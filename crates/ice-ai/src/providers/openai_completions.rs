@@ -15,7 +15,9 @@ use crate::event_stream::{
     AssistantMessageEventStreamProducer,
 };
 use crate::model::{MaxTokensField, Model, StreamingProtocolCompat};
-use crate::provider::{Provider, SimpleStreamOptions};
+use crate::provider::{
+    enforce_hard_max_tokens_in_record, request_max_tokens, Provider, SimpleStreamOptions,
+};
 use crate::providers::anthropic::cost::calculate_cost;
 use crate::providers::anthropic::json_parse::parse_streaming_json;
 use crate::providers::anthropic::retry::retry_provider_request;
@@ -163,7 +165,13 @@ async fn run_stream(
         return;
     }
 
-    let body = build_request(model, ctx, opts);
+    let body = match build_request_with_hard_max_tokens(model, ctx, opts) {
+        Ok(body) => body,
+        Err(message) => {
+            state.error(producer, message, false);
+            return;
+        }
+    };
     let url = chat_completions_url(&model.base_url);
     // A silent/stalled gateway must not leave the harness in Working forever.
     // Callers can override this through SimpleStreamOptions when needed.
@@ -256,6 +264,38 @@ async fn run_stream(
             }
         }
     }
+}
+
+fn build_request_with_hard_max_tokens(
+    model: &Model,
+    ctx: &Context,
+    opts: &SimpleStreamOptions,
+) -> Result<Value, String> {
+    let Some(hard_max_output_tokens) = opts.hard_max_output_tokens else {
+        return Ok(build_request(model, ctx, opts));
+    };
+
+    let max_tokens = request_max_tokens(model, ctx, opts)?;
+    let mut effective_opts = opts.clone();
+    effective_opts.max_tokens = Some(max_tokens);
+    let mut body = build_request(model, ctx, &effective_opts);
+    let Some(payload) = body.as_object_mut() else {
+        return Err("OpenAI Completions request payload must be an object".into());
+    };
+
+    // Some compatible providers accept either field. Clamp both whenever a
+    // model sampling parameter supplied one, so the unused alias cannot bypass
+    // the hard authority. The selected field is always present under authority.
+    for field in ["max_tokens", "max_completion_tokens"] {
+        if payload.contains_key(field) {
+            enforce_hard_max_tokens_in_record(payload, field, Some(hard_max_output_tokens))?;
+        }
+    }
+    let selected_field = max_tokens_field(model);
+    if !payload.contains_key(selected_field) {
+        enforce_hard_max_tokens_in_record(payload, selected_field, Some(hard_max_output_tokens))?;
+    }
+    Ok(body)
 }
 
 fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Value {
@@ -1383,6 +1423,110 @@ mod tests {
         assert_eq!(body["reasoning_effort"], "xhigh");
         assert_eq!(body["max_completion_tokens"], 1024);
         assert_eq!(body["stream_options"]["include_usage"], true);
+    }
+
+    #[test]
+    fn hard_output_authority_clamps_both_completions_fields_after_sampling_params() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({
+                "max_completion_tokens": 50_000,
+                "max_tokens": 60_000,
+            })
+            .as_object()
+            .unwrap()
+            .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        options.reasoning = Some(ThinkingLevel::Max);
+        // Deliberately leave max_tokens unset: the build allowance should still
+        // be bounded by the authority, even at the strongest reasoning level.
+        let body = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap();
+
+        assert_eq!(body["reasoning_effort"], "high");
+        assert_eq!(body["max_completion_tokens"].as_f64(), Some(256.0));
+        // Clamp the alternate alias too; gateways may honor either key.
+        assert_eq!(body["max_tokens"].as_f64(), Some(256.0));
+    }
+
+    #[test]
+    fn hard_output_authority_floors_selected_field_to_whole_tokens() {
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.9);
+        let body =
+            build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                .unwrap();
+
+        assert_eq!(body["max_completion_tokens"], 256);
+        assert!(body.get("max_tokens").is_none());
+    }
+
+    #[test]
+    fn subtoken_hard_output_authority_is_rejected() {
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(0.5);
+        let error =
+            build_request_with_hard_max_tokens(&model(), &Context::new(Vec::new()), &options)
+                .unwrap_err();
+
+        assert!(error.contains("at least one output token"));
+    }
+
+    #[test]
+    fn hard_output_authority_resets_null_sampling_override_to_the_limit() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({ "max_completion_tokens": null })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        let body = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap();
+
+        assert_eq!(body["max_completion_tokens"].as_f64(), Some(256.0));
+    }
+
+    #[test]
+    fn hard_output_authority_rejects_string_sampling_override() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({ "max_completion_tokens": "unbounded" })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(256.0);
+        let error = build_request_with_hard_max_tokens(&model, &Context::new(Vec::new()), &options)
+            .unwrap_err();
+
+        assert!(error.contains("max_completion_tokens"));
+    }
+
+    #[test]
+    fn absent_hard_authority_preserves_completions_sampling_overrides() {
+        let mut model = model();
+        model.sampling_params = Some(
+            json!({ "max_completion_tokens": 900, "max_tokens": 700 })
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+
+        let body = build_request_with_hard_max_tokens(
+            &model,
+            &Context::new(Vec::new()),
+            &SimpleStreamOptions::default(),
+        )
+        .unwrap();
+
+        assert_eq!(body["max_completion_tokens"], 900);
+        assert_eq!(body["max_tokens"], 700);
     }
 
     #[test]

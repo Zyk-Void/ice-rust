@@ -1,0 +1,365 @@
+{
+  "scope": "Independent source-first review of OBS-013, OBS-014, OBS-016, OBS-018 only; not approval of the whole observability audit.",
+  "stage": "ready-for-coordinator-resolution",
+  "reviewer": "/root/audit_extensions",
+  "source_only": true,
+  "tests_executed": false,
+  "method": "Fully read the three relevant TS production files and their three tests before comparing the four draft entries. Independently read the cited Rust counterpart implementations and performed behavior searches. Audit drafts were comparison targets, not source authority.",
+  "reviewed_spec": {
+    "path": "docs/ice-gap/evidence/spec-observability.json",
+    "sha256": "8b30bfc5b00826f159807230e66c206a7c494f504a1e4eb72395f0effa925561",
+    "entry_ids": [
+      "OBS-013",
+      "OBS-014",
+      "OBS-016",
+      "OBS-018"
+    ]
+  },
+  "corrections": [
+    {
+      "id": "OBS-QA-001",
+      "entries": [
+        "OBS-014"
+      ],
+      "field": "mechanism",
+      "severity": "factual prose correction",
+      "source": [
+        "ice:packages/coding-agent/src/config.ts:478-491"
+      ],
+      "finding": "The draft calls the file dashboard.html and implies existence testing of the individual asset. Actual filename is observe-dashboard.html. Bun returns getPackageDir()/observe/observe-dashboard.html. Other builds select src if the packageDir/src directory exists, otherwise dist, then append observe/observe-dashboard.html; the asset itself is not tested here.",
+      "replacement": "The HTML string is lazily read once and cached for the process. Bun resolves getPackageDir()/observe/observe-dashboard.html. Otherwise the loader selects src when getPackageDir()/src exists, or dist when it does not, then resolves observe/observe-dashboard.html beneath that directory.",
+      "needs_coordinator_action": true
+    },
+    {
+      "id": "OBS-QA-002",
+      "entries": [
+        "OBS-014",
+        "OBS-016"
+      ],
+      "field": "rust",
+      "severity": "factual prose correction",
+      "source": [
+        "rust:crates/ice-cli/src/remote/mod.rs:1-34",
+        "rust:crates/ice-cli/src/app.rs:393-503"
+      ],
+      "finding": "The reused Rust paragraph says remote/mod.rs declares SDK/RPC/WebSocket facilities. The actual module declares native protocol, CBOR, codec, framing, TCP client, session and TUI modules; its documentation describes JSONL TCP and optional four-byte length-prefixed CBOR. No WebSocket declaration appears in that file.",
+      "replacement": "Rust mode routing reaches print, JSON, interactive and RPC. Its remote module defines native protocol types, a TCP JSONL client and optional length-prefixed CBOR transport. Those facilities do not implement the read-only observation HTTP/SSE routes or their Host/token contract.",
+      "needs_coordinator_action": true
+    }
+  ],
+  "results": [
+    {
+      "entry_id": "OBS-013",
+      "verdict": "high-risk mechanism confirmed",
+      "source": [
+        "ice:packages/coding-agent/src/observe/observe-store.ts:83-86",
+        "ice:packages/coding-agent/src/observe/observe-store.ts:225-298",
+        "ice:packages/coding-agent/test/observe-store.test.ts:86-102"
+      ],
+      "finding": "Without options.limit, getState repeatedly fetches 10000 events after the last sequence until an empty page; it does not stop at the first page. With any explicitly defined limit, it fetches only one earliest page. Nonfinite explicit values therefore still choose the one-page branch and clamp to the getEvents default. Full reconstruction uses replacement Maps preserving first insertion order, not a latest-item tail.",
+      "rust_comparison": "The independently read SqliteSessionStorage refresh/persist operations and sessions.state_json schema in rust:crates/ice-harness/src/session/sqlite.rs:44-218 are canonical session snapshots, not observation run/event projection. A focused crates-wide search found no observation tables/routes/source symbols.",
+      "test_evidence": "The clean frozen-revision test inserts 10051 header events and expects model-10050. Source and test agree; test was read, not executed.",
+      "required_change": false
+    },
+    {
+      "entry_id": "OBS-014",
+      "verdict": "Host/token mechanism confirmed; two supporting prose corrections required",
+      "source": [
+        "ice:packages/coding-agent/src/observe/observe-server.ts:83-124",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:422-447",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:550-595",
+        "ice:packages/coding-agent/test/observe-server.test.ts:114-163"
+      ],
+      "finding": "Missing or non-loopback Host is rejected with 403 before token processing. A matching query, Bearer header or cookie is sufficient; failure is 401. Equality checks byte lengths before timingSafeEqual. Successful query auth sets an HttpOnly/SameSite=Strict/Path=/ cookie only on the HTML route. The token file uses exclusive creation and requested 0600 mode, but existing contents/permissions are not revalidated. The listener binds 127.0.0.1. Broad /index prefix and lack of method restriction are current source behavior.",
+      "limitations": "The connector redacted credential-like source assignments; no attempt was made to recover them. Cookie name is independently visible in the test. No live listener, filesystem permissions, or hostile Host request was tested. The fully read test file does not contain a dedicated Host-rejection assertion.",
+      "required_change": true,
+      "correction_ids": [
+        "OBS-QA-001",
+        "OBS-QA-002"
+      ]
+    },
+    {
+      "entry_id": "OBS-016",
+      "verdict": "first-250 reconstruction and cursor consequence confirmed",
+      "source": [
+        "ice:packages/coding-agent/src/observe/observe-server.ts:296-334",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:369-407",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:516-529",
+        "ice:packages/coding-agent/test/observe-server.test.ts:191-327"
+      ],
+      "finding": "Foreign snapshots call getState(runId,{limit:250}), so this is the first 250 events, not the latest 250 items. Newly observed foreign cursors are set to the current maximum sequence before the snapshot. Events after 250 and at or below that initial maximum are therefore not reconstructed or backfilled by subsequent polling. Items are then sorted and capped at 1000 across retained runs. Existing cursor entries survive periods without clients; initialization changes only missing entries, so reconnect behavior should not be described as resetting every cursor to max.",
+      "inference": "A concrete source-derived example is a foreign run whose first 250 events create items A and whose event 251 creates item B before first subscription: the snapshot omits B and the new cursor skips event 251. This was not executed.",
+      "test_evidence": "Current tests cover recent/finished/stale run filtering, port collision and live events arriving after first frame. They do not exercise preexisting foreign history beyond 250 events or cursor/snapshot races.",
+      "required_change": true,
+      "correction_ids": [
+        "OBS-QA-002"
+      ],
+      "optional_clarification": "Keep wording that initialization applies only to absent foreign cursors."
+    },
+    {
+      "entry_id": "OBS-018",
+      "verdict": "TTL, bounded concurrency and cancellation distinctions confirmed",
+      "source": [
+        "ice:packages/coding-agent/src/observe/observe-cognee.ts:78-96",
+        "ice:packages/coding-agent/src/observe/observe-cognee.ts:103-148",
+        "ice:packages/coding-agent/src/observe/observe-cognee.ts:150-248",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:212-228",
+        "ice:packages/coding-agent/src/observe/observe-server.ts:498-513",
+        "ice:packages/coding-agent/test/observe-cognee.test.ts:83-147"
+      ],
+      "finding": "Summary TTL is strictly greater than 30000 ms, measured immediately after initiating buildSummary, and applies to both pending and fulfilled promises. Status batches are sequential groups of 100; at most four document-list requests run concurrently within each build. summary ignores the advertised AbortSignal, including the signal passed by the HTTP route. Graph requests coalesce by dataset only while pending, delete on settlement, and accept no cancellation signal. Ordinary browse calls forward signals.",
+      "nuances": [
+        "A request after TTL may start a new build while the old build remains pending, so the four-request limit is per build, not a global cap across overlapping expired builds.",
+        "Per-dataset document-list rejection is swallowed into unknown count; an auth_failed/unreachable error swallowed there does not reach withConnection's reconnect/reset catch. List/status errors do reach that catch.",
+        "A rejected summary clears only the matching cached promise, protecting a replacement build from an older rejection."
+      ],
+      "test_evidence": "The clean frozen tests assert graph coalescing, a recent summary reuse and partial document-count failure. They do not assert exact TTL boundary, global concurrency during overlapping builds, or ignored-summary cancellation.",
+      "required_change": false,
+      "optional_clarification": "Opening sentence can say 'caches the summary promise for 30 seconds from creation, including both pending and fulfilled values'."
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-store.ts",
+      "total_lines": 331,
+      "sha256": "5b8d2a6da8f87dc04334e3fd10f5d87de84aebfcf6c33bf06480d27d5baccb82",
+      "baseline_sha256": "5b8d2a6da8f87dc04334e3fd10f5d87de84aebfcf6c33bf06480d27d5baccb82",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          331
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-cognee.ts",
+      "total_lines": 252,
+      "sha256": "392a9c0e31c0318fafb7145e067d0a7445b3a75bd61b8e5b0c619ca71b6e0caf",
+      "baseline_sha256": "392a9c0e31c0318fafb7145e067d0a7445b3a75bd61b8e5b0c619ca71b6e0caf",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          252
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/src/observe/observe-server.ts",
+      "total_lines": 597,
+      "sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+      "baseline_sha256": "3396bdf40c9a84d07de72fe26b3664f16d28ece9463d464d2e486f642b6dd177",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          597
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-store.test.ts",
+      "total_lines": 151,
+      "sha256": "08f29d108c835dfafe4ff5e4a18e1eafb6cfa6355f1c1403c3c66bd15d085580",
+      "baseline_sha256": null,
+      "baseline_match": null,
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-cognee.test.ts",
+      "total_lines": 169,
+      "sha256": "ea08be2557f7a058e7f31659dcdff48f8ee57caafb2eed5299174cb9a1c98faf",
+      "baseline_sha256": null,
+      "baseline_match": null,
+      "ranges": [
+        [
+          1,
+          169
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-server.test.ts",
+      "total_lines": 583,
+      "sha256": "75468d02762b0de867f7d0d09c841d2fee18cc2b750e2efabd4cff644ab9a78a",
+      "baseline_sha256": null,
+      "baseline_match": null,
+      "ranges": [
+        [
+          1,
+          583
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/sqlite.rs",
+      "total_lines": 494,
+      "sha256": "d39f13a3da7afd603e67fd54f5ec6c74e7869ef9801f85b486041c094737b447",
+      "baseline_sha256": "d39f13a3da7afd603e67fd54f5ec6c74e7869ef9801f85b486041c094737b447",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/mod.rs",
+      "total_lines": 34,
+      "sha256": "2f4a0cba1fe441e5db9a1f06b591efd709ebd83a318b8c0b8a4e97b7a3c1c5ee",
+      "baseline_sha256": "2f4a0cba1fe441e5db9a1f06b591efd709ebd83a318b8c0b8a4e97b7a3c1c5ee",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": true
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/context.rs",
+      "total_lines": 105,
+      "sha256": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61",
+      "baseline_sha256": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": false
+    },
+    {
+      "path": "rust:crates/ice-telemetry/src/production.rs",
+      "total_lines": 257,
+      "sha256": "3b785a970ec1a2b2a988f9bc623b06a225990f75dc30950548184cda73649472",
+      "baseline_sha256": "3b785a970ec1a2b2a988f9bc623b06a225990f75dc30950548184cda73649472",
+      "baseline_match": true,
+      "ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "total_lines": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline_sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline_match": true,
+      "ranges": [
+        [
+          350,
+          505
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/config.ts",
+      "total_lines": 605,
+      "sha256": "e4b690beca6ecfa772e8439c225537b43a8b763bd36691300965b131085b1337",
+      "baseline_sha256": "e4b690beca6ecfa772e8439c225537b43a8b763bd36691300965b131085b1337",
+      "baseline_match": true,
+      "ranges": [
+        [
+          465,
+          496
+        ]
+      ],
+      "notes": "Actual visible source read; no application execution.",
+      "full_read": false
+    }
+  ],
+  "test_identities": {
+    "source_only": true,
+    "tests_executed": false,
+    "files": [
+      {
+        "path": "packages/coding-agent/test/observe-store.test.ts",
+        "current_sha256": "08f29d108c835dfafe4ff5e4a18e1eafb6cfa6355f1c1403c3c66bd15d085580",
+        "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "revision_sha256": "08f29d108c835dfafe4ff5e4a18e1eafb6cfa6355f1c1403c3c66bd15d085580",
+        "revision_matches": true,
+        "status": "",
+        "historical_read_error": null
+      },
+      {
+        "path": "packages/coding-agent/test/observe-cognee.test.ts",
+        "current_sha256": "ea08be2557f7a058e7f31659dcdff48f8ee57caafb2eed5299174cb9a1c98faf",
+        "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "revision_sha256": "ea08be2557f7a058e7f31659dcdff48f8ee57caafb2eed5299174cb9a1c98faf",
+        "revision_matches": true,
+        "status": "",
+        "historical_read_error": null
+      },
+      {
+        "path": "packages/coding-agent/test/observe-server.test.ts",
+        "current_sha256": "75468d02762b0de867f7d0d09c841d2fee18cc2b750e2efabd4cff644ab9a78a",
+        "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "revision_sha256": "75468d02762b0de867f7d0d09c841d2fee18cc2b750e2efabd4cff644ab9a78a",
+        "revision_matches": true,
+        "status": "",
+        "historical_read_error": null
+      }
+    ]
+  },
+  "rust_searches": [
+    {
+      "workspace": "ws_0e25a2707810aacc6b30bda5",
+      "path": "crates",
+      "regex": true,
+      "query": "observe_runs|observe_events|ObserveRunStore|dashboardUrl|startObserveServer|cognee|/cognee/|/replay/events|observability.sqlite",
+      "max_matches": 100,
+      "result": "No matches.",
+      "truncated": false,
+      "partial": false,
+      "timed_out": false
+    },
+    {
+      "workspace": "ws_0e25a2707810aacc6b30bda5",
+      "path": "crates",
+      "regex": true,
+      "query": "TcpListener::bind|axum::|hyper::|actix|Authorization|timing_safe|constant_time|token_cookie|127\\.0\\.0\\.1",
+      "max_matches": 60,
+      "result": "Returned provider, transport, auth, and test references. Followed the actual app mode and remote module sources. This bounded search is not a blanket absence proof."
+    }
+  ],
+  "limitations": [
+    "Only four requested entries were independently reviewed; no entire-area acceptance or publication is asserted.",
+    "All three relevant TS source files and three tests were fully read. Supplemental Rust/config reads are partial and exact ranges are recorded.",
+    "Test files are absent from the original source hash map, so their current hashes were checked against the frozen TS Git revision and clean status; all three match. No historical dirty hash was invented.",
+    "No source changes, tests, app imports, installs, network commands, user-state access, or shared publication files were written.",
+    "Runtime races and performance consequences are source inferences until a later authorized implementation/testing phase."
+  ],
+  "next_action": "Coordinator applies OBS-QA-001 and OBS-QA-002, resolves any optional wording nuances, and accepts/publishes according to required order. Reviewer proceeds to the separately assigned TUI area."
+}

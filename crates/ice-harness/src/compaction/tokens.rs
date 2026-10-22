@@ -50,8 +50,8 @@ pub fn extract_file_ops_from_message(message: &AgentMessage, file_ops: &mut File
         if let Content::ToolCall(call) = block {
             let path = match call.arguments.get("path") {
                 Some(v) => match v.as_str() {
-                    Some(s) => s,
-                    None => continue,
+                    Some(s) if !s.is_empty() => s,
+                    _ => continue,
                 },
                 None => continue,
             };
@@ -114,7 +114,7 @@ pub fn format_file_operations(read_files: &[String], modified_files: &[String]) 
 // serializeConversation — mirrors utils.ts (operates on provider Message[])
 // ---------------------------------------------------------------------------
 
-const TOOL_RESULT_MAX_CHARS: usize = 2000;
+const TOOL_RESULT_MAX_UTF16_UNITS: usize = 2000;
 
 /// `safeJsonStringify` — `JSON.stringify` with a fallback. Rust's
 /// `serde_json::to_string` can fail on non-finite floats / cycles (cycles
@@ -123,15 +123,37 @@ fn safe_json_stringify(value: &serde_json::Value) -> String {
     serde_json::to_string(value).unwrap_or_else(|_| "[unserializable]".to_string())
 }
 
-fn truncate_for_summary(text: &str, max_chars: usize) -> String {
-    if text.len() <= max_chars {
+/// Count JavaScript-compatible UTF-16 code units. Astral Unicode scalars count
+/// as two units; BMP scalars count as one.
+pub fn utf16_code_units(text: &str) -> usize {
+    text.encode_utf16().count()
+}
+
+fn truncate_for_summary(text: &str, max_units: usize) -> String {
+    let total_units = utf16_code_units(text);
+    if total_units <= max_units {
         return text.to_string();
     }
-    // TS slices by UTF-16 code units; for ASCII-heavy tool output this matches.
-    // For multibyte content we slice by char boundary to stay valid UTF-8.
-    let truncated: String = text.chars().take(max_chars).collect();
-    let more = text.chars().count().saturating_sub(max_chars);
-    format!("{truncated}\n\n[... {more} more characters truncated]")
+
+    // JS String.slice can leave an isolated surrogate when the boundary falls
+    // between an astral scalar's UTF-16 pair. Rust strings cannot represent that,
+    // so back up to the preceding Unicode scalar boundary instead. The omitted
+    // count is the exact number of original UTF-16 units not retained.
+    let mut retained_units = 0usize;
+    let mut end = 0usize;
+    for (byte_index, ch) in text.char_indices() {
+        let char_units = ch.len_utf16();
+        if retained_units.saturating_add(char_units) > max_units {
+            break;
+        }
+        retained_units += char_units;
+        end = byte_index + ch.len_utf8();
+    }
+    let omitted_units = total_units.saturating_sub(retained_units);
+    format!(
+        "{}\n\n[... {omitted_units} more characters truncated]",
+        &text[..end]
+    )
 }
 
 /// Serialize LLM messages to plain text for summarization prompts. Mirrors
@@ -188,7 +210,7 @@ pub fn serialize_conversation(messages: &[Message]) -> String {
                 if !content.is_empty() {
                     parts.push(format!(
                         "[Tool result]: {}",
-                        truncate_for_summary(&content, TOOL_RESULT_MAX_CHARS)
+                        truncate_for_summary(&content, TOOL_RESULT_MAX_UTF16_UNITS)
                     ));
                 }
             }
@@ -208,87 +230,85 @@ fn user_content_text(content: &ice_ai::types::UserContent) -> String {
 // estimateTokens / estimateContextTokens — mirrors compaction.ts
 // ---------------------------------------------------------------------------
 
-const ESTIMATED_IMAGE_CHARS: usize = 4800;
+const ESTIMATED_IMAGE_UNITS: usize = 4800;
 
-/// Char count for text+image content (string or content blocks). Mirrors
-/// `estimateTextAndImageContentChars`.
-fn estimate_text_and_image_chars_content(content: &[Content]) -> usize {
-    let mut chars = 0;
+/// UTF-16 code-unit count for text+image content. Images retain the fixed 4800
+/// estimate used by the TypeScript implementation.
+fn estimate_text_and_image_units_content(content: &[Content]) -> usize {
+    let mut units = 0usize;
     for block in content {
         match block {
-            Content::Text(t) => chars += t.text.len(),
-            Content::Image(_) => chars += ESTIMATED_IMAGE_CHARS,
+            Content::Text(t) => units = units.saturating_add(utf16_code_units(&t.text)),
+            Content::Image(_) => units = units.saturating_add(ESTIMATED_IMAGE_UNITS),
             _ => {}
         }
     }
-    chars
+    units
 }
 
-/// Estimate token count for one message using the conservative chars/4
-/// heuristic. Mirrors `estimateTokens(message)` per role.
+/// Estimate token count for one message using `ceil(UTF-16 units / 4)`.
+/// Mirrors `estimateTokens(message)` per role.
 pub fn estimate_tokens(message: &AgentMessage) -> i64 {
-    let chars = estimate_message_chars(message);
-    div_ceil(chars as i64, 4)
+    let units = estimate_message_units(message);
+    let tokens = units.saturating_add(3) / 4;
+    i64::try_from(tokens).unwrap_or(i64::MAX)
 }
 
-fn estimate_message_chars(message: &AgentMessage) -> usize {
+fn estimate_message_units(message: &AgentMessage) -> usize {
     match message {
         AgentMessage::User(u) => match &u.content {
-            ice_ai::types::UserContent::Text(s) => s.len(),
+            ice_ai::types::UserContent::Text(s) => utf16_code_units(s),
             ice_ai::types::UserContent::Blocks(blocks) => {
-                estimate_text_and_image_chars_content(blocks)
+                estimate_text_and_image_units_content(blocks)
             }
         },
-        AgentMessage::Assistant(a) => estimate_assistant_chars(a),
-        AgentMessage::ToolResult(t) => estimate_text_and_image_chars_content(&t.content),
-        AgentMessage::Custom(c) => estimate_custom_chars(c),
+        AgentMessage::Assistant(a) => estimate_assistant_units(a),
+        AgentMessage::ToolResult(t) => estimate_text_and_image_units_content(&t.content),
+        AgentMessage::Custom(c) => estimate_custom_units(c),
     }
 }
 
-fn estimate_assistant_chars(a: &AssistantMessage) -> usize {
-    let mut chars = 0;
+fn estimate_assistant_units(a: &AssistantMessage) -> usize {
+    let mut units = 0usize;
     for block in &a.content {
         match block {
-            Content::Text(t) => chars += t.text.len(),
-            Content::Thinking(t) => chars += t.thinking.len(),
+            Content::Text(t) => units = units.saturating_add(utf16_code_units(&t.text)),
+            Content::Thinking(t) => units = units.saturating_add(utf16_code_units(&t.thinking)),
             Content::ToolCall(call) => {
-                chars += call.name.len() + safe_json_stringify(&call.arguments).len();
+                units = units
+                    .saturating_add(utf16_code_units(&call.name))
+                    .saturating_add(utf16_code_units(&safe_json_stringify(&call.arguments)));
             }
             _ => {}
         }
     }
-    chars
+    units
 }
 
-fn estimate_custom_chars(c: &ice_agent::message::CustomMessage) -> usize {
+fn estimate_custom_units(c: &ice_agent::message::CustomMessage) -> usize {
     match c.role.as_str() {
         crate::messages::BASH_EXECUTION_ROLE => {
             if let Some(d) = bash_execution_data(&AgentMessage::Custom(c.clone())) {
-                d.command.len() + d.output.len()
+                utf16_code_units(&d.command).saturating_add(utf16_code_units(&d.output))
             } else {
                 0
             }
         }
-        crate::messages::BRANCH_SUMMARY_ROLE | crate::messages::COMPACTION_SUMMARY_ROLE => {
-            if let Some(d) = branch_summary_data(&AgentMessage::Custom(c.clone())) {
-                d.summary.len()
-            } else if let Some(d) = compaction_summary_data(&AgentMessage::Custom(c.clone())) {
-                d.summary.len()
-            } else {
-                0
-            }
+        crate::messages::BRANCH_SUMMARY_ROLE => {
+            branch_summary_data(&AgentMessage::Custom(c.clone()))
+                .map(|d| utf16_code_units(&d.summary))
+                .unwrap_or(0)
         }
-        // Generic `custom` + unregistered roles → text+image chars of stored
-        // content (mirrors the TS `custom`/`toolResult` arm).
-        _ => estimate_text_and_image_chars_content(&c.content),
+        crate::messages::COMPACTION_SUMMARY_ROLE => {
+            compaction_summary_data(&AgentMessage::Custom(c.clone()))
+                .map(|d| utf16_code_units(&d.summary))
+                .unwrap_or(0)
+        }
+        crate::messages::CUSTOM_ROLE => estimate_text_and_image_units_content(&c.content),
+        // The registered harness roles are a closed projection. Unknown custom
+        // roles have no guaranteed rendering contract and estimate to zero.
+        _ => 0,
     }
-}
-
-fn div_ceil(a: i64, b: i64) -> i64 {
-    // `Math.ceil(chars / 4)` — integer ceil division. Written by hand (not
-    // `i64::div_ceil`) to keep the crate's MSRV (1.78) happy; `div_ceil`
-    // stabilized only in 1.87.
-    (a + b - 1) / b
 }
 
 /// Return the last valid assistant usage (stop_reason not aborted/error,
@@ -322,7 +342,7 @@ pub fn estimate_context_tokens(messages: &[AgentMessage]) -> ContextUsageEstimat
         None => {
             let mut estimated = 0i64;
             for m in messages {
-                estimated += estimate_tokens(m);
+                estimated = estimated.saturating_add(estimate_tokens(m));
             }
             ContextUsageEstimate {
                 tokens: estimated,
@@ -335,16 +355,43 @@ pub fn estimate_context_tokens(messages: &[AgentMessage]) -> ContextUsageEstimat
             let usage_tokens = usage.context_tokens();
             let mut trailing_tokens = 0i64;
             for m in messages.iter().skip(index + 1) {
-                trailing_tokens += estimate_tokens(m);
+                trailing_tokens = trailing_tokens.saturating_add(estimate_tokens(m));
             }
             ContextUsageEstimate {
-                tokens: usage_tokens + trailing_tokens,
+                tokens: usage_tokens.saturating_add(trailing_tokens),
                 usage_tokens,
                 trailing_tokens,
                 last_usage_index: Some(index),
             }
         }
     }
+}
+
+/// Estimate a coding request using the known composed prompt and tool schemas.
+/// Provider usage can already include both, so take the larger of fresh input
+/// estimation and historical usage instead of adding overhead to usage twice.
+/// This does not execute asynchronous request hooks or claim tokenizer accuracy.
+pub(crate) fn estimate_request_tokens(
+    messages: &[AgentMessage],
+    system_prompt: &str,
+    tools: &[ice_ai::types::Tool],
+) -> i64 {
+    let text_tokens = |text: &str| {
+        i64::try_from(utf16_code_units(text).saturating_add(3) / 4).unwrap_or(i64::MAX)
+    };
+    let mut estimated = messages.iter().fold(0i64, |sum, message| {
+        sum.saturating_add(estimate_tokens(message))
+    });
+    estimated = estimated.saturating_add(text_tokens(system_prompt));
+    if !tools.is_empty() {
+        // Tool definitions contain only serializable schema data. Fail closed
+        // on unexpected serialization errors rather than estimating zero.
+        let schema_tokens = serde_json::to_string(tools)
+            .map(|json| text_tokens(&json))
+            .unwrap_or(i64::MAX);
+        estimated = estimated.saturating_add(schema_tokens);
+    }
+    estimated.max(estimate_context_tokens(messages).tokens)
 }
 
 // ---------------------------------------------------------------------------
@@ -389,6 +436,45 @@ mod tests {
     }
 
     #[test]
+    fn request_estimate_counts_unicode_prompt_and_tool_schema() {
+        let messages = vec![user("😀😀😀")];
+        let tools = vec![ice_ai::types::Tool {
+            name: "read".into(),
+            description: "Read 日本語 😀".into(),
+            parameters:
+                serde_json::json!({"type": "object", "properties": {"path": {"type": "string"}}})
+                    .into(),
+            constrained_sampling: None,
+        }];
+        let schema = serde_json::to_string(&tools).unwrap();
+        let expected_schema = ((schema.encode_utf16().count() + 3) / 4) as i64;
+        assert_eq!(estimate_request_tokens(&messages, "😀😀😀", &[]), 4);
+        assert_eq!(
+            estimate_request_tokens(&messages, "😀😀😀", &tools),
+            4 + expected_schema
+        );
+        assert_eq!(estimate_request_tokens(&[], "", &[]), 0);
+    }
+
+    #[test]
+    fn request_estimate_does_not_charge_known_overhead_twice() {
+        let mut assistant = AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux", 1);
+        assistant.stop_reason = ice_ai::types::StopReason::Stop;
+        assistant.content = vec![Content::text("done")];
+        assistant.usage.input = 90;
+        assistant.usage.output = 10;
+        let messages = vec![AgentMessage::Assistant(Box::new(assistant)), user("next")];
+        // The provider's 100-token measurement already includes its prompt.
+        assert_eq!(estimate_request_tokens(&messages, "known prompt", &[]), 101);
+        // A much larger live prompt must not be hidden by older usage either.
+        assert_eq!(
+            estimate_request_tokens(&messages, &"s".repeat(800), &[]),
+            202
+        );
+        assert_eq!(estimate_context_tokens(&messages).tokens, 101);
+    }
+
+    #[test]
     fn extract_file_ops_classifies_read_write_edit() {
         // Build a real assistant with three tool calls.
         let mut a =
@@ -408,12 +494,18 @@ mod tests {
             "edit",
             serde_json::json!({"path": "/c"}),
         ));
+        a.content.push(Content::tool_call(
+            "c4",
+            "read",
+            serde_json::json!({"path": ""}),
+        ));
         let msg = AgentMessage::Assistant(Box::new(a));
         let mut ops = create_file_ops();
         extract_file_ops_from_message(&msg, &mut ops);
         assert!(ops.read.contains("/a"));
         assert!(ops.written.contains("/b"));
         assert!(ops.edited.contains("/c"));
+        assert!(!ops.read.contains(""));
         let (read, modified) = compute_file_lists(&ops);
         assert_eq!(read, vec!["/a".to_string()]);
         assert_eq!(modified, vec!["/b".to_string(), "/c".to_string()]);
@@ -438,6 +530,86 @@ mod tests {
         ))];
         let s = serialize_conversation(&msgs);
         assert_eq!(s, "[User]: hello");
+    }
+
+    #[test]
+    fn estimates_utf16_units_for_astral_text_and_tool_arguments() {
+        // Two astral characters are four UTF-16 units (one estimated token),
+        // despite occupying eight bytes in UTF-8.
+        assert_eq!(estimate_tokens(&user("😀😀")), 1);
+
+        let mut assistant =
+            ice_ai::types::AssistantMessage::empty(ice_ai::types::Api::Faux, "faux", "faux", 1);
+        assistant.content.push(Content::tool_call(
+            "call",
+            "read",
+            serde_json::json!({"value": "😀😀"}),
+        ));
+        let message = AgentMessage::Assistant(Box::new(assistant));
+        let serialized_units = "read".encode_utf16().count()
+            + serde_json::to_string(&serde_json::json!({"value": "😀😀"}))
+                .unwrap()
+                .encode_utf16()
+                .count();
+        assert_eq!(estimate_tokens(&message), (serialized_units as i64 + 3) / 4);
+    }
+
+    #[test]
+    fn unknown_custom_roles_count_zero_and_bash_estimate_ignores_full_output_path() {
+        let unknown = AgentMessage::Custom(ice_agent::message::CustomMessage::new(
+            "applicationRole",
+            vec![Content::text("visible but unknown")],
+            serde_json::Value::Null,
+            1,
+        ));
+        assert_eq!(estimate_tokens(&unknown), 0);
+        let custom = AgentMessage::Custom(ice_agent::message::CustomMessage::new(
+            crate::messages::CUSTOM_ROLE,
+            vec![Content::text("abcd")],
+            serde_json::Value::Null,
+            1,
+        ));
+        assert_eq!(estimate_tokens(&custom), 1);
+
+        let bash = crate::messages::bash_execution_message(
+            "cmd",
+            "out",
+            None,
+            false,
+            true,
+            Some("/a/very/long/full-output.txt".into()),
+            None,
+            1,
+        );
+        assert_eq!(estimate_tokens(&bash), 2); // command+output: 6 UTF-16 units.
+    }
+
+    #[test]
+    fn serialization_truncates_at_utf16_boundary_and_counts_omitted_units() {
+        let make_tool_result = |text: String| {
+            Message::ToolResult(Box::new(ice_ai::types::ToolResultMessage {
+                role: ice_ai::types::ToolResultRole,
+                tool_call_id: "call".into(),
+                tool_name: "read".into(),
+                content: vec![Content::text(text)],
+                details: None,
+                usage: None,
+                added_tool_names: Vec::new(),
+                is_error: false,
+                timestamp: 1,
+            }))
+        };
+        let text = format!("{}😀z", "a".repeat(1999));
+        let serialized = serialize_conversation(&[make_tool_result(text.clone())]);
+        assert!(serialized.starts_with(&format!("[Tool result]: {}", "a".repeat(1999))));
+        // Rust never emits an isolated surrogate: this boundary backs up before
+        // the astral scalar, so it retains 1999 units and counts all 3 omitted.
+        assert!(serialized.ends_with("[... 3 more characters truncated]"));
+        assert!(!serialized.contains('😀'));
+
+        let bmp = "界".repeat(2001);
+        let serialized = serialize_conversation(&[make_tool_result(bmp)]);
+        assert!(serialized.ends_with("[... 1 more characters truncated]"));
     }
 
     #[test]

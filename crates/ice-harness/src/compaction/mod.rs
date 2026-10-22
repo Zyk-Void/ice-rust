@@ -25,15 +25,17 @@ pub mod settings;
 pub mod tokens;
 
 pub use compaction::{
-    combine_usage, compact, complete_simple_with_retries, extract_file_operations,
+    combine_usage, compact, compact_coding, complete_simple_with_retries,
+    complete_simple_with_retry_options, complete_validated_coding_summary, extract_file_operations,
     generate_summary_with_usage, generate_turn_prefix_summary, get_message_from_entry,
     get_message_from_entry_for_compaction, is_retryable_assistant_error, prepare_compaction,
-    CompactResult, CompactionDetails, CompactionError, CompactionLlmOptions, CompactionPreparation,
+    CodingSummaryCompletionOptions, CompactResult, CompactionDetails, CompactionError,
+    CompactionLlmOptions, CompactionPreparation, SummarizationStreamFn,
 };
 pub use cut_point::{find_cut_point, find_turn_start_index, find_valid_cut_points, CutPointResult};
 pub use settings::{should_compact, CompactionSettings, DEFAULT_COMPACTION_SETTINGS};
 pub use tokens::{
     build_session_context, compute_file_lists, estimate_context_tokens, estimate_tokens,
     extract_file_ops_from_message, format_file_operations, serialize_conversation,
-    ContextUsageEstimate, FileOperations, SessionContext,
+    utf16_code_units, ContextUsageEstimate, FileOperations, SessionContext,
 };

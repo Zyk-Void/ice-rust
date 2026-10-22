@@ -327,6 +327,12 @@ mod tests {
     }
 
     #[test]
+    fn test_fuzzy_match_unicode_search() {
+        assert!(fuzzy_match("读取 icers", "读取下当前 icers -r 命令").matches);
+        assert!(fuzzy_match("😀界", "前文😀界后续").matches);
+    }
+
+    #[test]
     fn test_swap_alphanumeric() {
         assert_eq!(swap_alphanumeric("f2"), Some("2f".to_string()));
         assert_eq!(swap_alphanumeric("2file"), Some("file2".to_string()));

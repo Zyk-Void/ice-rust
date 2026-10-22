@@ -1,0 +1,373 @@
+{
+  "area": "ai",
+  "fragment": "shared-schema",
+  "owner": "audit_tools",
+  "complete": false,
+  "draft_complete": true,
+  "independent_qa": {
+    "status": "pending",
+    "owner": "coordinator",
+    "note": "Worker schema, source-range and fixed-identity checks accompany this fragment; coordinator review and publication remain pending."
+  },
+  "entries": [
+    {
+      "id": "AI-019",
+      "title": "Complete shared message, usage, content and model data contracts",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AI-009"
+      ],
+      "size_min": 140,
+      "size_max": 280
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.start",
+      "ice_ref": "packages/ai/src/types.ts:531",
+      "rust_ref": "crates/ice-ai/src/types.rs:894",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. partial assistant snapshot. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.text_start",
+      "ice_ref": "packages/ai/src/types.ts:532",
+      "rust_ref": "crates/ice-ai/src/types.rs:897",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex plus partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.text_delta",
+      "ice_ref": "packages/ai/src/types.ts:533",
+      "rust_ref": "crates/ice-ai/src/types.rs:901",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, string delta and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.text_end",
+      "ice_ref": "packages/ai/src/types.ts:534",
+      "rust_ref": "crates/ice-ai/src/types.rs:906",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, final string content and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.thinking_start",
+      "ice_ref": "packages/ai/src/types.ts:535",
+      "rust_ref": "crates/ice-ai/src/types.rs:911",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex plus partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.thinking_delta",
+      "ice_ref": "packages/ai/src/types.ts:536",
+      "rust_ref": "crates/ice-ai/src/types.rs:915",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, string delta and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.thinking_end",
+      "ice_ref": "packages/ai/src/types.ts:537",
+      "rust_ref": "crates/ice-ai/src/types.rs:920",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, final string content and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.toolcall_start",
+      "ice_ref": "packages/ai/src/types.ts:538",
+      "rust_ref": "crates/ice-ai/src/types.rs:925",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex plus partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.toolcall_delta",
+      "ice_ref": "packages/ai/src/types.ts:539",
+      "rust_ref": "crates/ice-ai/src/types.rs:929",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, growing argument string delta and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.toolcall_end",
+      "ice_ref": "packages/ai/src/types.ts:540",
+      "rust_ref": "crates/ice-ai/src/types.rs:934",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. contentIndex, complete ToolCall and partial. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.done",
+      "ice_ref": "packages/ai/src/types.ts:541",
+      "rust_ref": "crates/ice-ai/src/types.rs:939",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. outer reason stop/length/toolUse/deferred plus final message. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    },
+    {
+      "category": "hooks",
+      "name": "AssistantMessageEvent.error",
+      "ice_ref": "packages/ai/src/types.ts:546",
+      "rust_ref": "crates/ice-ai/src/types.rs:943",
+      "status": "partial",
+      "entry_id": "AI-019",
+      "candidate_ids": [],
+      "notes": "Authored structural event surface absent from the mechanical candidate inventory; native variant/serializer retained. outer reason aborted/error plus final error assistant. Shared nested assistant contract and native stopReason spelling require the precise AI-019 comparison."
+    }
+  ],
+  "candidate_dispositions": [],
+  "candidate_mapping": {
+    "source": "docs/ice-gap/evidence/candidates-ai.json",
+    "sha256": "a958b7e2671b1d7de45070b224b66e973bc2797e601bed554d25d2aa2c67f418",
+    "selection": "path == packages/ai/src/types.ts",
+    "selected_count": 0,
+    "notes": "The mechanical candidate scanner found no rows in types.ts. These data and event contracts are an authored coverage correction, with no invented candidate IDs."
+  },
+  "ledger_updates": [
+    {
+      "path": "packages/ai/src/types.ts",
+      "entry_ids_to_add": [
+        "AI-019"
+      ],
+      "read_ranges": [
+        [
+          1,
+          848
+        ]
+      ],
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "note": "Append this ownership reference to the already-read existing AI ledger row. Do not count the same source LOC or full-read coverage again."
+    }
+  ],
+  "read_evidence": [
+    {
+      "repository": "ice",
+      "path": "packages/ai/src/types.ts",
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "total_lines": 848,
+      "read_ranges": [
+        [
+          1,
+          848
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/types.rs",
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "total_lines": 1157,
+      "read_ranges": [
+        [
+          1,
+          1157
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/lib.rs",
+      "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110",
+      "total_lines": 47,
+      "read_ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/model.rs",
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "total_lines": 284,
+      "read_ranges": [
+        [
+          1,
+          284
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/tests/content_json.rs",
+      "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+      "total_lines": 134,
+      "read_ranges": [
+        [
+          1,
+          134
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74"
+      }
+    },
+    {
+      "repository": "ice",
+      "path": "packages/ai/test/lax-message-content.test.ts",
+      "sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196",
+      "total_lines": 68,
+      "read_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest",
+        "sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196"
+      }
+    },
+    {
+      "repository": "ice",
+      "path": "packages/ai/test/openai-completions-response-model.test.ts",
+      "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+      "total_lines": 141,
+      "read_ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest",
+        "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-cli/src/remote/protocol.rs",
+      "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939",
+      "total_lines": 521,
+      "read_ranges": [
+        [
+          181,
+          214
+        ]
+      ],
+      "full_file_read": false,
+      "read_method": "ConnectMe bounded read_many",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939"
+      }
+    }
+  ],
+  "dependency_requests": [],
+  "consumer_link_suggestions": [
+    {
+      "entry_id": "AGENT-001",
+      "prerequisite_id": "AI-019",
+      "reason": "AGENT-001 imports the exact nested provider Message/Usage/Content/event contracts."
+    },
+    {
+      "entry_id": "RPC-004",
+      "prerequisite_id": "AI-019",
+      "reason": "The explicit AI-to-protocol projection reads this complete internal shape and intentionally omits selected fields."
+    },
+    {
+      "entry_id": "RPC-034",
+      "prerequisite_id": "AI-019",
+      "reason": "Nested JSONL response admission validates the shared source DTOs; transport validation remains RPC-owned."
+    },
+    {
+      "entry_id": "RPC-003",
+      "related_id": "AI-019",
+      "reason": "Closed binary schemas mirror selected source data but intentionally define their own contract; direct AI-019 build dependency is optional, and RPC-004 is the actual conversion dependency. Do not replace the transport's closed schema with these wider types."
+    }
+  ],
+  "defects": [
+    {
+      "id": "RUST-035",
+      "relationship": "Existing serialization defect, no new record or duplicate estimate.",
+      "entry_id": "AI-019"
+    },
+    {
+      "candidate": "AI-SCHEMA-RAW-ROLE",
+      "relationship": "Separate bounded source-only duplicate-role candidate in ai-schema-defect-candidates.json; no observed execution failure."
+    }
+  ],
+  "documentation_claims": [],
+  "scope_limits": [
+    "No application/test/network execution, no source or user-state writes, no shared AI/progress/ledger/accepted-manifest mutation.",
+    "One targeted entry, not a new whole-area completeness claim.",
+    "Existing provider behavior, diagnostics, compatibility flags and RPC validation estimates remain in their owning entries."
+  ]
+}

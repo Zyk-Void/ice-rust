@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "date": "2026-10-20",
+  "proposal": "evidence/lane-exports-rpc-ai-auth-native-prose-replacements.json",
+  "proposal_sha256": "3ae59f65990f99fa7d587a6ddfd02ab660c5116c153825fa6342a8d3ab84428e",
+  "replacements": 3,
+  "candidate_fields": 38,
+  "checks": [
+    "Current accepted target-spec hashes and exact whole-field old values matched.",
+    "Every new field changes only the one specified native literal.",
+    "All removed/added literals match previously reviewed hunk text, source hashes, and hunk identifiers.",
+    "TypeScript facts, source citations, crate/C ABI identities, and qualifications remain unchanged."
+  ],
+  "errors": [],
+  "shared_or_active_mutations": false
+}

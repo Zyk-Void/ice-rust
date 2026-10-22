@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:34:27.026Z",
+  "status": "resolved",
+  "id": "BOUNDARY-001",
+  "active_root": "/home/mewtwo/Zykairotis/ice-rust",
+  "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+  "expected_git_status": "?? docs/ice-gap/\n",
+  "observed_git_status": "?? .least/\n?? docs/ice-gap/\n",
+  "observed_status_sha256": "e3c28e57a0089451df19a15f2c571edab2dd236286ef985b48e6ba1babe38c01",
+  "strict_boundary_complete": true,
+  "overall_closeout_complete": true,
+  "source_audit_published": true,
+  "source_machine_gate_passed": true,
+  "blocked_path": ".least/",
+  "access_result": "Connectme files rejected the metadata listing: LeastError: Path is blocked by safety rules: .least",
+  "documented_server_blocked_patterns": [
+    ".least",
+    ".least/**",
+    "**/.least/**"
+  ],
+  "blocked_contents_read": false,
+  "blocked_provenance_verified": false,
+  "bypass_attempted": false,
+  "cleanup_attempted": true,
+  "authorized_write_roots": [
+    "/home/mewtwo/Zks/ice-rust/docs/ice-gap/",
+    "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap/"
+  ],
+  "prior_clean_state": {
+    "preflight": "evidence/resume-integrity-2026-10-20T062504Z.json",
+    "preflight_sha256": "ad117c3bc37dd33ce9ed22abbd8ef8e529e071583471cc9a7c0d36d4fae154ed",
+    "active_status": "",
+    "copy_receipt": "evidence/active-relocation-copy.json",
+    "copy_receipt_sha256": "4634be07376f6415a0d41c7c6dc0691a827ba15dc81952a67cd30f239b7f56c0",
+    "copy_helper_requires_empty_git_status": true
+  },
+  "publication_flag_reason": "Existing historical mutation guards consult progress.complete directly. It stays true to preserve the publication lock; overall_closeout_complete and strict_boundary_complete explicitly remain false.",
+  "guard_evidence": {
+    "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+    "sha256": "d4031503f1c08c94812264d0e1c1eb7bbb54ca742805eeb5b704b539d0a85509",
+    "independent_static_review": "/root/helper_migration"
+  },
+  "recovery": [
+    "Resolve the blocked untracked .least/ directory through supported Connectme capabilities or local-environment action; do not bypass safety rules.",
+    "Require only ?? docs/ice-gap/ in active Git status at the fixed HEAD and verify the original snapshot and source boundaries again.",
+    "Refresh the boundary qualification only after its condition passes; rerun the active gate and final read-only residual check and save a new completion checkpoint.",
+    "Retain this exception, prior checkpoints, correction history and the original first-pass preview-loss disclosure. No source audit restart, helper migration or historical mutator execution is needed."
+  ],
+  "source_only": true,
+  "application_or_test_execution": false,
+  "resolved_at": "2026-10-20T07:53:42.329970+00:00",
+  "resolution": "evidence/closeout-boundary-resolution.json"
+}

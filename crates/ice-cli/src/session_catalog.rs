@@ -68,10 +68,19 @@ pub(crate) fn display_text(text: &str) -> String {
 }
 
 pub(crate) fn load_rows(directories: &[PathBuf]) -> Vec<SessionRow> {
+    load_rows_with_skipped(directories).0
+}
+
+/// [`load_rows`] plus a description of each file skipped for an unreadable or
+/// malformed header, so the picker can tell the user instead of hiding them.
+pub(crate) fn load_rows_with_skipped(directories: &[PathBuf]) -> (Vec<SessionRow>, Vec<String>) {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
+    let mut skipped = Vec::new();
     for directory in directories {
-        for path in crate::session::list_session_files_sync(directory) {
+        let (files, directory_skipped) = crate::session::discover_session_files_sync(directory);
+        skipped.extend(directory_skipped);
+        for path in files {
             let path = canonical(&path);
             if !seen.insert(path.clone()) || !path.is_file() {
                 continue;
@@ -86,7 +95,7 @@ pub(crate) fn load_rows(directories: &[PathBuf]) -> Vec<SessionRow> {
             .cmp(&left.modified)
             .then_with(|| left.path.cmp(&right.path))
     });
-    rows
+    (rows, skipped)
 }
 
 /// The working directory a session log was created in, from its header.
@@ -142,9 +151,18 @@ mod tests {
     fn write_session(directory: &Path, name: &str, cwd: &Path) -> PathBuf {
         std::fs::create_dir_all(directory).unwrap();
         let path = directory.join(name);
-        let header = serde_json::json!({"kind":"session","id":"same-id","cwd":cwd});
+        let header = ice_harness::session::jsonl::encode_header(
+            &ice_harness::session::jsonl::JsonlV4Header::new(
+                "same-id".into(),
+                1,
+                cwd.to_string_lossy().into_owned(),
+                None,
+                None,
+                None,
+            ),
+        );
         let entry = serde_json::json!({"kind":"entry","type":"message","message":{"role":"user","content":"A saved conversation"}});
-        std::fs::write(&path, format!("{header}\n{entry}\n")).unwrap();
+        std::fs::write(&path, format!("{header}{entry}\n")).unwrap();
         path
     }
 

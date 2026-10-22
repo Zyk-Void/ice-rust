@@ -1,0 +1,121 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+API anthropic-messages,packages/ai/src/api/anthropic-messages.ts:493,,partial,AI-021
+API openai-completions,packages/ai/src/api/openai-completions.ts:197,,partial,AI-025
+API openai-responses,packages/ai/src/api/openai-responses.ts:116,,partial,AI-026
+API openai-codex-responses,packages/ai/src/api/openai-codex-responses.ts:249,,missing,AI-027
+API azure-openai-responses,packages/ai/src/api/azure-openai-responses.ts:69,,missing,AI-028
+API ice-messages,packages/ai/src/api/ice-messages.ts:346,,missing,AI-029
+API bedrock-converse-stream,packages/ai/src/api/bedrock-converse-stream.ts:109,,missing,AI-030
+API google-generative-ai,packages/ai/src/api/google-generative-ai.ts:52,,missing,AI-034
+API google-vertex,packages/ai/src/api/google-vertex.ts:70,,missing,AI-035
+API mistral-conversations,packages/ai/src/api/mistral-conversations.ts:49,,missing,AI-040
+API openrouter-images,packages/ai/src/api/openrouter-images.ts:40,,partial,AI-057
+ImagesModels provider collection,packages/ai/src/images-models.ts:1,,partial,AI-015
+"registerImagesApiProvider(provider, sourceId?)",packages/ai/src/images-api-registry.ts:38,,partial,AI-015
+getImagesApiProvider(api),packages/ai/src/images-api-registry.ts:51,,partial,AI-015
+Cognee HTTP x-api-key authentication,packages/coding-agent/src/ice-cognee-client.ts:376,,missing,COG-009
+auth choice:bearer-token,packages/ai/src/providers/amazon-bedrock.ts:19,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+auth choice:aws-profile,packages/ai/src/providers/amazon-bedrock.ts:20,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+auth choice:credential-chain,packages/ai/src/providers/amazon-bedrock.ts:21,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+provider:amazon-bedrock,packages/ai/src/providers/amazon-bedrock.ts:84,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+provider:ant-ling,packages/ai/src/providers/ant-ling.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:anthropic,packages/ai/src/providers/anthropic.ts:45,crates/ice-cli/src/provider.rs:859,present,
+provider:azure-openai-responses,packages/ai/src/providers/azure-openai-responses.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:baseten,packages/ai/src/providers/baseten.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:cerebras,packages/ai/src/providers/cerebras.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:cloudflare-ai-gateway,packages/ai/src/providers/cloudflare-ai-gateway.ts:13,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+provider:cloudflare-workers-ai,packages/ai/src/providers/cloudflare-workers-ai.ts:9,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+provider:deepseek,packages/ai/src/providers/deepseek.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:fireworks,packages/ai/src/providers/fireworks.ts:9,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:github-copilot,packages/ai/src/providers/github-copilot.ts:11,crates/ice-cli/src/config.rs:232,missing,AUTH-018
+auth choice:api-key,packages/ai/src/providers/google-vertex.ts:21,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+auth choice:adc,packages/ai/src/providers/google-vertex.ts:22,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+auth choice:service-account,packages/ai/src/providers/google-vertex.ts:23,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+provider:google-vertex,packages/ai/src/providers/google-vertex.ts:94,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+provider:google,packages/ai/src/providers/google.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:groq,packages/ai/src/providers/groq.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:huggingface,packages/ai/src/providers/huggingface.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+api:openrouter-images,packages/ai/src/providers/images/register-builtins.ts:45,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+provider:kimi-coding,packages/ai/src/providers/kimi-coding.ts:9,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-020
+provider:minimax-cn,packages/ai/src/providers/minimax-cn.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:minimax,packages/ai/src/providers/minimax.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:mistral,packages/ai/src/providers/mistral.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:moonshotai-cn,packages/ai/src/providers/moonshotai-cn.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:moonshotai,packages/ai/src/providers/moonshotai.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:nvidia,packages/ai/src/providers/nvidia.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:openai-codex,packages/ai/src/providers/openai-codex.ts:9,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:openai,packages/ai/src/providers/openai.ts:8,crates/ice-cli/src/provider.rs:859,present,
+provider:opencode-go,packages/ai/src/providers/opencode-go.ts:13,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:opencode,packages/ai/src/providers/opencode.ts:13,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider capability:openrouter images,packages/ai/src/providers/openrouter-images.ts:9,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:openrouter,packages/ai/src/providers/openrouter.ts:9,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:qwen-token-plan-cn,packages/ai/src/providers/qwen-token-plan-cn.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:qwen-token-plan,packages/ai/src/providers/qwen-token-plan.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+api:ice-messages,packages/ai/src/providers/radius-config.ts:65,crates/ice-cli/src/config.rs:232,missing,AUTH-014
+provider:together,packages/ai/src/providers/together.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:vercel-ai-gateway,packages/ai/src/providers/vercel-ai-gateway.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:xai,packages/ai/src/providers/xai.ts:10,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:xiaomi-token-plan-ams,packages/ai/src/providers/xiaomi-token-plan-ams.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:xiaomi-token-plan-cn,packages/ai/src/providers/xiaomi-token-plan-cn.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:xiaomi-token-plan-sgp,packages/ai/src/providers/xiaomi-token-plan-sgp.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:xiaomi,packages/ai/src/providers/xiaomi.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:zai-coding-cn,packages/ai/src/providers/zai-coding-cn.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+provider:zai,packages/ai/src/providers/zai.ts:8,crates/ice-cli/src/provider.rs:859,missing,AUTH-011
+api:openai-completions,packages/coding-agent/src/ice-provider.ts:275,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+"Credential schema, OAuth expiry units and provider metadata",packages/ai/src/auth/types.ts:7,crates/ice-cli/src/config.rs:232,partial,AUTH-001
+Serialized credential mutations and cancellation-safe file ownership,packages/ai/src/auth/credential-store.ts:1,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+"Credential read snapshots, error modes and secret-free enumeration",packages/coding-agent/src/core/auth-storage.ts:36,crates/ice-cli/src/config.rs:143,partial,AUTH-003
+Authoritative request auth and double-checked OAuth refresh,packages/ai/src/auth/resolve.ts:1,crates/ice-cli/src/credentials.rs:57,partial,AUTH-004
+Runtime credential overrides and serialized commit/synchronization,packages/coding-agent/src/core/runtime-credentials.ts:4,crates/ice-cli/src/provider.rs:301,partial,AUTH-005
+"Live model availability generations, snapshots and change notification",packages/coding-agent/src/core/model-runtime.ts:58,crates/ice-cli/src/model_registry.rs:17,partial,AUTH-006
+Credential-blind models.json validation and ultra compatibility,packages/coding-agent/src/core/model-config.ts:10,crates/ice-cli/src/config.rs:343,partial,AUTH-007
+"Provider composition order, model overrides and extension registration",packages/coding-agent/src/core/provider-composer.ts:34,crates/ice-cli/src/provider.rs:714,partial,AUTH-008
+"Configured request auth, header precedence and execution preparation",packages/coding-agent/src/core/provider-composer.ts:248,crates/ice-cli/src/provider/binding.rs:22,partial,AUTH-009
+Persisted remote catalog overlays and refresh validators,packages/ai/src/models-store.ts:1,crates/ice-cli/src/provider.rs:859,missing,AUTH-010
+"Built-in provider identities, endpoint defaults and generated catalog assembly",packages/ai/src/providers/all.ts:1,crates/ice-cli/src/provider.rs:859,partial,AUTH-011
+Bedrock and Vertex credential choices and ambient readiness,packages/ai/src/providers/amazon-bedrock.ts:11,crates/ice-ai/src/types.rs:460,missing,AUTH-012
+Cloudflare account-aware auth and gateway header removal,packages/ai/src/providers/cloudflare-auth.ts:4,crates/ice-cli/src/config.rs:232,missing,AUTH-013
+Radius dynamic gateway configuration and legacy catalog restoration,packages/ai/src/providers/radius-config.ts:1,crates/ice-cli/src/config.rs:232,missing,AUTH-014
+"Typed login interaction, lazy OAuth loading and device polling",packages/ai/src/auth/types.ts:117,crates/ice-extensions/src/oauth.rs:14,partial,AUTH-015
+Anthropic subscription OAuth browser/manual exchange and refresh,packages/ai/src/auth/oauth/anthropic.ts:14,crates/ice-cli/src/credentials.rs:71,missing,AUTH-016
+OpenAI Codex browser and headless device OAuth with account identity,packages/ai/src/auth/oauth/openai-codex.ts:8,crates/ice-ai/src/types.rs:460,missing,AUTH-017
+"GitHub Copilot device grant, proxy endpoint and account model policy",packages/ai/src/auth/oauth/github-copilot.ts:9,crates/ice-cli/src/config.rs:232,missing,AUTH-018
+OpenRouter one-shot PKCE login and permanent OAuth-minted API key,packages/ai/src/auth/oauth/openrouter.ts:14,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-019
+"Kimi Code device login, bounded request lifetime and selective refresh retry",packages/ai/src/auth/oauth/kimi-coding.ts:13,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-020
+"xAI subscription device login, HTTPS verification and refresh-token retention",packages/ai/src/auth/oauth/xai.ts:8,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-021
+"Radius gateway OAuth discovery, fixed callback and immediate device polling",packages/ai/src/auth/oauth/radius.ts:26,crates/ice-extensions/src/oauth.rs:48,missing,AUTH-022
+"Provider attribution, session headers and caller override order",packages/coding-agent/src/core/provider-attribution.ts:5,crates/ice-cli/src/provider.rs:190,partial,AUTH-023
+"Exact references, fuzzy patterns and ordered scoped-model expansion",packages/coding-agent/src/core/model-resolver.ts:62,crates/ice-cli/src/app.rs:271,partial,AUTH-024
+"CLI model selection, authenticated ambiguity and custom-id fallback",packages/coding-agent/src/core/model-resolver.ts:173,crates/ice-cli/src/provider.rs:374,partial,AUTH-025
+Initial and restored model priority with provider defaults,packages/coding-agent/src/core/model-resolver.ts:19,crates/ice-cli/src/provider.rs:90,partial,AUTH-026
+"Omni endpoint catalog validation, reasoning maps and route capabilities",packages/coding-agent/src/ice-provider.ts:19,crates/ice-cli/src/config.rs:343,missing,AUTH-027
+Provider catalog settings submenu and refetch lifecycle,packages/coding-agent/src/ice-provider-settings.ts:22,crates/ice-cli/src/interactive_tui/settings.rs:1854,missing,AUTH-028
+"Faux scripted factories, model identity and streaming order",packages/ai/src/providers/faux.ts:23,crates/ice-ai/src/providers/faux.rs:23,partial,AUTH-029
+Faux usage serialization and prompt-cache affinity,packages/ai/src/providers/faux.ts:156,crates/ice-ai/src/providers/faux.rs:175,partial,AUTH-030
+"Faux deferred submission, per-handle polling and cancellation",packages/ai/src/providers/faux.ts:101,crates/ice-ai/src/providers/faux.rs:334,partial,AUTH-031
+"Omni catalog refresh, auth bootstrap and local versus remote refetch",packages/coding-agent/src/ice-provider.ts:10,crates/ice-cli/src/config.rs:343,missing,AUTH-032
+Complete provider compatibility configuration schema,packages/coding-agent/src/core/model-config.ts:10,crates/ice-ai/src/model.rs:10,partial,AUTH-033
+provider:radius,packages/ai/src/providers/radius.ts:21,crates/ice-cli/src/config.rs:232,missing,AUTH-014
+provider:faux,packages/ai/src/providers/faux.ts:686,crates/ice-ai/src/providers/faux.rs:23,partial,AUTH-029
+OAuth interaction: prompt/select/auth/info,packages/ai/src/auth/types.ts:117,crates/ice-extensions/src/oauth.rs:14,partial,AUTH-015
+CredentialStore modify callback,packages/ai/src/auth/credential-store.ts:30,crates/ice-cli/src/config.rs:20,partial,AUTH-002
+resolveCredentialSource / resolveAuth,packages/ai/src/auth/resolve.ts:119,crates/ice-cli/src/credentials.rs:57,partial,AUTH-004
+model runtime credential mutation queue,packages/coding-agent/src/core/model-runtime.ts:514,crates/ice-cli/src/provider.rs:301,partial,AUTH-005
+ModelRuntime changes and provider summaries,packages/coding-agent/src/core/model-runtime.ts:712,crates/ice-cli/src/model_registry.rs:17,partial,AUTH-006
+remote catalog ETag and four-hour TTL,packages/coding-agent/src/core/remote-catalog-provider.ts:5,crates/ice-cli/src/provider.rs:859,missing,AUTH-010
+model/scoped reference matching,packages/coding-agent/src/core/model-resolver.ts:62,crates/ice-cli/src/app.rs:271,partial,AUTH-024
+CLI provider/model inference,packages/coding-agent/src/core/model-resolver.ts:382,crates/ice-cli/src/provider.rs:374,partial,AUTH-025
+provider default-model table,packages/coding-agent/src/core/model-resolver.ts:19,crates/ice-cli/src/provider.rs:90,partial,AUTH-026
+Omni endpoint models response,packages/coding-agent/src/ice-provider.ts:73,crates/ice-cli/src/config.rs:343,missing,AUTH-027
+Faux deferred handles and cancellation,packages/ai/src/providers/faux.ts:568,crates/ice-ai/src/providers/faux.rs:334,partial,AUTH-031
+provider compat / model compat / modelOverrides compat,packages/coding-agent/src/core/model-config.ts:123,crates/ice-ai/src/model.rs:10,partial,AUTH-033
+claude-sdk bridge token /^[a-f0-9]{64}$/,packages/coding-agent/src/claude-sdk/adapter.ts:179,,missing,MISC-030
+provider claude-sdk,packages/coding-agent/src/claude-sdk/extension.ts:10,,missing,MISC-031
+api claude-sdk,packages/coding-agent/src/claude-sdk/extension.ts:12,,missing,MISC-031
+model name (SDK; billing external),packages/coding-agent/src/claude-sdk/extension.ts:19,,missing,MISC-031
+model reasoning=true,packages/coding-agent/src/claude-sdk/extension.ts:20,,missing,MISC-031
+model input text/image,packages/coding-agent/src/claude-sdk/extension.ts:21,,missing,MISC-031
+model contextWindow=200000,packages/coding-agent/src/claude-sdk/extension.ts:22,,missing,MISC-031
+model maxTokens=16384,packages/coding-agent/src/claude-sdk/extension.ts:23,,missing,MISC-031
+model external cost metadata=0,packages/coding-agent/src/claude-sdk/extension.ts:24,,missing,MISC-031
+api:openai-completions,packages/coding-agent/src/extensions/llama/provider.ts:34,crates/ice-ai/src/types.rs:419,missing,MISC-023

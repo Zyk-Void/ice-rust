@@ -1,0 +1,3748 @@
+{
+  "area": "ai",
+  "review_type": "source and test-body review; no execution",
+  "tests_executed": false,
+  "application_executed": false,
+  "ts_test_files": 137,
+  "ts_fully_visible": 127,
+  "ts_partially_redacted": 10,
+  "ts_test_reads": [
+    {
+      "path": "ice:packages/ai/test/abort.test.ts",
+      "total_lines": 340,
+      "sha256": "f4a2f7716ab5c4fcd8fd0e2a6206da4a046369f7dc8745bce252561554e20bba",
+      "ranges": [
+        [
+          1,
+          340
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-adaptive-thinking-models.test.ts",
+      "total_lines": 42,
+      "sha256": "ffdc8e61da463f3e82743810fcd4819692237667f44da8022a36f82351613ef1",
+      "ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-auth-token.test.ts",
+      "total_lines": 188,
+      "sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+      "ranges": [
+        [
+          1,
+          156
+        ],
+        [
+          158,
+          165
+        ],
+        [
+          167,
+          188
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        157,
+        166
+      ],
+      "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-cache-write-1h-cost.test.ts",
+      "total_lines": 87,
+      "sha256": "302e89654ef6d1c36401848be2774f0a6c3f402d82986e729d14e3ad4b6d0425",
+      "ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-eager-tool-input-compat.test.ts",
+      "total_lines": 162,
+      "sha256": "66fcf97c33a481e347c0c7b1aa0e95b28b5594f55d3e1c25ca695c75f37c32ea",
+      "ranges": [
+        [
+          1,
+          162
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-eager-tool-input-e2e.test.ts",
+      "total_lines": 156,
+      "sha256": "eb688671b4b704daaff591b7fe02b7b9b4138553e710487ff64222d5ac6c1f63",
+      "ranges": [
+        [
+          1,
+          156
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-empty-thinking-signature-compat.test.ts",
+      "total_lines": 109,
+      "sha256": "6f63433b6e747285dc35ab8a6b5b2f7842c5a5d4224bb96bae773815400f5c78",
+      "ranges": [
+        [
+          1,
+          109
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-force-adaptive-thinking.test.ts",
+      "total_lines": 124,
+      "sha256": "eb35967e76ef1232eb9d1acd4467f9b657dc821dbf5763447a0952c1d0b7ecfa",
+      "ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-long-cache-retention-e2e.test.ts",
+      "total_lines": 128,
+      "sha256": "21e093fb3d734a1b19656b4820cc39f02d3ce3720cbd283b5e7c9e13e57668f9",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-oauth.test.ts",
+      "total_lines": 145,
+      "sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-opus-4-8-smoke.test.ts",
+      "total_lines": 72,
+      "sha256": "8a35c1127e5ee30e0f1b3ad868bf7244cc6815373b840d7beac154b0a04b7844",
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-sse-parsing.test.ts",
+      "total_lines": 425,
+      "sha256": "c58248ad7d439f5fffebd9363638805cce955d03c5aa95615a8663222d127ac6",
+      "ranges": [
+        [
+          1,
+          425
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-temperature-compat.test.ts",
+      "total_lines": 104,
+      "sha256": "68c99075b68609c1c4d306525bd142b58eab41f349847bcd531d99f75a5735e6",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-thinking-disable.test.ts",
+      "total_lines": 173,
+      "sha256": "dc9f94f9df2b2f57aabb47b33dbd94de7c6da776719ada066606a232ae6eabc8",
+      "ranges": [
+        [
+          1,
+          173
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-tool-name-normalization.test.ts",
+      "total_lines": 205,
+      "sha256": "5fe365635ab8b471b2b850f3c85d8ef405ebaa68c06dd9e072e605dd4b2a4fbb",
+      "ranges": [
+        [
+          1,
+          205
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/azure-openai-base-url.test.ts",
+      "total_lines": 205,
+      "sha256": "3cb9935b9f304c789c7b73c67c6f0e7ff1d18c397c61c010532e61f606c16a2f",
+      "ranges": [
+        [
+          1,
+          82
+        ],
+        [
+          84,
+          205
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/ai/test/azure-openai-responses-reasoning-replay.test.ts",
+      "total_lines": 137,
+      "sha256": "a08df4a268fe070399b541dccfbfac6becde29a088b60b35d22a8aaf91d80150",
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/azure-utils.ts",
+      "total_lines": 29,
+      "sha256": "3bab4dcdeec901035e7bf7e109831724c9bd6c8b83b4029bbfe42ff9f24edce2",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/baseten-models.test.ts",
+      "total_lines": 142,
+      "sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+      "ranges": [
+        [
+          1,
+          11
+        ],
+        [
+          13,
+          135
+        ],
+        [
+          137,
+          142
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        12,
+        136
+      ],
+      "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-convert-messages.test.ts",
+      "total_lines": 275,
+      "sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+      "ranges": [
+        [
+          1,
+          275
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-credentials.test.ts",
+      "total_lines": 116,
+      "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-custom-headers.test.ts",
+      "total_lines": 203,
+      "sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+      "ranges": [
+        [
+          1,
+          203
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-endpoint-resolution.test.ts",
+      "total_lines": 209,
+      "sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+      "ranges": [
+        [
+          1,
+          209
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-error-metadata.test.ts",
+      "total_lines": 213,
+      "sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-models.test.ts",
+      "total_lines": 71,
+      "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-raw-stop-reason.test.ts",
+      "total_lines": 83,
+      "sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-thinking-payload.test.ts",
+      "total_lines": 267,
+      "sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+      "ranges": [
+        [
+          1,
+          267
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-utils.ts",
+      "total_lines": 19,
+      "sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/cache-retention.test.ts",
+      "total_lines": 530,
+      "sha256": "7f05c799ed484acbf1e84fd0fed9c6e98cc5d77835167e88b5b49a21a8183a9e",
+      "ranges": [
+        [
+          1,
+          530
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/cloudflare-stream.test.ts",
+      "total_lines": 66,
+      "sha256": "4084fc082752688154e4c910a533284f611caa1e8d8ab3b0eb5490c242dc68b5",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/cloudflare-utils.ts",
+      "total_lines": 10,
+      "sha256": "dbe1291ab67569d1a8aa94894989936161b7096abc44d056b445f3b7ec1bb44d",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/codex-sse-eof.test.ts",
+      "total_lines": 40,
+      "sha256": "fec3b568d78e6d3e3314245097e2112a8060bc10f23a7aafed5dd2002d7bcf80",
+      "ranges": [
+        [
+          1,
+          19
+        ],
+        [
+          21,
+          40
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/ai/test/codex-websocket-cached-probe.ts",
+      "total_lines": 300,
+      "sha256": "f8337da9acad5eac1c03804ca12d277ece0c2124c9b7ed6da119d8c98941fbef",
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/compat-env.test.ts",
+      "total_lines": 75,
+      "sha256": "d21e59ead5d900fabab11e8625633e7f827df6be7ef5f3ef6d720cb4af5ab1bf",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/constrained-sampling.test.ts",
+      "total_lines": 230,
+      "sha256": "edd6327caea7dcb1082f0dc4870954544497314e194573231df95c8b1831e284",
+      "ranges": [
+        [
+          1,
+          230
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/context-estimate.test.ts",
+      "total_lines": 82,
+      "sha256": "e2cd7ca0026cc365586da4b7700b4f612e904803b1b92c143568c8646427d958",
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/context-overflow.test.ts",
+      "total_lines": 760,
+      "sha256": "f46416aabb42b17d6b984325bf40220c1b77691abbd3bebaa5e7f4608ea5d942",
+      "ranges": [
+        [
+          1,
+          760
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/cross-provider-handoff.test.ts",
+      "total_lines": 508,
+      "sha256": "5600959f81584ca2c3f37ed28687a209878d3d711f366038e3ac01ab419380b4",
+      "ranges": [
+        [
+          1,
+          508
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/deferred-tools.test.ts",
+      "total_lines": 485,
+      "sha256": "f48460abc5363e35602d0bc250689e04f80c71a3f04cd8b48f54dc6ae0d67dd6",
+      "ranges": [
+        [
+          1,
+          485
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/empty.test.ts",
+      "total_lines": 803,
+      "sha256": "82ab3cb3d6d913ecbbfb0f3a5cd795765d5c84b76ff3308b1636e035e8df356f",
+      "ranges": [
+        [
+          1,
+          803
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/env-api-keys.test.ts",
+      "total_lines": 117,
+      "sha256": "2c45db2fa2cc09996f22ae8d0e576d04f4b542ce353f87bb9b29f73238e3ff44",
+      "ranges": [
+        [
+          1,
+          15
+        ],
+        [
+          17,
+          33
+        ],
+        [
+          35,
+          39
+        ],
+        [
+          41,
+          45
+        ],
+        [
+          47,
+          51
+        ],
+        [
+          53,
+          59
+        ],
+        [
+          61,
+          66
+        ],
+        [
+          68,
+          68
+        ],
+        [
+          70,
+          75
+        ],
+        [
+          77,
+          117
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/ai/test/error-body.test.ts",
+      "total_lines": 227,
+      "sha256": "1f1a91106e10f8d9f5cec797a3cc2dc69f834e435fbc95f391b4ac94e90c2be1",
+      "ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/faux-provider.test.ts",
+      "total_lines": 641,
+      "sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+      "ranges": [
+        [
+          1,
+          641
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/fetch-option.test.ts",
+      "total_lines": 179,
+      "sha256": "280f42d1800f520cac48dcd5cca2d3ebdfc712bf26e3d1ab5e0a1599087cf08c",
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/fireworks-models.test.ts",
+      "total_lines": 328,
+      "sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+      "ranges": [
+        [
+          1,
+          15
+        ],
+        [
+          17,
+          108
+        ],
+        [
+          110,
+          328
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        16,
+        109
+      ],
+      "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+    },
+    {
+      "path": "ice:packages/ai/test/github-copilot-anthropic.test.ts",
+      "total_lines": 128,
+      "sha256": "99cd1aec759c6e3b28a54d843ba4f1243537cccd549fb8ba361ddc9f0075d1bf",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/github-copilot-oauth.test.ts",
+      "total_lines": 453,
+      "sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+      "ranges": [
+        [
+          1,
+          453
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/google-raw-stop-reason.test.ts",
+      "total_lines": 107,
+      "sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-convert-tools.test.ts",
+      "total_lines": 204,
+      "sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+      "ranges": [
+        [
+          1,
+          204
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts",
+      "total_lines": 168,
+      "sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts",
+      "total_lines": 103,
+      "sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+      "ranges": [
+        [
+          1,
+          103
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-retry.test.ts",
+      "total_lines": 41,
+      "sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts",
+      "total_lines": 118,
+      "sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-disable.test.ts",
+      "total_lines": 161,
+      "sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+      "ranges": [
+        [
+          1,
+          161
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-thinking-signature.test.ts",
+      "total_lines": 39,
+      "sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+      "total_lines": 224,
+      "sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+      "ranges": [
+        [
+          1,
+          67
+        ],
+        [
+          69,
+          111
+        ],
+        [
+          113,
+          224
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        68,
+        112
+      ]
+    },
+    {
+      "path": "ice:packages/ai/test/hard-max-output-tokens.test.ts",
+      "total_lines": 144,
+      "sha256": "06860788c72ebefc9f5b99e1f50e7aa5e1b5b612eba51608125a94d3017b206c",
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/ice-messages.test.ts",
+      "total_lines": 275,
+      "sha256": "2c9b4715555a13e107b677ae19cff51bdcad3e905a26e3396315feaffbedc6dd",
+      "ranges": [
+        [
+          1,
+          275
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/image-model-data.test.ts",
+      "total_lines": 48,
+      "sha256": "6232831b8b2759f4017ba5b6ece41a5537763f955d9c0b4c7130c0e9f7ee50a1",
+      "ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/image-tool-result.test.ts",
+      "total_lines": 539,
+      "sha256": "035ee437e38c49d66cde584e4a65160696a42aa13099f8ae9cf137f674e83a43",
+      "ranges": [
+        [
+          1,
+          539
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/images-models.test.ts",
+      "total_lines": 210,
+      "sha256": "81e706c209a74725ef75d4b15271975039dba4281a55b7ee9f7a9c39c18b8a4a",
+      "ranges": [
+        [
+          1,
+          210
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/images.test.ts",
+      "total_lines": 91,
+      "sha256": "d44702aa4d1b5186a833e7f4c844ee996c08d303a8d8dc79ed0d513960f27ff8",
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/interleaved-thinking.test.ts",
+      "total_lines": 145,
+      "sha256": "4144ecf2389eaa13fd967c84112fdb4d61580cc8b2101ce6999baed231e84292",
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/kimi-coding-oauth.test.ts",
+      "total_lines": 271,
+      "sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+      "ranges": [
+        [
+          1,
+          271
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/lax-message-content.test.ts",
+      "total_lines": 68,
+      "sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/lazy-module-load.test.ts",
+      "total_lines": 120,
+      "sha256": "a350f84b5e7583467d75c15c03ed64c770830366992fd8d19737241689330c61",
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/legacy-protocol-compat.test.ts",
+      "total_lines": 76,
+      "sha256": "ddcf39061152d2326cb29a10ba4bbdc0b305885f1de51d851e68fb29ce9e98bf",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/max-thinking.test.ts",
+      "total_lines": 165,
+      "sha256": "1b0979d6b80f7648ca2032b87f0266c44caead0af1249656784366516eb83b9c",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-raw-stop-reason.test.ts",
+      "total_lines": 78,
+      "sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-reasoning-mode.test.ts",
+      "total_lines": 99,
+      "sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/mistral-tool-schema.test.ts",
+      "total_lines": 64,
+      "sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "owners": [
+        "audit_tools"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/model-catalog-types.test.ts",
+      "total_lines": 16,
+      "sha256": "8acfd837de0419bc9da5ccdeb98da55b3e64703da40eb3823d6413efe919e126",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/model-data-validation.test.ts",
+      "total_lines": 165,
+      "sha256": "79e7f0d7096438e0210e91a3787358cce686b3045881011846a38b5154cafe87",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/models-runtime.test.ts",
+      "total_lines": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "ranges": [
+        [
+          1,
+          1160
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/node-http-proxy.test.ts",
+      "total_lines": 77,
+      "sha256": "c94e805c6a4033b85b5b02c6e6e8ec635cf545f58911823e579364c98deb495d",
+      "ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/oauth-auth.test.ts",
+      "total_lines": 159,
+      "sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/oauth-device-code.test.ts",
+      "total_lines": 146,
+      "sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+      "ranges": [
+        [
+          1,
+          146
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/oauth.ts",
+      "total_lines": 86,
+      "sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+      "ranges": [
+        [
+          1,
+          86
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/openai-codex-cache-affinity-e2e.test.ts",
+      "total_lines": 36,
+      "sha256": "40233cf9f1936bf2970fdcb977cdeb414d0b8411c2ea724e3f28ba3ebbe11d59",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-codex-oauth.test.ts",
+      "total_lines": 487,
+      "sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+      "ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/openai-codex-stream.test.ts",
+      "total_lines": 2797,
+      "sha256": "238380d4b4e33fa07bb70fe819fbcf697103240da24fb9d9ed42f4653b612223",
+      "ranges": [
+        [
+          1,
+          104
+        ],
+        [
+          106,
+          499
+        ],
+        [
+          501,
+          939
+        ],
+        [
+          941,
+          1138
+        ],
+        [
+          1140,
+          2797
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": false
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-cache-control-format.test.ts",
+      "total_lines": 232,
+      "sha256": "e773ddfe4f308eff5d510d913064f1c69583961102eec5098ce3a93dc49bd3c4",
+      "ranges": [
+        [
+          1,
+          232
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-empty-tools.test.ts",
+      "total_lines": 305,
+      "sha256": "b1a4a19f6db328ae0eb3c9a419094c4e3b4259ecc5055e51cd87416f19cf9ee1",
+      "ranges": [
+        [
+          1,
+          305
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-prompt-cache.test.ts",
+      "total_lines": 281,
+      "sha256": "1de981b87b3db0aa6e9ce61d525fe4a12aa595ae66e35c81ba5713a5c238b69d",
+      "ranges": [
+        [
+          1,
+          281
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-raw-stop-reason.test.ts",
+      "total_lines": 80,
+      "sha256": "697c7a3e183e9e0775341688081905441553b1178df530bf9bd58b8a33cd1e14",
+      "ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-reasoning-details.test.ts",
+      "total_lines": 119,
+      "sha256": "dacb476300a3b755e55f0e9cf893ce81e918cd0def2b0e4877f45cd9eaaf33d4",
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-response-model.test.ts",
+      "total_lines": 141,
+      "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-retry.test.ts",
+      "total_lines": 140,
+      "sha256": "b7ee67710e1d262b860d3baeed977cb5cab5beb592513f1e7b20803ab7400300",
+      "ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-thinking-as-text.test.ts",
+      "total_lines": 223,
+      "sha256": "47f1a4f39fc563d1b9e53661af43f5a685ebb006b91d155cf516e4c65028c426",
+      "ranges": [
+        [
+          1,
+          223
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-tool-choice.test.ts",
+      "total_lines": 1797,
+      "sha256": "7a2cd788a100ac6ec2ac848e5d88aeab751748374bcfadbc587fc42c64192247",
+      "ranges": [
+        [
+          1,
+          1797
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-completions-tool-result-images.test.ts",
+      "total_lines": 157,
+      "sha256": "3d4788f965ca8e9da86007f73ae712a593b8f120db2494f006ea900ea3c71215",
+      "ranges": [
+        [
+          1,
+          157
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-cache-affinity-e2e.test.ts",
+      "total_lines": 32,
+      "sha256": "6e3abfbf6c720a80e801357dfbd1cef776aa874c9692bfeab0c265a01a8f751c",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-compat.test.ts",
+      "total_lines": 655,
+      "sha256": "32f67cc7419fca2a27708b1a7679af6aa8c873dc02cc67ddfe5f7c7e0cf027a6",
+      "ranges": [
+        [
+          1,
+          655
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-empty-tool-result.test.ts",
+      "total_lines": 59,
+      "sha256": "81e85eb7b80c80b93c8eb0abc6dcd8c3e97e6b8bcadcbd2fccdb96ce5fe0ac48",
+      "ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-foreign-toolcall-id.test.ts",
+      "total_lines": 67,
+      "sha256": "91dd00ef0d4cd937915c1787d1782d2362966701d8113c8ecfb4f3a3a63032fe",
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-message-id.test.ts",
+      "total_lines": 49,
+      "sha256": "e787dc8f9bb58ac8bbf3c411fe542038d01578632e1b5cc27c63d480a3019b5a",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-partial-json-cleanup.test.ts",
+      "total_lines": 107,
+      "sha256": "6c575f362fa83ca91d4d6d9e2e8eade06756dbf85c7ca698bf091df57ca03df6",
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-reasoning-replay-e2e.test.ts",
+      "total_lines": 292,
+      "sha256": "e166ebc6d8933c4e880ee71df6c10c9cffe9de4eda4c12f5cdd63a18a9d23df1",
+      "ranges": [
+        [
+          1,
+          292
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-terminal-event.test.ts",
+      "total_lines": 357,
+      "sha256": "4e360125967c10a5a0c13db61a4d961647af3940332d2317de2a2bd6dce1d1c0",
+      "ranges": [
+        [
+          1,
+          357
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openai-responses-tool-result-images.test.ts",
+      "total_lines": 195,
+      "sha256": "62894b12f0fdaf060f93528b196ce01bccd25cb8313a02730a40ddd5912544b4",
+      "ranges": [
+        [
+          1,
+          195
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-cache-control-models.test.ts",
+      "total_lines": 16,
+      "sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-cache-write-repro.test.ts",
+      "total_lines": 78,
+      "sha256": "aa175f29ec3677e3bd87deeddf49677cfdeca93880adf9733090c1a8d866e616",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-images.test.ts",
+      "total_lines": 141,
+      "sha256": "83a507fb213f4b38340f22b9b9a89b5909685093e7535bdbff979d1858c7a79e",
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-oauth.test.ts",
+      "total_lines": 323,
+      "sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+      "ranges": [
+        [
+          1,
+          8
+        ],
+        [
+          10,
+          242
+        ],
+        [
+          244,
+          258
+        ],
+        [
+          260,
+          323
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        9,
+        243,
+        259
+      ],
+      "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+    },
+    {
+      "path": "ice:packages/ai/test/overflow.test.ts",
+      "total_lines": 178,
+      "sha256": "079fa15d056a6187d3a1507f1f4a67d88e6b686e1d380ec4fe2b3f6c650bd219",
+      "ranges": [
+        [
+          1,
+          178
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/provider-continuation-diag.test.ts",
+      "total_lines": 68,
+      "sha256": "770376882c218b31f6b3ed00995df69f576e670aff109ecbbb64eba757cb325f",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/provider-env-legacy-compat.test.ts",
+      "total_lines": 23,
+      "sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/provider-error-body-passthrough.test.ts",
+      "total_lines": 79,
+      "sha256": "477e3a30169999bff87bd1f82e66befaca10ab693f6132e9ba5527612aa42688",
+      "ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/provider-error-body-regression.test.ts",
+      "total_lines": 214,
+      "sha256": "af225fb685018861042ac30cdec3bb3e61a3360253ea1c45972d9b1d69fc6e47",
+      "ranges": [
+        [
+          1,
+          214
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/provider-retry.test.ts",
+      "total_lines": 103,
+      "sha256": "409c595f1d1a69005f1179f53f28abf6b80a366676d4e868ab32f3e08f480f4a",
+      "ranges": [
+        [
+          1,
+          103
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/providers.test.ts",
+      "total_lines": 630,
+      "sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+      "ranges": [
+        [
+          1,
+          630
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/qwen-token-plan-models.test.ts",
+      "total_lines": 239,
+      "sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+      "ranges": [
+        [
+          1,
+          239
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/radius-oauth.test.ts",
+      "total_lines": 130,
+      "sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/reasoning-options.test.ts",
+      "total_lines": 45,
+      "sha256": "e84c1fbc40de0830a8e44ce6df37ab82ce2e41a01cffe6aceb3ca72356cbe0a4",
+      "ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/responseid.test.ts",
+      "total_lines": 121,
+      "sha256": "86ee611befd27221de3183c568b0534603efdfd378d4783e940e93ff6b55f8e4",
+      "ranges": [
+        [
+          1,
+          121
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/retry.test.ts",
+      "total_lines": 230,
+      "sha256": "022b12dd3bad511d8f55bd5ca3c55dd94cd42b32be89de187ece92f178dc5e6a",
+      "ranges": [
+        [
+          1,
+          230
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/sampling-options.test.ts",
+      "total_lines": 129,
+      "sha256": "38d3f0411a39570d800abf32bea871ba863b66974c3321b4390cc3a26cff3f65",
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/scratch.ts",
+      "total_lines": 58,
+      "sha256": "fb93916baef5bb05d50e4193995a0515156c545678287f15d14288694f57d4d1",
+      "ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/simple-options.test.ts",
+      "total_lines": 63,
+      "sha256": "b9c2ba401a511134316a3c7dcc16dfecbd73a27751854b1cf25619895b35f4b7",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/stream.test.ts",
+      "total_lines": 1717,
+      "sha256": "074dc7c5faa673984fe2d0cf4c483fb77e7fe07658c68918ee5061c6b81967c4",
+      "ranges": [
+        [
+          1,
+          1717
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/supports-xhigh.test.ts",
+      "total_lines": 158,
+      "sha256": "60d4e1ebacd014f85886e44c03ebe1d4b7960eaeef7b851330d4080f6ca1f044",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/text.test.ts",
+      "total_lines": 34,
+      "sha256": "e731172d854c7d603705fb43be143c98dfb4a722f7b4e98a8866d92e85d54a67",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/together-models.test.ts",
+      "total_lines": 81,
+      "sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+      "ranges": [
+        [
+          1,
+          10
+        ],
+        [
+          12,
+          74
+        ],
+        [
+          76,
+          81
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": false,
+      "excluded_redacted_lines": [
+        11,
+        75
+      ],
+      "notes": "All available source text was reviewed by the attributed owner; listed connector-redacted lines are excluded. Marker-only coordinator recheck agreed with the recorded hash. No application/tests executed."
+    },
+    {
+      "path": "ice:packages/ai/test/tokens.test.ts",
+      "total_lines": 358,
+      "sha256": "6375211253dac79a332cd26453e51bc1bc5ba5014737dea35fe568708bb8ba79",
+      "ranges": [
+        [
+          1,
+          358
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/tool-call-id-normalization.test.ts",
+      "total_lines": 291,
+      "sha256": "90ad7d7db53034cf58ee10692db90223c16c14008bdb6e0cf85d62928ed6065c",
+      "ranges": [
+        [
+          1,
+          291
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/tool-call-without-result.test.ts",
+      "total_lines": 352,
+      "sha256": "89545c5c2a5f4f038a835f133f14f07b46aec53d5a9e9e07bdb2ea5104eeff4a",
+      "ranges": [
+        [
+          1,
+          352
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/total-tokens.test.ts",
+      "total_lines": 858,
+      "sha256": "328eaa83cadbf40587d5dcc29b0ede572856d7c04fe2f5598a9c77b588ede7cf",
+      "ranges": [
+        [
+          1,
+          858
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/transform-messages-copilot-openai-to-anthropic.test.ts",
+      "total_lines": 192,
+      "sha256": "9ca82608662c28f5b23ee353b9b9ad0d93313895141ebfe948fca195e599f11d",
+      "ranges": [
+        [
+          1,
+          192
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/unicode-surrogate.test.ts",
+      "total_lines": 824,
+      "sha256": "deb705d8a184969f8755cc117884d07f18bf608250b1d78fcc19f27c5e338b9d",
+      "ranges": [
+        [
+          1,
+          824
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/uuid.test.ts",
+      "total_lines": 51,
+      "sha256": "377d2c10a94d748a92af2c96f06eeeef9a35781d770d266f0458c879052bed37",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/validation.test.ts",
+      "total_lines": 166,
+      "sha256": "3aafed50be5806d03d6116c89a2eb8e75b6ac7f933c7958ca219c379791e09ad",
+      "ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/xai-oauth.test.ts",
+      "total_lines": 336,
+      "sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+      "ranges": [
+        [
+          1,
+          336
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/xai-responses.test.ts",
+      "total_lines": 118,
+      "sha256": "88888d198756951e2490bebae30aebb88782e0216162a115da6b35f99c750e74",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/xhigh.test.ts",
+      "total_lines": 71,
+      "sha256": "bff409de7c2374a433fb6e701f258cf9e98e001943201196c37f27fb9e1d0df3",
+      "ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/xiaomi-models.test.ts",
+      "total_lines": 18,
+      "sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true,
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/ai/test/xiaomi-token-plan-ams-anthropic-empty-signature-smoke.test.ts",
+      "total_lines": 115,
+      "sha256": "188097e471bd41919e3f3bfafc65dea01576bc83c1bbd98fce74cba4bc8b0dbe",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/ai/test/zen.test.ts",
+      "total_lines": 26,
+      "sha256": "0e2d865917f5644ed326e5763eded26fb63700a41f8eeb1007dc4bb4fbb25f9a",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    }
+  ],
+  "rust_integration_test_files": 6,
+  "rust_integration_tests": [
+    {
+      "path": "rust:crates/ice-ai/tests/anthropic_smoke.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "6ca4bc883b9905310d894ae10423a6422312ab59d4bc50b8ccff8688559909a5",
+      "head_sha256": "6ca4bc883b9905310d894ae10423a6422312ab59d4bc50b8ccff8688559909a5",
+      "matches_head": true,
+      "current_lines": 135
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/anthropic_tool_images.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "8eba2f517cf13f7ca75549af494d6409a37b736f399b6ae8c9c90eba76f01bd9",
+      "head_sha256": "8eba2f517cf13f7ca75549af494d6409a37b736f399b6ae8c9c90eba76f01bd9",
+      "matches_head": true,
+      "current_lines": 285
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/coerce_table.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "a31d74da31e0c7ce4155cb50ed4b29264539529ede46c5bc8bdf57d25060dedc",
+      "head_sha256": "a31d74da31e0c7ce4155cb50ed4b29264539529ede46c5bc8bdf57d25060dedc",
+      "matches_head": true,
+      "current_lines": 202
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/content_json.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+      "head_sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+      "matches_head": true,
+      "current_lines": 134
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/event_stream.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "a8e6859c9bb3a3c955789746f54aa2913c0c5d6af5aefed727679f5676205a1a",
+      "head_sha256": "a8e6859c9bb3a3c955789746f54aa2913c0c5d6af5aefed727679f5676205a1a",
+      "matches_head": true,
+      "current_lines": 109
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/faux.rs",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "current_sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "head_sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "matches_head": true,
+      "current_lines": 224
+    }
+  ],
+  "baseline": {
+    "method": "Local Git object and working-file byte comparison; no application/test execution",
+    "rows": [
+      {
+        "path": "ice:packages/ai/test/abort.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f4a2f7716ab5c4fcd8fd0e2a6206da4a046369f7dc8745bce252561554e20bba",
+        "head_sha256": "f4a2f7716ab5c4fcd8fd0e2a6206da4a046369f7dc8745bce252561554e20bba",
+        "matches_head": true,
+        "current_lines": 340
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-adaptive-thinking-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ffdc8e61da463f3e82743810fcd4819692237667f44da8022a36f82351613ef1",
+        "head_sha256": "ffdc8e61da463f3e82743810fcd4819692237667f44da8022a36f82351613ef1",
+        "matches_head": true,
+        "current_lines": 42
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-auth-token.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+        "head_sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+        "matches_head": true,
+        "current_lines": 188
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-cache-write-1h-cost.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "302e89654ef6d1c36401848be2774f0a6c3f402d82986e729d14e3ad4b6d0425",
+        "head_sha256": "302e89654ef6d1c36401848be2774f0a6c3f402d82986e729d14e3ad4b6d0425",
+        "matches_head": true,
+        "current_lines": 87
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-eager-tool-input-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "66fcf97c33a481e347c0c7b1aa0e95b28b5594f55d3e1c25ca695c75f37c32ea",
+        "head_sha256": "66fcf97c33a481e347c0c7b1aa0e95b28b5594f55d3e1c25ca695c75f37c32ea",
+        "matches_head": true,
+        "current_lines": 162
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-eager-tool-input-e2e.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "eb688671b4b704daaff591b7fe02b7b9b4138553e710487ff64222d5ac6c1f63",
+        "head_sha256": "eb688671b4b704daaff591b7fe02b7b9b4138553e710487ff64222d5ac6c1f63",
+        "matches_head": true,
+        "current_lines": 156
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-empty-thinking-signature-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6f63433b6e747285dc35ab8a6b5b2f7842c5a5d4224bb96bae773815400f5c78",
+        "head_sha256": "6f63433b6e747285dc35ab8a6b5b2f7842c5a5d4224bb96bae773815400f5c78",
+        "matches_head": true,
+        "current_lines": 109
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-force-adaptive-thinking.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "eb35967e76ef1232eb9d1acd4467f9b657dc821dbf5763447a0952c1d0b7ecfa",
+        "head_sha256": "eb35967e76ef1232eb9d1acd4467f9b657dc821dbf5763447a0952c1d0b7ecfa",
+        "matches_head": true,
+        "current_lines": 124
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-long-cache-retention-e2e.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "21e093fb3d734a1b19656b4820cc39f02d3ce3720cbd283b5e7c9e13e57668f9",
+        "head_sha256": "21e093fb3d734a1b19656b4820cc39f02d3ce3720cbd283b5e7c9e13e57668f9",
+        "matches_head": true,
+        "current_lines": 128
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+        "head_sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+        "matches_head": true,
+        "current_lines": 145
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-opus-4-8-smoke.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "8a35c1127e5ee30e0f1b3ad868bf7244cc6815373b840d7beac154b0a04b7844",
+        "head_sha256": "8a35c1127e5ee30e0f1b3ad868bf7244cc6815373b840d7beac154b0a04b7844",
+        "matches_head": true,
+        "current_lines": 72
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-sse-parsing.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "c58248ad7d439f5fffebd9363638805cce955d03c5aa95615a8663222d127ac6",
+        "head_sha256": "c58248ad7d439f5fffebd9363638805cce955d03c5aa95615a8663222d127ac6",
+        "matches_head": true,
+        "current_lines": 425
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-temperature-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "68c99075b68609c1c4d306525bd142b58eab41f349847bcd531d99f75a5735e6",
+        "head_sha256": "68c99075b68609c1c4d306525bd142b58eab41f349847bcd531d99f75a5735e6",
+        "matches_head": true,
+        "current_lines": 104
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-thinking-disable.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "dc9f94f9df2b2f57aabb47b33dbd94de7c6da776719ada066606a232ae6eabc8",
+        "head_sha256": "dc9f94f9df2b2f57aabb47b33dbd94de7c6da776719ada066606a232ae6eabc8",
+        "matches_head": true,
+        "current_lines": 173
+      },
+      {
+        "path": "ice:packages/ai/test/anthropic-tool-name-normalization.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "5fe365635ab8b471b2b850f3c85d8ef405ebaa68c06dd9e072e605dd4b2a4fbb",
+        "head_sha256": "5fe365635ab8b471b2b850f3c85d8ef405ebaa68c06dd9e072e605dd4b2a4fbb",
+        "matches_head": true,
+        "current_lines": 205
+      },
+      {
+        "path": "ice:packages/ai/test/azure-openai-base-url.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "3cb9935b9f304c789c7b73c67c6f0e7ff1d18c397c61c010532e61f606c16a2f",
+        "head_sha256": "3cb9935b9f304c789c7b73c67c6f0e7ff1d18c397c61c010532e61f606c16a2f",
+        "matches_head": true,
+        "current_lines": 205
+      },
+      {
+        "path": "ice:packages/ai/test/azure-openai-responses-reasoning-replay.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "a08df4a268fe070399b541dccfbfac6becde29a088b60b35d22a8aaf91d80150",
+        "head_sha256": "a08df4a268fe070399b541dccfbfac6becde29a088b60b35d22a8aaf91d80150",
+        "matches_head": true,
+        "current_lines": 137
+      },
+      {
+        "path": "ice:packages/ai/test/azure-utils.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "3bab4dcdeec901035e7bf7e109831724c9bd6c8b83b4029bbfe42ff9f24edce2",
+        "head_sha256": "3bab4dcdeec901035e7bf7e109831724c9bd6c8b83b4029bbfe42ff9f24edce2",
+        "matches_head": true,
+        "current_lines": 29
+      },
+      {
+        "path": "ice:packages/ai/test/baseten-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+        "head_sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+        "matches_head": true,
+        "current_lines": 142
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-convert-messages.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+        "head_sha256": "c4d5b4509d5032985ef45d86768919591862c0b05c8b3c12e676cf56ca121409",
+        "matches_head": true,
+        "current_lines": 275
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-credentials.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+        "head_sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+        "matches_head": true,
+        "current_lines": 116
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-custom-headers.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+        "head_sha256": "5d18105b46f4bfb730dfa83c781fa1dd49e5aae67101458c3895c29f95620e59",
+        "matches_head": true,
+        "current_lines": 203
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-endpoint-resolution.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+        "head_sha256": "256644a52f42da4000520be9bb97f72bb996c2805650118e020d2d065d9c99aa",
+        "matches_head": true,
+        "current_lines": 209
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-error-metadata.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+        "head_sha256": "65619481f91cd1289fb20813342cf047c9583cb6552e0e15df176f5df5912552",
+        "matches_head": true,
+        "current_lines": 213
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+        "head_sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+        "matches_head": true,
+        "current_lines": 71
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-raw-stop-reason.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+        "head_sha256": "76eb85e0a94d50d91776a04bc976292db7d605b34a1f347df1abe6bed39d16f8",
+        "matches_head": true,
+        "current_lines": 83
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-thinking-payload.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+        "head_sha256": "fb2fa7cce248e6bbdd6f0f2e02542309bfa7ffad99d6ca90c76a4541d15e553b",
+        "matches_head": true,
+        "current_lines": 267
+      },
+      {
+        "path": "ice:packages/ai/test/bedrock-utils.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+        "head_sha256": "6c14c5ae40d9feb82da7ede426b6daac7cd69e841738378f930affa4d4544ead",
+        "matches_head": true,
+        "current_lines": 19
+      },
+      {
+        "path": "ice:packages/ai/test/cache-retention.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "7f05c799ed484acbf1e84fd0fed9c6e98cc5d77835167e88b5b49a21a8183a9e",
+        "head_sha256": "7f05c799ed484acbf1e84fd0fed9c6e98cc5d77835167e88b5b49a21a8183a9e",
+        "matches_head": true,
+        "current_lines": 530
+      },
+      {
+        "path": "ice:packages/ai/test/cloudflare-stream.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "4084fc082752688154e4c910a533284f611caa1e8d8ab3b0eb5490c242dc68b5",
+        "head_sha256": "4084fc082752688154e4c910a533284f611caa1e8d8ab3b0eb5490c242dc68b5",
+        "matches_head": true,
+        "current_lines": 66
+      },
+      {
+        "path": "ice:packages/ai/test/cloudflare-utils.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "dbe1291ab67569d1a8aa94894989936161b7096abc44d056b445f3b7ec1bb44d",
+        "head_sha256": "dbe1291ab67569d1a8aa94894989936161b7096abc44d056b445f3b7ec1bb44d",
+        "matches_head": true,
+        "current_lines": 10
+      },
+      {
+        "path": "ice:packages/ai/test/codex-sse-eof.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "fec3b568d78e6d3e3314245097e2112a8060bc10f23a7aafed5dd2002d7bcf80",
+        "head_sha256": "fec3b568d78e6d3e3314245097e2112a8060bc10f23a7aafed5dd2002d7bcf80",
+        "matches_head": true,
+        "current_lines": 40
+      },
+      {
+        "path": "ice:packages/ai/test/codex-websocket-cached-probe.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f8337da9acad5eac1c03804ca12d277ece0c2124c9b7ed6da119d8c98941fbef",
+        "head_sha256": "f8337da9acad5eac1c03804ca12d277ece0c2124c9b7ed6da119d8c98941fbef",
+        "matches_head": true,
+        "current_lines": 300
+      },
+      {
+        "path": "ice:packages/ai/test/compat-env.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "d21e59ead5d900fabab11e8625633e7f827df6be7ef5f3ef6d720cb4af5ab1bf",
+        "head_sha256": "d21e59ead5d900fabab11e8625633e7f827df6be7ef5f3ef6d720cb4af5ab1bf",
+        "matches_head": true,
+        "current_lines": 75
+      },
+      {
+        "path": "ice:packages/ai/test/constrained-sampling.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "edd6327caea7dcb1082f0dc4870954544497314e194573231df95c8b1831e284",
+        "head_sha256": "edd6327caea7dcb1082f0dc4870954544497314e194573231df95c8b1831e284",
+        "matches_head": true,
+        "current_lines": 230
+      },
+      {
+        "path": "ice:packages/ai/test/context-estimate.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e2cd7ca0026cc365586da4b7700b4f612e904803b1b92c143568c8646427d958",
+        "head_sha256": "e2cd7ca0026cc365586da4b7700b4f612e904803b1b92c143568c8646427d958",
+        "matches_head": true,
+        "current_lines": 82
+      },
+      {
+        "path": "ice:packages/ai/test/context-overflow.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f46416aabb42b17d6b984325bf40220c1b77691abbd3bebaa5e7f4608ea5d942",
+        "head_sha256": "f46416aabb42b17d6b984325bf40220c1b77691abbd3bebaa5e7f4608ea5d942",
+        "matches_head": true,
+        "current_lines": 760
+      },
+      {
+        "path": "ice:packages/ai/test/cross-provider-handoff.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "5600959f81584ca2c3f37ed28687a209878d3d711f366038e3ac01ab419380b4",
+        "head_sha256": "5600959f81584ca2c3f37ed28687a209878d3d711f366038e3ac01ab419380b4",
+        "matches_head": true,
+        "current_lines": 508
+      },
+      {
+        "path": "ice:packages/ai/test/deferred-tools.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f48460abc5363e35602d0bc250689e04f80c71a3f04cd8b48f54dc6ae0d67dd6",
+        "head_sha256": "f48460abc5363e35602d0bc250689e04f80c71a3f04cd8b48f54dc6ae0d67dd6",
+        "matches_head": true,
+        "current_lines": 485
+      },
+      {
+        "path": "ice:packages/ai/test/empty.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "82ab3cb3d6d913ecbbfb0f3a5cd795765d5c84b76ff3308b1636e035e8df356f",
+        "head_sha256": "82ab3cb3d6d913ecbbfb0f3a5cd795765d5c84b76ff3308b1636e035e8df356f",
+        "matches_head": true,
+        "current_lines": 803
+      },
+      {
+        "path": "ice:packages/ai/test/env-api-keys.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "2c45db2fa2cc09996f22ae8d0e576d04f4b542ce353f87bb9b29f73238e3ff44",
+        "head_sha256": "2c45db2fa2cc09996f22ae8d0e576d04f4b542ce353f87bb9b29f73238e3ff44",
+        "matches_head": true,
+        "current_lines": 117
+      },
+      {
+        "path": "ice:packages/ai/test/error-body.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "1f1a91106e10f8d9f5cec797a3cc2dc69f834e435fbc95f391b4ac94e90c2be1",
+        "head_sha256": "1f1a91106e10f8d9f5cec797a3cc2dc69f834e435fbc95f391b4ac94e90c2be1",
+        "matches_head": true,
+        "current_lines": 227
+      },
+      {
+        "path": "ice:packages/ai/test/faux-provider.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+        "head_sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+        "matches_head": true,
+        "current_lines": 641
+      },
+      {
+        "path": "ice:packages/ai/test/fetch-option.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "280f42d1800f520cac48dcd5cca2d3ebdfc712bf26e3d1ab5e0a1599087cf08c",
+        "head_sha256": "280f42d1800f520cac48dcd5cca2d3ebdfc712bf26e3d1ab5e0a1599087cf08c",
+        "matches_head": true,
+        "current_lines": 179
+      },
+      {
+        "path": "ice:packages/ai/test/fireworks-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+        "head_sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+        "matches_head": true,
+        "current_lines": 328
+      },
+      {
+        "path": "ice:packages/ai/test/github-copilot-anthropic.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "99cd1aec759c6e3b28a54d843ba4f1243537cccd549fb8ba361ddc9f0075d1bf",
+        "head_sha256": "99cd1aec759c6e3b28a54d843ba4f1243537cccd549fb8ba361ddc9f0075d1bf",
+        "matches_head": true,
+        "current_lines": 128
+      },
+      {
+        "path": "ice:packages/ai/test/github-copilot-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+        "head_sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+        "matches_head": true,
+        "current_lines": 453
+      },
+      {
+        "path": "ice:packages/ai/test/google-raw-stop-reason.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+        "head_sha256": "33f3469a72892c62fcabcefa1b0f9ecea28510005794f6aa66d028aa20239a88",
+        "matches_head": true,
+        "current_lines": 107
+      },
+      {
+        "path": "ice:packages/ai/test/google-shared-convert-tools.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+        "head_sha256": "238bf9aa3985bcec2cd6463fe84026144e687779700f4ddbb19310bb538baa64",
+        "matches_head": true,
+        "current_lines": 204
+      },
+      {
+        "path": "ice:packages/ai/test/google-shared-gemini3-unsigned-tool-call.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+        "head_sha256": "755b941ad446a3373e623162f93be59c2d339cd069c5673f0ee5fbde4867f9f7",
+        "matches_head": true,
+        "current_lines": 168
+      },
+      {
+        "path": "ice:packages/ai/test/google-shared-image-tool-result-routing.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+        "head_sha256": "2a4d8af59d52f5420a505e0826514908655180661272375426c1344dacebf37d",
+        "matches_head": true,
+        "current_lines": 103
+      },
+      {
+        "path": "ice:packages/ai/test/google-shared-retry.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+        "head_sha256": "de24f8ea13e0a83f7913a2741902550f53bbbe5200dc9494af52c0a1fbb49a78",
+        "matches_head": true,
+        "current_lines": 41
+      },
+      {
+        "path": "ice:packages/ai/test/google-shared-signed-empty-blocks.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+        "head_sha256": "3c9abb748f52d37d2e4674bc86ec0abf8ead48443a982592e03ce187cc6086e1",
+        "matches_head": true,
+        "current_lines": 118
+      },
+      {
+        "path": "ice:packages/ai/test/google-thinking-disable.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+        "head_sha256": "dc899136ae7d5c367b846aa68fc693cbe20fe12a85dfd8b41ff97fb8e6f22b10",
+        "matches_head": true,
+        "current_lines": 161
+      },
+      {
+        "path": "ice:packages/ai/test/google-thinking-signature.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+        "head_sha256": "81d47d5851bb3b9fa8cfc879df0a26747dd2ffd7c7093d22ce8bac74fb241dc1",
+        "matches_head": true,
+        "current_lines": 39
+      },
+      {
+        "path": "ice:packages/ai/test/google-vertex-api-key-resolution.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+        "head_sha256": "7f206be97b94a2a3eb8627bcc542d65063b223642925223c6e203c2dc5a817a3",
+        "matches_head": true,
+        "current_lines": 224
+      },
+      {
+        "path": "ice:packages/ai/test/hard-max-output-tokens.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "06860788c72ebefc9f5b99e1f50e7aa5e1b5b612eba51608125a94d3017b206c",
+        "head_sha256": "06860788c72ebefc9f5b99e1f50e7aa5e1b5b612eba51608125a94d3017b206c",
+        "matches_head": true,
+        "current_lines": 144
+      },
+      {
+        "path": "ice:packages/ai/test/ice-messages.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "2c9b4715555a13e107b677ae19cff51bdcad3e905a26e3396315feaffbedc6dd",
+        "head_sha256": "2c9b4715555a13e107b677ae19cff51bdcad3e905a26e3396315feaffbedc6dd",
+        "matches_head": true,
+        "current_lines": 275
+      },
+      {
+        "path": "ice:packages/ai/test/image-model-data.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6232831b8b2759f4017ba5b6ece41a5537763f955d9c0b4c7130c0e9f7ee50a1",
+        "head_sha256": "6232831b8b2759f4017ba5b6ece41a5537763f955d9c0b4c7130c0e9f7ee50a1",
+        "matches_head": true,
+        "current_lines": 48
+      },
+      {
+        "path": "ice:packages/ai/test/image-tool-result.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "035ee437e38c49d66cde584e4a65160696a42aa13099f8ae9cf137f674e83a43",
+        "head_sha256": "035ee437e38c49d66cde584e4a65160696a42aa13099f8ae9cf137f674e83a43",
+        "matches_head": true,
+        "current_lines": 539
+      },
+      {
+        "path": "ice:packages/ai/test/images-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "81e706c209a74725ef75d4b15271975039dba4281a55b7ee9f7a9c39c18b8a4a",
+        "head_sha256": "81e706c209a74725ef75d4b15271975039dba4281a55b7ee9f7a9c39c18b8a4a",
+        "matches_head": true,
+        "current_lines": 210
+      },
+      {
+        "path": "ice:packages/ai/test/images.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "d44702aa4d1b5186a833e7f4c844ee996c08d303a8d8dc79ed0d513960f27ff8",
+        "head_sha256": "d44702aa4d1b5186a833e7f4c844ee996c08d303a8d8dc79ed0d513960f27ff8",
+        "matches_head": true,
+        "current_lines": 91
+      },
+      {
+        "path": "ice:packages/ai/test/interleaved-thinking.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "4144ecf2389eaa13fd967c84112fdb4d61580cc8b2101ce6999baed231e84292",
+        "head_sha256": "4144ecf2389eaa13fd967c84112fdb4d61580cc8b2101ce6999baed231e84292",
+        "matches_head": true,
+        "current_lines": 145
+      },
+      {
+        "path": "ice:packages/ai/test/kimi-coding-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+        "head_sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+        "matches_head": true,
+        "current_lines": 271
+      },
+      {
+        "path": "ice:packages/ai/test/lax-message-content.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196",
+        "head_sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196",
+        "matches_head": true,
+        "current_lines": 68
+      },
+      {
+        "path": "ice:packages/ai/test/lazy-module-load.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "a350f84b5e7583467d75c15c03ed64c770830366992fd8d19737241689330c61",
+        "head_sha256": "a350f84b5e7583467d75c15c03ed64c770830366992fd8d19737241689330c61",
+        "matches_head": true,
+        "current_lines": 120
+      },
+      {
+        "path": "ice:packages/ai/test/legacy-protocol-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ddcf39061152d2326cb29a10ba4bbdc0b305885f1de51d851e68fb29ce9e98bf",
+        "head_sha256": "ddcf39061152d2326cb29a10ba4bbdc0b305885f1de51d851e68fb29ce9e98bf",
+        "matches_head": true,
+        "current_lines": 76
+      },
+      {
+        "path": "ice:packages/ai/test/max-thinking.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "1b0979d6b80f7648ca2032b87f0266c44caead0af1249656784366516eb83b9c",
+        "head_sha256": "1b0979d6b80f7648ca2032b87f0266c44caead0af1249656784366516eb83b9c",
+        "matches_head": true,
+        "current_lines": 165
+      },
+      {
+        "path": "ice:packages/ai/test/mistral-raw-stop-reason.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+        "head_sha256": "c77dc819018bd6fd2d5f4ea37aa0c8fc59584400e28cd26329c3f65ad2b65728",
+        "matches_head": true,
+        "current_lines": 78
+      },
+      {
+        "path": "ice:packages/ai/test/mistral-reasoning-mode.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+        "head_sha256": "f48cc8f80be9329c536f56811830069741213f9d3f3be9b57012a72b0be87da1",
+        "matches_head": true,
+        "current_lines": 99
+      },
+      {
+        "path": "ice:packages/ai/test/mistral-tool-schema.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+        "head_sha256": "9e913e9c49c2a9a2d1cfd4dc8d137a154e005b9291d06489e52136b92e5db24e",
+        "matches_head": true,
+        "current_lines": 64
+      },
+      {
+        "path": "ice:packages/ai/test/model-catalog-types.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "8acfd837de0419bc9da5ccdeb98da55b3e64703da40eb3823d6413efe919e126",
+        "head_sha256": "8acfd837de0419bc9da5ccdeb98da55b3e64703da40eb3823d6413efe919e126",
+        "matches_head": true,
+        "current_lines": 16
+      },
+      {
+        "path": "ice:packages/ai/test/model-data-validation.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "79e7f0d7096438e0210e91a3787358cce686b3045881011846a38b5154cafe87",
+        "head_sha256": "79e7f0d7096438e0210e91a3787358cce686b3045881011846a38b5154cafe87",
+        "matches_head": true,
+        "current_lines": 165
+      },
+      {
+        "path": "ice:packages/ai/test/models-runtime.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+        "head_sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+        "matches_head": true,
+        "current_lines": 1160
+      },
+      {
+        "path": "ice:packages/ai/test/node-http-proxy.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "c94e805c6a4033b85b5b02c6e6e8ec635cf545f58911823e579364c98deb495d",
+        "head_sha256": "c94e805c6a4033b85b5b02c6e6e8ec635cf545f58911823e579364c98deb495d",
+        "matches_head": true,
+        "current_lines": 77
+      },
+      {
+        "path": "ice:packages/ai/test/oauth-auth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+        "head_sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+        "matches_head": true,
+        "current_lines": 159
+      },
+      {
+        "path": "ice:packages/ai/test/oauth-device-code.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+        "head_sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+        "matches_head": true,
+        "current_lines": 146
+      },
+      {
+        "path": "ice:packages/ai/test/oauth.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+        "head_sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+        "matches_head": true,
+        "current_lines": 86
+      },
+      {
+        "path": "ice:packages/ai/test/openai-codex-cache-affinity-e2e.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "40233cf9f1936bf2970fdcb977cdeb414d0b8411c2ea724e3f28ba3ebbe11d59",
+        "head_sha256": "40233cf9f1936bf2970fdcb977cdeb414d0b8411c2ea724e3f28ba3ebbe11d59",
+        "matches_head": true,
+        "current_lines": 36
+      },
+      {
+        "path": "ice:packages/ai/test/openai-codex-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+        "head_sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+        "matches_head": true,
+        "current_lines": 487
+      },
+      {
+        "path": "ice:packages/ai/test/openai-codex-stream.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "238380d4b4e33fa07bb70fe819fbcf697103240da24fb9d9ed42f4653b612223",
+        "head_sha256": "238380d4b4e33fa07bb70fe819fbcf697103240da24fb9d9ed42f4653b612223",
+        "matches_head": true,
+        "current_lines": 2797
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-cache-control-format.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e773ddfe4f308eff5d510d913064f1c69583961102eec5098ce3a93dc49bd3c4",
+        "head_sha256": "e773ddfe4f308eff5d510d913064f1c69583961102eec5098ce3a93dc49bd3c4",
+        "matches_head": true,
+        "current_lines": 232
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-empty-tools.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "b1a4a19f6db328ae0eb3c9a419094c4e3b4259ecc5055e51cd87416f19cf9ee1",
+        "head_sha256": "b1a4a19f6db328ae0eb3c9a419094c4e3b4259ecc5055e51cd87416f19cf9ee1",
+        "matches_head": true,
+        "current_lines": 305
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-prompt-cache.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "1de981b87b3db0aa6e9ce61d525fe4a12aa595ae66e35c81ba5713a5c238b69d",
+        "head_sha256": "1de981b87b3db0aa6e9ce61d525fe4a12aa595ae66e35c81ba5713a5c238b69d",
+        "matches_head": true,
+        "current_lines": 281
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-raw-stop-reason.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "697c7a3e183e9e0775341688081905441553b1178df530bf9bd58b8a33cd1e14",
+        "head_sha256": "697c7a3e183e9e0775341688081905441553b1178df530bf9bd58b8a33cd1e14",
+        "matches_head": true,
+        "current_lines": 80
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-reasoning-details.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "dacb476300a3b755e55f0e9cf893ce81e918cd0def2b0e4877f45cd9eaaf33d4",
+        "head_sha256": "dacb476300a3b755e55f0e9cf893ce81e918cd0def2b0e4877f45cd9eaaf33d4",
+        "matches_head": true,
+        "current_lines": 119
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-response-model.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+        "head_sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+        "matches_head": true,
+        "current_lines": 141
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-retry.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "b7ee67710e1d262b860d3baeed977cb5cab5beb592513f1e7b20803ab7400300",
+        "head_sha256": "b7ee67710e1d262b860d3baeed977cb5cab5beb592513f1e7b20803ab7400300",
+        "matches_head": true,
+        "current_lines": 140
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-thinking-as-text.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "47f1a4f39fc563d1b9e53661af43f5a685ebb006b91d155cf516e4c65028c426",
+        "head_sha256": "47f1a4f39fc563d1b9e53661af43f5a685ebb006b91d155cf516e4c65028c426",
+        "matches_head": true,
+        "current_lines": 223
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-tool-choice.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "7a2cd788a100ac6ec2ac848e5d88aeab751748374bcfadbc587fc42c64192247",
+        "head_sha256": "7a2cd788a100ac6ec2ac848e5d88aeab751748374bcfadbc587fc42c64192247",
+        "matches_head": true,
+        "current_lines": 1797
+      },
+      {
+        "path": "ice:packages/ai/test/openai-completions-tool-result-images.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "3d4788f965ca8e9da86007f73ae712a593b8f120db2494f006ea900ea3c71215",
+        "head_sha256": "3d4788f965ca8e9da86007f73ae712a593b8f120db2494f006ea900ea3c71215",
+        "matches_head": true,
+        "current_lines": 157
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-cache-affinity-e2e.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6e3abfbf6c720a80e801357dfbd1cef776aa874c9692bfeab0c265a01a8f751c",
+        "head_sha256": "6e3abfbf6c720a80e801357dfbd1cef776aa874c9692bfeab0c265a01a8f751c",
+        "matches_head": true,
+        "current_lines": 32
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "32f67cc7419fca2a27708b1a7679af6aa8c873dc02cc67ddfe5f7c7e0cf027a6",
+        "head_sha256": "32f67cc7419fca2a27708b1a7679af6aa8c873dc02cc67ddfe5f7c7e0cf027a6",
+        "matches_head": true,
+        "current_lines": 655
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-empty-tool-result.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "81e85eb7b80c80b93c8eb0abc6dcd8c3e97e6b8bcadcbd2fccdb96ce5fe0ac48",
+        "head_sha256": "81e85eb7b80c80b93c8eb0abc6dcd8c3e97e6b8bcadcbd2fccdb96ce5fe0ac48",
+        "matches_head": true,
+        "current_lines": 59
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-foreign-toolcall-id.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "91dd00ef0d4cd937915c1787d1782d2362966701d8113c8ecfb4f3a3a63032fe",
+        "head_sha256": "91dd00ef0d4cd937915c1787d1782d2362966701d8113c8ecfb4f3a3a63032fe",
+        "matches_head": true,
+        "current_lines": 67
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-message-id.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e787dc8f9bb58ac8bbf3c411fe542038d01578632e1b5cc27c63d480a3019b5a",
+        "head_sha256": "e787dc8f9bb58ac8bbf3c411fe542038d01578632e1b5cc27c63d480a3019b5a",
+        "matches_head": true,
+        "current_lines": 49
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-partial-json-cleanup.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6c575f362fa83ca91d4d6d9e2e8eade06756dbf85c7ca698bf091df57ca03df6",
+        "head_sha256": "6c575f362fa83ca91d4d6d9e2e8eade06756dbf85c7ca698bf091df57ca03df6",
+        "matches_head": true,
+        "current_lines": 107
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-reasoning-replay-e2e.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e166ebc6d8933c4e880ee71df6c10c9cffe9de4eda4c12f5cdd63a18a9d23df1",
+        "head_sha256": "e166ebc6d8933c4e880ee71df6c10c9cffe9de4eda4c12f5cdd63a18a9d23df1",
+        "matches_head": true,
+        "current_lines": 292
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-terminal-event.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "4e360125967c10a5a0c13db61a4d961647af3940332d2317de2a2bd6dce1d1c0",
+        "head_sha256": "4e360125967c10a5a0c13db61a4d961647af3940332d2317de2a2bd6dce1d1c0",
+        "matches_head": true,
+        "current_lines": 357
+      },
+      {
+        "path": "ice:packages/ai/test/openai-responses-tool-result-images.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "62894b12f0fdaf060f93528b196ce01bccd25cb8313a02730a40ddd5912544b4",
+        "head_sha256": "62894b12f0fdaf060f93528b196ce01bccd25cb8313a02730a40ddd5912544b4",
+        "matches_head": true,
+        "current_lines": 195
+      },
+      {
+        "path": "ice:packages/ai/test/openrouter-cache-control-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+        "head_sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+        "matches_head": true,
+        "current_lines": 16
+      },
+      {
+        "path": "ice:packages/ai/test/openrouter-cache-write-repro.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "aa175f29ec3677e3bd87deeddf49677cfdeca93880adf9733090c1a8d866e616",
+        "head_sha256": "aa175f29ec3677e3bd87deeddf49677cfdeca93880adf9733090c1a8d866e616",
+        "matches_head": true,
+        "current_lines": 78
+      },
+      {
+        "path": "ice:packages/ai/test/openrouter-images.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "83a507fb213f4b38340f22b9b9a89b5909685093e7535bdbff979d1858c7a79e",
+        "head_sha256": "83a507fb213f4b38340f22b9b9a89b5909685093e7535bdbff979d1858c7a79e",
+        "matches_head": true,
+        "current_lines": 141
+      },
+      {
+        "path": "ice:packages/ai/test/openrouter-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+        "head_sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+        "matches_head": true,
+        "current_lines": 323
+      },
+      {
+        "path": "ice:packages/ai/test/overflow.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "079fa15d056a6187d3a1507f1f4a67d88e6b686e1d380ec4fe2b3f6c650bd219",
+        "head_sha256": "079fa15d056a6187d3a1507f1f4a67d88e6b686e1d380ec4fe2b3f6c650bd219",
+        "matches_head": true,
+        "current_lines": 178
+      },
+      {
+        "path": "ice:packages/ai/test/provider-continuation-diag.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "770376882c218b31f6b3ed00995df69f576e670aff109ecbbb64eba757cb325f",
+        "head_sha256": "770376882c218b31f6b3ed00995df69f576e670aff109ecbbb64eba757cb325f",
+        "matches_head": true,
+        "current_lines": 68
+      },
+      {
+        "path": "ice:packages/ai/test/provider-env-legacy-compat.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+        "head_sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+        "matches_head": true,
+        "current_lines": 23
+      },
+      {
+        "path": "ice:packages/ai/test/provider-error-body-passthrough.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "477e3a30169999bff87bd1f82e66befaca10ab693f6132e9ba5527612aa42688",
+        "head_sha256": "477e3a30169999bff87bd1f82e66befaca10ab693f6132e9ba5527612aa42688",
+        "matches_head": true,
+        "current_lines": 79
+      },
+      {
+        "path": "ice:packages/ai/test/provider-error-body-regression.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "af225fb685018861042ac30cdec3bb3e61a3360253ea1c45972d9b1d69fc6e47",
+        "head_sha256": "af225fb685018861042ac30cdec3bb3e61a3360253ea1c45972d9b1d69fc6e47",
+        "matches_head": true,
+        "current_lines": 214
+      },
+      {
+        "path": "ice:packages/ai/test/provider-retry.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "409c595f1d1a69005f1179f53f28abf6b80a366676d4e868ab32f3e08f480f4a",
+        "head_sha256": "409c595f1d1a69005f1179f53f28abf6b80a366676d4e868ab32f3e08f480f4a",
+        "matches_head": true,
+        "current_lines": 103
+      },
+      {
+        "path": "ice:packages/ai/test/providers.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+        "head_sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+        "matches_head": true,
+        "current_lines": 630
+      },
+      {
+        "path": "ice:packages/ai/test/qwen-token-plan-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+        "head_sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+        "matches_head": true,
+        "current_lines": 239
+      },
+      {
+        "path": "ice:packages/ai/test/radius-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+        "head_sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+        "matches_head": true,
+        "current_lines": 130
+      },
+      {
+        "path": "ice:packages/ai/test/reasoning-options.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e84c1fbc40de0830a8e44ce6df37ab82ce2e41a01cffe6aceb3ca72356cbe0a4",
+        "head_sha256": "e84c1fbc40de0830a8e44ce6df37ab82ce2e41a01cffe6aceb3ca72356cbe0a4",
+        "matches_head": true,
+        "current_lines": 45
+      },
+      {
+        "path": "ice:packages/ai/test/responseid.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "86ee611befd27221de3183c568b0534603efdfd378d4783e940e93ff6b55f8e4",
+        "head_sha256": "86ee611befd27221de3183c568b0534603efdfd378d4783e940e93ff6b55f8e4",
+        "matches_head": true,
+        "current_lines": 121
+      },
+      {
+        "path": "ice:packages/ai/test/retry.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "022b12dd3bad511d8f55bd5ca3c55dd94cd42b32be89de187ece92f178dc5e6a",
+        "head_sha256": "022b12dd3bad511d8f55bd5ca3c55dd94cd42b32be89de187ece92f178dc5e6a",
+        "matches_head": true,
+        "current_lines": 230
+      },
+      {
+        "path": "ice:packages/ai/test/sampling-options.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "38d3f0411a39570d800abf32bea871ba863b66974c3321b4390cc3a26cff3f65",
+        "head_sha256": "38d3f0411a39570d800abf32bea871ba863b66974c3321b4390cc3a26cff3f65",
+        "matches_head": true,
+        "current_lines": 129
+      },
+      {
+        "path": "ice:packages/ai/test/scratch.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "fb93916baef5bb05d50e4193995a0515156c545678287f15d14288694f57d4d1",
+        "head_sha256": "fb93916baef5bb05d50e4193995a0515156c545678287f15d14288694f57d4d1",
+        "matches_head": true,
+        "current_lines": 58
+      },
+      {
+        "path": "ice:packages/ai/test/simple-options.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "b9c2ba401a511134316a3c7dcc16dfecbd73a27751854b1cf25619895b35f4b7",
+        "head_sha256": "b9c2ba401a511134316a3c7dcc16dfecbd73a27751854b1cf25619895b35f4b7",
+        "matches_head": true,
+        "current_lines": 63
+      },
+      {
+        "path": "ice:packages/ai/test/stream.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "074dc7c5faa673984fe2d0cf4c483fb77e7fe07658c68918ee5061c6b81967c4",
+        "head_sha256": "074dc7c5faa673984fe2d0cf4c483fb77e7fe07658c68918ee5061c6b81967c4",
+        "matches_head": true,
+        "current_lines": 1717
+      },
+      {
+        "path": "ice:packages/ai/test/supports-xhigh.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "60d4e1ebacd014f85886e44c03ebe1d4b7960eaeef7b851330d4080f6ca1f044",
+        "head_sha256": "60d4e1ebacd014f85886e44c03ebe1d4b7960eaeef7b851330d4080f6ca1f044",
+        "matches_head": true,
+        "current_lines": 158
+      },
+      {
+        "path": "ice:packages/ai/test/text.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "e731172d854c7d603705fb43be143c98dfb4a722f7b4e98a8866d92e85d54a67",
+        "head_sha256": "e731172d854c7d603705fb43be143c98dfb4a722f7b4e98a8866d92e85d54a67",
+        "matches_head": true,
+        "current_lines": 34
+      },
+      {
+        "path": "ice:packages/ai/test/together-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+        "head_sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+        "matches_head": true,
+        "current_lines": 81
+      },
+      {
+        "path": "ice:packages/ai/test/tokens.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "6375211253dac79a332cd26453e51bc1bc5ba5014737dea35fe568708bb8ba79",
+        "head_sha256": "6375211253dac79a332cd26453e51bc1bc5ba5014737dea35fe568708bb8ba79",
+        "matches_head": true,
+        "current_lines": 358
+      },
+      {
+        "path": "ice:packages/ai/test/tool-call-id-normalization.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "90ad7d7db53034cf58ee10692db90223c16c14008bdb6e0cf85d62928ed6065c",
+        "head_sha256": "90ad7d7db53034cf58ee10692db90223c16c14008bdb6e0cf85d62928ed6065c",
+        "matches_head": true,
+        "current_lines": 291
+      },
+      {
+        "path": "ice:packages/ai/test/tool-call-without-result.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "89545c5c2a5f4f038a835f133f14f07b46aec53d5a9e9e07bdb2ea5104eeff4a",
+        "head_sha256": "89545c5c2a5f4f038a835f133f14f07b46aec53d5a9e9e07bdb2ea5104eeff4a",
+        "matches_head": true,
+        "current_lines": 352
+      },
+      {
+        "path": "ice:packages/ai/test/total-tokens.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "328eaa83cadbf40587d5dcc29b0ede572856d7c04fe2f5598a9c77b588ede7cf",
+        "head_sha256": "328eaa83cadbf40587d5dcc29b0ede572856d7c04fe2f5598a9c77b588ede7cf",
+        "matches_head": true,
+        "current_lines": 858
+      },
+      {
+        "path": "ice:packages/ai/test/transform-messages-copilot-openai-to-anthropic.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "9ca82608662c28f5b23ee353b9b9ad0d93313895141ebfe948fca195e599f11d",
+        "head_sha256": "9ca82608662c28f5b23ee353b9b9ad0d93313895141ebfe948fca195e599f11d",
+        "matches_head": true,
+        "current_lines": 192
+      },
+      {
+        "path": "ice:packages/ai/test/unicode-surrogate.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "deb705d8a184969f8755cc117884d07f18bf608250b1d78fcc19f27c5e338b9d",
+        "head_sha256": "deb705d8a184969f8755cc117884d07f18bf608250b1d78fcc19f27c5e338b9d",
+        "matches_head": true,
+        "current_lines": 824
+      },
+      {
+        "path": "ice:packages/ai/test/uuid.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "377d2c10a94d748a92af2c96f06eeeef9a35781d770d266f0458c879052bed37",
+        "head_sha256": "377d2c10a94d748a92af2c96f06eeeef9a35781d770d266f0458c879052bed37",
+        "matches_head": true,
+        "current_lines": 51
+      },
+      {
+        "path": "ice:packages/ai/test/validation.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "3aafed50be5806d03d6116c89a2eb8e75b6ac7f933c7958ca219c379791e09ad",
+        "head_sha256": "3aafed50be5806d03d6116c89a2eb8e75b6ac7f933c7958ca219c379791e09ad",
+        "matches_head": true,
+        "current_lines": 166
+      },
+      {
+        "path": "ice:packages/ai/test/xai-oauth.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+        "head_sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+        "matches_head": true,
+        "current_lines": 336
+      },
+      {
+        "path": "ice:packages/ai/test/xai-responses.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "88888d198756951e2490bebae30aebb88782e0216162a115da6b35f99c750e74",
+        "head_sha256": "88888d198756951e2490bebae30aebb88782e0216162a115da6b35f99c750e74",
+        "matches_head": true,
+        "current_lines": 118
+      },
+      {
+        "path": "ice:packages/ai/test/xhigh.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "bff409de7c2374a433fb6e701f258cf9e98e001943201196c37f27fb9e1d0df3",
+        "head_sha256": "bff409de7c2374a433fb6e701f258cf9e98e001943201196c37f27fb9e1d0df3",
+        "matches_head": true,
+        "current_lines": 71
+      },
+      {
+        "path": "ice:packages/ai/test/xiaomi-models.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+        "head_sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+        "matches_head": true,
+        "current_lines": 18
+      },
+      {
+        "path": "ice:packages/ai/test/xiaomi-token-plan-ams-anthropic-empty-signature-smoke.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "188097e471bd41919e3f3bfafc65dea01576bc83c1bbd98fce74cba4bc8b0dbe",
+        "head_sha256": "188097e471bd41919e3f3bfafc65dea01576bc83c1bbd98fce74cba4bc8b0dbe",
+        "matches_head": true,
+        "current_lines": 115
+      },
+      {
+        "path": "ice:packages/ai/test/zen.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "0e2d865917f5644ed326e5763eded26fb63700a41f8eeb1007dc4bb4fbb25f9a",
+        "head_sha256": "0e2d865917f5644ed326e5763eded26fb63700a41f8eeb1007dc4bb4fbb25f9a",
+        "matches_head": true,
+        "current_lines": 26
+      },
+      {
+        "path": "ice:packages/coding-agent/test/suite/regressions/6019-explicit-provider-retry-message.test.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "7aa6646e544ef35555b484312b1315dc1d4645bd91aa92f5ce7e4c1e57d94edc",
+        "head_sha256": "7aa6646e544ef35555b484312b1315dc1d4645bd91aa92f5ce7e4c1e57d94edc",
+        "matches_head": true,
+        "current_lines": 32
+      }
+    ]
+  },
+  "test_limitations": [
+    {
+      "path": "ice:packages/ai/test/anthropic-opus-4-8-smoke.test.ts",
+      "lines": [
+        24,
+        69
+      ],
+      "finding": "Conditional live test line48 expects adaptive without display, conflicting with current request payload. Source-read only, not a passing-test claim."
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/anthropic_smoke.rs",
+      "lines": [
+        111,
+        121
+      ],
+      "finding": "find_map collects at most the first tool call before asserting length1, so the test does not prove exactly one call was returned."
+    },
+    "Chat Completions test group fully read (10 files, including 1797-line tool-choice suite); none executed.",
+    "Responses compatibility fixture sometimes supplies bare [DONE] and checks payload/header only, accepting either terminal result. Native output_item_done_and_terminal_output_emit_one_tool_call_end inspects slot/content state but does not count emitted end events (openai_responses.rs3405-3447).",
+    "Image generation: complete source/test review distinguishes existing native registry/HTTP adapter from missing ImagesModels lifecycle; TS no-auth asynchronous rejection and synchronous refresh cleanup limitation, legacy E2E missing explicit credential and native permissive data URL parsing are source-only findings.",
+    "Coordinator completed remaining shared E2E matrices: empty tests permit success or structured errors; handoff fixture generation failures are skipped; several labels do not force the claimed API; Copilot Anthropic request fixture omits message_stop but asserts only payload/auth, not success. Image tests skip four Xiaomi mixed image cases and abort-usage tests skip four Xiaomi cases. All are source-only, not passing-test claims."
+  ],
+  "source_limits": [
+    "Codex omitted transport defaults to WebSocket but does not enable inner cached-context condition; no claim that unspecified transport has continuation deltas.",
+    "Native durable frame comments reference a TS file no longer present. SESSION confirms full-message JSONL and RPC confirms transient snapshot/delta projection are not that frame persistence contract.",
+    "TS generate-test-image.ts line22 uses Math.ICE; generator was not executed and the frozen image fixture was not regenerated."
+  ],
+  "credited_artifacts": [
+    {
+      "path": "evidence/providers-auth-source-review.json",
+      "sha256": "4a80fcd688ecd290c71e8269bbc44e81a36d497da89ea6dd940edf804c3b5a49",
+      "owner": "audit_session",
+      "scope": "23 AI test files with complete available-body review plus indicated native shared/provider files; exact redactions are excluded by the coordinator's normalized combined manifest.",
+      "limitations": [
+        "Concrete external ice-package provider implementations are outside authorized scope and unverified; docs acknowledge them, generic host/bridge was read.",
+        "config.rs887 max_tokens initializer and provider-composer.ts79 alias initializer were redacted; not used to infer exact behavior.",
+        "OpenRouter OAuth TOKEN_URL literal is redacted in both source21 and test9; exact endpoint is unverified.",
+        "ice-provider.ts188/200 callee initializers and faux.ts446 pacing initializer were connector-redacted. Described only unredacted surrounding logic and independently visible test assertions."
+      ]
+    },
+    {
+      "path": "evidence/provider-wire-supplement.json",
+      "sha256": "34004f90a79baf52732f475aac7607d90ce09c87bb2c3c67bce6ecc8550c4236",
+      "owner": "audit_tools",
+      "scope": "13 reviewed AI-030 through AI-042 narratives; 36 independent source/test full available read records; reusable AUTH source reads explicitly attributed."
+    }
+  ],
+  "generated_data_groups": [
+    {
+      "path": "ice:packages/ai/src/image-models.generated.ts",
+      "sha256": "eca804167d721a157c997bc22d76e6f869da35467782eb4b0de1f6b3b2d8ff66",
+      "total_lines": 820,
+      "read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "policy": "Generated values grouped under fully read generator generate-image-models.ts:1-163 and consumer image-models.ts:1-43; complete body not claimed as read."
+    },
+    {
+      "path": "ice:packages/ai/src/models.generated.ts",
+      "sha256": "7f7b345e04d96fe3944c4aee7821790fa0174e2780ed872e237411dfc94e541d",
+      "total_lines": 122,
+      "read_ranges": [
+        [
+          1,
+          122
+        ]
+      ],
+      "policy": "Full aggregator read; full 2909-line generator, model-data validation and AUTH-owned provider shards/consumer support grouped catalog-value review. No generator executed."
+    }
+  ],
+  "summary": "All available body text of all 137 TS AI test/helper files, the six native ice-ai integration tests and relevant native inline tests was read. 10 TS files contain explicitly excluded connector-redacted lines; 127 are fully visible. Gated live tests, skipped cases and permissive assertions do not establish runtime success. Native producer-drop errors and durable partial-progress frames were independently verified and must be preserved.",
+  "closure": "Source-review complete. Cross-area dependency and final active-checkout verification remain pending.",
+  "rust_integration_test_reads": [
+    {
+      "path": "rust:crates/ice-ai/tests/coerce_table.rs",
+      "total_lines": 202,
+      "sha256": "a31d74da31e0c7ce4155cb50ed4b29264539529ede46c5bc8bdf57d25060dedc",
+      "ranges": [
+        [
+          1,
+          202
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/anthropic_smoke.rs",
+      "total_lines": 135,
+      "sha256": "6ca4bc883b9905310d894ae10423a6422312ab59d4bc50b8ccff8688559909a5",
+      "ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/anthropic_tool_images.rs",
+      "total_lines": 285,
+      "sha256": "8eba2f517cf13f7ca75549af494d6409a37b736f399b6ae8c9c90eba76f01bd9",
+      "ranges": [
+        [
+          1,
+          285
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/faux.rs",
+      "total_lines": 224,
+      "sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "ranges": [
+        [
+          1,
+          224
+        ]
+      ],
+      "owners": [
+        "coordinator",
+        "audit_session"
+      ],
+      "records": 2,
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/content_json.rs",
+      "total_lines": 134,
+      "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+      "ranges": [
+        [
+          1,
+          134
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/event_stream.rs",
+      "total_lines": 109,
+      "sha256": "a8e6859c9bb3a3c955789746f54aa2913c0c5d6af5aefed727679f5676205a1a",
+      "ranges": [
+        [
+          1,
+          109
+        ]
+      ],
+      "owners": [
+        "coordinator"
+      ],
+      "records": 1,
+      "fully_read": true
+    }
+  ],
+  "publication_reference_check": {
+    "area": "ai",
+    "entries": 49,
+    "proposal_entries": 49,
+    "ledger_rows": 67,
+    "surfaces": 144,
+    "unique_source_references": 549,
+    "read_records": 415,
+    "problems": [],
+    "note": "Updated marker exclusions after AUTH shared-source transport verification."
+  },
+  "json_projection_baseline": {
+    "method": "Local Git object and working-file byte comparison; no application/test execution",
+    "rows": [
+      {
+        "path": "ice:packages/coding-agent/src/modes/json-event.ts",
+        "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+        "current_sha256": "418369a8be3584b209b975385905b5a6e8fd928c8aa8b790544640c355fab4d3",
+        "head_sha256": "418369a8be3584b209b975385905b5a6e8fd928c8aa8b790544640c355fab4d3",
+        "matches_head": true,
+        "current_lines": 41
+      }
+    ]
+  },
+  "coverage_correction": {
+    "reason": "Coordinator marker-only inspection of AUTH-shared source/test transports found five additional redacted AI test files. Original worker manifests remain preserved; normalized read ranges and counts supersede their fully-visible labels.",
+    "evidence": "evidence/qa-auth-redaction-markers.json"
+  }
+}

@@ -1,0 +1,2601 @@
+{
+  "area": "providers-auth",
+  "review_type": "Connector transport marker inspection, preserving original source-body reviewer attribution",
+  "tests_executed": false,
+  "application_executed": false,
+  "records": [
+    {
+      "path": "ice:packages/ai/src/auth/types.ts",
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "total_lines": 238,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        238
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/context.ts",
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "total_lines": 46,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        46
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/credential-store.ts",
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "total_lines": 68,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        68
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/helpers.ts",
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "total_lines": 54,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        54
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/resolve.ts",
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "total_lines": 206,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        206
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/all.ts",
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "total_lines": 154,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        154
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/model-catalog.ts",
+      "sha256": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "total_lines": 28,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        28
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/models-store.ts",
+      "sha256": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "total_lines": 46,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        46
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/env-api-keys.ts",
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "total_lines": 188,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        188
+      ],
+      "redacted_lines": [
+        29,
+        30,
+        31
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "total_lines": 419,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        419
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/test/oauth-auth.test.ts",
+      "sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+      "total_lines": 159,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        159
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/auth-storage.test.ts",
+      "sha256": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "total_lines": 488,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        488
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/test/models-runtime.test.ts",
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "total_lines": 1160,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1160
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/pkce.ts",
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "total_lines": 35,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        35
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "total_lines": 7,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        7
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/bun-oauth.ts",
+      "sha256": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "total_lines": 22,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        22
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/oauth.ts",
+      "sha256": "1250a2a276dc310849e64a0fd306a896d42e47ad0fc8d9394279eaee4e11cdff",
+      "total_lines": 11,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        11
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/amazon-bedrock.models.ts",
+      "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/ant-ling.models.ts",
+      "sha256": "da223d56dbe033f48b96ed451591498cb7ffa8d4851785ea9ad7542377f6c855",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/ant-ling.ts",
+      "sha256": "20ba100f8a9150f809fc42bf60f1d23840cc358d636793f1ec9fddf0e9feb2a7",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/anthropic.models.ts",
+      "sha256": "35fb58e216e45b3d1319b610f3f3021ef30e699a9e44250cbfcbefeeaaea2ff7",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/anthropic.ts",
+      "sha256": "7c7f814308749b01d1ba31ccb82256035a3ddf4f0778bdd4ac352c9c50d86da4",
+      "total_lines": 56,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        56
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/azure-openai-responses.models.ts",
+      "sha256": "9d0525eab9472b48dee748f7c6d2f3b65f25467389ff1facbf34dc2d40732717",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/azure-openai-responses.ts",
+      "sha256": "76e9f5cde761fcd516370d4d99519e4658e0db1029518746d0d0c0550ce54fa5",
+      "total_lines": 15,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        15
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/baseten.models.ts",
+      "sha256": "c3844bac330f9b0d04eef4349a37dbd6cbe5b6782b9f6726277148526c03ea0a",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/baseten.ts",
+      "sha256": "c3833be0c64c4d5c96810403e23e966bb779bf2c045619b6fbac18ff27ac92f5",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cerebras.models.ts",
+      "sha256": "45412b6f921b67cf7b82276bac1d8b95f164c5bf2ff3297b950f94f773162c57",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cerebras.ts",
+      "sha256": "457fc35499abea92be4ad7add4f08502d069293380be61bf05b11ae5352bce4f",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-ai-gateway.models.ts",
+      "sha256": "c90e50ce6cd8b536e893ca7180a5b9731581d76b31125aff5bdfc62bd17efe26",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-ai-gateway.ts",
+      "sha256": "b40b3329e44148afbbe93f5e9562fa5be2329fac8a5a7180e50572583eba54fc",
+      "total_lines": 24,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        24
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-stream.ts",
+      "sha256": "866117c0e12f6bba9da36842271d0208b200364dc785dc968fa5d31b6da6594b",
+      "total_lines": 29,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        29
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-workers-ai.models.ts",
+      "sha256": "95da6a78965178d952b46a4de4e2ea52723ac051ad37583537a3b79e4033ecde",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-workers-ai.ts",
+      "sha256": "5ab1575a34fd66e35706fcae8a38516d7c2e427521b7f8680e1f756d8420ec9c",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/data-json.d.ts",
+      "sha256": "d30c397c753fb4c6a608ab2e2d95e50c763a369b591bcc2bd6e02147016f8aff",
+      "total_lines": 5,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        5
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/deepseek.models.ts",
+      "sha256": "afce9b250edda8c9df66e800cfa791f1a2c2546503956c45c5262204265624cf",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/deepseek.ts",
+      "sha256": "4d4ac9870d3dcdb13a90627a95598314459f5cc2f8a122f802fab3b0d2840fee",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/fireworks.models.ts",
+      "sha256": "68f77ac268a3e643944401e96fdc71abe7b34e1ccc3c50f885eb3e236b4fb45e",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/fireworks.ts",
+      "sha256": "72dbb53e3bb8b0bc6c42dd7937ec11dd0126efe3176f11153b1d599a0c7776af",
+      "total_lines": 20,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        20
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/github-copilot.models.ts",
+      "sha256": "6bd4c4ae054ea91fe4c9eea8c8372901584e851532352cb621a9e9de6ecece5c",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/github-copilot.ts",
+      "sha256": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "total_lines": 35,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        35
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/google-vertex.models.ts",
+      "sha256": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/google.models.ts",
+      "sha256": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/google.ts",
+      "sha256": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/groq.models.ts",
+      "sha256": "41fbe59a9104788078b57b490ebf2312291905e579a67ceaeff803ff41ffc9c0",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/groq.ts",
+      "sha256": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/huggingface.models.ts",
+      "sha256": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/huggingface.ts",
+      "sha256": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/images/register-builtins.ts",
+      "sha256": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "total_lines": 51,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        51
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/kimi-coding.models.ts",
+      "sha256": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/kimi-coding.ts",
+      "sha256": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "total_lines": 24,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        24
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/minimax-cn.models.ts",
+      "sha256": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; complete source-body review is credited to the original worker manifest, not newly claimed by the coordinator."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/minimax-cn.ts",
+      "sha256": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/minimax.models.ts",
+      "sha256": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/minimax.ts",
+      "sha256": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/mistral.models.ts",
+      "sha256": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/mistral.ts",
+      "sha256": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/moonshotai-cn.models.ts",
+      "sha256": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/moonshotai-cn.ts",
+      "sha256": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/moonshotai.models.ts",
+      "sha256": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/moonshotai.ts",
+      "sha256": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/nvidia.models.ts",
+      "sha256": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/nvidia.ts",
+      "sha256": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openai-codex.models.ts",
+      "sha256": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openai-codex.ts",
+      "sha256": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "total_lines": 19,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        19
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openai.models.ts",
+      "sha256": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openai.ts",
+      "sha256": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/opencode-go.models.ts",
+      "sha256": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/opencode-go.ts",
+      "sha256": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "total_lines": 25,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        25
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/opencode.models.ts",
+      "sha256": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/opencode.ts",
+      "sha256": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "total_lines": 25,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        25
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openrouter-images.ts",
+      "sha256": "921e057fa1880412c29a849505ddd7dbe466996d78087c0c0628437ec2051880",
+      "total_lines": 23,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        23
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openrouter.models.ts",
+      "sha256": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/openrouter.ts",
+      "sha256": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "total_lines": 24,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        24
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/qwen-token-plan-cn.models.ts",
+      "sha256": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/qwen-token-plan-cn.ts",
+      "sha256": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/qwen-token-plan.models.ts",
+      "sha256": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/qwen-token-plan.ts",
+      "sha256": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/together.models.ts",
+      "sha256": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/together.ts",
+      "sha256": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/vercel-ai-gateway.models.ts",
+      "sha256": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/vercel-ai-gateway.ts",
+      "sha256": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xai.models.ts",
+      "sha256": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xai.ts",
+      "sha256": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "total_lines": 28,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        28
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-ams.models.ts",
+      "sha256": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-ams.ts",
+      "sha256": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-cn.models.ts",
+      "sha256": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-cn.ts",
+      "sha256": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts",
+      "sha256": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi-token-plan-sgp.ts",
+      "sha256": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi.models.ts",
+      "sha256": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/xiaomi.ts",
+      "sha256": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/zai-coding-cn.models.ts",
+      "sha256": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/zai-coding-cn.ts",
+      "sha256": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/zai.models.ts",
+      "sha256": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "total_lines": 9,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        9
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/zai.ts",
+      "sha256": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/auth-guidance.ts",
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "total_lines": 26,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        26
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/radius.ts",
+      "sha256": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "total_lines": 2,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        2
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/runtime-credentials.ts",
+      "sha256": "ff9b851af45a63120863a4de5981f211c5b277d2e6f6302458fa0f3b3c1c8937",
+      "total_lines": 53,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        53
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/amazon-bedrock.ts",
+      "sha256": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+      "total_lines": 91,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        91
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/cloudflare-auth.ts",
+      "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "total_lines": 104,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        104
+      ],
+      "redacted_lines": [
+        4
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/google-vertex.ts",
+      "sha256": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+      "total_lines": 101,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        101
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/radius-config.ts",
+      "sha256": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "total_lines": 98,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        98
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/radius.ts",
+      "sha256": "2e5b3c47fbb04f8e9698ca6c6580264f910d9433385b440df41309b606ff163c",
+      "total_lines": 83,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        83
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/load.ts",
+      "sha256": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "total_lines": 69,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        69
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/device-code.ts",
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "total_lines": 99,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        99
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/oauth-page.ts",
+      "sha256": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "total_lines": 110,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        110
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/models-store.ts",
+      "sha256": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "total_lines": 75,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        75
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-config.ts",
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "total_lines": 288,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        288
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/types.ts",
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "total_lines": 848,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        848
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/provider-attribution.ts",
+      "sha256": "6b676c90436c6c91bdbbe123b97fca80e9ef91d6ff01fc2aef63b0d53e1a8604",
+      "total_lines": 104,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        104
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "total_lines": 136,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        136
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-registry.ts",
+      "sha256": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "total_lines": 163,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        163
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/provider-composer.ts",
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "total_lines": 592,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        592
+      ],
+      "redacted_lines": [
+        79
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-runtime.ts",
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "total_lines": 811,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        811
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/utils/legacy-protocol.ts",
+      "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "total_lines": 4,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        4
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/providers.md",
+      "sha256": "254a1bf541a24edf13e2ab1686697767f1fd3192d7be939a9ef5ccd278f64c97",
+      "total_lines": 311,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        311
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/anthropic.ts",
+      "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "total_lines": 364,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        364
+      ],
+      "redacted_lines": [
+        31
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/openai-codex.ts",
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "total_lines": 544,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        544
+      ],
+      "redacted_lines": [
+        29,
+        32
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/github-copilot.ts",
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "total_lines": 412,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        412
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/kimi-coding.ts",
+      "sha256": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "total_lines": 310,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        310
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/openrouter.ts",
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "total_lines": 312,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        312
+      ],
+      "redacted_lines": [
+        21
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/xai.ts",
+      "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "total_lines": 239,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        239
+      ],
+      "redacted_lines": [
+        11
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/radius.ts",
+      "sha256": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "total_lines": 405,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        405
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-oauth.test.ts",
+      "sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+      "total_lines": 145,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        145
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-oauth.test.ts",
+      "sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+      "total_lines": 323,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        323
+      ],
+      "redacted_lines": [
+        9,
+        243,
+        259
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/oauth-device-code.test.ts",
+      "sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+      "total_lines": 146,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        146
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/radius-oauth.test.ts",
+      "sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+      "total_lines": 130,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        130
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/oauth.ts",
+      "sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+      "total_lines": 86,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        86
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/kimi-coding-oauth.test.ts",
+      "sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+      "total_lines": 271,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        271
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/xai-oauth.test.ts",
+      "sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+      "total_lines": 336,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        336
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/openai-codex-oauth.test.ts",
+      "sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+      "total_lines": 487,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        487
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/github-copilot-oauth.test.ts",
+      "sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+      "total_lines": 453,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        453
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-resolver.ts",
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "total_lines": 775,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        775
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-provider-settings.ts",
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "total_lines": 235,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        235
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-provider.ts",
+      "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "total_lines": 360,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        360
+      ],
+      "redacted_lines": [
+        188,
+        200
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/src/providers/faux.ts",
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "total_lines": 710,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        710
+      ],
+      "redacted_lines": [
+        446
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/faux-provider.test.ts",
+      "sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+      "total_lines": 641,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        641
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-provider-fast-mode.test.ts",
+      "sha256": "cbe2e33e9a2695ccc7da49ba54ef4ee4889aa02cda7a0fdee410f4e5fc422a3d",
+      "total_lines": 19,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        19
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-provider-settings.test.ts",
+      "sha256": "a4bd16284cae9643b749a5ee5f95ac65d28d6921ae31a9c17a79f60743537b3c",
+      "total_lines": 90,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        90
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-provider.test.ts",
+      "sha256": "7f353536e39a76a2954ef11c1c2766725c5566b554fd2e11313a540d31c208dd",
+      "total_lines": 506,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        506
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/models.md",
+      "sha256": "941b3e00f3409c930d4549a7ccce9aa2f5b5351532791578ef03c6f085788cbf",
+      "total_lines": 568,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        568
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/custom-provider.md",
+      "sha256": "6f8e0536c9aecfa5a432ad4df8ec2b054dd8ccc62ed9ceb6240ca0713488bc1a",
+      "total_lines": 775,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        775
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/anthropic-auth-token.test.ts",
+      "sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+      "total_lines": 188,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        188
+      ],
+      "redacted_lines": [
+        157,
+        166
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/provider-env-legacy-compat.test.ts",
+      "sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+      "total_lines": 23,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        23
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-credentials.test.ts",
+      "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "total_lines": 116,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        116
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-resolver.test.ts",
+      "sha256": "f9565a02fbd1aafee5aae01dcf7918c2b0611a3e6a4d35a614fa1ad2fef82656",
+      "total_lines": 798,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        798
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/runtime-credentials.test.ts",
+      "sha256": "cdfc938374154a739fd7cb34073ba46a83bfffd01795c49d0e4758e621c0c98c",
+      "total_lines": 87,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        87
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/models-store.test.ts",
+      "sha256": "e3c6cd048724745d5f72433a99a8ecd467b512151edfebd214819e053348243f",
+      "total_lines": 125,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        125
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-test-utils.ts",
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "total_lines": 26,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        26
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-registry.test.ts",
+      "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "total_lines": 2052,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        2052
+      ],
+      "redacted_lines": [
+        1529,
+        1551,
+        1617,
+        1639
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-modify-models-compat.test.ts",
+      "sha256": "c6fc16bc6ac6957e1c7244c6b9003cad8958ab9490ad5c9f948b36b551236c27",
+      "total_lines": 333,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        333
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-credential-sync.test.ts",
+      "sha256": "a8ee2d28e0eccd2c2bdee89713fe139c51df8ef3553763266fcdbe82c914c33b",
+      "total_lines": 376,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        376
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-auth-options.test.ts",
+      "sha256": "4f459831caccf9fa8f367ea473ef27675cba0fb765d75c82f3f2596faa7d5646",
+      "total_lines": 293,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        293
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/credentials.rs",
+      "sha256": "679203dc4a4794ac60776030fd68a7b6be4417372960bc5ba577d4e3bf4e1f0a",
+      "total_lines": 221,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        221
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/model.rs",
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "total_lines": 284,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        284
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/auth.rs",
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "total_lines": 739,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        739
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1761
+      ],
+      "redacted_lines": [
+        887,
+        1642,
+        1643
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider.rs",
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "total_lines": 3458,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        3458
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/binding.rs",
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "total_lines": 104,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        104
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/factories.rs",
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "total_lines": 623,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        623
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/oauth.rs",
+      "sha256": "4c17aefa14428c65c8713eacd5cde0cad53a32a73e66472da2ff248bada15500",
+      "total_lines": 299,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        299
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/types.rs",
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "total_lines": 1157,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1157
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/export.rs",
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "total_lines": 367,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        367
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:packages/provider-runtime/README.md",
+      "sha256": "56d8810c0e72f525cfe65c6de01438428cc5e994f26ac4a47a457fcc283e4a62",
+      "total_lines": 7,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        7
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/auth_guidance.rs",
+      "sha256": "7b0b46745b0599446aaf52e00e439eeada2252c826a801241e467055a03a08da",
+      "total_lines": 61,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        61
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/model_registry.rs",
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "total_lines": 416,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        416
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:packages/provider-runtime/src/lib.rs",
+      "sha256": "818627d407a8524a9e71c82dcac140fa84fabb7aca4682a9909259b9787171c6",
+      "total_lines": 346,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        346
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:docs/architecture/provider-packages.md",
+      "sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "total_lines": 182,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        182
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:docs/extensions/provider-integration.md",
+      "sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "total_lines": 251,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        251
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/providers/faux.rs",
+      "sha256": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "total_lines": 928,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        928
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-ai/tests/faux.rs",
+      "sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "total_lines": 224,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        224
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/tests/provider_packages.rs",
+      "sha256": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "total_lines": 767,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        767
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "total_lines": 1015,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1015
+      ],
+      "redacted_lines": [
+        96
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/agent_session.rs",
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "total_lines": 613,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        613
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/settings.rs",
+      "sha256": "41a1a99a8295384989ed27e52ee112656e6171d1a19d37957fcf27c7a7d870d8",
+      "total_lines": 1221,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1221
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/settings.rs",
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "total_lines": 1944,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        1944
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        3398
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/model-runtime-cloudflare-compat.test.ts",
+      "sha256": "5f9835a1a7085abe6358286d82bb815c1b05d7b417764e0090cfdc6005c87cff",
+      "total_lines": 107,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        107
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/providers.test.ts",
+      "sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+      "total_lines": 630,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        630
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/together-models.test.ts",
+      "sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+      "total_lines": 81,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        81
+      ],
+      "redacted_lines": [
+        11,
+        75
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/xiaomi-models.test.ts",
+      "sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+      "total_lines": 18,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        18
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/qwen-token-plan-models.test.ts",
+      "sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+      "total_lines": 239,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        239
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/fireworks-models.test.ts",
+      "sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+      "total_lines": 328,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        328
+      ],
+      "redacted_lines": [
+        16,
+        109
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/bedrock-models.test.ts",
+      "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "total_lines": 71,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        71
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/baseten-models.test.ts",
+      "sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+      "total_lines": 142,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        142
+      ],
+      "redacted_lines": [
+        12,
+        136
+      ],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/ai/test/openrouter-cache-control-models.test.ts",
+      "sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+      "total_lines": 16,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        16
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/remote-catalog-provider.test.ts",
+      "sha256": "29663c2be986588a85d83398b2e16e5d1017889acf008919c9ddb9241ab4db17",
+      "total_lines": 258,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        258
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/credential-print.test.ts",
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "total_lines": 105,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        105
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+      "sha256": "8dbd7701172395915eff2b768370e4c7f9431ae139386360b4d651388f9c3beb",
+      "total_lines": 105,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        105
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6999-models-json-hot-reload.test.ts",
+      "sha256": "1558a9f6bbcd7b6399456e791da2fedd198c87d27f9a23fdb3fcbbb0f30ec26f",
+      "total_lines": 85,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        85
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+      "sha256": "d93cb53808d012856913c910fe88f7bb48c9b1df51e792f61b63f188ceb1cc10",
+      "total_lines": 161,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        161
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+      "sha256": "36c697f0d20fe542eaf1116204066bb04838c54a725fb44672ea0251901b80d2",
+      "total_lines": 108,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        108
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "sha256": "ab7df0db39dc6c15116818ff9c9c7309bd0ae546a2a327decc342e3851260170",
+      "total_lines": 126,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        126
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "sha256": "052c24aa2d145f30dc386a5982225cc8bfb0deb67da237d49d3e25923c56d4ba",
+      "total_lines": 47,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        47
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "sha256": "dd4d85d37cdfa4ad5886b2878dd71c4f02bda34f653f7d30defb1aa507dfb3ec",
+      "total_lines": 120,
+      "baseline_matches": true,
+      "received_range": [
+        1,
+        120
+      ],
+      "redacted_lines": [],
+      "complete_transport": true,
+      "notes": "Marker audit only; source-body review is credited to the original worker manifest."
+    }
+  ],
+  "record_count": 195,
+  "redacted_file_count": 17,
+  "hash_mismatches": [],
+  "limits": "This check discovers redaction markers and confirms recorded hashes. It does not newly claim full coordinator source-body review or infer hidden values.",
+  "ai_coverage_correction": {
+    "tests": 137,
+    "fully_visible": 127,
+    "partially_redacted": 10
+  }
+}

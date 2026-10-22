@@ -1,0 +1,407 @@
+{
+  "area": "cli-packaging",
+  "stage": "46 entries independently reviewed; ready for source-range validation and publication",
+  "source_only": true,
+  "tests_executed": false,
+  "application_executed": false,
+  "reviewed_entry_ids": [
+    "CLI-001",
+    "CLI-002",
+    "CLI-003",
+    "CLI-004",
+    "CLI-005",
+    "CLI-006",
+    "CLI-007",
+    "CLI-008",
+    "CLI-009",
+    "CLI-010",
+    "CLI-011",
+    "CLI-012",
+    "CLI-013",
+    "CLI-014",
+    "CLI-015",
+    "CLI-016",
+    "CLI-017",
+    "CLI-018",
+    "CLI-019",
+    "CLI-020",
+    "CLI-021",
+    "CLI-022",
+    "CLI-023",
+    "CLI-024",
+    "CLI-025",
+    "CLI-026",
+    "CLI-027",
+    "CLI-028",
+    "CLI-029",
+    "CLI-030",
+    "CLI-031",
+    "CLI-032",
+    "CLI-033",
+    "CLI-034",
+    "CLI-035",
+    "CLI-036",
+    "CLI-037",
+    "CLI-038",
+    "CLI-039",
+    "CLI-040",
+    "CLI-041",
+    "CLI-042",
+    "CLI-043",
+    "CLI-044",
+    "CLI-045",
+    "CLI-046"
+  ],
+  "reviewed_spec_sha256": "db7950628ab51bdc10a12b56f5e8994f206b8a06d56ddb49015302fae4b69add",
+  "source_reads": [
+    {
+      "path": "ice:packages/coding-agent/src/cli/startup-ui.ts",
+      "total_lines": 240,
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "ranges": [
+        [
+          134,
+          239
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "total_lines": 1612,
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          768,
+          860
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/settings-manager.ts",
+      "total_lines": 1612,
+      "sha256": "a249e320979d7a7446e3baddfeca256a539534fb925437cfbd9871971d3c56b0",
+      "ranges": [
+        [
+          730,
+          768
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/piped-stdin.ts",
+      "total_lines": 56,
+      "sha256": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/cli/credential-print.ts",
+      "total_lines": 152,
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "ranges": [
+        [
+          18,
+          76
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "total_lines": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "ranges": [
+        [
+          770,
+          886
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session.rs",
+      "total_lines": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "ranges": [
+        [
+          130,
+          192
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "total_lines": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "ranges": [
+        [
+          169,
+          225
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/agent_session.rs",
+      "total_lines": 613,
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "ranges": [
+        [
+          228,
+          235
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Numbered source body read independently; no tests or application executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/packages.rs",
+      "total_lines": 819,
+      "sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "ranges": [
+        [
+          109,
+          190
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/packages.rs",
+      "total_lines": 819,
+      "sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "ranges": [
+        [
+          388,
+          431
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/packages.rs",
+      "total_lines": 819,
+      "sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "ranges": [
+        [
+          573,
+          626
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_release.rs",
+      "total_lines": 373,
+      "sha256": "97ab5b041b5eacb663fb37369b5cfef9497b991062f9460fb6a9d75f74e4ef64",
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_extensions.rs",
+      "total_lines": 1403,
+      "sha256": "ca30b4e1be3c36eb898957b2fca93e8b06c8c4b9c519ff3d58db1f5fe94a9d7e",
+      "ranges": [
+        [
+          158,
+          195
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "ranges": [
+        [
+          715,
+          750
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "ranges": [
+        [
+          1781,
+          1836
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "ranges": [
+        [
+          99,
+          119
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "ranges": [
+        [
+          1310,
+          1330
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "total_lines": 3527,
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "ranges": [
+        [
+          2119,
+          2155
+        ]
+      ],
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator",
+      "notes": "Independent numbered source read of live package/updater boundaries; no execution."
+    }
+  ],
+  "findings": [
+    {
+      "entry_ids": [
+        "CLI-001",
+        "CLI-019"
+      ],
+      "result": "HTTP dispatcher dependency belongs to SET-013; do not create duplicate MISC ownership."
+    },
+    {
+      "entry_ids": [
+        "CLI-009"
+      ],
+      "result": "Native CLI attachment boundary passes raw image bytes, but later harness normalization exists and is credited. Shared path and image pipeline ownership remains TOOLS-020 and TOOLS-023; post-hook tool-result normalization is MISC-003."
+    },
+    {
+      "entry_ids": [
+        "CLI-015"
+      ],
+      "result": "Settings writes catch and record ordinary storage errors before flush awaits the queue. Ordinary write failure can finish without durable preferences; an unexpected rejected finalizer or throwing terminal operation has a separate unresolved-promise risk because selector/setup outer promises expose only resolve. Revised draft distinguishes these paths."
+    },
+    {
+      "entry_ids": [
+        "CLI-008"
+      ],
+      "result": "TS stream handling reports stdin errors, while native read_piped_stdin maps read_to_string failure to None; this can silently lose redirected input. No stdin process was executed."
+    },
+    {
+      "entry_ids": [
+        "CLI-011"
+      ],
+      "result": "TS expiration regex is case insensitive but unit dispatch is case sensitive, so uppercase units fall through to hours. Credential-print validation rejects specific incompatible fields, not every known CLI flag."
+    },
+    {
+      "entry_ids": [
+        "CLI-013"
+      ],
+      "result": "Native migration creates the destination before transfers and returns early on later runs if destination exists; the counter increments despite failed rename/copy. This can report migration while leaving source files untransferred and disables automatic retry."
+    },
+    {
+      "entry_ids": [
+        "SESSION-016"
+      ],
+      "result": "Native AgentSession::compact ignores CompactOutcome and returns Ok after any successful result. TUI run_compact similarly reports success for Ok regardless of outcome."
+    },
+    {
+      "result": "Package dot-name joins and post-activation registry validation confirmed independently; CLI-039 distinguishes preconditions and native global transaction preservation."
+    },
+    {
+      "result": "Already-staged branch, post-wait output caps and Windows timestamp mismatch confirmed from actual producer/consumer source."
+    },
+    {
+      "result": "Frozen CLI prebuilt repository-case rejection confirmed; active checkout resolution remains for final relocation."
+    },
+    {
+      "result": "Package worker corrected raw npm version truthiness/type behavior, exact JSON selection, concrete source anchors and symbols before release."
+    },
+    {
+      "result": "Supplement package-document claims are separately retained and do not inflate the first-pass ICE_PORTING claim count."
+    }
+  ],
+  "limitations": [
+    "No application, installer, updater, network request or tests were executed.",
+    "Final cross-area dependency and active-checkout revalidation remain pending."
+  ]
+}

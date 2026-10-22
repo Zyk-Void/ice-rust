@@ -1334,12 +1334,12 @@ pub(super) async fn switch_provider(
 /// Persist a specific default provider + model pair (used when `/model` picks a
 /// model from a different provider than the one currently bound to the lane).
 pub(super) fn set_default_model(provider_id: &str, model_id: &str) -> Result<String, String> {
-    let mut settings = crate::settings::load_settings().unwrap_or_default();
+    let mut settings = crate::settings::load_settings().map_err(|error| error.to_string())?;
     settings.default_provider = Some(provider_id.to_string());
     settings.default_model = Some(model_id.to_string());
     crate::settings::save_settings(&settings).map_err(|error| error.to_string())?;
     Ok(format!(
-        "Default provider set to {provider_id} (model {model_id}) — takes effect after restart. The current session keeps its startup provider."
+        "Default provider set to {provider_id} (model {model_id}) — used on the next launch."
     ))
 }
 
@@ -1808,22 +1808,13 @@ pub(super) fn open_settings_thinking_selector(
             return;
         };
         let lane = lane_sel.clone();
-        let footer_sel = state_sel.footer.clone();
+        let state = state_sel.clone();
+        let chat = chat_sel.clone();
+        let tui = tui_sel.clone();
         tokio::spawn(async move {
-            let _ = lane.set_thinking_level(level).await;
+            apply_thinking_selection(&lane, &state, &chat, level, true).await;
+            tui.request_render(false);
         });
-        footer_sel.set_thinking_level(Some(thinking_level_name(level)));
-        let mut settings = crate::settings::load_settings().unwrap_or_default();
-        settings.default_thinking_level = Some(item.value.clone());
-        let saved = crate::settings::save_settings(&settings);
-        add_note_message(
-            &chat_sel,
-            &format!(
-                "Default thinking set to {} (saved{}",
-                item.label,
-                if saved.is_ok() { ")" } else { ", not saved)" },
-            ),
-        );
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();

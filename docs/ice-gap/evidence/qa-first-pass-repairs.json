@@ -1,0 +1,616 @@
+{
+  "schema_version": 1,
+  "owner": "/root/audit_tools",
+  "source_only": true,
+  "qa_artifact": {
+    "path": "evidence/qa-first-pass-coverage.json",
+    "sha256": "ef3e4c40fcbd4e11d74274b489fa06f51fc373f7e049e203c5df3892367d9bf0"
+  },
+  "instructions": "Coordinator-owned repair suggestion only; this worker has not changed accepted manifests. Replace the Blackhole claims list with the canonical eight rows to avoid duplicate compiler/live-state records; retain all detailed BLACK entries and additional audited behavior. Source labels on the three other records are explicit.",
+  "blackhole": {
+    "area": "blackhole",
+    "artifact": "evidence/blackhole.json",
+    "expected_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+    "original_record_count": 12,
+    "record_repairs": [
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 0,
+        "original_range": [
+          386,
+          387
+        ],
+        "original_claim": "Optional Blackhole is missing as a plugin and deterministic engine.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            387,
+            389
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-126"
+        ],
+        "reason": "Correct stale/misplaced range; current text identifies the optional package and native LLM compaction."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 1,
+        "original_range": [
+          389,
+          390
+        ],
+        "original_claim": "Compiler normalizes messages into deterministic sections.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            391,
+            395
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-127"
+        ],
+        "reason": "Compiler/section text begins at391, not389."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 2,
+        "original_range": [
+          390,
+          391
+        ],
+        "original_claim": "Compiler extracts goals/preferences/files/commits/outstanding/recent actions and builds a bounded brief.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            391,
+            395
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-127"
+        ],
+        "reason": "Exact extraction claims are393–395 within the compiler paragraph; audit-only extra budget details remain in the entries."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 3,
+        "original_range": [
+          392,
+          392
+        ],
+        "original_claim": "Live-state reconstructs Active Goal, Mode And Plan, Background Shells and MCP/external use.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            396,
+            398
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-128"
+        ],
+        "reason": "Live-state paragraph is396–398, not392."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 4,
+        "original_range": [
+          393,
+          393
+        ],
+        "original_claim": "Subagent digest reads latest child records.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            396,
+            398
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-128"
+        ],
+        "reason": "Subagent state is one part of actual398; detailed latest-record/cap ordering is additional specification."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 5,
+        "original_range": [
+          394,
+          394
+        ],
+        "original_claim": "tailBehavior supports ice-default/minimal with kept-tail and recall-noise handling.",
+        "action": "reclassify_as_additional_audit_behavior",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [],
+        "qa_claim_ids": [],
+        "reason": "tailBehavior configuration/default/sentinel was not a substantive first-pass claim at394. Keep BLACK-002/031 as additional audited behavior; remove this record from first-pass claim count."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 6,
+        "original_range": [
+          395,
+          395
+        ],
+        "original_claim": "Checkpoint recall appends a fresh session-matching bounded Relevant Memory section.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            401,
+            401
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-131"
+        ],
+        "reason": "Checkpoint recall is401, not395."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 7,
+        "original_range": [
+          396,
+          397
+        ],
+        "original_claim": "Refinement is optional, model-routed, bounded and falls back to deterministic text.",
+        "action": "reclassify_as_additional_audit_behavior",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [],
+        "qa_claim_ids": [],
+        "reason": "Optional refinement was not described at396–397; those lines are the live-state paragraph. Keep BLACK-038 as additional audited behavior, without a fabricated first-pass claim."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 8,
+        "original_range": [
+          398,
+          398
+        ],
+        "original_claim": "Before-compaction hook can override core and kept-tool outputs are trimmed.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            391,
+            395
+          ],
+          [
+            400,
+            400
+          ]
+        ],
+        "qa_claim_ids": [
+          "FPC-127",
+          "FPC-130"
+        ],
+        "reason": "Split engine override from the actual kept-tool-result trim mention;398 is live state."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 9,
+        "original_range": [
+          399,
+          400
+        ],
+        "original_claim": "Config at agentDir/ice-blackhole with enum/percent/refine/memory settings.",
+        "action": "reclassify_as_additional_audit_behavior",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [],
+        "qa_claim_ids": [],
+        "reason": "Configuration schema/write behavior was not claimed at399–400; those lines concern skill collapse and kept-tail trimming. Keep BLACK-002/003/004 as additional audit entries."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 10,
+        "original_range": [
+          401,
+          403
+        ],
+        "original_claim": "registerSettings and /blackhole provide status/percent/resume/pause/off.",
+        "action": "reclassify_as_additional_audit_behavior",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [],
+        "qa_claim_ids": [],
+        "reason": "Settings/slash command parser was not claimed at401–403; those lines concern recall and boundary triggers. Keep BLACK-005/006 as additional audit entries. Actual trigger claim maps to FPC-132."
+      },
+      {
+        "manifest": "blackhole.json",
+        "manifest_sha256": "280fdd456e8004e3355baf473893b4ad27f78ca1ee5d3cbba66b107d2db34286",
+        "index": 11,
+        "original_range": [
+          410,
+          412
+        ],
+        "original_claim": "Mid-run compaction is missing in Rust; compaction exists mainly as manual flow.",
+        "action": "replace_range_or_split",
+        "replacement_source_labels": [
+          "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md"
+        ],
+        "replacement_ranges": [
+          [
+            410,
+            412
+          ]
+        ],
+        "qa_claim_ids": [],
+        "reason": "Range remains valid for core mid-run compaction. Its correction is corroborated by SESSION-015/017 and BLACK-041; preserve native mid-loop compaction."
+      }
+    ],
+    "replacement_claims": [
+      {
+        "qa_claim_id": "FPC-126",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          387,
+          389
+        ],
+        "claim": "Optional Blackhole derives from sting8k/ice-vcc; native compaction exists without Blackhole.",
+        "verdict": "qualified",
+        "finding": "Repository package/license/provenance support the adaptation attribution and optional-extension packaging. Native LLM compaction is real; the absent feature is Blackhole's deterministic compiler and hooks. No upstream network or external package availability was checked.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/index.ts:1-159",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/package.json:1-18",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md:1-23",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/LICENSE:1-21",
+          "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:49-81",
+          "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:1-164",
+          "rust:crates/ice-plugin-sdk/src/lib.rs:575-598",
+          "rust:crates/ice-extensions/src/actions.rs:381-499",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+          "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+          "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+          "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+          "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+          "rust:crates/ice-extensions/src/translate.rs:934-942"
+        ],
+        "entry_ids": [
+          "BLACK-001",
+          "BLACK-039"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-127",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          391,
+          395
+        ],
+        "claim": "Blackhole replaces LLM summary generation with normalization, filtering and deterministic request/finding/file/commit/goal/preference sections.",
+        "verdict": "qualified",
+        "finding": "The deterministic compiler and named sections are covered individually. The full hook also gates engine/mode, rebuilds state, optionally refines and delegates final persistence to the host, so 'deterministic' describes the default compiler rather than every configured path.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+          "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+          "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+          "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+          "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+          "rust:crates/ice-extensions/src/translate.rs:934-942"
+        ],
+        "entry_ids": [
+          "BLACK-007",
+          "BLACK-008",
+          "BLACK-009",
+          "BLACK-018",
+          "BLACK-019",
+          "BLACK-022",
+          "BLACK-023",
+          "BLACK-024",
+          "BLACK-025",
+          "BLACK-026",
+          "BLACK-039"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-128",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          396,
+          398
+        ],
+        "claim": "Blackhole rebuilds volatile goal/mode/plan/subagent/shell/MCP state from durable entries instead of merging previous summaries.",
+        "verdict": "supported",
+        "finding": "Supported as recorded-branch projections. These summaries do not poll live processes or confer runtime authority; subagent selection follows its recorded-state ordering.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts:1-111",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts:229-247",
+          "ice:packages/coding-agent/src/core/agent-session.ts:2279-2313",
+          "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:211-363",
+          "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:112-127",
+          "rust:crates/ice-harness/src/compaction/compaction.rs:125-147",
+          "rust:crates/ice-extensions/src/translate.rs:934-942"
+        ],
+        "entry_ids": [
+          "BLACK-032",
+          "BLACK-033",
+          "BLACK-034",
+          "BLACK-035",
+          "BLACK-036",
+          "BLACK-039"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-129",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          399,
+          399
+        ],
+        "claim": "Blackhole skill-collapse collapses skill bodies.",
+        "verdict": "supported",
+        "finding": "Both line and raw-text collapse helpers are specified, including exact tag syntax, malformed closing behavior and the line helper's per-name deduplication.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts:1-35",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/sections.test.ts:1-205",
+          "rust:crates/ice-harness/src/compaction/compaction.rs:620-683",
+          "rust:crates/ice-harness/src/compaction/tokens.rs:137-198"
+        ],
+        "entry_ids": [
+          "BLACK-012"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-130",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          400,
+          400
+        ],
+        "claim": "Blackhole trim-kept-tail trims the kept tail.",
+        "verdict": "qualified",
+        "finding": "The actual helper rewrites old tool-result text in model context after a compaction timestamp, with a shared 6000 UTF-16-unit text budget. It preserves full session records and nontext blocks; it is not general transcript deletion.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts:1-83",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.test.ts:1-85",
+          "rust:crates/ice-harness/src/compaction/tokens.rs:117-135",
+          "rust:crates/ice-agent/src/hooks.rs:29-34"
+        ],
+        "entry_ids": [
+          "BLACK-040"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-131",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          401,
+          401
+        ],
+        "claim": "Blackhole consumes Cognee's one-shot checkpoint recall.",
+        "verdict": "qualified",
+        "finding": "The session-bound, expiry-checked handoff is consumed separately from summary/refinement. Matching valid files are deleted before rendering, mismatch is retained, and the exact size/claim limitations are recorded.",
+        "evidence": [
+          "ice:packages/coding-agent/src/ice-cognee.ts:139-195",
+          "ice:packages/coding-agent/src/ice-cognee.ts:2288-2504"
+        ],
+        "entry_ids": [
+          "BLACK-037",
+          "COG-051"
+        ]
+      },
+      {
+        "qa_claim_id": "FPC-132",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        },
+        "first_pass_lines": [
+          402,
+          403
+        ],
+        "claim": "Blackhole requests boundary compaction and stops re-requesting after a miss.",
+        "verdict": "supported",
+        "finding": "Supported with request/acknowledgement/suspension state, reset rules and pause/resume semantics. Existing native automatic mid-run compaction remains credited separately.",
+        "evidence": [
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:1-68",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts:133-145",
+          "ice:packages/coding-agent/test/blackhole-review-repairs.test.ts:128-164",
+          "ice:packages/coding-agent/test/suite/blackhole-compaction.test.ts:83-209",
+          "rust:crates/ice-harness/src/agent_harness.rs:3867-3915",
+          "rust:crates/ice-agent/src/hooks.rs:59-64",
+          "ice:packages/coding-agent/src/core/agent-session.ts:2167-2407",
+          "ice:packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts:1-386",
+          "rust:crates/ice-harness/src/agent_harness.rs:2239-2281",
+          "rust:crates/ice-harness/src/agent_harness.rs:4283-4442",
+          "ice:packages/coding-agent/src/core/agent-session.ts:2408-2565",
+          "ice:packages/coding-agent/src/core/compaction/compaction.ts:135-174",
+          "rust:crates/ice-harness/src/agent_harness.rs:3547-3585",
+          "rust:crates/ice-harness/src/agent_harness.rs:3697-3785",
+          "rust:crates/ice-harness/src/agent_harness.rs:3860-3970"
+        ],
+        "entry_ids": [
+          "BLACK-041",
+          "SESSION-015"
+        ]
+      },
+      {
+        "first_pass_lines": [
+          410,
+          412
+        ],
+        "claim": "Mid-run compaction is missing in Rust; compaction exists mainly as manual flow.",
+        "verdict": "corrected",
+        "finding": "Rust installs an AfterToolResults closure, checks threshold, compacts/persists and replaces context before the next model step. Blackhole-specific percent settings, pause/resume request protocol and suppression state remain absent.",
+        "evidence": [
+          "rust:crates/ice-harness/src/agent_harness.rs:3867-3915",
+          "rust:crates/ice-harness/src/agent_harness.rs:3957-3969",
+          "ice:packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:21-68"
+        ],
+        "entry_ids": [
+          "BLACK-041"
+        ],
+        "qa_claim_id": "BLACK-existing-mid-run",
+        "first_pass_source": {
+          "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+          "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+        }
+      }
+    ]
+  },
+  "source_label_repairs": [
+    {
+      "manifest": "extensions.json",
+      "index": 7,
+      "range": [
+        666,
+        668
+      ],
+      "source": "old",
+      "active_equivalent": [
+        694,
+        696
+      ],
+      "reason": "Without an explicit report label, these numbers point into the active report's §11a introduction rather than its suggested port order.",
+      "expected_sha256": "8df9e6a206dbdb13cfd176c874832553c90792bf8d25426db64233c425e9450b",
+      "original_claim": "Custom entries must be added to the host API before later ports.",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        666,
+        668
+      ]
+    },
+    {
+      "manifest": "providers-auth.json",
+      "index": 7,
+      "range": [
+        670,
+        675
+      ],
+      "source": "active",
+      "old_equivalent": null,
+      "reason": "These are new active §11a ultra claims, not old §12 suggested order.",
+      "expected_sha256": "4b3760500311ab668d22ae165da166a7dc7b26a6f73236e00a32bc15274dbf9d",
+      "original_claim": "Rust lacks ultra and rejects an ultra thinkingLevelMap key; three private imported keys were remapped.",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+        "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d"
+      },
+      "first_pass_lines": [
+        670,
+        675
+      ]
+    },
+    {
+      "manifest": "providers-auth.json",
+      "index": 8,
+      "range": [
+        676,
+        680
+      ],
+      "source": "active",
+      "old_equivalent": null,
+      "reason": "These are new active §11a provider claims; old report ends at678.",
+      "expected_sha256": "4b3760500311ab668d22ae165da166a7dc7b26a6f73236e00a32bc15274dbf9d",
+      "original_claim": "Stored keys for zai/opencode/opencode-go/modal lack a native built-in catalog.",
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+        "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d"
+      },
+      "first_pass_lines": [
+        676,
+        680
+      ]
+    }
+  ],
+  "extra_cross_area_repair": {
+    "manifest": "tools.json",
+    "index": 4,
+    "original_range": [
+      314,
+      316
+    ],
+    "action": "resolve_cross_area_qualification",
+    "replacement_source_labels": [
+      "old:314-316",
+      "active:314-316"
+    ],
+    "qa_claim_ids": [
+      "FPC-114"
+    ],
+    "entry_ids": [
+      "TOOLS-003",
+      "TOOLS-005",
+      "TOOLS-006",
+      "TOOLS-008",
+      "SESSION-025",
+      "RPC-026",
+      "TUI-055"
+    ],
+    "reason": "RPC-026 is now published; TUI-055 is a source-backed draft. The original worker's unresolved cross-area caveat should become a precise published/draft distinction."
+  }
+}

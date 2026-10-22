@@ -1,0 +1,154 @@
+{
+  "captured_at": "2026-10-19T22:46:40.063Z",
+  "root": "/home/mewtwo/Zks/ice-rust",
+  "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+  "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+  "remotes": [
+    "origin\thttps://github.com/Zyk-Void/ice-rust.git (fetch)",
+    "origin\thttps://github.com/Zyk-Void/ice-rust.git (push)",
+    "upstream\thttps://github.com/bigfish1913/pi-rust.git (fetch)",
+    "upstream\thttps://github.com/bigfish1913/pi-rust.git (push)"
+  ],
+  "tag_matches": [
+    "v0.6.1"
+  ],
+  "upstream_cargo": "# rpi — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.\n[workspace]\nmembers = [\n    \"crates/rpi-telemetry\",\n    \"crates/rpi-ai\",\n    \"crates/rpi-agent\",\n    \"crates/rpi-tools\",\n    \"crates/rpi-harness\",\n    \"crates/rpi-cli\",\n    \"crates/rpi-tui\",\n    \"crates/rpi-plugin-sdk\",\n    \"crates/rpi-extensions\",\n    \"examples/minimal\",\n    \"examples/tools\",\n    \"examples/tui\",\n    \"examples/plugin-stub\",\n    \"packages/provider-runtime\",\n]\ndefault-members = [\n    \"crates/rpi-agent\",\n    \"crates/rpi-tools\",\n    \"crates/rpi-harness\",\n    \"crates/rpi-cli\",\n]\nresolver = \"2\"\n\n[workspace.package]\nedition = \"2021\"\nrust-version = \"1.78\"\nlicense = \"MIT\"\nrepository = \"https://github.com/bigfish1913/pi-rust\"\nhomepage = \"https://rpi.laofu.online/\"\nversion = \"0.6.1\"\nauthors = [\"BigFish <fuwei201473@gmail.com>\"]\n\n[workspace.dependencies]\n# Async runtime\ntokio = { version = \"1\", features = [\"rt-multi-thread\", \"macros\", \"time\", \"fs\", \"process\", \"sync\", \"io-util\"] }\ntokio-util = { version = \"0.7\", features = [\"rt\"] }\nasync-trait = \"0.1\"\nfutures = \"0.3\"\nfs2 = \"0.4\"\n\n# Serialization / schemas\nserde = { version = \"1\", features = [\"derive\", \"rc\"] }\nserde_json = { version = \"1\", features = [\"preserve_order\", \"raw_value\"] }\nyaml_serde = \"=0.10.2\"\nindexmap = { version = \"2\", features = [\"serde\"] }\nschemars = { version = \"0.8\", features = [\"preserve_order\"] }\njsonschema = \"0.18\"\n\n# HTTP / SSE (used by anthropic provider, M3)\nreqwest = { version = \"0.12\", default-features = false, features = [\"rustls-tls\", \"json\", \"stream\"] }\nbytes = \"1\"\neventsource-stream = \"0.2\"\n\n# Errors / logging\nthiserror = \"1\"\ntracing = \"0.1\"\n\n# Misc\nuuid = { version = \"1\", features = [\"v4\", \"v7\"] }\nrusqlite = { version = \"0.31\", features = [\"bundled\"] }\nbase64 = \"0.22\"\npng = \"0.18\"\ntempfile = \"3\"\nregex = \"1\"\nsemver = \"1\"\nglobset = \"=0.4.15\"\ndirs = \"5\"\nrpassword = \"7\"\n\n# rpi internal crates (package names and directories both use the `rpi-` prefix).\nrpi-telemetry = { path = \"crates/rpi-telemetry\", version = \"0.6.1\" }\nrpi-ai = { path = \"crates/rpi-ai\", version = \"0.6.1\" }\nrpi-agent = { path = \"crates/rpi-agent\", version = \"0.6.1\" }\nrpi-tools = { path = \"crates/rpi-tools\", version = \"0.6.1\" }\nrpi-harness = { path = \"crates/rpi-harness\", version = \"0.6.1\" }\n\nrpi-tui = { path = \"crates/rpi-tui\", version = \"0.6.1\" }\n\nrpi-plugin-sdk = { path = \"crates/rpi-plugin-sdk\", version = \"0.6.1\" }\nrpi-extensions = { path = \"crates/rpi-extensions\", version = \"0.6.1\" }\n\n[profile.release]\nlto = \"thin\"\ncodegen-units = 16\nstrip = \"symbols\"\n",
+  "targets": [
+    {
+      "id": "AGENT-049",
+      "file": "crates/ice-tools/src/os_env.rs",
+      "range": [
+        840,
+        867
+      ],
+      "anchor": "if options.inherit_env",
+      "current_sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb",
+      "current_excerpt": "840 |         // Build the spawn.\n841 |         let mut cmd = tokio::process::Command::new(&shell_cfg.shell);\n842 |         cmd.current_dir(&cwd);\n843 |         cmd.env_clear();\n844 |         // Environment: inherit + shell_env + per-call. The host's own private\n845 |         // plumbing (`HOST_PRIVATE_ENV`) is skipped: it describes *this* process,\n846 |         // not the shell or anything the shell runs, and inheriting it makes a\n847 |         // nested `ice` misreport its session. A caller that genuinely wants a\n848 |         // value passed down can still set it explicitly through `env`/`shell_env`\n849 |         // below (those are applied after this loop and win).\n850 |         if options.inherit_env {\n851 |             for (k, v) in std::env::vars() {\n852 |                 if is_host_private_env(&k) {\n853 |                     continue;\n854 |                 }\n855 |                 cmd.env(k, v);\n856 |             }\n857 |         }\n858 |         if let Some(base) = &self.shell_env {\n859 |             for (k, v) in base {\n860 |                 cmd.env(k, v);\n861 |             }\n862 |         }\n863 |         if let Some(extra) = &options.env {\n864 |             for (k, v) in extra {\n865 |                 cmd.env(k, v);\n866 |             }\n867 |         }",
+      "blame_commits": [
+        {
+          "sha": "909e85120146cfcf46b7835d69a8805bce3edcff",
+          "in_upstream": true
+        },
+        {
+          "sha": "e93d565118c59052b17330a7168a3f36601a9213",
+          "in_upstream": true
+        },
+        {
+          "sha": "8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb",
+          "in_upstream": false
+        }
+      ],
+      "upstream_matches": [
+        {
+          "path": "crates/rpi-tools/src/os_env.rs",
+          "anchor_line": 850,
+          "range": [
+            838,
+            867
+          ],
+          "excerpt": "838 |         }\n839 | \n840 |         // Build the spawn.\n841 |         let mut cmd = tokio::process::Command::new(&shell_cfg.shell);\n842 |         cmd.current_dir(&cwd);\n843 |         cmd.env_clear();\n844 |         // Environment: inherit + shell_env + per-call. The host's own private\n845 |         // plumbing (`HOST_PRIVATE_ENV`) is skipped: it describes *this* process,\n846 |         // not the shell or anything the shell runs, and inheriting it makes a\n847 |         // nested `rpi` misreport its session. A caller that genuinely wants a\n848 |         // value passed down can still set it explicitly through `env`/`shell_env`\n849 |         // below (those are applied after this loop and win).\n850 |         if options.inherit_env {\n851 |             for (k, v) in std::env::vars() {\n852 |                 if is_host_private_env(&k) {\n853 |                     continue;\n854 |                 }\n855 |                 cmd.env(k, v);\n856 |             }\n857 |         }\n858 |         if let Some(base) = &self.shell_env {\n859 |             for (k, v) in base {\n860 |                 cmd.env(k, v);\n861 |             }\n862 |         }\n863 |         if let Some(extra) = &options.env {\n864 |             for (k, v) in extra {\n865 |                 cmd.env(k, v);\n866 |             }\n867 |         }",
+          "sha256": "75c20900f4ea98f4c6b4d67e17a8ab2a6705c8f104f8656a59577fbac1e718e0"
+        }
+      ]
+    },
+    {
+      "id": "AGENT-050",
+      "file": "crates/ice-tools/src/os_env.rs",
+      "range": [
+        929,
+        1057
+      ],
+      "anchor": "let status_res = (&mut status_fut).await;",
+      "current_sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb",
+      "current_excerpt": "929 |         let stdout_task = async {\n930 |             if let Some(s) = stdout.as_mut() {\n931 |                 let mut buf = vec![0u8; 8192];\n932 |                 use tokio::io::AsyncReadExt;\n933 |                 loop {\n934 |                     let read = s.read(&mut buf);\n935 |                     let read_result = match cancel {\n936 |                         Some(token) => tokio::select! {\n937 |                             result = read => result,\n938 |                             _ = token.cancelled() => break,\n939 |                         },\n940 |                         None => read.await,\n941 |                     };\n942 |                     let n = match read_result {\n943 |                         Ok(0) => break,\n944 |                         Ok(n) => n,\n945 |                         Err(_) => break,\n946 |                     };\n947 |                     let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();\n948 |                     if let Some(cb) = on_stdout.as_mut() {\n949 |                         // Callback errors are swallowed (TS sets callbackError;\n950 |                         // v1 simplifies — the callback contract is best-effort).\n951 |                         cb(&chunk);\n952 |                     }\n953 |                     stdout_buf.push_str(&chunk);\n954 |                 }\n955 |             }\n956 |         };\n957 |         let stderr_task = async {\n958 |             if let Some(s) = stderr.as_mut() {\n959 |                 let mut buf = vec![0u8; 8192];\n960 |                 use tokio::io::AsyncReadExt;\n961 |                 loop {\n962 |                     let read = s.read(&mut buf);\n963 |                     let read_result = match cancel {\n964 |                         Some(token) => tokio::select! {\n965 |                             result = read => result,\n966 |                             _ = token.cancelled() => break,\n967 |                         },\n968 |                         None => read.await,\n969 |                     };\n970 |                     let n = match read_result {\n971 |                         Ok(0) => break,\n972 |                         Ok(n) => n,\n973 |                         Err(_) => break,\n974 |                     };\n975 |                     let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();\n976 |                     if let Some(cb) = on_stderr.as_mut() {\n977 |                         cb(&chunk);\n978 |                     }\n979 |                     stderr_buf.push_str(&chunk);\n980 |                 }\n981 |             }\n982 |         };\n983 | \n984 |         // Wait for the child, with timeout + cancellation.\n985 |         let mut timed_out = false;\n986 |         let exit_status = {\n987 |             // We pin stdout/stderr take handles + the wait future, then drive\n988 |             // them concurrently inside a single select! block. `child` is only\n989 |             // touched again AFTER the join completes (kill + reap), so the\n990 |             // borrow ends cleanly.\n991 |             let status_fut = async {\n992 |                 match (timeout, cancel) {\n993 |                     (Some(to), Some(token)) => {\n994 |                         tokio::select! {\n995 |                             status = child.wait() => status,\n996 |                             _ = tokio::time::sleep(to) => {\n997 |                                 timed_out = true;\n998 |                                 if let Some(pid) = child.id() {\n999 |                                     kill_process_tree(pid).await;\n1000 |                                 }\n1001 |                                 child.wait().await\n1002 |                             }\n1003 |                             _ = token.cancelled() => {\n1004 |                                 if let Some(pid) = child.id() {\n1005 |                                     kill_process_tree(pid).await;\n1006 |                                 }\n1007 |                                 child.wait().await\n1008 |                             }\n1009 |                         }\n1010 |                     }\n1011 |                     (Some(to), None) => match tokio::time::timeout(to, child.wait()).await {\n1012 |                         Ok(status) => status,\n1013 |                         Err(_) => {\n1014 |                             timed_out = true;\n1015 |                             if let Some(pid) = child.id() {\n1016 |                                 kill_process_tree(pid).await;\n1017 |                             }\n1018 |                             child.wait().await\n1019 |                         }\n1020 |                     },\n1021 |                     (None, Some(token)) => {\n1022 |                         tokio::select! {\n1023 |                             status = child.wait() => status,\n1024 |                             _ = token.cancelled() => {\n1025 |                                 if let Some(pid) = child.id() {\n1026 |                                     kill_process_tree(pid).await;\n1027 |                                 }\n1028 |                                 child.wait().await\n1029 |                             }\n1030 |                         }\n1031 |                     }\n1032 |                     (None, None) => child.wait().await,\n1033 |                 }\n1034 |             };\n1035 |             // Run stdio + status concurrently — but the CHILD is the driver:\n1036 |             // once it is reaped the command is over, and the call has to end even\n1037 |             // if something else still holds the stdout/stderr pipes open.\n1038 |             //\n1039 |             // This is the \"`npm run` 卡住\" shape. A script that starts a watcher,\n1040 |             // a dev-server or a background daemon leaves a grandchild running with\n1041 |             // the inherited pipes, so reading to EOF waits for a process the\n1042 |             // command no longer owns. No timeout rescues that: the timeout wraps\n1043 |             // `child.wait()` and the child already exited successfully.\n1044 |             tokio::pin!(status_fut, stdout_task, stderr_task);\n1045 |             let status_res = (&mut status_fut).await;\n1046 |             // Drain what is already in the pipe — a completed write is already in\n1047 |             // the pipe buffer, so this is not a race — then stop, without waiting\n1048 |             // for an EOF that may never come. A command whose own process is gone\n1049 |             // should not be able to hold the call open.\n1050 |             let _ = tokio::time::timeout(\n1051 |                 std::time::Duration::from_millis(EXIT_STDIO_GRACE_MS),\n1052 |                 async {\n1053 |                     let _ = tokio::join!(&mut stdout_task, &mut stderr_task);\n1054 |                 },\n1055 |             )\n1056 |             .await;\n1057 |             status_res",
+      "blame_commits": [
+        {
+          "sha": "909e85120146cfcf46b7835d69a8805bce3edcff",
+          "in_upstream": true
+        },
+        {
+          "sha": "dba50ae3418a117c8e6809a97cbab2778a622c59",
+          "in_upstream": true
+        },
+        {
+          "sha": "f01c89eabdf0c3758b9765455221fdcd058720f4",
+          "in_upstream": true
+        },
+        {
+          "sha": "db4eacd64e8c24939345fb6bd4efc2ef4328ee13",
+          "in_upstream": true
+        }
+      ],
+      "upstream_matches": [
+        {
+          "path": "crates/rpi-tools/src/os_env.rs",
+          "anchor_line": 1045,
+          "range": [
+            1033,
+            1062
+          ],
+          "excerpt": "1033 |                 }\n1034 |             };\n1035 |             // Run stdio + status concurrently — but the CHILD is the driver:\n1036 |             // once it is reaped the command is over, and the call has to end even\n1037 |             // if something else still holds the stdout/stderr pipes open.\n1038 |             //\n1039 |             // This is the \"`npm run` 卡住\" shape. A script that starts a watcher,\n1040 |             // a dev-server or a background daemon leaves a grandchild running with\n1041 |             // the inherited pipes, so reading to EOF waits for a process the\n1042 |             // command no longer owns. No timeout rescues that: the timeout wraps\n1043 |             // `child.wait()` and the child already exited successfully.\n1044 |             tokio::pin!(status_fut, stdout_task, stderr_task);\n1045 |             let status_res = (&mut status_fut).await;\n1046 |             // Drain what is already in the pipe — a completed write is already in\n1047 |             // the pipe buffer, so this is not a race — then stop, without waiting\n1048 |             // for an EOF that may never come. A command whose own process is gone\n1049 |             // should not be able to hold the call open.\n1050 |             let _ = tokio::time::timeout(\n1051 |                 std::time::Duration::from_millis(EXIT_STDIO_GRACE_MS),\n1052 |                 async {\n1053 |                     let _ = tokio::join!(&mut stdout_task, &mut stderr_task);\n1054 |                 },\n1055 |             )\n1056 |             .await;\n1057 |             status_res\n1058 |         };\n1059 | \n1060 |         // Give trailing stdio a brief grace period. Only the timed-out and\n1061 |         // cancelled paths still owe a wait: on the normal path the drain above\n1062 |         // already capped it.",
+          "sha256": "75c20900f4ea98f4c6b4d67e17a8ab2a6705c8f104f8656a59577fbac1e718e0"
+        }
+      ]
+    },
+    {
+      "id": "AGENT-057",
+      "file": "crates/ice-harness/src/prompt_templates.rs",
+      "range": [
+        393,
+        419
+      ],
+      "anchor": "out.push(bytes[i] as char);",
+      "current_sha256": "a91401e7be31523a731d3c4fe198a0ce801dc99e37568361baf3278ed617f2e5",
+      "current_excerpt": "393 | fn replace_dollar_n(content: &str, args: &[String]) -> String {\n394 |     let bytes = content.as_bytes();\n395 |     let mut out = String::with_capacity(content.len());\n396 |     let mut i = 0;\n397 |     while i < bytes.len() {\n398 |         if bytes[i] == b'$' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() {\n399 |             // Consume the maximal run of digits.\n400 |             let mut j = i + 1;\n401 |             while j < bytes.len() && bytes[j].is_ascii_digit() {\n402 |                 j += 1;\n403 |             }\n404 |             let digits = std::str::from_utf8(&bytes[i + 1..j]).unwrap_or(\"\");\n405 |             let n: usize = digits.parse().unwrap_or(0);\n406 |             if n >= 1 {\n407 |                 if let Some(arg) = args.get(n - 1) {\n408 |                     out.push_str(arg);\n409 |                 }\n410 |             }\n411 |             // n==0 (digits \"0\") → TS `args[parseInt(\"0\")-1] ?? \"\"` = args[-1] →\n412 |             // undefined → \"\". Matches: push nothing.\n413 |             i = j;\n414 |         } else {\n415 |             out.push(bytes[i] as char);\n416 |             i += 1;\n417 |         }\n418 |     }\n419 |     out",
+      "blame_commits": [
+        {
+          "sha": "df8cba823d887338c197fb5f9fb830961032797c",
+          "in_upstream": true
+        }
+      ],
+      "upstream_matches": [
+        {
+          "path": "crates/rpi-harness/src/prompt_templates.rs",
+          "anchor_line": 415,
+          "range": [
+            403,
+            432
+          ],
+          "excerpt": "403 |             }\n404 |             let digits = std::str::from_utf8(&bytes[i + 1..j]).unwrap_or(\"\");\n405 |             let n: usize = digits.parse().unwrap_or(0);\n406 |             if n >= 1 {\n407 |                 if let Some(arg) = args.get(n - 1) {\n408 |                     out.push_str(arg);\n409 |                 }\n410 |             }\n411 |             // n==0 (digits \"0\") → TS `args[parseInt(\"0\")-1] ?? \"\"` = args[-1] →\n412 |             // undefined → \"\". Matches: push nothing.\n413 |             i = j;\n414 |         } else {\n415 |             out.push(bytes[i] as char);\n416 |             i += 1;\n417 |         }\n418 |     }\n419 |     out\n420 | }\n421 | \n422 | // Replace `${@:N}` and `${@:N:L}`. Mirrors the TS regex\n423 | // `\\$\\{@:(\\d+)(?::(\\d+))?\\}`.\n424 | fn replace_at_colon(content: &str, args: &[String]) -> String {\n425 |     let bytes = content.as_bytes();\n426 |     let mut out = String::with_capacity(content.len());\n427 |     let mut i = 0;\n428 |     while i < bytes.len() {\n429 |         // Look for `${@:` at this position.\n430 |         if i + 3 < bytes.len()\n431 |             && bytes[i] == b'$'\n432 |             && bytes[i + 1] == b'{'",
+          "sha256": "4b71b9fde93c0f1b4cf28282ccf040c0746ed28b4246409805d3ad9b9c13174d"
+        }
+      ]
+    },
+    {
+      "id": "OBS-RUST-001",
+      "file": "crates/ice-telemetry/src/context.rs",
+      "range": [
+        83,
+        103
+      ],
+      "anchor": "if Arc::strong_count(&inner) > 1",
+      "current_sha256": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61",
+      "current_excerpt": "83 | impl Drop for SpanGuard {\n84 |     fn drop(&mut self) {\n85 |         let Some(inner) = self.inner.take() else {\n86 |             return;\n87 |         };\n88 |         // Another clone is still alive: defer the end callback to the last drop.\n89 |         if Arc::strong_count(&inner) > 1 {\n90 |             return;\n91 |         }\n92 |         // Last handle: unwrap the Arc and fire the end callback exactly once.\n93 |         let Ok(owned) = Arc::try_unwrap(inner) else {\n94 |             return;\n95 |         };\n96 |         let status = owned\n97 |             .finish\n98 |             .lock()\n99 |             .ok()\n100 |             .and_then(|mut slot| slot.take())\n101 |             .unwrap_or(SpanStatus::Ok);\n102 |         (owned.on_end)(&owned.name, status);\n103 |     }",
+      "blame_commits": [
+        {
+          "sha": "91d89082dd6d09d3cdbbb0d55ceb6ab88e1a9523",
+          "in_upstream": true
+        }
+      ],
+      "upstream_matches": [
+        {
+          "path": "crates/rpi-telemetry/src/context.rs",
+          "anchor_line": 89,
+          "range": [
+            77,
+            105
+          ],
+          "excerpt": "77 |         Self {\n78 |             inner: self.inner.clone(),\n79 |         }\n80 |     }\n81 | }\n82 | \n83 | impl Drop for SpanGuard {\n84 |     fn drop(&mut self) {\n85 |         let Some(inner) = self.inner.take() else {\n86 |             return;\n87 |         };\n88 |         // Another clone is still alive: defer the end callback to the last drop.\n89 |         if Arc::strong_count(&inner) > 1 {\n90 |             return;\n91 |         }\n92 |         // Last handle: unwrap the Arc and fire the end callback exactly once.\n93 |         let Ok(owned) = Arc::try_unwrap(inner) else {\n94 |             return;\n95 |         };\n96 |         let status = owned\n97 |             .finish\n98 |             .lock()\n99 |             .ok()\n100 |             .and_then(|mut slot| slot.take())\n101 |             .unwrap_or(SpanStatus::Ok);\n102 |         (owned.on_end)(&owned.name, status);\n103 |     }\n104 | }\n105 | ",
+          "sha256": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61"
+        }
+      ]
+    }
+  ]
+}

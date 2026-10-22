@@ -1,0 +1,749 @@
+{
+  "generated_at": "2026-10-20T03:12:12.243Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/auth/context.ts",
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "emitted_ranges": [
+        [
+          22,
+          46
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "defaultProviderAuthContext",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/context.ts:23",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/credential-store.ts",
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "emitted_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "InMemoryCredentialStore",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/credential-store.ts:9",
+          "covering_entries": [
+            "AUTH-002"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/helpers.ts",
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "emitted_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "envApiKeyAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/helpers.ts:9",
+          "covering_entries": [
+            "AUTH-004",
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/anthropic.ts",
+      "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "emitted_ranges": [
+        [
+          354,
+          364
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "anthropicOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/anthropic.ts:355",
+          "covering_entries": [
+            "AUTH-016"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/device-code.ts",
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "emitted_ranges": [
+        [
+          15,
+          36
+        ],
+        [
+          45,
+          64
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OAuthDeviceCodePollResult",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/oauth/device-code.ts:16",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "OAuthDeviceCodePollOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/oauth/device-code.ts:18",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "pollOAuthDeviceCodeFlow",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/device-code.ts:46",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/github-copilot.ts",
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "emitted_ranges": [
+        [
+          397,
+          412
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "githubCopilotOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/github-copilot.ts:398",
+          "covering_entries": [
+            "AUTH-018"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/kimi-coding.ts",
+      "sha256": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "emitted_ranges": [
+        [
+          294,
+          310
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "kimiCodingOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/kimi-coding.ts:295",
+          "covering_entries": [
+            "AUTH-020"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/load.ts",
+      "sha256": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "emitted_ranges": [
+        [
+          30,
+          69
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "loadAnthropicOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:31",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadOpenAICodexOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:36",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadGitHubCopilotOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:41",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadOpenRouterOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:46",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadKimiCodingOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:51",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadXaiOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:56",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "loadRadiusOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/load.ts:61",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/oauth-page.ts",
+      "sha256": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "emitted_ranges": [
+        [
+          93,
+          110
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "oauthSuccessHtml",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/oauth-page.ts:94",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "oauthErrorHtml",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/oauth-page.ts:102",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "emitted_ranges": [
+        [
+          514,
+          533
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openaiCodexOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/openai-codex.ts:515",
+          "covering_entries": [
+            "AUTH-017"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/openrouter.ts",
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "emitted_ranges": [
+        [
+          300,
+          312
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openRouterOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/openrouter.ts:301",
+          "covering_entries": [
+            "AUTH-019"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/pkce.ts",
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "emitted_ranges": [
+        [
+          20,
+          35
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "generatePKCE",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/pkce.ts:21",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/radius.ts",
+      "sha256": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "emitted_ranges": [
+        [
+          352,
+          371
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RadiusOAuthOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/oauth/radius.ts:353",
+          "covering_entries": [
+            "AUTH-022"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/xai.ts",
+      "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "emitted_ranges": [
+        [
+          228,
+          239
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "xaiOAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/auth/oauth/xai.ts:229",
+          "covering_entries": [
+            "AUTH-021"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/resolve.ts",
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "emitted_ranges": [
+        [
+          15,
+          34
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ModelsErrorCode",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/resolve.ts:16",
+          "covering_entries": [
+            "AUTH-004"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/auth/types.ts",
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "emitted_ranges": [
+        [
+          39,
+          94
+        ],
+        [
+          116,
+          150
+        ],
+        [
+          163,
+          188
+        ],
+        [
+          233,
+          238
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CredentialInfo",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:40",
+          "covering_entries": [
+            "AUTH-001"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AuthOperationOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:46",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "AuthType",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:117",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AuthInfoLink",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:132",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderAuthInteraction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:164",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ApiKeyAuth",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:170",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ProviderAuth",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/auth/types.ts:234",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "emitted_ranges": [
+        [
+          2,
+          7
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "bedrockProviderModule",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/bedrock-provider.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/bun-oauth.ts",
+      "sha256": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "emitted_ranges": [
+        [
+          10,
+          22
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "registerBunOAuthFlows",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/bun-oauth.ts:11",
+          "covering_entries": [
+            "AUTH-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/env-api-keys.ts",
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "emitted_ranges": [
+        [
+          28,
+          49
+        ],
+        [
+          127,
+          163
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ANTHROPIC_AUTH_TOKEN_ENV",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:29",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ANTHROPIC_OAUTH_TOKEN_ENV",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:30",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ANTHROPIC_API_KEY_ENV",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:31",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "findEnvKeys",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:128",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "findEnvKeys",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:129",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "findEnvKeys",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:130",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getEnvApiKey",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:143",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getEnvApiKey",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:144",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getEnvApiKey",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/env-api-keys.ts:145",
+          "covering_entries": [
+            "AUTH-012"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/model-catalog.ts",
+      "sha256": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "emitted_ranges": [
+        [
+          2,
+          21
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ModelGroups",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/model-catalog.ts:3",
+          "covering_entries": [
+            "AI-058",
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/models-store.ts",
+      "sha256": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "emitted_ranges": [
+        [
+          15,
+          45
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ModelsStoreOperationOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models-store.ts:16",
+          "covering_entries": [
+            "AUTH-010"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "InMemoryModelsStore",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/models-store.ts:27",
+          "covering_entries": [
+            "AUTH-010"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/all.ts",
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "emitted_ranges": [
+        [
+          51,
+          91
+        ],
+        [
+          141,
+          154
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "BuiltinProvider",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/providers/all.ts:52",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getBuiltinModel",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/all.ts:60",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getBuiltinProviders",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/all.ts:68",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getBuiltinModelDataGeneratedAt",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/all.ts:73",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "builtinImagesProviders",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/all.ts:142",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "builtinImagesModels",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/all.ts:147",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

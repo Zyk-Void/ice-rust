@@ -1,0 +1,459 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T06:48:14.107Z",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "derivation": "Immutable reviewed native replacement fields only; no new source review.",
+  "explicit_deliberate_identity_policy_entries": [
+    "CLI-018",
+    "SET-001"
+  ],
+  "policy_explanation": "CLI-018 explicitly distinguishes native names from TypeScript ice/.ice/ICE_* and disclaims automatic migration. SET-001 explicitly requires preserving intentional icers/.icers/ICERS_* identity.",
+  "identity_correction_entries": [
+    "AUTH-023",
+    "BLACK-002",
+    "CLI-001",
+    "CLI-003",
+    "CLI-004",
+    "CLI-006",
+    "CLI-008",
+    "CLI-018",
+    "CLI-019",
+    "CLI-022",
+    "CLI-039",
+    "CLI-042",
+    "CLI-044",
+    "CLI-045",
+    "MISC-001",
+    "MISC-013",
+    "OBS-002",
+    "RPC-015",
+    "RPC-036",
+    "SESSION-023",
+    "SET-001",
+    "SET-014",
+    "SUB-034",
+    "TUI-050",
+    "TUI-208"
+  ],
+  "entry_details": [
+    {
+      "id": "AUTH-023",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "icers"
+      ],
+      "reviewed_reasons": [
+        "The active native integration-test source checks the x-title: icers prefix. This retains the explicit external-package and unexecuted-test limitations."
+      ],
+      "proposals": [
+        "lane-exports-rpc-ai-auth-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "BLACK-002",
+      "fields": [
+        "port"
+      ],
+      "native_literals": [
+        "icers",
+        "ICERS_CODING_AGENT_DIR",
+        ".icers/agent"
+      ],
+      "reviewed_reasons": [
+        "Make the proposed native port use the current shared Rust configuration identity; preserve the TypeScript source path and override contract in mechanism/interfaces."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-001",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "icers",
+        "ICERS_CODING_AGENT_DIR"
+      ],
+      "reviewed_reasons": [
+        "Native executable/config override are renamed; absent TS ICE_CODING_AGENT/AI_AGENT markers and PI bridge remain unchanged claims."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-003",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_EXTENSIONS_DIR"
+      ],
+      "reviewed_reasons": [
+        "Native args environment lookup changed."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-004",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "icers",
+        "ICERS_FORCE_TUI"
+      ],
+      "reviewed_reasons": [
+        "Native version output and force-TUI control follow the active host identity."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-006",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        ".icers/sessions"
+      ],
+      "reviewed_reasons": [
+        "Native default session directory changed; TS paths remain unchanged."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-008",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_SKIP_STDIN"
+      ],
+      "reviewed_reasons": [
+        "Native stdin bypass control changed."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-018",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_CODING_AGENT_DIR",
+        ".icers/agent",
+        ".icers/sessions."
+      ],
+      "reviewed_reasons": [
+        "Explicitly distinguish native runtime identity from TypeScript compatibility names."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-019",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_OFFLINE",
+        "ICERS_SKIP_STDIN",
+        "ICERS_FORCE_TUI"
+      ],
+      "reviewed_reasons": [
+        "Native controls change; the explicitly TS ICE_SKIP_VERSION_CHECK marker remains."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-022",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        ".icers/packages/<name>/extensions."
+      ],
+      "reviewed_reasons": [
+        "Native project package location changed."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-039",
+      "fields": [
+        "mechanism",
+        "interfaces"
+      ],
+      "native_literals": [
+        ".icers/packages/<name>/extensions.",
+        ".icers/extensions",
+        ".icers/packages/..",
+        ".icers/packages/<name>/extensions",
+        ".icers/packages.json"
+      ],
+      "reviewed_reasons": [
+        "Native dot-name containment consequence follows the .icers project root; code/OS limitations are retained.",
+        "Native project registry and artifact paths changed."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-042",
+      "fields": [
+        "mechanism",
+        "interfaces"
+      ],
+      "native_literals": [
+        "ICERS_OFFLINE",
+        "ICERS_DISABLE_UPDATE_CHECK",
+        "icers"
+      ],
+      "reviewed_reasons": [
+        "Native cache identity/access and update controls changed; exact serialization consequence is distinguished from source-backend parity.",
+        "Only native environment identities change; TS ICE_SKIP_VERSION_CHECK remains unchanged."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-044",
+      "fields": [
+        "mechanism"
+      ],
+      "native_literals": [
+        "icers"
+      ],
+      "reviewed_reasons": [
+        "Version parser uses APP_NAME→SDK HOST_NAME; helper function identifier validate_ice_executable_version is retained."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "CLI-045",
+      "fields": [
+        "mechanism",
+        "interfaces"
+      ],
+      "native_literals": [
+        "icers"
+      ],
+      "reviewed_reasons": [
+        "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+      ],
+      "proposals": [
+        "coordinator-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "MISC-001",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "icers",
+        "ICERS_DISABLE_UPDATE_CHECK"
+      ],
+      "reviewed_reasons": [
+        "Use the active native user agent and update-disable variable; TS version-check inputs and helper semantics remain unchanged."
+      ],
+      "proposals": [
+        "lane-final-areas-active-identity-proposal.json"
+      ]
+    },
+    {
+      "id": "MISC-013",
+      "fields": [
+        "interfaces",
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_CHANGELOG_URL"
+      ],
+      "reviewed_reasons": [
+        "Correct only the explicitly native public configuration variable.",
+        "Use the current native changelog URL override; the dedicated Ice baseline name is an existing source identifier and remains."
+      ],
+      "proposals": [
+        "lane-final-areas-active-identity-proposal.json"
+      ]
+    },
+    {
+      "id": "OBS-002",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_TIMING"
+      ],
+      "reviewed_reasons": [
+        "Native and TypeScript timing gates now have different names, although both still use the exact value 1."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "RPC-015",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_SERVER_TOKEN"
+      ],
+      "reviewed_reasons": [
+        "The active native connection-token fallback reads the renamed ICERS_SERVER_TOKEN environment key."
+      ],
+      "proposals": [
+        "lane-exports-rpc-ai-auth-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "RPC-036",
+      "fields": [
+        "mechanism"
+      ],
+      "native_literals": [
+        "ICERS_REMOTE_E2E_ADDR"
+      ],
+      "reviewed_reasons": [
+        "The native optional real-server test gate reads ICERS_REMOTE_E2E_ADDR. Test intent remains source-only; no external server execution is asserted."
+      ],
+      "proposals": [
+        "lane-exports-rpc-ai-auth-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "SESSION-023",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_SESSION_ID"
+      ],
+      "reviewed_reasons": [
+        "Update the current native session-identity variable; preserve the TypeScript tool-environment facts and the native ToolCallContext behavior."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "SET-001",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        ".icers",
+        "ICERS_CODING_AGENT_DIR",
+        "icers",
+        ".icers/ICERS_"
+      ],
+      "reviewed_reasons": [
+        "Update the native comparison to the active checkout while keeping TS .ice/ICE_* identity and native RelativeOverride behavior unchanged."
+      ],
+      "proposals": [
+        "lane-final-areas-active-identity-proposal.json"
+      ]
+    },
+    {
+      "id": "SET-014",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_BASH_TIMEOUT"
+      ],
+      "reviewed_reasons": [
+        "Use the active native bash timeout variable; the 120-second default and missing shellPath wiring remain the same source findings."
+      ],
+      "proposals": [
+        "lane-final-areas-active-identity-proposal.json"
+      ]
+    },
+    {
+      "id": "SUB-034",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_TEST_SUBAGENT_LIBRARY"
+      ],
+      "reviewed_reasons": [
+        "Update the native conditional DLL-test environment variable while retaining the absent companion-package limitation."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "TUI-050",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_EXTERNAL_EDITOR"
+      ],
+      "reviewed_reasons": [
+        "Update the native editor override key. Preserve the unchanged ice-draft- prefix, caller timing, cursor limitations and error behavior."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    },
+    {
+      "id": "TUI-208",
+      "fields": [
+        "rust"
+      ],
+      "native_literals": [
+        "ICERS_KITTY_KEYBOARD"
+      ],
+      "reviewed_reasons": [
+        "Update the native keyboard-protocol override key; keep all existing protocol/fallback behavior and TypeScript terminal keys."
+      ],
+      "proposals": [
+        "lane-exports-sub-session-native-prose-replacements.json"
+      ]
+    }
+  ],
+  "reviewed_inputs": [
+    {
+      "path": "evidence/coordinator-native-prose-replacements.json",
+      "sha256": "e3c8a805c6cf0c66c669f93285a15a3a107d22eb7365b0cae83c57921eb13476"
+    },
+    {
+      "path": "evidence/lane-exports-rpc-ai-auth-native-prose-replacements.json",
+      "sha256": "3ae59f65990f99fa7d587a6ddfd02ab660c5116c153825fa6342a8d3ab84428e"
+    },
+    {
+      "path": "evidence/lane-exports-sub-session-native-prose-replacements.json",
+      "sha256": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423"
+    },
+    {
+      "path": "evidence/lane-final-areas-active-identity-proposal.json",
+      "sha256": "3bad2fa6387b5a5677cd166530547d36f1214467f7fa22b13c1552c6f2846f27"
+    }
+  ]
+}

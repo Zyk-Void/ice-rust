@@ -41,8 +41,16 @@ pub struct CompactionSettingsJson {
     pub enabled: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reserve_tokens: Option<i64>,
+    /// Coding-agent percentage trigger. Kept as JSON so malformed values can
+    /// fall back to the product default without invalidating the full settings
+    /// file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub threshold_percent: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub keep_recent_tokens: Option<i64>,
+    /// Coding-agent turn-boundary behavior (`off`, `pause`, or `resume`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mid_run_compaction: Option<ice_harness::compaction::settings::MidRunCompactionMode>,
     /// Per-model overrides. Kept for round-tripping; the harness has no
     /// per-model compaction override.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -279,7 +287,45 @@ impl Settings {
         policy
     }
 
-    /// Compaction settings, resolved onto the harness type.
+    /// Coding-agent compaction policy, separate from the generic harness's
+    /// reserve-based compaction settings. An absent `reserveTokens` remains
+    /// implicit so it can be recalculated for each selected model.
+    pub fn coding_agent_compaction_policy(
+        &self,
+    ) -> ice_harness::compaction::settings::CodingAgentCompactionPolicy {
+        use ice_harness::compaction::settings::{
+            CodingAgentCompactionPolicy, MidRunCompactionMode,
+            DEFAULT_CODING_AGENT_COMPACTION_THRESHOLD_PERCENT,
+        };
+
+        let mut policy = CodingAgentCompactionPolicy::default();
+        let Some(compaction) = &self.compaction else {
+            return policy;
+        };
+        if let Some(enabled) = compaction.enabled {
+            policy.enabled = enabled;
+        }
+        if let Some(threshold) = compaction
+            .threshold_percent
+            .as_ref()
+            .and_then(|v| v.as_f64())
+        {
+            policy.threshold_percent = threshold;
+        } else {
+            policy.threshold_percent = DEFAULT_CODING_AGENT_COMPACTION_THRESHOLD_PERCENT;
+        }
+        policy.reserve_tokens = compaction.reserve_tokens;
+        if let Some(keep_recent_tokens) = compaction.keep_recent_tokens {
+            policy.keep_recent_tokens = keep_recent_tokens;
+        }
+        policy.mid_run_compaction = compaction
+            .mid_run_compaction
+            .unwrap_or(MidRunCompactionMode::Off);
+        policy
+    }
+
+    /// Generic harness settings, resolved onto the harness type. This preserves
+    /// the legacy reserve-based policy independently of the coding-agent policy.
     pub fn compaction_settings(&self) -> ice_harness::types::CompactionSettings {
         let mut settings = ice_harness::types::CompactionSettings::default();
         let Some(compaction) = &self.compaction else {
@@ -936,6 +982,77 @@ mod scoped_tests {
 
         assert_eq!(settings.steering_mode(), ice_agent::QueueMode::All);
         assert_eq!(settings.follow_up_mode(), ice_agent::QueueMode::All);
+    }
+
+    #[test]
+    fn coding_agent_compaction_settings_parse_and_roundtrip_independently() {
+        use ice_harness::compaction::settings::MidRunCompactionMode;
+
+        let raw = r#"{
+            "enabled": false,
+            "reserveTokens": 16384,
+            "thresholdPercent": 87.5,
+            "keepRecentTokens": 4321,
+            "midRunCompaction": "resume"
+        }"#;
+        let parsed: CompactionSettingsJson = serde_json::from_str(raw).unwrap();
+        let serialized = serde_json::to_value(&parsed).unwrap();
+        let roundtripped: CompactionSettingsJson = serde_json::from_value(serialized).unwrap();
+        assert_eq!(roundtripped.enabled, Some(false));
+        assert_eq!(roundtripped.reserve_tokens, Some(16_384));
+        assert_eq!(
+            roundtripped.threshold_percent,
+            Some(serde_json::json!(87.5))
+        );
+        assert_eq!(roundtripped.keep_recent_tokens, Some(4_321));
+        assert_eq!(
+            roundtripped.mid_run_compaction,
+            Some(MidRunCompactionMode::Resume)
+        );
+
+        let settings: Settings =
+            serde_json::from_str(&format!("{{\"compaction\":{raw}}}")).unwrap();
+        let policy = settings.coding_agent_compaction_policy();
+        assert!(!policy.enabled);
+        assert_eq!(policy.threshold_percent, 87.5);
+        assert_eq!(policy.reserve_tokens, Some(16_384));
+        assert_eq!(policy.keep_recent_tokens, 4_321);
+        assert_eq!(policy.mid_run_compaction, MidRunCompactionMode::Resume);
+    }
+
+    #[test]
+    fn absent_and_explicit_product_reserves_remain_distinct() {
+        let absent: Settings = serde_json::from_str(
+            r#"{"compaction":{"thresholdPercent":85,"midRunCompaction":"off"}}"#,
+        )
+        .unwrap();
+        let explicit: Settings =
+            serde_json::from_str(r#"{"compaction":{"reserveTokens":16384}}"#).unwrap();
+
+        let absent_policy = absent.coding_agent_compaction_policy();
+        let explicit_policy = explicit.coding_agent_compaction_policy();
+        assert_eq!(absent_policy.reserve_tokens, None);
+        assert_eq!(explicit_policy.reserve_tokens, Some(16_384));
+        assert_eq!(
+            absent_policy.resolve_reserve_tokens(Some(8_000), Some(100_000)),
+            8_000
+        );
+        assert_eq!(
+            explicit_policy.resolve_reserve_tokens(Some(8_000), Some(100_000)),
+            16_384
+        );
+    }
+
+    #[test]
+    fn invalid_product_threshold_does_not_invalidate_settings() {
+        for raw_threshold in [r#""bad""#, "null", "0", "-1"] {
+            let settings: Settings = serde_json::from_str(&format!(
+                r#"{{"compaction":{{"thresholdPercent":{raw_threshold}}}}}"#
+            ))
+            .expect("invalid threshold should fall back, not reject settings");
+            let policy = settings.coding_agent_compaction_policy();
+            assert_eq!(policy.normalized_threshold_percent(), 85.0);
+        }
     }
 
     /// An absent key keeps the harness default rather than a zero value: a partial

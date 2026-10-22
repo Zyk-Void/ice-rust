@@ -1,0 +1,1146 @@
+{
+  "generated_at": "2026-10-20T03:16:47.548Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/coding-agent/src/modes/rpc/jsonl.ts",
+      "sha256": "c020a530d0aa37ec1b8b4e7841752a710b7a39fb030f8a25b421a0ee59952b2b",
+      "emitted_ranges": [
+        [
+          20,
+          46
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "JsonlReaderOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/jsonl.ts:21",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "attachJsonlLineReader",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/jsonl.ts:28",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
+      "sha256": "f02bb51a514c3809a14cc93ccaee15bad2676b6c38129be5249a393127d85527",
+      "emitted_ranges": [
+        [
+          77,
+          96
+        ],
+        [
+          102,
+          129
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcClientOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:78",
+          "covering_entries": [
+            "RPC-032"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelInfo",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:103",
+          "covering_entries": [
+            "RPC-032"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcEventListener",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:111",
+          "covering_entries": [
+            "RPC-032"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-coordinator.ts",
+      "sha256": "fa7385e652aeaa1578027e170fa642e1c58d11a49f92cbbe9ff1eb85944227d5",
+      "emitted_ranges": [
+        [
+          3,
+          22
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RPC_MAX_PENDING_COMMANDS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-coordinator.ts:4",
+          "covering_entries": [
+            "RPC-018"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts",
+      "sha256": "1cc64c008ecc4a0a94646837965a5697fa183923c856948939a703f06039b1b1",
+      "emitted_ranges": [
+        [
+          3,
+          22
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RPC_LIVE_CONTROLS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts:4",
+          "covering_entries": [
+            "RPC-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_OUTPUT_LINE_BYTES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts:19",
+          "covering_entries": [
+            "RPC-017",
+            "RPC-035"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_COLLECTED_EVENT_BYTES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts:20",
+          "covering_entries": [
+            "RPC-017",
+            "RPC-035"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_COLLECTED_EVENTS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts:21",
+          "covering_entries": [
+            "RPC-017",
+            "RPC-035"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-schema.ts",
+      "sha256": "f36e05bf4644173fadfa01705bc82612bc7625acda289bedcae6e0d861263ced",
+      "emitted_ranges": [
+        [
+          11,
+          173
+        ],
+        [
+          250,
+          269
+        ],
+        [
+          291,
+          328
+        ],
+        [
+          388,
+          407
+        ],
+        [
+          413,
+          432
+        ],
+        [
+          444,
+          463
+        ],
+        [
+          672,
+          691
+        ],
+        [
+          695,
+          705
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcCommandSource",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:12",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandOption",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:14",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandFieldValueType",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:20",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandFieldBase",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:22",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcBooleanCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:35",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcIntegerCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:41",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcNumberCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:49",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcStringCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:58",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcEnumCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:67",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcStringListCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:74",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:82",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandGroup",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:90",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandSchema",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:96",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandSchemaResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:109",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandInvocationResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:115",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandErrorDetails",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:121",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcCommandExecutionError",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:137",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "COMMAND_FIELD_KEY_PATTERN",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:153",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ICE_SETTINGS_COMMAND_NAME",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:154",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ICE_SETTINGS_SCHEMA_ID",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:155",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "buildIceSettingsCommandSchema",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:251",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getIceSettingsCommandSchemaResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:292",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "invokeIceSettingsCommand",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:310",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CustomStructuredCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:389",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "mergeCustomStructuredCommandInventory",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:414",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "validateStructuredInvocation",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:445",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "registerCustomStructuredCommand",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:673",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "clearCustomStructuredCommands",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:696",
+          "covering_entries": [
+            "RPC-031"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-input-admission.ts",
+      "sha256": "f3b6c0da6287ef47e880fb911dbabe77a9b7c74944a29a779caa6b0b8c38d0e2",
+      "emitted_ranges": [
+        [
+          4,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RPC_MAX_RETAINED_INPUT_BYTES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:5",
+          "covering_entries": [
+            "RPC-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_CONTROL_INPUT_BYTES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:6",
+          "covering_entries": [
+            "RPC-018"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_LIVE_CONTROLS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:7",
+          "covering_entries": [
+            "RPC-018"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "emitted_ranges": [
+        [
+          142,
+          191
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcModeOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:143",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-pages.ts",
+      "sha256": "171335f191bbae7f58208b1e2c3a25ed2d20bac6f8a904f17c7dd3c8d8887833",
+      "emitted_ranges": [
+        [
+          4,
+          48
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcPage",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-pages.ts:5",
+          "covering_entries": [
+            "RPC-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "pageAfterKey",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-pages.ts:12",
+          "covering_entries": [
+            "RPC-023",
+            "RPC-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "pageMessages",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-pages.ts:30",
+          "covering_entries": [
+            "RPC-024"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts",
+      "sha256": "46e367c73910fbf62e30d5946dbb846ab2f6fd62c4b1a862b8fb701e55efbc5c",
+      "emitted_ranges": [
+        [
+          2,
+          36
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcRequestExecutionError",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:3",
+          "covering_entries": [
+            "RPC-019"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_MAX_REQUEST_TIMEOUT_MS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:14",
+          "covering_entries": [
+            "RPC-019"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_CANCELLABLE_COMMANDS",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:15",
+          "covering_entries": [
+            "RPC-019"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcRequestScope",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:18",
+          "covering_entries": [
+            "RPC-019"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-settings.ts",
+      "sha256": "452d06b6b8878704db7637fa321a38db280b888321a719244bb5af7b4fe5455c",
+      "emitted_ranges": [
+        [
+          13,
+          36
+        ],
+        [
+          43,
+          91
+        ],
+        [
+          1070,
+          1089
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcSettingsFieldKind",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:14",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsFieldScope",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:15",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsValue",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:16",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsConstraints",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:18",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsField",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:44",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsDiagnostic",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:46",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingUpdate",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:60",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsContext",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:66",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSettingsErrorCode",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:73",
+          "covering_entries": [
+            "RPC-030"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "createRpcSettingsSnapshot",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-settings.ts:1071",
+          "covering_entries": [
+            "RPC-029"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "sha256": "549d3dbd0cf3a46408c52daab3b4619e4964dc9a1004491677b24badba709400",
+      "emitted_ranges": [
+        [
+          38,
+          57
+        ],
+        [
+          191,
+          389
+        ],
+        [
+          573,
+          756
+        ],
+        [
+          791,
+          802
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RpcCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:39",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcSlashCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:192",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcCapabilities",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:213",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcProviderInfo",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:236",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcProviderSnapshot",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:246",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcModelSnapshot",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:252",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcMessagePage",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:259",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcTreePage",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:266",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcModelsRefreshResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:274",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcModelsChangedEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:281",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcEntryPage",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:287",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSessionPage",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:294",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcQueueSnapshot",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:300",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSessionState",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:305",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcResponse",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:341",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcAttachment",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:574",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcExportResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:580",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcExtensionFlag",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:587",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcExtensionShortcut",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:597",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcDiagnostics",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:603",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcCompletions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:621",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcScopedModelRef",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:631",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcToolInfo",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:638",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcShellSummary",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:641",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcShellDetail",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:643",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSessionInfo",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:652",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcChangelogEntry",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:664",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcResources",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:670",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcShellsUpdateEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:684",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSubagentPatchAction",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:689",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSubagentPatchResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:692",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSubagentsUpdateEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:702",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcSessionChangedEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:708",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "RpcExtensionUIRequest",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:733",
+          "covering_entries": [
+            "RPC-028"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcExtensionUIResponse",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:792",
+          "covering_entries": [
+            "RPC-028"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-validation.ts",
+      "sha256": "2e10656a673e3777785e20fc32ac9588f59df009f195f64910249adeda17bbb5",
+      "emitted_ranges": [
+        [
+          3,
+          22
+        ],
+        [
+          197,
+          228
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RPC_MAX_INPUT_LINE_BYTES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:4",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RPC_COMMAND_TYPES",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:198",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RpcInputValidation",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:200",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "validateRpcInput",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:210",
+          "covering_entries": [
+            "RPC-016"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/modes/rpc/rpc-views.ts",
+      "sha256": "ad77ea81c307c51c9fe447b88764b7f2bad6a2b034c3593436e176b0414729e9",
+      "emitted_ranges": [
+        [
+          25,
+          86
+        ],
+        [
+          139,
+          158
+        ],
+        [
+          171,
+          216
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "toPublicModel",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:26",
+          "covering_entries": [
+            "RPC-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "toShellSummary",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:31",
+          "covering_entries": [
+            "RPC-026"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "listShellSummaries",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:36",
+          "covering_entries": [
+            "RPC-026"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "readShellDetail",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:44",
+          "covering_entries": [
+            "RPC-026"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "listTools",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:63",
+          "covering_entries": [
+            "RPC-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getDiagnostics",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:68",
+          "covering_entries": [
+            "RPC-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getProviderSnapshot",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:140",
+          "covering_entries": [
+            "RPC-023"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "toSessionInfo",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:172",
+          "covering_entries": [
+            "RPC-022",
+            "RPC-024"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "readChangelog",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:187",
+          "covering_entries": [
+            "RPC-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getScopedModelRefs",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:193",
+          "covering_entries": [
+            "RPC-023"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "resolveScopedModels",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/modes/rpc/rpc-views.ts:202",
+          "covering_entries": [
+            "RPC-023"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

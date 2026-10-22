@@ -1,0 +1,223 @@
+{
+  "generated_at": "2026-10-20T03:03:44.211Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/api/google-vertex.lazy.ts",
+      "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "googleVertexApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-vertex.lazy.ts:4",
+          "covering_entries": [
+            "AI-035"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/ice-messages.lazy.ts",
+      "sha256": "7003f7b27ec78b0d498ae2a3b8de681231163c41a088f859c63c6d3a87063469",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "iceMessagesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/ice-messages.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/ice-messages.ts",
+      "sha256": "23770ef5d114e4c6b99287c72cff7153750a46da6be6a37d8c66567939c694d3",
+      "emitted_ranges": [
+        [
+          52,
+          71
+        ],
+        [
+          94,
+          113
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "IceMessagesEvent",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/ice-messages.ts:53",
+          "covering_entries": [
+            "AI-029"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "IceMessagesResponseError",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/ice-messages.ts:95",
+          "covering_entries": [
+            "AI-029"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/lazy.ts",
+      "sha256": "ff4ce241fb72cdd1900d56865a6295815d8d073b321c2ed20435639ed74bf39a",
+      "emitted_ranges": [
+        [
+          67,
+          86
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "LazyApiCapabilities",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/lazy.ts:68",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/mistral-conversations.lazy.ts",
+      "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "mistralConversationsApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/mistral-conversations.lazy.ts:4",
+          "covering_entries": [
+            "AI-040"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-codex-responses.lazy.ts",
+      "sha256": "89e1883f937df0992b852970f574b5e1fc2a69fefaacc89628cd1d924a8af63f",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openAICodexResponsesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/openai-codex-responses.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-codex-responses.ts",
+      "sha256": "654cc286cc96d58de703a6d0221fa0f84e5a43e630fadd11d298572f6ff59ef5",
+      "emitted_ranges": [
+        [
+          880,
+          899
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OpenAICodexWebSocketDebugStats",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/openai-codex-responses.ts:881",
+          "covering_entries": [
+            "AI-055"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-completions.lazy.ts",
+      "sha256": "a1defe07f6d7bd37de3933164cc88cfeb2d46cf390d0bbb52c85b280cc58d193",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openAICompletionsApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/openai-completions.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-completions.ts",
+      "sha256": "02be1155ed483bf695482658d264d283843180453a388c4b062f6cc39441d818",
+      "emitted_ranges": [
+        [
+          145,
+          164
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ConvertCompletionsMessagesOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/openai-completions.ts:146",
+          "covering_entries": [
+            "AI-025"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-prompt-cache.ts",
+      "sha256": "78727b9b42d5c5cdc47d17f44d532cdf951cbee3b158cacfb3e640d8f792e8a4",
+      "emitted_ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENAI_PROMPT_CACHE_KEY_MAX_LENGTH",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/openai-prompt-cache.ts:1",
+          "covering_entries": [
+            "AI-027"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

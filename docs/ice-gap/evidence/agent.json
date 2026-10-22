@@ -1,0 +1,3664 @@
+{
+  "area": "agent",
+  "complete": true,
+  "entries": [
+    {
+      "id": "AGENT-001",
+      "title": "Open message union and complete agent event payloads",
+      "status": "different-by-design",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "AI-019"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AI-006",
+          "kind": "shared-contract",
+          "reason": "AI-019 explicitly owns the complete nested provider data contracts; AI-006 remains request-option authority.",
+          "reviews": [
+            "DEPQA-031"
+          ]
+        },
+        {
+          "entry_id": "AI-019",
+          "kind": "prerequisite",
+          "reason": "AI-019 explicitly owns the complete nested provider data contracts; AI-006 remains request-option authority.",
+          "reviews": [
+            "DEPQA-031"
+          ]
+        },
+        {
+          "entry_id": "RPC-004",
+          "kind": "shared-contract",
+          "reason": "AI-019 explicitly owns the complete nested provider data contracts; AI-006 remains request-option authority.",
+          "reviews": [
+            "DEPQA-031"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-002",
+      "title": "Asynchronous stream-function construction",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-003",
+      "title": "Replaceable default stream registry and package entry points",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 30,
+      "size_max": 65,
+      "dependencies": [
+        "AGENT-002"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-004",
+      "title": "Raw loop entry, continuation, sink and return boundaries",
+      "status": "different-by-design",
+      "priority": "P1",
+      "size_min": 120,
+      "size_max": 220,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-002",
+        "AGENT-003"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-005",
+      "title": "Turn progression and exact steering/follow-up drain order",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "AGENT-004",
+        "AGENT-010",
+        "AGENT-017",
+        "AGENT-018",
+        "AGENT-019"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-006",
+      "title": "Context transformation before provider-message conversion",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 55,
+      "size_max": 105,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-007",
+      "title": "Per-request dynamic key and full stream-option forwarding",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 160,
+      "dependencies": [
+        "AGENT-002",
+        "AGENT-006",
+        "AI-006"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AI-003",
+          "kind": "shared-contract",
+          "reason": "The raw loop forwards the complete shared request option envelope, which AI-006 owns. Dynamic key resolution is the supplied getApiKey callback; default provider dispatch is AI-003. Do not make the callback seam depend on the coding-agent auth store or UI.",
+          "reviews": [
+            "DEPQA-032"
+          ]
+        },
+        {
+          "entry_id": "AI-006",
+          "kind": "prerequisite",
+          "reason": "The raw loop forwards the complete shared request option envelope, which AI-006 owns. Dynamic key resolution is the supplied getApiKey callback; default provider dispatch is AI-003. Do not make the callback seam depend on the coding-agent auth store or UI.",
+          "reviews": [
+            "DEPQA-032"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-008",
+      "title": "Streaming assistant reduction and terminal result selection",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-002",
+        "AGENT-006",
+        "AGENT-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-009",
+      "title": "Terminal error-to-aborted reclassification",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 12,
+      "size_max": 30,
+      "dependencies": [
+        "AGENT-008"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-010",
+      "title": "Whole-batch sequential override and truncated-call rejection",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [
+        "AGENT-012",
+        "AGENT-013",
+        "AGENT-014",
+        "AGENT-015",
+        "AGENT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-011",
+      "title": "Parallel completion events during later permission preparation",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 130,
+      "size_max": 220,
+      "dependencies": [
+        "AGENT-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-012",
+      "title": "Argument preparation, validation and trusted before-tool hook",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-016",
+        "AI-012"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AI-012",
+          "kind": "prerequisite",
+          "reason": "Argument preparation then validateToolArguments requires the exact shared validator/coercion/error contract. The trusted beforeToolCall hook and no-revalidation behavior remain AGENT-012.",
+          "reviews": [
+            "DEPQA-033"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-013",
+      "title": "Final cancellation check immediately before tool execution",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 15,
+      "size_max": 35,
+      "dependencies": [
+        "AGENT-012",
+        "AGENT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-014",
+      "title": "Tool update acknowledgement, late-update suppression and raw arguments",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 110,
+      "size_max": 200,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-015",
+      "title": "After-tool override and exception conversion",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 75,
+      "size_max": 140,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-016",
+      "title": "Tool-result normalization, empty content and additional tool discovery",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 50,
+      "size_max": 95,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-017",
+      "title": "All-results termination vote",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 30,
+      "size_max": 60,
+      "dependencies": [
+        "AGENT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-018",
+      "title": "Atomic next-turn context, model and thinking replacement",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 65,
+      "size_max": 125,
+      "dependencies": [
+        "AGENT-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-019",
+      "title": "Stop-after-turn gate before queue consumption",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 35,
+      "size_max": 75,
+      "dependencies": [
+        "AGENT-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-020",
+      "title": "Mutable Agent state, snapshots and reducer visibility",
+      "status": "different-by-design",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 175,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-021",
+      "title": "Awaited Agent subscribers and the true idle boundary",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-020"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-022",
+      "title": "Steering and follow-up queue CRUD and delivery modes",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 105,
+      "size_max": 185,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-023",
+      "title": "Continuation from an assistant tail using queued work",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 65,
+      "size_max": 115,
+      "dependencies": [
+        "AGENT-004",
+        "AGENT-022",
+        "AGENT-026"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-024",
+      "title": "Synthetic failure lifecycle and guaranteed Agent finalization",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 105,
+      "size_max": 185,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-020",
+        "AGENT-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-025",
+      "title": "Agent option and mutable hook forwarding",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 150,
+      "size_max": 260,
+      "dependencies": [
+        "AGENT-002",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-012",
+        "AGENT-015",
+        "AGENT-018",
+        "AGENT-019",
+        "AGENT-020"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-009",
+          "kind": "shared-contract",
+          "reason": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+          "reviews": [
+            "DEPQA-034"
+          ]
+        },
+        {
+          "entry_id": "EXT-024",
+          "kind": "shared-contract",
+          "reason": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+          "reviews": [
+            "DEPQA-034"
+          ]
+        },
+        {
+          "entry_id": "EXT-025",
+          "kind": "shared-contract",
+          "reason": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+          "reviews": [
+            "DEPQA-034"
+          ]
+        },
+        {
+          "entry_id": "EXT-030",
+          "kind": "shared-contract",
+          "reason": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+          "reviews": [
+            "DEPQA-034"
+          ]
+        },
+        {
+          "entry_id": "EXT-033",
+          "kind": "shared-contract",
+          "reason": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+          "reviews": [
+            "DEPQA-034"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-026",
+      "title": "Prompt overloads and content-shape preservation",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 25,
+      "size_max": 55,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-027",
+      "title": "Abort, wait-for-idle and reset lifetime rules",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 95,
+      "size_max": 175,
+      "dependencies": [
+        "AGENT-020",
+        "AGENT-021",
+        "AGENT-022",
+        "AGENT-024"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-028",
+      "title": "Bearer-authenticated compact-event proxy request",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 150,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-002"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-029",
+      "title": "Compact proxy line framing and terminal EOF handling",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 165,
+      "dependencies": [
+        "AGENT-028",
+        "AGENT-030"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-030",
+      "title": "Compact proxy content-block reconstruction and signatures",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 170,
+      "size_max": 280,
+      "dependencies": [
+        "AGENT-001",
+        "AI-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AI-011",
+          "kind": "prerequisite",
+          "reason": "Proxy partial tool JSON calls parseStreamingJson. AI-011 specifies repair order, permissive runtime root types and failure fallback; execution-time validation is separate.",
+          "reviews": [
+            "DEPQA-035"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-031",
+      "title": "Proxy failure conversion, cancellation and reader cleanup",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 140,
+      "dependencies": [
+        "AGENT-028",
+        "AGENT-029"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-029",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-032",
+      "title": "AgentHarness v2 operations are explicit scaffold rejections",
+      "status": "different-by-design",
+      "priority": "P3",
+      "size_min": 0,
+      "size_max": 0,
+      "dependencies": [
+        "AGENT-036"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-001",
+          "kind": "shared-contract",
+          "reason": "This TS export is a scaffold that rejects operations, while Rust already has a working AgentHarness. Session branch/lane/log recovery entries document preserved native behavior. No new harness implementation dependency should be inferred from the scaffold.",
+          "reviews": [
+            "DEPQA-036"
+          ]
+        },
+        {
+          "entry_id": "SESSION-003",
+          "kind": "shared-contract",
+          "reason": "This TS export is a scaffold that rejects operations, while Rust already has a working AgentHarness. Session branch/lane/log recovery entries document preserved native behavior. No new harness implementation dependency should be inferred from the scaffold.",
+          "reviews": [
+            "DEPQA-036"
+          ]
+        },
+        {
+          "entry_id": "SESSION-030",
+          "kind": "shared-contract",
+          "reason": "This TS export is a scaffold that rejects operations, while Rust already has a working AgentHarness. Session branch/lane/log recovery entries document preserved native behavior. No new harness implementation dependency should be inferred from the scaffold.",
+          "reviews": [
+            "DEPQA-036"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-033",
+      "title": "Dormant v2 hook, action, result and trace type contracts",
+      "status": "different-by-design",
+      "priority": "P3",
+      "size_min": 0,
+      "size_max": 80,
+      "dependencies": [
+        "AGENT-036"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-034",
+      "title": "Scaffold configuration copies and unchecked setters",
+      "status": "different-by-design",
+      "priority": "P2",
+      "size_min": 30,
+      "size_max": 90,
+      "dependencies": [
+        "AGENT-032"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-035",
+      "title": "Scaffold lane lookup, static watches and close flag",
+      "status": "different-by-design",
+      "priority": "P3",
+      "size_min": 0,
+      "size_max": 50,
+      "dependencies": [
+        "AGENT-032",
+        "AGENT-034"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-034",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-036",
+      "title": "Tagged errors and explicit Result adapters",
+      "status": "different-by-design",
+      "priority": "P2",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "AGENT-037",
+      "title": "Execution environment interfaces and error classification",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 140,
+      "dependencies": [
+        "AGENT-036"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-038",
+      "title": "Home/file-URL path normalization and join semantics",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 150,
+      "dependencies": [
+        "AGENT-037"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-039",
+      "title": "Full UTF-8 text reads and malformed-byte policy",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 15,
+      "size_max": 40,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-040",
+      "title": "Incremental text-line reads and exact limit behavior",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 75,
+      "size_max": 135,
+      "dependencies": [
+        "AGENT-039"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-041",
+      "title": "Binary read and overwrite cancellation boundaries",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 20,
+      "size_max": 50,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-042",
+      "title": "Append parent errors and ignored TypeScript cancellation",
+      "status": "different-by-design",
+      "priority": "P2",
+      "size_min": 20,
+      "size_max": 45,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-043",
+      "title": "Non-following metadata, fractional timestamps and root basename",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 25,
+      "size_max": 55,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-044",
+      "title": "Directory listing order, special-file skipping and stat failures",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 20,
+      "size_max": 45,
+      "dependencies": [
+        "AGENT-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-045",
+      "title": "Canonical paths and existence of unsupported objects",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 20,
+      "size_max": 45,
+      "dependencies": [
+        "AGENT-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-046",
+      "title": "Directory creation and file/directory removal semantics",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-047",
+      "title": "Temporary directory/file naming and lifetime",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-048",
+      "title": "Shell discovery, POSIX fallback and legacy WSL command transport",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 55,
+      "size_max": 105,
+      "dependencies": [
+        "AGENT-037"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-049",
+      "title": "Shell environment replacement and host-private variable handling",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 25,
+      "size_max": 55,
+      "dependencies": [
+        "AGENT-037"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-050",
+      "title": "Shell spawn, live pipe draining and process registration",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 150,
+      "size_max": 260,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-048",
+        "AGENT-049",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-048",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-049",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-051",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-052",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-053",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "shared-contract",
+          "reason": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted.",
+          "reviews": [
+            "DEPQA-037"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-008",
+          "kind": "shared-contract",
+          "reason": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted.",
+          "reviews": [
+            "DEPQA-037"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-010",
+          "kind": "shared-contract",
+          "reason": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted.",
+          "reviews": [
+            "DEPQA-037"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-015",
+          "kind": "shared-contract",
+          "reason": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted.",
+          "reviews": [
+            "DEPQA-037"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-051",
+      "title": "Incremental UTF-8 output and callback failure precedence",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "AGENT-037"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-052",
+      "title": "Timeout/abort validation, termination and final error ordering",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 85,
+      "size_max": 155,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-048"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-048",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-053",
+      "title": "Post-exit pipe idle grace rather than a fixed drain deadline",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 75,
+      "size_max": 130,
+      "dependencies": [
+        "AGENT-037"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-054",
+      "title": "Best-effort process cleanup without temporary-file ownership",
+      "status": "different-by-design",
+      "priority": "P1",
+      "size_min": 50,
+      "size_max": 100,
+      "dependencies": [
+        "AGENT-037",
+        "AGENT-052"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-052",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-055",
+      "title": "Prompt-template path discovery, symlinks and ordering",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-043",
+        "AGENT-044",
+        "AGENT-045",
+        "AGENT-056"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-045",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-056",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-003",
+          "kind": "shared-contract",
+          "reason": "The agent-package loader is a separate lower-level implementation with no trust or collision policy. Coding-agent prompt discovery and trust belong to SET-028/003. Keep parallel-layer references; do not silently apply coding-agent behavior to the low-level helper.",
+          "reviews": [
+            "DEPQA-038"
+          ]
+        },
+        {
+          "entry_id": "SET-028",
+          "kind": "shared-contract",
+          "reason": "The agent-package loader is a separate lower-level implementation with no trust or collision policy. Coding-agent prompt discovery and trust belong to SET-028/003. Keep parallel-layer references; do not silently apply coding-agent behavior to the low-level helper.",
+          "reviews": [
+            "DEPQA-038"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-056",
+      "title": "Frontmatter fences, strict YAML and template description fallback",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "AGENT-036",
+        "AGENT-039"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-057",
+      "title": "Prompt argument lexer and ordered JavaScript substitution",
+      "status": "partial",
+      "priority": "P0",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "AGENT-056"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-056",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-058",
+      "title": "Source-tagged template mapper and flattened diagnostics",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "AGENT-055"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-055",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-059",
+      "title": "Skill discovery precedence, logical symlinks and recursive scope",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 175,
+      "dependencies": [
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-043",
+        "AGENT-044",
+        "AGENT-045",
+        "AGENT-060",
+        "AGENT-061"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-045",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-060",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-003",
+          "kind": "shared-contract",
+          "reason": "The coding-agent skill loader, refresh signature and trust path are separate from the agent-package helper. They are related integration/parallel-layer contracts, not imports required to implement this helper's exact discovery behavior.",
+          "reviews": [
+            "DEPQA-039"
+          ]
+        },
+        {
+          "entry_id": "SET-030",
+          "kind": "shared-contract",
+          "reason": "The coding-agent skill loader, refresh signature and trust path are separate from the agent-package helper. They are related integration/parallel-layer contracts, not imports required to implement this helper's exact discovery behavior.",
+          "reviews": [
+            "DEPQA-039"
+          ]
+        },
+        {
+          "entry_id": "SET-032",
+          "kind": "shared-contract",
+          "reason": "The coding-agent skill loader, refresh signature and trust path are separate from the agent-package helper. They are related integration/parallel-layer contracts, not imports required to implement this helper's exact discovery behavior.",
+          "reviews": [
+            "DEPQA-039"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-060",
+      "title": "Skill ignore-file prefixing and full matcher dependency",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-043",
+        "AGENT-044"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-061",
+      "title": "Skill metadata limits and preserved invocation/list formatting",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 115,
+      "dependencies": [
+        "AGENT-039",
+        "AGENT-056"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-056",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-031",
+          "kind": "shared-contract",
+          "reason": "AGENT-061 already owns model-visible invocation/list formatting. SET-031 specifies a distinct coding-agent metadata/listing path, while TUI-030 displays a parsed skill card. Rendering is a downstream concern, not a prerequisite of pure formatting.",
+          "reviews": [
+            "DEPQA-040"
+          ]
+        },
+        {
+          "entry_id": "TUI-030",
+          "kind": "shared-contract",
+          "reason": "AGENT-061 already owns model-visible invocation/list formatting. SET-031 specifies a distinct coding-agent metadata/listing path, while TUI-030 displays a parsed skill card. Rendering is a downstream concern, not a prerequisite of pure formatting.",
+          "reviews": [
+            "DEPQA-040"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-062",
+      "title": "Source-tagged skill enrichment and diagnostics",
+      "status": "partial",
+      "priority": "P2",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "AGENT-059",
+        "AGENT-061"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-063",
+      "title": "Bash-execution custom message shape and text projection",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 90,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SESSION-029",
+          "kind": "shared-contract",
+          "reason": "The flat custom Bash message shape is input to the session codec/export. SESSION-029 already depends on AGENT-063. Preserve the type-to-codec direction and retain explicit wire adaptation rather than assuming native tagged serialization is identical.",
+          "reviews": [
+            "DEPQA-041"
+          ]
+        },
+        {
+          "entry_id": "SESSION-038",
+          "kind": "shared-contract",
+          "reason": "The flat custom Bash message shape is input to the session codec/export. SESSION-029 already depends on AGENT-063. Preserve the type-to-codec direction and retain explicit wire adaptation rather than assuming native tagged serialization is identical.",
+          "reviews": [
+            "DEPQA-041"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-064",
+      "title": "Custom and summary constructors, timestamps and envelopes",
+      "status": "partial",
+      "priority": "P1",
+      "size_min": 75,
+      "size_max": 135,
+      "dependencies": [
+        "AGENT-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AGENT-065",
+      "title": "Custom-role provider projection and Rust-only orphan repair",
+      "status": "different-by-design",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 135,
+      "dependencies": [
+        "AGENT-001",
+        "AGENT-063",
+        "AGENT-064"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-063",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-064",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AI-014",
+          "kind": "shared-contract",
+          "reason": "AI-014 is a later provider projection/repair with different orphan and timestamp semantics. AGENT-065 does not invoke it and must retain the separate native no-reexecution recovery stage. This is a related pipeline contract, not a prerequisite of the pure custom-role converter.",
+          "reviews": [
+            "DEPQA-042"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/agent/src/agent-loop.ts",
+      "entry_ids": [
+        "AGENT-001",
+        "AGENT-002",
+        "AGENT-003",
+        "AGENT-004",
+        "AGENT-005",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-008",
+        "AGENT-009",
+        "AGENT-010",
+        "AGENT-011",
+        "AGENT-012",
+        "AGENT-013",
+        "AGENT-014",
+        "AGENT-015",
+        "AGENT-016",
+        "AGENT-017",
+        "AGENT-018",
+        "AGENT-019"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/agent.ts",
+      "entry_ids": [
+        "AGENT-002",
+        "AGENT-003",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-019",
+        "AGENT-020",
+        "AGENT-021",
+        "AGENT-022",
+        "AGENT-023",
+        "AGENT-024",
+        "AGENT-025",
+        "AGENT-026",
+        "AGENT-027"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/agent-harness.ts",
+      "entry_ids": [
+        "AGENT-032",
+        "AGENT-033",
+        "AGENT-034",
+        "AGENT-035",
+        "AGENT-036"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/env/nodejs.ts",
+      "entry_ids": [
+        "AGENT-037",
+        "AGENT-038",
+        "AGENT-039",
+        "AGENT-040",
+        "AGENT-041",
+        "AGENT-042",
+        "AGENT-043",
+        "AGENT-044",
+        "AGENT-045",
+        "AGENT-046",
+        "AGENT-047",
+        "AGENT-048",
+        "AGENT-049",
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053",
+        "AGENT-054"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/messages.ts",
+      "entry_ids": [
+        "AGENT-001",
+        "AGENT-063",
+        "AGENT-064",
+        "AGENT-065"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/prompt-templates.ts",
+      "entry_ids": [
+        "AGENT-055",
+        "AGENT-056",
+        "AGENT-057",
+        "AGENT-058"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/result.ts",
+      "entry_ids": [
+        "AGENT-036"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/skills.ts",
+      "entry_ids": [
+        "AGENT-056",
+        "AGENT-059",
+        "AGENT-060",
+        "AGENT-061",
+        "AGENT-062"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/system-prompt.ts",
+      "entry_ids": [
+        "AGENT-061"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/harness/types.ts",
+      "entry_ids": [
+        "AGENT-033",
+        "AGENT-036",
+        "AGENT-037",
+        "AGENT-061"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/index.ts",
+      "entry_ids": [
+        "AGENT-003",
+        "AGENT-032",
+        "AGENT-037",
+        "AGENT-055",
+        "AGENT-059",
+        "AGENT-064"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/node.ts",
+      "entry_ids": [
+        "AGENT-003",
+        "AGENT-037"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/proxy.ts",
+      "entry_ids": [
+        "AGENT-028",
+        "AGENT-029",
+        "AGENT-030",
+        "AGENT-031"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/stream-fn.ts",
+      "entry_ids": [
+        "AGENT-002",
+        "AGENT-003"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    },
+    {
+      "path": "packages/agent/src/types.ts",
+      "entry_ids": [
+        "AGENT-001",
+        "AGENT-002",
+        "AGENT-003",
+        "AGENT-004",
+        "AGENT-005",
+        "AGENT-006",
+        "AGENT-007",
+        "AGENT-008",
+        "AGENT-009",
+        "AGENT-010",
+        "AGENT-011",
+        "AGENT-012",
+        "AGENT-013",
+        "AGENT-014",
+        "AGENT-015",
+        "AGENT-016",
+        "AGENT-017",
+        "AGENT-018",
+        "AGENT-019",
+        "AGENT-020",
+        "AGENT-021",
+        "AGENT-022",
+        "AGENT-023",
+        "AGENT-024",
+        "AGENT-025",
+        "AGENT-026",
+        "AGENT-027"
+      ],
+      "status": "mapped",
+      "notes": "Full file and relevant existing tests read. Active low-level behavior is distinguished from the explicitly nonfunctional AgentHarness v2 scaffold. Dependency-level ignore/YAML equivalence limitations are recorded in entries."
+    }
+  ],
+  "supplemental_ledger": [],
+  "surfaces": [
+    {
+      "category": "environment",
+      "name": "ProgramFiles",
+      "ice_ref": "packages/agent/src/harness/env/nodejs.ts:202",
+      "rust_ref": "crates/ice-tools/src/os_env.rs:296",
+      "status": "present",
+      "entry_id": "AGENT-048",
+      "candidate_ids": [
+        "C000004"
+      ],
+      "notes": "Windows Git Bash discovery input is present; broader shell differences are in AGENT-048."
+    },
+    {
+      "category": "environment",
+      "name": "ProgramFiles(x86)",
+      "ice_ref": "packages/agent/src/harness/env/nodejs.ts:204",
+      "rust_ref": "crates/ice-tools/src/os_env.rs:297",
+      "status": "present",
+      "entry_id": "AGENT-048",
+      "candidate_ids": [
+        "C000005"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.agent_start",
+      "ice_ref": "packages/agent/src/types.ts:424",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-001",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.agent_end",
+      "ice_ref": "packages/agent/src/types.ts:425",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-021",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.turn_start",
+      "ice_ref": "packages/agent/src/types.ts:427",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-005",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.turn_end",
+      "ice_ref": "packages/agent/src/types.ts:428",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-005",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.message_start",
+      "ice_ref": "packages/agent/src/types.ts:430",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-001",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.message_update",
+      "ice_ref": "packages/agent/src/types.ts:432",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-008",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.message_end",
+      "ice_ref": "packages/agent/src/types.ts:433",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-001",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.tool_execution_start",
+      "ice_ref": "packages/agent/src/types.ts:435",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-012",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.tool_execution_update",
+      "ice_ref": "packages/agent/src/types.ts:436",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-014",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentEvent.tool_execution_end",
+      "ice_ref": "packages/agent/src/types.ts:437",
+      "rust_ref": "crates/ice-agent/src/events.rs:18",
+      "status": "partial",
+      "entry_id": "AGENT-011",
+      "candidate_ids": [],
+      "notes": "Low-level event, not an extension event registration. Payload/ordering differences are specified by the entry."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.transformContext",
+      "ice_ref": "packages/agent/src/types.ts:195",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-006",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.convertToLlm",
+      "ice_ref": "packages/agent/src/types.ts:159",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-006",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.getApiKey",
+      "ice_ref": "packages/agent/src/types.ts:205",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-007",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.beforeToolCall",
+      "ice_ref": "packages/agent/src/types.ts:271",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-012",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.afterToolCall",
+      "ice_ref": "packages/agent/src/types.ts:286",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-015",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.prepareNextTurn",
+      "ice_ref": "packages/agent/src/types.ts:224",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-018",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentLoopConfig.shouldStopAfterTurn",
+      "ice_ref": "packages/agent/src/types.ts:217",
+      "rust_ref": "crates/ice-agent/src/hooks.rs:162",
+      "status": "partial",
+      "entry_id": "AGENT-019",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_run (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:198",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_resume (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:199",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_run_end (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:200",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.transform_context (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:201",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_request (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:202",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_payload (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:203",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.after_response (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:204",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_tool (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:205",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.after_tool (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:206",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_compaction (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:207",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "hooks",
+      "name": "AgentHarness.hooks.before_navigation (declared; no-op)",
+      "ice_ref": "packages/agent/src/harness/agent-harness.ts:208",
+      "rust_ref": "crates/ice-harness/src/types.rs:1",
+      "status": "different-by-design",
+      "entry_id": "AGENT-033",
+      "candidate_ids": [],
+      "notes": "PassiveRegistry stores no handler and emits no event. Not a missing working TypeScript hook."
+    },
+    {
+      "category": "session-types",
+      "name": "AgentMessage.role=bashExecution",
+      "ice_ref": "packages/agent/src/harness/messages.ts:20",
+      "rust_ref": "crates/ice-harness/src/messages.rs:44",
+      "status": "partial",
+      "entry_id": "AGENT-063",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "AgentMessage.role=custom",
+      "ice_ref": "packages/agent/src/harness/messages.ts:32",
+      "rust_ref": "crates/ice-harness/src/messages.rs:44",
+      "status": "partial",
+      "entry_id": "AGENT-064",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "AgentMessage.role=branchSummary",
+      "ice_ref": "packages/agent/src/harness/messages.ts:41",
+      "rust_ref": "crates/ice-harness/src/messages.rs:44",
+      "status": "partial",
+      "entry_id": "AGENT-064",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "AgentMessage.role=compactionSummary",
+      "ice_ref": "packages/agent/src/harness/messages.ts:48",
+      "rust_ref": "crates/ice-harness/src/messages.rs:44",
+      "status": "partial",
+      "entry_id": "AGENT-064",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "CustomMessage.customType=<caller-defined string>",
+      "ice_ref": "packages/agent/src/harness/messages.ts:33",
+      "rust_ref": "crates/ice-harness/src/messages.rs:96",
+      "status": "partial",
+      "entry_id": "AGENT-064",
+      "candidate_ids": [],
+      "notes": ""
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000006",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000007",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000008",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000009",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000010",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000011",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000012",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000013",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000014",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    },
+    {
+      "candidate_id": "C000015",
+      "reason": "Caller-supplied generic filesystem operand, not a fixed read/write path under ~/.ice or .ice. The exact operation is specified in AGENT-038 through AGENT-047; variable spelling does not identify a persistent ICE surface."
+    }
+  ],
+  "claims": [
+    {
+      "first_pass_lines": [
+        413,
+        415
+      ],
+      "claim": "Errors observed after run cancellation are reclassified as aborted; Rust abort.rs needs verification.",
+      "verdict": "confirmed",
+      "finding": "The TypeScript done/error stream-event branch changes a final error stop reason to aborted when the signal is already cancelled. The EOF-result fallback does not. Rust abort helpers only provide token primitives and its stream reducer has no equivalent normalization; this is an actual message/event gap, distinct from its early post-tool cancellation exit.",
+      "evidence": [
+        "ice:packages/agent/src/agent-loop.ts:350-378",
+        "rust:crates/ice-agent/src/agent_loop.rs:514-576",
+        "rust:crates/ice-agent/src/abort.rs:1-94"
+      ],
+      "entry_ids": [
+        "AGENT-009"
+      ]
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/agent/src/agent-loop.ts",
+      "ranges": [
+        [
+          1,
+          806
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/agent.ts",
+      "ranges": [
+        [
+          1,
+          613
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/agent-harness.ts",
+      "ranges": [
+        [
+          1,
+          533
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/env/nodejs.ts",
+      "ranges": [
+        [
+          1,
+          676
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/messages.ts",
+      "ranges": [
+        [
+          1,
+          169
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/prompt-templates.ts",
+      "ranges": [
+        [
+          1,
+          263
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/result.ts",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/skills.ts",
+      "ranges": [
+        [
+          1,
+          376
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/system-prompt.ts",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/harness/types.ts",
+      "ranges": [
+        [
+          1,
+          314
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/index.ts",
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/node.ts",
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/proxy.ts",
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/stream-fn.ts",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/src/types.ts",
+      "ranges": [
+        [
+          1,
+          438
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/agent-loop.test.ts",
+      "ranges": [
+        [
+          1,
+          1660
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/agent.test.ts",
+      "ranges": [
+        [
+          1,
+          829
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/proxy.test.ts",
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/e2e.test.ts",
+      "ranges": [
+        [
+          1,
+          416
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/agent-harness-scaffold.test.ts",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/nodejs-env.test.ts",
+      "ranges": [
+        [
+          1,
+          449
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/prompt-templates.test.ts",
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/skills.test.ts",
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/resource-formatting.test.ts",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "ice:packages/agent/test/harness/system-prompt.test.ts",
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "notes": "Full content read in this direct audit; tests were not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent_loop.rs",
+      "ranges": [
+        [
+          1,
+          1299
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent.rs",
+      "ranges": [
+        [
+          1,
+          651
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/abort.rs",
+      "ranges": [
+        [
+          1,
+          94
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/error.rs",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/tool_execution_scope.rs",
+      "ranges": [
+        [
+          1,
+          142
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/types.rs",
+      "ranges": [
+        [
+          1,
+          272
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/hooks.rs",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent_tool.rs",
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/events.rs",
+      "ranges": [
+        [
+          1,
+          202
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/queue.rs",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/stream_fn.rs",
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-agent/src/message.rs",
+      "ranges": [
+        [
+          1,
+          193
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/env.rs",
+      "ranges": [
+        [
+          1,
+          325
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/os_env.rs",
+      "ranges": [
+        [
+          1,
+          1141
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-tools/src/error.rs",
+      "ranges": [
+        [
+          1,
+          315
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/messages.rs",
+      "ranges": [
+        [
+          1,
+          714
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/prompt_templates.rs",
+      "ranges": [
+        [
+          1,
+          566
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/frontmatter.rs",
+      "ranges": [
+        [
+          1,
+          180
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/system_prompt.rs",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/types.rs",
+      "ranges": [
+        [
+          1,
+          526
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/skills.rs",
+      "ranges": [
+        [
+          1,
+          1051
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/error.rs",
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "notes": "Full source and embedded tests read, not executed."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "ranges": [
+        [
+          649,
+          810
+        ],
+        [
+          2005,
+          2190
+        ]
+      ],
+      "notes": "Only these contiguous slices were read; the rest belongs to the session audit."
+    }
+  ],
+  "dependency_requests": [],
+  "rust_only": [
+    {
+      "capability": "Operational native AgentHarness versus the exported TypeScript v2 scaffold",
+      "ts_comparison": "The directly compared TypeScript packages/agent AgentHarness methods explicitly reject or return static no-op results, while Rust creates a working durable main-lane runner. This is scoped to that exported class, not a claim that the TypeScript coding-agent cannot run sessions.",
+      "evidence": [
+        "ice:packages/agent/src/harness/agent-harness.ts:280-312",
+        "ice:packages/agent/src/harness/agent-harness.ts:354-422",
+        "rust:crates/ice-harness/src/agent_harness.rs:649-810"
+      ]
+    },
+    {
+      "capability": "Orphan-tool repair inside the harness converter",
+      "ts_comparison": "The Rust converter synthesizes missing provider-context results without rerunning tools and drops unmatched results. The directly compared TS harness converter only maps roles; related repair in other TS layers remains a separate audit dependency.",
+      "evidence": [
+        "ice:packages/agent/src/harness/messages.ts:124-168",
+        "rust:crates/ice-harness/src/messages.rs:302-438"
+      ]
+    },
+    {
+      "capability": "Native execution-environment improvements to retain",
+      "ts_comparison": "Rust offers an explicit per-call shell-program override and filters inherited host-private variables. The directly compared NodeExecutionEnv selects its configured Bash-like shell and spreads inherited environment variables without that filter. Keep these native features while fixing the inheritEnv=false and pipe-draining defects.",
+      "evidence": [
+        "ice:packages/agent/src/harness/env/nodejs.ts:168-248",
+        "rust:crates/ice-tools/src/os_env.rs:67-104",
+        "rust:crates/ice-tools/src/os_env.rs:840-891"
+      ]
+    }
+  ],
+  "unverified": [
+    {
+      "entry_id": "AGENT-060",
+      "finding": "Connector safety rules blocked node_modules/ignore. Call-site transformations and concrete Rust subset are verified; full JavaScript matcher edge semantics are not. No bypass, install or network request was attempted."
+    },
+    {
+      "entry_id": "AGENT-056",
+      "finding": "Dependency-level yaml vs yaml_serde equivalence was not fully inspected or executed. Exact local fence/metadata code and Rust salvage behavior are verified."
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q-AGENT-01",
+      "question": "Should the Rust public Agent match awaited TypeScript subscriber acknowledgements and synthetic failure events, or expose these as an explicit compatibility/critical-sink mode while keeping lossy broadcast for UI?",
+      "entries": [
+        "AGENT-021",
+        "AGENT-024",
+        "AGENT-027"
+      ]
+    },
+    {
+      "id": "Q-AGENT-02",
+      "question": "Which TypeScript quirks should be corrected rather than copied: shared continuation arrays, reset during active runs, replacement-string metacharacters, ignore anchoring/escaped exclamation, nonfinite timestamps and unbounded proxy/shell buffers?",
+      "entries": [
+        "AGENT-004",
+        "AGENT-027",
+        "AGENT-029",
+        "AGENT-050",
+        "AGENT-057",
+        "AGENT-060",
+        "AGENT-064"
+      ]
+    },
+    {
+      "id": "Q-AGENT-03",
+      "question": "Should the Rust SDK offer exact flat TypeScript message/diagnostic serialization, while retaining native kind/data enums and context-only orphan recovery internally?",
+      "entries": [
+        "AGENT-001",
+        "AGENT-055",
+        "AGENT-058",
+        "AGENT-062",
+        "AGENT-063",
+        "AGENT-064",
+        "AGENT-065"
+      ]
+    },
+    {
+      "id": "Q-AGENT-04",
+      "question": "Should post-exit shell output use TypeScript’s resettable 100 ms idle grace or Rust’s bounded-total policy once live pipe draining is repaired?",
+      "entries": [
+        "AGENT-050",
+        "AGENT-053"
+      ]
+    }
+  ],
+  "dependency_request_history": [
+    {
+      "entry_id": "AGENT-001",
+      "area": "ai",
+      "capability": "exact provider Message/Usage/Content schemas and serialization"
+    },
+    {
+      "entry_id": "AGENT-007",
+      "area": "ai",
+      "capability": "SimpleStreamOptions and dynamic credential/provider routing"
+    },
+    {
+      "entry_id": "AGENT-012",
+      "area": "ai",
+      "capability": "validateToolArguments schema/coercion and error contract"
+    },
+    {
+      "entry_id": "AGENT-025",
+      "area": "extensions",
+      "capability": "native host exposure of critical awaited loop callbacks"
+    },
+    {
+      "entry_id": "AGENT-030",
+      "area": "ai",
+      "capability": "parseStreamingJson partial JSON repair contract"
+    },
+    {
+      "entry_id": "AGENT-032",
+      "area": "session",
+      "capability": "working Rust AgentHarness, durable Session storage, lanes and operation recovery"
+    },
+    {
+      "entry_id": "AGENT-050",
+      "area": "tools",
+      "capability": "foreground tool wrapper output capture/truncation and durable background-shell ownership"
+    },
+    {
+      "entry_id": "AGENT-055",
+      "area": "settings",
+      "capability": "higher-level prompt discovery/trust/collision policy"
+    },
+    {
+      "entry_id": "AGENT-059",
+      "area": "settings",
+      "capability": "coding-agent skill path discovery/hot reload and trust"
+    },
+    {
+      "entry_id": "AGENT-061",
+      "area": "tui",
+      "capability": "skill invocation/list presentation"
+    },
+    {
+      "entry_id": "AGENT-063",
+      "area": "session",
+      "capability": "flat custom-role JSONL codec/import/export compatibility"
+    },
+    {
+      "entry_id": "AGENT-065",
+      "area": "ai",
+      "capability": "provider-layer tool-result repair beyond this helper"
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "AGENT-001",
+      "area": "ai",
+      "capability": "exact provider Message/Usage/Content schemas and serialization",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AI-019"
+      ],
+      "related_entry_ids": [
+        "AI-006",
+        "RPC-004"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-031",
+      "rationale": "AI-019 explicitly owns the complete nested provider data contracts; AI-006 remains request-option authority.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-007",
+      "area": "ai",
+      "capability": "SimpleStreamOptions and dynamic credential/provider routing",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AI-006"
+      ],
+      "related_entry_ids": [
+        "AI-003"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-032",
+      "rationale": "The raw loop forwards the complete shared request option envelope, which AI-006 owns. Dynamic key resolution is the supplied getApiKey callback; default provider dispatch is AI-003. Do not make the callback seam depend on the coding-agent auth store or UI.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-012",
+      "area": "ai",
+      "capability": "validateToolArguments schema/coercion and error contract",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AI-012"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-033",
+      "rationale": "Argument preparation then validateToolArguments requires the exact shared validator/coercion/error contract. The trusted beforeToolCall hook and no-revalidation behavior remain AGENT-012.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-025",
+      "area": "extensions",
+      "capability": "native host exposure of critical awaited loop callbacks",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "EXT-009",
+        "EXT-024",
+        "EXT-025",
+        "EXT-030",
+        "EXT-033"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-034",
+      "rationale": "The Agent SDK forwards low-level callbacks. Extension host binding, hook reducers and native event payload ownership consume those hooks; they are downstream integration references rather than build prerequisites of the Agent wrapper.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-030",
+      "area": "ai",
+      "capability": "parseStreamingJson partial JSON repair contract",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AI-011"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-035",
+      "rationale": "Proxy partial tool JSON calls parseStreamingJson. AI-011 specifies repair order, permissive runtime root types and failure fallback; execution-time validation is separate.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-032",
+      "area": "session",
+      "capability": "working Rust AgentHarness, durable Session storage, lanes and operation recovery",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SESSION-001",
+        "SESSION-003",
+        "SESSION-030"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-036",
+      "rationale": "This TS export is a scaffold that rejects operations, while Rust already has a working AgentHarness. Session branch/lane/log recovery entries document preserved native behavior. No new harness implementation dependency should be inferred from the scaffold.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-050",
+      "area": "tools",
+      "capability": "foreground tool wrapper output capture/truncation and durable background-shell ownership",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "TOOLS-010",
+        "TOOLS-015",
+        "TOOLS-005",
+        "TOOLS-008"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-037",
+      "rationale": "The execution environment drains pipes and emits chunks. The capture wrappers and background registry consume it, and TOOLS-010/015 already depend on AGENT-050. The original phrase 'durable background-shell ownership' is inaccurate: the registry is in memory; only logs/branch notifications are persisted.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-055",
+      "area": "settings",
+      "capability": "higher-level prompt discovery/trust/collision policy",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SET-028",
+        "SET-003"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-038",
+      "rationale": "The agent-package loader is a separate lower-level implementation with no trust or collision policy. Coding-agent prompt discovery and trust belong to SET-028/003. Keep parallel-layer references; do not silently apply coding-agent behavior to the low-level helper.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-059",
+      "area": "settings",
+      "capability": "coding-agent skill path discovery/hot reload and trust",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SET-030",
+        "SET-032",
+        "SET-003"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-039",
+      "rationale": "The coding-agent skill loader, refresh signature and trust path are separate from the agent-package helper. They are related integration/parallel-layer contracts, not imports required to implement this helper's exact discovery behavior.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-061",
+      "area": "tui",
+      "capability": "skill invocation/list presentation",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SET-031",
+        "TUI-030"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-040",
+      "rationale": "AGENT-061 already owns model-visible invocation/list formatting. SET-031 specifies a distinct coding-agent metadata/listing path, while TUI-030 displays a parsed skill card. Rendering is a downstream concern, not a prerequisite of pure formatting.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-063",
+      "area": "session",
+      "capability": "flat custom-role JSONL codec/import/export compatibility",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SESSION-029",
+        "SESSION-038"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-041",
+      "rationale": "The flat custom Bash message shape is input to the session codec/export. SESSION-029 already depends on AGENT-063. Preserve the type-to-codec direction and retain explicit wire adaptation rather than assuming native tagged serialization is identical.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "AGENT-065",
+      "area": "ai",
+      "capability": "provider-layer tool-result repair beyond this helper",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "AI-014"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-042",
+      "rationale": "AI-014 is a later provider projection/repair with different orphan and timestamp semantics. AGENT-065 does not invoke it and must retain the separate native no-reexecution recovery stage. This is a related pipeline contract, not a prerequisite of the pure custom-role converter.",
+      "previous_confirmed_entry_ids": []
+    }
+  ],
+  "source_evidence_coordinate_system": "Historical read/provenance records retain ff9270f coordinates and hashes; current rust: comparison citations and surfaces are remapped to 1891337. Canonical read-coverage.json separately records current source identity and exact transferred credit.",
+  "draft_complete": true,
+  "published": true,
+  "accepted_phase": "active-source-verified"
+}

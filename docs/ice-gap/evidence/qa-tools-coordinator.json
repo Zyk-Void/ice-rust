@@ -1,0 +1,241 @@
+{
+  "area": "tools",
+  "reviewer": "/root",
+  "evidence_level": "Source-only review; no builds, test execution or runtime reproduction",
+  "reviewed_entries": [
+    "TOOLS-008",
+    "TOOLS-010",
+    "TOOLS-019",
+    "TOOLS-021",
+    "TOOLS-025",
+    "TOOLS-026",
+    "TOOLS-031"
+  ],
+  "findings": [
+    "Confirmed output accumulation differs from low-level pipe drainage and UTF-8 decoding.",
+    "Confirmed Rust truncation output_lines can disagree with the bytes actually returned.",
+    "Confirmed canonical-path queue distinctions and edit preflight/diff behavior.",
+    "Removed unsupported fireId deduplication claim; IDs identify alerts but no deduplication mechanism was established.",
+    "Split combined interface source references into 36 individual surface anchors and linked settings prerequisites.",
+    "Native RPC writer already provides a bounded 64-message queue; the missing contract is byte limits, stdout isolation and guarded lifecycle."
+  ],
+  "limitations": [
+    "Source-inferred defects are not presented as runtime-reproduced failures.",
+    "Dependency resolution is tracked in the global closeout artifacts."
+  ],
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "ranges": [
+        [
+          69,
+          171
+        ]
+      ],
+      "total_lines": null,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "ranges": [
+        [
+          257,
+          343
+        ]
+      ],
+      "total_lines": null,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "ranges": [
+        [
+          388,
+          425
+        ]
+      ],
+      "total_lines": null,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/truncate.rs",
+      "sha256": "2a12548be58e82815f0ffd9c68349918a1fa375fe5c29649dd22928b7ad07af5",
+      "ranges": [
+        [
+          193,
+          285
+        ]
+      ],
+      "total_lines": null,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          258,
+          404
+        ]
+      ],
+      "total_lines": 595,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/output-guard.ts",
+      "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+      "ranges": [
+        [
+          1,
+          148
+        ]
+      ],
+      "total_lines": 148,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/file-mutation-queue.ts",
+      "sha256": "e05311094e23fdb0c7993f01eaa8574b4771f997013ea891a4facb1f868f8400",
+      "ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "total_lines": 79,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/file_mutation_queue.rs",
+      "sha256": "4b71f4eac970355a7fb85022a22bab00796b28ef15ec1210dd306508f0a7eeee",
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "total_lines": 137,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "ranges": [
+        [
+          570,
+          635
+        ]
+      ],
+      "total_lines": 1566,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "ranges": [
+        [
+          523,
+          641
+        ]
+      ],
+      "total_lines": 688,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice.ts",
+      "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "ranges": [
+        [
+          80,
+          105
+        ]
+      ],
+      "total_lines": 131,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "ranges": [
+        [
+          523,
+          549
+        ]
+      ],
+      "total_lines": 1008,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "ranges": [
+        [
+          630,
+          634
+        ]
+      ],
+      "total_lines": 1008,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/main.ts",
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "ranges": [
+        [
+          708,
+          711
+        ]
+      ],
+      "total_lines": 1008,
+      "fully_read": false,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    }
+  ],
+  "artifact_reads": [
+    {
+      "path": "docs/ice-gap/evidence/proposal-tools.json",
+      "sha256": "9ebb321551cc4f149ddda1976aca1969b41b8894cb6beb01388b26e789470430",
+      "ranges": [
+        [
+          1,
+          2772
+        ]
+      ],
+      "total_lines": 2772,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "coordinator"
+    }
+  ],
+  "evidence_note": "Exact source paths, hashes and reviewed ranges are embedded in this persisted artifact; no session-local variable names are required to recover them."
+}

@@ -1,0 +1,584 @@
+{
+  "generated_at": "2026-10-20T03:16:22.065Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/client/src/errors.ts",
+      "sha256": "aff5259e7a95da738422735f0d47f4cafe63a0da2ff33cb620fda55976ce25b9",
+      "emitted_ranges": [
+        [
+          14,
+          57
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "IceDisconnectedError",
+          "kind": "runtime",
+          "ts": "ice:packages/client/src/errors.ts:15",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "toDisconnectedError",
+          "kind": "runtime",
+          "ts": "ice:packages/client/src/errors.ts:53",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/client/src/promise.ts",
+      "sha256": "4437b54dcf657e0992ecedc7cc27dd863d21765047dfba63835b24926a20075b",
+      "emitted_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "PromiseResolvers",
+          "kind": "type",
+          "ts": "ice:packages/client/src/promise.ts:1",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "createPromiseResolvers",
+          "kind": "runtime",
+          "ts": "ice:packages/client/src/promise.ts:8",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/client/src/session-handle.ts",
+      "sha256": "1f152906d7dbcf135278034e9c1d52f1671d7a1fe597ffa2aecb398bea8526a3",
+      "emitted_ranges": [
+        [
+          12,
+          33
+        ],
+        [
+          36,
+          65
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "SessionLeaseMode",
+          "kind": "type",
+          "ts": "ice:packages/client/src/session-handle.ts:13",
+          "covering_entries": [
+            "RPC-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AcquireSessionOptions",
+          "kind": "type",
+          "ts": "ice:packages/client/src/session-handle.ts:15",
+          "covering_entries": [
+            "RPC-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionHandleCallbacks",
+          "kind": "type",
+          "ts": "ice:packages/client/src/session-handle.ts:37",
+          "covering_entries": [
+            "RPC-012"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionHandle",
+          "kind": "runtime",
+          "ts": "ice:packages/client/src/session-handle.ts:47",
+          "covering_entries": [
+            "RPC-012"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/client/src/transport.ts",
+      "sha256": "22ce6eea04d189d71e0037978593ae7844f024d4fed321d4bf4f2c8d7d83ef03",
+      "emitted_ranges": [
+        [
+          7,
+          19
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ByteTransportHandlers",
+          "kind": "type",
+          "ts": "ice:packages/client/src/transport.ts:8",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/client/src/types.ts",
+      "sha256": "40006b3ff19d3d5b6948c6b99f7ea3733aab8157d653479d282066a28d122af7",
+      "emitted_ranges": [
+        [
+          3,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ConnectionState",
+          "kind": "type",
+          "ts": "ice:packages/client/src/types.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ConnectionStateChange",
+          "kind": "type",
+          "ts": "ice:packages/client/src/types.ts:6",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ListenerErrorHandler",
+          "kind": "type",
+          "ts": "ice:packages/client/src/types.ts:12",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "IceClientOptions",
+          "kind": "type",
+          "ts": "ice:packages/client/src/types.ts:14",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "CreateSessionOptions",
+          "kind": "type",
+          "ts": "ice:packages/client/src/types.ts:21",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/client/src/unix.ts",
+      "sha256": "9270ae709121d9cf823c8a07f66becf126054d31a2e9486255ba3d1791b1c026",
+      "emitted_ranges": [
+        [
+          6,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "UnixTransportOptions",
+          "kind": "type",
+          "ts": "ice:packages/client/src/unix.ts:7",
+          "covering_entries": [
+            "RPC-009"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/auth.ts",
+      "sha256": "7b0cb05c95b944d6c1ef814affacda620c2ad18cd15ba251e06ecf2a705bcb85",
+      "emitted_ranges": [
+        [
+          4,
+          22
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RawAuthOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/auth.ts:5",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "parseAuthInput",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/auth.ts:10",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/command-options.ts",
+      "sha256": "0be8213b0d4161f94f9699dbdedde04e752bd3982522fc56d515fe409a842511",
+      "emitted_ranges": [
+        [
+          5,
+          39
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "authTokenOption",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:6",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "authTokenFileOption",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:7",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "transportOption",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:9",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "parseAuth",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:18",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "parseLegacyOptions",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:25",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "unsupportedLegacyOptions",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command-options.ts:35",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/command.ts",
+      "sha256": "058db87657b0db7d45dd844d6b5a28ee48fcc1e32bc17c911a856cc5cb92913d",
+      "emitted_ranges": [
+        [
+          4,
+          57
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CommandParseResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:5",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandExecutionResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:9",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandOptionParseResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:13",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandOption",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:17",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "valueOption",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:22",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "stringOption",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:29",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ParsedCommandInput",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:33",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CommandBuildResult",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/command.ts:39",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/commands/client.ts",
+      "sha256": "42cfab1e646c88dec04107a592fb82b5efd9c59e6c46a8172632fb0c207bf65c",
+      "emitted_ranges": [
+        [
+          12,
+          43
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ClientCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/client.ts:13",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ClientCommandContext",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/client.ts:19",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "clientCommand",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/client.ts:25",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/commands/ice.ts",
+      "sha256": "1ff997feeae524083424a90e69d5b305f08d84b7b95d0a1bf64452fda68cd837",
+      "emitted_ranges": [
+        [
+          12,
+          44
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "IceCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/ice.ts:13",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "IceCommandContext",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/ice.ts:20",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "iceCommand",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/ice.ts:26",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/commands/server.ts",
+      "sha256": "6eb3cc1d8aa4318d8948b0fc8942ab11bba199629eba1bc02c6d0209ae567ca9",
+      "emitted_ranges": [
+        [
+          12,
+          43
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ServerCommand",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/server.ts:13",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ServerCommandContext",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/server.ts:19",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "serverCommand",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/commands/server.ts:25",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/cli/experimental/transport-address.ts",
+      "sha256": "a604f6ae2ca467e5657a2a9e88fd5de7b03afa42cf95e57accd89ffc685648a6",
+      "emitted_ranges": [
+        [
+          2,
+          49
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "UnixTransportAddress",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/transport-address.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "parseTransportAddress",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/cli/experimental/transport-address.ts:10",
+          "covering_entries": [
+            "RPC-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/client/remote-session.ts",
+      "sha256": "2dce24d4bf0e8313ac384dba00c2f09e561c55ea75f461e9b651257483e4caa5",
+      "emitted_ranges": [
+        [
+          25,
+          64
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "RemoteSessionOperation",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/client/remote-session.ts:26",
+          "covering_entries": [
+            "RPC-014",
+            "RPC-036"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RemoteSessionLifecycle",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/client/remote-session.ts:28",
+          "covering_entries": [
+            "RPC-014",
+            "RPC-036"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RemoteSessionState",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/client/remote-session.ts:34",
+          "covering_entries": [
+            "RPC-014",
+            "RPC-036"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateRemoteSessionOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/client/remote-session.ts:40",
+          "covering_entries": [
+            "RPC-014",
+            "RPC-036"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RemoteSessionOptions",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/client/remote-session.ts:46",
+          "covering_entries": [
+            "RPC-014",
+            "RPC-036"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

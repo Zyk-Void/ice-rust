@@ -115,6 +115,9 @@ pub fn map_agent_event(event: &AgentEvent) -> Option<UiEvent> {
             delay_ms: *delay_ms,
             error: error.clone(),
         }),
+        AgentEvent::RetryRefused { error } => Some(UiEvent::RetryRefused {
+            error: error.clone(),
+        }),
         AgentEvent::TurnStart | AgentEvent::TurnEnd { .. } | AgentEvent::RunSettled { .. } => None,
         AgentEvent::MessageStart { message } => match message {
             AgentMessage::Assistant(a) => Some(UiEvent::AssistantStart {
@@ -373,6 +376,9 @@ pub fn map_remote_event(event: &RemoteEvent) -> Option<UiEvent> {
             delay_ms: *delay_ms,
             error: error.clone(),
         }),
+        RemoteEvent::RetryRefused { error } => Some(UiEvent::RetryRefused {
+            error: error.clone(),
+        }),
         RemoteEvent::MessageStart { message } => {
             if message_role(message) != "assistant" {
                 return None;
@@ -460,6 +466,7 @@ fn auth_hint(error: String) -> String {
 /// keeps using its own model catalog for `/model`.
 pub struct LocalDriver {
     lane: Arc<dyn AgentLane>,
+    prompt_cancel: Arc<StdMutex<Option<tokio_util::sync::CancellationToken>>>,
     status_tx: mpsc::UnboundedSender<DriverEvent>,
     events: StdMutex<Option<mpsc::UnboundedReceiver<DriverEvent>>>,
 }
@@ -472,6 +479,7 @@ impl LocalDriver {
         tokio::spawn(pump_agent_events(lane.clone(), events, tx));
         Self {
             lane,
+            prompt_cancel: Arc::new(StdMutex::new(None)),
             status_tx,
             events: StdMutex::new(Some(rx)),
         }
@@ -493,21 +501,42 @@ impl SessionDriver for LocalDriver {
                 // Drive the run on a background task: `prompt_text` only returns
                 // once the run completes, but a driver `send` must not block the
                 // TUI loop on the whole agent turn.
+                let cancel = tokio_util::sync::CancellationToken::new();
+                {
+                    let mut pending = self.prompt_cancel.lock().unwrap();
+                    if pending.is_some() {
+                        return Err("A prompt is already running or awaiting admission".into());
+                    }
+                    *pending = Some(cancel.clone());
+                }
                 let lane = self.lane.clone();
                 let tx = self.status_tx.clone();
+                let pending = self.prompt_cancel.clone();
                 tokio::spawn(async move {
-                    if let Err(error) = lane.prompt_text(&text, Vec::new()).await {
+                    // Share RPC's admission-aware cancellation and settlement.
+                    let result = crate::modes::rpc_prompt_cancellable(&lane, &text, cancel).await;
+                    pending.lock().unwrap().take();
+                    if let Err(error) = result {
                         let _ = tx.send(DriverEvent::Notice(format!("error: {error}")));
                     }
                 });
                 Ok(())
             }
-            DriverCommand::Abort => self
-                .lane
-                .abort()
-                .await
-                .map(|_| ())
-                .map_err(|e| e.to_string()),
+            DriverCommand::Abort => {
+                let pending = self.prompt_cancel.lock().unwrap().clone();
+                if let Some(cancel) = &pending {
+                    cancel.cancel();
+                }
+                match self.lane.abort().await {
+                    Ok(_) => Ok(()),
+                    Err(ice_harness::result::HarnessError::NoActiveRun { .. })
+                        if pending.is_some() =>
+                    {
+                        Ok(())
+                    }
+                    Err(error) => Err(error.to_string()),
+                }
+            }
             DriverCommand::RefreshState => {
                 let status = query_status(&self.lane, false).await;
                 let _ = self.status_tx.send(DriverEvent::Status(status));
@@ -623,6 +652,53 @@ fn parse_thinking_level_name(name: &str) -> Option<ThinkingLevel> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[tokio::test]
+    async fn local_driver_immediate_abort_prevents_prompt_admission() {
+        let provider = ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new().with_text("must not run"),
+        );
+        let harness = ice_harness::agent_harness::AgentHarness::create(
+            ice_harness::types::AgentHarnessOptions {
+                model: provider.default_model().clone(),
+                models: vec![provider.clone()],
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        let (_sender, receiver) = broadcast::channel(16);
+        let driver = LocalDriver::new(harness.lane("main"), receiver);
+        let mut events = driver.events().unwrap();
+        driver
+            .send(DriverCommand::Prompt("cancel before admission".into()))
+            .await
+            .unwrap();
+        // Current-thread scheduling leaves the spawned prompt waiting for a poll.
+        driver.send(DriverCommand::Abort).await.unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while let Some(event) = events.recv().await {
+                if matches!(event, DriverEvent::Notice(ref notice) if notice.contains("aborted")) {
+                    break;
+                }
+            }
+        })
+        .await
+        .unwrap();
+        assert_eq!(provider.state().call_count.load(Ordering::SeqCst), 0);
+        assert!(harness
+            .session()
+            .find_entries(&Default::default())
+            .await
+            .unwrap()
+            .is_empty());
+        assert!(harness
+            .session()
+            .find_open_operations("main", None)
+            .await
+            .unwrap()
+            .is_empty());
+    }
 
     #[test]
     fn remote_dialogs_are_forwarded_as_modal_events() {

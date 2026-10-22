@@ -1,0 +1,5010 @@
+{
+  "captured_at": "2026-10-20T07:03:24.936Z",
+  "passed": true,
+  "source_only": true,
+  "application_or_test_execution": false,
+  "tool_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+  "proposal_hashes": {
+    "coordinator-native-prose-replacements.json": "e3c8a805c6cf0c66c669f93285a15a3a107d22eb7365b0cae83c57921eb13476",
+    "lane-exports-rpc-ai-auth-native-prose-replacements.json": "3ae59f65990f99fa7d587a6ddfd02ab660c5116c153825fa6342a8d3ab84428e",
+    "lane-exports-sub-session-native-prose-replacements.json": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+    "lane-final-areas-active-identity-proposal.json": "3bad2fa6387b5a5677cd166530547d36f1214467f7fa22b13c1552c6f2846f27",
+    "lane-final-areas-first-pass-findings-proposal.json": "435fd3a102c2efa1a08b434a3cae35b9bc55b849b9714e7f49f86e59e8f8b40f",
+    "lane-exports-sub-session-cli-prose-review.json": "2da3ccfff955049c4c31620c4199571ee17305081e16cfb0ca83368ab9fca410",
+    "lane-exports-sub-session-native-surfaces-review.json": "2321e72183dcb4aee9ec80601a3fec5929200fe7627baef5f1efcf33dc0e8046"
+  },
+  "projection": {
+    "coordinate_space": "active",
+    "virtual_original_preview": false,
+    "report": "relocation-rust-remap.json",
+    "report_sha256": "6787b3c138aac0e039130c18d42d27a7120c246c049d88ca8bd88c3849e17f54",
+    "remapper_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+    "source_map_sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d",
+    "hunk_map_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+    "independent_review_sha256": "ebf9835bd323170cb3c716b91a6f2101ce8b8c66a0e9eb204bf98207cd3f59f5",
+    "reviewed_range_records_checked": 9950,
+    "spacing_tool_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+    "spacing_validation": "spacing-residual-validation.json",
+    "spacing_validation_sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36",
+    "old_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a"
+  },
+  "exact_field_guards": 52,
+  "projection_citation_occurrences": 226,
+  "citations": [
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/bin/ice.rs:1-21",
+      "new_citation": "rust:crates/ice-cli/src/bin/icers.rs:1-21",
+      "old_path": "crates/ice-cli/src/bin/ice.rs",
+      "active_path": "crates/ice-cli/src/bin/icers.rs",
+      "old_range": [
+        1,
+        21
+      ],
+      "new_range": [
+        1,
+        21
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/lib.rs:82-89",
+      "new_citation": "rust:crates/ice-cli/src/lib.rs:82-89",
+      "old_path": "crates/ice-cli/src/lib.rs",
+      "active_path": "crates/ice-cli/src/lib.rs",
+      "old_range": [
+        82,
+        89
+      ],
+      "new_range": [
+        82,
+        89
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:82-190",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:82-190",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        82,
+        190
+      ],
+      "new_range": [
+        82,
+        190
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        89,
+        108
+      ],
+      "new_range": [
+        89,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/bin/ice.rs:1-21",
+      "new_citation": "rust:crates/ice-cli/src/bin/icers.rs:1-21",
+      "old_path": "crates/ice-cli/src/bin/ice.rs",
+      "active_path": "crates/ice-cli/src/bin/icers.rs",
+      "old_range": [
+        1,
+        21
+      ],
+      "new_range": [
+        1,
+        21
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/lib.rs:82-89",
+      "new_citation": "rust:crates/ice-cli/src/lib.rs:82-89",
+      "old_path": "crates/ice-cli/src/lib.rs",
+      "active_path": "crates/ice-cli/src/lib.rs",
+      "old_range": [
+        82,
+        89
+      ],
+      "new_range": [
+        82,
+        89
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:82-190",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:82-190",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        82,
+        190
+      ],
+      "new_range": [
+        82,
+        190
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-001",
+        "id": "CLI-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        89,
+        108
+      ],
+      "new_range": [
+        89,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:76-270",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:76-270",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        76,
+        270
+      ],
+      "new_range": [
+        76,
+        270
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:271-555",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:271-555",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        271,
+        555
+      ],
+      "new_range": [
+        271,
+        555
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:718-1120",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:718-1120",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        718,
+        1120
+      ],
+      "new_range": [
+        718,
+        1120
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:76-270",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:76-270",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        76,
+        270
+      ],
+      "new_range": [
+        76,
+        270
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:271-555",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:271-555",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        271,
+        555
+      ],
+      "new_range": [
+        271,
+        555
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-003",
+        "id": "CLI-003",
+        "field": "rust",
+        "pointer": "/entries/2/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:718-1120",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:718-1120",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        718,
+        1120
+      ],
+      "new_range": [
+        718,
+        1120
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:174-219",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:174-219",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        174,
+        219
+      ],
+      "new_range": [
+        174,
+        219
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:523-579",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:523-579",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        523,
+        579
+      ],
+      "new_range": [
+        523,
+        579
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:589-716",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:589-716",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        589,
+        716
+      ],
+      "new_range": [
+        589,
+        716
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:556-578",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:556-578",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        556,
+        578
+      ],
+      "new_range": [
+        556,
+        578
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:234-235",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:234-235",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        234,
+        235
+      ],
+      "new_range": [
+        234,
+        235
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:352-381",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:352-381",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        352,
+        381
+      ],
+      "new_range": [
+        352,
+        381
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        505
+      ],
+      "new_range": [
+        434,
+        505
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:174-219",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:174-219",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        174,
+        219
+      ],
+      "new_range": [
+        174,
+        219
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:523-579",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:523-579",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        523,
+        579
+      ],
+      "new_range": [
+        523,
+        579
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:589-716",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:589-716",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        589,
+        716
+      ],
+      "new_range": [
+        589,
+        716
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:556-578",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:556-578",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        556,
+        578
+      ],
+      "new_range": [
+        556,
+        578
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:234-235",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:234-235",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        234,
+        235
+      ],
+      "new_range": [
+        234,
+        235
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:352-381",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:352-381",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        352,
+        381
+      ],
+      "new_range": [
+        352,
+        381
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-004",
+        "id": "CLI-004",
+        "field": "rust",
+        "pointer": "/entries/3/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        505
+      ],
+      "new_range": [
+        434,
+        505
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:154-192",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:154-192",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        154,
+        192
+      ],
+      "new_range": [
+        154,
+        192
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:617-638",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:617-638",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        617,
+        638
+      ],
+      "new_range": [
+        617,
+        638
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/resume_picker.rs:16-26",
+      "new_citation": "rust:crates/ice-cli/src/resume_picker.rs:16-26",
+      "old_path": "crates/ice-cli/src/resume_picker.rs",
+      "active_path": "crates/ice-cli/src/resume_picker.rs",
+      "old_range": [
+        16,
+        26
+      ],
+      "new_range": [
+        16,
+        26
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2096-2135",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2096-2135",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2096,
+        2135
+      ],
+      "new_range": [
+        2096,
+        2135
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2498-2519",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2498-2519",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2498,
+        2519
+      ],
+      "new_range": [
+        2498,
+        2519
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2137-2184",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2137-2184",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2137,
+        2184
+      ],
+      "new_range": [
+        2137,
+        2184
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:400-422",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:400-422",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        400,
+        422
+      ],
+      "new_range": [
+        400,
+        422
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2676-2713",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2676-2713",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2676,
+        2713
+      ],
+      "new_range": [
+        2676,
+        2713
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:154-192",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:154-192",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        154,
+        192
+      ],
+      "new_range": [
+        154,
+        192
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:617-638",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:617-638",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        617,
+        638
+      ],
+      "new_range": [
+        617,
+        638
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/resume_picker.rs:16-26",
+      "new_citation": "rust:crates/ice-cli/src/resume_picker.rs:16-26",
+      "old_path": "crates/ice-cli/src/resume_picker.rs",
+      "active_path": "crates/ice-cli/src/resume_picker.rs",
+      "old_range": [
+        16,
+        26
+      ],
+      "new_range": [
+        16,
+        26
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2096-2135",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2096-2135",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2096,
+        2135
+      ],
+      "new_range": [
+        2096,
+        2135
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2498-2519",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2498-2519",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2498,
+        2519
+      ],
+      "new_range": [
+        2498,
+        2519
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2137-2184",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2137-2184",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2137,
+        2184
+      ],
+      "new_range": [
+        2137,
+        2184
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:400-422",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:400-422",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        400,
+        422
+      ],
+      "new_range": [
+        400,
+        422
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-006",
+        "id": "CLI-006",
+        "field": "rust",
+        "pointer": "/entries/5/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2676-2713",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2676-2713",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2676,
+        2713
+      ],
+      "new_range": [
+        2676,
+        2713
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:221-235",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:221-235",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        221,
+        235
+      ],
+      "new_range": [
+        221,
+        235
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:315-342",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:315-342",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        315,
+        342
+      ],
+      "new_range": [
+        315,
+        342
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:770-800",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:770-800",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        770,
+        800
+      ],
+      "new_range": [
+        770,
+        800
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:221-235",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:221-235",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        221,
+        235
+      ],
+      "new_range": [
+        221,
+        235
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:315-342",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:315-342",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        315,
+        342
+      ],
+      "new_range": [
+        315,
+        342
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-008",
+        "id": "CLI-008",
+        "field": "rust",
+        "pointer": "/entries/7/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:770-800",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:770-800",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        770,
+        800
+      ],
+      "new_range": [
+        770,
+        800
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        89,
+        108
+      ],
+      "new_range": [
+        89,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:176-225",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:176-225",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        176,
+        225
+      ],
+      "new_range": [
+        176,
+        225
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:189-192",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:189-192",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        189,
+        192
+      ],
+      "new_range": [
+        189,
+        192
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:89-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        89,
+        108
+      ],
+      "new_range": [
+        89,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:176-225",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:176-225",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        176,
+        225
+      ],
+      "new_range": [
+        176,
+        225
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-018",
+        "id": "CLI-018",
+        "field": "rust",
+        "pointer": "/entries/17/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:189-192",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:189-192",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        189,
+        192
+      ],
+      "new_range": [
+        189,
+        192
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:73-103",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:73-103",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        73,
+        103
+      ],
+      "new_range": [
+        73,
+        103
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:31-71",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:31-71",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        31,
+        71
+      ],
+      "new_range": [
+        31,
+        71
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:315-381",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:315-381",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        315,
+        381
+      ],
+      "new_range": [
+        315,
+        381
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-520",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-520",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        520
+      ],
+      "new_range": [
+        434,
+        520
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:640-650",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:640-650",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        640,
+        650
+      ],
+      "new_range": [
+        640,
+        650
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:73-103",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:73-103",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        73,
+        103
+      ],
+      "new_range": [
+        73,
+        103
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/args.rs:31-71",
+      "new_citation": "rust:crates/ice-cli/src/args.rs:31-71",
+      "old_path": "crates/ice-cli/src/args.rs",
+      "active_path": "crates/ice-cli/src/args.rs",
+      "old_range": [
+        31,
+        71
+      ],
+      "new_range": [
+        31,
+        71
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:315-381",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:315-381",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        315,
+        381
+      ],
+      "new_range": [
+        315,
+        381
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-520",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-520",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        520
+      ],
+      "new_range": [
+        434,
+        520
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-019",
+        "id": "CLI-019",
+        "field": "rust",
+        "pointer": "/entries/18/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:640-650",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:640-650",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        640,
+        650
+      ],
+      "new_range": [
+        640,
+        650
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-022",
+        "id": "CLI-022",
+        "field": "rust",
+        "pointer": "/entries/21/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/install.rs:93-154",
+      "new_citation": "rust:crates/ice-cli/src/install.rs:93-154",
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs",
+      "old_range": [
+        93,
+        154
+      ],
+      "new_range": [
+        93,
+        154
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-022",
+        "id": "CLI-022",
+        "field": "rust",
+        "pointer": "/entries/21/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:136-166",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:136-166",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        136,
+        166
+      ],
+      "new_range": [
+        136,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-022",
+        "id": "CLI-022",
+        "field": "rust",
+        "pointer": "/entries/21/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/install.rs:93-154",
+      "new_citation": "rust:crates/ice-cli/src/install.rs:93-154",
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs",
+      "old_range": [
+        93,
+        154
+      ],
+      "new_range": [
+        93,
+        154
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-022",
+        "id": "CLI-022",
+        "field": "rust",
+        "pointer": "/entries/21/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:136-166",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:136-166",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        136,
+        166
+      ],
+      "new_range": [
+        136,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:48-190",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:48-190",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        48,
+        190
+      ],
+      "new_range": [
+        48,
+        190
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:468-605",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:468-605",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        468,
+        605
+      ],
+      "new_range": [
+        468,
+        605
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:192-467",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:192-467",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        192,
+        467
+      ],
+      "new_range": [
+        192,
+        467
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:123-166",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:123-166",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        123,
+        166
+      ],
+      "new_range": [
+        123,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:388-421",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:388-421",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        388,
+        421
+      ],
+      "new_range": [
+        388,
+        421
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:573-626",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:573-626",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        573,
+        626
+      ],
+      "new_range": [
+        573,
+        626
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:48-190",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:48-190",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        48,
+        190
+      ],
+      "new_range": [
+        48,
+        190
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:468-605",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:468-605",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        468,
+        605
+      ],
+      "new_range": [
+        468,
+        605
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:192-467",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:192-467",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        192,
+        467
+      ],
+      "new_range": [
+        192,
+        467
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:123-166",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:123-166",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        123,
+        166
+      ],
+      "new_range": [
+        123,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:388-421",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:388-421",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        388,
+        421
+      ],
+      "new_range": [
+        388,
+        421
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-039",
+        "id": "CLI-039",
+        "field": "mechanism",
+        "pointer": "/entries/38/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/packages.rs:573-626",
+      "new_citation": "rust:crates/ice-cli/src/packages.rs:573-626",
+      "old_path": "crates/ice-cli/src/packages.rs",
+      "active_path": "crates/ice-cli/src/packages.rs",
+      "old_range": [
+        573,
+        626
+      ],
+      "new_range": [
+        573,
+        626
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-041",
+        "id": "CLI-041",
+        "field": "rust",
+        "pointer": "/entries/40/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        1,
+        1403
+      ],
+      "new_range": [
+        1,
+        1403
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-041",
+        "id": "CLI-041",
+        "field": "rust",
+        "pointer": "/entries/40/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/install.rs:155-221",
+      "new_citation": "rust:crates/ice-cli/src/install.rs:155-221",
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs",
+      "old_range": [
+        155,
+        221
+      ],
+      "new_range": [
+        155,
+        221
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-041",
+        "id": "CLI-041",
+        "field": "rust",
+        "pointer": "/entries/40/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        1,
+        1403
+      ],
+      "new_range": [
+        1,
+        1403
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-041",
+        "id": "CLI-041",
+        "field": "rust",
+        "pointer": "/entries/40/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/install.rs:155-221",
+      "new_citation": "rust:crates/ice-cli/src/install.rs:155-221",
+      "old_path": "crates/ice-cli/src/install.rs",
+      "active_path": "crates/ice-cli/src/install.rs",
+      "old_range": [
+        155,
+        221
+      ],
+      "new_range": [
+        155,
+        221
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:120-253",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:120-253",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        120,
+        253
+      ],
+      "new_range": [
+        120,
+        253
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:254-357",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:254-357",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        254,
+        357
+      ],
+      "new_range": [
+        254,
+        357
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:445-493",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:445-493",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        445,
+        493
+      ],
+      "new_range": [
+        445,
+        493
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:358-419",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:358-419",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        358,
+        419
+      ],
+      "new_range": [
+        358,
+        419
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:474-521",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:474-521",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        474,
+        521
+      ],
+      "new_range": [
+        474,
+        521
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:120-253",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:120-253",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        120,
+        253
+      ],
+      "new_range": [
+        120,
+        253
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:254-357",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:254-357",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        254,
+        357
+      ],
+      "new_range": [
+        254,
+        357
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:445-493",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:445-493",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        445,
+        493
+      ],
+      "new_range": [
+        445,
+        493
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:358-419",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:358-419",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        358,
+        419
+      ],
+      "new_range": [
+        358,
+        419
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:474-521",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:474-521",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        474,
+        521
+      ],
+      "new_range": [
+        474,
+        521
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:64-82",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:64-82",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        64,
+        82
+      ],
+      "new_range": [
+        64,
+        82
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:254-259",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:254-259",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        254,
+        259
+      ],
+      "new_range": [
+        254,
+        259
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:321-340",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:321-340",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        321,
+        340
+      ],
+      "new_range": [
+        321,
+        340
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-042",
+        "id": "CLI-042",
+        "field": "mechanism",
+        "pointer": "/entries/41/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:482-484",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:482-484",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        482,
+        484
+      ],
+      "new_range": [
+        482,
+        484
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1051-1266",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1051-1268",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1051,
+        1266
+      ],
+      "new_range": [
+        1051,
+        1268
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:877-895",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:877-895",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        877,
+        895
+      ],
+      "new_range": [
+        877,
+        895
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1875-1985",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1879-1989",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1875,
+        1985
+      ],
+      "new_range": [
+        1879,
+        1989
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1781-1836",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1785-1840",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1781,
+        1836
+      ],
+      "new_range": [
+        1785,
+        1840
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1051-1266",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1051-1268",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1051,
+        1266
+      ],
+      "new_range": [
+        1051,
+        1268
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:877-895",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:877-895",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        877,
+        895
+      ],
+      "new_range": [
+        877,
+        895
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1875-1985",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1879-1989",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1875,
+        1985
+      ],
+      "new_range": [
+        1879,
+        1989
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-044",
+        "id": "CLI-044",
+        "field": "mechanism",
+        "pointer": "/entries/43/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:1781-1836",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:1785-1840",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        1781,
+        1836
+      ],
+      "new_range": [
+        1785,
+        1840
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-189",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-189",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        1,
+        189
+      ],
+      "new_range": [
+        1,
+        189
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:11",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:11",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        11,
+        11
+      ],
+      "new_range": [
+        11,
+        11
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:50",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:50",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        50,
+        50
+      ],
+      "new_range": [
+        50,
+        50
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        92,
+        92
+      ],
+      "new_range": [
+        92,
+        92
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        158,
+        195
+      ],
+      "new_range": [
+        158,
+        195
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-189",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-189",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        1,
+        189
+      ],
+      "new_range": [
+        1,
+        189
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:11",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:11",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        11,
+        11
+      ],
+      "new_range": [
+        11,
+        11
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:50",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:50",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        50,
+        50
+      ],
+      "new_range": [
+        50,
+        50
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        92,
+        92
+      ],
+      "new_range": [
+        92,
+        92
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        158,
+        195
+      ],
+      "new_range": [
+        158,
+        195
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "mechanism",
+        "pointer": "/entries/44/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:27",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:27",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        27,
+        27
+      ],
+      "new_range": [
+        27,
+        27
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-373",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-373",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        1,
+        373
+      ],
+      "new_range": [
+        1,
+        373
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        158,
+        195
+      ],
+      "new_range": [
+        158,
+        195
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        425,
+        803
+      ],
+      "new_range": [
+        425,
+        803
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-373",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_release.rs:1-373",
+      "old_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_release.rs",
+      "old_range": [
+        1,
+        373
+      ],
+      "new_range": [
+        1,
+        373
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        158,
+        195
+      ],
+      "new_range": [
+        158,
+        195
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803",
+      "new_citation": "rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803",
+      "old_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "active_path": "crates/ice-cli/src/prebuilt_extensions.rs",
+      "old_range": [
+        425,
+        803
+      ],
+      "new_range": [
+        425,
+        803
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-cli-packaging.json",
+        "entry_id": "CLI-045",
+        "id": "CLI-045",
+        "field": "rust",
+        "pointer": "/entries/44/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:27",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:27",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        27,
+        27
+      ],
+      "new_range": [
+        27,
+        27
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:96",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:96",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        96,
+        96
+      ],
+      "new_range": [
+        96,
+        96
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:43-65",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:43-65",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        43,
+        65
+      ],
+      "new_range": [
+        43,
+        65
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:95",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:95",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        95,
+        95
+      ],
+      "new_range": [
+        95,
+        95
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:97-98",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:97-98",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        97,
+        98
+      ],
+      "new_range": [
+        97,
+        98
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        505
+      ],
+      "new_range": [
+        434,
+        505
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:207-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:207-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        207,
+        264
+      ],
+      "new_range": [
+        207,
+        264
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:96",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:96",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        96,
+        96
+      ],
+      "new_range": [
+        96,
+        96
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:43-65",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:43-65",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        43,
+        65
+      ],
+      "new_range": [
+        43,
+        65
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:95",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:95",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        95,
+        95
+      ],
+      "new_range": [
+        95,
+        95
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:97-98",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:97-98",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        97,
+        98
+      ],
+      "new_range": [
+        97,
+        98
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:434-505",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        434,
+        505
+      ],
+      "new_range": [
+        434,
+        505
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-015",
+        "id": "RPC-015",
+        "field": "rust",
+        "pointer": "/entries/14/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:207-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:207-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        207,
+        264
+      ],
+      "new_range": [
+        207,
+        264
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:24-121",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:24-121",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        24,
+        121
+      ],
+      "new_range": [
+        24,
+        121
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:215-311",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:215-311",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        215,
+        311
+      ],
+      "new_range": [
+        215,
+        311
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:434-442",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:434-444",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        434,
+        442
+      ],
+      "new_range": [
+        434,
+        444
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:169-190",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:169-190",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        169,
+        190
+      ],
+      "new_range": [
+        169,
+        190
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:127-165",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:127-165",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        127,
+        165
+      ],
+      "new_range": [
+        127,
+        165
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        243,
+        264
+      ],
+      "new_range": [
+        243,
+        264
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/session.rs:136-162",
+      "new_citation": "rust:crates/ice-cli/src/remote/session.rs:136-162",
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs",
+      "old_range": [
+        136,
+        162
+      ],
+      "new_range": [
+        136,
+        162
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/session.rs:191-493",
+      "new_citation": "rust:crates/ice-cli/src/remote/session.rs:191-493",
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs",
+      "old_range": [
+        191,
+        493
+      ],
+      "new_range": [
+        191,
+        493
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        243,
+        264
+      ],
+      "new_range": [
+        243,
+        264
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:314-431",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:314-431",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        314,
+        431
+      ],
+      "new_range": [
+        314,
+        431
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509",
+      "new_citation": "rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509",
+      "old_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "active_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "old_range": [
+        130,
+        509
+      ],
+      "new_range": [
+        130,
+        509
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:24-121",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:24-121",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        24,
+        121
+      ],
+      "new_range": [
+        24,
+        121
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:215-311",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:215-311",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        215,
+        311
+      ],
+      "new_range": [
+        215,
+        311
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:434-442",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:434-444",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        434,
+        442
+      ],
+      "new_range": [
+        434,
+        444
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:169-190",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:169-190",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        169,
+        190
+      ],
+      "new_range": [
+        169,
+        190
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/client.rs:127-165",
+      "new_citation": "rust:crates/ice-cli/src/remote/client.rs:127-165",
+      "old_path": "crates/ice-cli/src/remote/client.rs",
+      "active_path": "crates/ice-cli/src/remote/client.rs",
+      "old_range": [
+        127,
+        165
+      ],
+      "new_range": [
+        127,
+        165
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        243,
+        264
+      ],
+      "new_range": [
+        243,
+        264
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/session.rs:136-162",
+      "new_citation": "rust:crates/ice-cli/src/remote/session.rs:136-162",
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs",
+      "old_range": [
+        136,
+        162
+      ],
+      "new_range": [
+        136,
+        162
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/remote/session.rs:191-493",
+      "new_citation": "rust:crates/ice-cli/src/remote/session.rs:191-493",
+      "old_path": "crates/ice-cli/src/remote/session.rs",
+      "active_path": "crates/ice-cli/src/remote/session.rs",
+      "old_range": [
+        191,
+        493
+      ],
+      "new_range": [
+        191,
+        493
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:243-264",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        243,
+        264
+      ],
+      "new_range": [
+        243,
+        264
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session_driver.rs:314-431",
+      "new_citation": "rust:crates/ice-cli/src/session_driver.rs:314-431",
+      "old_path": "crates/ice-cli/src/session_driver.rs",
+      "active_path": "crates/ice-cli/src/session_driver.rs",
+      "old_range": [
+        314,
+        431
+      ],
+      "new_range": [
+        314,
+        431
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-rpc-remote.json",
+        "entry_id": "RPC-036",
+        "id": "RPC-036",
+        "field": "mechanism",
+        "pointer": "/entries/35/mechanism"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509",
+      "new_citation": "rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509",
+      "old_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "active_path": "crates/ice-cli/tests/remote_client_smoke.rs",
+      "old_range": [
+        130,
+        509
+      ],
+      "new_range": [
+        130,
+        509
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/provider.rs:190-273",
+      "new_citation": "rust:crates/ice-cli/src/provider.rs:190-273",
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs",
+      "old_range": [
+        190,
+        273
+      ],
+      "new_range": [
+        190,
+        273
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/provider.rs:289-330",
+      "new_citation": "rust:crates/ice-cli/src/provider.rs:289-330",
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs",
+      "old_range": [
+        289,
+        330
+      ],
+      "new_range": [
+        289,
+        330
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/provider_packages.rs:349-379",
+      "new_citation": "rust:crates/ice-cli/tests/provider_packages.rs:349-379",
+      "old_path": "crates/ice-cli/tests/provider_packages.rs",
+      "active_path": "crates/ice-cli/tests/provider_packages.rs",
+      "old_range": [
+        349,
+        379
+      ],
+      "new_range": [
+        349,
+        379
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/provider.rs:190-273",
+      "new_citation": "rust:crates/ice-cli/src/provider.rs:190-273",
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs",
+      "old_range": [
+        190,
+        273
+      ],
+      "new_range": [
+        190,
+        273
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/provider.rs:289-330",
+      "new_citation": "rust:crates/ice-cli/src/provider.rs:289-330",
+      "old_path": "crates/ice-cli/src/provider.rs",
+      "active_path": "crates/ice-cli/src/provider.rs",
+      "old_range": [
+        289,
+        330
+      ],
+      "new_range": [
+        289,
+        330
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-providers-auth.json",
+        "entry_id": "AUTH-023",
+        "id": "AUTH-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/provider_packages.rs:349-379",
+      "new_citation": "rust:crates/ice-cli/tests/provider_packages.rs:349-379",
+      "old_path": "crates/ice-cli/tests/provider_packages.rs",
+      "active_path": "crates/ice-cli/tests/provider_packages.rs",
+      "old_range": [
+        349,
+        379
+      ],
+      "new_range": [
+        349,
+        379
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness.rs:2023-2042",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness.rs:2023-2042",
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs",
+      "old_range": [
+        2023,
+        2042
+      ],
+      "new_range": [
+        2023,
+        2042
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness.rs:4973-4986",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness.rs:4973-4986",
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs",
+      "old_range": [
+        4973,
+        4986
+      ],
+      "new_range": [
+        4973,
+        4986
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2521-2577",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2521-2577",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2521,
+        2577
+      ],
+      "new_range": [
+        2521,
+        2577
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness.rs:2023-2042",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness.rs:2023-2042",
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs",
+      "old_range": [
+        2023,
+        2042
+      ],
+      "new_range": [
+        2023,
+        2042
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness.rs:4973-4986",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness.rs:4973-4986",
+      "old_path": "crates/ice-harness/src/agent_harness.rs",
+      "active_path": "crates/ice-harness/src/agent_harness.rs",
+      "old_range": [
+        4973,
+        4986
+      ],
+      "new_range": [
+        4973,
+        4986
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-session.json",
+        "entry_id": "SESSION-023",
+        "id": "SESSION-023",
+        "field": "rust",
+        "pointer": "/entries/22/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:2521-2577",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:2521-2577",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        2521,
+        2577
+      ],
+      "new_range": [
+        2521,
+        2577
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/child_agents.rs:140-286",
+      "new_citation": "rust:crates/ice-cli/src/child_agents.rs:140-286",
+      "old_path": "crates/ice-cli/src/child_agents.rs",
+      "active_path": "crates/ice-cli/src/child_agents.rs",
+      "old_range": [
+        140,
+        286
+      ],
+      "new_range": [
+        140,
+        286
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness/child.rs:74-172",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness/child.rs:74-172",
+      "old_path": "crates/ice-harness/src/agent_harness/child.rs",
+      "active_path": "crates/ice-harness/src/agent_harness/child.rs",
+      "old_range": [
+        74,
+        172
+      ],
+      "new_range": [
+        74,
+        172
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/subagent_packages.rs:23-375",
+      "new_citation": "rust:crates/ice-cli/tests/subagent_packages.rs:23-375",
+      "old_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "old_range": [
+        23,
+        375
+      ],
+      "new_range": [
+        23,
+        375
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63",
+      "new_citation": "rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63",
+      "old_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "old_range": [
+        3,
+        63
+      ],
+      "new_range": [
+        3,
+        63
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/child_agents.rs:140-286",
+      "new_citation": "rust:crates/ice-cli/src/child_agents.rs:140-286",
+      "old_path": "crates/ice-cli/src/child_agents.rs",
+      "active_path": "crates/ice-cli/src/child_agents.rs",
+      "old_range": [
+        140,
+        286
+      ],
+      "new_range": [
+        140,
+        286
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-harness/src/agent_harness/child.rs:74-172",
+      "new_citation": "rust:crates/ice-harness/src/agent_harness/child.rs:74-172",
+      "old_path": "crates/ice-harness/src/agent_harness/child.rs",
+      "active_path": "crates/ice-harness/src/agent_harness/child.rs",
+      "old_range": [
+        74,
+        172
+      ],
+      "new_range": [
+        74,
+        172
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/subagent_packages.rs:23-375",
+      "new_citation": "rust:crates/ice-cli/tests/subagent_packages.rs:23-375",
+      "old_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages.rs",
+      "old_range": [
+        23,
+        375
+      ],
+      "new_range": [
+        23,
+        375
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-subagents.json",
+        "entry_id": "SUB-034",
+        "id": "SUB-034",
+        "field": "rust",
+        "pointer": "/entries/33/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63",
+      "new_citation": "rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63",
+      "old_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "active_path": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+      "old_range": [
+        3,
+        63
+      ],
+      "new_range": [
+        3,
+        63
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui/run.rs:72-118",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui/run.rs:72-118",
+      "old_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "old_range": [
+        72,
+        118
+      ],
+      "new_range": [
+        72,
+        118
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2271-2280",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2271-2280",
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs",
+      "old_range": [
+        2271,
+        2280
+      ],
+      "new_range": [
+        2271,
+        2280
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2901-2912",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2901-2912",
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs",
+      "old_range": [
+        2901,
+        2912
+      ],
+      "new_range": [
+        2901,
+        2912
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/editor.rs:548-562",
+      "new_citation": "rust:crates/ice-tui/src/editor.rs:548-562",
+      "old_path": "crates/ice-tui/src/editor.rs",
+      "active_path": "crates/ice-tui/src/editor.rs",
+      "old_range": [
+        548,
+        562
+      ],
+      "new_range": [
+        548,
+        562
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui/run.rs:72-118",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui/run.rs:72-118",
+      "old_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui/run.rs",
+      "old_range": [
+        72,
+        118
+      ],
+      "new_range": [
+        72,
+        118
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2271-2280",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2271-2280",
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs",
+      "old_range": [
+        2271,
+        2280
+      ],
+      "new_range": [
+        2271,
+        2280
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2901-2912",
+      "new_citation": "rust:crates/ice-cli/src/interactive_tui.rs:2901-2912",
+      "old_path": "crates/ice-cli/src/interactive_tui.rs",
+      "active_path": "crates/ice-cli/src/interactive_tui.rs",
+      "old_range": [
+        2901,
+        2912
+      ],
+      "new_range": [
+        2901,
+        2912
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-050",
+        "id": "TUI-050",
+        "field": "rust",
+        "pointer": "/entries/49/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/editor.rs:548-562",
+      "new_citation": "rust:crates/ice-tui/src/editor.rs:548-562",
+      "old_path": "crates/ice-tui/src/editor.rs",
+      "active_path": "crates/ice-tui/src/editor.rs",
+      "old_range": [
+        548,
+        562
+      ],
+      "new_range": [
+        548,
+        562
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:16-65",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:16-65",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        16,
+        65
+      ],
+      "new_range": [
+        16,
+        65
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:187-290",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:187-290",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        187,
+        290
+      ],
+      "new_range": [
+        187,
+        290
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:340-369",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:340-369",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        340,
+        369
+      ],
+      "new_range": [
+        340,
+        369
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:469-506",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:469-506",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        469,
+        506
+      ],
+      "new_range": [
+        469,
+        506
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:16-65",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:16-65",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        16,
+        65
+      ],
+      "new_range": [
+        16,
+        65
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:187-290",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:187-290",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        187,
+        290
+      ],
+      "new_range": [
+        187,
+        290
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:340-369",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:340-369",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        340,
+        369
+      ],
+      "new_range": [
+        340,
+        369
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-tui.json",
+        "entry_id": "TUI-208",
+        "id": "TUI-208",
+        "field": "rust",
+        "pointer": "/entries/91/rust"
+      },
+      "old_citation": "rust:crates/ice-tui/src/terminal.rs:469-506",
+      "new_citation": "rust:crates/ice-tui/src/terminal.rs:469-506",
+      "old_path": "crates/ice-tui/src/terminal.rs",
+      "active_path": "crates/ice-tui/src/terminal.rs",
+      "old_range": [
+        469,
+        506
+      ],
+      "new_range": [
+        469,
+        506
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-observability.json",
+        "entry_id": "OBS-002",
+        "id": "OBS-002",
+        "field": "rust",
+        "pointer": "/entries/1/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/timings.rs:1-109",
+      "new_citation": "rust:crates/ice-cli/src/timings.rs:1-109",
+      "old_path": "crates/ice-cli/src/timings.rs",
+      "active_path": "crates/ice-cli/src/timings.rs",
+      "old_range": [
+        1,
+        109
+      ],
+      "new_range": [
+        1,
+        109
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-observability.json",
+        "entry_id": "OBS-002",
+        "id": "OBS-002",
+        "field": "rust",
+        "pointer": "/entries/1/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:68-79",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:68-79",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        68,
+        79
+      ],
+      "new_range": [
+        68,
+        79
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-observability.json",
+        "entry_id": "OBS-002",
+        "id": "OBS-002",
+        "field": "rust",
+        "pointer": "/entries/1/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/timings.rs:1-109",
+      "new_citation": "rust:crates/ice-cli/src/timings.rs:1-109",
+      "old_path": "crates/ice-cli/src/timings.rs",
+      "active_path": "crates/ice-cli/src/timings.rs",
+      "old_range": [
+        1,
+        109
+      ],
+      "new_range": [
+        1,
+        109
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-observability.json",
+        "entry_id": "OBS-002",
+        "id": "OBS-002",
+        "field": "rust",
+        "pointer": "/entries/1/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/app.rs:68-79",
+      "new_citation": "rust:crates/ice-cli/src/app.rs:68-79",
+      "old_path": "crates/ice-cli/src/app.rs",
+      "active_path": "crates/ice-cli/src/app.rs",
+      "old_range": [
+        68,
+        79
+      ],
+      "new_range": [
+        68,
+        79
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:17-21",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:17-21",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        17,
+        21
+      ],
+      "new_range": [
+        17,
+        21
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:119-158",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:119-158",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        119,
+        158
+      ],
+      "new_range": [
+        119,
+        158
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:445-480",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:445-480",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        445,
+        480
+      ],
+      "new_range": [
+        445,
+        480
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:17-21",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:17-21",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        17,
+        21
+      ],
+      "new_range": [
+        17,
+        21
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:119-158",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:119-158",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        119,
+        158
+      ],
+      "new_range": [
+        119,
+        158
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-001",
+        "id": "MISC-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/updates.rs:445-480",
+      "new_citation": "rust:crates/ice-cli/src/updates.rs:445-480",
+      "old_path": "crates/ice-cli/src/updates.rs",
+      "active_path": "crates/ice-cli/src/updates.rs",
+      "old_range": [
+        445,
+        480
+      ],
+      "new_range": [
+        445,
+        480
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:13-34",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:13-34",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        13,
+        34
+      ],
+      "new_range": [
+        13,
+        34
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:96-253",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:96-253",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        96,
+        253
+      ],
+      "new_range": [
+        96,
+        253
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:35-94",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:35-94",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        35,
+        94
+      ],
+      "new_range": [
+        35,
+        94
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:255-434",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:255-434",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        255,
+        434
+      ],
+      "new_range": [
+        255,
+        434
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:13-34",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:13-34",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        13,
+        34
+      ],
+      "new_range": [
+        13,
+        34
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:96-253",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:96-253",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        96,
+        253
+      ],
+      "new_range": [
+        96,
+        253
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:35-94",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:35-94",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        35,
+        94
+      ],
+      "new_range": [
+        35,
+        94
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-misc.json",
+        "entry_id": "MISC-013",
+        "id": "MISC-013",
+        "field": "rust",
+        "pointer": "/entries/12/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/changelog.rs:255-434",
+      "new_citation": "rust:crates/ice-cli/src/changelog.rs:255-434",
+      "old_path": "crates/ice-cli/src/changelog.rs",
+      "active_path": "crates/ice-cli/src/changelog.rs",
+      "old_range": [
+        255,
+        434
+      ],
+      "new_range": [
+        255,
+        434
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:42-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:42-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        42,
+        108
+      ],
+      "new_range": [
+        42,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:123-166",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:123-166",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        123,
+        166
+      ],
+      "new_range": [
+        123,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:168-255",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:168-255",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        168,
+        255
+      ],
+      "new_range": [
+        168,
+        255
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:42-108",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:42-108",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        42,
+        108
+      ],
+      "new_range": [
+        42,
+        108
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:123-166",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:123-166",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        123,
+        166
+      ],
+      "new_range": [
+        123,
+        166
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-001",
+        "id": "SET-001",
+        "field": "rust",
+        "pointer": "/entries/0/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/config.rs:168-255",
+      "new_citation": "rust:crates/ice-cli/src/config.rs:168-255",
+      "old_path": "crates/ice-cli/src/config.rs",
+      "active_path": "crates/ice-cli/src/config.rs",
+      "old_range": [
+        168,
+        255
+      ],
+      "new_range": [
+        168,
+        255
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/settings.rs:113-123",
+      "new_citation": "rust:crates/ice-cli/src/settings.rs:113-123",
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs",
+      "old_range": [
+        113,
+        123
+      ],
+      "new_range": [
+        113,
+        123
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/settings.rs:897-910",
+      "new_citation": "rust:crates/ice-cli/src/settings.rs:897-910",
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs",
+      "old_range": [
+        897,
+        910
+      ],
+      "new_range": [
+        897,
+        910
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:1932-1955",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:1932-1955",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        1932,
+        1955
+      ],
+      "new_range": [
+        1932,
+        1955
+      ],
+      "method": "reviewed"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/settings.rs:113-123",
+      "new_citation": "rust:crates/ice-cli/src/settings.rs:113-123",
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs",
+      "old_range": [
+        113,
+        123
+      ],
+      "new_range": [
+        113,
+        123
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/settings.rs:897-910",
+      "new_citation": "rust:crates/ice-cli/src/settings.rs:897-910",
+      "old_path": "crates/ice-cli/src/settings.rs",
+      "active_path": "crates/ice-cli/src/settings.rs",
+      "old_range": [
+        897,
+        910
+      ],
+      "new_range": [
+        897,
+        910
+      ],
+      "method": "unchanged"
+    },
+    {
+      "context": {
+        "artifact": "evidence/spec-settings.json",
+        "entry_id": "SET-014",
+        "id": "SET-014",
+        "field": "rust",
+        "pointer": "/entries/13/rust"
+      },
+      "old_citation": "rust:crates/ice-cli/src/session.rs:1932-1955",
+      "new_citation": "rust:crates/ice-cli/src/session.rs:1932-1955",
+      "old_path": "crates/ice-cli/src/session.rs",
+      "active_path": "crates/ice-cli/src/session.rs",
+      "old_range": [
+        1932,
+        1955
+      ],
+      "new_range": [
+        1932,
+        1955
+      ],
+      "method": "reviewed"
+    }
+  ],
+  "rendering_deferred_until_migration": true,
+  "immutable_proposals_unchanged": true
+}

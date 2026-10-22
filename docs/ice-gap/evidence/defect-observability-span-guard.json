@@ -1,0 +1,29 @@
+{
+  "id": "OBS-RUST-001",
+  "area": "observability",
+  "title": "SpanGuard concurrent final-clone drops can lose the end callback",
+  "status": "source-verified",
+  "severity": "medium (observability)",
+  "evidence_level": "source-read; not reproduced",
+  "source": "rust:crates/ice-telemetry/src/context.rs:83-103",
+  "behavior": "Two concurrent cloned-guard drops can both see strong_count == 2 and return before releasing their local Arc. The subsequent releases destroy SpanEnd with neither path invoking on_end. The span end/export is lost.",
+  "interleaving": [
+    "A takes self.inner into its local Arc; B's clone is still alive.",
+    "A reads strong_count=2 and selects early return before its local Arc is dropped.",
+    "B takes its Arc, reads strong_count=2, and also selects early return before A releases.",
+    "A and B release their locals; SpanEnd is destroyed without its stored FnOnce callback being called."
+  ],
+  "assumptions": [
+    "Separate guard clones are dropped concurrently on different threads.",
+    "No external wrapper serializes all such drops.",
+    "Sequential drops ordinarily invoke the callback on the final guard; the issue is not asserted for every drop."
+  ],
+  "parity_relation": "Separate Rust implementation defect in a capability to preserve; not evidence that the TypeScript activity dashboard already exists in Rust.",
+  "upstream_provenance": "Confirmed in local Git at upstream bigfish1913/pi-rust v0.6.1 / 0fb2d893206981527b14e86d68e3ddbdf2c8189a, crates/rpi-telemetry/src/context.rs:83-103; introducing blame 91d89082dd6d09d3cdbbb0d55ceb6ab88e1a9523 is an ancestor. Evidence: rust-defect-provenance.json. Not caused by the local rebrand.",
+  "review": {
+    "author": "/root",
+    "independent_reviewer": "/root/audit_session",
+    "review_conclusion": "Confirmed by independent source inspection; the finish Mutex does not serialize the refcount check/release and SpanEnd has no Drop implementation."
+  },
+  "remediation_note": "For an implementation follow-up, once-only finalization should live in the shared state destructor or another synchronization mechanism; application source was not changed."
+}

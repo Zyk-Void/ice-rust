@@ -1,0 +1,77 @@
+{
+  "area": "subagents",
+  "field_replacements": [
+    {
+      "id": "SUB-008",
+      "field": "interfaces",
+      "expected_old": "Resolution={decision:allow|deny,source:automated|user|timeout|aborted|disposed|no-channel,sessionRule?}.",
+      "replacement": "ApprovalOutcome is {decision:allow,source:automated|user,sessionRule?} or {decision:deny,source:automated|user|timeout|no-channel|disposed|cancelled}.",
+      "ts": "ice:packages/coding-agent/src/subagents/permissions/approval.ts:34-36,77-142",
+      "reason": "The directly reopened type and cancellation branches use cancelled; an allow result cannot have timeout/cancelled/disposed/no-channel as its source.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/permissions/approval.ts:34-36,77-142"
+      }
+    },
+    {
+      "id": "SUB-011",
+      "field": "interfaces",
+      "expected_old": "Dispatcher output {outcome,records,diagnostics,contextAdditions}",
+      "replacement": "Dispatcher output {decision,records,diagnostics,contextAdditions}",
+      "ts": "ice:packages/coding-agent/src/subagents/settings.ts:480-486",
+      "reason": "IceHookDispatchResult names the aggregate field decision; outcome belongs to each handler result/dispatch record.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/settings.ts:480-486"
+      }
+    },
+    {
+      "id": "SUB-026",
+      "field": "mechanism",
+      "expected_old": "one of satisfied|partial|failed|not_run|not_applicable",
+      "replacement": "one of satisfied|partial|blocked|failed|not_attempted",
+      "ts": "ice:packages/coding-agent/src/subagents/results/report.ts:234-276; ice:packages/coding-agent/src/subagents/types.ts:369-375",
+      "reason": "The direct parser rejects every value outside the same five-member vocabulary declared by SubagentRequirementClaimStatus.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/results/report.ts:234-276; ice:packages/coding-agent/src/subagents/types.ts:369-375"
+      }
+    },
+    {
+      "id": "SUB-033",
+      "field": "interfaces",
+      "expected_old": "runAgentsCli returns {exitCode,stdout,stderr}",
+      "replacement": "runAgentsCli returns AgentsCliResult {exitCode:number,stdout:string}",
+      "ts": "ice:packages/coding-agent/src/subagents/v2/cli.ts:20-23",
+      "reason": "AgentsCliResult has only these two properties; the entry currently invents stderr.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/v2/cli.ts:20-23"
+      }
+    },
+    {
+      "id": "SUB-044",
+      "field": "mechanism",
+      "expected_old": "The legacy SubagentError helpers classify19 error codes with retryability",
+      "replacement": "The legacy SubagentError helpers carry the24-member SubagentFailureCode vocabulary with caller-supplied retryability",
+      "ts": "ice:packages/coding-agent/src/subagents/types.ts:163-187; ice:packages/coding-agent/src/subagents/runtime/helpers.ts:205-216",
+      "reason": "The type declares24 members. The class constructor stores the supplied code/retryable flag (default false), rather than computing a classification over19 codes.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/types.ts:163-187; ice:packages/coding-agent/src/subagents/runtime/helpers.ts:205-216"
+      }
+    },
+    {
+      "id": "SUB-044",
+      "field": "mechanism",
+      "expected_old": "Context-packet normalization rejects malformed/oversized items and canonically deduplicates, with base packet entries winning a merge.",
+      "replacement": "Context-packet normalization rejects malformed/oversized items and duplicate IDs. The separate mergeTrustedChildContext file-list helper deduplicates canonical paths (falling back to resolved paths) with base files winning over selected files.",
+      "ts": "ice:packages/coding-agent/src/subagents/runtime/helpers.ts:332-389; ice:packages/coding-agent/src/subagents/runtime/live-session.ts:444-461",
+      "reason": "The current sentence conflates distinct item-ID normalization and file-path merge functions. Neither repeated context item IDs nor their contents are silently deduplicated.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-sub-session-subagents-source-review.json",
+        "source": "ice:packages/coding-agent/src/subagents/runtime/helpers.ts:332-389; ice:packages/coding-agent/src/subagents/runtime/live-session.ts:444-461"
+      }
+    }
+  ]
+}

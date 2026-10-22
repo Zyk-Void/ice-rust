@@ -1,0 +1,639 @@
+{
+  "schema_version": 1,
+  "owner": "/root/final_area_handoffs",
+  "status": "READY",
+  "scope": [
+    "misc",
+    "settings"
+  ],
+  "field_replacements": [
+    {
+      "area": "misc",
+      "id": "MISC-001",
+      "field": "rust",
+      "old_text": "Rust startup lookup uses crates.io ice-cli metadata, request timeout 1800 ms and user agent ice/<VERSION>. It distinguishes missing(404/410) from transient HTTP/JSON failures and reads crate.max_version. Its semantic comparison strips leading 'v' characters after trim, uses cmp_precedence, and returns false if either parse fails. Its disable controls are native offline_env_enabled and presence of ICE_DISABLE_UPDATE_CHECK, rather than the two TS truthy helpers (rust:crates/ice-cli/src/updates.rs:17-21; rust:crates/ice-cli/src/updates.rs:119-158; rust:crates/ice-cli/src/updates.rs:445-480). CLI-042 credits native caching, and CLI-043/045 own native release/install sources. No equivalent operator-controlled npm package handoff or TS structured note is present at this registry boundary.",
+      "new_text": "Rust startup lookup uses crates.io ice-cli metadata, request timeout 1800 ms and user agent icers/<VERSION>. It distinguishes missing(404/410) from transient HTTP/JSON failures and reads crate.max_version. Its semantic comparison strips leading 'v' characters after trim, uses cmp_precedence, and returns false if either parse fails. Its disable controls are native offline_env_enabled and presence of ICERS_DISABLE_UPDATE_CHECK, rather than the two TS truthy helpers (rust:crates/ice-cli/src/updates.rs:17-21; rust:crates/ice-cli/src/updates.rs:119-158; rust:crates/ice-cli/src/updates.rs:445-480). CLI-042 credits native caching, and CLI-043/045 own native release/install sources. No equivalent operator-controlled npm package handoff or TS structured note is present at this registry boundary.",
+      "reason": "Use the active native user agent and update-disable variable; TS version-check inputs and helper semantics remain unchanged.",
+      "source_review": [
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/updates.rs",
+          "active_path": "crates/ice-cli/src/updates.rs",
+          "old_sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+          "active_sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+          "old_ranges": [
+            [
+              155,
+              155
+            ]
+          ],
+          "active_ranges": [
+            [
+              155,
+              155
+            ]
+          ],
+          "old_text": "        .user_agent(format!(\"ice/{}\", crate::VERSION))",
+          "active_text": "        .user_agent(format!(\"icers/{}\", crate::VERSION))",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        },
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/updates.rs",
+          "active_path": "crates/ice-cli/src/updates.rs",
+          "old_sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+          "active_sha256": "587fdaa1fbae831826bea57eb1409cd5a884297a713d0cce57830e84f6cc6470",
+          "old_ranges": [
+            [
+              137,
+              137
+            ]
+          ],
+          "active_ranges": [
+            [
+              137,
+              137
+            ]
+          ],
+          "old_text": "    crate::args::offline_env_enabled() || std::env::var_os(\"ICE_DISABLE_UPDATE_CHECK\").is_some()",
+          "active_text": "    crate::args::offline_env_enabled() || std::env::var_os(\"ICERS_DISABLE_UPDATE_CHECK\").is_some()",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        }
+      ],
+      "spec_sha256_at_review": "62f377e00ed555ed22d8cb4b6913e1432c6eb83f9f4d12973a0ffa1116c27945",
+      "citation_basis": "Existing references retained; these exact changed literal lines have zero old-to-active offset. Coordinator owns full citation relocation."
+    },
+    {
+      "area": "misc",
+      "id": "MISC-013",
+      "field": "interfaces",
+      "old_text": "ChangelogEntry {major, minor, patch, content}; parseChangelog(path), compareVersions, getNewEntries(entries, lastVersion), normalizeChangelogLinks(markdown, version). Native public configuration additionally includes ICE_CHANGELOG_URL and allow_network; those are retained native facilities, not TS helper inputs.",
+      "new_text": "ChangelogEntry {major, minor, patch, content}; parseChangelog(path), compareVersions, getNewEntries(entries, lastVersion), normalizeChangelogLinks(markdown, version). Native public configuration additionally includes ICERS_CHANGELOG_URL and allow_network; those are retained native facilities, not TS helper inputs.",
+      "reason": "Correct only the explicitly native public configuration variable.",
+      "source_review": [
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/changelog.rs",
+          "active_path": "crates/ice-cli/src/changelog.rs",
+          "old_sha256": "e758eade22f55011e3a67b366a126fa475028f5db315c0495c9a2c97dfae57e9",
+          "active_sha256": "8ab8bfa468d64174fd6f3173cb2ff61e415821431092bce3115d684432dac491",
+          "old_ranges": [
+            [
+              31,
+              31
+            ]
+          ],
+          "active_ranges": [
+            [
+              31,
+              31
+            ]
+          ],
+          "old_text": "    std::env::var(\"ICE_CHANGELOG_URL\").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())",
+          "active_text": "    std::env::var(\"ICERS_CHANGELOG_URL\").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        }
+      ],
+      "spec_sha256_at_review": "62f377e00ed555ed22d8cb4b6913e1432c6eb83f9f4d12973a0ffa1116c27945",
+      "citation_basis": "Existing references retained; these exact changed literal lines have zero old-to-active offset. Coordinator owns full citation relocation."
+    },
+    {
+      "area": "misc",
+      "id": "MISC-013",
+      "field": "rust",
+      "old_text": "Native changelog.rs already parses entries, embeds bundled release notes, sorts bundled entries, selects the latest release at/below the running version, distinguishes dedicated Ice baseline from compatible legacy baseline, and suppresses first-run notices for a fresh profile. It also supports optional network retrieval with allow_network, ICE_CHANGELOG_URL, a 15-second timeout and fallback to an empty list on load failure (rust:crates/ice-cli/src/changelog.rs:13-34; rust:crates/ice-cli/src/changelog.rs:96-253). Native headings are broader: it trims and accepts leading '#' levels, optional v and missing/invalid minor/patch values defaulting to zero; the heading is excluded from content, and an invalid heading stays in the preceding body. These differ from TS section boundaries. No release-pinned Markdown link normalization is present. Existing inline tests cover native baseline/entry behavior but not the TS link transformation (rust:crates/ice-cli/src/changelog.rs:35-94; rust:crates/ice-cli/src/changelog.rs:255-434).",
+      "new_text": "Native changelog.rs already parses entries, embeds bundled release notes, sorts bundled entries, selects the latest release at/below the running version, distinguishes dedicated Ice baseline from compatible legacy baseline, and suppresses first-run notices for a fresh profile. It also supports optional network retrieval with allow_network, ICERS_CHANGELOG_URL, a 15-second timeout and fallback to an empty list on load failure (rust:crates/ice-cli/src/changelog.rs:13-34; rust:crates/ice-cli/src/changelog.rs:96-253). Native headings are broader: it trims and accepts leading '#' levels, optional v and missing/invalid minor/patch values defaulting to zero; the heading is excluded from content, and an invalid heading stays in the preceding body. These differ from TS section boundaries. No release-pinned Markdown link normalization is present. Existing inline tests cover native baseline/entry behavior but not the TS link transformation (rust:crates/ice-cli/src/changelog.rs:35-94; rust:crates/ice-cli/src/changelog.rs:255-434).",
+      "reason": "Use the current native changelog URL override; the dedicated Ice baseline name is an existing source identifier and remains.",
+      "source_review": [
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/changelog.rs",
+          "active_path": "crates/ice-cli/src/changelog.rs",
+          "old_sha256": "e758eade22f55011e3a67b366a126fa475028f5db315c0495c9a2c97dfae57e9",
+          "active_sha256": "8ab8bfa468d64174fd6f3173cb2ff61e415821431092bce3115d684432dac491",
+          "old_ranges": [
+            [
+              31,
+              31
+            ]
+          ],
+          "active_ranges": [
+            [
+              31,
+              31
+            ]
+          ],
+          "old_text": "    std::env::var(\"ICE_CHANGELOG_URL\").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())",
+          "active_text": "    std::env::var(\"ICERS_CHANGELOG_URL\").unwrap_or_else(|_| DEFAULT_CHANGELOG_URL.to_string())",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        }
+      ],
+      "spec_sha256_at_review": "62f377e00ed555ed22d8cb4b6913e1432c6eb83f9f4d12973a0ffa1116c27945",
+      "citation_basis": "Existing references retained; these exact changed literal lines have zero old-to-active offset. Coordinator owns full citation relocation."
+    },
+    {
+      "area": "settings",
+      "id": "SET-001",
+      "field": "rust",
+      "old_text": "rust:crates/ice-cli/src/config.rs:42-108; rust:crates/ice-cli/src/config.rs:123-166 has a real nested agent root and concrete auth/models/settings/trust paths. Its frozen old-checkout constants are .ice and ICE_CODING_AGENT_DIR; a present empty, relative or tilde override is rejected as RelativeOverride instead of following TS truthy/normalizePath behavior. There is no package-manifest-driven application identity or Bun asset layout in this native binary. rust:crates/ice-cli/src/config.rs:168-255 has a separate legacy flat-layout migration; that is not a TypeScript alias search. The active checkout's intentional icers/.icers/ICERS_* identity must be retained during final citation relocation, never changed back to the TypeScript namespace.",
+      "new_text": "rust:crates/ice-cli/src/config.rs:42-108; rust:crates/ice-cli/src/config.rs:123-166 has a real nested agent root and concrete auth/models/settings/trust paths. The active native constants are .icers and ICERS_CODING_AGENT_DIR; a present empty, relative or tilde override is rejected as RelativeOverride instead of following TS truthy/normalizePath behavior. There is no package-manifest-driven application identity or Bun asset layout in this native binary. rust:crates/ice-cli/src/config.rs:168-255 has a separate legacy flat-layout migration; that is not a TypeScript alias search. The active checkout's intentional icers/.icers/ICERS_* identity must be retained during final citation relocation, never changed back to the TypeScript namespace.",
+      "reason": "Update the native comparison to the active checkout while keeping TS .ice/ICE_* identity and native RelativeOverride behavior unchanged.",
+      "source_review": [
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/config.rs",
+          "active_path": "crates/ice-cli/src/config.rs",
+          "old_sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+          "active_sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+          "old_ranges": [
+            [
+              43,
+              43
+            ]
+          ],
+          "active_ranges": [
+            [
+              43,
+              43
+            ]
+          ],
+          "old_text": "pub const CONFIG_DIR_NAME: &str = \".ice\";",
+          "active_text": "pub const CONFIG_DIR_NAME: &str = \".icers\";",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        },
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/config.rs",
+          "active_path": "crates/ice-cli/src/config.rs",
+          "old_sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+          "active_sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+          "old_ranges": [
+            [
+              47,
+              47
+            ]
+          ],
+          "active_ranges": [
+            [
+              47,
+              47
+            ]
+          ],
+          "old_text": "pub const CONFIG_DIR_ENV: &str = \"ICE_CODING_AGENT_DIR\";",
+          "active_text": "pub const CONFIG_DIR_ENV: &str = \"ICERS_CODING_AGENT_DIR\";",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        }
+      ],
+      "spec_sha256_at_review": "d74646eb4672a9c231388e259a4cb7753a7fe4800df59c6764fc322849ad4ccd",
+      "citation_basis": "Existing references retained; these exact changed literal lines have zero old-to-active offset. Coordinator owns full citation relocation."
+    },
+    {
+      "area": "settings",
+      "id": "SET-014",
+      "field": "rust",
+      "old_text": "rust:crates/ice-cli/src/settings.rs:113-123 parses shellPath and shellCommandPrefix; rust:crates/ice-cli/src/settings.rs:897-910 explicitly tests parsing while noting shellPath is unconsumed. rust:crates/ice-cli/src/session.rs:1932-1955 reloads global settings for command_prefix and supplies a separate ICE_BASH_TIMEOUT default of 120 seconds. It does not pass shellPath, the TS release/alert timer settings or stdin approval policy. The Rust execution environment already exposes with_shell_path (covered by AGENT-048), so missing CLI wiring must not be mistaken for a missing low-level facility. The typed settings schema has no background timer or bashInputApproval fields.",
+      "new_text": "rust:crates/ice-cli/src/settings.rs:113-123 parses shellPath and shellCommandPrefix; rust:crates/ice-cli/src/settings.rs:897-910 explicitly tests parsing while noting shellPath is unconsumed. rust:crates/ice-cli/src/session.rs:1932-1955 reloads global settings for command_prefix and supplies a separate ICERS_BASH_TIMEOUT default of 120 seconds. It does not pass shellPath, the TS release/alert timer settings or stdin approval policy. The Rust execution environment already exposes with_shell_path (covered by AGENT-048), so missing CLI wiring must not be mistaken for a missing low-level facility. The typed settings schema has no background timer or bashInputApproval fields.",
+      "reason": "Use the active native bash timeout variable; the 120-second default and missing shellPath wiring remain the same source findings.",
+      "source_review": [
+        {
+          "artifact": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+          "artifact_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+          "old_path": "crates/ice-cli/src/session.rs",
+          "active_path": "crates/ice-cli/src/session.rs",
+          "old_sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+          "active_sha256": "c528a01013fa065cd367e698957e0a082bf9acb4b89a283d7f82b6c7a452b16f",
+          "old_ranges": [
+            [
+              1940,
+              1940
+            ]
+          ],
+          "active_ranges": [
+            [
+              1940,
+              1940
+            ]
+          ],
+          "old_text": "    let default = std::env::var(\"ICE_BASH_TIMEOUT\")",
+          "active_text": "    let default = std::env::var(\"ICERS_BASH_TIMEOUT\")",
+          "review": "Exact changed literal was directly displayed and read; current file hashes and line text verified without executing source."
+        }
+      ],
+      "spec_sha256_at_review": "d74646eb4672a9c231388e259a4cb7753a7fe4800df59c6764fc322849ad4ccd",
+      "citation_basis": "Existing references retained; these exact changed literal lines have zero old-to-active offset. Coordinator owns full citation relocation."
+    }
+  ],
+  "entry_updates": [],
+  "manifest_replacements": [
+    {
+      "artifact": "docs/ice-gap/evidence/misc.json",
+      "area": "misc",
+      "json_pointer": "/unverified/1",
+      "old_text": "First-pass claims, complete test inventory, candidate mapping and remaining shared-owner credits not yet reconciled.",
+      "new_text": "First-pass claims, candidate mapping and shared source credits are reconciled in the accepted manifests and canonical coverage. Relevant tests have attributed source-read evidence for the documented visible ranges; no application or test execution occurred.",
+      "reason": "Remove an obsolete pending-closeout statement after the completed first-pass and original-checkout gates.",
+      "evidence": [
+        {
+          "path": "docs/ice-gap/evidence/final-validation.json",
+          "sha256": "1cf69224a452b09369c974770839c425b9c1387abe9766e4292bb2db9ec9ddfa",
+          "passed": true,
+          "phase": "original"
+        },
+        {
+          "path": "docs/ice-gap/evidence/qa-first-pass-coverage.json",
+          "sha256": "1e6c466741c31e3efdd2cfccdc34ae2fae5151e8ee0bee9074d8637994045fa1",
+          "coverage_complete": true
+        },
+        {
+          "path": "docs/ice-gap/evidence/lane-final-areas-read-coverage-qa.json",
+          "sha256": "8b043726f171d1f9b6dedc2a0c4bcaa8b967a0e044a6fb33347ab2fd772e9768",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "docs/ice-gap/evidence/misc.json",
+      "area": "misc",
+      "json_pointer": "/unverified/3",
+      "old_text": "No direct downloader/abort/sleep utility suite was found; adjacent consumer suites require final owner reconciliation.",
+      "new_text": "No direct downloader/abort/sleep utility suite was found in the documented searches. Adjacent consumer-test source coverage is retained in the accepted owner manifests and canonical read coverage; no runtime result is claimed.",
+      "reason": "Preserve the direct-suite discovery limitation while removing the stale future owner-reconciliation requirement.",
+      "evidence": [
+        {
+          "path": "docs/ice-gap/evidence/final-validation.json",
+          "sha256": "1cf69224a452b09369c974770839c425b9c1387abe9766e4292bb2db9ec9ddfa",
+          "passed": true,
+          "phase": "original"
+        },
+        {
+          "path": "docs/ice-gap/evidence/qa-first-pass-coverage.json",
+          "sha256": "1e6c466741c31e3efdd2cfccdc34ae2fae5151e8ee0bee9074d8637994045fa1",
+          "coverage_complete": true
+        },
+        {
+          "path": "docs/ice-gap/evidence/lane-final-areas-read-coverage-qa.json",
+          "sha256": "8b043726f171d1f9b6dedc2a0c4bcaa8b967a0e044a6fb33347ab2fd772e9768",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "docs/ice-gap/evidence/settings.json",
+      "area": "settings",
+      "json_pointer": "/unverified/description",
+      "old_text": "All17 assigned source/document files and all10 identified core settings/resource/trust/config test bodies were read in full. UI selector/style, RPC settings and provider settings consumer tests are owned by their corresponding area audits and must be closed there before global completion.",
+      "new_text": "All 17 assigned source/document files and all 10 identified core settings/resource/trust/config test bodies have attributed source-read evidence. UI selector/style, RPC settings and provider settings consumer tests are reconciled in their accepted area manifests and canonical coverage, with exact visible ranges and exclusions retained. No tests or application processes were executed.",
+      "reason": "Describe completed consumer-source reconciliation without implying runtime execution or overriding recorded exclusions.",
+      "evidence": [
+        {
+          "path": "docs/ice-gap/evidence/final-validation.json",
+          "sha256": "1cf69224a452b09369c974770839c425b9c1387abe9766e4292bb2db9ec9ddfa",
+          "passed": true,
+          "phase": "original"
+        },
+        {
+          "path": "docs/ice-gap/evidence/qa-first-pass-coverage.json",
+          "sha256": "1e6c466741c31e3efdd2cfccdc34ae2fae5151e8ee0bee9074d8637994045fa1",
+          "coverage_complete": true
+        },
+        {
+          "path": "docs/ice-gap/evidence/lane-final-areas-read-coverage-qa.json",
+          "sha256": "8b043726f171d1f9b6dedc2a0c4bcaa8b967a0e044a6fb33347ab2fd772e9768",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "manifest_scan": [
+    {
+      "area": "misc",
+      "sha256": "208d02a6891efc08dc0b128b115e80571be74e06a724309a90aedadd8fa44911",
+      "fields_reviewed": [
+        "rust_only",
+        "open_questions",
+        "unverified",
+        "claims.finding"
+      ],
+      "rust_only_records": 0,
+      "open_question_records": 2,
+      "claim_findings": 2,
+      "original_claims_preserved": true,
+      "source_read_provenance_preserved": true,
+      "findings": "No native prefix correction is needed in rust_only, open_questions or claim findings; stale unverified progress text is addressed separately."
+    },
+    {
+      "area": "settings",
+      "sha256": "93f21b0303bae0fcbadbc9c7a07876d804b1ce77011742ceeb43e810f290918b",
+      "fields_reviewed": [
+        "rust_only",
+        "open_questions",
+        "unverified",
+        "claims.finding"
+      ],
+      "rust_only_records": 2,
+      "open_question_records": 2,
+      "claim_findings": 6,
+      "original_claims_preserved": true,
+      "source_read_provenance_preserved": true,
+      "findings": "No native prefix correction is needed in rust_only, open_questions or claim findings; stale unverified progress text is addressed separately."
+    }
+  ],
+  "candidate_dispositions": [
+    {
+      "index": 0,
+      "area": "misc",
+      "id": "MISC-001",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 1,
+      "area": "misc",
+      "id": "MISC-001",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 2,
+      "area": "misc",
+      "id": "MISC-001",
+      "field": "rust",
+      "disposition": "guarded-native-identity-replacement",
+      "reason": "Native changed literals source-verified in the listed replacement."
+    },
+    {
+      "index": 3,
+      "area": "misc",
+      "id": "MISC-002",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 4,
+      "area": "misc",
+      "id": "MISC-002",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 5,
+      "area": "misc",
+      "id": "MISC-010",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 6,
+      "area": "misc",
+      "id": "MISC-010",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 7,
+      "area": "misc",
+      "id": "MISC-013",
+      "field": "interfaces",
+      "disposition": "guarded-native-identity-replacement",
+      "reason": "Native changed literals source-verified in the listed replacement."
+    },
+    {
+      "index": 8,
+      "area": "misc",
+      "id": "MISC-013",
+      "field": "rust",
+      "disposition": "guarded-native-identity-replacement",
+      "reason": "Native changed literals source-verified in the listed replacement."
+    },
+    {
+      "index": 9,
+      "area": "misc",
+      "id": "MISC-018",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 10,
+      "area": "misc",
+      "id": "MISC-018",
+      "field": "dependency_text",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 11,
+      "area": "misc",
+      "id": "MISC-024",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 12,
+      "area": "misc",
+      "id": "MISC-031",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 13,
+      "area": "misc",
+      "id": "MISC-040",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 14,
+      "area": "misc",
+      "id": "MISC-040",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 15,
+      "area": "misc",
+      "id": "MISC-040",
+      "field": "rust",
+      "disposition": "preserve",
+      "reason": "ICE_EVAL_ is a recorded TS-target search term for an absent adapter; ice-harness remains the published crate name. Neither is an active native environment control."
+    },
+    {
+      "index": 16,
+      "area": "misc",
+      "id": "MISC-044",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 17,
+      "area": "misc",
+      "id": "MISC-046",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 18,
+      "area": "misc",
+      "id": "MISC-046",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 19,
+      "area": "misc",
+      "id": "MISC-048",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 20,
+      "area": "settings",
+      "id": "SET-001",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 21,
+      "area": "settings",
+      "id": "SET-001",
+      "field": "rust",
+      "disposition": "guarded-native-identity-replacement",
+      "reason": "Native changed literals source-verified in the listed replacement."
+    },
+    {
+      "index": 22,
+      "area": "settings",
+      "id": "SET-007",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 23,
+      "area": "settings",
+      "id": "SET-014",
+      "field": "rust",
+      "disposition": "guarded-native-identity-replacement",
+      "reason": "Native changed literals source-verified in the listed replacement."
+    },
+    {
+      "index": 24,
+      "area": "settings",
+      "id": "SET-015",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 25,
+      "area": "settings",
+      "id": "SET-015",
+      "field": "interfaces",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    },
+    {
+      "index": 26,
+      "area": "settings",
+      "id": "SET-033",
+      "field": "mechanism",
+      "disposition": "preserve",
+      "reason": "The original TS identity, API/configuration literal, historical statement or TS-facing dependency remains correct; no global prefix substitution is warranted."
+    }
+  ],
+  "consumer_test_coverage": [
+    {
+      "path": "ice:packages/coding-agent/test/settings-selector.test.ts",
+      "sha256": "76fe4a03d6a7ee8cc2e77dc2e2f56df54eac7fca466ac62d14adbed34c57bb1c",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ui-style-settings.test.ts",
+      "sha256": "977b13cdaf36adc9ad9911240ee6a165b724b26bf61dd4218cc4569c26e3eb8c",
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/rpc-settings.test.ts",
+      "sha256": "dfc72dac256ab2cf2193a45297e3fba632fd5177ae35dba3c28e26db54878e99",
+      "ranges": [
+        [
+          1,
+          418
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-provider-settings.test.ts",
+      "sha256": "a4bd16284cae9643b749a5ee5f95ac65d28d6921ae31a9c17a79f60743537b3c",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    }
+  ],
+  "publication_findings": [
+    {
+      "artifact": "docs/ice-gap/misc.md",
+      "observed_first_line": "# Miscellaneous utilities and integrations",
+      "cause": "spec-misc.json lacks title and introduction while the renderer expects those fields.",
+      "spec_metadata_proposal": {
+        "title": "Utilities, export modes, local-model integration and evaluation adapters",
+        "introduction": "This area specifies 43 entries covering update and process helpers, clipboard and text utilities, single-shot output and HTML export, local-model integration, the optional Claude SDK bridge, and evaluation/reporting adapters. The comparison preserves existing native facilities and their source-proven limitations. Source inspection only; no application, tests, model calls or private user-state reads were executed."
+      },
+      "entry_count": 43,
+      "settings_entry_count": 33,
+      "numeric_intro_issue": "No numeric count inconsistency found in the settings introduction. MISC has a missing heading/intro rather than a wrong numeric count."
+    }
+  ],
+  "preservation": [
+    "No TS source prose, original claims or report excerpts are replaced.",
+    "Crate/package names, lastIceChangelogVersion/dedicated Ice baseline and the TS ice configuration namespace remain unchanged.",
+    "No source-read metadata, baseline hashes or inherited reader attribution is rewritten."
+  ],
+  "errors": []
+}

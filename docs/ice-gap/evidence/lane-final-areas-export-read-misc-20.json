@@ -1,0 +1,660 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "LLAMA_PROVIDER_ID",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/provider.ts:13",
+      "covering_entries": [
+        "MISC-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/provider.ts",
+        "sha256": "36aa18033eea0382b05cef0988d4e809a0a5cd955526857751e20f90217b6abb",
+        "range": [
+          10,
+          27
+        ],
+        "text": "10 | import { stream, streamSimple } from \"@zykairotis/ice-ai/compat\";\n11 | import { LlamaClient, type LlamaModelInfo, llamaInferenceUrl, normalizeLlamaServerUrl } from \"./client.ts\";\n12 | \n13 | export const LLAMA_PROVIDER_ID = \"llama.cpp\";\n14 | export const DEFAULT_LLAMA_SERVER_URL = \"http://127.0.0.1:8080\";\n15 | function credentialServerUrl(credential: ApiKeyCredential | undefined): string | undefined {\n16 | \tconst value = credential?.env?.LLAMA_BASE_URL;\n17 | \treturn typeof value === \"string\" && value.trim() ? normalizeLlamaServerUrl(value) : undefined;\n18 | }\n19 | \n20 | async function resolveServerUrl(\n21 | \tctx: AuthContext,\n22 | \tcredential: ApiKeyCredential | undefined,\n23 | ): Promise<string | undefined> {\n24 | \tconst configured = credentialServerUrl(credential) ?? (await ctx.env(\"LLAMA_BASE_URL\"))?.trim();\n25 | \treturn configured ? normalizeLlamaServerUrl(configured) : undefined;\n26 | }\n27 | "
+      },
+      "entries": [
+        {
+          "id": "MISC-023",
+          "title": "Built-in llama provider login, environment resolution and catalog publication",
+          "what": "Expose loaded llama.cpp router models through the ordinary provider/model interfaces, with optional API-key login and cached catalog restoration. Configuring a compatible inference URL alone does not reproduce this provider's discovery and auth rules.",
+          "source": "ice:packages/coding-agent/src/extensions/index.ts:1-5; ice:packages/coding-agent/src/extensions/llama/provider.ts:1-151; ice:packages/coding-agent/src/extensions/llama/index.ts:42-62; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/provider/binding.rs:30-82; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "Provider/API llama.cpp/openai-completions; default router http://127.0.0.1:8080; environment LLAMA_BASE_URL,LLAMA_API_KEY; optional api_key credential with env.LLAMA_BASE_URL; getModels,refreshModels,stream,streamSimple; LlamaProviderController.setCatalog. Login is the generic /login llama.cpp flow, not a /llama login subcommand."
+        }
+      ]
+    },
+    {
+      "symbol": "DEFAULT_LLAMA_SERVER_URL",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/provider.ts:14",
+      "covering_entries": [
+        "MISC-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/provider.ts",
+        "sha256": "36aa18033eea0382b05cef0988d4e809a0a5cd955526857751e20f90217b6abb",
+        "range": [
+          11,
+          28
+        ],
+        "text": "11 | import { LlamaClient, type LlamaModelInfo, llamaInferenceUrl, normalizeLlamaServerUrl } from \"./client.ts\";\n12 | \n13 | export const LLAMA_PROVIDER_ID = \"llama.cpp\";\n14 | export const DEFAULT_LLAMA_SERVER_URL = \"http://127.0.0.1:8080\";\n15 | function credentialServerUrl(credential: ApiKeyCredential | undefined): string | undefined {\n16 | \tconst value = credential?.env?.LLAMA_BASE_URL;\n17 | \treturn typeof value === \"string\" && value.trim() ? normalizeLlamaServerUrl(value) : undefined;\n18 | }\n19 | \n20 | async function resolveServerUrl(\n21 | \tctx: AuthContext,\n22 | \tcredential: ApiKeyCredential | undefined,\n23 | ): Promise<string | undefined> {\n24 | \tconst configured = credentialServerUrl(credential) ?? (await ctx.env(\"LLAMA_BASE_URL\"))?.trim();\n25 | \treturn configured ? normalizeLlamaServerUrl(configured) : undefined;\n26 | }\n27 | \n28 | function toIceModel(model: LlamaModelInfo, serverUrl: string): Model<\"openai-completions\"> {"
+      },
+      "entries": [
+        {
+          "id": "MISC-023",
+          "title": "Built-in llama provider login, environment resolution and catalog publication",
+          "what": "Expose loaded llama.cpp router models through the ordinary provider/model interfaces, with optional API-key login and cached catalog restoration. Configuring a compatible inference URL alone does not reproduce this provider's discovery and auth rules.",
+          "source": "ice:packages/coding-agent/src/extensions/index.ts:1-5; ice:packages/coding-agent/src/extensions/llama/provider.ts:1-151; ice:packages/coding-agent/src/extensions/llama/index.ts:42-62; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/provider/binding.rs:30-82; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "Provider/API llama.cpp/openai-completions; default router http://127.0.0.1:8080; environment LLAMA_BASE_URL,LLAMA_API_KEY; optional api_key credential with env.LLAMA_BASE_URL; getModels,refreshModels,stream,streamSimple; LlamaProviderController.setCatalog. Login is the generic /login llama.cpp flow, not a /llama login subcommand."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaManagerAction",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/ui.ts:25",
+      "covering_entries": [
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+        "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+        "range": [
+          22,
+          39
+        ],
+        "text": "22 | \n23 | const DOWNLOAD_VALUE = \"\\0download\";\n24 | \n25 | export type LlamaManagerAction = { type: \"model\"; model: LlamaModelInfo } | { type: \"download\" } | { type: \"close\" };\n26 | \n27 | interface ProgressState extends LlamaProgress {\n28 | \ttitle: string;\n29 | \tmodel: string;\n30 | }\n31 | \n32 | function contextLabel(model: LlamaModelInfo): string | undefined {\n33 | \tconst context = model.meta?.n_ctx ?? model.meta?.n_ctx_train;\n34 | \tif (context) return context >= 1000 ? `${Math.round(context / 1000)}k` : String(context);\n35 | \tconst args = model.status.args ?? [];\n36 | \tfor (let index = 0; index < args.length - 1; index++) {\n37 | \t\tif (args[index] !== \"--ctx-size\" && args[index] !== \"-c\" && args[index] !== \"-ctx\") continue;\n38 | \t\tconst value = Number(args[index + 1]);\n39 | \t\tif (Number.isFinite(value) && value > 0) return value >= 1000 ? `${Math.round(value / 1000)}k` : String(value);"
+      },
+      "entries": [
+        {
+          "id": "MISC-024",
+          "title": "Interactive llama model manager, search and cancellation recovery",
+          "what": "Provide an interactive model manager that can inspect the router, choose load/unload behavior, search and download GGUF models, and recover previously loaded models when a replacement is cancelled.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/index.ts:1-229; ice:packages/coding-agent/src/extensions/llama/ui.ts:1-543; ice:packages/coding-agent/docs/llama-cpp.md:1-100; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-extensions/src/registry.rs:622-669.",
+          "interfaces": "Command /llama (TUI only; args ignored); /login llama.cpp uses the generic auth flow. UI methods showModels/select/confirm/connectionError/searchModels/showStatus/progress/updateProgress. Action union model|download|close. Selection keys tui.select.up/down/confirm/cancel, search debounce500ms, minimum2 chars, visible10/12 rows, progress width40."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaUi",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/ui.ts:77",
+      "covering_entries": [
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+        "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+        "range": [
+          74,
+          91
+        ],
+        "text": "74 | \treturn container;\n75 | }\n76 | \n77 | export interface LlamaUi {\n78 | \tshowModels(serverUrl: string, models: LlamaModelInfo[]): Promise<LlamaManagerAction>;\n79 | \tselect(title: string, options: string[]): Promise<string | undefined>;\n80 | \tconfirm(title: string, message: string): Promise<boolean>;\n81 | \tconnectionError(serverUrl: string, message: string): Promise<\"retry\" | \"close\">;\n82 | \tsearchModels(\n83 | \t\tsearch: (query: string, signal: AbortSignal) => Promise<HuggingFaceModel[]>,\n84 | \t): Promise<string | undefined>;\n85 | \tshowStatus(title: string, message: string): void;\n86 | \tprogress(state: ProgressState): Promise<void>;\n87 | \tupdateProgress(state: ProgressState): void;\n88 | }\n89 | \n90 | function compactCount(value: number): string {\n91 | \tif (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`;"
+      },
+      "entries": [
+        {
+          "id": "MISC-024",
+          "title": "Interactive llama model manager, search and cancellation recovery",
+          "what": "Provide an interactive model manager that can inspect the router, choose load/unload behavior, search and download GGUF models, and recover previously loaded models when a replacement is cancelled.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/index.ts:1-229; ice:packages/coding-agent/src/extensions/llama/ui.ts:1-543; ice:packages/coding-agent/docs/llama-cpp.md:1-100; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-extensions/src/registry.rs:622-669.",
+          "interfaces": "Command /llama (TUI only; args ignored); /login llama.cpp uses the generic auth flow. UI methods showModels/select/confirm/connectionError/searchModels/showStatus/progress/updateProgress. Action union model|download|close. Selection keys tui.select.up/down/confirm/cancel, search debounce500ms, minimum2 chars, visible10/12 rows, progress width40."
+        }
+      ]
+    },
+    {
+      "symbol": "runWithProgress",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/ui.ts:494",
+      "covering_entries": [
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+        "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+        "range": [
+          491,
+          508
+        ],
+        "text": "491 | \t});\n492 | }\n493 | \n494 | export async function runWithProgress<T>(\n495 | \tui: LlamaUi,\n496 | \toptions: {\n497 | \t\ttitle: string;\n498 | \t\tmodel: string;\n499 | \t\tinitialMessage: string;\n500 | \t\tcancelTitle: string;\n501 | \t\tcancelMessage: string;\n502 | \t\trun(signal: AbortSignal, update: (progress: LlamaProgress) => void): Promise<T>;\n503 | \t\tcancel(): Promise<void>;\n504 | \t},\n505 | ): Promise<{ cancelled: true } | { cancelled: false; value: T }> {\n506 | \tconst controller = new AbortController();\n507 | \tconst state: ProgressState = { title: options.title, model: options.model, message: options.initialMessage };\n508 | \tconst settled = options"
+      },
+      "entries": [
+        {
+          "id": "MISC-024",
+          "title": "Interactive llama model manager, search and cancellation recovery",
+          "what": "Provide an interactive model manager that can inspect the router, choose load/unload behavior, search and download GGUF models, and recover previously loaded models when a replacement is cancelled.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/index.ts:1-229; ice:packages/coding-agent/src/extensions/llama/ui.ts:1-543; ice:packages/coding-agent/docs/llama-cpp.md:1-100; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-extensions/src/registry.rs:622-669.",
+          "interfaces": "Command /llama (TUI only; args ignored); /login llama.cpp uses the generic auth flow. UI methods showModels/select/confirm/connectionError/searchModels/showStatus/progress/updateProgress. Action union model|download|close. Selection keys tui.select.up/down/confirm/cancel, search debounce500ms, minimum2 chars, visible10/12 rows, progress width40."
+        }
+      ]
+    },
+    {
+      "symbol": "PrintModeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/print-mode.ts:18",
+      "covering_entries": [
+        "MISC-015"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/print-mode.ts",
+        "sha256": "5562a121cc75a477d16fb11f79715afb26e1ab28c8158b7d8cc61570200203c9",
+        "range": [
+          15,
+          32
+        ],
+        "text": "15 | /**\n16 |  * Options for print mode.\n17 |  */\n18 | export interface PrintModeOptions {\n19 | \t/** Output mode: \"text\" for final response only, \"json\" for all events */\n20 | \tmode: \"text\" | \"json\";\n21 | \t/** Array of additional prompts to send after initialMessage */\n22 | \tmessages?: string[];\n23 | \t/** First message to send (may contain @file content) */\n24 | \tinitialMessage?: string;\n25 | \t/** Images to attach to the initial message */\n26 | \tinitialImages?: ImageContent[];\n27 | }\n28 | \n29 | /**\n30 |  * Run in print (single-shot) mode.\n31 |  * Sends prompts to the agent and outputs the result.\n32 |  */"
+      },
+      "entries": [
+        {
+          "id": "MISC-015",
+          "title": "Single-shot text prompts, final-message output and cleanup",
+          "what": "Run initial and additional prompts sequentially, print the final session message's text, and dispose the runtime once. Native text mode already works, but its retained-message state can print an earlier answer after the final prompt fails.",
+          "source": "ice:packages/coding-agent/src/modes/print-mode.ts:1-170; ice:packages/coding-agent/test/print-mode.test.ts:1-143; rust:crates/ice-cli/src/modes.rs:29-143; rust:crates/ice-cli/src/app.rs:434-520.",
+          "interfaces": "runPrintMode(runtimeHost,{mode:'text'|'json',messages?,initialMessage?,initialImages?})→Promise<number>. Text success returns 0, final assistant error/aborted or caught exception returns 1; signal exits are 129/143. Extension command context is rebound through the runtime host."
+        }
+      ]
+    },
+    {
+      "symbol": "raceWithAbortSignal",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/abort.ts:22",
+      "covering_entries": [
+        "MISC-007"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/abort.ts",
+        "sha256": "bc6ae52d6a9ed9bfa0f677a10dc4484cea50bbb34cf0154942ed56b9536baeaa",
+        "range": [
+          19,
+          36
+        ],
+        "text": "19 | }\n20 | \n21 | /** Stop waiting on abort while observing the abandoned operation through settlement. */\n22 | export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSignal | undefined): Promise<T> {\n23 | \tif (!signal) return operation;\n24 | \tif (signal.aborted) {\n25 | \t\tvoid operation.catch(() => {});\n26 | \t\treturn Promise.reject(abortReason(signal));\n27 | \t}\n28 | \n29 | \treturn new Promise<T>((resolve, reject) => {\n30 | \t\tlet settled = false;\n31 | \t\tconst cleanup = () => signal.removeEventListener(\"abort\", onAbort);\n32 | \t\tconst onAbort = () => {\n33 | \t\t\tif (settled) return;\n34 | \t\t\tsettled = true;\n35 | \t\t\tcleanup();\n36 | \t\t\treject(abortReason(signal));"
+      },
+      "entries": [
+        {
+          "id": "MISC-007",
+          "title": "Cancellation linking, waiter races and abortable timer lifetime",
+          "what": "Link an operation to a caller's cancellation signal and stop waiting promptly without abandoning the underlying promise's rejection. Timer and listener ownership are part of the contract, while Rust uses cancellation tokens and dropped futures instead of JavaScript promises.",
+          "source": "ice:packages/coding-agent/src/utils/abort.ts:1-57; ice:packages/coding-agent/src/utils/sleep.ts:1-19; rust:crates/ice-harness/src/compaction/compaction.rs:451-495; rust:crates/ice-harness/src/agent_harness/child.rs:34-51.",
+          "interfaces": "linkAbortSignal(source?:AbortSignal,target:AbortController)→unlink; operationSignal(signal?:AbortSignal)→AbortSignal; raceWithAbort<T>(operation:Promise<T>,signal?:AbortSignal)→Promise<T>; sleep(ms:number,signal?:AbortSignal)→Promise<void>. Cancellation can carry any JS reason; absence of a reason has a named AbortError fallback only in abort.ts."
+        }
+      ]
+    },
+    {
+      "symbol": "spawnProcess",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/child-process.ts:18",
+      "covering_entries": [
+        "EXT-056",
+        "TOOLS-016",
+        "TOOLS-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/child-process.ts",
+        "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+        "range": [
+          15,
+          32
+        ],
+        "text": "15 | \n16 | const EXIT_STDIO_GRACE_MS = 100;\n17 | \n18 | export function spawnProcess(\n19 | \tcommand: string,\n20 | \targs: string[],\n21 | \toptions: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>,\n22 | ): ChildProcessByStdio<null, Readable, Readable>;\n23 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess;\n24 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess {\n25 | \treturn process.platform === \"win32\" ? crossSpawn(command, args, options) : nodeSpawn(command, args, options);\n26 | }\n27 | \n28 | export function spawnProcessSync(\n29 | \tcommand: string,\n30 | \targs: string[],\n31 | \toptions: SpawnSyncOptionsWithStringEncoding,\n32 | ): SpawnSyncReturns<string> {"
+      },
+      "entries": [
+        {
+          "id": "EXT-056",
+          "title": "Extension direct-process execution API and captured working directory",
+          "what": "Let trusted extension code run a command with an argument vector and collect separate stdout/stderr plus its exit result.",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404; ice:packages/coding-agent/src/core/extensions/loader.ts:413-416; ice:packages/coding-agent/src/core/exec.ts:1-108; ice:packages/coding-agent/src/utils/child-process.ts:1-138. ExtensionAPI.exec and execCommand delegation.",
+          "interfaces": "```ts\n\t/** Execute a shell command. */\n\texec(command: string, args: string[], options?: ExecOptions): Promise<ExecResult>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404.\n```ts\nexport interface ExecOptions {\n\t/** AbortSignal to cancel the command */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds */\n\ttimeout?: number;\n\t/** Working directory */\n\tcwd?: string;\n}\n\n/**\n * Result of executing a shell command.\n */\nexport interface ExecResult {\n\tstdout: string;\n\tstderr: string;\n\tcode: number;\n\tkilled: boolean;\n}\n```\nSource: ice:packages/coding-agent/src/core/exec.ts:11-28."
+        },
+        {
+          "id": "TOOLS-016",
+          "title": "User Bash execution helper and its distinct output contract",
+          "what": "User-entered shell commands produce live readable text, cancellation/exit metadata and a temporary full-output path without a model tool call. This helper has a different sanitation and buffering policy from model Bash.",
+          "source": "ice:packages/coding-agent/src/core/bash-executor.ts:1-156 executeBashWithOperations,executeBash; ice:packages/coding-agent/src/utils/child-process.ts:1-138; ice:packages/coding-agent/src/core/tools/bash.ts:233-374",
+          "interfaces": "executeBash(command:string,cwd:string,{onChunk?,signal?}) and executeBashWithOperations(command,cwd,operations,options). BashOperations is the same injectable execution interface used by TOOLS-001/002. Output has {output:string,exitCode?:number,cancelled:boolean,truncated:boolean,fullOutputPath?:string}. No timeout option is accepted by this helper. The user-facing !/!! dispatch and session persistence belong to session integration."
+        },
+        {
+          "id": "TOOLS-017",
+          "title": "Direct argv execution with capture, cancellation and timeout result",
+          "what": "Extension callers can execute an exact executable-plus-arguments array, capture stdout/stderr separately, and receive a result even on spawn failure or timeout.",
+          "source": "ice:packages/coding-agent/src/core/exec.ts:1-107 execCommand,ExecOptions,ExecResult; ice:packages/coding-agent/src/utils/child-process.ts:1-138 waitForChildProcess; ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts:1-83",
+          "interfaces": "```ts\ninterface ExecOptions { signal?: AbortSignal; timeout?: number; cwd?: string }\ninterface ExecResult { stdout: string; stderr: string; code: number; killed: boolean }\nexecCommand(command: string, args: string[], cwd: string, options?: ExecOptions): Promise<ExecResult>\n```\ntimeout is milliseconds, unlike Bash tool seconds. No shell metacharacter interpretation, stdin API, output limit, session path or RPC protocol is defined here."
+        }
+      ]
+    },
+    {
+      "symbol": "spawnProcess",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/child-process.ts:23",
+      "covering_entries": [
+        "EXT-056",
+        "TOOLS-016",
+        "TOOLS-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/child-process.ts",
+        "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+        "range": [
+          20,
+          37
+        ],
+        "text": "20 | \targs: string[],\n21 | \toptions: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>,\n22 | ): ChildProcessByStdio<null, Readable, Readable>;\n23 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess;\n24 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess {\n25 | \treturn process.platform === \"win32\" ? crossSpawn(command, args, options) : nodeSpawn(command, args, options);\n26 | }\n27 | \n28 | export function spawnProcessSync(\n29 | \tcommand: string,\n30 | \targs: string[],\n31 | \toptions: SpawnSyncOptionsWithStringEncoding,\n32 | ): SpawnSyncReturns<string> {\n33 | \treturn process.platform === \"win32\"\n34 | \t\t? crossSpawn.sync(command, args, options)\n35 | \t\t: nodeSpawnSync(command, args, options);\n36 | }\n37 | "
+      },
+      "entries": [
+        {
+          "id": "EXT-056",
+          "title": "Extension direct-process execution API and captured working directory",
+          "what": "Let trusted extension code run a command with an argument vector and collect separate stdout/stderr plus its exit result.",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404; ice:packages/coding-agent/src/core/extensions/loader.ts:413-416; ice:packages/coding-agent/src/core/exec.ts:1-108; ice:packages/coding-agent/src/utils/child-process.ts:1-138. ExtensionAPI.exec and execCommand delegation.",
+          "interfaces": "```ts\n\t/** Execute a shell command. */\n\texec(command: string, args: string[], options?: ExecOptions): Promise<ExecResult>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404.\n```ts\nexport interface ExecOptions {\n\t/** AbortSignal to cancel the command */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds */\n\ttimeout?: number;\n\t/** Working directory */\n\tcwd?: string;\n}\n\n/**\n * Result of executing a shell command.\n */\nexport interface ExecResult {\n\tstdout: string;\n\tstderr: string;\n\tcode: number;\n\tkilled: boolean;\n}\n```\nSource: ice:packages/coding-agent/src/core/exec.ts:11-28."
+        },
+        {
+          "id": "TOOLS-016",
+          "title": "User Bash execution helper and its distinct output contract",
+          "what": "User-entered shell commands produce live readable text, cancellation/exit metadata and a temporary full-output path without a model tool call. This helper has a different sanitation and buffering policy from model Bash.",
+          "source": "ice:packages/coding-agent/src/core/bash-executor.ts:1-156 executeBashWithOperations,executeBash; ice:packages/coding-agent/src/utils/child-process.ts:1-138; ice:packages/coding-agent/src/core/tools/bash.ts:233-374",
+          "interfaces": "executeBash(command:string,cwd:string,{onChunk?,signal?}) and executeBashWithOperations(command,cwd,operations,options). BashOperations is the same injectable execution interface used by TOOLS-001/002. Output has {output:string,exitCode?:number,cancelled:boolean,truncated:boolean,fullOutputPath?:string}. No timeout option is accepted by this helper. The user-facing !/!! dispatch and session persistence belong to session integration."
+        },
+        {
+          "id": "TOOLS-017",
+          "title": "Direct argv execution with capture, cancellation and timeout result",
+          "what": "Extension callers can execute an exact executable-plus-arguments array, capture stdout/stderr separately, and receive a result even on spawn failure or timeout.",
+          "source": "ice:packages/coding-agent/src/core/exec.ts:1-107 execCommand,ExecOptions,ExecResult; ice:packages/coding-agent/src/utils/child-process.ts:1-138 waitForChildProcess; ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts:1-83",
+          "interfaces": "```ts\ninterface ExecOptions { signal?: AbortSignal; timeout?: number; cwd?: string }\ninterface ExecResult { stdout: string; stderr: string; code: number; killed: boolean }\nexecCommand(command: string, args: string[], cwd: string, options?: ExecOptions): Promise<ExecResult>\n```\ntimeout is milliseconds, unlike Bash tool seconds. No shell metacharacter interpretation, stdin API, output limit, session path or RPC protocol is defined here."
+        }
+      ]
+    },
+    {
+      "symbol": "spawnProcess",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/child-process.ts:24",
+      "covering_entries": [
+        "EXT-056",
+        "TOOLS-016",
+        "TOOLS-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/child-process.ts",
+        "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+        "range": [
+          21,
+          38
+        ],
+        "text": "21 | \toptions: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>,\n22 | ): ChildProcessByStdio<null, Readable, Readable>;\n23 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess;\n24 | export function spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess {\n25 | \treturn process.platform === \"win32\" ? crossSpawn(command, args, options) : nodeSpawn(command, args, options);\n26 | }\n27 | \n28 | export function spawnProcessSync(\n29 | \tcommand: string,\n30 | \targs: string[],\n31 | \toptions: SpawnSyncOptionsWithStringEncoding,\n32 | ): SpawnSyncReturns<string> {\n33 | \treturn process.platform === \"win32\"\n34 | \t\t? crossSpawn.sync(command, args, options)\n35 | \t\t: nodeSpawnSync(command, args, options);\n36 | }\n37 | \n38 | /**"
+      },
+      "entries": [
+        {
+          "id": "EXT-056",
+          "title": "Extension direct-process execution API and captured working directory",
+          "what": "Let trusted extension code run a command with an argument vector and collect separate stdout/stderr plus its exit result.",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404; ice:packages/coding-agent/src/core/extensions/loader.ts:413-416; ice:packages/coding-agent/src/core/exec.ts:1-108; ice:packages/coding-agent/src/utils/child-process.ts:1-138. ExtensionAPI.exec and execCommand delegation.",
+          "interfaces": "```ts\n\t/** Execute a shell command. */\n\texec(command: string, args: string[], options?: ExecOptions): Promise<ExecResult>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404.\n```ts\nexport interface ExecOptions {\n\t/** AbortSignal to cancel the command */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds */\n\ttimeout?: number;\n\t/** Working directory */\n\tcwd?: string;\n}\n\n/**\n * Result of executing a shell command.\n */\nexport interface ExecResult {\n\tstdout: string;\n\tstderr: string;\n\tcode: number;\n\tkilled: boolean;\n}\n```\nSource: ice:packages/coding-agent/src/core/exec.ts:11-28."
+        },
+        {
+          "id": "TOOLS-016",
+          "title": "User Bash execution helper and its distinct output contract",
+          "what": "User-entered shell commands produce live readable text, cancellation/exit metadata and a temporary full-output path without a model tool call. This helper has a different sanitation and buffering policy from model Bash.",
+          "source": "ice:packages/coding-agent/src/core/bash-executor.ts:1-156 executeBashWithOperations,executeBash; ice:packages/coding-agent/src/utils/child-process.ts:1-138; ice:packages/coding-agent/src/core/tools/bash.ts:233-374",
+          "interfaces": "executeBash(command:string,cwd:string,{onChunk?,signal?}) and executeBashWithOperations(command,cwd,operations,options). BashOperations is the same injectable execution interface used by TOOLS-001/002. Output has {output:string,exitCode?:number,cancelled:boolean,truncated:boolean,fullOutputPath?:string}. No timeout option is accepted by this helper. The user-facing !/!! dispatch and session persistence belong to session integration."
+        },
+        {
+          "id": "TOOLS-017",
+          "title": "Direct argv execution with capture, cancellation and timeout result",
+          "what": "Extension callers can execute an exact executable-plus-arguments array, capture stdout/stderr separately, and receive a result even on spawn failure or timeout.",
+          "source": "ice:packages/coding-agent/src/core/exec.ts:1-107 execCommand,ExecOptions,ExecResult; ice:packages/coding-agent/src/utils/child-process.ts:1-138 waitForChildProcess; ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts:1-83",
+          "interfaces": "```ts\ninterface ExecOptions { signal?: AbortSignal; timeout?: number; cwd?: string }\ninterface ExecResult { stdout: string; stderr: string; code: number; killed: boolean }\nexecCommand(command: string, args: string[], cwd: string, options?: ExecOptions): Promise<ExecResult>\n```\ntimeout is milliseconds, unlike Bash tool seconds. No shell metacharacter interpretation, stdin API, output limit, session path or RPC protocol is defined here."
+        }
+      ]
+    },
+    {
+      "symbol": "spawnProcessSync",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/child-process.ts:28",
+      "covering_entries": [
+        "EXT-056",
+        "TOOLS-016",
+        "TOOLS-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/child-process.ts",
+        "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+        "range": [
+          25,
+          42
+        ],
+        "text": "25 | \treturn process.platform === \"win32\" ? crossSpawn(command, args, options) : nodeSpawn(command, args, options);\n26 | }\n27 | \n28 | export function spawnProcessSync(\n29 | \tcommand: string,\n30 | \targs: string[],\n31 | \toptions: SpawnSyncOptionsWithStringEncoding,\n32 | ): SpawnSyncReturns<string> {\n33 | \treturn process.platform === \"win32\"\n34 | \t\t? crossSpawn.sync(command, args, options)\n35 | \t\t: nodeSpawnSync(command, args, options);\n36 | }\n37 | \n38 | /**\n39 |  * Wait for a child process to terminate without hanging on inherited stdio handles.\n40 |  *\n41 |  * A short-lived child can `exit` while a detached descendant keeps its stdout/stderr\n42 |  * pipe open. We must not resolve and destroy the streams on a fixed deadline measured"
+      },
+      "entries": [
+        {
+          "id": "EXT-056",
+          "title": "Extension direct-process execution API and captured working directory",
+          "what": "Let trusted extension code run a command with an argument vector and collect separate stdout/stderr plus its exit result.",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404; ice:packages/coding-agent/src/core/extensions/loader.ts:413-416; ice:packages/coding-agent/src/core/exec.ts:1-108; ice:packages/coding-agent/src/utils/child-process.ts:1-138. ExtensionAPI.exec and execCommand delegation.",
+          "interfaces": "```ts\n\t/** Execute a shell command. */\n\texec(command: string, args: string[], options?: ExecOptions): Promise<ExecResult>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:1403-1404.\n```ts\nexport interface ExecOptions {\n\t/** AbortSignal to cancel the command */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds */\n\ttimeout?: number;\n\t/** Working directory */\n\tcwd?: string;\n}\n\n/**\n * Result of executing a shell command.\n */\nexport interface ExecResult {\n\tstdout: string;\n\tstderr: string;\n\tcode: number;\n\tkilled: boolean;\n}\n```\nSource: ice:packages/coding-agent/src/core/exec.ts:11-28."
+        },
+        {
+          "id": "TOOLS-016",
+          "title": "User Bash execution helper and its distinct output contract",
+          "what": "User-entered shell commands produce live readable text, cancellation/exit metadata and a temporary full-output path without a model tool call. This helper has a different sanitation and buffering policy from model Bash.",
+          "source": "ice:packages/coding-agent/src/core/bash-executor.ts:1-156 executeBashWithOperations,executeBash; ice:packages/coding-agent/src/utils/child-process.ts:1-138; ice:packages/coding-agent/src/core/tools/bash.ts:233-374",
+          "interfaces": "executeBash(command:string,cwd:string,{onChunk?,signal?}) and executeBashWithOperations(command,cwd,operations,options). BashOperations is the same injectable execution interface used by TOOLS-001/002. Output has {output:string,exitCode?:number,cancelled:boolean,truncated:boolean,fullOutputPath?:string}. No timeout option is accepted by this helper. The user-facing !/!! dispatch and session persistence belong to session integration."
+        },
+        {
+          "id": "TOOLS-017",
+          "title": "Direct argv execution with capture, cancellation and timeout result",
+          "what": "Extension callers can execute an exact executable-plus-arguments array, capture stdout/stderr separately, and receive a result even on spawn failure or timeout.",
+          "source": "ice:packages/coding-agent/src/core/exec.ts:1-107 execCommand,ExecOptions,ExecResult; ice:packages/coding-agent/src/utils/child-process.ts:1-138 waitForChildProcess; ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts:1-83",
+          "interfaces": "```ts\ninterface ExecOptions { signal?: AbortSignal; timeout?: number; cwd?: string }\ninterface ExecResult { stdout: string; stderr: string; code: number; killed: boolean }\nexecCommand(command: string, args: string[], cwd: string, options?: ExecOptions): Promise<ExecResult>\n```\ntimeout is milliseconds, unlike Bash tool seconds. No shell metacharacter interpretation, stdin API, output limit, session path or RPC protocol is defined here."
+        }
+      ]
+    },
+    {
+      "symbol": "warnDeprecation",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/deprecation.ts:5",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/deprecation.ts",
+        "sha256": "5d299ae61779d60507f8634caada1283b0b63077bcc5d5a03d0a328168f3e46f",
+        "range": [
+          2,
+          15
+        ],
+        "text": "2 | \n3 | const emittedDeprecationWarnings = new Set<string>();\n4 | \n5 | export function warnDeprecation(message: string): void {\n6 | \tif (emittedDeprecationWarnings.has(message)) return;\n7 | \temittedDeprecationWarnings.add(message);\n8 | \tconsole.warn(chalk.yellow(`Deprecation warning: ${message}`));\n9 | }\n10 | \n11 | /** Clear deprecation warning state. Exported for tests. */\n12 | export function clearDeprecationWarningsForTests(): void {\n13 | \temittedDeprecationWarnings.clear();\n14 | }\n15 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "clearDeprecationWarningsForTests",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/deprecation.ts:12",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/deprecation.ts",
+        "sha256": "5d299ae61779d60507f8634caada1283b0b63077bcc5d5a03d0a328168f3e46f",
+        "range": [
+          9,
+          15
+        ],
+        "text": "9 | }\n10 | \n11 | /** Clear deprecation warning state. Exported for tests. */\n12 | export function clearDeprecationWarningsForTests(): void {\n13 | \temittedDeprecationWarnings.clear();\n14 | }\n15 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "applyExifOrientation",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/exif-orientation.ts:147",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/exif-orientation.ts",
+        "sha256": "9ca969cd6226c14ff09f3f620c18ec26f148df3e2e13ae316291744637f0f265",
+        "range": [
+          144,
+          161
+        ],
+        "text": "144 | }\n145 | \n146 | // Flip orientations mutate in-place. Rotations return a new image (caller must free the old one if different).\n147 | export function applyExifOrientation(\n148 | \tphoton: Photon,\n149 | \timage: PhotonImageType,\n150 | \toriginalBytes: Uint8Array,\n151 | ): PhotonImageType {\n152 | \tconst orientation = getExifOrientation(originalBytes);\n153 | \tif (orientation === 1) return image;\n154 | \n155 | \tswitch (orientation) {\n156 | \t\tcase 2:\n157 | \t\t\tphoton.fliph(image);\n158 | \t\t\treturn image;\n159 | \t\tcase 3:\n160 | \t\t\tphoton.fliph(image);\n161 | \t\t\tphoton.flipv(image);"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "convertImageBytesToPng",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/image-convert.ts:4",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-convert.ts",
+        "sha256": "791f2a134995ecd2d337c5e881971bc257889615c1245ea54013203af1ef8e16",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import { applyExifOrientation } from \"./exif-orientation.ts\";\n2 | import { loadPhoton } from \"./photon.ts\";\n3 | \n4 | export async function convertImageBytesToPng(bytes: Uint8Array): Promise<Uint8Array | null> {\n5 | \tconst photon = await loadPhoton();\n6 | \tif (!photon) {\n7 | \t\t// Photon not available, can't convert\n8 | \t\treturn null;\n9 | \t}\n10 | \n11 | \ttry {\n12 | \t\tconst rawImage = photon.PhotonImage.new_from_byteslice(bytes);\n13 | \t\tconst image = applyExifOrientation(photon, rawImage, bytes);\n14 | \t\tif (image !== rawImage) rawImage.free();\n15 | \t\ttry {\n16 | \t\t\treturn new Uint8Array(image.get_bytes());\n17 | \t\t} finally {\n18 | \t\t\timage.free();"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "ProcessImageOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-process.ts:4",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-process.ts",
+        "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import { convertImageBytesToPng } from \"./image-convert.ts\";\n2 | import { formatDimensionNote, type ImageResizeOptions, resizeImage } from \"./image-resize.ts\";\n3 | \n4 | export interface ProcessImageOptions {\n5 | \t/** Whether to resize images to inline provider limits. Default: true */\n6 | \tautoResizeImages?: boolean;\n7 | \t/** Optional resize overrides. Uses resizeImage defaults when omitted. */\n8 | \tresizeOptions?: ImageResizeOptions;\n9 | }\n10 | \n11 | export type ProcessImageResult =\n12 | \t| {\n13 | \t\t\tok: true;\n14 | \t\t\tdata: string;\n15 | \t\t\tmimeType: string;\n16 | \t\t\thints: string[];\n17 | \t  }\n18 | \t| {"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "ProcessImageResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-process.ts:11",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-process.ts",
+        "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+        "range": [
+          8,
+          25
+        ],
+        "text": "8 | \tresizeOptions?: ImageResizeOptions;\n9 | }\n10 | \n11 | export type ProcessImageResult =\n12 | \t| {\n13 | \t\t\tok: true;\n14 | \t\t\tdata: string;\n15 | \t\t\tmimeType: string;\n16 | \t\t\thints: string[];\n17 | \t  }\n18 | \t| {\n19 | \t\t\tok: false;\n20 | \t\t\tmessage: string;\n21 | \t  };\n22 | \n23 | interface NormalizedImage {\n24 | \tbytes: Uint8Array;\n25 | \tmimeType: string;"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "ImageResizeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-resize-core.ts:4",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+        "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import { applyExifOrientation } from \"./exif-orientation.ts\";\n2 | import { loadPhoton } from \"./photon.ts\";\n3 | \n4 | export interface ImageResizeOptions {\n5 | \tmaxWidth?: number; // Default: 2000\n6 | \tmaxHeight?: number; // Default: 2000\n7 | \tmaxBytes?: number; // Default: 4.5MB of base64 payload (below Anthropic's 5MB limit)\n8 | \tjpegQuality?: number; // Default: 80\n9 | }\n10 | \n11 | export interface ResizedImage {\n12 | \tdata: string; // base64\n13 | \tmimeType: string;\n14 | \toriginalWidth: number;\n15 | \toriginalHeight: number;\n16 | \twidth: number;\n17 | \theight: number;\n18 | \twasResized: boolean;"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "ResizedImage",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-resize-core.ts:11",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+        "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+        "range": [
+          8,
+          25
+        ],
+        "text": "8 | \tjpegQuality?: number; // Default: 80\n9 | }\n10 | \n11 | export interface ResizedImage {\n12 | \tdata: string; // base64\n13 | \tmimeType: string;\n14 | \toriginalWidth: number;\n15 | \toriginalHeight: number;\n16 | \twidth: number;\n17 | \theight: number;\n18 | \twasResized: boolean;\n19 | }\n20 | \n21 | // 4.5MB of base64 payload. Provides headroom below Anthropic's 5MB limit.\n22 | const DEFAULT_MAX_BYTES = 4.5 * 1024 * 1024;\n23 | \n24 | const DEFAULT_OPTIONS: Required<ImageResizeOptions> = {\n25 | \tmaxWidth: 2000,"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "resizeImageInProcess",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/image-resize-core.ts:59",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+        "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+        "range": [
+          56,
+          73
+        ],
+        "text": "56 |  * 3. If still too large, try JPEG with decreasing quality\n57 |  * 4. If still too large, progressively reduce dimensions until 1x1\n58 |  */\n59 | export async function resizeImageInProcess(\n60 | \tinputBytes: Uint8Array,\n61 | \tmimeType: string,\n62 | \toptions?: ImageResizeOptions,\n63 | ): Promise<ResizedImage | null> {\n64 | \tconst opts = { ...DEFAULT_OPTIONS, ...options };\n65 | \tconst inputBase64Size = Math.ceil(inputBytes.byteLength / 3) * 4;\n66 | \n67 | \tconst photon = await loadPhoton();\n68 | \tif (!photon) {\n69 | \t\treturn null;\n70 | \t}\n71 | \n72 | \tlet image: ReturnType<typeof photon.PhotonImage.new_from_byteslice> | undefined;\n73 | \ttry {"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "detectSupportedImageMimeTypeFromFile",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/utils/mime.ts:25",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/mime.ts",
+        "sha256": "00893b8a5089c217405b5a9b2d316b3392a1845966f8d4aad8fb31c156e4d922",
+        "range": [
+          22,
+          39
+        ],
+        "text": "22 | \treturn null;\n23 | }\n24 | \n25 | export async function detectSupportedImageMimeTypeFromFile(filePath: string): Promise<string | null> {\n26 | \tconst fileHandle = await open(filePath, \"r\");\n27 | \ttry {\n28 | \t\tconst buffer = Buffer.alloc(IMAGE_TYPE_SNIFF_BYTES);\n29 | \t\tconst { bytesRead } = await fileHandle.read(buffer, 0, IMAGE_TYPE_SNIFF_BYTES, 0);\n30 | \t\treturn detectSupportedImageMimeType(buffer.subarray(0, bytesRead));\n31 | \t} finally {\n32 | \t\tawait fileHandle.close();\n33 | \t}\n34 | }\n35 | \n36 | function isPng(buffer: Uint8Array): boolean {\n37 | \treturn (\n38 | \t\tbuffer.length >= 16 && readUint32BE(buffer, PNG_SIGNATURE.length) === 13 && startsWithAscii(buffer, 12, \"IHDR\")\n39 | \t);"
+      },
+      "entries": [
+        {
+          "id": "TOOLS-023",
+          "title": "Image signatures, conversion, resizing and coordinate hints",
+          "what": "Image reads attach supported content within model size limits, convert BMP when necessary, and tell the model how displayed coordinates map back to the original image.",
+          "source": "ice:packages/agent/src/harness/tools/image.ts:1-104; ice:packages/coding-agent/src/utils/mime.ts:1-117; ice:packages/coding-agent/src/utils/image-process.ts:1-120; ice:packages/coding-agent/src/utils/image-convert.ts:1-50; ice:packages/coding-agent/src/utils/image-resize.ts:1-124; ice:packages/coding-agent/src/utils/image-resize-core.ts:1-165; ice:packages/coding-agent/src/utils/image-resize-worker.ts:1-43; ice:packages/coding-agent/src/utils/exif-orientation.ts:1-184; ice:packages/coding-agent/src/utils/photon.ts:1-140; ice:packages/coding-agent/test/image-process.test.ts:1-54; ice:packages/coding-agent/test/image-processing.test.ts:1-171; ice:packages/coding-agent/test/image-resize-callers.test.ts:1-54",
+          "interfaces": "detectSupportedImageMimeType(bytes) -> image/jpeg|image/png|image/gif|image/webp|image/bmp|undefined; processImage(bytes,mime,{autoResizeImages?}) -> {ok:true,data,mimeType,hints}|{ok:false,message}; resizeImage(bytes,mime,{maxWidth?,maxHeight?,maxBytes?,jpegQuality?}) -> {data,mimeType,width,height,originalWidth,originalHeight,wasResized}|null; formatDimensionNote(result). ReadImageProcessor returns base64 image content plus optional explanatory text. External dependency: @silvia-odwyer/photon-node WASM in TS; no network service is contacted by the image pipeline."
+        }
+      ]
+    },
+    {
+      "symbol": "PathInputOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:9",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001",
+        "TOOLS-020"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/utils/paths.ts",
+        "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+        "range": [
+          6,
+          23
+        ],
+        "text": "6 | \n7 | const UNICODE_SPACES = /[\\u00A0\\u2000-\\u200A\\u202F\\u205F\\u3000]/g;\n8 | \n9 | export interface PathInputOptions {\n10 | \t/** Trim leading/trailing whitespace before normalization. */\n11 | \ttrim?: boolean;\n12 | \t/** Expand leading `~` to a home directory. Defaults to true. */\n13 | \texpandTilde?: boolean;\n14 | \t/** Home directory used for `~` expansion. Defaults to `os.homedir()`. */\n15 | \thomeDir?: string;\n16 | \t/** Strip a leading `@`, used for CLI @file paths. */\n17 | \tstripAtPrefix?: boolean;\n18 | \t/** Normalize unicode space variants to regular spaces. */\n19 | \tnormalizeUnicodeSpaces?: boolean;\n20 | }\n21 | \n22 | /**\n23 |  * Resolve a path to its canonical (real) form, following symlinks."
+      },
+      "entries": [
+        {
+          "id": "CLI-020",
+          "title": "Package source grammar, canonical identity and scoped local-path resolution",
+          "what": "Users can identify extension/resource packages with npm specifications, Git repositories with optional refs, or local files/directories. The parser determines cache identity and pin behavior before any install or settings mutation.",
+          "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1789; ice:packages/coding-agent/src/utils/git.ts:1-227; ice:packages/coding-agent/src/utils/paths.ts:1-119; ice:packages/coding-agent/test/git-ssh-url.test.ts:1-92; ice:packages/coding-agent/test/paths.test.ts:1-151; rust:crates/ice-cli/src/install.rs:1075-1300; rust:crates/ice-cli/src/packages.rs:48-136.; ice:packages/coding-agent/src/core/package-manager.ts:2008-2136.",
+          "interfaces": "Source strings include npm:name[@version], npm:@scope/name[@version], git:host/owner/repo[@ref], explicit git:git@host:owner/repo[@ref], protocol Git URLs, relative/absolute/home/file-URL local paths. GitSource carries repo, host, path, optional ref and pinned. Stable identity must be reused by add/remove/update and scoped dedup; it must not silently turn a bare local name into an npm or Git source."
+        },
+        {
+          "id": "SET-001",
+          "title": "Distribution identity, agent roots and bundled resource path resolution",
+          "what": "Every settings, resource and session consumer resolves a consistent distribution identity and directory tree, whether ICE runs from TypeScript, a package installation or a Bun binary. Environment overrides and resource assets have explicit path rules.",
+          "source": "ice:packages/coding-agent/src/config.ts:21-25,369-605 getPackageDir, asset/path helpers and identity constants; ice:packages/coding-agent/src/utils/paths.ts:1-119 normalizePath/resolvePath/canonicalPath; ice:packages/coding-agent/src/core/legacy-compat/paths.ts:1-7; ice:packages/coding-agent/src/core/legacy-compat/env.ts:1-32; ice:packages/coding-agent/docs/environment-variables.md:1-89.",
+          "interfaces": "Exports include isBunBinary,isBunRuntime,getPackageDir,getThemesDir,getExportTemplateDir,getPackageJsonPath,getReadmePath,getDocsPath,getExamplesPath,getChangelogPath,getInteractiveAssetsDir,getCogneeSkillsDir,getObserveDashboardPath,getBundledInteractiveAssetPath,expandTildePath,getShareViewerUrl,getAgentDir,getProjectConfigDir,getCustomThemesDir,getModelsPath,getAuthPath,getSettingsPath,getToolsDir,getBinDir,getPromptsDir,getSessionsDir,getDebugLogPath. Identity fields are PACKAGE_NAME,APP_NAME,APP_TITLE,CONFIG_DIR_NAME,VERSION,ENV_AGENT_DIR,ENV_SESSION_DIR. No migration or directory creation is implied by a path getter."
+        },
+        {
+          "id": "TOOLS-020",
+          "title": "Tool path normalization and ordered read-path fallback",
+          "what": "Tool calls accept user-style paths and locate common macOS screenshot spellings while keeping write/edit destinations literal after normalization.",
+          "source": "ice:packages/coding-agent/src/core/tools/path-utils.ts:1-118; ice:packages/coding-agent/src/utils/paths.ts:7-100; ice:packages/agent/src/harness/tools/path-utils.ts:1-30; ice:packages/coding-agent/test/path-utils.test.ts:1-175",
+          "interfaces": "expandPath,resolveToCwd,resolveReadPath,resolveReadPathAsync,pathExists; harness normalizeToolPath,resolveToolPath,resolveReadToolPath. Shared normalizePath options {trim?,expandTilde?,homeDir?,stripAtPrefix?,normalizeUnicodeSpaces?}; tool callers enable stripAtPrefix and normalizeUnicodeSpaces. Inputs remain strings, and errors from file URLs or harness filesystem operations can reject the tool."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "captured_at": "2026-10-19T22:20:55.780047+00:00",
+  "initial_baseline_rows": 831,
+  "supplemental_rows": 29,
+  "counts": {
+    "ledger_rows": 860,
+    "mapped": 84,
+    "not_applicable": 4,
+    "pending": 772,
+    "entry_count": 200,
+    "first_pass_claims": 52,
+    "surface_counts": {
+      "cli": {
+        "total": 130,
+        "pending": 123
+      },
+      "environment": {
+        "total": 117,
+        "pending": 93
+      },
+      "extension-api": {
+        "total": 231,
+        "pending": 219
+      },
+      "hooks": {
+        "total": 141,
+        "pending": 86
+      },
+      "keybindings": {
+        "total": 167,
+        "pending": 167
+      },
+      "observability": {
+        "total": 20,
+        "pending": 9
+      },
+      "paths": {
+        "total": 327,
+        "pending": 308
+      },
+      "providers-auth": {
+        "total": 50,
+        "pending": 49
+      },
+      "rpc": {
+        "total": 306,
+        "pending": 306
+      },
+      "session-types": {
+        "total": 98,
+        "pending": 78
+      },
+      "settings": {
+        "total": 565,
+        "pending": 522
+      },
+      "slash-commands": {
+        "total": 53,
+        "pending": 32
+      },
+      "tools": {
+        "total": 23,
+        "pending": 18
+      },
+      "tui": {
+        "total": 336,
+        "pending": 335
+      }
+    }
+  },
+  "identities": {
+    "ice": {
+      "root": "/home/mewtwo/Zks/ice",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void",
+      "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n"
+    },
+    "rust": {
+      "root": "/home/mewtwo/Zks/ice-rust",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main",
+      "status": "?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n"
+    }
+  },
+  "areas": {
+    "safe-verify": {
+      "entries": 26,
+      "statuses": {
+        "missing": 26
+      }
+    },
+    "cognee": {
+      "entries": 68,
+      "statuses": {
+        "missing": 68
+      }
+    },
+    "blackhole": {
+      "entries": 41,
+      "statuses": {
+        "missing": 33,
+        "partial": 8
+      }
+    },
+    "agent": {
+      "entries": 65,
+      "statuses": {
+        "different-by-design": 11,
+        "partial": 49,
+        "missing": 5
+      }
+    }
+  },
+  "extensions_draft_entries": 34,
+  "citation_count": 1127,
+  "citation_issues": [],
+  "source_drift": [],
+  "recorded_read_hash_drift": [],
+  "issues": [],
+  "unresolved_dependency_ids": [],
+  "resume_file_preexisted": false,
+  "artifact_hashes": {
+    "README.md": "f1e4e27a20b79f71450ea6bc505e5050367c1d66e413f6257eb7224266f3c0ce",
+    "ledger.csv": "c21c2f6d9c8bb4c4485827865de07fe218fd3b24d952a81e99ffa6d8a420a3d7",
+    "evidence/progress.json": "37dd11bf3b123684f595d987d021a815135813105adec82ad542a2421c1edfc8",
+    "evidence/execution-policy.json": "11eb06167bbcf9ea60ab170d26bd0cba12d77bb1476265bf9de6a87160277170",
+    "evidence/baseline.json": "8e7d216a220018ff4f2a2f740051f39e4da7d7cbe07dacef39b811f83dc39d5e",
+    "evidence/read-coverage.json": "1a7ea87cb8a32ce63219fbb8733d0ae4e85976ed757531acd7022a12da194b35",
+    "surfaces/cli.csv": "8855bbc5b44365a66716308467e80f995bf65b3881f7b423f3b484636232fa6d",
+    "surfaces/environment.csv": "aa38fd94c9ef5e81c9dab920c54c311f192463b8618c0cac3196d269b3399807",
+    "surfaces/extension-api.csv": "33e582bb380af755d74fe2c2fd990eed84369b14cd0fac4998f15f3329fefee2",
+    "surfaces/hooks.csv": "d5d6080201100558e5aad6244f6488b499b8f2ca8efa37be3c82061cb54e2395",
+    "surfaces/keybindings.csv": "aa3e247792cb106ff3836a532bcafc9bb289edcd88bffeefd676ac966f270d2f",
+    "surfaces/observability.csv": "ed04f2c0f3ee3c161b8c583dc8bb429be75e730c6cd056911e1d2653cd996973",
+    "surfaces/paths.csv": "16ebcf9e37d78ee466f484a8974b3b2d3f42d77d146ec49d9b1c7eecee021f5d",
+    "surfaces/providers-auth.csv": "f1fd4d7fbe7f34f865d149c44c362ee4bdc1bd0fc55a72e9224e5d34224170b1",
+    "surfaces/rpc.csv": "a5b3beffd87ac040a6fe1d01f0d62bc003e6acf29f629ab900c6806d91000aeb",
+    "surfaces/session-types.csv": "325b68721d1c3af62ac2a6c8a8472188042f2402162fbf072e0e6dfe2874d77d",
+    "surfaces/settings.csv": "c243b61e4208876d5b078be596e213d3679d0d6089cbe4670202fc4f95a402ee",
+    "surfaces/slash-commands.csv": "8c41b390ed8b02c2f60bb20252d74c564cdcaf08984b691ae40477ee73575af3",
+    "surfaces/tools.csv": "e0c289d98166bdac0708522f4a455b76b00f9a94da9ed70d7f5f4e5504d50d62",
+    "surfaces/tui.csv": "dfc20f0ba47ef4406630850fed66d0675d630dc133eb1d8674d7452073b7b219",
+    "safe-verify.md": "7c920ae4ec72d8ee182dff96c66be62022d5d5ed8bc0fd5106dceae65062430c",
+    "cognee.md": "dea6ccfd39ceff4bfcebebbbfb93fa9c840b6c16d206c2e5bde19ed201053813",
+    "blackhole.md": "62ee18ecfd87e1202eb5eccfbabc1f72c8312c007c119e0ef15af35f037f8e51",
+    "agent.md": "6ff4caacc978695fbfcf6e902c77774eb28aac37cd8589fa84e13272865e4ce9",
+    "evidence/spec-safe-verify.json": "b6f1444b2b895587ab58b33a2a8f76f14903736ee2572497b1df661fb3d39137",
+    "evidence/spec-cognee.json": "390a7c8524c67d12dd2ec6312e0bfdbbd05fdd4d41436e7cfa3eec4c683335e8",
+    "evidence/spec-blackhole.json": "e67e2f41a3de8c7b87e2b841c8ae73c28dda5c85cc343870f0e247cf0ee3962a",
+    "evidence/spec-agent.json": "2c744cd8a785623f1406b5381eb7edad767282ecf73c9702e898908718284f08",
+    "evidence/spec-extensions.json": "949cf112d06d750b3e40e5d1300929f95cb4da64e87479834962130108a8cef8"
+  },
+  "checks_note": "Structural parsing, hashes, reference bounds and persisted-state reconciliation only; not a new semantic re-audit of certified entries."
+}

@@ -1,0 +1,7 @@
+# CLI and packaging audit checkpoint
+
+CLI-001 through CLI-019 are authored in spec-cli-packaging.json with full behavioral contracts and 2–3 plain opening sentences in every mechanism. proposal-cli-packaging.json contains 160 surface rows, eight reconciled first-pass claims, 95 mapped own candidates and one explicitly excluded false environment-read candidate. The full area remains incomplete pending the package worker's CLI-020 through CLI-049 supplement (three ledger files and 26 mechanical candidates).
+
+All 28 own TypeScript ledger bodies and 18 directly relevant suites are fully visibly read. Five adjacent tests/helpers are cross-credited with exact owner/hash/ranges. Direct reads cover 56 unique files and 9,650 visible lines; 51 are complete. Native app.rs is visible except connector-redacted line 96. Other bounded native ranges and exact unread intervals are in cli-source-review.json. No source code, tests, application commands, network commands, installs or actual user state were executed/read beyond authorized source inspection.
+
+Own citation and surface line validation has no unresolved range errors. Stable links include SET-002/008/013/017/018, OBS-002/003/004/014/016, TUI-007/048/062–064/068–070/073/220/235. MISC shared helper IDs and final package mappings remain pending. Work can proceed to MISC while the package worker finishes its independent supplement; coordinator publication must wait for integration and final reconciliation.

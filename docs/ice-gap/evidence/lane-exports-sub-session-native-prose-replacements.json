@@ -1,0 +1,3263 @@
+{
+  "schema_version": 1,
+  "reviewer": "/root/exports_sub_session",
+  "captured_at": "2026-10-20 03:49:38 UTC",
+  "status": "exact-replacement-proposal; not applied",
+  "source_only": true,
+  "scope": [
+    "session",
+    "subagents",
+    "tui",
+    "agent",
+    "tools",
+    "safe-verify",
+    "observability",
+    "cognee",
+    "blackhole"
+  ],
+  "apply_instructions": {
+    "gate": "Root applies only after the original audit gate passes and the active audit copy exists.",
+    "sequence": [
+      "Apply field_replacements and manifest_replacements to the active audit copy using expected_old_field / old_text occurrence guards.",
+      "Mechanically remap existing current rust: source citations from old coordinates to active coordinates.",
+      "Insert proposed_catalog_object and proposed_provenance_addendum after remapping; their sources already use active coordinates."
+    ],
+    "source_proof_coordinates": "source_evidence and proposed catalog/provenance objects describe the active checkout. Replacement prose retains all existing citation coordinates for root's later remap.",
+    "writes_performed": "Only this lane's helper/evidence artifacts in the old audit root. No shared spec/manifest or active-checkout writes."
+  },
+  "identities": {
+    "old_root": "/home/mewtwo/Zks/ice-rust",
+    "active_root": "/home/mewtwo/Zykairotis/ice-rust",
+    "old_commit": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "active_commit": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+    "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a"
+  },
+  "accepted_snapshots": [
+    {
+      "area": "session",
+      "spec": {
+        "path": "evidence/spec-session.json",
+        "sha256": "bf070480003b3a40a828b92766a33d7b447651ff975550c41442a53478bd04ef",
+        "entries": 38
+      },
+      "manifest": {
+        "path": "evidence/session.json",
+        "sha256": "e1c36372e4c8360bc3adee0bcfe5b851762a2c818bacbee097cfee928bc67fd1"
+      }
+    },
+    {
+      "area": "subagents",
+      "spec": {
+        "path": "evidence/spec-subagents.json",
+        "sha256": "d6323b97206d88c117dbb67d82e6511f7195ac8940eea9971f8d0201e235dc0c",
+        "entries": 44
+      },
+      "manifest": {
+        "path": "evidence/subagents.json",
+        "sha256": "e1fb7844fa0b4c8d35bad861cb73c4e52e2b9cb716591e15432b2e9aca936c7b"
+      }
+    },
+    {
+      "area": "tui",
+      "spec": {
+        "path": "evidence/spec-tui.json",
+        "sha256": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+        "entries": 151
+      },
+      "manifest": {
+        "path": "evidence/tui.json",
+        "sha256": "6f51fb5fb3369bbf79e8ad42d95c0ac0aa0b23544567ba3af9c808b61cadadf1"
+      }
+    },
+    {
+      "area": "agent",
+      "spec": {
+        "path": "evidence/spec-agent.json",
+        "sha256": "bff5e13459f02d99ef9d738792f36ebf3e0c3cff9687bebf7e2e005b3f1eab28",
+        "entries": 65
+      },
+      "manifest": {
+        "path": "evidence/agent.json",
+        "sha256": "c699ab4cb6742e8b54514d5a57666e8c907e629a22e8eea75435355de2eed97d"
+      }
+    },
+    {
+      "area": "tools",
+      "spec": {
+        "path": "evidence/spec-tools.json",
+        "sha256": "13c4ec49f34f370da497728aff390e0c51646f3d59a68d894e99293e4c6bdd64",
+        "entries": 31
+      },
+      "manifest": {
+        "path": "evidence/tools.json",
+        "sha256": "f7e99c8a863bbb2ea5d53e148a61710dcb48fc6ad0ef0d673fdfc32e9dc8cd69"
+      }
+    },
+    {
+      "area": "safe-verify",
+      "spec": {
+        "path": "evidence/spec-safe-verify.json",
+        "sha256": "41757c24ab4baa4ba0398760c0f53fec5ca2e54f016441e630ae1da60970096c",
+        "entries": 26
+      },
+      "manifest": {
+        "path": "evidence/safe-verify.json",
+        "sha256": "6678bf49653b227771fe1f3cdaf9fa85f91a3af7e2430b7ac308176e0a60e36e"
+      }
+    },
+    {
+      "area": "observability",
+      "spec": {
+        "path": "evidence/spec-observability.json",
+        "sha256": "fccc30d4c80b007519b79f6818831aeb51e8e18cf7279fed3822c2b91d36e479",
+        "entries": 29
+      },
+      "manifest": {
+        "path": "evidence/observability.json",
+        "sha256": "b7955dbd9e3575666ea0b0bec51283cc6dbcbc2f28a988a40bf4c2bcbcf94421"
+      }
+    },
+    {
+      "area": "cognee",
+      "spec": {
+        "path": "evidence/spec-cognee.json",
+        "sha256": "81590f1a5fd60dbfc629a09d937bbff12e4fc77a23e2c445fc6f674f6cffb63d",
+        "entries": 68
+      },
+      "manifest": {
+        "path": "evidence/cognee.json",
+        "sha256": "1daf3f85c29bca3aa9f53c743896463e2cae2a617be269e89c6fa5f8c0366abc"
+      }
+    },
+    {
+      "area": "blackhole",
+      "spec": {
+        "path": "evidence/spec-blackhole.json",
+        "sha256": "4e4cfbeed75c1e2a6ed72462df19020ea75fe34109c70e1971f9a0e180a9956b",
+        "entries": 41
+      },
+      "manifest": {
+        "path": "evidence/blackhole.json",
+        "sha256": "9a1c0371dcd6999e9538c1da419ff1fb7e29b335ccbac79d9e04ad88fa9c983b"
+      }
+    }
+  ],
+  "scan_method": "Identity candidates were enumerated across non-source spec string fields, then supplemented with standalone ICE/Ice and deliberately unchanged native temporary-name searches. Each returned field was reviewed in context. Accepted manifests were recursively scanned, including rust_only, open_questions, unverified, claims findings, surfaces and notes; original claims/report excerpts/source identities were protected. This is an identity prose review, not a fresh implementation-completeness audit. The accepted main TUI spec includes terminal entries; historical spec-tui-terminal.json was not separately proposed for mutation.",
+  "field_replacements": [
+    {
+      "area": "session",
+      "path": "evidence/spec-session.json",
+      "spec_snapshot_sha256": "bf070480003b3a40a828b92766a33d7b447651ff975550c41442a53478bd04ef",
+      "id": "SESSION-023",
+      "field": "rust",
+      "old_text": "ICE_SESSION_ID",
+      "new_text": "ICERS_SESSION_ID",
+      "expected_occurrences": 1,
+      "expected_old_field": "Rust has mutable set_tools/set_active_tools and executable tool registries, but the inspected harness setters replace registry/name arrays without rebuilding a coding-session prompt or emitting configuration lifecycle events (rust:crates/ice-harness/src/agent_harness.rs:2023-2042; rust:crates/ice-harness/src/agent_harness.rs:4973-4986). Native CLI construction assembles tools/resources separately; the missing background/control mechanics are recorded in Tools. Rust already republishes ICE_SESSION_ID and ToolCallContext identity on successful session activation, which must be preserved, rather than described as wholly absent session identity (rust:crates/ice-cli/src/session.rs:2521-2577).",
+      "proposed_new_field": "Rust has mutable set_tools/set_active_tools and executable tool registries, but the inspected harness setters replace registry/name arrays without rebuilding a coding-session prompt or emitting configuration lifecycle events (rust:crates/ice-harness/src/agent_harness.rs:2023-2042; rust:crates/ice-harness/src/agent_harness.rs:4973-4986). Native CLI construction assembles tools/resources separately; the missing background/control mechanics are recorded in Tools. Rust already republishes ICERS_SESSION_ID and ToolCallContext identity on successful session activation, which must be preserved, rather than described as wholly absent session identity (rust:crates/ice-cli/src/session.rs:2521-2577).",
+      "reason": "Update the current native session-identity variable; preserve the TypeScript tool-environment facts and the native ToolCallContext behavior.",
+      "source_review": {
+        "evidence_id": "native-session-id",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    },
+    {
+      "area": "subagents",
+      "path": "evidence/spec-subagents.json",
+      "spec_snapshot_sha256": "d6323b97206d88c117dbb67d82e6511f7195ac8940eea9971f8d0201e235dc0c",
+      "id": "SUB-034",
+      "field": "rust",
+      "old_text": "ICE_TEST_SUBAGENT_LIBRARY",
+      "new_text": "ICERS_TEST_SUBAGENT_LIBRARY",
+      "expected_occurrences": 1,
+      "expected_old_field": "rust:crates/ice-cli/src/child_agents.rs:140-286 implements an owner-scoped native host start/poll/cancel/dispose protocol and rust:crates/ice-harness/src/agent_harness/child.rs:74-172 creates inherited child harnesses. This is useful partial infrastructure, but has no versioned per-events-owner V2 controller, plan-default SDK wrapper, durable result/patch preview or equivalent task schema. rust:crates/ice-cli/tests/subagent_packages.rs:23-375 and rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63 exercise an independently supplied DLL only when ICE_TEST_SUBAGENT_LIBRARY is set; the audited repository did not establish that package's implementation.",
+      "proposed_new_field": "rust:crates/ice-cli/src/child_agents.rs:140-286 implements an owner-scoped native host start/poll/cancel/dispose protocol and rust:crates/ice-harness/src/agent_harness/child.rs:74-172 creates inherited child harnesses. This is useful partial infrastructure, but has no versioned per-events-owner V2 controller, plan-default SDK wrapper, durable result/patch preview or equivalent task schema. rust:crates/ice-cli/tests/subagent_packages.rs:23-375 and rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63 exercise an independently supplied DLL only when ICERS_TEST_SUBAGENT_LIBRARY is set; the audited repository did not establish that package's implementation.",
+      "reason": "Update the native conditional DLL-test environment variable while retaining the absent companion-package limitation.",
+      "source_review": {
+        "evidence_id": "native-subagent-library",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    },
+    {
+      "area": "tui",
+      "path": "evidence/spec-tui.json",
+      "spec_snapshot_sha256": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+      "id": "TUI-050",
+      "field": "rust",
+      "old_text": "ICE_EXTERNAL_EDITOR",
+      "new_text": "ICERS_EXTERNAL_EDITOR",
+      "expected_occurrences": 1,
+      "expected_old_field": "Native launch_external_editor uses a worker thread, a NamedTempFile with ice-draft- prefix/.md suffix, writes the expanded draft and chooses ICE_EXTERNAL_EDITOR (nonblank), then VISUAL, EDITOR, or notepad/nano. Command::new receives the whole environment string as one executable with no argument parsing. Successful exit reads the file without stripping a trailing newline; errors are returned through TuiMessage (`rust:crates/ice-cli/src/interactive_tui/run.rs:72-118`). The key caller launches and immediately continues with no terminal stop/start or exclusive editor-operation state in this path; result handling unconditionally replaces the current draft. A late result can therefore overwrite edits made while the child was open. It sets cursor row0 and col=text.chars().count, but Editor.set_cursor interprets col as a byte offset in that row, giving incorrect multiline/non-ASCII positioning (`rust:crates/ice-cli/src/interactive_tui.rs:2271-2280`, `rust:crates/ice-cli/src/interactive_tui.rs:2901-2912`, `rust:crates/ice-tui/src/editor.rs:548-562`). Existing native temp-file cleanup and explicit error messages remain credited.",
+      "proposed_new_field": "Native launch_external_editor uses a worker thread, a NamedTempFile with ice-draft- prefix/.md suffix, writes the expanded draft and chooses ICERS_EXTERNAL_EDITOR (nonblank), then VISUAL, EDITOR, or notepad/nano. Command::new receives the whole environment string as one executable with no argument parsing. Successful exit reads the file without stripping a trailing newline; errors are returned through TuiMessage (`rust:crates/ice-cli/src/interactive_tui/run.rs:72-118`). The key caller launches and immediately continues with no terminal stop/start or exclusive editor-operation state in this path; result handling unconditionally replaces the current draft. A late result can therefore overwrite edits made while the child was open. It sets cursor row0 and col=text.chars().count, but Editor.set_cursor interprets col as a byte offset in that row, giving incorrect multiline/non-ASCII positioning (`rust:crates/ice-cli/src/interactive_tui.rs:2271-2280`, `rust:crates/ice-cli/src/interactive_tui.rs:2901-2912`, `rust:crates/ice-tui/src/editor.rs:548-562`). Existing native temp-file cleanup and explicit error messages remain credited.",
+      "reason": "Update the native editor override key. Preserve the unchanged ice-draft- prefix, caller timing, cursor limitations and error behavior.",
+      "source_review": {
+        "evidence_id": "native-external-editor",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    },
+    {
+      "area": "tui",
+      "path": "evidence/spec-tui.json",
+      "spec_snapshot_sha256": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+      "id": "TUI-208",
+      "field": "rust",
+      "old_text": "ICE_KITTY_KEYBOARD",
+      "new_text": "ICERS_KITTY_KEYBOARD",
+      "expected_occurrences": 1,
+      "expected_old_field": "rust:crates/ice-tui/src/terminal.rs:16-65; rust:crates/ice-tui/src/terminal.rs:187-290; rust:crates/ice-tui/src/terminal.rs:340-369; rust:crates/ice-tui/src/terminal.rs:469-506 implements flags7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICE_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+      "proposed_new_field": "rust:crates/ice-tui/src/terminal.rs:16-65; rust:crates/ice-tui/src/terminal.rs:187-290; rust:crates/ice-tui/src/terminal.rs:340-369; rust:crates/ice-tui/src/terminal.rs:469-506 implements flags7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICERS_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+      "reason": "Update the native keyboard-protocol override key; keep all existing protocol/fallback behavior and TypeScript terminal keys.",
+      "source_review": {
+        "evidence_id": "native-kitty-keyboard",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    },
+    {
+      "area": "observability",
+      "path": "evidence/spec-observability.json",
+      "spec_snapshot_sha256": "fccc30d4c80b007519b79f6818831aeb51e8e18cf7279fed3822c2b91d36e479",
+      "id": "OBS-002",
+      "field": "rust",
+      "old_text": "caches the same exact `ICE_TIMING=1` decision",
+      "new_text": "caches an exact `ICERS_TIMING=1` decision",
+      "expected_occurrences": 1,
+      "expected_old_field": "`rust:crates/ice-cli/src/timings.rs:1-109` implements namespace groups behind a Mutex, caches the same exact `ICE_TIMING=1` decision in OnceLock on first use, and uses monotonic `Instant`. Its first new-group interval is 0 ms, and print order is always main then extensions. These are concrete differences from TypeScript's import-time gate, Date.now intervals and insertion ordering. The Rust CLI wraps the entire `run_inner().await` and prints after it returns, rather than before entering a long-lived run (`rust:crates/ice-cli/src/app.rs:68-79`). Both implementations preserve the general labelled stderr report. Neither baseline environment helper implements a legacy prefix alias.",
+      "proposed_new_field": "`rust:crates/ice-cli/src/timings.rs:1-109` implements namespace groups behind a Mutex, caches an exact `ICERS_TIMING=1` decision in OnceLock on first use, and uses monotonic `Instant`. Its first new-group interval is 0 ms, and print order is always main then extensions. These are concrete differences from TypeScript's import-time gate, Date.now intervals and insertion ordering. The Rust CLI wraps the entire `run_inner().await` and prints after it returns, rather than before entering a long-lived run (`rust:crates/ice-cli/src/app.rs:68-79`). Both implementations preserve the general labelled stderr report. Neither baseline environment helper implements a legacy prefix alias.",
+      "reason": "Native and TypeScript timing gates now have different names, although both still use the exact value 1.",
+      "source_review": {
+        "evidence_id": "native-timing",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    },
+    {
+      "area": "blackhole",
+      "path": "evidence/spec-blackhole.json",
+      "spec_snapshot_sha256": "4e4cfbeed75c1e2a6ed72462df19020ea75fe34109c70e1971f9a0e180a9956b",
+      "id": "BLACK-002",
+      "field": "port",
+      "old_text": "Resolve the ICE data directory through the shared Rust config service, preserving the explicit directory override.",
+      "new_text": "Resolve the native icers data directory through the shared Rust config service, preserving its explicit ICERS_CODING_AGENT_DIR override and ~/.icers/agent default.",
+      "expected_occurrences": 1,
+      "expected_old_field": "Use serde_json::Value for tolerant decode before constructing a typed BlackholeConfig; a strict deserialize-only implementation would reject inputs TS tolerates. Resolve the ICE data directory through the shared Rust config service, preserving the explicit directory override. Host settings UI support belongs to BLACK-005.",
+      "proposed_new_field": "Use serde_json::Value for tolerant decode before constructing a typed BlackholeConfig; a strict deserialize-only implementation would reject inputs TS tolerates. Resolve the native icers data directory through the shared Rust config service, preserving its explicit ICERS_CODING_AGENT_DIR override and ~/.icers/agent default. Host settings UI support belongs to BLACK-005.",
+      "reason": "Make the proposed native port use the current shared Rust configuration identity; preserve the TypeScript source path and override contract in mechanism/interfaces.",
+      "source_review": {
+        "evidence_id": "native-agent-dir",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "All pre-existing rust: references remain at old audit coordinates; coordinator remaps after applying prose. This replacement adds no new rust: reference."
+    }
+  ],
+  "manifest_replacements": [
+    {
+      "area": "subagents",
+      "path": "evidence/subagents.json",
+      "manifest_snapshot_sha256": "e1fb7844fa0b4c8d35bad861cb73c4e52e2b9cb716591e15432b2e9aca936c7b",
+      "pointer": "/claims/0/finding",
+      "id": null,
+      "old_text": "ICE_TEST_SUBAGENT_LIBRARY",
+      "new_text": "ICERS_TEST_SUBAGENT_LIBRARY",
+      "expected_occurrences": 1,
+      "expected_old_field": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICE_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "proposed_new_field": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICERS_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "reason": "The claim finding describes the native test gate, not the historical claim quotation.",
+      "source_review": {
+        "evidence_id": "native-subagent-library",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "No citation coordinates changed; claims.claim/original/source/report_excerpt remain untouched."
+    },
+    {
+      "area": "subagents",
+      "path": "evidence/subagents.json",
+      "manifest_snapshot_sha256": "e1fb7844fa0b4c8d35bad861cb73c4e52e2b9cb716591e15432b2e9aca936c7b",
+      "pointer": "/open_questions/0/question",
+      "id": "Q-SUB-001",
+      "old_text": "ICE_TEST_SUBAGENT_LIBRARY",
+      "new_text": "ICERS_TEST_SUBAGENT_LIBRARY",
+      "expected_occurrences": 1,
+      "expected_old_field": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICE_TEST_SUBAGENT_LIBRARY tests are conditional and were not run.",
+      "proposed_new_field": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICERS_TEST_SUBAGENT_LIBRARY tests are conditional and were not run.",
+      "reason": "The current open question must name the active conditional-test variable while preserving the companion-package uncertainty.",
+      "source_review": {
+        "evidence_id": "native-subagent-library",
+        "proof_location": "source_evidence",
+        "coordinate_space": "already-active-source-proof"
+      },
+      "replacement_citation_coordinates": "No citation coordinates changed; claims.claim/original/source/report_excerpt remain untouched."
+    }
+  ],
+  "review_counts": {
+    "areas": 9,
+    "accepted_spec_entries": 493,
+    "spec_candidate_fields": 122,
+    "manifest_candidate_fields": 270,
+    "spec_replacements": 6,
+    "manifest_replacements": 2
+  },
+  "source_artifacts": [
+    {
+      "path": "evidence/active-checkout-diff-hunks-complete.json",
+      "sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006"
+    },
+    {
+      "path": "evidence/lane-exports-sub-session-native-hunk-review.json",
+      "sha256": "2259c2305ab7401c7fd6aabdc2e957727a47821dbf20340a00b56e3834d880e2"
+    },
+    {
+      "path": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+      "sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7"
+    },
+    {
+      "path": "evidence/lane-exports-sub-session-native-value-compatibility.json",
+      "sha256": "aaca123d8714d7b116cb87c0eb018576aef000812f7f5848603de7718077ec19"
+    }
+  ],
+  "source_evidence": [
+    {
+      "id": "native-session-id",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Captured hunk and direct active SDK/CLI reads",
+      "finding": "SESSION_ID_ENV now contains ICERS_SESSION_ID; publish_session_identity and set_active_session use that constant and continue to publish ToolCallContext identity.",
+      "hunk_evidence": [
+        {
+          "file": "crates/ice-plugin-sdk/src/lib.rs",
+          "active_file": "crates/ice-plugin-sdk/src/lib.rs",
+          "old_sha256": "3a61438fbc4f495e820942da7f7662377027a95cf49b6bba81c5ecf01e5c5f31",
+          "active_sha256": "dffb48ef806f7b04efba33c666a805d07e24566e9529abc5c9e0db061ee76655",
+          "diff_sha256": "ae37469033558276556dd2806b8fffc4d695afd3b60cb570e93edd7cf1663942",
+          "hunks": [
+            "@@ -687 +687 @@ pub const HOST_VERSION: &str = env!(\"CARGO_PKG_VERSION\");\n-pub const SESSION_ID_ENV: &str = \"ICE_SESSION_ID\";\n+pub const SESSION_ID_ENV: &str = \"ICERS_SESSION_ID\";\n",
+            "@@ -690 +690 @@ pub const SESSION_ID_ENV: &str = \"ICE_SESSION_ID\";\n-/// *nested* `ice` should attach to, and reads back to decide it is a subagent.\n+/// *nested* `icers` should attach to, and reads back to decide it is a subagent.\n",
+            "@@ -698 +698 @@ pub const SESSION_ID_ENV: &str = \"ICE_SESSION_ID\";\n-///   `ice` started from one mistakes itself for a subagent), and\n+///   `icers` started from one mistakes itself for a subagent), and\n"
+          ]
+        },
+        {
+          "file": "crates/ice-cli/src/session.rs",
+          "active_file": "crates/ice-cli/src/session.rs",
+          "old_sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+          "active_sha256": "c528a01013fa065cd367e698957e0a082bf9acb4b89a283d7f82b6c7a452b16f",
+          "diff_sha256": "8bd3fce372a9b6ffbc8418b1dd8eeed5f09178becc8a902cb67d506d1b4eb5be",
+          "hunks": [
+            "@@ -2530 +2530 @@ async fn open_session_by_id_in_dir(id: &str, cwd: &str, dir: &Path) -> Result<Se\n-/// - `ICE_SESSION_ID` — read per **turn** by the provider hooks, which is the\n+/// - `ICERS_SESSION_ID` — read per **turn** by the provider hooks, which is the\n",
+            "@@ -3939 +3939 @@ mod tests {\n-        assert_eq!(ice_plugin_sdk::SESSION_ID_ENV, \"ICE_SESSION_ID\");\n+        assert_eq!(ice_plugin_sdk::SESSION_ID_ENV, \"ICERS_SESSION_ID\");\n"
+          ]
+        }
+      ],
+      "direct_reads": [
+        {
+          "file": "crates/ice-plugin-sdk/src/lib.rs",
+          "range": [
+            678,
+            688
+          ],
+          "sha256": "dffb48ef806f7b04efba33c666a805d07e24566e9529abc5c9e0db061ee76655",
+          "text": "678 | /// The host **rewrites** it whenever a session becomes active — at startup and\n679 | /// on every in-process swap (`/import`, fork, switch) — so the value always\n680 | /// names the session currently being served. It is not an embedder override:\n681 | /// a value inherited from a parent process would otherwise make a child `icers`\n682 | /// report its ancestor's session forever. Embedders that need to pin the id set\n683 | /// it after the session is active rather than before.\n684 | ///\n685 | /// The id is a plain UTF-8 string (no NUL), which is what makes writing it with\n686 | /// `std::env::set_var` sound.\n687 | pub const SESSION_ID_ENV: &str = \"ICERS_SESSION_ID\";\n688 | ",
+          "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+        },
+        {
+          "file": "crates/ice-cli/src/session.rs",
+          "range": [
+            2521,
+            2577
+          ],
+          "sha256": "c528a01013fa065cd367e698957e0a082bf9acb4b89a283d7f82b6c7a452b16f",
+          "text": "2521 | /// Publish the active session's id to plugins, on both channels that carry it.\n2522 | ///\n2523 | /// Called on **every** activation of a session — the startup build AND every\n2524 | /// in-process swap (`switch_to_session`, `fork_session`, and the plugin\n2525 | /// `NewSession`/`Fork`/`SwitchSession` runtime actions all route through\n2526 | /// [`set_active_session`]). Two things must stay in step:\n2527 | ///\n2528 | /// - `ToolCallContext` — read per plugin **tool** call, which is why a stale\n2529 | ///   value there made a plugin's `todo`-style state follow the wrong session.\n2530 | /// - `ICERS_SESSION_ID` — read per **turn** by the provider hooks, which is the\n2531 | ///   only channel an observer gets for a pure-chat run. Process-global, which is\n2532 | ///   exactly the scope of \"the session this process is serving\".\n2533 | ///\n2534 | /// The write overwrites unconditionally, deliberately. An inherited value is not\n2535 | /// an override: `icers` spawning `icers` would otherwise hand the child the parent's\n2536 | /// session id, and the child — which is *serving its own* session — would report\n2537 | /// it forever. (Children no longer inherit the variable at all; see\n2538 | /// `ice_tools::HOST_PRIVATE_ENV`. This overwrite is the second line of defence,\n2539 | /// for any other way a value can arrive pre-set.)\n2540 | ///\n2541 | /// An embedder that genuinely wants to pin the id can revert to the old\n2542 | /// behaviour by setting the variable *after* this runs; there is no supported\n2543 | /// way to pin it before, because a session that does not match its own id is\n2544 | /// never what the caller wants.\n2545 | fn publish_session_identity(tool_context: &ice_extensions::ToolCallContext, id: &str) {\n2546 |     std::env::set_var(ice_plugin_sdk::SESSION_ID_ENV, id);\n2547 |     tool_context.set_session_id(id);\n2548 | }\n2549 | \n2550 | /// Swap the session the harness serves, republishing the identity to plugins.\n2551 | ///\n2552 | /// The single funnel for an in-process session change. Prefer this over calling\n2553 | /// `AgentHarness::set_session` directly: the harness holds no reference to the\n2554 | /// plugin channels, so a bare `set_session` would leave every plugin reporting\n2555 | /// the session it had before the swap.\n2556 | ///\n2557 | /// `tool_context` is optional because not every caller has one (the harness's own\n2558 | /// tests, a headless embedder); the env channel is always published, since the\n2559 | /// provider hooks depend on it.\n2560 | pub(crate) async fn set_active_session(\n2561 |     harness: &AgentHarness,\n2562 |     session: Session,\n2563 |     tool_context: Option<&ice_extensions::ToolCallContext>,\n2564 | ) -> Result<(), String> {\n2565 |     let metadata = session.get_metadata().await.ok();\n2566 |     harness\n2567 |         .set_session(session)\n2568 |         .await\n2569 |         .map_err(|e| e.to_string())?;\n2570 |     if let Some(metadata) = metadata {\n2571 |         std::env::set_var(ice_plugin_sdk::SESSION_ID_ENV, &metadata.id);\n2572 |         if let Some(context) = tool_context {\n2573 |             context.set_session_id(metadata.id);\n2574 |         }\n2575 |     }\n2576 |     Ok(())\n2577 | }",
+          "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+        }
+      ]
+    },
+    {
+      "id": "native-subagent-library",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Captured old/active hunks and RPC lane review",
+      "finding": "Both conditional native subagent DLL tests read ICERS_TEST_SUBAGENT_LIBRARY. The companion package identity ice-subagents and conditional-test limitation remain unchanged; no test was executed.",
+      "hunk_evidence": [
+        {
+          "file": "crates/ice-cli/tests/subagent_packages.rs",
+          "active_file": "crates/ice-cli/tests/subagent_packages.rs",
+          "old_sha256": "c6d36ea24c4ed8ba860ad0b2d480b6d6035b5dd75163ba0b4c45a56d4cf1e0fc",
+          "active_sha256": "304a4ac7ac8d6ff28ac24d82ddf857d3041bcf35bd97500d7267735cbeec6227",
+          "diff_sha256": "88fd586ce62ea08f6c1676d71269e1afd917fac47b12a235b2af6e37cc3e3be5",
+          "hunks": [
+            "@@ -1 +1 @@\n-//! Build the independent ice-subagents DLL, then set ICE_TEST_SUBAGENT_LIBRARY.\n+//! Build the independent ice-subagents DLL, then set ICERS_TEST_SUBAGENT_LIBRARY.\n",
+            "@@ -25,2 +25,2 @@ async fn real_subagent_plugin_inherits_project_tools_model_and_parent_approval_u\n-    let Some(path) = std::env::var_os(\"ICE_TEST_SUBAGENT_LIBRARY\") else {\n-        eprintln!(\"SKIP: build ice-subagents and set ICE_TEST_SUBAGENT_LIBRARY\");\n+    let Some(path) = std::env::var_os(\"ICERS_TEST_SUBAGENT_LIBRARY\") else {\n+        eprintln!(\"SKIP: build ice-subagents and set ICERS_TEST_SUBAGENT_LIBRARY\");\n"
+          ]
+        },
+        {
+          "file": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+          "active_file": "crates/ice-cli/tests/subagent_packages/lifetime.rs",
+          "old_sha256": "91769a027f1545ffff28c4f0a39ae9aa5dac509b1bc9412ea687eaed89cc0c33",
+          "active_sha256": "84f8285cb790c5112d2090c05da3f52e346e19383c9f7058a0cdac0120a9919a",
+          "diff_sha256": "52b959f1768dcab127116021c850fdaf49136b32130a58e7baa331cea60f5844",
+          "hunks": [
+            "@@ -5 +5 @@ async fn dropping_a_plugin_bound_harness_releases_its_provider_and_tool_keepaliv\n-    let Some(path) = std::env::var_os(\"ICE_TEST_SUBAGENT_LIBRARY\") else {\n+    let Some(path) = std::env::var_os(\"ICERS_TEST_SUBAGENT_LIBRARY\") else {\n"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-external-editor",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Captured hunk, RPC lane review, direct active source",
+      "finding": "External-editor selection uses ICERS_EXTERNAL_EDITOR, then VISUAL and EDITOR. Native temp-file prefix ice-draft- at line 75 is unchanged.",
+      "hunk_evidence": [
+        {
+          "file": "crates/ice-cli/src/interactive_tui/run.rs",
+          "active_file": "crates/ice-cli/src/interactive_tui/run.rs",
+          "old_sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+          "active_sha256": "e63ffdaef99be990bb524976f310e40fdc8f21b912e784710f2b00207be8fd29",
+          "diff_sha256": "68431a4689a3dd38ef9a6f3debaccc12fbc03cef34426f57426a1f580f421f54",
+          "hunks": [
+            "@@ -93 +93 @@ pub(super) fn launch_external_editor(draft: String, tx: mpsc::UnboundedSender<Tu\n-        let editor = std::env::var(\"ICE_EXTERNAL_EDITOR\")\n+        let editor = std::env::var(\"ICERS_EXTERNAL_EDITOR\")\n"
+          ]
+        }
+      ],
+      "direct_reads": [
+        {
+          "file": "crates/ice-cli/src/interactive_tui/run.rs",
+          "range": [
+            72,
+            106
+          ],
+          "sha256": "e63ffdaef99be990bb524976f310e40fdc8f21b912e784710f2b00207be8fd29",
+          "text": " 72 | pub(super) fn launch_external_editor(draft: String, tx: mpsc::UnboundedSender<TuiMessage>) {\n 73 |     std::thread::spawn(move || {\n 74 |         let file = match tempfile::Builder::new()\n 75 |             .prefix(\"ice-draft-\")\n 76 |             .suffix(\".md\")\n 77 |             .tempfile()\n 78 |         {\n 79 |             Ok(file) => file,\n 80 |             Err(error) => {\n 81 |                 let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(\n 82 |                     \"Could not create editor file: {error}\"\n 83 |                 ))));\n 84 |                 return;\n 85 |             }\n 86 |         };\n 87 |         if let Err(error) = std::fs::write(file.path(), draft.as_bytes()) {\n 88 |             let _ = tx.send(TuiMessage::ExternalEditorResult(Err(format!(\n 89 |                 \"Could not write editor file: {error}\"\n 90 |             ))));\n 91 |             return;\n 92 |         }\n 93 |         let editor = std::env::var(\"ICERS_EXTERNAL_EDITOR\")\n 94 |             .ok()\n 95 |             .filter(|value| !value.trim().is_empty())\n 96 |             .or_else(|| std::env::var(\"VISUAL\").ok())\n 97 |             .or_else(|| std::env::var(\"EDITOR\").ok())\n 98 |             .unwrap_or_else(|| {\n 99 |                 if cfg!(windows) {\n100 |                     \"notepad\".to_string()\n101 |                 } else {\n102 |                     \"nano\".to_string()\n103 |                 }\n104 |             });\n105 |         let status = std::process::Command::new(&editor)\n106 |             .arg(file.path())",
+          "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+        }
+      ]
+    },
+    {
+      "id": "native-kitty-keyboard",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Own complete native hunk review",
+      "finding": "The executable var_os lookup at line 57 now reads ICERS_KITTY_KEYBOARD. Existing subsequent negotiation policy is unchanged by this identity hunk.",
+      "hunk_evidence": [
+        {
+          "file": "crates/ice-tui/src/terminal.rs",
+          "active_file": "crates/ice-tui/src/terminal.rs",
+          "old_sha256": "5dc9e614eb1589611e87491eb5d1dab93cd8596534e0fab107f63c472ba427bc",
+          "active_sha256": "9f83d169f60211becf29fc3e85de47827ec8fb24fd0712c5efb33c9087719aa2",
+          "diff_sha256": "d4e15525485f5a60a6c3b871ded96dbdc51423bfe319c7b36b57f5869d859d19",
+          "hunks": [
+            {
+              "header": "@@ -17 +17 @@ use thiserror::Error;",
+              "old_start": 17,
+              "old_count": 1,
+              "active_start": 17,
+              "active_count": 1,
+              "section": " use thiserror::Error;",
+              "unified_diff": "-/// ICE only consumes wheel events, so keep the platform default selectable.\n+/// ICERS only consumes wheel events, so keep the platform default selectable.",
+              "classification": "identity-only",
+              "change_indices": [
+                0
+              ],
+              "reviewed": true
+            },
+            {
+              "header": "@@ -52 +52 @@ fn keyboard_protocol_enabled_for(",
+              "old_start": 52,
+              "old_count": 1,
+              "active_start": 52,
+              "active_count": 1,
+              "section": " fn keyboard_protocol_enabled_for(",
+              "unified_diff": "-/// `ICE_KITTY_KEYBOARD=1` forces the protocol on, `ICE_KITTY_KEYBOARD=0` forces\n+/// `ICERS_KITTY_KEYBOARD=1` forces the protocol on, `ICERS_KITTY_KEYBOARD=0` forces",
+              "classification": "identity-only",
+              "change_indices": [
+                1
+              ],
+              "reviewed": true
+            },
+            {
+              "header": "@@ -57 +57 @@ fn keyboard_protocol_enabled() -> bool {",
+              "old_start": 57,
+              "old_count": 1,
+              "active_start": 57,
+              "active_count": 1,
+              "section": " fn keyboard_protocol_enabled() -> bool {",
+              "unified_diff": "-    if let Some(value) = std::env::var_os(\"ICE_KITTY_KEYBOARD\") {\n+    if let Some(value) = std::env::var_os(\"ICERS_KITTY_KEYBOARD\") {",
+              "classification": "behavioral",
+              "change_indices": [
+                2
+              ],
+              "reviewed": true
+            },
+            {
+              "header": "@@ -629 +629 @@ mod tests {",
+              "old_start": 629,
+              "old_count": 1,
+              "active_start": 629,
+              "active_count": 1,
+              "section": " mod tests {",
+              "unified_diff": "-        // losing Shift+Enter; `ICE_KITTY_KEYBOARD=0` is the escape hatch.\n+        // losing Shift+Enter; `ICERS_KITTY_KEYBOARD=0` is the escape hatch.",
+              "classification": "identity-only",
+              "change_indices": [
+                3
+              ],
+              "reviewed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-timing",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Captured hunk, RPC lane review, direct active source",
+      "finding": "Native timing OnceLock reads ICERS_TIMING and accepts exactly 1; the TypeScript contract remains ICE_TIMING, so the old wording 'same exact' key must also change.",
+      "hunk_evidence": [
+        {
+          "file": "crates/ice-cli/src/timings.rs",
+          "active_file": "crates/ice-cli/src/timings.rs",
+          "old_sha256": "1fdf71c1c0b9ead04dac50bd2623163c88bac6a569c4adcf8682cc896eef6943",
+          "active_sha256": "e2e03b321989ab2bdd1fed625b31beca9f0abd2103913e8e3b9652d69e7f03b3",
+          "diff_sha256": "65efef63ba23f3750981e906412f40f5bdc68e013c328075024f871a913d973d",
+          "hunks": [
+            "@@ -4 +4 @@\n-//! the `ICE_TIMING=1` environment variable; disabled builds pay only a single\n+//! the `ICERS_TIMING=1` environment variable; disabled builds pay only a single\n",
+            "@@ -14 +14 @@ use std::time::Instant;\n-/// True when `ICE_TIMING=1`. Evaluated once.\n+/// True when `ICERS_TIMING=1`. Evaluated once.\n",
+            "@@ -18 +18 @@ pub fn enabled() -> bool {\n-        std::env::var(\"ICE_TIMING\")\n+        std::env::var(\"ICERS_TIMING\")\n",
+            "@@ -82 +82 @@ pub fn time(label: impl Into<String>, namespace: TimingNamespace) {\n-/// Print every accumulated namespace to stderr. No-op unless `ICE_TIMING=1`.\n+/// Print every accumulated namespace to stderr. No-op unless `ICERS_TIMING=1`.\n",
+            "@@ -118 +118 @@ mod tests {\n-        if std::env::var_os(\"ICE_TIMING\").is_none() {\n+        if std::env::var_os(\"ICERS_TIMING\").is_none() {\n"
+          ]
+        }
+      ],
+      "direct_reads": [
+        {
+          "file": "crates/ice-cli/src/timings.rs",
+          "range": [
+            14,
+            25
+          ],
+          "sha256": "e2e03b321989ab2bdd1fed625b31beca9f0abd2103913e8e3b9652d69e7f03b3",
+          "text": "14 | /// True when `ICERS_TIMING=1`. Evaluated once.\n15 | pub fn enabled() -> bool {\n16 |     static ENABLED: OnceLock<bool> = OnceLock::new();\n17 |     *ENABLED.get_or_init(|| {\n18 |         std::env::var(\"ICERS_TIMING\")\n19 |             .map(|v| v == \"1\")\n20 |             .unwrap_or(false)\n21 |     })\n22 | }\n23 | \n24 | #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\n25 | pub enum TimingNamespace {",
+          "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+        }
+      ]
+    },
+    {
+      "id": "native-agent-dir",
+      "coordinate_space": "already-active-source-proof",
+      "basis": "Direct active config source read",
+      "finding": "CONFIG_DIR_NAME=.icers, CONFIG_DIR_ENV=ICERS_CODING_AGENT_DIR; agent_dir() returns an absolute explicit override or home/.icers/agent. This grounds port advice and does not claim a Blackhole implementation exists.",
+      "direct_reads": [
+        {
+          "file": "crates/ice-cli/src/config.rs",
+          "range": [
+            42,
+            108
+          ],
+          "sha256": "44b07f8b3e3708bb04963678efa527928815696174bba870cfba34aa8bc02510",
+          "text": " 42 | /// The config directory name under the home dir.\n 43 | pub const CONFIG_DIR_NAME: &str = \".icers\";\n 44 | \n 45 | /// Env var that overrides the whole config dir. Absolute path; relative\n 46 | /// values are rejected.\n 47 | pub const CONFIG_DIR_ENV: &str = \"ICERS_CODING_AGENT_DIR\";\n 48 | \n 49 | /// The provider id under which `icers auth login` stores the Anthropic key.\n 50 | /// Mirrors upstream's fixed `anthropic` provider id.\n 51 | pub const DEFAULT_PROVIDER_ID: &str = \"anthropic\";\n 52 | \n 53 | // ---------------------------------------------------------------------------\n 54 | // Errors\n 55 | // ---------------------------------------------------------------------------\n 56 | \n 57 | /// A config-layer error (path resolution, IO, JSON). Surfaced to the user by\n 58 | /// the `auth` subcommand / `provider::resolve`.\n 59 | #[derive(Debug, thiserror::Error)]\n 60 | pub enum ConfigError {\n 61 |     #[error(\"could not resolve home directory (set {env} to override)\")]\n 62 |     NoHomeDir { env: &'static str },\n 63 |     #[error(\"config dir override {env}={val:?} is not an absolute path\")]\n 64 |     RelativeOverride { env: &'static str, val: String },\n 65 |     #[error(\"could not read {path}: {source}\")]\n 66 |     Read {\n 67 |         path: PathBuf,\n 68 |         #[source]\n 69 |         source: std::io::Error,\n 70 |     },\n 71 |     #[error(\"could not write {path}: {source}\")]\n 72 |     Write {\n 73 |         path: PathBuf,\n 74 |         #[source]\n 75 |         source: std::io::Error,\n 76 |     },\n 77 |     #[error(\"invalid JSON in {path}: {source}\")]\n 78 |     Json {\n 79 |         path: PathBuf,\n 80 |         #[source]\n 81 |         source: serde_json::Error,\n 82 |     },\n 83 | }\n 84 | \n 85 | // ---------------------------------------------------------------------------\n 86 | // Path resolution\n 87 | // ---------------------------------------------------------------------------\n 88 | \n 89 | /// The icers config directory (`~/.icers/agent` by default, `ICERS_CODING_AGENT_DIR`\n 90 | /// override). Creates nothing — purely a path computation. The `agent/` layer\n 91 | /// is `join(homedir(), CONFIG_DIR_NAME, \"agent\")`. The env override points at\n 92 | /// the agent dir itself.\n 93 | pub fn agent_dir() -> Result<PathBuf, ConfigError> {\n 94 |     if let Some(val) = std::env::var_os(CONFIG_DIR_ENV) {\n 95 |         let p = PathBuf::from(&val);\n 96 |         if !p.is_absolute() {\n 97 |             return Err(ConfigError::RelativeOverride {\n 98 |                 env: CONFIG_DIR_ENV,\n 99 |                 val: val.to_string_lossy().into_owned(),\n100 |             });\n101 |         }\n102 |         return Ok(p);\n103 |     }\n104 |     let home = dirs::home_dir().ok_or(ConfigError::NoHomeDir {\n105 |         env: CONFIG_DIR_ENV,\n106 |     })?;\n107 |     Ok(home.join(CONFIG_DIR_NAME).join(\"agent\"))\n108 | }",
+          "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+        }
+      ]
+    }
+  ],
+  "spec_candidate_dispositions": [
+    {
+      "area": "session",
+      "id": "SESSION-023",
+      "field": "rust",
+      "disposition": "replace-current-native-identity",
+      "reason": "Update the current native session-identity variable; preserve the TypeScript tool-environment facts and the native ToolCallContext behavior."
+    },
+    {
+      "area": "session",
+      "id": "SESSION-030",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-001",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-002",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-003",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-003",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-005",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-005",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "ice.subagents denotes the absent TypeScript scoped-settings contract."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-010",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-010",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "ice.hooks denotes the absent TypeScript configuration/registry contract."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-012",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-014",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-025",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-030",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-033",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-034",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-034",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-034",
+      "field": "rust",
+      "disposition": "replace-current-native-identity",
+      "reason": "Update the native conditional DLL-test environment variable while retaining the absent companion-package limitation."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-035",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-035",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-002",
+      "field": "mechanism",
+      "disposition": "preserve-historical-theme-identity",
+      "reason": "lavender-ice is the historical custom theme name; this audit does not inspect or rename private theme state."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-050",
+      "field": "rust",
+      "disposition": "replace-current-native-identity",
+      "reason": "Update the native editor override key. Preserve the unchanged ice-draft- prefix, caller timing, cursor limitations and error behavior."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-072",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-072",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-074",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-078",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-078",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-208",
+      "field": "rust",
+      "disposition": "replace-current-native-identity",
+      "reason": "Update the native keyboard-protocol override key; keep all existing protocol/fallback behavior and TypeScript terminal keys."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-209",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-209",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-216",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-216",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tui",
+      "id": "TUI-221",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-002",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "tools",
+      "id": "TOOLS-002",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-001",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "ice.goals.host and ICE guard identify the TypeScript Goals/guard contract searched for in native code."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-003",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-004",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-022",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-022",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-025",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-001",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-001",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-001",
+      "field": "dependency_text",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-002",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-002",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-002",
+      "field": "rust",
+      "disposition": "replace-current-native-identity",
+      "reason": "Native and TypeScript timing gates now have different names, although both still use the exact value 1."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-001",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-001",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-002",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-002",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-003",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-006",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-035",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-045",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-046",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-047",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-048",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-049",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-051",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-052",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-053",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-054",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-055",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-056",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-057",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-058",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-058",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-062",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-063",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-068",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": null,
+      "field": "appendix",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-001",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-001",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-002",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-003",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-003",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-005",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-006",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-023",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-039",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-040",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-041",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-041",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "ICE_PORTING.md is an existing repository source filename, not the native executable identity."
+    },
+    {
+      "area": "subagents",
+      "id": "SUB-042",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-001",
+      "field": "what",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-001",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-003",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-004",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-004",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-006",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-008",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-008",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-012",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-015",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-016",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-017",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-018",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-021",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-023",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-023",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-024",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "safe-verify",
+      "id": "SAFE-025",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "observability",
+      "id": "OBS-016",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-021",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-035",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-043",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-059",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-066",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-067",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "cognee",
+      "id": "COG-067",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-002",
+      "field": "port",
+      "disposition": "replace-current-native-identity",
+      "reason": "Make the proposed native port use the current shared Rust configuration identity; preserve the TypeScript source path and override contract in mechanism/interfaces."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-011",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-022",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-031",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-032",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-033",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-033",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-034",
+      "field": "rust",
+      "disposition": "preserve-named-typescript-absence-or-source-file",
+      "reason": "The Rust comparison names an absent TypeScript ICE guard, Goals, receipts, launcher or record-schema contract; it does not describe the current native executable or native directory."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-035",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-035",
+      "field": "interfaces",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    },
+    {
+      "area": "blackhole",
+      "id": "BLACK-036",
+      "field": "mechanism",
+      "disposition": "preserve-typescript-contract",
+      "reason": "The reviewed occurrence describes TypeScript behavior, identifiers, interface literals, paths or source examples; retain it when the native identity changes."
+    }
+  ],
+  "manifest_candidate_dispositions": [
+    {
+      "area": "session",
+      "pointer": "/limitations/1",
+      "disposition": "preserve-explicit-inspection-limit",
+      "reason": "The old and active user directories are both named to state that neither was inspected."
+    },
+    {
+      "area": "session",
+      "pointer": "/dependency_request_history/12/capability",
+      "disposition": "preserve-source-filename",
+      "reason": "ICE_PORTING.md is the literal first-pass report filename, not the executable identity."
+    },
+    {
+      "area": "session",
+      "pointer": "/dependency_resolutions/12/capability",
+      "disposition": "preserve-source-filename",
+      "reason": "ICE_PORTING.md is the literal first-pass report filename, not the executable identity."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/0/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/3/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/4/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/5/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/6/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/7/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/9/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/10/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/22/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/23/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/24/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/25/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/26/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/27/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/28/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/29/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/30/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/31/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/32/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/33/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/34/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/35/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/36/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/58/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/59/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/60/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/61/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/62/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/63/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/64/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/65/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/66/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/67/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/68/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/69/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/70/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/71/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/72/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/73/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/74/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/75/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/76/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/77/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/78/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/79/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/80/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/81/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/82/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/83/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/84/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/85/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/86/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/87/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/88/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/89/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/90/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/91/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/92/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/93/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/94/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/95/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/96/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/98/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/99/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/100/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/101/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/102/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/103/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/104/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/105/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/106/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/107/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/108/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/109/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/110/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/111/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/153/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/154/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/155/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/165/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/166/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/167/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/168/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/169/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/170/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/171/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/172/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/173/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/174/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/175/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/186/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/187/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/192/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/218/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/23/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/24/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/25/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/26/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/27/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/34/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/35/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/36/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/37/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/38/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/40/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/41/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/42/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/43/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/44/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/45/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/46/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/47/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/50/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/51/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/52/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/56/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/58/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/59/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/60/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/61/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/62/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/63/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/64/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/65/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/66/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/67/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/95/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/117/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/118/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/119/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/120/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/121/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/122/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/123/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/candidate_exclusions/124/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/0/finding",
+      "disposition": "replace-current-native-identity",
+      "reason": "Current native conditional DLL tests use ICERS_TEST_SUBAGENT_LIBRARY."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/0/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/1/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/2/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/3/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/4/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/5/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/6/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/7/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/8/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/9/finding",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/9/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/10/finding",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/10/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/11/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/11/evidence/4",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/12/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/open_questions/0/question",
+      "disposition": "replace-current-native-identity",
+      "reason": "Current native conditional DLL tests use ICERS_TEST_SUBAGENT_LIBRARY."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/surfaces/156/ice_ref",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/read_evidence/81/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/claims/9/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "subagents",
+      "pointer": "/supplemental_ledger/0/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/549/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/555/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/556/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/556/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/688/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/689/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/690/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/691/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/692/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/693/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/693/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/694/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/696/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/925/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/925/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/926/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/926/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/928/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/928/notes",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/surfaces/1134/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/0/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/5/evidence/12",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/9/finding",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/13/unverified/0",
+      "disposition": "preserve-historical-private-theme-limit",
+      "reason": "The historical lavender-ice theme and private import state remain outside source-only scope."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/0/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/1/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/2/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/3/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/4/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/5/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/6/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/7/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/8/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/9/report_excerpt",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/9/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/9/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/10/report_excerpt",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/10/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/10/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/11/report_excerpt",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/11/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/11/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/12/report_excerpt",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/12/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/12/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/13/report_excerpt",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/13/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/claims/13/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/read_evidence/439/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tui",
+      "pointer": "/source_baseline/first_pass/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/0/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/1/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/2/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/3/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/4/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/5/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/6/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/7/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/8/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "agent",
+      "pointer": "/candidate_exclusions/9/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/surfaces/22/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/surfaces/23/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/surfaces/24/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/surfaces/25/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/surfaces/26/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/0/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/1/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/2/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/3/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/4/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/5/evidence/0",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "tools",
+      "pointer": "/read_evidence/100/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "tools",
+      "pointer": "/claims/4/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "safe-verify",
+      "pointer": "/candidate_exclusions/3/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "safe-verify",
+      "pointer": "/candidate_exclusions/4/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "safe-verify",
+      "pointer": "/candidate_exclusions/5/reason",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "safe-verify",
+      "pointer": "/claims/0/finding",
+      "disposition": "preserve-typescript-absence-contract",
+      "reason": "ICE guard names the missing TypeScript guard state/command contract, not a present native binary."
+    },
+    {
+      "area": "safe-verify",
+      "pointer": "/claims/19/evidence/2",
+      "disposition": "preserve-source-reference",
+      "reason": "This is an existing source-reference filename/coordinate, including ICE_PORTING.md or the TypeScript ice.ts entrypoint. Root separately remaps current native citations."
+    },
+    {
+      "area": "observability",
+      "pointer": "/surfaces/13/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "observability",
+      "pointer": "/surfaces/14/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "observability",
+      "pointer": "/surfaces/15/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "observability",
+      "pointer": "/open_questions/0/question",
+      "disposition": "preserve-already-current-native-question",
+      "reason": "The question already says icers; ice.dev is explicitly the TypeScript service choice and remains unchanged."
+    },
+    {
+      "area": "observability",
+      "pointer": "/read_evidence/37/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/19/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/20/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/21/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/22/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/24/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/25/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/26/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/27/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/28/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/29/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/surfaces/34/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/claims/7/finding",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/claims/8/finding",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "cognee",
+      "pointer": "/claims/11/claim",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/surfaces/1/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/surfaces/2/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/surfaces/3/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/surfaces/4/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/surfaces/5/name",
+      "disposition": "preserve-typescript-contract",
+      "reason": "Reviewed as a TypeScript surface, source contract or candidate disposition; the native identity change does not rename this fact."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/0/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/1/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/2/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/3/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/4/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/5/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/6/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    },
+    {
+      "area": "blackhole",
+      "pointer": "/claims/7/first_pass_source/path",
+      "disposition": "preserve-historical-quotation-or-source",
+      "reason": "Original claims, report excerpts, first-pass source paths and source-file identities remain historical/TypeScript evidence."
+    }
+  ],
+  "preservation_notes": [
+    "TypeScript ICE_* keys, ice.subagents/ice.hooks interfaces, .ice paths, CLI spelling, Cognee dataset literals and original claims remain unchanged.",
+    "Rust crate/package/module identities ice-*/ice_* and plugin C symbols remain unchanged.",
+    "Native external-editor temp prefix ice-draft- and the source filename ICE_PORTING.md are deliberately unchanged.",
+    "No current native ice.value prose existed in these nine accepted specs/manifests that required a mechanical substitution. The compatibility issue is recorded separately with the old discriminator preserved as historical native data.",
+    "All connector redactions, cache_stats.rs line-95 limitation and sessions.rs line-627 evidence conflict remain preserved."
+  ],
+  "proposed_catalog_object": {
+    "id": "RUST-069",
+    "entry_ids": [],
+    "title": "Renamed session-value discriminator omits historical native values during restoration",
+    "severity": "medium; conditional session-value restoration regression",
+    "evidence_level": "source-read; not reproduced",
+    "sources": [
+      "rust:crates/ice-harness/src/session/values.rs:31-82",
+      "rust:crates/ice-harness/src/session/values.rs:119-147",
+      "rust:crates/ice-harness/src/session/types.rs:431-439",
+      "rust:crates/ice-harness/src/session/jsonl/codec.rs:285-329",
+      "rust:crates/ice-harness/src/session/jsonl/storage.rs:153-239",
+      "rust:crates/ice-harness/src/session/storage.rs:359-383",
+      "rust:crates/ice-harness/src/session/state.rs:155-209",
+      "rust:crates/ice-harness/src/session/state.rs:582-608",
+      "rust:crates/ice-harness/src/session/session.rs:377-393",
+      "rust:crates/ice-cli/src/agent_session.rs:282-298",
+      "rust:crates/ice-cli/src/interactive_tui.rs:917-928"
+    ],
+    "behavior": "When a historical native session still contains customType='ice.value' records and no external migration has rewritten them before loading, active SessionValues omits those records from its latest-wins value view. The underlying generic custom entries can remain in the session log. A concrete native caller loads display.hide_thinking through this API; under that condition, an older saved session preference is not restored and the existing settings default remains.",
+    "technical_explanation": "The local identity change replaces VALUE_CUSTOM_TYPE='ice.value' with 'icers.value' at values.rs:32. SessionValues::load passes the new discriminator into an exact custom_type storage query at lines 43-53; from_entries also skips every entry whose custom_type differs from that constant at lines 57-82. SessionValueWriter appends only the new discriminator at lines 119-147. A complete active crates search for ice.value, icers.value and VALUE_CUSTOM_TYPE found only the new constant/example, its two read filters, its writer and the module re-export. Both production direct callers found by the scoped caller search pass harness.session() directly to load. In the bounded native JSONL path, the custom-entry decoder copies the raw customType string, replay changes parent_id rather than the discriminator, and common query matching compares custom_type exactly. No historical alias or rewrite appears in that inspected path.",
+    "assumptions": "Requires historical raw native ice.value records to reach the active API without an external migration. This is source-level reasoning, not a reproduced runtime result. No real sessions or user configuration directories were inspected; no application, test, terminal or migration was executed. External import/migration utilities and arbitrary third-party SessionStorage implementations were not exhaustively inspected. This finding concerns values omitted from the projected view, not deletion of the generic log records.",
+    "parity_relation": "Active native compatibility regression introduced by identity rebranding; not a new missing TypeScript-parity requirement. The inspected TypeScript gap entries do not establish a precise existing SESSION owner for the generic native SessionValues API, so entry_ids is intentionally empty. The existing native read/write API and the remaining v4 durability behavior stay credited.",
+    "provenance_status": "introduced-by-local-rebrand-in-active-checkout",
+    "provenance": "Active line-32 blame identifies cae01ac2ff307987a46cde130ef9c0d3c59c4381 (chore(ice): give the Rust build its own icers identity). A bounded git show for values.rs confirms the executable ice.value→icers.value replacement and its example update. The frozen old file has the historical discriminator and the active file has the new one. Local git merge-base --is-ancestor returns exit 1 for this introducing commit against the recorded upstream commit; this establishes that this commit is not an ancestor of that upstream reference, not a complete independent upstream behavior comparison.",
+    "provenance_targets": [
+      {
+        "file": "crates/ice-harness/src/session/values.rs",
+        "range": [
+          32,
+          32
+        ]
+      }
+    ],
+    "provenance_evidence": "evidence/lane-exports-sub-session-native-prose-replacements.json",
+    "provenance_review": {
+      "commit": "cae01ac2ff307987a46cde130ef9c0d3c59c4381",
+      "active_commit": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+      "old_commit": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+      "method": "Read-only line blame, bounded introducing diff and local commit-ancestry query, combined with captured old/active file hashes and bounded native caller/decode/replay/query source inspection.",
+      "source_trace": "evidence/lane-exports-sub-session-native-value-compatibility.json",
+      "source_trace_sha256": "aaca123d8714d7b116cb87c0eb018576aef000812f7f5848603de7718077ec19"
+    }
+  },
+  "catalog_insertion": {
+    "coordinate_space": "already-active",
+    "root_reserved_id": "RUST-069",
+    "current_catalog_snapshot_sha256": "42b2eca0a025b78b80f274b1f2f37633030977897752e5fbf4c1c57f5f67b5cc",
+    "current_provenance_snapshot_sha256": "19d87cfd2d6d69779f67c92b54baac27b8648a22118a5d1087fe69c8523e170b",
+    "apply_after_existing_citation_remap": true,
+    "owner_note": "No unrelated TUI-050 external-editor ownership is assigned to this session-value finding; the concrete visibility-restoration caller is cited directly."
+  },
+  "proposed_provenance_addendum": {
+    "id": "RUST-069",
+    "entry_ids": [],
+    "file": "crates/ice-harness/src/session/values.rs",
+    "range": [
+      32,
+      32
+    ],
+    "current_sha256": "ef71cc410f6e1e52e14e179ff9328579ea3677cbd0861c6c3341818378084ae4",
+    "current_excerpt": "32 | pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";",
+    "old_sha256": "02568727fe2fa768f3e43237eec504ff68cc9dde133e8cc28ea6f6ac92d9342e",
+    "old_excerpt": "32 | pub const VALUE_CUSTOM_TYPE: &str = \"ice.value\";",
+    "blame_commits": [
+      {
+        "sha": "cae01ac2ff307987a46cde130ef9c0d3c59c4381",
+        "in_upstream": false
+      }
+    ],
+    "upstream_matches": [],
+    "upstream_matches_limitation": "No new upstream line comparison was performed for this addendum. in_upstream=false means the observed introducing commit is not an ancestor of the recorded upstream reference.",
+    "coordinate_space": "already-active",
+    "old_commit": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "active_commit": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+    "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+    "git_evidence": [
+      "native_value_git.blame",
+      "native_value_git.introducing_diff",
+      "native_value_git.ancestry"
+    ]
+  },
+  "native_value_git": {
+    "blame": {
+      "root": "/home/mewtwo/Zykairotis/ice-rust",
+      "command": "git blame -L 32,32 1891337558105fb8322c79617e5a03d98c1b2c3a -- crates/ice-harness/src/session/values.rs",
+      "exit_code": 0,
+      "stdout": "cae01ac2 (Zykairotis 2026-10-19 22:30:04 +0300 32) pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";\n",
+      "stderr": "",
+      "truncated": false,
+      "timed_out": false
+    },
+    "introducing_diff": {
+      "root": "/home/mewtwo/Zykairotis/ice-rust",
+      "command": "git show --format='%H%n%s' --no-ext-diff --unified=3 cae01ac2 -- crates/ice-harness/src/session/values.rs",
+      "exit_code": 0,
+      "stdout": "cae01ac2ff307987a46cde130ef9c0d3c59c4381\nchore(ice): give the Rust build its own icers identity\n\ndiff --git a/crates/ice-harness/src/session/values.rs b/crates/ice-harness/src/session/values.rs\nindex 5998d5a..7facbbe 100644\n--- a/crates/ice-harness/src/session/values.rs\n+++ b/crates/ice-harness/src/session/values.rs\n@@ -9,7 +9,7 @@\n //! Shape of a value entry:\n //!\n //! ```jsonc\n-//! { \"type\": \"custom\", \"customType\": \"ice.value\", \"data\": { \"key\": \"…\", \"value\": … } }\n+//! { \"type\": \"custom\", \"customType\": \"icers.value\", \"data\": { \"key\": \"…\", \"value\": … } }\n //! ```\n //!\n //! A `null` `value` is a tombstone: the key is treated as deleted from that\n@@ -29,7 +29,7 @@ use crate::session::session::Session;\n use crate::session::types::{Entry, EntryOrder, EntryQuery};\n \n /// The reserved `customType` that marks a session value entry.\n-pub const VALUE_CUSTOM_TYPE: &str = \"ice.value\";\n+pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";\n \n /// A loaded, latest-wins view of the session's values. Cheap to clone.\n #[derive(Debug, Clone, Default, PartialEq)]\n",
+      "stderr": "",
+      "truncated": false,
+      "timed_out": false
+    },
+    "ancestry": {
+      "root": "/home/mewtwo/Zykairotis/ice-rust",
+      "command": "git merge-base --is-ancestor cae01ac2ff307987a46cde130ef9c0d3c59c4381 0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "",
+      "truncated": false,
+      "timed_out": false
+    }
+  },
+  "native_value_finding": {
+    "classification": "behavioral",
+    "title": "Historical native session-value discriminator no longer accepted by the value API",
+    "old_discriminator": "ice.value",
+    "active_discriminator": "icers.value",
+    "constant_range": "crates/ice-harness/src/session/values.rs:31-32",
+    "read_filter_range": "crates/ice-harness/src/session/values.rs:43-53",
+    "strict_projection_range": "crates/ice-harness/src/session/values.rs:57-82",
+    "write_range": "crates/ice-harness/src/session/values.rs:119-147",
+    "confirmation": "Under the stated condition, active SessionValues::load queries only icers.value and SessionValues::from_entries skips every other discriminator. SessionValueWriter persists only icers.value. The inspected native JSONL decode/replay path preserves the historical customType string, and the storage matcher uses exact equality. Therefore a historical live key is omitted from the value view; generic custom entries remain in the log.",
+    "alias_status": "No historical ice.value alias appears in the inspected production API or complete active crates literal/constant search.",
+    "limits": [
+      "Source-derived conditional compatibility finding; no runtime regression test was run.",
+      "Bounded trace covers both production direct callers found by the active crates search, JSONL decode/replay, Session query delegation, the common state matcher, and exact value projection.",
+      "External import/migration tools, arbitrary third-party SessionStorage implementations, and real historical files were not exhaustively inspected.",
+      "No real sessions or user configuration directories were read.",
+      "Existing transport redactions and sessions.rs:627 conflict remain untouched."
+    ],
+    "condition": "Historical native session entries still carry customType ice.value and have not been externally migrated before the active value API loads them.",
+    "user_visible_example": "interactive_tui.rs:917-928 reads display.hide_thinking through this API and leaves the settings default unchanged when absent. Under the stated historical-record condition, the saved session preference is not restored. agent_session.rs:282-298 also exposes reads/writes through the same API."
+  },
+  "native_value_source_trace": {
+    "artifact": "evidence/lane-exports-sub-session-native-value-compatibility.json",
+    "sha256": "aaca123d8714d7b116cb87c0eb018576aef000812f7f5848603de7718077ec19",
+    "old_source": {
+      "file": "crates/ice-harness/src/session/values.rs",
+      "range": [
+        24,
+        148
+      ],
+      "sha256": "02568727fe2fa768f3e43237eec504ff68cc9dde133e8cc28ea6f6ac92d9342e",
+      "text": " 24 | \n 25 | use serde_json::Value;\n 26 | \n 27 | use crate::error::{SessionError, SessionResult};\n 28 | use crate::session::session::Session;\n 29 | use crate::session::types::{Entry, EntryOrder, EntryQuery};\n 30 | \n 31 | /// The reserved `customType` that marks a session value entry.\n 32 | pub const VALUE_CUSTOM_TYPE: &str = \"ice.value\";\n 33 | \n 34 | /// A loaded, latest-wins view of the session's values. Cheap to clone.\n 35 | #[derive(Debug, Clone, Default, PartialEq)]\n 36 | pub struct SessionValues {\n 37 |     values: BTreeMap<String, Value>,\n 38 | }\n 39 | \n 40 | impl SessionValues {\n 41 |     /// Load every value from the session, resolving latest-wins and dropping\n 42 |     /// tombstoned keys.\n 43 |     pub async fn load(session: &Session) -> SessionResult<Self> {\n 44 |         let entries = session\n 45 |             .find_entries(&EntryQuery {\n 46 |                 entry_type: Some(\"custom\"),\n 47 |                 custom_type: Some(VALUE_CUSTOM_TYPE.to_string()),\n 48 |                 order: Some(EntryOrder::OldestFirst),\n 49 |                 limit: None,\n 50 |                 cursor: None,\n 51 |             })\n 52 |             .await?;\n 53 |         Ok(Self::from_entries(&entries))\n 54 |     }\n 55 | \n 56 |     /// Resolve a value set from already-fetched entries (oldest first).\n 57 |     pub fn from_entries(entries: &[Entry]) -> Self {\n 58 |         let mut values = BTreeMap::new();\n 59 |         for entry in entries {\n 60 |             let Entry::Custom(custom) = entry else {\n 61 |                 continue;\n 62 |             };\n 63 |             if custom.custom_type != VALUE_CUSTOM_TYPE {\n 64 |                 continue;\n 65 |             }\n 66 |             let Some(data) = &custom.data else {\n 67 |                 continue;\n 68 |             };\n 69 |             let Some(key) = data.get(\"key\").and_then(Value::as_str) else {\n 70 |                 continue;\n 71 |             };\n 72 |             match data.get(\"value\") {\n 73 |                 // Tombstone: delete from this point forward.\n 74 |                 Some(Value::Null) | None => {\n 75 |                     values.remove(key);\n 76 |                 }\n 77 |                 Some(value) => {\n 78 |                     values.insert(key.to_string(), value.clone());\n 79 |                 }\n 80 |             }\n 81 |         }\n 82 |         Self { values }\n 83 |     }\n 84 | \n 85 |     /// Read a value.\n 86 |     pub fn get(&self, key: &str) -> Option<&Value> {\n 87 |         self.values.get(key)\n 88 |     }\n 89 | \n 90 |     /// Read a typed value, returning `None` when absent or the wrong shape.\n 91 |     pub fn get_as<T: serde::de::DeserializeOwned>(&self, key: &str) -> Option<T> {\n 92 |         let value = self.values.get(key)?;\n 93 |         serde_json::from_value(value.clone()).ok()\n 94 |     }\n 95 | \n 96 |     /// Every live key/value pair, ordered by key.\n 97 |     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {\n 98 |         self.values.iter().map(|(k, v)| (k.as_str(), v))\n 99 |     }\n100 | \n101 |     /// The number of live keys.\n102 |     pub fn len(&self) -> usize {\n103 |         self.values.len()\n104 |     }\n105 | \n106 |     /// Whether there are no live keys.\n107 |     pub fn is_empty(&self) -> bool {\n108 |         self.values.is_empty()\n109 |     }\n110 | }\n111 | \n112 | /// Durable writer for session values. Each write appends one custom entry, so\n113 | /// the operation is crash-safe and ordering-preserving.\n114 | #[derive(Clone)]\n115 | pub struct SessionValueWriter {\n116 |     session: Session,\n117 | }\n118 | \n119 | impl SessionValueWriter {\n120 |     pub fn new(session: Session) -> Self {\n121 |         Self { session }\n122 |     }\n123 | \n124 |     /// `setValue(key, value)` — persist a value (latest-wins).\n125 |     pub async fn set(&self, key: &str, value: Value) -> SessionResult<String> {\n126 |         self.append(key, Some(value)).await\n127 |     }\n128 | \n129 |     /// `deleteValue(key)` — persist a tombstone.\n130 |     pub async fn delete(&self, key: &str) -> SessionResult<String> {\n131 |         self.append(key, None).await\n132 |     }\n133 | \n134 |     async fn append(&self, key: &str, value: Option<Value>) -> SessionResult<String> {\n135 |         if key.trim().is_empty() {\n136 |             return Err(SessionError::invalid_payload(\n137 |                 \"session value key must not be empty\",\n138 |             ));\n139 |         }\n140 |         let data = serde_json::json!({\n141 |             \"key\": key,\n142 |             \"value\": value.unwrap_or(Value::Null),\n143 |         });\n144 |         self.session\n145 |             .append_custom_entry(VALUE_CUSTOM_TYPE, Some(data))\n146 |             .await\n147 |     }\n148 | }",
+      "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+    },
+    "active_source": {
+      "file": "crates/ice-harness/src/session/values.rs",
+      "range": [
+        24,
+        156
+      ],
+      "sha256": "ef71cc410f6e1e52e14e179ff9328579ea3677cbd0861c6c3341818378084ae4",
+      "text": " 24 | \n 25 | use serde_json::Value;\n 26 | \n 27 | use crate::error::{SessionError, SessionResult};\n 28 | use crate::session::session::Session;\n 29 | use crate::session::types::{Entry, EntryOrder, EntryQuery};\n 30 | \n 31 | /// The reserved `customType` that marks a session value entry.\n 32 | pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";\n 33 | \n 34 | /// A loaded, latest-wins view of the session's values. Cheap to clone.\n 35 | #[derive(Debug, Clone, Default, PartialEq)]\n 36 | pub struct SessionValues {\n 37 |     values: BTreeMap<String, Value>,\n 38 | }\n 39 | \n 40 | impl SessionValues {\n 41 |     /// Load every value from the session, resolving latest-wins and dropping\n 42 |     /// tombstoned keys.\n 43 |     pub async fn load(session: &Session) -> SessionResult<Self> {\n 44 |         let entries = session\n 45 |             .find_entries(&EntryQuery {\n 46 |                 entry_type: Some(\"custom\"),\n 47 |                 custom_type: Some(VALUE_CUSTOM_TYPE.to_string()),\n 48 |                 order: Some(EntryOrder::OldestFirst),\n 49 |                 limit: None,\n 50 |                 cursor: None,\n 51 |             })\n 52 |             .await?;\n 53 |         Ok(Self::from_entries(&entries))\n 54 |     }\n 55 | \n 56 |     /// Resolve a value set from already-fetched entries (oldest first).\n 57 |     pub fn from_entries(entries: &[Entry]) -> Self {\n 58 |         let mut values = BTreeMap::new();\n 59 |         for entry in entries {\n 60 |             let Entry::Custom(custom) = entry else {\n 61 |                 continue;\n 62 |             };\n 63 |             if custom.custom_type != VALUE_CUSTOM_TYPE {\n 64 |                 continue;\n 65 |             }\n 66 |             let Some(data) = &custom.data else {\n 67 |                 continue;\n 68 |             };\n 69 |             let Some(key) = data.get(\"key\").and_then(Value::as_str) else {\n 70 |                 continue;\n 71 |             };\n 72 |             match data.get(\"value\") {\n 73 |                 // Tombstone: delete from this point forward.\n 74 |                 Some(Value::Null) | None => {\n 75 |                     values.remove(key);\n 76 |                 }\n 77 |                 Some(value) => {\n 78 |                     values.insert(key.to_string(), value.clone());\n 79 |                 }\n 80 |             }\n 81 |         }\n 82 |         Self { values }\n 83 |     }\n 84 | \n 85 |     /// Read a value.\n 86 |     pub fn get(&self, key: &str) -> Option<&Value> {\n 87 |         self.values.get(key)\n 88 |     }\n 89 | \n 90 |     /// Read a typed value, returning `None` when absent or the wrong shape.\n 91 |     pub fn get_as<T: serde::de::DeserializeOwned>(&self, key: &str) -> Option<T> {\n 92 |         let value = self.values.get(key)?;\n 93 |         serde_json::from_value(value.clone()).ok()\n 94 |     }\n 95 | \n 96 |     /// Every live key/value pair, ordered by key.\n 97 |     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {\n 98 |         self.values.iter().map(|(k, v)| (k.as_str(), v))\n 99 |     }\n100 | \n101 |     /// The number of live keys.\n102 |     pub fn len(&self) -> usize {\n103 |         self.values.len()\n104 |     }\n105 | \n106 |     /// Whether there are no live keys.\n107 |     pub fn is_empty(&self) -> bool {\n108 |         self.values.is_empty()\n109 |     }\n110 | }\n111 | \n112 | /// Durable writer for session values. Each write appends one custom entry, so\n113 | /// the operation is crash-safe and ordering-preserving.\n114 | #[derive(Clone)]\n115 | pub struct SessionValueWriter {\n116 |     session: Session,\n117 | }\n118 | \n119 | impl SessionValueWriter {\n120 |     pub fn new(session: Session) -> Self {\n121 |         Self { session }\n122 |     }\n123 | \n124 |     /// `setValue(key, value)` — persist a value (latest-wins).\n125 |     pub async fn set(&self, key: &str, value: Value) -> SessionResult<String> {\n126 |         self.append(key, Some(value)).await\n127 |     }\n128 | \n129 |     /// `deleteValue(key)` — persist a tombstone.\n130 |     pub async fn delete(&self, key: &str) -> SessionResult<String> {\n131 |         self.append(key, None).await\n132 |     }\n133 | \n134 |     async fn append(&self, key: &str, value: Option<Value>) -> SessionResult<String> {\n135 |         if key.trim().is_empty() {\n136 |             return Err(SessionError::invalid_payload(\n137 |                 \"session value key must not be empty\",\n138 |             ));\n139 |         }\n140 |         let data = serde_json::json!({\n141 |             \"key\": key,\n142 |             \"value\": value.unwrap_or(Value::Null),\n143 |         });\n144 |         self.session\n145 |             .append_custom_entry(VALUE_CUSTOM_TYPE, Some(data))\n146 |             .await\n147 |     }\n148 | }\n149 | \n150 | #[cfg(test)]\n151 | mod tests {\n152 |     use super::*;\n153 |     use crate::session::memory::{InMemorySessionStorage, SystemClock};\n154 |     use crate::session::session::{DefaultIdGenerator, Session};\n155 |     use crate::session::types::SessionMetadata;\n156 |     use std::sync::Arc;",
+      "method": "Bounded Connectme source read; range-only result, not a claim of full-file read."
+    },
+    "complete_literal_search": {
+      "request": {
+        "path": "crates",
+        "query": "ice\\.value|icers\\.value|VALUE_CUSTOM_TYPE",
+        "regex": true,
+        "max_matches": 100,
+        "result_complete": true
+      },
+      "matches": [
+        {
+          "path": "crates/ice-harness/src/session/values.rs",
+          "line": 12,
+          "text": "//! { \"type\": \"custom\", \"customType\": \"icers.value\", \"data\": { \"key\": \"…\", \"value\": … } }",
+          "context": "10- //!\n11- //! ```jsonc\n12: //! { \"type\": \"custom\", \"customType\": \"icers.value\", \"data\": { \"key\": \"…\", \"value\": … } }\n13- //! ```\n14- //!"
+        },
+        {
+          "path": "crates/ice-harness/src/session/values.rs",
+          "line": 32,
+          "text": "pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";",
+          "context": "30- \n31- /// The reserved `customType` that marks a session value entry.\n32: pub const VALUE_CUSTOM_TYPE: &str = \"icers.value\";\n33- \n34- /// A loaded, latest-wins view of the session's values. Cheap to clone."
+        },
+        {
+          "path": "crates/ice-harness/src/session/values.rs",
+          "line": 47,
+          "text": "                custom_type: Some(VALUE_CUSTOM_TYPE.to_string()),",
+          "context": "45-             .find_entries(&EntryQuery {\n46-                 entry_type: Some(\"custom\"),\n47:                 custom_type: Some(VALUE_CUSTOM_TYPE.to_string()),\n48-                 order: Some(EntryOrder::OldestFirst),\n49-                 limit: None,"
+        },
+        {
+          "path": "crates/ice-harness/src/session/values.rs",
+          "line": 63,
+          "text": "            if custom.custom_type != VALUE_CUSTOM_TYPE {",
+          "context": "61-                 continue;\n62-             };\n63:             if custom.custom_type != VALUE_CUSTOM_TYPE {\n64-                 continue;\n65-             }"
+        },
+        {
+          "path": "crates/ice-harness/src/session/values.rs",
+          "line": 145,
+          "text": "            .append_custom_entry(VALUE_CUSTOM_TYPE, Some(data))",
+          "context": "143-         });\n144-         self.session\n145:             .append_custom_entry(VALUE_CUSTOM_TYPE, Some(data))\n146-             .await\n147-     }"
+        },
+        {
+          "path": "crates/ice-harness/src/session/mod.rs",
+          "line": 36,
+          "text": "pub use values::{SessionValueWriter, SessionValues, VALUE_CUSTOM_TYPE};",
+          "context": "34- pub use sqlite::{SqliteSessionRepo, SqliteSessionStorage};\n35- pub use state::{ApplyOutcome, SessionState};\n36: pub use values::{SessionValueWriter, SessionValues, VALUE_CUSTOM_TYPE};\n37- pub mod keyed_queue;\n38- pub mod resources;"
+        }
+      ]
+    },
+    "trace_conclusion": "The two direct production callers pass harness.session() straight to SessionValues::load. JSONL parse_entry_mutation strips kind/lane and deserializes the entry; the CustomEntry decoder copies customType as a String. Replay chain_onto_lane_leaf mutates only parent_id, and SessionState stores the entry unchanged. Session::query_entries delegates the unchanged custom_type query (only limit may be overridden), and SessionState::matches_entry_query tests exact equality. No custom_type rewrite is present in this bounded path."
+  },
+  "limitations": [
+    "No runtime test, build, migration or application execution was performed.",
+    "No active/source/shared audit files were changed by this lane.",
+    "The proposal does not claim overall audit or implementation completion.",
+    "Root must recheck exact old-field guards after concurrent accepted-artifact updates; snapshot hashes are provenance, not permission to overwrite changed content."
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:34:27.026Z",
+  "status": "approved-and-applied",
+  "owner": "/root",
+  "source_only": true,
+  "scope": "Truthful qualification of overall closeout after the final strict-boundary check",
+  "exception": "evidence/closeout-boundary-exception.json",
+  "exception_sha256": "e81a42dd34523f590fcae73fa208d9e50a37c5ef90608c6d03c7bc0f73904864",
+  "preserved_publication_lock": true,
+  "all_area_metadata_unchanged": true,
+  "helpers_unchanged": true,
+  "historical_resume_suffix_sha256": "62a800055db4627b5a8cabc87b9ba7dfbf4b42ce2baf58fbb1678b2ac7a99ca1",
+  "changes": [
+    {
+      "path": "README.md",
+      "before_sha256": "4dbec9460799db532271a00aab9b50ad19e1086d9798650b0720532a15190752",
+      "after_sha256": "737c14f00545c50cd68f1dbfbb0c26eea0e22271897706e44a9e1d63a1ea14f1",
+      "before_bytes": 193087,
+      "after_bytes": 193820
+    },
+    {
+      "path": "evidence/RESUME.md",
+      "before_sha256": "a3232f8a4d1b69bfb0d8944a9ba50973101a30e94cd322a19fe006ce625dee99",
+      "after_sha256": "d480faf7ec8eb78856e05cebd9506265c6f162d4c4ce5bc58b6aa6be760d02f1",
+      "before_bytes": 24400,
+      "after_bytes": 25582
+    },
+    {
+      "path": "evidence/progress.json",
+      "before_sha256": "962b0adf42d2ef0daefedcbc5cda7758562cecbbe6f60e81a7178d880b113846",
+      "after_sha256": "d7b28f8a5e8a4a1a09539af0464228ae6a0d385cb423accd8b60aebcdc73b737",
+      "before_bytes": 3296,
+      "after_bytes": 3632
+    },
+    {
+      "path": "evidence/closeout-completion.json",
+      "before_sha256": "9a574c79e202507963e8b0fe187c87fc4a8c3bc7bfdbc9710f5d5921d8c7002e",
+      "after_sha256": "afe37b23146aeaa3f5a232538fb927a8eb331898272defd14c91c20300442cca",
+      "before_bytes": 1022,
+      "after_bytes": 1497
+    }
+  ],
+  "preserved_artifacts": [
+    {
+      "source": "README.md",
+      "archive": "evidence/closeout-boundary/README.before.md",
+      "sha256": "4dbec9460799db532271a00aab9b50ad19e1086d9798650b0720532a15190752",
+      "bytes": 193087
+    },
+    {
+      "source": "evidence/RESUME.md",
+      "archive": "evidence/closeout-boundary/RESUME.before.md",
+      "sha256": "a3232f8a4d1b69bfb0d8944a9ba50973101a30e94cd322a19fe006ce625dee99",
+      "bytes": 24400
+    },
+    {
+      "source": "evidence/progress.json",
+      "archive": "evidence/closeout-boundary/progress.before.json",
+      "sha256": "962b0adf42d2ef0daefedcbc5cda7758562cecbbe6f60e81a7178d880b113846",
+      "bytes": 3296
+    },
+    {
+      "source": "evidence/closeout-completion.json",
+      "archive": "evidence/closeout-boundary/closeout-completion.before.json",
+      "sha256": "9a574c79e202507963e8b0fe187c87fc4a8c3bc7bfdbc9710f5d5921d8c7002e",
+      "bytes": 1022
+    },
+    {
+      "source": "evidence/final-validation.json",
+      "archive": "evidence/closeout-boundary/final-validation.before.json",
+      "sha256": "e52e7c38de61fe1dbcb17c928f9f688e98df23e4131d751f2a3bc8f5ee659b78",
+      "bytes": 705207
+    },
+    {
+      "source": "evidence/final-prose-spacing-check.json",
+      "archive": "evidence/closeout-boundary/final-prose-spacing-check.before.json",
+      "sha256": "090060cee7e68a8317d17808aee8fa1c56f47026162f6aa61044bf5917713761",
+      "bytes": 8245
+    }
+  ],
+  "final_gate_and_prose_check_to_be_refreshed": true
+}

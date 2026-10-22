@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-19T21:15:18.480Z",
+  "rows": 831,
+  "mismatches": [],
+  "heads": {
+    "ice": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "note": "Hashes confirm file identity only, not previous connector-read content or authored semantics."
+}

@@ -1,0 +1,224 @@
+{
+  "area": "ai",
+  "fragment": "shared-schema",
+  "owner": "audit_tools",
+  "complete": true,
+  "source_only": true,
+  "application_or_test_execution": false,
+  "source_manifest": "docs/ice-gap/evidence/resume-source-identities-2026-10-19T222055Z.json",
+  "identities": {
+    "ice": {
+      "root": "/home/mewtwo/Zks/ice",
+      "workspace_id": "ws_d62232a3dcdfcedb170213cb",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    "rust": {
+      "root": "/home/mewtwo/Zks/ice-rust",
+      "workspace_id": "ws_0e25a2707810aacc6b30bda5",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+    }
+  },
+  "files": [
+    {
+      "repository": "ice",
+      "path": "packages/ai/src/types.ts",
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "total_lines": 848,
+      "read_ranges": [
+        [
+          1,
+          848
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/types.rs",
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "total_lines": 1157,
+      "read_ranges": [
+        [
+          1,
+          1157
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/lib.rs",
+      "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110",
+      "total_lines": 47,
+      "read_ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "8fcf3262b77d47d427bec969ecce15b844a60749f210b539ef1adf63225af110"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/src/model.rs",
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "total_lines": 284,
+      "read_ranges": [
+        [
+          1,
+          284
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-ai/tests/content_json.rs",
+      "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+      "total_lines": 134,
+      "read_ranges": [
+        [
+          1,
+          134
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74"
+      }
+    },
+    {
+      "repository": "ice",
+      "path": "packages/ai/test/lax-message-content.test.ts",
+      "sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196",
+      "total_lines": 68,
+      "read_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest",
+        "sha256": "2a8ee2048658a1a0a2a8928cc9570c7db41ed295ca20b1d23098b70d4d39e196"
+      }
+    },
+    {
+      "repository": "ice",
+      "path": "packages/ai/test/openai-completions-response-model.test.ts",
+      "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+      "total_lines": 141,
+      "read_ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "full_file_read": true,
+      "read_method": "ConnectMe read_many; full visible source replayed in bounded pieces when chat output capped",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest",
+        "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b"
+      }
+    },
+    {
+      "repository": "rust",
+      "path": "crates/ice-cli/src/remote/protocol.rs",
+      "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939",
+      "total_lines": 521,
+      "read_ranges": [
+        [
+          181,
+          214
+        ]
+      ],
+      "full_file_read": false,
+      "read_method": "ConnectMe bounded read_many",
+      "executed": false,
+      "baseline": {
+        "matched": true,
+        "basis": "coordinator source manifest",
+        "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939"
+      }
+    }
+  ],
+  "scope": "Independent complete reads of the core type files and model.rs; exact bounded remote event serializer caller. Tests are source-read only. This is a targeted coverage correction, not a claim of full AI provider/test re-review.",
+  "test_limits": [
+    "Native content_json.rs tests concrete message structs and raw Content discriminator uniqueness, but not raw outer Message discriminator uniqueness or TS toolUse spelling.",
+    "TS lax-message-content tests downstream normalization of untyped missing/null content. It is not a type-level assertion that required content is optional.",
+    "TS response-model suite documents requested model versus returned concrete model provenance; adapter behavior remains AI-052."
+  ],
+  "checkpoint": "Final source-only supplement AI-019, proposal and bounded defect handoff complete. Worker schema/range/source-identity QA accompanies this release; coordinator independent review/publication pending.",
+  "draft_complete": true,
+  "authored_context": [
+    {
+      "path": "docs/ice-gap/evidence/spec-agent.json",
+      "sha256": "05544e39a827c4d126fa5245fda96f2a46fe144a6f56d9715100c3798cb8da76",
+      "entry_ids": [
+        "AGENT-001"
+      ]
+    },
+    {
+      "path": "docs/ice-gap/evidence/spec-ai.json",
+      "sha256": "f10af7a200b17292deeeca172bfc5051727a049de3261881b784a678678a8e42",
+      "entry_ids": [
+        "AI-006",
+        "AI-009",
+        "AI-013"
+      ]
+    },
+    {
+      "path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+      "sha256": "747f79c01c00da090acd3133bf5291cb501bba55bd56dbf129c7d119d95a8be0",
+      "entry_ids": [
+        "RPC-003",
+        "RPC-004",
+        "RPC-034"
+      ]
+    }
+  ],
+  "candidates": {
+    "path": "candidates-ai.json",
+    "sha256": "a958b7e2671b1d7de45070b224b66e973bc2797e601bed554d25d2aa2c67f418",
+    "count": 0,
+    "candidates": []
+  }
+}

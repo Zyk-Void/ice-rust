@@ -1,0 +1,911 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "CustomizationApplyResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:14",
+      "covering_entries": [
+        "TUI-016"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts",
+        "sha256": "f6b094e20916695249b627dabd53aae501d834e233890f3cf2e95d57e2f81331",
+        "range": [
+          11,
+          28
+        ],
+        "text": "11 | import { ProfileDraftSession } from \"./profile-draft-session.ts\";\n12 | import { ThemeDraftSession } from \"./theme-draft-session.ts\";\n13 | \n14 | export interface CustomizationApplyResult {\n15 | \tsuccess: boolean;\n16 | \terror?: string;\n17 | \t/** Concrete theme to display after apply (member of the pair when automatic). */\n18 | \tselectedTheme?: string;\n19 | }\n20 | \n21 | /** Which member of an automatic light/dark pair the editor currently targets. */\n22 | export type ThemePreviewSide = \"terminal\" | \"light\" | \"dark\";\n23 | \n24 | export type AppearanceSectionId =\n25 | \t| \"userMessage\"\n26 | \t| \"assistantMessage\"\n27 | \t| \"inputBox\"\n28 | \t| \"thinking.indicator\""
+      },
+      "entries": [
+        {
+          "id": "TUI-016",
+          "title": "Unified appearance/theme customization preview, reset, apply and cancel",
+          "status": "missing",
+          "source": "Appearance preview controller: `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-controller.ts:12-75`; complete coordinator: `ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:14-410`. Tests: `ice:packages/coding-agent/test/appearance-controller.test.ts:23-86`, `ice:packages/coding-agent/test/appearance-acceptance.test.ts:149-198`.",
+          "what": "Keeps a single customization draft across appearance settings, theme selection and library edits, supports preview/reset/cancel, and applies the selected state in a defined order.",
+          "mechanism": "InteractiveAppearanceController captures a settings baseline and at most one preview. Getters clone; beginPreview refreshes baseline only when not already previewing; valid preview replaces in-memory effective state and calls onChanged; invalid preview leaves state untouched. Commit validates, delegates to SettingsManager.setAppearanceSettings, updates baseline and clears preview only on valid result. Rollback clears preview without writing; refreshBaseline updates from settings and notifies only when not previewing. Callback or settings exceptions are not swallowed (`ice:packages/coding-agent/src/modes/interactive/appearance/appearance-controller.ts:18-75`).\n\nCustomizationDraftSession captures typed theme setting from settings or fixed fallback, terminal dark/light value, a ThemeDraftSession and ProfileDraftSession. It uses previewSide terminal/light/dark to resolve automatic pairs. Fixed-to-automatic copies current theme into both members; automatic-to-fixed chooses the currently previewed member and resets side to terminal. Name setters mutate selection state and invoke draft.select without surfacing that result; final apply checks availability. Its loadProfile merges only appearance; UI separately controls whether profile themeSetting is adopted (`ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:92-234`).\n\nDirty checks compare JSON.stringify values for the full appearance, each named section and theme setting, plus staged library state. ResetSection copies its captured baseline section (array replacement; object existing keys copied) then previews. resetAll rolls appearance back and reconstructs both drafts from baseline theme setting; it does not reload a new external settings baseline. Cancel similarly rolls back and reconstructs drafts, then resets previewSide; neither reverts already-persisted partial apply files (`ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:236-348`, `ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:400-409`).\n\nApply order is: validate selected theme members against draft list; validate current appearance; themeDraft.commitWrites; profileDraft.commitWrites(availableThemes); setAppearanceThemeSetting; appearanceController.commit; themeDraft.commitDeletes; profileDraft.commitDeletes; return concrete selected theme. Each explicit failure stops later phases. The comment says every staged surface validates before writes, but profile validation begins after theme destinations may already be written, and individual profile appearance checks occur during saves. Theme settings may be persisted before appearance commit fails; cleanup failures occur after both setting updates. There is no all-files/settings rollback, locking or asynchronous flush wait in this coordinator. Selected theme returned uses the preview side, which may differ from the captured terminal member in automatic mode. Actual overlay/runtime refresh after return is audited with the customizer caller (`ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:352-398`).",
+          "interfaces": "AppearanceSectionId: userMessage,assistantMessage,inputBox,thinking.indicator,thinking.label,thinking.block,statusIndicators,markdown,tools,bash,diff,systemCards,footer,chrome,subagentChrome,inputHighlighters. ThemePreviewSide='terminal'|'light'|'dark'. Controller beginPreview/preview/commit/rollback/refreshBaseline; session getAppearance/getBaselineAppearance/patchAppearance/loadProfile; typed theme selection and preview-side methods; isSectionDirty/isAppearanceDirty/isThemeSettingDirty/isDirty/resetSection/resetAll/apply/cancel. Apply result {success:boolean,error?:string,selectedTheme?:string}. This model itself provides no slash command or keyboard handling; those belong to the overlay.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-014",
+            "TUI-015",
+            "SET-017"
+          ],
+          "dependency_text": "SettingsManager is the persistence boundary. Source tests use a fake settings manager and do not establish atomic disk commits.",
+          "rust": "Native three-preset selection applies global theme immediately; settings selector and direct command write settings separately while plain theme selector does not persist (`rust:crates/ice-cli/src/interactive_tui/commands.rs:311-347`, `rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-517`, `rust:crates/ice-cli/src/interactive_tui/settings.rs:403-432`). No combined appearance/theme/profile draft or rollback coordinator was found.",
+          "port": "Add a single session-owned customization transaction with explicit preview state and persistence phases. Validate all destination data first, make failures/retries reviewable, and decide whether settings/library atomicity or compensating rollback is required. Keep terminal theme synchronization separate from preview-side editing and restore runtime state on close.",
+          "size_min": 250,
+          "size_max": 450,
+          "priority": "P1",
+          "priority_reason": "Core state ownership needed for dependable Apply/Cancel behavior across the appearance editor."
+        }
+      ]
+    },
+    {
+      "symbol": "HighlightSpan",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:14",
+      "covering_entries": [
+        "TUI-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts",
+        "sha256": "68920842380eed62809f75b8490bee7b5e99fa7350a9fa34251256f41b8c3f80",
+        "range": [
+          11,
+          28
+        ],
+        "text": "11 |  * rule claims its column range.\n12 |  */\n13 | \n14 | export interface HighlightSpan {\n15 | \tstart: number;\n16 | \tend: number;\n17 | \tstyles: AppearanceTextStyle[];\n18 | \tforeground: string | null;\n19 | \tbackground: string | null;\n20 | }\n21 | \n22 | const MAX_RULES = 64;\n23 | const MAX_PATTERN_CHARS = 128;\n24 | const MAX_MATCHES_PER_RULE = 256;\n25 | const MAX_TOTAL_SPANS = 1024;\n26 | \n27 | /**\n28 |  * Case-fold a single character code for offset-safe literal comparison."
+      },
+      "entries": [
+        {
+          "id": "TUI-017",
+          "title": "Literal input highlighting with stable source offsets and overlap priority",
+          "status": "missing",
+          "source": "Full engine: `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:14-169`; validation: `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:352-417`; tests: `ice:packages/coding-agent/test/appearance-input-highlighters.test.ts:21-92`.",
+          "what": "Highlights selected literal phrases in the editor without changing the text used for cursor movement, undo, history, paste or submission.",
+          "mechanism": "The engine receives a plain source line and returns nonoverlapping spans indexed by JavaScript code-unit offsets. It selects enabled literal rules, sorts by numeric priority, lets earlier priority/order claim complete ranges, then converts spans into ANSI decorations at rendering time.\n\nIt filters enabled/literal rules before taking first64; stable sort lower priority wins. Patterns must have length1..128 code units. Case-sensitive scan uses indexOf and advances by pattern length, so it finds nonoverlapping occurrences. Case-insensitive scan folds ASCII A..Z only and checks every source offset, preserving length and allowing overlapping candidate matches; non-ASCII code units compare exactly. Each rule first computes all matches, so scan/match-list cost is not bounded by the later span cap. At most the first256 candidate matches per rule are considered, including those rejected for overlap; total accepted spans<=1024. Any claimed code unit rejects the entire candidate. Results sort by start (`ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:22-65`, `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:102-136`).\n\nAccepted spans copy styles and color prefixes from the shared resolver. Terminal-default/none have no prefix and become null here. Style opens are emitted in order with closes prepended in reverse. spanToDecoration combines fg,bg,styles and closes styles then bg then fg; applyHighlightSpans assumes sorted spans, skips any starting before current cursor, copies intervening/source text and closes styles then fg then bg. Neither mutates the original line. These are UTF-16 offsets rather than display columns or grapheme indices; the editor adapter must preserve that mapping (`ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:67-100`, `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:138-169`).",
+          "interfaces": "Rule={id,name,enabled,matcher:{kind:'literal',pattern,caseSensitive},styles,foreground,background,priority}. computeHighlightSpans(line,rules)->{start,end,styles,foreground:string|null,background:string|null}[]; spanToDecoration->{start,end,prefix,suffix}; applyHighlightSpans(line,spans)->styled string. Exact limits64active rules/128pattern code units/256candidate matches per rule/1024accepted spans. No regex or executable matcher.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-010"
+          ],
+          "dependency_text": "Editor text-decoration integration and width/grapheme handling are owned by the terminal fragment and main custom editor caller.",
+          "rust": "Recorded native behavior search found syntax_highlight.rs for language tokens, but no user-configured literal appearance-rule model or matcher. Native palette and message components do not provide this source-offset decoration contract (`rust:crates/ice-tui/src/theme.rs:15-106`, `rust:crates/ice-tui/src/user_message.rs:41-75`). Low-level editor support must be assessed through the coordinated terminal fragment before claiming a rendering backend is absent.",
+          "port": "Add a bounded literal-span engine and editor decoration interface to ice-tui, with explicit UTF-8/UTF-16/grapheme offset conversion. Stop match collection at the relevant cap to bound allocation while preserving documented priority and overlap decisions. Keep source text separate from styled output.",
+          "size_min": 180,
+          "size_max": 320,
+          "priority": "P2",
+          "priority_reason": "Restores user-defined editor highlighting without compromising cursor and source-text behavior."
+        }
+      ]
+    },
+    {
+      "symbol": "TextDecorationSpan",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:138",
+      "covering_entries": [
+        "TUI-017"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts",
+        "sha256": "68920842380eed62809f75b8490bee7b5e99fa7350a9fa34251256f41b8c3f80",
+        "range": [
+          135,
+          152
+        ],
+        "text": "135 | \treturn spans.sort((a, b) => a.start - b.start);\n136 | }\n137 | \n138 | export interface TextDecorationSpan {\n139 | \tstart: number;\n140 | \tend: number;\n141 | \tprefix: string;\n142 | \tsuffix: string;\n143 | }\n144 | \n145 | export function spanToDecoration(span: HighlightSpan): TextDecorationSpan {\n146 | \tconst { prefix, suffix } = stylePrefix(span.styles);\n147 | \tconst open = `${span.foreground ?? \"\"}${span.background ?? \"\"}`;\n148 | \tconst close = `${span.background ? \"\\x1b[49m\" : \"\"}${span.foreground ? \"\\x1b[39m\" : \"\"}`;\n149 | \treturn { start: span.start, end: span.end, prefix: `${open}${prefix}`, suffix: `${suffix}${close}` };\n150 | }\n151 | \n152 | export function applyHighlightSpans(line: string, spans: HighlightSpan[]): string {"
+      },
+      "entries": [
+        {
+          "id": "TUI-017",
+          "title": "Literal input highlighting with stable source offsets and overlap priority",
+          "status": "missing",
+          "source": "Full engine: `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:14-169`; validation: `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:352-417`; tests: `ice:packages/coding-agent/test/appearance-input-highlighters.test.ts:21-92`.",
+          "what": "Highlights selected literal phrases in the editor without changing the text used for cursor movement, undo, history, paste or submission.",
+          "mechanism": "The engine receives a plain source line and returns nonoverlapping spans indexed by JavaScript code-unit offsets. It selects enabled literal rules, sorts by numeric priority, lets earlier priority/order claim complete ranges, then converts spans into ANSI decorations at rendering time.\n\nIt filters enabled/literal rules before taking first64; stable sort lower priority wins. Patterns must have length1..128 code units. Case-sensitive scan uses indexOf and advances by pattern length, so it finds nonoverlapping occurrences. Case-insensitive scan folds ASCII A..Z only and checks every source offset, preserving length and allowing overlapping candidate matches; non-ASCII code units compare exactly. Each rule first computes all matches, so scan/match-list cost is not bounded by the later span cap. At most the first256 candidate matches per rule are considered, including those rejected for overlap; total accepted spans<=1024. Any claimed code unit rejects the entire candidate. Results sort by start (`ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:22-65`, `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:102-136`).\n\nAccepted spans copy styles and color prefixes from the shared resolver. Terminal-default/none have no prefix and become null here. Style opens are emitted in order with closes prepended in reverse. spanToDecoration combines fg,bg,styles and closes styles then bg then fg; applyHighlightSpans assumes sorted spans, skips any starting before current cursor, copies intervening/source text and closes styles then fg then bg. Neither mutates the original line. These are UTF-16 offsets rather than display columns or grapheme indices; the editor adapter must preserve that mapping (`ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:67-100`, `ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:138-169`).",
+          "interfaces": "Rule={id,name,enabled,matcher:{kind:'literal',pattern,caseSensitive},styles,foreground,background,priority}. computeHighlightSpans(line,rules)->{start,end,styles,foreground:string|null,background:string|null}[]; spanToDecoration->{start,end,prefix,suffix}; applyHighlightSpans(line,spans)->styled string. Exact limits64active rules/128pattern code units/256candidate matches per rule/1024accepted spans. No regex or executable matcher.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-010"
+          ],
+          "dependency_text": "Editor text-decoration integration and width/grapheme handling are owned by the terminal fragment and main custom editor caller.",
+          "rust": "Recorded native behavior search found syntax_highlight.rs for language tokens, but no user-configured literal appearance-rule model or matcher. Native palette and message components do not provide this source-offset decoration contract (`rust:crates/ice-tui/src/theme.rs:15-106`, `rust:crates/ice-tui/src/user_message.rs:41-75`). Low-level editor support must be assessed through the coordinated terminal fragment before claiming a rendering backend is absent.",
+          "port": "Add a bounded literal-span engine and editor decoration interface to ice-tui, with explicit UTF-8/UTF-16/grapheme offset conversion. Stop match collection at the relevant cap to bound allocation while preserving documented priority and overlap decisions. Keep source text separate from styled output.",
+          "size_min": 180,
+          "size_max": 320,
+          "priority": "P2",
+          "priority_reason": "Restores user-defined editor highlighting without compromising cursor and source-text behavior."
+        }
+      ]
+    },
+    {
+      "symbol": "ThemeDraftCommitResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:28",
+      "covering_entries": [
+        "TUI-014"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts",
+        "sha256": "fdbade3f525965cdd5e398680bf0fd87f5bc3194cbf2a681609d6aa96cc03761",
+        "range": [
+          25,
+          42
+        ],
+        "text": "25 | \twritten?: boolean;\n26 | }\n27 | \n28 | export interface ThemeDraftCommitResult extends ThemeLibraryResult {\n29 | \tselectedTheme?: string;\n30 | }\n31 | \n32 | function validateDraftName(name: string): string | null {\n33 | \tif (!name || name.trim().length === 0) return \"theme name must not be empty\";\n34 | \tif (name.length > 64) return \"theme name is too long\";\n35 | \tif (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(name)) return \"theme name must use letters, digits, dash, or underscore\";\n36 | \treturn null;\n37 | }\n38 | \n39 | /**\n40 |  * Write-free theme editing transaction for `/customize`.\n41 |  *\n42 |  * Selecting, cloning, renaming, deleting, importing, and editing colors/vars"
+      },
+      "entries": [
+        {
+          "id": "TUI-014",
+          "title": "In-memory theme drafts, variable editing and retryable apply phases",
+          "status": "missing",
+          "source": "Full draft implementation: `ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:17-390`; tests: `ice:packages/coding-agent/test/appearance-theme-draft-session.test.ts:29-157`.",
+          "what": "Lets users preview palette selection, clones, renames, deletions and variable changes without writing files until they apply the draft.",
+          "mechanism": "A ThemeDraftSession tracks selected name, staged entries and deleted original names. It reads palette data lazily, returns copies, constructs preview themes through full runtime validation, and splits persistence into destination writes followed by original deletions.\n\nConstruction chooses the requested name if currently available, otherwise first available or dark. listThemes dynamically combines current catalog names minus deleted originals plus staged names, then sorts. Selection validates that list. Editable means staged entry or global custom file; built-ins require a clone. Entries track originalName,isNew,dirty,baseName,written. Cloning deep-copies current JSON, selects new name, records its source base. Rename marks original for later deletion and retains provenance; deleting a new draft drops it, deleting existing custom stages removal and selects first remaining name/dark (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:46-162`).\n\nsetToken requires the permissive library color precheck and existing token, changes value, runtime-validates complete JSON, marks dirty or restores that value. setVariable requires ^[A-Za-z][A-Za-z0-9_-]*$, changes/adds a var and validates; failure restores/deletes that var. Whole-theme reset copies named/base/dark palette with current name. Token reset copies a base token and then validates but does not restore its mutation on failure. Import validates destination name, rejects existing name unless replace, permits replacement only when isCustomTheme(name), runtime-validates, stages data/provenance and selects it; this also means a newly staged but not-yet-written name is not replaceable via this path (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:164-257`).\n\nVariable rename rewrites exact string references across colors, vars and export, renames the var key, validates and restores a full backup on failure. Delete removes var then validates/restores. Runtime creation resolves referenced color vars, so the comment 'reject while references remain' is limited by what runtime construction actually resolves; export-only references and unused variable chains require separate scrutiny. variableReferences enumerates exact matching colors, other vars and export fields; errors produce[] (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:259-342`).\n\ncommitWrites first runtime-validates every staged entry, then writes entries that are new/dirty/renamed in insertion order. Overwrite is allowed after successful previous write, or for an existing entry retaining its original name. Successful entries mark written=true; failure stops and retains retry state, so prior destinations may exist. commitDeletes then iterates deleted originals, skips ones still staged or no longer custom, deletes and stops on error. It does not clear the theme entries/deletion set after success. commit chains writes/deletes and returns selectedTheme. Dropping the draft before an apply writes nothing; cancel after partial persistence cannot undo already-completed writes (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:344-390`).",
+          "interfaces": "ThemeDraftSession(initialTheme); listThemes,getSelectedName,hasStagedChanges,select,getThemeData,createPreviewTheme,isEditable,cloneSelected,renameSelected,deleteSelected,setToken,setVariable,resetSelected,resetToken,importTheme(name,json,{replace?}),renameVariable,deleteVariable,variableReferences,exportSelected,commitWrites,commitDeletes,commit. Result {success,error?,selectedTheme?}; raw JSON values remain lossless rather than being replaced with resolved RGB.",
+          "dependencies": [
+            "TUI-001",
+            "TUI-003",
+            "TUI-013"
+          ],
+          "dependency_text": "Filesystem writes are delegated to the immediate custom-theme library only during commit phases.",
+          "rust": "No native theme-draft transaction, palette-variable editor or split write/delete API was found. Native /theme changes the global manager immediately (`rust:crates/ice-cli/src/interactive_tui/commands.rs:311-347`); its selector changes live theme on select without a staged palette document (`rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-517`).",
+          "port": "Add a draft model independent of rendering and disk I/O, with explicit originals/destinations and validation-before-write. Preserve raw variable references and exact rename mapping; restore failed token resets and validate export references intentionally. Define recovery for partial commits and refresh baselines after successful apply.",
+          "size_min": 350,
+          "size_max": 600,
+          "priority": "P1",
+          "priority_reason": "Makes interactive palette editing cancelable and protects existing files during rename/import."
+        }
+      ]
+    },
+    {
+      "symbol": "ThemeLibraryResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:12",
+      "covering_entries": [
+        "TUI-013"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/theme-library.ts",
+        "sha256": "5b85835447d0b634add0becef51d53699e46fbb7501a192c18745468c35e592f",
+        "range": [
+          9,
+          26
+        ],
+        "text": "9 | \ttype ThemeJson,\n10 | } from \"../theme/theme.ts\";\n11 | \n12 | export interface ThemeLibraryResult {\n13 | \tsuccess: boolean;\n14 | \terror?: string;\n15 | }\n16 | \n17 | function themeFilePath(name: string): string {\n18 | \treturn join(getCustomThemesDir(), `${name}.json`);\n19 | }\n20 | \n21 | function readThemeData(name: string, customPath?: string): { data: ThemeJson; path: string | undefined } {\n22 | \tif (customPath && existsSync(customPath)) {\n23 | \t\tconst raw = JSON.parse(readFileSync(customPath, \"utf-8\")) as unknown;\n24 | \t\treturn { data: parseThemeJsonData(customPath, raw), path: customPath };\n25 | \t}\n26 | \tconst customFile = themeFilePath(name);"
+      },
+      "entries": [
+        {
+          "id": "TUI-013",
+          "title": "Custom theme file library and immediate palette editing",
+          "status": "missing",
+          "source": "Full library implementation: `ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:12-189`; tests: `ice:packages/coding-agent/test/appearance-theme-library.test.ts:34-87`; JSON versus runtime validation: `ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:693-811`.",
+          "what": "Creates writable copies of palettes, edits or resets individual colors, and renames, deletes, imports or exports custom theme files.",
+          "mechanism": "The library operates on <customThemesDir>/<name>.json and returns success/error objects for writes. It is an immediate filesystem API; the customizer uses a separate in-memory draft so preview operations do not call these writes until apply.\n\nDestination names must be nonblank, <=64 code units and ASCII alphanumeric first followed by alphanumerics/dash/underscore; slash, backslash and '..' are explicitly rejected. isCustomTheme checks only existence of that global filename. readThemeData uses an explicit existing path first, then the global custom file, and schema-parses JSON; otherwise it throws. Source/read/delete names are not checked by the destination validator (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:17-48`).\n\nwriteThemeFile creates the custom directory, schema-validates a copy with name overridden, writes pretty JSON plus newline to fixed sibling .json.tmp, renames to destination, then runtime-loads that file. Runtime variable/color validation therefore occurs after replacement: load failure can return failure while the destination has already changed. No lock, unique temp name, fsync or rollback appears. save/import reject existing custom destinations unless overwrite is explicitly supported; clone uses catalog source.path and fails if it has no readable file; rename writes new before deleting old. Delete removes only the global custom file. Built-in name collisions are judged by global custom-file existence in these immediate functions, not by the entire registry (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:69-137`, `ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:177-189`).\n\nColor edit precheck allows integer0..255, empty, #RGB/#RRGGBB, bounded rgb, syntactic hsl and variable identifiers <=128 code units. Its HSL check does not bound numeric ranges, and the theme runtime expects six-digit hex or variables rather than RGB/HSL strings; passing this precheck is not proof of runtime acceptance. setThemeTokenValue requires an existing custom file and token membership, then writes. resetThemeToken copies one value from a source palette's color map without copying its vars; a copied variable reference may fail runtime load after disk replacement. Export returns indented JSON without trailing newline (`ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:50-67`, `ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:139-175`).",
+          "interfaces": "Functions isCustomTheme,readCustomTheme,isValidThemeColorValue,saveCustomTheme(name,data,overwrite=false),cloneTheme(source,dest),renameCustomTheme(old,new),deleteCustomTheme,setThemeTokenValue(theme,token,value),resetThemeToken(theme,token,base),exportCustomTheme,importCustomTheme(name,json). Mutations return {success:boolean,error?:string}; export adds json?. Files are ThemeJson with destination name forced into its name field.",
+          "dependencies": [
+            "TUI-001",
+            "TUI-003"
+          ],
+          "dependency_text": "Depends on custom-theme directory resolution and source-aware theme catalog from SET-033.",
+          "rust": "Native theme code has no custom palette file library, JSON loader or individual semantic-token edit API; only typed presets and ThemeManager mutation exist (`rust:crates/ice-tui/src/theme.rs:343-386`, `rust:crates/ice-tui/src/theme.rs:499-505`). Native /theme accepts three names and persists a setting (`rust:crates/ice-cli/src/interactive_tui/commands.rs:311-347`).",
+          "port": "Implement file-backed palette CRUD in ice-cli with full schema and runtime validation before replacement. Preserve safe-name and write-before-delete behavior, while making rollback/durability and collisions explicit. Use serde_json and the TUI-001 resolver; do not retain a precheck that accepts syntax unsupported by the actual runtime.",
+          "size_min": 250,
+          "size_max": 400,
+          "priority": "P2",
+          "priority_reason": "Required for a usable custom palette library and safe editing of existing theme files."
+        }
+      ]
+    },
+    {
+      "symbol": "UserMessagePresentation",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:4",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts",
+        "sha256": "d6e827df541a57a85a9d4feb6273d9ff3985bd7cf7f56c3921346ded2641f82a",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import { resolveAppearanceColorFn } from \"./appearance-resolve.ts\";\n2 | import type { AppearanceBorderStyle, AppearanceColor, AppearanceTextStyle } from \"./appearance-types.ts\";\n3 | \n4 | export interface UserMessagePresentation {\n5 | \tformat: string;\n6 | \tbold: boolean;\n7 | \titalic: boolean;\n8 | \tunderline: boolean;\n9 | \tstrikethrough: boolean;\n10 | \tinverse: boolean;\n11 | \tborderStyle: AppearanceBorderStyle;\n12 | \tpaddingX: number;\n13 | \tpaddingY: number;\n14 | \tfitToContent: boolean;\n15 | \tcolor: (text: string) => string;\n16 | \tbackground: (text: string) => string;\n17 | \tborderColor: (text: string) => string;\n18 | }"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "applyUserMessageFormat",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:20",
+      "covering_entries": [
+        "TUI-027"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts",
+        "sha256": "d6e827df541a57a85a9d4feb6273d9ff3985bd7cf7f56c3921346ded2641f82a",
+        "range": [
+          17,
+          34
+        ],
+        "text": "17 | \tborderColor: (text: string) => string;\n18 | }\n19 | \n20 | export function applyUserMessageFormat(format: string, message: string): string {\n21 | \treturn format.split(\"{message}\").join(message);\n22 | }\n23 | \n24 | function identity(text: string): string {\n25 | \treturn text;\n26 | }\n27 | \n28 | function styleWrappers(styles: AppearanceTextStyle[]): { prefix: string; suffix: string } {\n29 | \tlet prefix = \"\";\n30 | \tlet suffix = \"\";\n31 | \tfor (const style of styles) {\n32 | \t\tswitch (style) {\n33 | \t\t\tcase \"bold\":\n34 | \t\t\t\tprefix += \"\\x1b[1m\";"
+      },
+      "entries": [
+        {
+          "id": "TUI-027",
+          "title": "User message formatting, width budgets and OSC 133 zones",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:1-181`; `ice:packages/coding-agent/src/modes/interactive/components/osc133-zone.ts:1-20`; presentation helper `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:20-163`; tests `ice:packages/coding-agent/test/user-message.test.ts:1-67`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:1-163`, `ice:packages/coding-agent/test/appearance-user-message.test.ts:1-67`.",
+          "what": "Renders the user's original prompt as styled Markdown with appearance-controlled format, padding, borders and optional compact width, and marks the resulting rows as a terminal prompt zone.",
+          "mechanism": "The component retains original text separately from formatted display text, builds a background Box around Markdown and applies appearance styling without mutating the prompt. Rendering recomputes the width budget and rebuilds the box, then adds optional borders and OSC133 markers to the emitted rows.\n\nConstructor defaults are Markdown theme from the global theme, outputPad1, no transformers and no appearance. getText returns the original text; setOutputPad/setAppearance rebuild immediately. With appearance, every `{message}` occurrence in format is replaced through split/join, the shared resolver supplies exact foreground/background/border colors and configured text styles, and appearance padding overrides outputPad. Without appearance, background is userMessageBg, foreground userMessageText and vertical padding0. Markdown is configured with preserveOrderedListMarkers:true and preserveBackslashEscapes:true, plus the user/false transformer context (TUI-028). Box padding is clamped nonnegative at construction (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:31-102`).\n\nrender floors the requested width and clamps it to at least1. Side borders reserve2 columns except none/top-bottom styles. Horizontal padding is limited to max(0,floor((safeWidth-sideWidth)/2)); vertical padding is used unchanged. The full-width branch renders the Box at safeWidth, clips/pads rows, wraps each row with side borders when present and finally clips/pads every returned row back to safeWidth. It therefore fits the final rows, but the Box is initially rendered at outer width rather than the reduced side-border content width; adding side borders clips the rendered rows instead of reflowing text at that smaller width. This source behavior is distinct from the comment claiming content is budgeted before borders (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:104-145`).\n\nfitToContent chooses min(maxWidth,longest visible source line+2*paddingX+sideWidth), using formatted raw source rather than rendered Markdown row widths. It renders at that outer target, slices side-border content to max(1,outerTarget-sideWidth), adds top/bottom and returns without the full-width branch's final clamp. For a one-column target with side borders, the helper still supplies two side glyphs and contentTarget remains1; this branch has an untested narrow-width overflow risk. The existing width1/2/3/10/30/80 matrix uses the default fitToContent:false; the fit-to-content test uses width80. No runtime tests were executed (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:122-135`, `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:145-161`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:20-100`).\n\nfitLineToWidth pads with spaces or slices by visible columns while preserving ANSI; zero requested width is allowed in this helper. fitTargetWidth measures each unwrapped source line. Exported fitLinesToContent measures already-rendered lines, clamps target to maxWidth-sideWidth and pads/truncates each, but the component's render path uses fitTargetWidth instead. The border helper supports none/single/double/round/bold/classic/single-double/double-single/top-bottom-single/top-bottom-double/top-bottom-bold; its mixed styles fall through to default horizontal/vertical glyphs, with the supplied mixed-style corner table, unlike the assistant helper's explicit mixed glyphs.\n\nmarkOsc133Zone mutates the rows array. Empty rows remain empty; a single row begins A+B+C in order; multiple rows begin with A on the first and B+C on the last, never suffixing the line. Exact bytes are ESC]133;A BEL, ESC]133;B BEL and ESC]133;C BEL. User-message tests assert one-row compact output, marker order, background reset at line end and transformer context/invalidation; appearance tests cover format/style/color/width, not preservation of all text through side-border clipping.",
+          "interfaces": "UserMessageComponent(text,markdownTheme?,outputPad=1,markdownTransformers=[]): getText(),setOutputPad(number),setAppearance(UserMessageAppearance|null),render(width). Helpers fitLineToWidth(line,width),fitTargetWidth(source,paddingX,maxWidth,sideWidth),fitLinesToContent(lines,maxWidth,sideWidth),markOsc133Zone(lines). Appearance schema and validation remain TUI-009/010, not a second independently validated model.",
+          "dependencies": [
+            "TUI-005",
+            "TUI-009",
+            "TUI-010",
+            "TUI-028",
+            "TUI-201",
+            "TUI-203"
+          ],
+          "dependency_text": "Uses shared Box/Markdown and ANSI-aware width/slicing. Main interactive stamping and later appearance updates are TUI-024.",
+          "rust": "Native UserMessageComponent already wraps Markdown in a theme.surface background and OSC133, defaults horizontal padding1, permits with_pad, and rebuilds its cached Box only on invalidation/padding/theme revision (`rust:crates/ice-tui/src/user_message.rs:25-115`). Its vertical padding is always1, unlike TS default0; the comment claiming output_pad controls both is inaccurate. It has no user appearance format/styles/borders/fit-to-content or user transformer hook. Marker insertion would produce B+C before A for a single returned row, but the fixed vertical padding normally makes standard messages multi-row; scope that as the helper path, not an observed current one-row regression. Native inline tests check nonempty output, marker presence and CJK no-panic, without marker-order or exact layout assertions (`rust:crates/ice-tui/src/user_message.rs:122-154`). The native cache optimization is an existing capability to retain; its comment that TS builds only once does not describe the frozen TS render method.",
+          "port": "Add typed user appearance and original/display text separation to native UserMessageComponent, preserving its cache and rebuilding only when text/theme/appearance/width requires it. Budget the actual inner width before Markdown layout and explicitly decide whether to fix the TS clipping and narrow fit branch while retaining intended appearance behavior. Implement shared OSC133 order handling for one and multiple rows, exact per-role colors and width-aware user transformer context. Test content preservation as well as line width.",
+          "size_min": 300,
+          "size_max": 500,
+          "priority": "P1",
+          "priority_reason": "Core prompt presentation differs in default spacing and lacks the appearance/transformer contract."
+        }
+      ]
+    },
+    {
+      "symbol": "resolveUserMessagePresentation",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:58",
+      "covering_entries": [
+        "TUI-010",
+        "TUI-027"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts",
+        "sha256": "d6e827df541a57a85a9d4feb6273d9ff3985bd7cf7f56c3921346ded2641f82a",
+        "range": [
+          55,
+          72
+        ],
+        "text": "55 | \treturn { prefix, suffix };\n56 | }\n57 | \n58 | export function resolveUserMessagePresentation(options: {\n59 | \tformat: string;\n60 | \tstyles: AppearanceTextStyle[];\n61 | \tforeground: AppearanceColor;\n62 | \tbackground: AppearanceColor;\n63 | \tborderStyle: AppearanceBorderStyle;\n64 | \tborderColor: AppearanceColor;\n65 | \tpaddingX: number;\n66 | \tpaddingY: number;\n67 | \tfitToContent: boolean;\n68 | \tthemeForeground: (text: string) => string;\n69 | \tthemeBackground: (text: string) => string;\n70 | \tthemeBorder: (text: string) => string;\n71 | \tcustomColor: (value: string) => (text: string) => string;\n72 | }): UserMessagePresentation {"
+      },
+      "entries": [
+        {
+          "id": "TUI-010",
+          "title": "Appearance color resolution and text/Markdown presentation adapters",
+          "status": "partial",
+          "source": "Custom color parsing: `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-colors.ts:8-94`; shared resolver: `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts:18-62`; text/Markdown/tool/status adapters: `ice:packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:5-99`; user adapter: `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:28-105`. Tests: `ice:packages/coding-agent/test/appearance-validate.test.ts:44-65`, `ice:packages/coding-agent/test/appearance-v2-runtime.test.ts:16-65`, `ice:packages/coding-agent/test/appearance-acceptance.test.ts:200-220`.",
+          "what": "Applies appearance foregrounds, backgrounds and text attributes consistently while letting semantic color references follow the currently selected theme.",
+          "mechanism": "The shared resolver builds color functions for a foreground/background role and resolves theme tokens dynamically through the live theme proxy. Custom values are parsed once into truecolor wrappers, terminal indices retain their exact palette number, terminal-default emits a closing reset only, and none returns text unchanged.\n\n#RGB expands each nibble; #RRGGBB requires all six hex digits. rgb accepts three decimal integers0..255. hsl accepts positive decimal hue0..360 and percentages0..100; standard sector conversion rounds/clamps each channel. Invalid direct parser input returns null and custom wrapper becomes identity. Custom output always uses 38;2/48;2 and ends39/49, with no terminal capability downgrade. Terminal-index emits38;5/48;5 and39/49. Unknown/mismatched theme-role tokens become identity. resolveAppearanceColorDecoration applies the wrapper around a NUL sentinel then extracts prefix/suffix (`ice:packages/coding-agent/src/modes/interactive/appearance/appearance-colors.ts:13-94`, `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts:18-62`).\n\napplyTextPresentation applies foreground, then background, then wraps each configured style in array order; opens1/3/4/9/7 and closes22/23/24/29/27. No-override means both colors terminal-default and empty styles; composition returns the original base function in that case, preserving stock rendering. Otherwise composition calls base(applyTextPresentation(...)); it does not replace base. Markdown heading picks an h1..h6 override if present, otherwise shared base; adapters cover links, URL, inline/fenced code, quotes, rule, bullet, bold/italic/strikethrough, and set codeBlockIndent to paddingX spaces. Border color wrappers enclose existing base border styling. Full block padding/background/border application remains the component/Markdown renderer's responsibility (`ice:packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:5-79`).\n\nTool-state adapter picks pending/success/error background; status adapter returns spinner and label closures for each lifecycle kind. User adapter returns format/style flags/layout plus color functions; theme/custom/default/none go through shared resolver or identity, but the terminal-index case falls through to the caller fallback. Thus this user helper does not honor an otherwise valid indexed color the way the shared resolver does. The older validate-module resolveAppearanceColor lookup helper also omits terminal-index and returns undefined for it; do not claim uniform coverage from the type alone (`ice:packages/coding-agent/src/modes/interactive/appearance/text-presentation.ts:81-99`, `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:58-105`, `ice:packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:1047-1060`).",
+          "interfaces": "parseCustomColorToRgb(string) -> {r,g,b}|null; customForeground/customBackground(string)->(text)=>string; resolveAppearanceColorFn(AppearanceColor,'fg'|'bg'); resolveAppearanceColorDecoration -> {prefix,suffix}; applyTextPresentation(TextPresentation,string); markdownThemeWithAppearance(baseMarkdownTheme,MarkdownAppearance); toolStateBackground(appearance,state); statusIndicatorColors(appearance,kind). AppearanceColor is theme{token}, custom{value}, terminal-index{index}, terminal-default or none. Exact ANSI sequences and no-override semantics are described above; these functions change presentation only.",
+          "dependencies": [
+            "TUI-001",
+            "TUI-009"
+          ],
+          "dependency_text": "Depends on live Theme proxy and terminal Markdown component; terminal fragment owns low-level Markdown layout and ANSI width behavior.",
+          "rust": "Native Color already supports Default/Ansi16/Ansi256/Rgb and styles text, but fg ends SGR0 and bg reapplies its opening sequence after every nested SGR0 (`rust:crates/ice-tui/src/theme.rs:173-221`). Typed native palette fields do not resolve stored appearance colors dynamically by token. Native user Box captures surface and rebuilds on theme revision (`rust:crates/ice-tui/src/user_message.rs:41-47`, `rust:crates/ice-tui/src/user_message.rs:78-115`); assistant thinking uses a fixed italic/thinking_text base style rather than a configurable TextPresentation (`rust:crates/ice-tui/src/assistant_message.rs:257-282`).",
+          "port": "Add typed AppearanceColor/TextPresentation resolvers to ice-tui, using closures or a runtime palette reference instead of copying baked colors where live updates are required. Preserve native nested-background repair deliberately; compare it with TS attribute-specific resets. Cover indexed user colors explicitly and document that as a fix to the observed TS omission, not inherited parity.",
+          "size_min": 250,
+          "size_max": 450,
+          "priority": "P1",
+          "priority_reason": "Shared adapter needed to make appearance data affect every component consistently."
+        },
+        {
+          "id": "TUI-027",
+          "title": "User message formatting, width budgets and OSC 133 zones",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:1-181`; `ice:packages/coding-agent/src/modes/interactive/components/osc133-zone.ts:1-20`; presentation helper `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:20-163`; tests `ice:packages/coding-agent/test/user-message.test.ts:1-67`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:1-163`, `ice:packages/coding-agent/test/appearance-user-message.test.ts:1-67`.",
+          "what": "Renders the user's original prompt as styled Markdown with appearance-controlled format, padding, borders and optional compact width, and marks the resulting rows as a terminal prompt zone.",
+          "mechanism": "The component retains original text separately from formatted display text, builds a background Box around Markdown and applies appearance styling without mutating the prompt. Rendering recomputes the width budget and rebuilds the box, then adds optional borders and OSC133 markers to the emitted rows.\n\nConstructor defaults are Markdown theme from the global theme, outputPad1, no transformers and no appearance. getText returns the original text; setOutputPad/setAppearance rebuild immediately. With appearance, every `{message}` occurrence in format is replaced through split/join, the shared resolver supplies exact foreground/background/border colors and configured text styles, and appearance padding overrides outputPad. Without appearance, background is userMessageBg, foreground userMessageText and vertical padding0. Markdown is configured with preserveOrderedListMarkers:true and preserveBackslashEscapes:true, plus the user/false transformer context (TUI-028). Box padding is clamped nonnegative at construction (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:31-102`).\n\nrender floors the requested width and clamps it to at least1. Side borders reserve2 columns except none/top-bottom styles. Horizontal padding is limited to max(0,floor((safeWidth-sideWidth)/2)); vertical padding is used unchanged. The full-width branch renders the Box at safeWidth, clips/pads rows, wraps each row with side borders when present and finally clips/pads every returned row back to safeWidth. It therefore fits the final rows, but the Box is initially rendered at outer width rather than the reduced side-border content width; adding side borders clips the rendered rows instead of reflowing text at that smaller width. This source behavior is distinct from the comment claiming content is budgeted before borders (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:104-145`).\n\nfitToContent chooses min(maxWidth,longest visible source line+2*paddingX+sideWidth), using formatted raw source rather than rendered Markdown row widths. It renders at that outer target, slices side-border content to max(1,outerTarget-sideWidth), adds top/bottom and returns without the full-width branch's final clamp. For a one-column target with side borders, the helper still supplies two side glyphs and contentTarget remains1; this branch has an untested narrow-width overflow risk. The existing width1/2/3/10/30/80 matrix uses the default fitToContent:false; the fit-to-content test uses width80. No runtime tests were executed (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:122-135`, `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:145-161`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:20-100`).\n\nfitLineToWidth pads with spaces or slices by visible columns while preserving ANSI; zero requested width is allowed in this helper. fitTargetWidth measures each unwrapped source line. Exported fitLinesToContent measures already-rendered lines, clamps target to maxWidth-sideWidth and pads/truncates each, but the component's render path uses fitTargetWidth instead. The border helper supports none/single/double/round/bold/classic/single-double/double-single/top-bottom-single/top-bottom-double/top-bottom-bold; its mixed styles fall through to default horizontal/vertical glyphs, with the supplied mixed-style corner table, unlike the assistant helper's explicit mixed glyphs.\n\nmarkOsc133Zone mutates the rows array. Empty rows remain empty; a single row begins A+B+C in order; multiple rows begin with A on the first and B+C on the last, never suffixing the line. Exact bytes are ESC]133;A BEL, ESC]133;B BEL and ESC]133;C BEL. User-message tests assert one-row compact output, marker order, background reset at line end and transformer context/invalidation; appearance tests cover format/style/color/width, not preservation of all text through side-border clipping.",
+          "interfaces": "UserMessageComponent(text,markdownTheme?,outputPad=1,markdownTransformers=[]): getText(),setOutputPad(number),setAppearance(UserMessageAppearance|null),render(width). Helpers fitLineToWidth(line,width),fitTargetWidth(source,paddingX,maxWidth,sideWidth),fitLinesToContent(lines,maxWidth,sideWidth),markOsc133Zone(lines). Appearance schema and validation remain TUI-009/010, not a second independently validated model.",
+          "dependencies": [
+            "TUI-005",
+            "TUI-009",
+            "TUI-010",
+            "TUI-028",
+            "TUI-201",
+            "TUI-203"
+          ],
+          "dependency_text": "Uses shared Box/Markdown and ANSI-aware width/slicing. Main interactive stamping and later appearance updates are TUI-024.",
+          "rust": "Native UserMessageComponent already wraps Markdown in a theme.surface background and OSC133, defaults horizontal padding1, permits with_pad, and rebuilds its cached Box only on invalidation/padding/theme revision (`rust:crates/ice-tui/src/user_message.rs:25-115`). Its vertical padding is always1, unlike TS default0; the comment claiming output_pad controls both is inaccurate. It has no user appearance format/styles/borders/fit-to-content or user transformer hook. Marker insertion would produce B+C before A for a single returned row, but the fixed vertical padding normally makes standard messages multi-row; scope that as the helper path, not an observed current one-row regression. Native inline tests check nonempty output, marker presence and CJK no-panic, without marker-order or exact layout assertions (`rust:crates/ice-tui/src/user_message.rs:122-154`). The native cache optimization is an existing capability to retain; its comment that TS builds only once does not describe the frozen TS render method.",
+          "port": "Add typed user appearance and original/display text separation to native UserMessageComponent, preserving its cache and rebuilding only when text/theme/appearance/width requires it. Budget the actual inner width before Markdown layout and explicitly decide whether to fix the TS clipping and narrow fit branch while retaining intended appearance behavior. Implement shared OSC133 order handling for one and multiple rows, exact per-role colors and width-aware user transformer context. Test content preservation as well as line width.",
+          "size_min": 300,
+          "size_max": 500,
+          "priority": "P1",
+          "priority_reason": "Core prompt presentation differs in default spacing and lacks the appearance/transformer contract."
+        }
+      ]
+    },
+    {
+      "symbol": "renderUserMessageBorder",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:140",
+      "covering_entries": [
+        "TUI-027"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts",
+        "sha256": "d6e827df541a57a85a9d4feb6273d9ff3985bd7cf7f56c3921346ded2641f82a",
+        "range": [
+          137,
+          154
+        ],
+        "text": "137 | \treturn style === \"top-bottom-single\" || style === \"top-bottom-double\" || style === \"top-bottom-bold\";\n138 | }\n139 | \n140 | export function renderUserMessageBorder(\n141 | \tstyle: AppearanceBorderStyle,\n142 | \twidth: number,\n143 | \tborderColor: (text: string) => string,\n144 | ): { top: string | null; bottom: string | null; left: string; right: string } {\n145 | \tif (style === \"none\" || width <= 0) {\n146 | \t\treturn { top: null, bottom: null, left: \"\", right: \"\" };\n147 | \t}\n148 | \tconst safeWidth = Math.max(1, width);\n149 | \tif (isTopBottomOnly(style)) {\n150 | \t\tconst glyph = HORIZONTAL_BORDERS[style.replace(\"top-bottom-\", \"\")] ?? \"─\";\n151 | \t\tconst line = borderColor(glyph.repeat(safeWidth));\n152 | \t\treturn { top: line, bottom: line, left: \"\", right: \"\" };\n153 | \t}\n154 | \tconst horizontal = HORIZONTAL_BORDERS[style] ?? \"─\";"
+      },
+      "entries": [
+        {
+          "id": "TUI-027",
+          "title": "User message formatting, width budgets and OSC 133 zones",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:1-181`; `ice:packages/coding-agent/src/modes/interactive/components/osc133-zone.ts:1-20`; presentation helper `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:20-163`; tests `ice:packages/coding-agent/test/user-message.test.ts:1-67`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:1-163`, `ice:packages/coding-agent/test/appearance-user-message.test.ts:1-67`.",
+          "what": "Renders the user's original prompt as styled Markdown with appearance-controlled format, padding, borders and optional compact width, and marks the resulting rows as a terminal prompt zone.",
+          "mechanism": "The component retains original text separately from formatted display text, builds a background Box around Markdown and applies appearance styling without mutating the prompt. Rendering recomputes the width budget and rebuilds the box, then adds optional borders and OSC133 markers to the emitted rows.\n\nConstructor defaults are Markdown theme from the global theme, outputPad1, no transformers and no appearance. getText returns the original text; setOutputPad/setAppearance rebuild immediately. With appearance, every `{message}` occurrence in format is replaced through split/join, the shared resolver supplies exact foreground/background/border colors and configured text styles, and appearance padding overrides outputPad. Without appearance, background is userMessageBg, foreground userMessageText and vertical padding0. Markdown is configured with preserveOrderedListMarkers:true and preserveBackslashEscapes:true, plus the user/false transformer context (TUI-028). Box padding is clamped nonnegative at construction (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:31-102`).\n\nrender floors the requested width and clamps it to at least1. Side borders reserve2 columns except none/top-bottom styles. Horizontal padding is limited to max(0,floor((safeWidth-sideWidth)/2)); vertical padding is used unchanged. The full-width branch renders the Box at safeWidth, clips/pads rows, wraps each row with side borders when present and finally clips/pads every returned row back to safeWidth. It therefore fits the final rows, but the Box is initially rendered at outer width rather than the reduced side-border content width; adding side borders clips the rendered rows instead of reflowing text at that smaller width. This source behavior is distinct from the comment claiming content is budgeted before borders (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:104-145`).\n\nfitToContent chooses min(maxWidth,longest visible source line+2*paddingX+sideWidth), using formatted raw source rather than rendered Markdown row widths. It renders at that outer target, slices side-border content to max(1,outerTarget-sideWidth), adds top/bottom and returns without the full-width branch's final clamp. For a one-column target with side borders, the helper still supplies two side glyphs and contentTarget remains1; this branch has an untested narrow-width overflow risk. The existing width1/2/3/10/30/80 matrix uses the default fitToContent:false; the fit-to-content test uses width80. No runtime tests were executed (`ice:packages/coding-agent/src/modes/interactive/components/user-message.ts:122-135`, `ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:145-161`, `ice:packages/coding-agent/test/appearance-user-message-layout.test.ts:20-100`).\n\nfitLineToWidth pads with spaces or slices by visible columns while preserving ANSI; zero requested width is allowed in this helper. fitTargetWidth measures each unwrapped source line. Exported fitLinesToContent measures already-rendered lines, clamps target to maxWidth-sideWidth and pads/truncates each, but the component's render path uses fitTargetWidth instead. The border helper supports none/single/double/round/bold/classic/single-double/double-single/top-bottom-single/top-bottom-double/top-bottom-bold; its mixed styles fall through to default horizontal/vertical glyphs, with the supplied mixed-style corner table, unlike the assistant helper's explicit mixed glyphs.\n\nmarkOsc133Zone mutates the rows array. Empty rows remain empty; a single row begins A+B+C in order; multiple rows begin with A on the first and B+C on the last, never suffixing the line. Exact bytes are ESC]133;A BEL, ESC]133;B BEL and ESC]133;C BEL. User-message tests assert one-row compact output, marker order, background reset at line end and transformer context/invalidation; appearance tests cover format/style/color/width, not preservation of all text through side-border clipping.",
+          "interfaces": "UserMessageComponent(text,markdownTheme?,outputPad=1,markdownTransformers=[]): getText(),setOutputPad(number),setAppearance(UserMessageAppearance|null),render(width). Helpers fitLineToWidth(line,width),fitTargetWidth(source,paddingX,maxWidth,sideWidth),fitLinesToContent(lines,maxWidth,sideWidth),markOsc133Zone(lines). Appearance schema and validation remain TUI-009/010, not a second independently validated model.",
+          "dependencies": [
+            "TUI-005",
+            "TUI-009",
+            "TUI-010",
+            "TUI-028",
+            "TUI-201",
+            "TUI-203"
+          ],
+          "dependency_text": "Uses shared Box/Markdown and ANSI-aware width/slicing. Main interactive stamping and later appearance updates are TUI-024.",
+          "rust": "Native UserMessageComponent already wraps Markdown in a theme.surface background and OSC133, defaults horizontal padding1, permits with_pad, and rebuilds its cached Box only on invalidation/padding/theme revision (`rust:crates/ice-tui/src/user_message.rs:25-115`). Its vertical padding is always1, unlike TS default0; the comment claiming output_pad controls both is inaccurate. It has no user appearance format/styles/borders/fit-to-content or user transformer hook. Marker insertion would produce B+C before A for a single returned row, but the fixed vertical padding normally makes standard messages multi-row; scope that as the helper path, not an observed current one-row regression. Native inline tests check nonempty output, marker presence and CJK no-panic, without marker-order or exact layout assertions (`rust:crates/ice-tui/src/user_message.rs:122-154`). The native cache optimization is an existing capability to retain; its comment that TS builds only once does not describe the frozen TS render method.",
+          "port": "Add typed user appearance and original/display text separation to native UserMessageComponent, preserving its cache and rebuilding only when text/theme/appearance/width requires it. Budget the actual inner width before Markdown layout and explicitly decide whether to fix the TS clipping and narrow fit branch while retaining intended appearance behavior. Implement shared OSC133 order handling for one and multiple rows, exact per-role colors and width-aware user transformer context. Test content preservation as well as line width.",
+          "size_min": 300,
+          "size_max": 500,
+          "priority": "P1",
+          "priority_reason": "Core prompt presentation differs in default spacing and lacks the appearance/transformer contract."
+        }
+      ]
+    },
+    {
+      "symbol": "AppearanceProfileActionResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:36",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+        "sha256": "a4f367e1a56d9abcf8cb1a4b25289412c5e41c0a19b5741d14ac1a62a95d99ce",
+        "range": [
+          33,
+          50
+        ],
+        "text": "33 | import { AppearancePreviewComponent, PREVIEW_SCENES, type PreviewScene } from \"./appearance-preview.ts\";\n34 | import { ExtensionInputComponent } from \"./extension-input.ts\";\n35 | \n36 | export interface AppearanceProfileActionResult {\n37 | \tappearance?: AppearanceSettingsV2;\n38 | \ttheme?: string;\n39 | }\n40 | \n41 | export interface AppearanceCustomizerCallbacks {\n42 | \tonDraftChange: (draft: AppearanceSettingsV2) => void;\n43 | \tonApply: () => void;\n44 | \tonCancel: () => void;\n45 | \tonThemePreview?: (theme: Theme, name: string) => void;\n46 | \tonProfileAction?: (\n47 | \t\taction: string,\n48 | \t\tname: string | undefined,\n49 | \t\tdraft: AppearanceSettingsV2,\n50 | \t\tthemeName: string,"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "AppearanceCustomizerCallbacks",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:41",
+      "covering_entries": [
+        "TUI-019"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+        "sha256": "a4f367e1a56d9abcf8cb1a4b25289412c5e41c0a19b5741d14ac1a62a95d99ce",
+        "range": [
+          38,
+          55
+        ],
+        "text": "38 | \ttheme?: string;\n39 | }\n40 | \n41 | export interface AppearanceCustomizerCallbacks {\n42 | \tonDraftChange: (draft: AppearanceSettingsV2) => void;\n43 | \tonApply: () => void;\n44 | \tonCancel: () => void;\n45 | \tonThemePreview?: (theme: Theme, name: string) => void;\n46 | \tonProfileAction?: (\n47 | \t\taction: string,\n48 | \t\tname: string | undefined,\n49 | \t\tdraft: AppearanceSettingsV2,\n50 | \t\tthemeName: string,\n51 | \t) => AppearanceProfileActionResult | undefined;\n52 | }\n53 | \n54 | const SECTION_LABELS: Record<string, string> = {\n55 | \t\"user-messages\": \"User messages\","
+      },
+      "entries": [
+        {
+          "id": "TUI-019",
+          "title": "Appearance customizer viewport, navigation, draft validation and disposal",
+          "status": "missing",
+          "source": "Customizer shell and controls: `ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:41-52`, `ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:210-435`, `ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:470-630`; viewport/focus tests: `ice:packages/coding-agent/test/appearance-customizer.test.ts:69-141`, `ice:packages/coding-agent/test/appearance-customizer.test.ts:174-242`.",
+          "what": "A full-screen appearance editor presents a searchable settings tree beside a live preview and applies or discards an existing customization draft.",
+          "mechanism": "The constructor snapshots the session appearance and selected theme, builds a root SettingsList with at most20 visible items and search enabled, and owns an AppearancePreviewComponent. Tab switches settings/preview focus before submenu input handling, so Tab is intercepted even in text editors. Preview up/down moves one row, page actions move by preview height, and cancel returns focus to settings; root cancel delegates the supplied callback. dispose stops preview activity.\n\nRendering uses the terminal row count, default48, reserving two hint rows. Below width104 it stacks settings above a preview capped at10 rows and40% of the body; at104 or wider the left pane is min(56,floor((width-3)*.45)), with a three-cell separator and remaining width for preview. Each line is visibly truncated/padded, and output is clipped to height. The preview's own first three heading rows are discarded, a pane heading reports visible range, scroll is clamped, and blank rows fill the viewport. List fitting repeatedly reduces maxVisible until it fits. Nested shells have breadcrumbs, optional inline errors, at most14 initial rows, and hard-coded Enter/Esc hints; structural actions rebuild lists, whereas ordinary updates synchronize values/descriptions/labels.\n\nRoot sections cover theme, user/input, three thinking sections, assistant/Markdown/tools/Bash/diff/system/status/footer/chrome/subagent, highlighters, profiles and import/export, plus preview scene, apply and reset. emit passes the local draft through session validation. Invalid edits restore the last effective draft and refresh root items without invoking preview/callback; valid edits clone the normalized result into the preview and onDraftChange. A successful edit does not explicitly clear an earlier themeError. Reset clears pending imports and resets the combined session, then emits appearance; theme instance preview is not directly invoked by that root action. Applying and canceling are callback contracts; filesystem transaction semantics belong to TUI-016.",
+          "interfaces": "AppearanceCustomizerComponent(session,{onDraftChange,onApply,onCancel,onThemePreview?,onProfileAction?},ui?); render(width),handleInput(data),invalidate(),dispose(),getSettingsList(). onProfileAction is declared but not called in the read implementation. The main runtime supplies an overlay occupying100% width and max height, anchored top-left (TUI-024).",
+          "dependencies": [
+            "TUI-016",
+            "TUI-023"
+          ],
+          "dependency_text": "Uses SettingsList, ExtensionInputComponent and terminal width/keybinding utilities; primitive behavior is covered by the TUI terminal fragment.",
+          "rust": "Native /settings constructs a single SettingsList and immediately persists value changes. Submenus replace the active selector; cancel returns to the editor. Its complete row builder has theme/model/thinking/scope and operational settings but no appearance customizer, staged Apply/Cancel tree or side preview (`rust:crates/ice-cli/src/interactive_tui/settings.rs:51-287`). The native /theme selector contains three presets (`rust:crates/ice-cli/src/interactive_tui/selectors.rs:449-506`). These existing primitives do not implement this screen.",
+          "port": "Build the customizer over native settings/overlay primitives with explicit draft ownership, deterministic viewport fitting, focus transfer, validation feedback and disposal. Preserve existing settings behavior unless deliberately changing it. Cover narrow/wide layouts, nested cancel, preview scrolling, failed edits and overlay teardown with behavioral tests.",
+          "size_min": 420,
+          "size_max": 700,
+          "priority": "P1",
+          "priority_reason": "Provides the main user route to the existing TS appearance feature set."
+        }
+      ]
+    },
+    {
+      "symbol": "PreviewScene",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:34",
+      "covering_entries": [
+        "TUI-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/appearance-preview.ts",
+        "sha256": "f97369dd1e85e277bfebe5871ce5e2deb70c17469b81ba1e9b99f522813b1e72",
+        "range": [
+          31,
+          48
+        ],
+        "text": "31 | import { UserMessageComponent } from \"./user-message.ts\";\n32 | \n33 | /** Scene tabs for the live preview (plan 27.1). */\n34 | export type PreviewScene = \"all\" | \"conversation\" | \"markdown\" | \"tools\" | \"input\" | \"chrome\" | \"footer\";\n35 | \n36 | export const PREVIEW_SCENES: PreviewScene[] = [\"all\", \"conversation\", \"markdown\", \"tools\", \"input\", \"chrome\", \"footer\"];\n37 | \n38 | /** Border glyphs for the input presentation demo (subset shared with the editor). */\n39 | const INPUT_BORDER_GLYPHS: Record<string, { tl: string; tr: string; bl: string; br: string; h: string; v: string }> = {\n40 | \tsingle: { tl: \"┌\", tr: \"┐\", bl: \"└\", br: \"┘\", h: \"─\", v: \"│\" },\n41 | \tdouble: { tl: \"╔\", tr: \"╗\", bl: \"╚\", br: \"╝\", h: \"═\", v: \"║\" },\n42 | \tround: { tl: \"╭\", tr: \"╮\", bl: \"╰\", br: \"╯\", h: \"─\", v: \"│\" },\n43 | \tbold: { tl: \"┏\", tr: \"┓\", bl: \"┗\", br: \"┛\", h: \"━\", v: \"┃\" },\n44 | };\n45 | \n46 | export const DEFAULT_HIGHLIGHTER_TEST_TEXT = \"TODO fix this  // FIXME later\";\n47 | \n48 | /** Representative preview built from the same renderers/presentation helpers used by interactive mode. */"
+      },
+      "entries": [
+        {
+          "id": "TUI-023",
+          "title": "Appearance preview scenes, real component samples and animation cleanup",
+          "status": "missing",
+          "source": "Complete preview component: `ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:1-404`; scene test: `ice:packages/coding-agent/test/appearance-customizer.test.ts:420-430`; disposal coverage: `ice:packages/coding-agent/test/appearance-acceptance.test.ts:395-416`.",
+          "what": "Renders representative conversation, Markdown, tool, input, chrome and footer samples inside the customizer without submitting messages or running commands.",
+          "mechanism": "Scenes are all,conversation,markdown,tools,input,chrome,footer; all is default. The component clones appearance, owns Loader and Bash preview instances, and disposes them before every rebuild. setAppearance always rebuilds; setScene rebuilds only on change. dispose stops loaders, disposes Bash previews and empties their arrays. Highlighter sample text defaults to TODO fix this // FIXME later and is capped at200 UTF-16 units.\n\nWith a UI, input uses a real CustomEditor and fresh KeybindingsManager; tool samples use real ToolExecutionComponent instances for fake pending/success/error results, cwd=process.cwd and showImages=false; Bash samples use fake npm test output and never execute a process. The tools-only scene shows all three states, while the all scene limits tool output. Without a UI it renders simplified styled text/manual borders; the manual editor sample has a nominal inner width at least10 rather than the real editor's geometry.\n\nConversation samples use real UserMessage/AssistantMessage/CustomMessage components with appearance applied, but thinking is a separate sample. Thinking animation uses mirrored frames and configured interval; per-kind status samples use raw frames, so reverseMirror is not applied there. Status uses a Loader only when a UI exists and more than one frame is present; otherwise first-frame text. Working/thinking uses its own Loader path and first configured verb. Markdown covers headings, inline styles, link, quote/list/rule/table with the appearance MarkdownTheme and table style. Diff is styled added/removed/context text. Chrome and subagent state samples are static.\n\nPreview coverage is intentionally incomplete in current source: the footer is two static lines and does not exercise actual Footer field order, visibility, separators or extension statuses; Markdown samples do not exercise every modeled padding/background/code-block property; assistant thinking sample and status mirroring differ from runtime paths. Thus a convincing preview is not evidence that every appearance field reaches production rendering.",
+          "interfaces": "AppearancePreviewComponent(appearance,ui?,scene='all'),setAppearance,setScene/getScene,setHighlighterSampleText,invalidate,render,dispose. Preview runtime timers must stop when the customizer closes or a scene is rebuilt.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-010",
+            "TUI-017",
+            "TUI-018"
+          ],
+          "dependency_text": "Depends on the concrete message/tool/Bash/editor/status components documented separately. TUI-019 owns pane layout and focus.",
+          "rust": "Native TUI has message and loader components, but the native settings selector has no preview factory or scene pane (`rust:crates/ice-cli/src/interactive_tui/settings.rs:51-153`). Existing native UserMessage and AssistantMessage implementations provide reusable rendering primitives (`rust:crates/ice-tui/src/user_message.rs:16-119`, `rust:crates/ice-tui/src/assistant_message.rs:125-283`); they do not implement a customization preview lifecycle.",
+          "port": "Build preview scenes using the same native presentation adapters as runtime, inject fake data rather than execute tools, and centralize timer/disposal ownership. Expand assertions beyond timer counts to verify preview/runtime parity for footer fields, status mirroring and Markdown geometry.",
+          "size_min": 320,
+          "size_max": 550,
+          "priority": "P2",
+          "priority_reason": "Enables safe visual review of settings while preventing leaked animation activity and misleading previews."
+        }
+      ]
+    },
+    {
+      "symbol": "PREVIEW_SCENES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:36",
+      "covering_entries": [
+        "TUI-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/appearance-preview.ts",
+        "sha256": "f97369dd1e85e277bfebe5871ce5e2deb70c17469b81ba1e9b99f522813b1e72",
+        "range": [
+          33,
+          50
+        ],
+        "text": "33 | /** Scene tabs for the live preview (plan 27.1). */\n34 | export type PreviewScene = \"all\" | \"conversation\" | \"markdown\" | \"tools\" | \"input\" | \"chrome\" | \"footer\";\n35 | \n36 | export const PREVIEW_SCENES: PreviewScene[] = [\"all\", \"conversation\", \"markdown\", \"tools\", \"input\", \"chrome\", \"footer\"];\n37 | \n38 | /** Border glyphs for the input presentation demo (subset shared with the editor). */\n39 | const INPUT_BORDER_GLYPHS: Record<string, { tl: string; tr: string; bl: string; br: string; h: string; v: string }> = {\n40 | \tsingle: { tl: \"┌\", tr: \"┐\", bl: \"└\", br: \"┘\", h: \"─\", v: \"│\" },\n41 | \tdouble: { tl: \"╔\", tr: \"╗\", bl: \"╚\", br: \"╝\", h: \"═\", v: \"║\" },\n42 | \tround: { tl: \"╭\", tr: \"╮\", bl: \"╰\", br: \"╯\", h: \"─\", v: \"│\" },\n43 | \tbold: { tl: \"┏\", tr: \"┓\", bl: \"┗\", br: \"┛\", h: \"━\", v: \"┃\" },\n44 | };\n45 | \n46 | export const DEFAULT_HIGHLIGHTER_TEST_TEXT = \"TODO fix this  // FIXME later\";\n47 | \n48 | /** Representative preview built from the same renderers/presentation helpers used by interactive mode. */\n49 | export class AppearancePreviewComponent extends Container {\n50 | \tprivate appearance: AppearanceSettingsV2;"
+      },
+      "entries": [
+        {
+          "id": "TUI-023",
+          "title": "Appearance preview scenes, real component samples and animation cleanup",
+          "status": "missing",
+          "source": "Complete preview component: `ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:1-404`; scene test: `ice:packages/coding-agent/test/appearance-customizer.test.ts:420-430`; disposal coverage: `ice:packages/coding-agent/test/appearance-acceptance.test.ts:395-416`.",
+          "what": "Renders representative conversation, Markdown, tool, input, chrome and footer samples inside the customizer without submitting messages or running commands.",
+          "mechanism": "Scenes are all,conversation,markdown,tools,input,chrome,footer; all is default. The component clones appearance, owns Loader and Bash preview instances, and disposes them before every rebuild. setAppearance always rebuilds; setScene rebuilds only on change. dispose stops loaders, disposes Bash previews and empties their arrays. Highlighter sample text defaults to TODO fix this // FIXME later and is capped at200 UTF-16 units.\n\nWith a UI, input uses a real CustomEditor and fresh KeybindingsManager; tool samples use real ToolExecutionComponent instances for fake pending/success/error results, cwd=process.cwd and showImages=false; Bash samples use fake npm test output and never execute a process. The tools-only scene shows all three states, while the all scene limits tool output. Without a UI it renders simplified styled text/manual borders; the manual editor sample has a nominal inner width at least10 rather than the real editor's geometry.\n\nConversation samples use real UserMessage/AssistantMessage/CustomMessage components with appearance applied, but thinking is a separate sample. Thinking animation uses mirrored frames and configured interval; per-kind status samples use raw frames, so reverseMirror is not applied there. Status uses a Loader only when a UI exists and more than one frame is present; otherwise first-frame text. Working/thinking uses its own Loader path and first configured verb. Markdown covers headings, inline styles, link, quote/list/rule/table with the appearance MarkdownTheme and table style. Diff is styled added/removed/context text. Chrome and subagent state samples are static.\n\nPreview coverage is intentionally incomplete in current source: the footer is two static lines and does not exercise actual Footer field order, visibility, separators or extension statuses; Markdown samples do not exercise every modeled padding/background/code-block property; assistant thinking sample and status mirroring differ from runtime paths. Thus a convincing preview is not evidence that every appearance field reaches production rendering.",
+          "interfaces": "AppearancePreviewComponent(appearance,ui?,scene='all'),setAppearance,setScene/getScene,setHighlighterSampleText,invalidate,render,dispose. Preview runtime timers must stop when the customizer closes or a scene is rebuilt.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-010",
+            "TUI-017",
+            "TUI-018"
+          ],
+          "dependency_text": "Depends on the concrete message/tool/Bash/editor/status components documented separately. TUI-019 owns pane layout and focus.",
+          "rust": "Native TUI has message and loader components, but the native settings selector has no preview factory or scene pane (`rust:crates/ice-cli/src/interactive_tui/settings.rs:51-153`). Existing native UserMessage and AssistantMessage implementations provide reusable rendering primitives (`rust:crates/ice-tui/src/user_message.rs:16-119`, `rust:crates/ice-tui/src/assistant_message.rs:125-283`); they do not implement a customization preview lifecycle.",
+          "port": "Build preview scenes using the same native presentation adapters as runtime, inject fake data rather than execute tools, and centralize timer/disposal ownership. Expand assertions beyond timer counts to verify preview/runtime parity for footer fields, status mirroring and Markdown geometry.",
+          "size_min": 320,
+          "size_max": 550,
+          "priority": "P2",
+          "priority_reason": "Enables safe visual review of settings while preventing leaked animation activity and misleading previews."
+        }
+      ]
+    },
+    {
+      "symbol": "DEFAULT_HIGHLIGHTER_TEST_TEXT",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:46",
+      "covering_entries": [
+        "TUI-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/appearance-preview.ts",
+        "sha256": "f97369dd1e85e277bfebe5871ce5e2deb70c17469b81ba1e9b99f522813b1e72",
+        "range": [
+          43,
+          60
+        ],
+        "text": "43 | \tbold: { tl: \"┏\", tr: \"┓\", bl: \"┗\", br: \"┛\", h: \"━\", v: \"┃\" },\n44 | };\n45 | \n46 | export const DEFAULT_HIGHLIGHTER_TEST_TEXT = \"TODO fix this  // FIXME later\";\n47 | \n48 | /** Representative preview built from the same renderers/presentation helpers used by interactive mode. */\n49 | export class AppearancePreviewComponent extends Container {\n50 | \tprivate appearance: AppearanceSettingsV2;\n51 | \tprivate scene: PreviewScene = \"all\";\n52 | \tprivate highlighterTestText = DEFAULT_HIGHLIGHTER_TEST_TEXT;\n53 | \tprivate readonly ui?: TUI;\n54 | \tprivate loaders: Loader[] = [];\n55 | \tprivate bashPreviews: BashExecutionComponent[] = [];\n56 | \n57 | \tconstructor(appearance: AppearanceSettingsV2, ui?: TUI) {\n58 | \t\tsuper();\n59 | \t\tthis.appearance = structuredClone(appearance);\n60 | \t\tthis.ui = ui;"
+      },
+      "entries": [
+        {
+          "id": "TUI-023",
+          "title": "Appearance preview scenes, real component samples and animation cleanup",
+          "status": "missing",
+          "source": "Complete preview component: `ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:1-404`; scene test: `ice:packages/coding-agent/test/appearance-customizer.test.ts:420-430`; disposal coverage: `ice:packages/coding-agent/test/appearance-acceptance.test.ts:395-416`.",
+          "what": "Renders representative conversation, Markdown, tool, input, chrome and footer samples inside the customizer without submitting messages or running commands.",
+          "mechanism": "Scenes are all,conversation,markdown,tools,input,chrome,footer; all is default. The component clones appearance, owns Loader and Bash preview instances, and disposes them before every rebuild. setAppearance always rebuilds; setScene rebuilds only on change. dispose stops loaders, disposes Bash previews and empties their arrays. Highlighter sample text defaults to TODO fix this // FIXME later and is capped at200 UTF-16 units.\n\nWith a UI, input uses a real CustomEditor and fresh KeybindingsManager; tool samples use real ToolExecutionComponent instances for fake pending/success/error results, cwd=process.cwd and showImages=false; Bash samples use fake npm test output and never execute a process. The tools-only scene shows all three states, while the all scene limits tool output. Without a UI it renders simplified styled text/manual borders; the manual editor sample has a nominal inner width at least10 rather than the real editor's geometry.\n\nConversation samples use real UserMessage/AssistantMessage/CustomMessage components with appearance applied, but thinking is a separate sample. Thinking animation uses mirrored frames and configured interval; per-kind status samples use raw frames, so reverseMirror is not applied there. Status uses a Loader only when a UI exists and more than one frame is present; otherwise first-frame text. Working/thinking uses its own Loader path and first configured verb. Markdown covers headings, inline styles, link, quote/list/rule/table with the appearance MarkdownTheme and table style. Diff is styled added/removed/context text. Chrome and subagent state samples are static.\n\nPreview coverage is intentionally incomplete in current source: the footer is two static lines and does not exercise actual Footer field order, visibility, separators or extension statuses; Markdown samples do not exercise every modeled padding/background/code-block property; assistant thinking sample and status mirroring differ from runtime paths. Thus a convincing preview is not evidence that every appearance field reaches production rendering.",
+          "interfaces": "AppearancePreviewComponent(appearance,ui?,scene='all'),setAppearance,setScene/getScene,setHighlighterSampleText,invalidate,render,dispose. Preview runtime timers must stop when the customizer closes or a scene is rebuilt.",
+          "dependencies": [
+            "TUI-009",
+            "TUI-010",
+            "TUI-017",
+            "TUI-018"
+          ],
+          "dependency_text": "Depends on the concrete message/tool/Bash/editor/status components documented separately. TUI-019 owns pane layout and focus.",
+          "rust": "Native TUI has message and loader components, but the native settings selector has no preview factory or scene pane (`rust:crates/ice-cli/src/interactive_tui/settings.rs:51-153`). Existing native UserMessage and AssistantMessage implementations provide reusable rendering primitives (`rust:crates/ice-tui/src/user_message.rs:16-119`, `rust:crates/ice-tui/src/assistant_message.rs:125-283`); they do not implement a customization preview lifecycle.",
+          "port": "Build preview scenes using the same native presentation adapters as runtime, inject fake data rather than execute tools, and centralize timer/disposal ownership. Expand assertions beyond timer counts to verify preview/runtime parity for footer fields, status mirroring and Markdown geometry.",
+          "size_min": 320,
+          "size_max": 550,
+          "priority": "P2",
+          "priority_reason": "Enables safe visual review of settings while preventing leaked animation activity and misleading previews."
+        }
+      ]
+    },
+    {
+      "symbol": "RenderDiffOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/diff.ts:126",
+      "covering_entries": [
+        "TUI-036"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/diff.ts",
+        "sha256": "7650b07f051c9136342fe27e59262ae6e9f8d0fd9e048b0f340f32f6a8806dab",
+        "range": [
+          123,
+          140
+        ],
+        "text": "123 | \treturn { removedLine, addedLine };\n124 | }\n125 | \n126 | export interface RenderDiffOptions {\n127 | \t/** File path (unused, kept for API compatibility) */\n128 | \tfilePath?: string;\n129 | \t/** Pad tinted rows to this width (and truncate longer ones) so the background spans the view. */\n130 | \twidth?: number;\n131 | }\n132 | \n133 | /**\n134 |  * Render a diff string: a line-number/sign gutter, tinted rows for added and removed lines,\n135 |  * and a stronger tint on changed words of a single-line modification.\n136 |  */\n137 | export function renderDiff(diffText: string, options: RenderDiffOptions = {}): string {\n138 | \tconst { width } = options;\n139 | \tconst lines = diffText.split(\"\\n\");\n140 | \tconst result: string[] = [];"
+      },
+      "entries": [
+        {
+          "id": "TUI-036",
+          "title": "Diff row parsing, word emphasis and appearance-sensitive tinting",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/diff.ts:1-207`; `ice:packages/coding-agent/src/modes/interactive/components/tool-execution.ts:392-460`; native inline tests `rust:crates/ice-tui/src/diff.rs:313-358`.",
+          "what": "Formats numbered edit diffs with theme or custom appearance, single-line replacement word emphasis and width-sensitive background rows.",
+          "mechanism": "renderDiff parses numbered changed/context rows and coalesces consecutive removals followed by additions. Exactly one removed and one added row receive a word-level comparison; larger hunks retain whole-row coloring. The result is newline-joined text whose height is controlled by the caller.\n\nThe TS parser requires a leading '+', '-' or whitespace, optional whitespace/digits, then one whitespace separator and the remaining content. Unparsed rows stay context text. Tabs become3 spaces only in parsed content. Line-number text is retained, then rendered before the sign. diffWords marks changed chunks; leading whitespace is excluded from emphasis only for the first removed/added chunk. The normal theme path uses added/removed/context foregrounds and, for changed rows, a background chosen by theme.getDiffBgAnsi. Stronger word background is used only when both row/word tints exist, otherwise inverse video emphasizes changed words. A customized appearance is detected by JSON.stringify inequality against the default model, so property order can affect that decision; custom text presentation disables automatic row tinting (`ice:packages/coding-agent/src/modes/interactive/components/diff.ts:13-98`, `ice:packages/coding-agent/src/modes/interactive/components/diff.ts:117-207`).\n\nOnly tinted changed rows apply width clipping with ellipsis, right padding to width and a background reset. Custom-styled rows and untinted/context rows do not apply that width bound in this helper; the compact tool caller clips the returned rows separately. The optional filePath argument is accepted but unused, so it does not supply syntax highlighting. setDiffAppearance clones its argument into module-global state and reset(undefined) restores defaults. No height cap exists in renderDiff itself; TUI-032 applies14 collapsed rows and all rows for an expanded successful edit.",
+          "interfaces": "setDiffAppearance(appearance|undefined); renderDiff(diff,{filePath?,width?}) returns string. Internal parseDiffLine/styleLine/diffWords grouping handles only the documented numbered-row grammar.",
+          "dependencies": [
+            "TUI-001",
+            "TUI-009",
+            "TUI-032",
+            "TUI-203"
+          ],
+          "dependency_text": "TOOLS owns edit diff production and atomic file changes; this entry owns display parsing and tint/word styling. Terminal TUI-203 provides clipping/style continuation primitives.",
+          "rust": "Native render_diff already parses changed/context rows, uses TextDiff::from_unicode_words for a single replacement pair, highlights changed words by inverse video and clips positive-width rows. Its layout places sign before a right-aligned line-number gutter and '│'; TS places the retained number before the sign. Native accepts only '+','-' or literal-space leading signs, does not require the TS separator after digits, and width0 returns content unchanged. It has no appearance override or adaptive changed-row/word background. Tabs become3 spaces. Its changed-word loop strips leading whitespace from every changed chunk but re-adds it only for the first chunk, so later changed chunks can lose their leading whitespace; this is a bounded source-level formatting limitation. Native inline tests verify inverse emphasis, context foreground and clipping but do not cover that later-chunk case (`rust:crates/ice-tui/src/diff.rs:1-311`, `rust:crates/ice-tui/src/diff.rs:313-358`). Native tool panels then impose their own6/40 diff-row caps, separately from this renderer (`rust:crates/ice-tui/src/tool_execution.rs:465-505`).",
+          "port": "Align the numbered-row grammar and row order where compatibility is desired, add shared diff appearance and theme-derived row/word tinting, and preserve whitespace across all word chunks. Keep explicit clipping at both renderer and consumer boundaries so appearance changes cannot produce unbounded rows.",
+          "size_min": 140,
+          "size_max": 250,
+          "priority": "P2",
+          "priority_reason": "Native diff rendering is usable, but appearance, grammar, layout and a whitespace edge case differ."
+        }
+      ]
+    },
+    {
+      "symbol": "ExtensionEditorComponent",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:22",
+      "covering_entries": [
+        "EXT-040"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/extension-editor.ts",
+        "sha256": "82c5ea3c36613bd1289a4f2b810295f1b11470b45f2f9e72e7cf5dfe3c0b983c",
+        "range": [
+          19,
+          36
+        ],
+        "text": "19 | import { DynamicBorder } from \"./dynamic-border.ts\";\n20 | import { keyHint } from \"./keybinding-hints.ts\";\n21 | \n22 | export class ExtensionEditorComponent extends Container implements Focusable {\n23 | \tprivate editor: Editor;\n24 | \tprivate onSubmitCallback: (value: string) => void;\n25 | \tprivate onCancelCallback: () => void;\n26 | \tprivate tui: TUI;\n27 | \tprivate keybindings: KeybindingsManager;\n28 | \tprivate externalEditorCommand: string;\n29 | \n30 | \tprivate _focused = false;\n31 | \tget focused(): boolean {\n32 | \t\treturn this._focused;\n33 | \t}\n34 | \tset focused(value: boolean) {\n35 | \t\tthis._focused = value;\n36 | \t\tthis.editor.focused = value;"
+      },
+      "entries": [
+        {
+          "id": "EXT-040",
+          "title": "Extension dialogs, cancellation and interactive/RPC projection",
+          "status": "partial",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:97-105; ice:packages/coding-agent/src/core/extensions/types.ts:154-162; ice:packages/coding-agent/src/core/extensions/types.ts:248-249; ice:packages/coding-agent/src/core/extensions/runner.ts:255-286; ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3245-3423; ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129; ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90; ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133; ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:280-441. Tests: ice:packages/coding-agent/test/interactive-mode-status.test.ts:374-415.",
+          "what": "Let an extension ask a selector, yes/no question, single-line input or multiline editor question and receive a cancellable result when the current mode supports it.",
+          "mechanism": "Dialog calls are asynchronous UI requests whose cancellation defaults are undefined for text/selection and false for confirmation. Interactive and RPC modes implement the same public signatures through different transports, while the no-UI context resolves immediately without displaying a dialog.\n\nselect, confirm and input take optional AbortSignal, timeout and Markdown content. Interactive mode checks an already-aborted signal, installs a one-shot abort listener, renders the dialog and cleans it up when submitted/cancelled/timed out. Confirmation maps the Yes choice to true; all cancellation paths are false. The selector consumes content and configured timeout. The input component accepts a placeholder argument but its implementation names it _placeholder and does not display it, so documented placeholder behavior is not actually present there. editor(title,prefill) has no dialog options or deadline and supports the component's external-editor path, selecting VISUAL, then EDITOR, then its platform fallback.\n\nRPC uses request IDs, a pending-request map and extension_ui_request/extension_ui_response messages. It removes pending state on settlement and returns the same cancellation defaults; timeout is tested by truthiness, not a positive-value validator. Abort is local settlement, with no paired wire cancellation message from this path. Admission/shutdown may reject new control requests before sending them. These queues are not durable session records. The public no-UI implementation returns undefined/false, and custom editor creation is a separate EXT-045 contract.",
+          "interfaces": "```ts\n/** Options for extension UI dialogs. */\nexport interface ExtensionUIDialogOptions {\n\t/** AbortSignal to programmatically dismiss the dialog. */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds. Dialog auto-dismisses with live countdown display. */\n\ttimeout?: number;\n\t/** Optional Markdown content to review before choosing an option. */\n\tcontent?: string;\n}\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:97-105.\n```ts\n\t/** Show a selector and return the user's choice. */\n\tselect(title: string, options: string[], opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n\n\t/** Show a confirmation dialog. */\n\tconfirm(title: string, message: string, opts?: ExtensionUIDialogOptions): Promise<boolean>;\n\n\t/** Show a text input dialog. */\n\tinput(title: string, placeholder?: string, opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:155-162.\n```ts\n\t/** Show a multi-line editor for text editing. */\n\teditor(title: string, prefill?: string): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:248-249.\nInteractive editor environment selection: VISUAL, then EDITOR (ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:53-57). The RPC wire implementation is cited above; its common envelope and admission limits belong to the RPC audit.",
+          "dependencies": [
+            "EXT-009",
+            "EXT-010"
+          ],
+          "dependency_text": "External binary: the configured external editor only when that interactive editor action is invoked. Requires RPC request/response correlation and TUI modal focus contracts from their area audits.",
+          "rust": "rust:crates/ice-extensions/src/actions.rs:1-360; rust:crates/ice-plugin-sdk/src/dialogs.rs:1-106; rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495; rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939. Rust has real command-result selector/input/editor dialogs and a separate UiDialog mailbox for ask_user. The mailbox supports open/poll/cancel/respond with requestId, pending/terminal states, UI detach cancellation and remembered cancelled tool-call IDs; terminal polling consumes the result. It rejects opening without an attached UI rather than returning a fabricated answer. Native selectors show ten visible items, preserve a real input placeholder, and return structured values/kind JSON rather than the TypeScript scalar/boolean contracts. Confirm defaults to Yes/No choices but returns selector-shaped values, not boolean. Permission-purpose dialogs validate explicit allow/reject options and a toolCallId. There is no shared TypeScript AbortSignal/timeout/content contract, and the request mailbox is unbounded. A command dialog may resume its command with encoded action/value arguments instead of resolving a factory Promise.",
+          "port": "Build a compatibility facade on the existing UiDialog mailbox, with typed select/confirm/input/editor requests and scalar response decoding. Add absolute deadlines, cancellation on owner invalidation, bounded outstanding requests and deterministic terminal cleanup. Preserve native permission-purpose validation and UI-not-attached errors as explicit capability behavior, while translating TypeScript cancellation defaults only at the compatibility boundary. Reuse current TUI modal components and define RPC transport projection separately.",
+          "size_min": 220,
+          "size_max": 400,
+          "priority": "P1",
+          "priority_reason": "Dialog result shape and cancellation differences can leave plugins waiting or interpret user consent incorrectly."
+        }
+      ]
+    },
+    {
+      "symbol": "ExtensionInputOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:11",
+      "covering_entries": [
+        "EXT-040"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/extension-input.ts",
+        "sha256": "b13738ed38d26634a3e011fad97bb70fbfb6c3e4fd896720269b9ae71164c684",
+        "range": [
+          8,
+          25
+        ],
+        "text": "8 | import { DynamicBorder } from \"./dynamic-border.ts\";\n9 | import { keyHint } from \"./keybinding-hints.ts\";\n10 | \n11 | export interface ExtensionInputOptions {\n12 | \ttui?: TUI;\n13 | \ttimeout?: number;\n14 | \tinitialValue?: string;\n15 | }\n16 | \n17 | export class ExtensionInputComponent extends Container implements Focusable {\n18 | \tprivate input: Input;\n19 | \tprivate onSubmitCallback: (value: string) => void;\n20 | \tprivate onCancelCallback: () => void;\n21 | \tprivate titleText: Text;\n22 | \tprivate baseTitle: string;\n23 | \tprivate countdown: CountdownTimer | undefined;\n24 | \n25 | \t// Focusable implementation - propagate to input for IME cursor positioning"
+      },
+      "entries": [
+        {
+          "id": "EXT-040",
+          "title": "Extension dialogs, cancellation and interactive/RPC projection",
+          "status": "partial",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:97-105; ice:packages/coding-agent/src/core/extensions/types.ts:154-162; ice:packages/coding-agent/src/core/extensions/types.ts:248-249; ice:packages/coding-agent/src/core/extensions/runner.ts:255-286; ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3245-3423; ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129; ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90; ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133; ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:280-441. Tests: ice:packages/coding-agent/test/interactive-mode-status.test.ts:374-415.",
+          "what": "Let an extension ask a selector, yes/no question, single-line input or multiline editor question and receive a cancellable result when the current mode supports it.",
+          "mechanism": "Dialog calls are asynchronous UI requests whose cancellation defaults are undefined for text/selection and false for confirmation. Interactive and RPC modes implement the same public signatures through different transports, while the no-UI context resolves immediately without displaying a dialog.\n\nselect, confirm and input take optional AbortSignal, timeout and Markdown content. Interactive mode checks an already-aborted signal, installs a one-shot abort listener, renders the dialog and cleans it up when submitted/cancelled/timed out. Confirmation maps the Yes choice to true; all cancellation paths are false. The selector consumes content and configured timeout. The input component accepts a placeholder argument but its implementation names it _placeholder and does not display it, so documented placeholder behavior is not actually present there. editor(title,prefill) has no dialog options or deadline and supports the component's external-editor path, selecting VISUAL, then EDITOR, then its platform fallback.\n\nRPC uses request IDs, a pending-request map and extension_ui_request/extension_ui_response messages. It removes pending state on settlement and returns the same cancellation defaults; timeout is tested by truthiness, not a positive-value validator. Abort is local settlement, with no paired wire cancellation message from this path. Admission/shutdown may reject new control requests before sending them. These queues are not durable session records. The public no-UI implementation returns undefined/false, and custom editor creation is a separate EXT-045 contract.",
+          "interfaces": "```ts\n/** Options for extension UI dialogs. */\nexport interface ExtensionUIDialogOptions {\n\t/** AbortSignal to programmatically dismiss the dialog. */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds. Dialog auto-dismisses with live countdown display. */\n\ttimeout?: number;\n\t/** Optional Markdown content to review before choosing an option. */\n\tcontent?: string;\n}\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:97-105.\n```ts\n\t/** Show a selector and return the user's choice. */\n\tselect(title: string, options: string[], opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n\n\t/** Show a confirmation dialog. */\n\tconfirm(title: string, message: string, opts?: ExtensionUIDialogOptions): Promise<boolean>;\n\n\t/** Show a text input dialog. */\n\tinput(title: string, placeholder?: string, opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:155-162.\n```ts\n\t/** Show a multi-line editor for text editing. */\n\teditor(title: string, prefill?: string): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:248-249.\nInteractive editor environment selection: VISUAL, then EDITOR (ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:53-57). The RPC wire implementation is cited above; its common envelope and admission limits belong to the RPC audit.",
+          "dependencies": [
+            "EXT-009",
+            "EXT-010"
+          ],
+          "dependency_text": "External binary: the configured external editor only when that interactive editor action is invoked. Requires RPC request/response correlation and TUI modal focus contracts from their area audits.",
+          "rust": "rust:crates/ice-extensions/src/actions.rs:1-360; rust:crates/ice-plugin-sdk/src/dialogs.rs:1-106; rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495; rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939. Rust has real command-result selector/input/editor dialogs and a separate UiDialog mailbox for ask_user. The mailbox supports open/poll/cancel/respond with requestId, pending/terminal states, UI detach cancellation and remembered cancelled tool-call IDs; terminal polling consumes the result. It rejects opening without an attached UI rather than returning a fabricated answer. Native selectors show ten visible items, preserve a real input placeholder, and return structured values/kind JSON rather than the TypeScript scalar/boolean contracts. Confirm defaults to Yes/No choices but returns selector-shaped values, not boolean. Permission-purpose dialogs validate explicit allow/reject options and a toolCallId. There is no shared TypeScript AbortSignal/timeout/content contract, and the request mailbox is unbounded. A command dialog may resume its command with encoded action/value arguments instead of resolving a factory Promise.",
+          "port": "Build a compatibility facade on the existing UiDialog mailbox, with typed select/confirm/input/editor requests and scalar response decoding. Add absolute deadlines, cancellation on owner invalidation, bounded outstanding requests and deterministic terminal cleanup. Preserve native permission-purpose validation and UI-not-attached errors as explicit capability behavior, while translating TypeScript cancellation defaults only at the compatibility boundary. Reuse current TUI modal components and define RPC transport projection separately.",
+          "size_min": 220,
+          "size_max": 400,
+          "priority": "P1",
+          "priority_reason": "Dialog result shape and cancellation differences can leave plugins waiting or interpret user consent incorrectly."
+        }
+      ]
+    },
+    {
+      "symbol": "ExtensionSelectorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:12",
+      "covering_entries": [
+        "EXT-040"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
+        "sha256": "c67a4d68512424886271408b3f9681c6091d07016aad3c0678108887a60a36a3",
+        "range": [
+          9,
+          26
+        ],
+        "text": "9 | import { DynamicBorder } from \"./dynamic-border.ts\";\n10 | import { keyHint, rawKeyHint } from \"./keybinding-hints.ts\";\n11 | \n12 | export interface ExtensionSelectorOptions {\n13 | \ttui?: TUI;\n14 | \ttimeout?: number;\n15 | \tcontent?: string;\n16 | \tonToggleToolsExpanded?: () => void;\n17 | }\n18 | \n19 | export class ExtensionSelectorComponent extends VStack {\n20 | \tprivate options: string[];\n21 | \tprivate selectedIndex = 0;\n22 | \tprivate listContainer: Container;\n23 | \tprivate onSelectCallback: (option: string) => void;\n24 | \tprivate onCancelCallback: () => void;\n25 | \tprivate titleText: Text;\n26 | \tprivate baseTitle: string;"
+      },
+      "entries": [
+        {
+          "id": "EXT-040",
+          "title": "Extension dialogs, cancellation and interactive/RPC projection",
+          "status": "partial",
+          "source": "ice:packages/coding-agent/src/core/extensions/types.ts:97-105; ice:packages/coding-agent/src/core/extensions/types.ts:154-162; ice:packages/coding-agent/src/core/extensions/types.ts:248-249; ice:packages/coding-agent/src/core/extensions/runner.ts:255-286; ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:3245-3423; ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:1-129; ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:1-90; ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:1-133; ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:280-441. Tests: ice:packages/coding-agent/test/interactive-mode-status.test.ts:374-415.",
+          "what": "Let an extension ask a selector, yes/no question, single-line input or multiline editor question and receive a cancellable result when the current mode supports it.",
+          "mechanism": "Dialog calls are asynchronous UI requests whose cancellation defaults are undefined for text/selection and false for confirmation. Interactive and RPC modes implement the same public signatures through different transports, while the no-UI context resolves immediately without displaying a dialog.\n\nselect, confirm and input take optional AbortSignal, timeout and Markdown content. Interactive mode checks an already-aborted signal, installs a one-shot abort listener, renders the dialog and cleans it up when submitted/cancelled/timed out. Confirmation maps the Yes choice to true; all cancellation paths are false. The selector consumes content and configured timeout. The input component accepts a placeholder argument but its implementation names it _placeholder and does not display it, so documented placeholder behavior is not actually present there. editor(title,prefill) has no dialog options or deadline and supports the component's external-editor path, selecting VISUAL, then EDITOR, then its platform fallback.\n\nRPC uses request IDs, a pending-request map and extension_ui_request/extension_ui_response messages. It removes pending state on settlement and returns the same cancellation defaults; timeout is tested by truthiness, not a positive-value validator. Abort is local settlement, with no paired wire cancellation message from this path. Admission/shutdown may reject new control requests before sending them. These queues are not durable session records. The public no-UI implementation returns undefined/false, and custom editor creation is a separate EXT-045 contract.",
+          "interfaces": "```ts\n/** Options for extension UI dialogs. */\nexport interface ExtensionUIDialogOptions {\n\t/** AbortSignal to programmatically dismiss the dialog. */\n\tsignal?: AbortSignal;\n\t/** Timeout in milliseconds. Dialog auto-dismisses with live countdown display. */\n\ttimeout?: number;\n\t/** Optional Markdown content to review before choosing an option. */\n\tcontent?: string;\n}\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:97-105.\n```ts\n\t/** Show a selector and return the user's choice. */\n\tselect(title: string, options: string[], opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n\n\t/** Show a confirmation dialog. */\n\tconfirm(title: string, message: string, opts?: ExtensionUIDialogOptions): Promise<boolean>;\n\n\t/** Show a text input dialog. */\n\tinput(title: string, placeholder?: string, opts?: ExtensionUIDialogOptions): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:155-162.\n```ts\n\t/** Show a multi-line editor for text editing. */\n\teditor(title: string, prefill?: string): Promise<string | undefined>;\n```\nSource: ice:packages/coding-agent/src/core/extensions/types.ts:248-249.\nInteractive editor environment selection: VISUAL, then EDITOR (ice:packages/coding-agent/src/modes/interactive/components/extension-editor.ts:53-57). The RPC wire implementation is cited above; its common envelope and admission limits belong to the RPC audit.",
+          "dependencies": [
+            "EXT-009",
+            "EXT-010"
+          ],
+          "dependency_text": "External binary: the configured external editor only when that interactive editor action is invoked. Requires RPC request/response correlation and TUI modal focus contracts from their area audits.",
+          "rust": "rust:crates/ice-extensions/src/actions.rs:1-360; rust:crates/ice-plugin-sdk/src/dialogs.rs:1-106; rust:crates/ice-cli/src/interactive_tui/extensions.rs:77-495; rust:crates/ice-cli/src/interactive_tui/extensions.rs:529-939. Rust has real command-result selector/input/editor dialogs and a separate UiDialog mailbox for ask_user. The mailbox supports open/poll/cancel/respond with requestId, pending/terminal states, UI detach cancellation and remembered cancelled tool-call IDs; terminal polling consumes the result. It rejects opening without an attached UI rather than returning a fabricated answer. Native selectors show ten visible items, preserve a real input placeholder, and return structured values/kind JSON rather than the TypeScript scalar/boolean contracts. Confirm defaults to Yes/No choices but returns selector-shaped values, not boolean. Permission-purpose dialogs validate explicit allow/reject options and a toolCallId. There is no shared TypeScript AbortSignal/timeout/content contract, and the request mailbox is unbounded. A command dialog may resume its command with encoded action/value arguments instead of resolving a factory Promise.",
+          "port": "Build a compatibility facade on the existing UiDialog mailbox, with typed select/confirm/input/editor requests and scalar response decoding. Add absolute deadlines, cancellation on owner invalidation, bounded outstanding requests and deterministic terminal cleanup. Preserve native permission-purpose validation and UI-not-attached errors as explicit capability behavior, while translating TypeScript cancellation defaults only at the compatibility boundary. Reuse current TUI modal components and define RPC transport projection separately.",
+          "size_min": 220,
+          "size_max": 400,
+          "priority": "P1",
+          "priority_reason": "Dialog result shape and cancellation differences can leave plugins waiting or interpret user consent incorrectly."
+        }
+      ]
+    },
+    {
+      "symbol": "KeyTextFormatOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:8",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          5,
+          22
+        ],
+        "text": "5 | import { getKeybindings, type Keybinding, type KeyId } from \"@zykairotis/ice-tui\";\n6 | import { theme } from \"../theme/theme.ts\";\n7 | \n8 | export interface KeyTextFormatOptions {\n9 | \tcapitalize?: boolean;\n10 | }\n11 | \n12 | function formatKeyPart(part: string, options: KeyTextFormatOptions): string {\n13 | \tconst displayPart = process.platform === \"darwin\" && part.toLowerCase() === \"alt\" ? \"option\" : part;\n14 | \treturn options.capitalize ? displayPart.charAt(0).toUpperCase() + displayPart.slice(1) : displayPart;\n15 | }\n16 | \n17 | export function formatKeyText(key: string, options: KeyTextFormatOptions = {}): string {\n18 | \treturn key\n19 | \t\t.split(\"/\")\n20 | \t\t.map((k) =>\n21 | \t\t\tk\n22 | \t\t\t\t.split(\"+\")"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "formatKeyText",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:17",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          14,
+          31
+        ],
+        "text": "14 | \treturn options.capitalize ? displayPart.charAt(0).toUpperCase() + displayPart.slice(1) : displayPart;\n15 | }\n16 | \n17 | export function formatKeyText(key: string, options: KeyTextFormatOptions = {}): string {\n18 | \treturn key\n19 | \t\t.split(\"/\")\n20 | \t\t.map((k) =>\n21 | \t\t\tk\n22 | \t\t\t\t.split(\"+\")\n23 | \t\t\t\t.map((part) => formatKeyPart(part, options))\n24 | \t\t\t\t.join(\"+\"),\n25 | \t\t)\n26 | \t\t.join(\"/\");\n27 | }\n28 | \n29 | function formatKeys(keys: KeyId[], options: KeyTextFormatOptions = {}): string {\n30 | \tif (keys.length === 0) return \"\";\n31 | \treturn formatKeyText(keys.join(\"/\"), options);"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "keyText",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:34",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          31,
+          48
+        ],
+        "text": "31 | \treturn formatKeyText(keys.join(\"/\"), options);\n32 | }\n33 | \n34 | export function keyText(keybinding: Keybinding): string {\n35 | \treturn formatKeys(getKeybindings().getKeys(keybinding));\n36 | }\n37 | \n38 | export function keyDisplayText(keybinding: Keybinding): string {\n39 | \treturn formatKeys(getKeybindings().getKeys(keybinding), { capitalize: true });\n40 | }\n41 | \n42 | export function keyHint(keybinding: Keybinding, description: string): string {\n43 | \treturn theme.fg(\"dim\", keyText(keybinding)) + theme.fg(\"muted\", ` ${description}`);\n44 | }\n45 | \n46 | export function rawKeyHint(key: string, description: string): string {\n47 | \treturn theme.fg(\"dim\", formatKeyText(key)) + theme.fg(\"muted\", ` ${description}`);\n48 | }"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "keyDisplayText",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:38",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          35,
+          49
+        ],
+        "text": "35 | \treturn formatKeys(getKeybindings().getKeys(keybinding));\n36 | }\n37 | \n38 | export function keyDisplayText(keybinding: Keybinding): string {\n39 | \treturn formatKeys(getKeybindings().getKeys(keybinding), { capitalize: true });\n40 | }\n41 | \n42 | export function keyHint(keybinding: Keybinding, description: string): string {\n43 | \treturn theme.fg(\"dim\", keyText(keybinding)) + theme.fg(\"muted\", ` ${description}`);\n44 | }\n45 | \n46 | export function rawKeyHint(key: string, description: string): string {\n47 | \treturn theme.fg(\"dim\", formatKeyText(key)) + theme.fg(\"muted\", ` ${description}`);\n48 | }\n49 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "keyHint",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:42",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          39,
+          49
+        ],
+        "text": "39 | \treturn formatKeys(getKeybindings().getKeys(keybinding), { capitalize: true });\n40 | }\n41 | \n42 | export function keyHint(keybinding: Keybinding, description: string): string {\n43 | \treturn theme.fg(\"dim\", keyText(keybinding)) + theme.fg(\"muted\", ` ${description}`);\n44 | }\n45 | \n46 | export function rawKeyHint(key: string, description: string): string {\n47 | \treturn theme.fg(\"dim\", formatKeyText(key)) + theme.fg(\"muted\", ` ${description}`);\n48 | }\n49 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "rawKeyHint",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:46",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+        "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+        "range": [
+          43,
+          49
+        ],
+        "text": "43 | \treturn theme.fg(\"dim\", keyText(keybinding)) + theme.fg(\"muted\", ` ${description}`);\n44 | }\n45 | \n46 | export function rawKeyHint(key: string, description: string): string {\n47 | \treturn theme.fg(\"dim\", formatKeyText(key)) + theme.fg(\"muted\", ` ${description}`);\n48 | }\n49 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "formatAuthSelectorProviderType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:22",
+      "covering_entries": [
+        "TUI-046"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/oauth-selector.ts",
+        "sha256": "6bff4e6b8be206850e89878a8f9a83d696d7cd084c9d6c067a16c3b7d97c8308",
+        "range": [
+          19,
+          36
+        ],
+        "text": "19 | \tstatus?: AuthCheck;\n20 | };\n21 | \n22 | export function formatAuthSelectorProviderType(authType: AuthSelectorProvider[\"authType\"]): string {\n23 | \treturn authType === \"oauth\" ? \"subscription\" : \"API key\";\n24 | }\n25 | \n26 | /**\n27 |  * Component that renders an auth provider selector\n28 |  */\n29 | export class OAuthSelectorComponent extends Container implements Focusable {\n30 | \tprivate searchInput: Input;\n31 | \n32 | \t// Focusable implementation - propagate to search input for IME cursor positioning\n33 | \tprivate _focused = false;\n34 | \tget focused(): boolean {\n35 | \t\treturn this._focused;\n36 | \t}"
+      },
+      "entries": [
+        {
+          "id": "TUI-046",
+          "title": "Authentication option picker, configured-status labels and method routing",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:1-215`; `ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-7026`; `ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7028-7181`; `ice:packages/coding-agent/test/oauth-selector.test.ts:1-53`; `ice:packages/coding-agent/test/oauth-selector.test.ts:55-148`.",
+          "what": "Lists provider authentication options with method and configured-source status, filters them, and routes login/logout to the chosen method.",
+          "mechanism": "Each AuthSelectorProvider carries id,name,authType oauth|api_key, optional method metadata and configured status. The picker decides once from the initial list whether to display auth-type labels (only if more than one auth type exists). Search includes name, ID, raw auth type and method name; status/source labels are not search keys. Filtering preserves/clamps the previous index rather than resetting to zero. Eight centered rows use TruncatedText with selected accent arrow, plus a scroll counter. Up/down clamp at the endpoints rather than wrap; confirm invokes onSelect(id,authType), cancel invokes onCancel and remaining input goes to Input. Focus propagates to Input (`ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:1-164`).\n\nUnconfigured rows use a muted label. A configured credential of the other auth type shows a warning identifying subscription or API key. Same-type status with no source, OAuth, or stored credential is rendered as configured; an uppercase environment-name list is prefixed env:, while another source string is displayed verbatim. Login and logout have distinct titles/empty-list text, and an empty filtered result is distinct from having no available providers. Callbacks are synchronous from the component's perspective; it owns no refresh/disposal controller. The test at line54 was redacted by the connector; visible ranges1–53 and55–148 were read, and no claim depends on the hidden line (`ice:packages/coding-agent/src/modes/interactive/components/oauth-selector.ts:165-215`, `ice:packages/coding-agent/test/oauth-selector.test.ts:1-53`, `ice:packages/coding-agent/test/oauth-selector.test.ts:55-148`).\n\nThe login host enumerates modelRuntime providers and makes an option for each supported OAuth/API-key method, attaching the same configured type/source status and sorting by provider name. A direct trimmed case-insensitive provider ID/name match with one option starts immediately; multiple methods open a method selector; a nonexact input becomes the provider search query. OAuth routes to showLoginDialog; API key with a login callback routes to showApiKeyLoginDialog; a method configured externally routes to ambient information. Method selection uses displayed labels and maps the chosen label by comparison, rather than carrying an opaque option ID. The exact API-key label assignment at interactive-mode.ts7027 was redacted and remains unverified (`ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-7026`, `ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7028-7124`).\n\nLogout enumerates stored credentials with a 15,000 ms AbortSignal timeout, labels them from current provider metadata with an ID fallback, and sorts by provider name. After selection the UI closes before asynchronous logout. It resolves the stored record by provider ID, invokes runtime.logout with the same bounded timeout, updates provider counts and reports success or a synchronization-specific error. Returning from a method-specific picker can reopen the all-method provider picker; a general cancel closes the selector. AUTH owns credential enumeration/storage/logout semantics and method implementations (`ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6933-6975`, `ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:7080-7181`).",
+          "interfaces": "AuthSelectorProvider{id,name,authType,method?,status?}; OAuthSelectorComponent(action login|logout, providers, onSelect(providerId,authType),onCancel,initialSearch?); focused forwarding and handleInput. Host composes ExtensionSelector for the same-provider method choice.",
+          "dependencies": [
+            "TUI-001",
+            "TUI-210",
+            "TUI-235",
+            "AUTH-015"
+          ],
+          "dependency_text": "AUTH owns provider method declarations and credential/configured-source resolution. TUI-047 owns subsequent dialog presentation and callback lifecycle; Settings storage remains separate.",
+          "rust": "Native login options are present and source-aware: login_provider_items_with_oauth merges catalog/config/package/OAuth provider identities, filters anonymous providers using requires_auth, attaches key/env/OAuth descriptions and emits one option per provider. The SearchableSelectList is ten rows with a richer provider/description search string (`rust:crates/ice-cli/src/interactive_tui/settings.rs:698-785`, `rust:crates/ice-cli/src/interactive_tui/selectors.rs:518-613`). Selecting a provider chooses generic OAuth whenever registered, otherwise masked API-key login, without a separate per-provider method choice (`rust:crates/ice-cli/src/interactive_tui/settings.rs:802-819`). Native logout lists saved credential entries and routes through provider-aware revocation/removal (`rust:crates/ice-cli/src/interactive_tui/settings.rs:1187-1204`, `rust:crates/ice-cli/src/interactive_tui/selectors.rs:615-694`, `rust:crates/ice-cli/src/interactive_tui.rs:3223-3290`). Tests confirm anonymous-package exclusion and OAuth-only inclusion (`rust:crates/ice-cli/src/interactive_tui/tests.rs:2312-2356`). The missing part is the TS method-level option/status and navigation contract, not provider login/logout as a whole.",
+          "port": "Extend the native option model to represent each usable auth method and configured source separately. Retain package and OAuth-only provider discovery, add the direct-match/back-navigation rules and use opaque selection values so equal display labels cannot select the wrong method. Keep the blocked label/test line explicitly unverified.",
+          "size_min": 220,
+          "size_max": 360,
+          "priority": "P2",
+          "priority_reason": "Native provider login works, but providers supporting multiple methods cannot expose the same choices or status details."
+        }
+      ]
+    },
+    {
+      "symbol": "SettingsSelectorComponent",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506",
+      "covering_entries": [
+        "TUI-025"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts",
+        "sha256": "5fdb6b2d9ce91c90ea38b819d78ad7f3d22e329b2ee8f10b4026a765a55e850e",
+        "range": [
+          503,
+          520
+        ],
+        "text": "503 | /**\n504 |  * Main settings selector component.\n505 |  */\n506 | export class SettingsSelectorComponent extends Container {\n507 | \tprivate settingsList: SettingsList;\n508 | \n509 | \tconstructor(config: SettingsConfig, callbacks: SettingsCallbacks) {\n510 | \t\tsuper();\n511 | \n512 | \t\tconst supportsImages = getCapabilities().images;\n513 | \t\tconst followUpKey = keyDisplayText(\"app.message.followUp\");\n514 | \t\tlet currentWarnings = { ...config.warnings };\n515 | \t\tconst extensionSettingCallbacks = new Map<string, (value: string) => void>();\n516 | \t\tconst extensionItems = (config.extensionSettings ?? []).flatMap((settings) =>\n517 | \t\t\tsettings.items.map((item) => {\n518 | \t\t\t\tconst id = `${settings.name}:${item.id}`;\n519 | \t\t\t\textensionSettingCallbacks.set(id, (value) => settings.onChange(item.id, value));\n520 | \t\t\t\treturn { ...item, id };"
+      },
+      "entries": [
+        {
+          "id": "TUI-025",
+          "title": "Searchable settings menu, exact choices and extension sections",
+          "status": "partial",
+          "source": "`ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:1-194`, `ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:506-1028`; runtime callbacks `ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:6050-6325`; tests `ice:packages/coding-agent/test/settings-selector.test.ts:1-75`, `ice:packages/coding-agent/test/ui-style-settings.test.ts:1-31`.",
+          "what": "Presents built-in and extension settings in a searchable ten-row menu, dispatching concrete values to runtime callbacks while staging the appearance preview controls.",
+          "mechanism": "The component builds the complete settings list from a runtime snapshot and terminal capabilities, then delegates search/navigation to SettingsList. Each row has an explicit value conversion and callback; persistence and live UI changes belong to the callback owner, so the menu does not itself write settings.\n\nExtension items are flattened after the first three compaction rows, use `${settings.name}:${item.id}` as their UI identity and retain all original item fields, including submenu. A Map dispatches the selected value back to settings.onChange with the original item.id; duplicate composite identities overwrite the callback map entry while retaining duplicate rows. This layer performs no async awaiting or error isolation around extension callbacks (`ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:515-546`, `ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:1009-1014`).\n\nImage visibility and width rows are inserted only when getCapabilities().images is truthy. Resize and block controls remain available even without rendering support. Skill commands, hardware cursor, editor/output padding, autocomplete, clear-on-shrink and terminal progress are inserted afterward; fast mode is independently gated by fastModeAvailable. Other controls remain present even when their available submenu list is empty. DynamicBorder surrounds a SettingsList with maxVisible10 and enableSearch:true. The follow-up explanation uses the current configured key display rather than a hard-coded shortcut.\n\nThe exact menu contracts are:\n\n| UI id | Values / source | Callback | Conversion / condition |\n| --- | --- | --- | --- |\n| autocompact | true, false | onAutoCompactChange | boolean |\n| compaction-threshold | 10%,20%,30%,40%,50%,60%,70%,75%,80%,85%,90%,95% | onCompactionThresholdPercentChange | parseInt |\n| mid-run-compaction | off,pause,resume | onMidRunCompactionChange | enum cast |\n| steering-mode | one-at-a-time,all | onSteeringModeChange | enum cast |\n| follow-up-mode | one-at-a-time,all | onFollowUpModeChange | enum cast |\n| transport | sse,websocket,websocket-cached,auto | onTransportChange | enum cast |\n| http-idle-timeout | HTTP_IDLE_TIMEOUT_CHOICES labels | onHttpIdleTimeoutMsChange | exact label lookup; unknown ignored |\n| hide-thinking | true,false | onHideThinkingBlockChange | boolean |\n| table-style | unicode,ascii,clean,clean-top-bottom,raw | onTableStylePreview | staged preview |\n| input-border-style | single,double,round,bold,none | onInputBorderStylePreview | staged preview |\n| thinking-interval | 40,80,120,200,500 | onThinkingIntervalPreview | parseInt; staged preview |\n| appearance-apply | apply | onAppearanceApply | commit staged preview |\n| appearance-cancel | cancel | onAppearanceCancel | discard staged preview |\n| cache-miss-notices | true,false | onShowCacheMissNoticesChange | boolean |\n| collapse-changelog | true,false | onCollapseChangelogChange | boolean |\n| quiet-startup | true,false | onQuietStartupChange | boolean |\n| install-telemetry | true,false | onEnableInstallTelemetryChange | boolean |\n| default-project-trust | Ask,Always trust,Never trust | onDefaultProjectTrustChange | labels map to ask/always/never; unknown ignored |\n| double-escape-action | tree,fork,none | onDoubleEscapeActionChange | cast mentions fork/tree but none reaches callback unchanged |\n| tree-filter-mode | default,no-tools,user-only,labeled-only,all | onTreeFilterModeChange | enum cast |\n| warnings | configure | onWarningsChange | nested anthropicExtraUsage boolean; default true |\n| thinking | config.availableThinkingLevels | onThinkingLevelChange | submenu; exact supplied order |\n| fast-mode | true,false | onFastModeChange | shown only if fastModeAvailable |\n| ui-mode | regular,fullscreen | onUiModeChange | enum cast |\n| footer-style | compact,legacy | onFooterStyleChange | legacy exact, otherwise compact |\n| tool-style | compact,boxed | onToolStyleChange | boxed exact, otherwise compact |\n| symbols | auto,unicode,nerd,ascii | onSymbolsChange | enum cast |\n| fullscreen-scrollbar | auto,always,hidden | onFullscreenScrollbarChange | enum cast |\n| appearance | configure | onOpenAppearance | open full customizer |\n| theme | config.availableThemes plus Automatic | onThemeChange | TUI-026 |\n| show-images | true,false | onShowImagesChange | shown only if terminal image capability |\n| image-width-cells | 60,80,120 | onImageWidthCellsChange | parseInt; shown only if terminal image capability |\n| auto-resize-images | true,false | onAutoResizeImagesChange | always shown |\n| block-images | true,false | onBlockImagesChange | always shown |\n| skill-commands | true,false | onEnableSkillCommandsChange | boolean |\n| show-hardware-cursor | true,false | onShowHardwareCursorChange | boolean |\n| editor-padding | 0,1,2,3 | onEditorPaddingXChange | parseInt |\n| output-padding | 0,1 | onOutputPadChange | 0 exact else1 |\n| autocomplete-max-visible | 3,5,7,10,15,20 | onAutocompleteMaxVisibleChange | parseInt |\n| clear-on-shrink | true,false | onClearOnShrinkChange | boolean |\n| terminal-progress | true,false | onShowTerminalProgressChange | boolean |\n\nAll true/false handlers compare the string to true. Numeric menu values use parseInt without a second validation layer. table-style/input-border-style/thinking-interval call the Preview callbacks, not their declared Change counterparts; the separate Apply/Cancel rows operate on the shared appearance session (TUI-024). WarningSettingsSubmenu clones the incoming object, exposes only anthropic-extra-usage, defaults absent to true, preserves other warning fields and emits a new object on each toggle. The outer menu holds updated warnings for later submenu openings (`ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:154-194`, `ice:packages/coding-agent/src/modes/interactive/components/settings-selector.ts:669-681`).\n\nSource tests assert scrollbar cycling auto→always→hidden→auto, compaction85%→90%, opening Appearance, and SettingsManager defaults/fallbacks for compact footer, compact tools and auto symbols. They do not exercise every row or prove successful persistence. Runtime callback wiring and appearance transaction semantics are separately documented in TUI-024.",
+          "interfaces": "SettingsConfig and SettingsCallbacks are the exported contracts at settings-selector.ts56–149; getSettingsList() exposes the focus/input target. Config carries booleans, numeric thresholds/padding, enum strings, availableThinkingLevels/availableThemes, terminalTheme, warnings and optional RegisteredSettings[]. Callbacks include all table-listed actions plus optional onThemePreview and declared onTableStyleChange/onInputBorderStyleChange/onThinkingIntervalChange, which this menu's preview rows do not invoke. No SettingsManager is stored in this component.",
+          "dependencies": [
+            "TUI-006",
+            "TUI-016",
+            "TUI-024",
+            "TUI-026",
+            "EXT-016"
+          ],
+          "dependency_text": "Settings storage/normalization is coordinator-owned SET; EXT-016 defines named settings registration. Generic SettingsList keyboard/rendering is covered by the terminal fragment.",
+          "rust": "Native open_settings_selector creates a searchable SettingsList and saves callback changes immediately; its concrete catalog includes theme/default model/default thinking/scoped models plus hide-thinking, images, cache notices, quiet startup, changelog, progress, copy-on-select, double Escape, editor padding, autocomplete and HTTP idle timeout (`rust:crates/ice-cli/src/interactive_tui/settings.rs:51-300`). apply_setting_change updates thinking/images/cache live, stores copy-on-select, and persists several other options for next launch; idle choices map disabled/30s/1m/other→300000 (`rust:crates/ice-cli/src/interactive_tui/settings.rs:301-383`). The independently read native menu lacks most TS rows, the extension-injected sections and shared staged appearance controls. Native copy-on-select is an additional setting to retain. Native submenus replace the selector and return to the editor rather than rebuilding the original settings menu.",
+          "port": "Add the explicit missing menu rows and typed conversions on top of native SettingsList, using the existing settings/session APIs as owners. Implement extension sections through EXT-016 and route appearance preview/apply/cancel through a shared draft. Keep per-setting immediate versus next-launch behavior explicit, refresh controls after relevant changes, and preserve native copy-on-select. Use source-level contract cases for every choice and capability gate rather than relying on generic row rendering alone.",
+          "size_min": 500,
+          "size_max": 800,
+          "priority": "P1",
+          "priority_reason": "The primary user-facing settings menu exposes materially fewer controls in Rust and lacks extension/appearance integration."
+        }
+      ]
+    }
+  ]
+}

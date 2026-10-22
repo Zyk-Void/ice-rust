@@ -1,0 +1,1521 @@
+{
+  "area": "extensions",
+  "candidate_count": 258,
+  "mappings": {
+    "254": {
+      "entry": "EXT-053",
+      "status": "partial",
+      "note": "Dynamic customType parameter for appendEntry; native customType/data append exists, but durable option and result/error contract differ.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:454-480"
+    },
+    "257": {
+      "entry": "EXT-040",
+      "status": "partial",
+      "note": "select returns string|undefined; native selector/mailbox returns structured result and has different cancellation/deadline behavior.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "258": {
+      "entry": "EXT-040",
+      "status": "partial",
+      "note": "confirm returns boolean; native Yes/No choices return selector-shaped values and require explicit decoding.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "259": {
+      "entry": "EXT-040",
+      "status": "partial",
+      "note": "input returns string|undefined with dialog options; native supports real placeholder but a distinct mailbox result/deadline contract.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "260": {
+      "entry": "EXT-041",
+      "status": "missing",
+      "note": "notify level/id/sticky is not a native runtime action; SetStatus/UiComponent/logging serve distinct purposes.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "261": {
+      "entry": "EXT-046",
+      "status": "partial",
+      "note": "Raw input handler may consume/replace data; native Input is decoded key/modifier/kind notification, without raw byte replacement.",
+      "rustRef": "crates/ice-cli/src/interactive_tui.rs:390-505"
+    },
+    "262": {
+      "entry": "EXT-042",
+      "status": "partial",
+      "note": "Native keyed status exists with trimmed keys/values, sorted order and no automatic owner cleanup.",
+      "rustRef": "crates/ice-extensions/src/status.rs:1-416"
+    },
+    "263": {
+      "entry": "EXT-042",
+      "status": "missing",
+      "note": "Working message reset/replace has no native action; existing legacy status is not this control.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "264": {
+      "entry": "EXT-042",
+      "status": "missing",
+      "note": "Built-in working-row visibility has no native action; existing legacy status is not this control.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "265": {
+      "entry": "EXT-042",
+      "status": "missing",
+      "note": "Working frames and interval has no native action; existing legacy status is not this control.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "266": {
+      "entry": "EXT-042",
+      "status": "missing",
+      "note": "Hidden-thinking label reset/replace has no native action; existing legacy status is not this control.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "267": {
+      "entry": "EXT-043",
+      "status": "partial",
+      "note": "String-array widget with aboveEditor/belowEditor and per-widget ten-line interactive projection; native bounded text panels use other slots.",
+      "rustRef": "crates/ice-extensions/src/status.rs:1-416"
+    },
+    "268": {
+      "entry": "EXT-043",
+      "status": "partial",
+      "note": "Component-factory widget uses rpcText without executing the factory in RPC; native declarative panels have owner/limit/slot differences.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117"
+    },
+    "269": {
+      "entry": "EXT-043",
+      "status": "partial",
+      "note": "Nested optional widget component dispose hook, not a top-level UI method; native owner cleanup handles panels rather than Component objects.",
+      "rustRef": "crates/ice-extensions/src/actions.rs:527-793"
+    },
+    "270": {
+      "entry": "EXT-044",
+      "status": "partial",
+      "note": "Custom footer factory receives read-only footer data; native footer.after adds text but cannot replace footer factory.",
+      "rustRef": "crates/ice-extensions/src/status.rs:1-416"
+    },
+    "271": {
+      "entry": "EXT-044",
+      "status": "partial",
+      "note": "Nested optional footer component disposal; native component cleanup is declarative and owner-scoped.",
+      "rustRef": "crates/ice-extensions/src/actions.rs:527-793"
+    },
+    "272": {
+      "entry": "EXT-044",
+      "status": "missing",
+      "note": "Custom header replacement and RPC text projection lack a matching native header action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "273": {
+      "entry": "EXT-044",
+      "status": "missing",
+      "note": "Nested optional header component dispose hook; no native header factory lifecycle exists.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "274": {
+      "entry": "EXT-044",
+      "status": "missing",
+      "note": "Terminal title setter is distinct from session name; no native title action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "275": {
+      "entry": "EXT-045",
+      "status": "partial",
+      "note": "Focused generic result-bearing custom component factory differs from native bounded text overlays and typed dialogs; it is not an independent top-level component API.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117; crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "276": {
+      "entry": "EXT-045",
+      "status": "partial",
+      "note": "Nested optional disposal of the custom component differs from native bounded text overlays and typed dialogs; it is not an independent top-level component API.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117; crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "277": {
+      "entry": "EXT-045",
+      "status": "partial",
+      "note": "Nested custom-view overlay selection differs from native bounded text overlays and typed dialogs; it is not an independent top-level component API.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117; crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "278": {
+      "entry": "EXT-045",
+      "status": "partial",
+      "note": "Static or callable overlayOptions differs from native bounded text overlays and typed dialogs; it is not an independent top-level component API.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117; crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "279": {
+      "entry": "EXT-045",
+      "status": "partial",
+      "note": "onHandle callback exposing a live overlay handle differs from native bounded text overlays and typed dialogs; it is not an independent top-level component API.",
+      "rustRef": "crates/ice-extensions/src/panel.rs:1-117; crates/ice-cli/src/interactive_tui/extensions.rs:529-939"
+    },
+    "280": {
+      "entry": "EXT-047",
+      "status": "missing",
+      "note": "Bracketed paste passes through editor handling; native queued SetEditorText does not expose paste semantics.",
+      "rustRef": "crates/ice-extensions/src/editor_text.rs:1-184"
+    },
+    "281": {
+      "entry": "EXT-047",
+      "status": "partial",
+      "note": "Native editor mutation is queued, accepts mode/autoSendMs and acknowledges before application.",
+      "rustRef": "crates/ice-extensions/src/editor_text.rs:1-184"
+    },
+    "282": {
+      "entry": "EXT-047",
+      "status": "missing",
+      "note": "Expanded editor text query has no native action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "283": {
+      "entry": "EXT-040",
+      "status": "partial",
+      "note": "Multiline editor resolves string|undefined without dialog options; native editor resumes commands/mailbox through a different result protocol.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/extensions.rs:388-495"
+    },
+    "284": {
+      "entry": "EXT-048",
+      "status": "missing",
+      "note": "Ordered provider wrappers and trigger contributions have no native registration.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "285": {
+      "entry": "EXT-047",
+      "status": "missing",
+      "note": "Custom editor factory installation has no native host API.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "286": {
+      "entry": "EXT-047",
+      "status": "missing",
+      "note": "Getter returns configured editor factory, not editor text/component; native has no factory capability.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "287": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Live theme getter is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "288": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Available-theme enumeration is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "289": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Nested theme enumeration name field is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "290": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Nested optional theme path field is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "291": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Named theme loading without applying it is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "292": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "String-or-Theme setting is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "293": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Nested setTheme result success field is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "294": {
+      "entry": "EXT-049",
+      "status": "missing",
+      "note": "Nested setTheme optional error field is not exposed by native runtime actions; discovered theme paths are a separate unwired resource contribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "295": {
+      "entry": "EXT-050",
+      "status": "missing",
+      "note": "Query returns the batch expansion boolean, not an all-rows-expanded predicate; native plugins cannot query it.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "296": {
+      "entry": "EXT-050",
+      "status": "missing",
+      "note": "Explicit expand/collapse clears row overrides; no native extension setter.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "297": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "UI capability object is represented by separate native actions with narrower controls.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "298": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Explicit interactive|rpc|print mode field is absent from the native execution snapshot.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "299": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "hasUI identity flag is not a native context query; UiDialog attachment errors are a different signal.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "300": {
+      "entry": "EXT-019",
+      "status": "present",
+      "note": "Native tool context and GetExecutionContext carry cwd as an owned string.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "301": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native GetSessionBranch provides records, not the live read-only session manager object.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "302": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Mutable settings manager access is not exported through native actions.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "303": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Live model-registry object access is not exported.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "304": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native execution context provides safe model identity, not a full Model object.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "305": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Scoped-model array is not exported.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "306": {
+      "entry": "EXT-019",
+      "status": "present",
+      "note": "Native GetThinkingLevel exposes the effective level through an owned action result.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "307": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No matching main-run isIdle query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "308": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No matching isCompacting query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "309": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No generic extension isProjectTrusted query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "310": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native tools have cancellation/invocation lifetime, but no equivalent live AbortSignal context property.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "311": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No generic main-session abort action in the SDK action enum.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "312": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No stopAfterTurn action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "313": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No compactAfterTurn action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "314": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No hasPendingMessages query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "315": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No hasPendingSteering query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "316": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native StdioLifecycle finish is restricted to its declaring owner; it is not unrestricted context shutdown.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "317": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "No extension context-usage query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "318": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native Compact exists but uses asynchronous run outcome rather than this callback-oriented context contract.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "319": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Native GetSystemPrompt returns owned JSON/text; TypeScript supplies a lazy guarded synchronous getter.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "320": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "getSystemPromptOptions query is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "321": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "No native waitForIdle command-context method.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "322": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "NewSession is implemented, but parent/setup/withSession and cancelled return shape are not.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "323": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested newSession.parentSession option is not consumed by native action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "324": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested newSession.setup callback cannot cross the current native DTO.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "325": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested newSession.withSession replacement callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "326": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested cancelled result differs from native runId/status return.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "327": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Native Fork exists but ignores the TypeScript entry/position options.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "328": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested fork.position option is not consumed.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "329": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested fork.withSession callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "330": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested fork cancelled result is not native runId/status.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "331": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Native NavigateTree exists with a narrower DTO and current harness behavior.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "332": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested summarize is accepted by native adapter; underlying effectiveness belongs to the session review.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "333": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested customInstructions is forwarded by adapter; underlying effectiveness belongs to session review.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "334": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested replaceInstructions is not in native adapter.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "335": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested label is accepted by adapter; persistence/effect is a session review dependency.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "336": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested navigation cancelled result differs from native outcome.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "337": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Native SwitchSession uses an ID rather than a TS session path and has no withSession callback.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "338": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Nested switch.withSession callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "339": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Nested switch cancelled result differs from native outcome.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "340": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Native reload signaling exists; missing/disconnected receiver can still yield null through callback path.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "341": {
+      "entry": "EXT-035",
+      "status": "present",
+      "note": "Tool name is carried in native StableToolSchema.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "342": {
+      "entry": "EXT-035",
+      "status": "partial",
+      "note": "Native label is derived from tool name; custom label not carried.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "343": {
+      "entry": "EXT-035",
+      "status": "present",
+      "note": "Native StableToolSchema carries description.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "344": {
+      "entry": "EXT-035",
+      "status": "missing",
+      "note": "Prompt snippet omitted from native descriptor.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "345": {
+      "entry": "EXT-035",
+      "status": "missing",
+      "note": "Prompt guideline array omitted.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "346": {
+      "entry": "EXT-011",
+      "status": "partial",
+      "note": "Native JSON object schema validation does not require type:'object'.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "347": {
+      "entry": "EXT-035",
+      "status": "missing",
+      "note": "Native registration sets constrained_sampling to None.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "348": {
+      "entry": "EXT-036",
+      "status": "missing",
+      "note": "Native tools lack renderShell default/self.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "349": {
+      "entry": "EXT-035",
+      "status": "missing",
+      "note": "No plugin preparation callback in native schema.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "350": {
+      "entry": "EXT-035",
+      "status": "partial",
+      "note": "Native extension adapter always reports Parallel rather than taking override metadata.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "351": {
+      "entry": "EXT-035",
+      "status": "missing",
+      "note": "Read/write access declaration missing from descriptor.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "352": {
+      "entry": "EXT-012",
+      "status": "partial",
+      "note": "Native execute/poll/cancel/destroy protocol is real, with different arguments/results and added-tool attribution.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "353": {
+      "entry": "EXT-036",
+      "status": "missing",
+      "note": "No per-tool call renderer.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "354": {
+      "entry": "EXT-036",
+      "status": "missing",
+      "note": "No per-tool result renderer.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:348-353; crates/ice-extensions/src/tool.rs:300-395"
+    },
+    "355": {
+      "entry": "EXT-034",
+      "status": "missing",
+      "note": "SDK tag exists but no Rust host emitter/decision hook; caller defaults belong to SET-003.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:590-645; crates/ice-cli/src/session.rs:1847-1901"
+    },
+    "356": {
+      "entry": "EXT-031",
+      "status": "partial",
+      "note": "Native strings lose owner provenance; discovered theme paths are accepted but not consumed.",
+      "rustRef": "crates/ice-extensions/src/resources.rs:1-317"
+    },
+    "357": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native notification exists; lifecycle payload/caller wiring differs, and reload emission is owned by session audit.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-450"
+    },
+    "358": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Session name-change event has different native payload/caller wiring.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "359": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "TS last-truthy/cancel reducer differs from native cancellation/lifecycle protocol.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "360": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Typed before-fork input/result and reduction differ from native lifecycle dispatch.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "361": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Compaction preparation/result and cancel reducer differ; SESSION-016 owns caller order.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "362": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Post-compaction event uses generic notification; session audit owns save/cancel emission order.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "363": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native shutdown timeout and lifecycle delivery differ from awaited TS handlers.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "364": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Before-tree preparation/options/result reduction differ from native notification.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "365": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Tree completion payload and timing differ; navigation belongs to session audit.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "366": {
+      "entry": "EXT-027",
+      "status": "partial",
+      "note": "TS makes one structuredClone and chains mutation/replacement; native lacks equivalent writeback.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:98-196"
+    },
+    "367": {
+      "entry": "EXT-028",
+      "status": "partial",
+      "note": "Native observes host envelope and returns None; TS can replace actual payload with any nonundefined value.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:132-196"
+    },
+    "368": {
+      "entry": "EXT-029",
+      "status": "partial",
+      "note": "TS mutates a shared plain record; native observer does not write back headers.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:187-196"
+    },
+    "369": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native after-response contains AssistantMessage rather than TS provider response contract.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:198-248"
+    },
+    "370": {
+      "entry": "EXT-030",
+      "status": "partial",
+      "note": "Native systemPrompt transform exists but additional messages/full images/options differ.",
+      "rustRef": "crates/ice-extensions/src/prompt_transform.rs:1-212"
+    },
+    "371": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native dispatch ordering and failure handling differ even for a small notification payload.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "372": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native limited/empty representation omits TS run messages.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "373": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Settled event requires caller settlement ordering; generic native dispatch has separate timing.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "374": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native empty payload loses TS turn index/timestamp.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "375": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native representation loses TS turn result and tool-result context.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "376": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native message translation is not a lossless TS message/event schema.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "377": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native serializes delta without complete enclosing message/update context.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "378": {
+      "entry": "EXT-023",
+      "status": "partial",
+      "note": "TS chains role-preserving shallow replacements; native notification lacks matching reduction.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:59-76"
+    },
+    "379": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native start fields/ownership differ from TS event.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "380": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native update includes arguments but omits TS partial result.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "381": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Native manual serializer omits usage; execution parser support is a different path.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "382": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Model/previous-model/source event differs from native ID-based model action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:534-574; crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "383": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "TS effective/previous-level event follows changed-state persistence; native action/event differs.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:546-574"
+    },
+    "384": {
+      "entry": "EXT-026",
+      "status": "partial",
+      "note": "TS first-valid result/operations routing and terminal invalid-response failure differ from native notification.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "385": {
+      "entry": "EXT-032",
+      "status": "partial",
+      "note": "TS text/image transform reduction differs from native claimed fanout; no TS requestId field.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "386": {
+      "entry": "EXT-024",
+      "status": "partial",
+      "note": "TS propagates rejection and last truthy/block result; native fail-closed decision has 600-second timeout.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:606-796"
+    },
+    "387": {
+      "entry": "EXT-025",
+      "status": "partial",
+      "note": "TS shared shallow wrapper supports defined returned fields/usage; native payload/writeback differs.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "388": {
+      "entry": "EXT-034",
+      "status": "missing",
+      "note": "Exact on(\"project_trust\") overload plus unsubscribe; EXT-008 owns registration mutation/order. SDK tag exists but no Rust host emitter/decision hook; caller defaults belong to SET-003.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:590-645; crates/ice-cli/src/session.rs:1847-1901"
+    },
+    "389": {
+      "entry": "EXT-031",
+      "status": "partial",
+      "note": "Exact on(\"resources_discover\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native strings lose owner provenance; discovered theme paths are accepted but not consumed.",
+      "rustRef": "crates/ice-extensions/src/resources.rs:1-317"
+    },
+    "390": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native notification exists; lifecycle payload/caller wiring differs, and reload emission is owned by session audit.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-450"
+    },
+    "391": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_info_changed\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Session name-change event has different native payload/caller wiring.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "392": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_before_switch\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS last-truthy/cancel reducer differs from native cancellation/lifecycle protocol.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "393": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_before_fork\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Typed before-fork input/result and reduction differ from native lifecycle dispatch.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "394": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_before_compact\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Compaction preparation/result and cancel reducer differ; SESSION-016 owns caller order.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "395": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_compact\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Post-compaction event uses generic notification; session audit owns save/cancel emission order.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "396": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_shutdown\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native shutdown timeout and lifecycle delivery differ from awaited TS handlers.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "397": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_before_tree\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Before-tree preparation/options/result reduction differ from native notification.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "398": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"session_tree\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Tree completion payload and timing differ; navigation belongs to session audit.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "399": {
+      "entry": "EXT-027",
+      "status": "partial",
+      "note": "Exact on(\"context\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS makes one structuredClone and chains mutation/replacement; native lacks equivalent writeback.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:98-196"
+    },
+    "400": {
+      "entry": "EXT-028",
+      "status": "partial",
+      "note": "Exact on(\"before_provider_request\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native observes host envelope and returns None; TS can replace actual payload with any nonundefined value.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:132-196"
+    },
+    "401": {
+      "entry": "EXT-029",
+      "status": "partial",
+      "note": "Exact on(\"before_provider_headers\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS mutates a shared plain record; native observer does not write back headers.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:187-196"
+    },
+    "402": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"after_provider_response\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native after-response contains AssistantMessage rather than TS provider response contract.",
+      "rustRef": "crates/ice-extensions/src/provider_hooks.rs:198-248"
+    },
+    "403": {
+      "entry": "EXT-030",
+      "status": "partial",
+      "note": "Exact on(\"before_agent_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native systemPrompt transform exists but additional messages/full images/options differ.",
+      "rustRef": "crates/ice-extensions/src/prompt_transform.rs:1-212"
+    },
+    "404": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"agent_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native dispatch ordering and failure handling differ even for a small notification payload.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "405": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"agent_end\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native limited/empty representation omits TS run messages.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "406": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"agent_settled\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Settled event requires caller settlement ordering; generic native dispatch has separate timing.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "407": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"turn_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native empty payload loses TS turn index/timestamp.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "408": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"turn_end\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native representation loses TS turn result and tool-result context.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "409": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"message_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native message translation is not a lossless TS message/event schema.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "410": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"message_update\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native serializes delta without complete enclosing message/update context.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "411": {
+      "entry": "EXT-023",
+      "status": "partial",
+      "note": "Exact on(\"message_end\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS chains role-preserving shallow replacements; native notification lacks matching reduction.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:59-76"
+    },
+    "412": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"tool_execution_start\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native start fields/ownership differ from TS event.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "413": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"tool_execution_update\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native update includes arguments but omits TS partial result.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "414": {
+      "entry": "EXT-022",
+      "status": "partial",
+      "note": "Exact on(\"tool_execution_end\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Native manual serializer omits usage; execution parser support is a different path.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "415": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Exact on(\"model_select\") overload plus unsubscribe; EXT-008 owns registration mutation/order. Model/previous-model/source event differs from native ID-based model action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:534-574; crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "416": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Exact on(\"thinking_level_select\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS effective/previous-level event follows changed-state persistence; native action/event differs.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:546-574"
+    },
+    "417": {
+      "entry": "EXT-024",
+      "status": "partial",
+      "note": "Exact on(\"tool_call\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS propagates rejection and last truthy/block result; native fail-closed decision has 600-second timeout.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:606-796"
+    },
+    "418": {
+      "entry": "EXT-025",
+      "status": "partial",
+      "note": "Exact on(\"tool_result\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS shared shallow wrapper supports defined returned fields/usage; native payload/writeback differs.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:1-340"
+    },
+    "419": {
+      "entry": "EXT-026",
+      "status": "partial",
+      "note": "Exact on(\"user_bash\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS first-valid result/operations routing and terminal invalid-response failure differ from native notification.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "420": {
+      "entry": "EXT-032",
+      "status": "partial",
+      "note": "Exact on(\"input\") overload plus unsubscribe; EXT-008 owns registration mutation/order. TS text/image transform reduction differs from native claimed fanout; no TS requestId field.",
+      "rustRef": "crates/ice-extensions/src/translate.rs:342-605"
+    },
+    "421": {
+      "entry": "EXT-011",
+      "status": "partial",
+      "note": "Same-owner tool replacement/refresh and object-schema validation differ from native immutable first-wins registration.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:343-415"
+    },
+    "422": {
+      "entry": "EXT-013",
+      "status": "partial",
+      "note": "Native commands exist; collision suffixes, completions and command contexts differ.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/extensions.rs:34-75"
+    },
+    "423": {
+      "entry": "EXT-016",
+      "status": "missing",
+      "note": "No settings-group/items/onChange registrar equivalent.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1200-1460"
+    },
+    "424": {
+      "entry": "EXT-014",
+      "status": "partial",
+      "note": "Shortcut declarations exist; native bare-key matching and all-Input-subscriber fanout differ.",
+      "rustRef": "crates/ice-cli/src/interactive_tui.rs:390-505"
+    },
+    "425": {
+      "entry": "EXT-014",
+      "status": "partial",
+      "note": "Nested shortcut description, not a top-level API member.",
+      "rustRef": "crates/ice-extensions/src/registry.rs:1-1330"
+    },
+    "426": {
+      "entry": "EXT-014",
+      "status": "partial",
+      "note": "Nested shortcut handler takes ExtensionContext; native callbacks receive decoded input JSON.",
+      "rustRef": "crates/ice-cli/src/interactive_tui.rs:390-505"
+    },
+    "427": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "Flag validation, default initialization and owner lookup differ from native first-wins declarations.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:343-569"
+    },
+    "428": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "Nested flag description metadata belongs to registerFlag.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:343-569"
+    },
+    "429": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "Flag type is boolean|string; native name/default validation differs.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:343-569"
+    },
+    "432": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "Nested default matches declared type; first initialized shared value wins in TS.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:343-569"
+    },
+    "433": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "TS getFlag requires owner registration; native queries any name and returns null if absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:423-428"
+    },
+    "434": {
+      "entry": "EXT-037",
+      "status": "partial",
+      "note": "Register by exact customType; native consumer ignores name and matches only kind.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/sessions.rs:470-559"
+    },
+    "435": {
+      "entry": "EXT-039",
+      "status": "partial",
+      "note": "TS context/order/error continuation differs from native Markdown chain.",
+      "rustRef": "crates/ice-cli/src/interactive_tui.rs:110-157"
+    },
+    "436": {
+      "entry": "EXT-038",
+      "status": "partial",
+      "note": "Native Entry renderer ignores registered name and receives incomplete entry data.",
+      "rustRef": "crates/ice-cli/src/interactive_tui/sessions.rs:470-610"
+    },
+    "437": {
+      "entry": "EXT-051",
+      "status": "partial",
+      "note": "Native custom message delivery works, but active default and awaited errors differ.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:190-439"
+    },
+    "438": {
+      "entry": "EXT-051",
+      "status": "partial",
+      "note": "Nested triggerTurn controls pending/idle execution; native active default differs.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:190-439"
+    },
+    "439": {
+      "entry": "EXT-051",
+      "status": "partial",
+      "note": "Nested deliverAs is steer|followUp|nextTurn with nextTurn precedence.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:190-439"
+    },
+    "440": {
+      "entry": "EXT-052",
+      "status": "partial",
+      "note": "Native SendUserMessage accepts text only and returns awaited outcome.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:441-452"
+    },
+    "441": {
+      "entry": "EXT-052",
+      "status": "missing",
+      "note": "Nested user deliverAs steer|followUp is not read by native adapter.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:441-452"
+    },
+    "442": {
+      "entry": "EXT-053",
+      "status": "partial",
+      "note": "Native custom append returns entryId and lacks durable intent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:454-480"
+    },
+    "443": {
+      "entry": "EXT-053",
+      "status": "missing",
+      "note": "Nested durable brackets TS append with flushDurably; native does not consume it.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:454-480"
+    },
+    "444": {
+      "entry": "EXT-053",
+      "status": "partial",
+      "note": "Native name setter persists; TS also emits session_info_changed through both channels.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:506-514"
+    },
+    "445": {
+      "entry": "EXT-053",
+      "status": "missing",
+      "note": "No direct GetSessionName native action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "446": {
+      "entry": "EXT-053",
+      "status": "missing",
+      "note": "No SetLabel native action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "447": {
+      "entry": "EXT-056",
+      "status": "missing",
+      "note": "No direct-argv exec host action; SDK process utility serves lifecycle cleanup.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "448": {
+      "entry": "EXT-054",
+      "status": "partial",
+      "note": "Native active tools query returns {tools} asynchronously.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:516-523"
+    },
+    "449": {
+      "entry": "EXT-054",
+      "status": "missing",
+      "note": "Full ToolInfo/schema/guidelines/access/source metadata query is absent.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "450": {
+      "entry": "EXT-054",
+      "status": "partial",
+      "note": "Native setter delegates to main lane and filters nonstring elements.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:181-190; crates/ice-cli/src/extensions_actions.rs:525-532"
+    },
+    "451": {
+      "entry": "EXT-054",
+      "status": "missing",
+      "note": "No extension/prompt/skill command-catalog query.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "452": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Native accepts catalog ID/substring and returns {model:id}; TS takes Model and returns boolean/throws.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:138-158; crates/ice-cli/src/extensions_actions.rs:534-544"
+    },
+    "453": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Native thinking query returns {level} asynchronously.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:546-553"
+    },
+    "454": {
+      "entry": "EXT-055",
+      "status": "partial",
+      "note": "Native serde-decodes level; TS clamps/persists and emits on effective change.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:555-574"
+    },
+    "455": {
+      "entry": "EXT-018",
+      "status": "partial",
+      "note": "Public Provider-object overload differs from native provider callback ABI.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "456": {
+      "entry": "EXT-018",
+      "status": "partial",
+      "note": "Named ProviderConfig overload supports queued/dynamic override unlike immutable native registration.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "457": {
+      "entry": "EXT-018",
+      "status": "missing",
+      "note": "Dynamic unregister/restore lacks a native runtime action.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "458": {
+      "entry": "EXT-017",
+      "status": "partial",
+      "note": "TS arbitrary-name EventBus works; native dispatch_event stub drops payload and returns zero.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:769-774"
+    },
+    "461": {
+      "entry": "EXT-015",
+      "status": "partial",
+      "note": "Internal flag-values Map is distinct from public factory API; native parsed map is queried by action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:423-428"
+    },
+    "462": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Internal compatibility-provider queue, not a public factory field.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "463": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Nested queued compatibility provider name.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "464": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Nested queued compatibility ProviderConfig.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "465": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Nested compatibility queue owner path for binding-error attribution.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "466": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Internal Provider-object queue separate from legacy named queue.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "467": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Nested queued Provider object; not a public registerNativeProvider method.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "468": {
+      "entry": "EXT-018",
+      "status": "different-by-design",
+      "note": "Nested native-provider queue owner path.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "469": {
+      "entry": "EXT-010",
+      "status": "partial",
+      "note": "assertActive rethrows first invalidation cause; native Weak/atomic/invocation checks differ.",
+      "rustRef": "crates/ice-extensions/src/actions.rs:527-793; crates/ice-extensions/src/actions.rs:984-1265"
+    },
+    "470": {
+      "entry": "EXT-010",
+      "status": "partial",
+      "note": "invalidate preserves first cause; native queue-specific cleanup and owner revocation differ.",
+      "rustRef": "crates/ice-extensions/src/actions.rs:527-793"
+    },
+    "471": {
+      "entry": "EXT-018",
+      "status": "partial",
+      "note": "Internal named-provider binding, not another public overload.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "472": {
+      "entry": "EXT-018",
+      "status": "partial",
+      "note": "Internal registerNativeProvider binding; public API uses registerProvider overloads.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "473": {
+      "entry": "EXT-018",
+      "status": "missing",
+      "note": "Internal unregister binding has no native dynamic restoration action.",
+      "rustRef": "crates/ice-extensions/src/lib.rs:569-691"
+    },
+    "474": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Native execution context provides safe model identity, not a full Model object.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "475": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Scoped-model array is not exported.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "476": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Mutable settings manager access is not exported through native actions.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "477": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No matching main-run isIdle query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "478": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No matching isCompacting query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "479": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No generic extension isProjectTrusted query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "480": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Native tools have cancellation/invocation lifetime, but no equivalent live AbortSignal context property.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "481": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No generic main-session abort action in the SDK action enum.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "482": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No stopAfterTurn action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "483": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No compactAfterTurn action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "484": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No hasPendingMessages query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "485": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No hasPendingSteering query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "486": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Native StdioLifecycle finish is restricted to its declaring owner; it is not unrestricted context shutdown.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "487": {
+      "entry": "EXT-019",
+      "status": "missing",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. No extension context-usage query.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "488": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Native Compact exists but uses asynchronous run outcome rather than this callback-oriented context contract.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "489": {
+      "entry": "EXT-019",
+      "status": "partial",
+      "note": "Internal ExtensionContextActions binding, not an additional public factory method. Native GetSystemPrompt returns owned JSON/text; TypeScript supplies a lazy guarded synchronous getter.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:388-405; crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "490": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal getSystemPromptOptions has no corresponding native action.",
+      "rustRef": "crates/ice-plugin-sdk/src/lib.rs:1010-1074"
+    },
+    "491": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. No native waitForIdle command-context method.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "492": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. NewSession is implemented, but parent/setup/withSession and cancelled return shape are not.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "493": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested newSession.parentSession option is not consumed by native action.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "494": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested newSession.setup callback cannot cross the current native DTO.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "495": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested newSession.withSession replacement callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "496": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested cancelled result differs from native runId/status return.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "497": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Native Fork exists but ignores the TypeScript entry/position options.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "498": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested fork.position option is not consumed.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "499": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested fork.withSession callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "500": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested fork cancelled result is not native runId/status.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "501": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Native NavigateTree exists with a narrower DTO and current harness behavior.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "502": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested summarize is accepted by native adapter; underlying effectiveness belongs to the session review.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "503": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested customInstructions is forwarded by adapter; underlying effectiveness belongs to session review.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "504": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested replaceInstructions is not in native adapter.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "505": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested label is accepted by adapter; persistence/effect is a session review dependency.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "506": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested navigation cancelled result differs from native outcome.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "507": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Native SwitchSession uses an ID rather than a TS session path and has no withSession callback.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "508": {
+      "entry": "EXT-020",
+      "status": "missing",
+      "note": "Internal command-context binding or nested options/result field. Nested switch.withSession callback is absent.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "509": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Nested switch cancelled result differs from native outcome.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    },
+    "510": {
+      "entry": "EXT-020",
+      "status": "partial",
+      "note": "Internal command-context binding or nested options/result field. Native reload signaling exists; missing/disconnected receiver can still yield null through callback path.",
+      "rustRef": "crates/ice-cli/src/extensions_actions.rs:600-673; crates/ice-extensions/src/actions.rs:860-868"
+    }
+  },
+  "excluded_candidates": [
+    "C000255",
+    "C000256",
+    "C000430",
+    "C000431",
+    "C000459",
+    "C000460",
+    "C000523"
+  ]
+}

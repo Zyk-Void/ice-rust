@@ -150,6 +150,10 @@ enum FaultTarget {
     WriteFile,
     /// Inject an error on the next `rename_file`.
     RenameFile,
+    /// Fail the required final operation record, not prior accepted history.
+    OperationFinished,
+    /// Remove a listed file immediately before its header is read.
+    DisappearingHeader,
 }
 
 struct FaultyFs {
@@ -181,11 +185,13 @@ impl FaultyFs {
         let matches = match self.target {
             FaultTarget::WriteFile => is_write,
             FaultTarget::RenameFile => !is_write,
+            FaultTarget::OperationFinished | FaultTarget::DisappearingHeader => false,
         };
         if matches && self.armed.swap(false, Ordering::SeqCst) {
             Some(Self::fault_error(match self.target {
                 FaultTarget::WriteFile => "write_file",
                 FaultTarget::RenameFile => "rename_file",
+                FaultTarget::OperationFinished | FaultTarget::DisappearingHeader => unreachable!(),
             }))
         } else {
             None
@@ -229,6 +235,11 @@ impl FileSystem for FaultyFs {
         max_lines: Option<usize>,
         cancel: Option<&CancellationToken>,
     ) -> Result<Vec<String>, FileError> {
+        if matches!(self.target, FaultTarget::DisappearingHeader)
+            && self.armed.swap(false, Ordering::SeqCst)
+        {
+            self.inner.remove(path, false, false, cancel).await?;
+        }
         self.inner.read_text_lines(path, max_lines, cancel).await
     }
 
@@ -259,6 +270,12 @@ impl FileSystem for FaultyFs {
         content: FileContent,
         cancel: Option<&CancellationToken>,
     ) -> Result<(), FileError> {
+        if matches!(self.target, FaultTarget::OperationFinished)
+            && matches!(&content, FileContent::Text(text) if text.contains("\"type\":\"operation_finished\""))
+            && self.armed.swap(false, Ordering::SeqCst)
+        {
+            return Err(Self::fault_error("operation_finished").with_path(path));
+        }
         self.inner.append_file(path, content, cancel).await
     }
 
@@ -359,6 +376,54 @@ fn faulty_repo(target: FaultTarget) -> (Arc<FaultyFs>, JsonlSessionRepo) {
 // ---------------------------------------------------------------------------
 // tests
 // ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn discovery_keeps_healthy_sessions_when_a_listed_file_disappears() {
+    let base: Arc<dyn FileSystem> =
+        Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/proj".into()));
+    let original_repo = repo(base.clone());
+    let first = original_repo
+        .create_typed(&create_options("first"))
+        .await
+        .unwrap();
+    let second = original_repo
+        .create_typed(&create_options("second"))
+        .await
+        .unwrap();
+    let before = original_repo.list_typed(&Default::default()).await.unwrap();
+    assert_eq!(before.len(), 2);
+    let faulty = FaultyFs::new(base.clone(), FaultTarget::DisappearingHeader);
+    let listed = repo(faulty.clone())
+        .list_typed(&Default::default())
+        .await
+        .unwrap();
+    assert!(
+        !faulty.armed.load(Ordering::SeqCst),
+        "header-read fault was exercised"
+    );
+    assert_eq!(listed.len(), 1);
+    let remaining = if listed[0].id == first.jsonl_metadata().id {
+        first.jsonl_metadata()
+    } else {
+        assert_eq!(listed[0].id, second.jsonl_metadata().id);
+        second.jsonl_metadata()
+    };
+    assert!(base.exists(&remaining.path, None).await.unwrap());
+    let mut missing = before.iter().filter(|meta| meta.id != remaining.id);
+    assert!(!base
+        .exists(&missing.next().unwrap().path, None)
+        .await
+        .unwrap());
+    assert!(missing.next().is_none());
+    assert_eq!(
+        original_repo
+            .list_typed(&Default::default())
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+}
 
 /// Mirrors "does not publish a partial fork when staging fails": a fork whose
 /// staging (`write_file` of the `.tmp`) fails must leave the destination
@@ -829,6 +894,101 @@ fn operation_started(id: &str, lane: &str) -> LaneRecord {
             resume_data: None,
         },
     })
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn failed_final_record_is_not_reported_as_a_completed_run() {
+    use ice_harness::agent_harness::{AgentHarness, AgentLane};
+    let (faulty, repo) = faulty_repo(FaultTarget::OperationFinished);
+    let storage = repo
+        .create_typed(&create_options("final-run"))
+        .await
+        .unwrap();
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new().with_text("acknowledged response"),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        session: ice_harness::session::Session::new(Arc::new(storage), None),
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let result = harness.prompt_text("keep my prompt", Vec::new()).await;
+    assert!(
+        !faulty.armed.load(Ordering::SeqCst),
+        "final-record fault must fire"
+    );
+    assert!(
+        result.is_err(),
+        "a failed required final save must not report completion"
+    );
+    let entries = harness
+        .session()
+        .find_entries(&EntryQuery::default())
+        .await
+        .unwrap();
+    assert_eq!(
+        entries.len(),
+        2,
+        "previously acknowledged history stays available"
+    );
+    assert!(harness.snapshot().await.unwrap().active.is_none());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn failed_final_record_is_not_reported_as_successful_compaction() {
+    use ice_harness::agent_harness::{AgentHarness, AgentLane};
+    let (faulty, repo) = faulty_repo(FaultTarget::OperationFinished);
+    let storage = repo
+        .create_typed(&create_options("final-compact"))
+        .await
+        .unwrap();
+    storage
+        .append_entry(
+            ProvisionedEntry {
+                id: "prompt".into(),
+                kind: ProvisionedKind::Message {
+                    message: user_msg("preserve original history"),
+                    terminate: None,
+                },
+            },
+            "main",
+        )
+        .await
+        .unwrap();
+    let provider = ice_ai::providers::faux::FauxProvider::new(
+        ice_ai::providers::faux::FauxScript::new().with_text("useful checkpoint"),
+    );
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        session: ice_harness::session::Session::new(Arc::new(storage), None),
+        compaction: ice_harness::types::CompactionSettings {
+            keep_recent_tokens: 0,
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let result = harness.compact(None).await;
+    assert!(
+        !faulty.armed.load(Ordering::SeqCst),
+        "final-record fault must fire"
+    );
+    assert!(
+        result.is_err(),
+        "a failed required final save must not report successful compaction"
+    );
+    assert!(harness
+        .session()
+        .get_entry("prompt")
+        .await
+        .unwrap()
+        .is_some());
+    assert!(harness.snapshot().await.unwrap().active.is_none());
 }
 
 // Silence unused-import warnings if a helper goes unused in a subset build.

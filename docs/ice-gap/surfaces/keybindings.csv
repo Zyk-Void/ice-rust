@@ -1,0 +1,187 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+tui.editor.cursorUp,packages/tui/src/keybindings.ts:64,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorDown,packages/tui/src/keybindings.ts:65,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorLeft,packages/tui/src/keybindings.ts:66,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorRight,packages/tui/src/keybindings.ts:70,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorWordLeft,packages/tui/src/keybindings.ts:74,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorWordRight,packages/tui/src/keybindings.ts:78,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorLineStart,packages/tui/src/keybindings.ts:82,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.cursorLineEnd,packages/tui/src/keybindings.ts:86,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.jumpForward,packages/tui/src/keybindings.ts:90,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.jumpBackward,packages/tui/src/keybindings.ts:94,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.pageUp,packages/tui/src/keybindings.ts:98,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.pageDown,packages/tui/src/keybindings.ts:99,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteCharBackward,packages/tui/src/keybindings.ts:100,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteCharForward,packages/tui/src/keybindings.ts:104,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteWordBackward,packages/tui/src/keybindings.ts:108,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteWordForward,packages/tui/src/keybindings.ts:112,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteToLineStart,packages/tui/src/keybindings.ts:116,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.deleteToLineEnd,packages/tui/src/keybindings.ts:120,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.yank,packages/tui/src/keybindings.ts:124,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.yankPop,packages/tui/src/keybindings.ts:125,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.editor.undo,packages/tui/src/keybindings.ts:126,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.input.newLine,packages/tui/src/keybindings.ts:127,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.input.submit,packages/tui/src/keybindings.ts:128,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.input.tab,packages/tui/src/keybindings.ts:129,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.input.copy,packages/tui/src/keybindings.ts:130,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.up,packages/tui/src/keybindings.ts:131,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.down,packages/tui/src/keybindings.ts:132,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.left,packages/tui/src/keybindings.ts:133,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.right,packages/tui/src/keybindings.ts:134,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.pageUp,packages/tui/src/keybindings.ts:135,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.pageDown,packages/tui/src/keybindings.ts:136,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.confirm,packages/tui/src/keybindings.ts:140,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.select.cancel,packages/tui/src/keybindings.ts:141,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.pageUp,packages/tui/src/keybindings.ts:146,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.pageDown,packages/tui/src/keybindings.ts:150,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.previousPrompt,packages/tui/src/keybindings.ts:154,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.nextPrompt,packages/tui/src/keybindings.ts:158,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.top,packages/tui/src/keybindings.ts:162,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+tui.altScreen.bottom,packages/tui/src/keybindings.ts:163,crates/ice-tui/src/keybindings.rs:107,partial,TUI-210
+app.interrupt,packages/coding-agent/src/core/keybindings.ts:92,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.clear,packages/coding-agent/src/core/keybindings.ts:93,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.exit,packages/coding-agent/src/core/keybindings.ts:94,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.suspend,packages/coding-agent/src/core/keybindings.ts:95,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.thinking.cycle,packages/coding-agent/src/core/keybindings.ts:99,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.model.cycleForward,packages/coding-agent/src/core/keybindings.ts:103,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.model.cycleBackward,packages/coding-agent/src/core/keybindings.ts:107,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.model.select,packages/coding-agent/src/core/keybindings.ts:111,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.model.toggleFavorite,packages/coding-agent/src/core/keybindings.ts:112,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tools.expand,packages/coding-agent/src/core/keybindings.ts:113,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.tools.collapse,packages/coding-agent/src/core/keybindings.ts:114,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tools.expandLast,packages/coding-agent/src/core/keybindings.ts:115,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.notices.show,packages/coding-agent/src/core/keybindings.ts:116,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.notices.dismiss,packages/coding-agent/src/core/keybindings.ts:117,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.notices.clear,packages/coding-agent/src/core/keybindings.ts:118,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.notices.copy,packages/coding-agent/src/core/keybindings.ts:122,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.shortcuts.show,packages/coding-agent/src/core/keybindings.ts:123,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tasks.background,packages/coding-agent/src/core/keybindings.ts:127,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.shells.open,packages/coding-agent/src/core/keybindings.ts:131,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.shells.stop,packages/coding-agent/src/core/keybindings.ts:136,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.shells.follow,packages/coding-agent/src/core/keybindings.ts:137,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.attach,packages/coding-agent/src/core/keybindings.ts:141,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.open,packages/coding-agent/src/core/keybindings.ts:142,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.parent,packages/coding-agent/src/core/keybindings.ts:143,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.next,packages/coding-agent/src/core/keybindings.ts:144,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.previous,packages/coding-agent/src/core/keybindings.ts:148,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.subagents.takeControl,packages/coding-agent/src/core/keybindings.ts:152,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.hub,packages/coding-agent/src/core/keybindings.ts:153,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.stop,packages/coding-agent/src/core/keybindings.ts:157,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.delete,packages/coding-agent/src/core/keybindings.ts:158,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.approve,packages/coding-agent/src/core/keybindings.ts:159,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.deny,packages/coding-agent/src/core/keybindings.ts:163,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.approveSession,packages/coding-agent/src/core/keybindings.ts:164,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.agents.nextApproval,packages/coding-agent/src/core/keybindings.ts:168,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.thinking.toggle,packages/coding-agent/src/core/keybindings.ts:173,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.session.toggleNamedFilter,packages/coding-agent/src/core/keybindings.ts:177,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.editor.external,packages/coding-agent/src/core/keybindings.ts:181,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.message.copy,packages/coding-agent/src/core/keybindings.ts:185,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.message.followUp,packages/coding-agent/src/core/keybindings.ts:189,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.message.sendNow,packages/coding-agent/src/core/keybindings.ts:193,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.message.dequeue,packages/coding-agent/src/core/keybindings.ts:197,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.clipboard.pasteImage,packages/coding-agent/src/core/keybindings.ts:201,crates/ice-tui/src/keybindings.rs:147,partial,TUI-048
+app.session.new,packages/coding-agent/src/core/keybindings.ts:205,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.tree,packages/coding-agent/src/core/keybindings.ts:206,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.fork,packages/coding-agent/src/core/keybindings.ts:207,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.resume,packages/coding-agent/src/core/keybindings.ts:208,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.foldOrUp,packages/coding-agent/src/core/keybindings.ts:209,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.unfoldOrDown,packages/coding-agent/src/core/keybindings.ts:213,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.editLabel,packages/coding-agent/src/core/keybindings.ts:217,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.toggleLabelTimestamp,packages/coding-agent/src/core/keybindings.ts:221,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.togglePath,packages/coding-agent/src/core/keybindings.ts:225,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.toggleSort,packages/coding-agent/src/core/keybindings.ts:229,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.rename,packages/coding-agent/src/core/keybindings.ts:233,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.delete,packages/coding-agent/src/core/keybindings.ts:237,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.session.deleteNoninvasive,packages/coding-agent/src/core/keybindings.ts:241,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.save,packages/coding-agent/src/core/keybindings.ts:245,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.enableAll,packages/coding-agent/src/core/keybindings.ts:249,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.clearAll,packages/coding-agent/src/core/keybindings.ts:253,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.toggleProvider,packages/coding-agent/src/core/keybindings.ts:257,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.reorderUp,packages/coding-agent/src/core/keybindings.ts:261,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.models.reorderDown,packages/coding-agent/src/core/keybindings.ts:265,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.default,packages/coding-agent/src/core/keybindings.ts:269,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.noTools,packages/coding-agent/src/core/keybindings.ts:273,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.userOnly,packages/coding-agent/src/core/keybindings.ts:277,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.labeledOnly,packages/coding-agent/src/core/keybindings.ts:281,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.all,packages/coding-agent/src/core/keybindings.ts:285,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.cycleForward,packages/coding-agent/src/core/keybindings.ts:289,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+app.tree.filter.cycleBackward,packages/coding-agent/src/core/keybindings.ts:293,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorUp,packages/coding-agent/src/core/keybindings.ts:300,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorDown,packages/coding-agent/src/core/keybindings.ts:301,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorLeft,packages/coding-agent/src/core/keybindings.ts:302,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorRight,packages/coding-agent/src/core/keybindings.ts:303,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorWordLeft,packages/coding-agent/src/core/keybindings.ts:304,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorWordRight,packages/coding-agent/src/core/keybindings.ts:305,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorLineStart,packages/coding-agent/src/core/keybindings.ts:306,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cursorLineEnd,packages/coding-agent/src/core/keybindings.ts:307,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:jumpForward,packages/coding-agent/src/core/keybindings.ts:308,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:jumpBackward,packages/coding-agent/src/core/keybindings.ts:309,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:pageUp,packages/coding-agent/src/core/keybindings.ts:310,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:pageDown,packages/coding-agent/src/core/keybindings.ts:311,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteCharBackward,packages/coding-agent/src/core/keybindings.ts:312,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteCharForward,packages/coding-agent/src/core/keybindings.ts:313,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteWordBackward,packages/coding-agent/src/core/keybindings.ts:314,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteWordForward,packages/coding-agent/src/core/keybindings.ts:315,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteToLineStart,packages/coding-agent/src/core/keybindings.ts:316,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteToLineEnd,packages/coding-agent/src/core/keybindings.ts:317,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:yank,packages/coding-agent/src/core/keybindings.ts:318,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:yankPop,packages/coding-agent/src/core/keybindings.ts:319,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:undo,packages/coding-agent/src/core/keybindings.ts:320,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:newLine,packages/coding-agent/src/core/keybindings.ts:321,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:submit,packages/coding-agent/src/core/keybindings.ts:322,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:tab,packages/coding-agent/src/core/keybindings.ts:323,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:copy,packages/coding-agent/src/core/keybindings.ts:324,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectUp,packages/coding-agent/src/core/keybindings.ts:325,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectDown,packages/coding-agent/src/core/keybindings.ts:326,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectPageUp,packages/coding-agent/src/core/keybindings.ts:327,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectPageDown,packages/coding-agent/src/core/keybindings.ts:328,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectConfirm,packages/coding-agent/src/core/keybindings.ts:329,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectCancel,packages/coding-agent/src/core/keybindings.ts:330,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:interrupt,packages/coding-agent/src/core/keybindings.ts:331,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:clear,packages/coding-agent/src/core/keybindings.ts:332,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:exit,packages/coding-agent/src/core/keybindings.ts:333,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:suspend,packages/coding-agent/src/core/keybindings.ts:334,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cycleThinkingLevel,packages/coding-agent/src/core/keybindings.ts:335,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cycleModelForward,packages/coding-agent/src/core/keybindings.ts:336,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:cycleModelBackward,packages/coding-agent/src/core/keybindings.ts:337,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:selectModel,packages/coding-agent/src/core/keybindings.ts:338,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:expandTools,packages/coding-agent/src/core/keybindings.ts:339,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:toggleThinking,packages/coding-agent/src/core/keybindings.ts:340,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:toggleSessionNamedFilter,packages/coding-agent/src/core/keybindings.ts:341,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:externalEditor,packages/coding-agent/src/core/keybindings.ts:342,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:followUp,packages/coding-agent/src/core/keybindings.ts:343,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:sendNow,packages/coding-agent/src/core/keybindings.ts:344,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:dequeue,packages/coding-agent/src/core/keybindings.ts:345,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:pasteImage,packages/coding-agent/src/core/keybindings.ts:346,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:newSession,packages/coding-agent/src/core/keybindings.ts:347,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:tree,packages/coding-agent/src/core/keybindings.ts:348,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:fork,packages/coding-agent/src/core/keybindings.ts:349,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:resume,packages/coding-agent/src/core/keybindings.ts:350,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:treeFoldOrUp,packages/coding-agent/src/core/keybindings.ts:351,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:treeUnfoldOrDown,packages/coding-agent/src/core/keybindings.ts:352,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:treeEditLabel,packages/coding-agent/src/core/keybindings.ts:353,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:treeToggleLabelTimestamp,packages/coding-agent/src/core/keybindings.ts:354,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:toggleSessionPath,packages/coding-agent/src/core/keybindings.ts:355,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:toggleSessionSort,packages/coding-agent/src/core/keybindings.ts:356,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:renameSession,packages/coding-agent/src/core/keybindings.ts:357,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteSession,packages/coding-agent/src/core/keybindings.ts:358,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+legacy:deleteSessionNoninvasive,packages/coding-agent/src/core/keybindings.ts:359,crates/ice-tui/src/keybindings.rs:147,missing,TUI-048
+tui.select.cancel (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:231,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.hub (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:231,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+tui.select.up (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:235,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+tui.select.down (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:238,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.nextApproval (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:241,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+tui.select.confirm (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:244,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.subagents.attach (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:245,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.stop (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:266,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.delete (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:268,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.approve (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:270,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.approveSession (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:271,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+app.agents.deny (Agent Hub consumer),packages/coding-agent/src/subagents/ui/hub.ts:272,crates/ice-cli/src/child_agents.rs:207,missing,SUB-037
+Activity 0–9 filters,packages/coding-agent/src/observe/observe-dashboard.html:1963,,missing,OBS-023
+Activity Space follow,packages/coding-agent/src/observe/observe-dashboard.html:1965,,missing,OBS-023
+Activity Escape close,packages/coding-agent/src/observe/observe-dashboard.html:1966,,missing,OBS-023
+Activity ArrowUp/ArrowDown,packages/coding-agent/src/observe/observe-dashboard.html:1967,,missing,OBS-023
+Inspector ArrowLeft/ArrowRight ±24px,packages/coding-agent/src/observe/observe-dashboard.html:1444,,missing,OBS-021
+Inspector Home/End,packages/coding-agent/src/observe/observe-dashboard.html:1447,,missing,OBS-021
+Graph Enter/Shift+Enter matches,packages/coding-agent/src/observe/observe-dashboard.html:3314,,missing,OBS-029

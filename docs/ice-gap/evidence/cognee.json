@@ -1,0 +1,5083 @@
+{
+  "area": "cognee",
+  "complete": true,
+  "entries": [
+    {
+      "id": "COG-001",
+      "title": "Cognee configuration defaults, validation and precedence",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 150,
+      "size_max": 250,
+      "dependencies": [
+        "COG-002",
+        "COG-004",
+        "COG-006"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "CLI-018",
+          "kind": "shared-contract",
+          "reason": "The pure configuration resolver already specifies the shallow-copy environment normalizer. Canonical agent-directory lookup is performed by connection/storage callers, not by resolveIceCogneeConfig itself. Keep these exact identity helpers as shared references; do not require the whole settings subsystem to implement the pure validator.",
+          "reviews": [
+            "DEPQA-008"
+          ]
+        },
+        {
+          "entry_id": "COG-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-001",
+          "kind": "shared-contract",
+          "reason": "The pure configuration resolver already specifies the shallow-copy environment normalizer. Canonical agent-directory lookup is performed by connection/storage callers, not by resolveIceCogneeConfig itself. Keep these exact identity helpers as shared references; do not require the whole settings subsystem to implement the pure validator.",
+          "reviews": [
+            "DEPQA-008"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-002",
+      "title": "Shared Cognee environment-file parser and local URL alias",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "COG-003",
+      "title": "Credential resolution, same-origin caches and connection fallback",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 110,
+      "size_max": 180,
+      "dependencies": [
+        "COG-001",
+        "COG-002",
+        "COG-006",
+        "SET-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "CLI-018",
+          "kind": "shared-contract",
+          "reason": "Connection lookup calls canonical getAgentDir and the exact ice-cognee path helper. keySource labels and omission of secret text are already COG-003 behavior; they do not require provider OAuth or an observability database.",
+          "reviews": [
+            "DEPQA-009"
+          ]
+        },
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-001",
+          "kind": "prerequisite",
+          "reason": "Connection lookup calls canonical getAgentDir and the exact ice-cognee path helper. keySource labels and omission of secret text are already COG-003 behavior; they do not require provider OAuth or an observability database.",
+          "reviews": [
+            "DEPQA-009"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-004",
+      "title": "Project dataset naming and lexical-root identity",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 50,
+      "size_max": 90,
+      "dependencies": [
+        "COG-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-005",
+      "title": "Host-bound Cognee session IDs and collision-resistant sanitization",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [
+        "COG-004"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-006",
+      "title": "Cognee config file loading and private atomic persistence",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [
+        "COG-001",
+        "COG-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-007",
+      "title": "Credential redaction, memory envelopes and UTF-16 caps",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [
+        "COG-001"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-012",
+          "kind": "shared-contract",
+          "reason": "Both entries use utils/redact.ts. COG-007 already includes the exact credential-text regexes and UTF-16 cap; OBS-012 adds store-specific key redaction and SQLite retention. Treat OBS-012 as the shared-helper owner/reference, not a prerequisite to initialize SQLite before formatting Cognee memory.",
+          "reviews": [
+            "DEPQA-010"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-008",
+      "title": "Capture serialization and visible-message text extraction",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 30,
+      "size_max": 65,
+      "dependencies": [
+        "COG-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-009",
+      "title": "Cognee HTTP URL, authentication and error taxonomy",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 65,
+      "size_max": 120,
+      "dependencies": [
+        "COG-001",
+        "COG-003"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-010",
+      "title": "Single-deadline HTTP cancellation and late-operation cleanup",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 130,
+      "size_max": 230,
+      "dependencies": [
+        "COG-009"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-011",
+      "title": "Streaming byte limits, Content-Length checks and truncating UTF-8 reads",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 120,
+      "size_max": 210,
+      "dependencies": [
+        "COG-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-012",
+      "title": "Recall envelope normalization and graph-context condensation",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 75,
+      "size_max": 130,
+      "dependencies": [
+        "COG-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-013",
+      "title": "Never-cognified dataset 404 as empty memory",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-009",
+        "COG-010",
+        "COG-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-014",
+      "title": "Dataset/session-scoped recall request and aggregate output cap",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 70,
+      "size_max": 120,
+      "dependencies": [
+        "COG-009",
+        "COG-010",
+        "COG-011",
+        "COG-012",
+        "COG-013"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-015",
+      "title": "Permanent-memory multipart remember request",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-009",
+        "COG-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-016",
+      "title": "Session-cache entry write and tolerant acknowledgement",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 110,
+      "dependencies": [
+        "COG-009",
+        "COG-010",
+        "COG-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-017",
+      "title": "Background improve request and acceptance semantics",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 75,
+      "dependencies": [
+        "COG-009",
+        "COG-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-018",
+      "title": "Optional server agent registration",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 35,
+      "size_max": 65,
+      "dependencies": [
+        "COG-009",
+        "COG-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-019",
+      "title": "Optional server agent unregistration",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-009",
+        "COG-010"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-020",
+      "title": "Server model identity projection without credential exposure",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 30,
+      "size_max": 60,
+      "dependencies": [
+        "COG-009",
+        "COG-010",
+        "COG-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-021",
+      "title": "Browse API data contracts, ID validation and common read policy",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 120,
+      "size_max": 210,
+      "dependencies": [
+        "COG-009",
+        "COG-010",
+        "COG-011"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-022",
+      "title": "Dataset enumeration projection",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 45,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-023",
+      "title": "Dataset-document enumeration without server filesystem paths",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 30,
+      "size_max": 55,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-024",
+      "title": "Multi-dataset status request and empty-input fast path",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-025",
+      "title": "Bounded raw document preview",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 30,
+      "size_max": 60,
+      "dependencies": [
+        "COG-011",
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-026",
+      "title": "Context-only dashboard search",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-012",
+        "COG-013",
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-013",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-027",
+      "title": "Graph projection, degree-based node cap and dangling-edge removal",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-028",
+      "title": "Dataset graph fetch with large bounded transport",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-011",
+        "COG-021",
+        "COG-027"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-027",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-029",
+      "title": "Session-cache enumeration",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-030",
+      "title": "Session-cache detail, QA and trace projection",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-021"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-031",
+      "title": "Independent recall and remember circuit breakers",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-009"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-032",
+      "title": "Durable remember operation identity and record schema",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 35,
+      "size_max": 65,
+      "dependencies": [
+        "COG-007"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-033",
+      "title": "Pending remember queue admission and capacity",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 70,
+      "dependencies": [
+        "COG-001",
+        "COG-032",
+        "COG-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-034",
+      "title": "Pending queue loading, uncertain-state update and removal",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 90,
+      "size_max": 150,
+      "dependencies": [
+        "COG-032",
+        "COG-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-035",
+      "title": "Single-flight pending drain and uncertain write quarantine",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 160,
+      "size_max": 260,
+      "dependencies": [
+        "COG-015",
+        "COG-031",
+        "COG-032",
+        "COG-033",
+        "COG-034",
+        "COG-059"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-033",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-034",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-036",
+      "title": "Failed session-cache warmup buffer and bounded replay",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 100,
+      "size_max": 180,
+      "dependencies": [
+        "COG-016",
+        "COG-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-037",
+      "title": "Dream ledger records, revision validation and dataset-qualified filenames",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 140,
+      "size_max": 220,
+      "dependencies": [
+        "COG-005",
+        "COG-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-038",
+      "title": "Cross-process dream capture locking and monotonic revisions",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 120,
+      "size_max": 200,
+      "dependencies": [
+        "COG-037",
+        "COG-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-039",
+      "title": "Revision-fenced dream claims and expiring improve leases",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 95,
+      "size_max": 165,
+      "dependencies": [
+        "COG-037",
+        "COG-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-040",
+      "title": "Dream completion and compare-token lease release",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 115,
+      "size_max": 195,
+      "dependencies": [
+        "COG-017",
+        "COG-037",
+        "COG-038",
+        "COG-039"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-041",
+      "title": "Dream candidate scan, expiry cleanup and dataset-sensitive exclusion",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 100,
+      "size_max": 175,
+      "dependencies": [
+        "COG-037",
+        "COG-038"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-042",
+      "title": "Private atomic single-file writer",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 40,
+      "size_max": 80,
+      "dependencies": [],
+      "dependency_relations": []
+    },
+    {
+      "id": "COG-043",
+      "title": "Extension runtime initialization, single-flight loading and tracked work",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 180,
+      "size_max": 290,
+      "dependencies": [
+        "COG-001",
+        "COG-003",
+        "COG-004",
+        "COG-009",
+        "EXT-019",
+        "EXT-022",
+        "EXT-057"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-009",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned.",
+          "reviews": [
+            "DEPQA-011"
+          ]
+        },
+        {
+          "entry_id": "EXT-022",
+          "kind": "prerequisite",
+          "reason": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned.",
+          "reviews": [
+            "DEPQA-011"
+          ]
+        },
+        {
+          "entry_id": "EXT-057",
+          "kind": "prerequisite",
+          "reason": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned.",
+          "reviews": [
+            "DEPQA-011"
+          ]
+        },
+        {
+          "entry_id": "SESSION-035",
+          "kind": "shared-contract",
+          "reason": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned.",
+          "reviews": [
+            "DEPQA-011"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-044",
+      "title": "Asynchronous cache capture with success counters and dream revisions",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 90,
+      "size_max": 160,
+      "dependencies": [
+        "COG-016",
+        "COG-036",
+        "COG-038",
+        "COG-043",
+        "COG-059"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-038",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-047",
+          "kind": "shared-contract",
+          "reason": "The requested tool-result event belongs at COG-047, whose handler constructs the payload consumed by COG-044.storeEntry. storeEntry itself consumes an ordinary record and can also be called for QA captures. Relocate the tool-result/context prerequisites to COG-047; do not force a result-hook dependency onto the generic sender.",
+          "reviews": [
+            "DEPQA-012"
+          ]
+        },
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "shared-contract",
+          "reason": "The requested tool-result event belongs at COG-047, whose handler constructs the payload consumed by COG-044.storeEntry. storeEntry itself consumes an ordinary record and can also be called for QA captures. Relocate the tool-result/context prerequisites to COG-047; do not force a result-hook dependency onto the generic sender.",
+          "reviews": [
+            "DEPQA-012"
+          ]
+        },
+        {
+          "entry_id": "EXT-025",
+          "kind": "shared-contract",
+          "reason": "The requested tool-result event belongs at COG-047, whose handler constructs the payload consumed by COG-044.storeEntry. storeEntry itself consumes an ordinary record and can also be called for QA captures. Relocate the tool-result/context prerequisites to COG-047; do not force a result-hook dependency onto the generic sender.",
+          "reviews": [
+            "DEPQA-012"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-045",
+      "title": "Health probe and doctor report projection",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 100,
+      "size_max": 175,
+      "dependencies": [
+        "COG-001",
+        "COG-003",
+        "COG-031",
+        "COG-034",
+        "COG-043",
+        "COG-052"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-034",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-052",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-046",
+      "title": "Per-prompt recall, exact deduplication and transient system injection",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 190,
+      "size_max": 310,
+      "dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-008",
+        "COG-014",
+        "COG-031",
+        "COG-043",
+        "COG-059",
+        "COG-061",
+        "EXT-019",
+        "EXT-030"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "The before_agent_start reducer supplies the chained transient system prompt and the live signal. Cognee owns passing that signal into recall. The host does not guarantee cancellation races, timeout, or a late-result session fence beyond the stated source behavior.",
+          "reviews": [
+            "DEPQA-013"
+          ]
+        },
+        {
+          "entry_id": "EXT-030",
+          "kind": "prerequisite",
+          "reason": "The before_agent_start reducer supplies the chained transient system prompt and the live signal. Cognee owns passing that signal into recall. The host does not guarantee cancellation races, timeout, or a late-result session fence beyond the stated source behavior.",
+          "reviews": [
+            "DEPQA-013"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-047",
+      "title": "Allowlisted per-turn tool trace capture",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 160,
+      "dependencies": [
+        "COG-007",
+        "COG-008",
+        "COG-044",
+        "COG-046",
+        "EXT-019",
+        "EXT-025"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-046",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "tool_result is consumed by COG-047; its asynchronous record sender is COG-044.",
+          "reviews": [
+            "DEPQA-012"
+          ]
+        },
+        {
+          "entry_id": "EXT-025",
+          "kind": "prerequisite",
+          "reason": "tool_result is consumed by COG-047; its asynchronous record sender is COG-044.",
+          "reviews": [
+            "DEPQA-012"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-048",
+      "title": "Prompt and last-assistant-answer pairing",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 65,
+      "size_max": 115,
+      "dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-008",
+        "COG-044",
+        "COG-046"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-046",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-049",
+      "title": "Current-session idle improvement and cooldown",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 140,
+      "size_max": 230,
+      "dependencies": [
+        "COG-017",
+        "COG-037",
+        "COG-039",
+        "COG-040",
+        "COG-043",
+        "COG-059"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-037",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-040",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-050",
+      "title": "Old-session dream pass with bounded claims and stop-on-error",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 120,
+      "size_max": 200,
+      "dependencies": [
+        "COG-017",
+        "COG-039",
+        "COG-040",
+        "COG-041",
+        "COG-043",
+        "COG-049",
+        "COG-059"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-039",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-040",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-041",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-049",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-051",
+      "title": "Session-scoped checkpoint recall handoff for Blackhole",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 190,
+      "size_max": 300,
+      "dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-014",
+        "COG-031",
+        "COG-042",
+        "EXT-019",
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "BLACK-037",
+          "kind": "consumer",
+          "reason": "Optional checkpoint-file consumer; producer does not require it.",
+          "reviews": [
+            "original-entry",
+            "DEPQA-014",
+            "coordinator-relationship-override"
+          ]
+        },
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-042",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-019",
+          "kind": "prerequisite",
+          "reason": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall.",
+          "reviews": [
+            "DEPQA-014"
+          ]
+        },
+        {
+          "entry_id": "SESSION-013",
+          "kind": "prerequisite",
+          "reason": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall.",
+          "reviews": [
+            "DEPQA-014"
+          ]
+        },
+        {
+          "entry_id": "SESSION-016",
+          "kind": "prerequisite",
+          "reason": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall.",
+          "reviews": [
+            "DEPQA-014"
+          ]
+        },
+        {
+          "entry_id": "SESSION-017",
+          "kind": "prerequisite",
+          "reason": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall.",
+          "reviews": [
+            "DEPQA-014"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-052",
+      "title": "Compaction ownership and deterministic local anchor",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 130,
+      "size_max": 220,
+      "dependencies": [
+        "COG-007",
+        "COG-008",
+        "COG-043",
+        "COG-051",
+        "EXT-022"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-008",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-051",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-022",
+          "kind": "prerequisite",
+          "reason": "The generic session_before_compact reducer owns ordered whole-result replacement and cancel handling. Session owners apply/save the result; COG-052's deterministic own-summary compiler does not append its own checkpoint.",
+          "reviews": [
+            "DEPQA-015"
+          ]
+        },
+        {
+          "entry_id": "SESSION-016",
+          "kind": "shared-contract",
+          "reason": "The generic session_before_compact reducer owns ordered whole-result replacement and cancel handling. Session owners apply/save the result; COG-052's deterministic own-summary compiler does not append its own checkpoint.",
+          "reviews": [
+            "DEPQA-015"
+          ]
+        },
+        {
+          "entry_id": "SESSION-017",
+          "kind": "shared-contract",
+          "reason": "The generic session_before_compact reducer owns ordered whole-result replacement and cancel handling. Session owners apply/save the result; COG-052's deterministic own-summary compiler does not append its own checkpoint.",
+          "reviews": [
+            "DEPQA-015"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-053",
+      "title": "Post-compaction checkpoint injection, capture and permanent queueing",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 115,
+      "size_max": 195,
+      "dependencies": [
+        "COG-005",
+        "COG-007",
+        "COG-032",
+        "COG-033",
+        "COG-035",
+        "COG-044",
+        "EXT-053",
+        "SESSION-016",
+        "SESSION-017",
+        "SESSION-031"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-033",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-035",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-044",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-053",
+          "kind": "prerequisite",
+          "reason": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry.",
+          "reviews": [
+            "DEPQA-016"
+          ]
+        },
+        {
+          "entry_id": "SESSION-016",
+          "kind": "prerequisite",
+          "reason": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry.",
+          "reviews": [
+            "DEPQA-016"
+          ]
+        },
+        {
+          "entry_id": "SESSION-017",
+          "kind": "prerequisite",
+          "reason": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry.",
+          "reviews": [
+            "DEPQA-016"
+          ]
+        },
+        {
+          "entry_id": "SESSION-031",
+          "kind": "prerequisite",
+          "reason": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry.",
+          "reviews": [
+            "DEPQA-016"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-054",
+      "title": "Shutdown drain, final improvement and unregister ordering",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 70,
+      "size_max": 130,
+      "dependencies": [
+        "COG-019",
+        "COG-043",
+        "COG-049",
+        "COG-061"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-049",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-055",
+      "title": "Model-facing cognee_search tool",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 80,
+      "size_max": 145,
+      "dependencies": [
+        "COG-007",
+        "COG-014",
+        "COG-031",
+        "COG-043",
+        "EXT-011",
+        "EXT-012",
+        "EXT-054"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "AI-012",
+          "kind": "shared-contract",
+          "reason": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation.",
+          "reviews": [
+            "DEPQA-017"
+          ]
+        },
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-011",
+          "kind": "prerequisite",
+          "reason": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation.",
+          "reviews": [
+            "DEPQA-017"
+          ]
+        },
+        {
+          "entry_id": "EXT-012",
+          "kind": "prerequisite",
+          "reason": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation.",
+          "reviews": [
+            "DEPQA-017"
+          ]
+        },
+        {
+          "entry_id": "EXT-054",
+          "kind": "prerequisite",
+          "reason": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation.",
+          "reviews": [
+            "DEPQA-017"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-056",
+      "title": "Cognee slash-command grammar and branch precedence",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 65,
+      "size_max": 115,
+      "dependencies": [
+        "COG-043",
+        "COG-063",
+        "COG-064",
+        "COG-065",
+        "COG-066",
+        "COG-067",
+        "COG-068"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-063",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-064",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-065",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-066",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-067",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-068",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-057",
+      "title": "Namespaced Cognee settings section and asynchronous changes",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 95,
+      "size_max": 160,
+      "dependencies": [
+        "COG-001",
+        "COG-006",
+        "COG-043",
+        "COG-055",
+        "EXT-016"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-055",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-016",
+          "kind": "prerequisite",
+          "reason": "The named settings descriptor/onChange host API is EXT-016. TUI-025 displays and dispatches those descriptors. Cognee owns its separate JSON persistence and its nonawaited save behavior; these are not core settings.json keys.",
+          "reviews": [
+            "DEPQA-018"
+          ]
+        },
+        {
+          "entry_id": "TUI-025",
+          "kind": "shared-contract",
+          "reason": "The named settings descriptor/onChange host API is EXT-016. TUI-025 displays and dispatches those descriptors. Cognee owns its separate JSON persistence and its nonawaited save behavior; these are not core settings.json keys.",
+          "reviews": [
+            "DEPQA-018"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-058",
+      "title": "Bundled Cognee skills and operational documentation",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 35,
+      "size_max": 70,
+      "dependencies": [
+        "COG-055",
+        "COG-056",
+        "EXT-031",
+        "SET-001",
+        "SET-021",
+        "SET-030"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-055",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-056",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-031",
+          "kind": "prerequisite",
+          "reason": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown.",
+          "reviews": [
+            "DEPQA-019"
+          ]
+        },
+        {
+          "entry_id": "SET-001",
+          "kind": "prerequisite",
+          "reason": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown.",
+          "reviews": [
+            "DEPQA-019"
+          ]
+        },
+        {
+          "entry_id": "SET-021",
+          "kind": "prerequisite",
+          "reason": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown.",
+          "reviews": [
+            "DEPQA-019"
+          ]
+        },
+        {
+          "entry_id": "SET-030",
+          "kind": "prerequisite",
+          "reason": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown.",
+          "reviews": [
+            "DEPQA-019"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-059",
+      "title": "Cognee observations, redaction boundary and serialized rotating append",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 160,
+      "size_max": 260,
+      "dependencies": [
+        "COG-007",
+        "COG-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "OBS-008",
+          "kind": "shared-contract",
+          "reason": "Cognee emits observations before its own serialized file append. OBS-008 subscribes and projects them; it already depends on COG-059. The producer must not acquire a reverse dependency on the recorder.",
+          "reviews": [
+            "DEPQA-020"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-060",
+      "title": "Observation replay and live subscription semantics",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 75,
+      "size_max": 130,
+      "dependencies": [
+        "COG-059"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-059",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-061",
+      "title": "Cognee status line and stale-context-safe activity spinner",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 75,
+      "size_max": 135,
+      "dependencies": [
+        "COG-043",
+        "COG-045",
+        "EXT-010",
+        "EXT-042"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-045",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-010",
+          "kind": "prerequisite",
+          "reason": "The required public capability is keyed setStatus plus stale-context invalidation. TUI-037 owns the footer map/display consumer; it is not a prerequisite for headless or RPC-capable Cognee execution. Cognee owns its 180 ms timer and stale-access catch.",
+          "reviews": [
+            "DEPQA-021"
+          ]
+        },
+        {
+          "entry_id": "EXT-042",
+          "kind": "prerequisite",
+          "reason": "The required public capability is keyed setStatus plus stale-context invalidation. TUI-037 owns the footer map/display consumer; it is not a prerequisite for headless or RPC-capable Cognee execution. Cognee owns its 180 ms timer and stale-access catch.",
+          "reviews": [
+            "DEPQA-021"
+          ]
+        },
+        {
+          "entry_id": "TUI-037",
+          "kind": "shared-contract",
+          "reason": "The required public capability is keyed setStatus plus stale-context invalidation. TUI-037 owns the footer map/display consumer; it is not a prerequisite for headless or RPC-capable Cognee execution. Cognee owns its 180 ms timer and stale-access catch.",
+          "reviews": [
+            "DEPQA-021"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-062",
+      "title": "Nonblocking session startup and optional server registration",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 120,
+      "size_max": 200,
+      "dependencies": [
+        "COG-004",
+        "COG-005",
+        "COG-018",
+        "COG-020",
+        "COG-035",
+        "COG-036",
+        "COG-043",
+        "COG-045",
+        "COG-055",
+        "COG-061"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-004",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-018",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-035",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-036",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-045",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-055",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-063",
+      "title": "Manual Cognee search command",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-007",
+        "COG-014",
+        "COG-031",
+        "COG-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-064",
+      "title": "Manual remember and failure queueing policy",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 70,
+      "size_max": 125,
+      "dependencies": [
+        "COG-007",
+        "COG-015",
+        "COG-031",
+        "COG-032",
+        "COG-033",
+        "COG-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-007",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-031",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-032",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-033",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-065",
+      "title": "Manual improve bypass of automatic scheduling gates",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 45,
+      "size_max": 85,
+      "dependencies": [
+        "COG-017",
+        "COG-043"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-017",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-066",
+      "title": "Policy toggle and compaction-mode slash commands",
+      "status": "missing",
+      "priority": "P1",
+      "size_min": 60,
+      "size_max": 105,
+      "dependencies": [
+        "COG-001",
+        "COG-006",
+        "COG-043",
+        "COG-055"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-043",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-055",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-067",
+      "title": "Status, doctor and dashboard handoff commands",
+      "status": "missing",
+      "priority": "P2",
+      "size_min": 55,
+      "size_max": 100,
+      "dependencies": [
+        "COG-045",
+        "COG-061"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-045",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-061",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COG-068",
+      "title": "Explicit pending or uncertain queue flush command",
+      "status": "missing",
+      "priority": "P0",
+      "size_min": 25,
+      "size_max": 50,
+      "dependencies": [
+        "COG-035",
+        "COG-056"
+      ],
+      "dependency_relations": [
+        {
+          "entry_id": "COG-035",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "COG-056",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/ice-cognee.md",
+      "entry_ids": [
+        "COG-001",
+        "COG-002",
+        "COG-003",
+        "COG-004",
+        "COG-035",
+        "COG-036",
+        "COG-043",
+        "COG-046",
+        "COG-047",
+        "COG-048",
+        "COG-049",
+        "COG-050",
+        "COG-051",
+        "COG-052",
+        "COG-053",
+        "COG-054",
+        "COG-055",
+        "COG-056",
+        "COG-057",
+        "COG-058",
+        "COG-059",
+        "COG-062",
+        "COG-063",
+        "COG-064",
+        "COG-065",
+        "COG-066",
+        "COG-067",
+        "COG-068"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-client.ts",
+      "entry_ids": [
+        "COG-009",
+        "COG-010",
+        "COG-011",
+        "COG-012",
+        "COG-013",
+        "COG-014",
+        "COG-015",
+        "COG-016",
+        "COG-017",
+        "COG-018",
+        "COG-019",
+        "COG-020",
+        "COG-021",
+        "COG-022",
+        "COG-023",
+        "COG-024",
+        "COG-025",
+        "COG-026",
+        "COG-027",
+        "COG-028",
+        "COG-029",
+        "COG-030"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-env.ts",
+      "entry_ids": [
+        "COG-002"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-observer.ts",
+      "entry_ids": [
+        "COG-059",
+        "COG-060"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-skills/cognee-remember/SKILL.md",
+      "entry_ids": [
+        "COG-058"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-skills/cognee-search/SKILL.md",
+      "entry_ids": [
+        "COG-058"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee-skills/cognee-sync/SKILL.md",
+      "entry_ids": [
+        "COG-058"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-cognee.ts",
+      "entry_ids": [
+        "COG-001",
+        "COG-003",
+        "COG-004",
+        "COG-005",
+        "COG-006",
+        "COG-007",
+        "COG-008",
+        "COG-031",
+        "COG-032",
+        "COG-033",
+        "COG-034",
+        "COG-035",
+        "COG-036",
+        "COG-037",
+        "COG-038",
+        "COG-039",
+        "COG-040",
+        "COG-041",
+        "COG-042",
+        "COG-043",
+        "COG-044",
+        "COG-045",
+        "COG-046",
+        "COG-047",
+        "COG-048",
+        "COG-049",
+        "COG-050",
+        "COG-051",
+        "COG-052",
+        "COG-053",
+        "COG-054",
+        "COG-055",
+        "COG-056",
+        "COG-057",
+        "COG-058",
+        "COG-061",
+        "COG-062",
+        "COG-063",
+        "COG-064",
+        "COG-065",
+        "COG-066",
+        "COG-067",
+        "COG-068"
+      ],
+      "status": "mapped",
+      "notes": "Complete source/document read; exact configuration, transport, persistence, lifecycle and UI mechanisms are specified in the listed entries. Tests were read, not executed."
+    }
+  ],
+  "supplemental_ledger": [],
+  "surfaces": [
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:baseUrl",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:124",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000772",
+        "C000805"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:dataset",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:125",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000773",
+        "C000806"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "CogneeClientConfig.apiKey",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-client.ts:28",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-003",
+      "candidate_ids": [
+        "C000774"
+      ],
+      "notes": "Embedding client option; not accepted or persisted by the config-file parser."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:recallBudgetMs",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:127",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000775",
+        "C000807"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "CogneeClientConfig.maxResponseChars",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:132",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000776",
+        "C000795",
+        "C000812"
+      ],
+      "notes": "Derived/embedding response limit, not a persisted editable JSON key."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:enabled",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:112",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000782",
+        "C000796"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:autoRecall",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:113",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000783",
+        "C000797"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:autoRemember",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:114",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000784",
+        "C000798"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:captureSession",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:116",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000785",
+        "C000799"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:captureTools",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:117",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000786",
+        "C000800"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:autoImprove",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:118",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000787",
+        "C000801"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:compactionSummaryMode",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:120",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000788",
+        "C000802"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:checkpointRecall",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:122",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000789",
+        "C000803"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:topK",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:123",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000790",
+        "C000804"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:recallMaxChars",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:128",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000791",
+        "C000808"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:rememberMaxChars",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:129",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000792",
+        "C000809"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:captureMaxChars",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:130",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000793",
+        "C000810"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "settings",
+      "name": "ice-cognee/config.json:queueLimit",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:131",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [
+        "C000794",
+        "C000811"
+      ],
+      "notes": "Exact top-level JSON key in the Cognee-specific config file."
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_API_KEY",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:897",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-003",
+      "candidate_ids": [
+        "C000828"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_ENABLED",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:337",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_RECALL",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:339",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_REMEMBER",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:340",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_BASE_URL",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:351",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_BASE_URL",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:351",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_DATASET",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:352",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_CAPTURE",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:354",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_CAPTURE_TOOLS",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:357",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_IMPROVE",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:360",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_COMPACTION_SUMMARY",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:361",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "ICE_COGNEE_CHECKPOINT_RECALL",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:370",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-001",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_LOCAL_API_URL",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:64",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_PLUGIN_DATASET",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:14",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [],
+      "notes": "Accepted into merged environment only; not used as runtime dataset/session identity by the Cognee resolver."
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_DATASET",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:15",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [],
+      "notes": "Accepted into merged environment only; not used as runtime dataset/session identity by the Cognee resolver."
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_SESSION_ID",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:16",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [],
+      "notes": "Accepted into merged environment only; not used as runtime dataset/session identity by the Cognee resolver."
+    },
+    {
+      "category": "environment",
+      "name": "COGNEE_* / ICE_COGNEE_* env-file acceptance",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:41",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "~/.cognee/.env",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-env.ts:54",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-002",
+      "candidate_ids": [
+        "C000777"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/observations.jsonl",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:55",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [
+        "C000778",
+        "C000779",
+        "C000780"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/observations.jsonl.1",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:100",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-060",
+      "candidate_ids": [
+        "C000781"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/ice-blackhole/ice-blackhole-config.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:141",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-051",
+      "candidate_ids": [
+        "C000813"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<target>.<uuid>.tmp",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:467",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-042",
+      "candidate_ids": [
+        "C000814",
+        "C000815",
+        "C000816"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/pending/",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1135",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-033",
+      "candidate_ids": [
+        "C000817",
+        "C000818",
+        "C000819"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/pending/<operationId>.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:503",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-034",
+      "candidate_ids": [
+        "C000820",
+        "C000821"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/dream/<sessionId>.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:620",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-037",
+      "candidate_ids": [
+        "C000822"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/dream/<sessionId>.<sha256(dataset)>.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:614",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-037",
+      "candidate_ids": [
+        "C000825",
+        "C000826"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<dream-record>.lock",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:653",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-038",
+      "candidate_ids": [
+        "C000823"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<dream-record> acknowledgement removal",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:725",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-040",
+      "candidate_ids": [
+        "C000824"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/config.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1134",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-006",
+      "candidate_ids": [
+        "C000827",
+        "C000830"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/ice-cognee/api_key.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:901",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-003",
+      "candidate_ids": [
+        "C000829"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "~/.cognee-plugin/api_key.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:900",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-003",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/warmup/<timestamp>-<uuid-prefix>.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1270",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-036",
+      "candidate_ids": [
+        "C000832",
+        "C000833",
+        "C000834",
+        "C000835",
+        "C000836",
+        "C000837"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<storageDir>/compaction-recall.json",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2288",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-051",
+      "candidate_ids": [
+        "C000846",
+        "C000847",
+        "C000848",
+        "C000849"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "paths",
+      "name": "<packageDir>/{src|dist}/ice-cognee-skills/",
+      "ice_ref": "packages/coding-agent/src/config.ts:469",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-058",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "ice-cognee",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1044",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-035",
+      "candidate_ids": [
+        "C000831"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "session-types",
+      "name": "compaction.details.engine=ice-cognee",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2429",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-052",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "tools",
+      "name": "cognee_search",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1780",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-055",
+      "candidate_ids": [
+        "C000838"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1825",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-056",
+      "candidate_ids": [
+        "C000839"
+      ],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee status",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1841",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-067",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee doctor",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1851",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-067",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee watch",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1831",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-067",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee compact auto|defer|own",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1877",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1886",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee recall on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1890",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee capture on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1894",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee tools on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1899",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee improve on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1904",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee improve [now]",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1909",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-065",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee remember on|off",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1930",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-066",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee search <query>",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1934",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-063",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee remember [node_set] <text>",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1938",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-064",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "slash-commands",
+      "name": "/cognee flush [pending|uncertain]",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1945",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-068",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "hooks",
+      "name": "resources_discover",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2038",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-058",
+      "candidate_ids": [
+        "C000840"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_start",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2043",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-062",
+      "candidate_ids": [
+        "C000841"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "before_agent_start",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2106",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-046",
+      "candidate_ids": [
+        "C000842"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "tool_result",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2194",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-047",
+      "candidate_ids": [
+        "C000843"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "agent_end",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2244",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-048",
+      "candidate_ids": [
+        "C000844"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "agent_settled",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2276",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-049",
+      "candidate_ids": [
+        "C000845"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_before_compact",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2376",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-052",
+      "candidate_ids": [
+        "C000850"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_compact",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2441",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-053",
+      "candidate_ids": [
+        "C000851"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "hooks",
+      "name": "session_shutdown",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2506",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-054",
+      "candidate_ids": [
+        "C000852"
+      ],
+      "notes": "This row is the Cognee handler at this registration site, not a claim that the generic host event is absent from Rust."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.enabled (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1964",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.autoRecall (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1971",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.autoRemember (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1978",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.compactionSummaryMode (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1985",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.checkpointRecall (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1993",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.captureSession (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2000",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.captureTools (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2007",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "settings",
+      "name": "cognee.autoImprove (settings UI)",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:2014",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": "Namespace plus UI item ID, not a nested core settings.json field."
+    },
+    {
+      "category": "extension-api",
+      "name": "registerSettings namespace cognee",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1961",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-057",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "extension-api",
+      "name": "Cognee observation subscription",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:70",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-060",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "tui",
+      "name": "Cognee status/activity line",
+      "ice_ref": "packages/coding-agent/src/ice-cognee.ts:1359",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-061",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:session",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:12",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:recall",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:remember_entry",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:14",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:remember",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:15",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:trace",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:16",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:improve",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:17",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee operation:queue",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:18",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee phase:started",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee phase:queued",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee phase:succeeded",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "observability",
+      "name": "Cognee phase:failed",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-observer.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-059",
+      "candidate_ids": [],
+      "notes": ""
+    },
+    {
+      "category": "providers-auth",
+      "name": "Cognee HTTP x-api-key authentication",
+      "ice_ref": "packages/coding-agent/src/ice-cognee-client.ts:376",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "COG-009",
+      "candidate_ids": [],
+      "notes": ""
+    }
+  ],
+  "candidate_exclusions": [],
+  "claims": [
+    {
+      "first_pass_lines": [
+        352,
+        355
+      ],
+      "claim": "Cognee integration is absent; an ice-memory plugin is unrelated.",
+      "verdict": "corrected",
+      "finding": "The local Rust crates/packages have no Cognee client/lifecycle integration. A companion ice-memory implementation is not present in this checkout, so its external behavior is unverified rather than asserted equivalent or unrelated. TS source sizes and bundled skill paths match the inspected files.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:1132-1172",
+        "rust:crates/ice-extensions/src/actions.rs:381-499",
+        "rust:crates/ice-harness/src/compaction/compaction.rs:749-804"
+      ],
+      "entry_ids": [
+        "COG-043",
+        "COG-058"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        358,
+        360
+      ],
+      "claim": "Prompt hook adds scoped recall, skips under four words and deduplicates.",
+      "verdict": "confirmed",
+      "finding": "Signal words contain a Unicode letter/number; successful exact session+raw-prompt requests suppress repeats for 15000 ms. Failures remain retryable and short/skipped prompts can still consume a last-compaction injection.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:1113-1116",
+        "ice:packages/coding-agent/src/ice-cognee.ts:2106-2192"
+      ],
+      "entry_ids": [
+        "COG-046"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        361,
+        362
+      ],
+      "claim": "Tool results capture allowlisted tools with a per-turn limit.",
+      "verdict": "confirmed",
+      "finding": "Exact allowlist and lower-case acceptance, 24 attempted traces per prompt, per-parameter caps and textual result capture are specified. Failed capture still consumes the slot.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:22-46",
+        "ice:packages/coding-agent/src/ice-cognee.ts:2194-2242"
+      ],
+      "entry_ids": [
+        "COG-047"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        363,
+        364
+      ],
+      "claim": "Agent end remembers QA and idle improves/dreams with cooldown.",
+      "verdict": "corrected",
+      "finding": "QA uses one pending prompt and the last assistant text, regardless of stop reason. Current-session improve and old-session dream are distinct, revision-fenced flows. HTTP acceptance is not server consolidation completion; warmup retry is a third flow.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:1319-1357",
+        "ice:packages/coding-agent/src/ice-cognee.ts:1432-1549",
+        "ice:packages/coding-agent/src/ice-cognee.ts:2244-2286"
+      ],
+      "entry_ids": [
+        "COG-036",
+        "COG-038",
+        "COG-039",
+        "COG-040",
+        "COG-048",
+        "COG-049",
+        "COG-050"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        365,
+        368
+      ],
+      "claim": "Compaction can be owned/contributed and checkpoint recall is handed to Blackhole.",
+      "verdict": "corrected",
+      "finding": "Default auto/defer never owns the summary. Explicit own compiles a local anchor and visible text without a Cognee summary request. Checkpoint recall is separately opt-in, config-detected Blackhole-only, and binds the handoff to the original host session ID.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:139-195",
+        "ice:packages/coding-agent/src/ice-cognee.ts:2288-2504"
+      ],
+      "entry_ids": [
+        "COG-051",
+        "COG-052",
+        "COG-053"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        369,
+        369
+      ],
+      "claim": "Shutdown runs final improve.",
+      "verdict": "confirmed",
+      "finding": "Tracked captures/drains settle before final current-session improve and optional unregister. No global shutdown deadline or server completion poll is provided.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:2506-2529"
+      ],
+      "entry_ids": [
+        "COG-054"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        370,
+        370
+      ],
+      "claim": "Resource discovery contributes Cognee skills.",
+      "verdict": "confirmed",
+      "finding": "The three bundled skill documents are always returned, even when memory is disabled; runtime-specific asset resolution is in config.ts, not the storage-compatibility helper.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:2037-2040",
+        "ice:packages/coding-agent/src/config.ts:463-476"
+      ],
+      "entry_ids": [
+        "COG-058"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        371,
+        372
+      ],
+      "claim": "$project derives ice-<root-name>-<hash>.",
+      "verdict": "corrected",
+      "finding": "Root is a lexical resolved path found by at most 24 .git-existence checks, not realpath or Git canonical root. Basename is sanitized/clipped to 40 and SHA-256 prefix is eight hex characters. Default dataset is literal ice, not $project.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:305-331",
+        "ice:packages/coding-agent/src/ice-cognee.ts:111-133"
+      ],
+      "entry_ids": [
+        "COG-001",
+        "COG-004"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        373,
+        375
+      ],
+      "claim": "Local HTTP client with a circuit breaker and env/cache credential sources; shared .env is nonsecret-only.",
+      "verdict": "corrected",
+      "finding": "The default endpoint is loopback but any HTTP/S URL is accepted. Two extension-owned breakers gate selected automatic paths, not all client requests. Credential order includes explicit options, process, ICE cache, shared-plugin cache and shared .env. The parser explicitly accepts COGNEE_API_KEY, so the nonsecret-only claim is false.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:280-290",
+        "ice:packages/coding-agent/src/ice-cognee.ts:868-907",
+        "ice:packages/coding-agent/src/ice-cognee-env.ts:10-69",
+        "ice:packages/coding-agent/src/ice-cognee.ts:933-952"
+      ],
+      "entry_ids": [
+        "COG-001",
+        "COG-002",
+        "COG-003",
+        "COG-009",
+        "COG-031",
+        "COG-045"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        376,
+        377
+      ],
+      "claim": "cognee_search, slash commands and a settings section are available.",
+      "verdict": "confirmed",
+      "finding": "Full tool schema, 14 command forms/branch precedence and eight settings descriptors are specified; manual improve and remember have different gating/replay rules from automatic flows.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:1780-2035"
+      ],
+      "entry_ids": [
+        "COG-055",
+        "COG-056",
+        "COG-057",
+        "COG-063",
+        "COG-064",
+        "COG-065",
+        "COG-066",
+        "COG-067",
+        "COG-068"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        378,
+        379
+      ],
+      "claim": "Every request is appended redacted to a size-capped observations log.",
+      "verdict": "corrected",
+      "finding": "Only instrumented call sites emit observations. The observer redacts preview only; some error/metadata/base URL displays remain unsanitized. Rotation occurs after append at more than 2 MiB, keeps one .1 generation and is serialized only within a process. Reads return at most 500 valid-ish recent lines but read full files first.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee-observer.ts:62-128",
+        "ice:packages/coding-agent/src/ice-cognee.ts:1211-1253",
+        "ice:packages/coding-agent/src/ice-cognee.ts:1720-1823"
+      ],
+      "entry_ids": [
+        "COG-045",
+        "COG-059",
+        "COG-060"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        380,
+        380
+      ],
+      "claim": "Ten ICE_COGNEE_* environment overrides exist.",
+      "verdict": "confirmed",
+      "finding": "All ten are resolved with strict types and exact names. COGNEE_BASE_URL/LOCAL_API_URL and API-key sources are additional supported inputs; numeric settings do not have environment overrides.",
+      "evidence": [
+        "ice:packages/coding-agent/src/ice-cognee.ts:333-398",
+        "ice:packages/coding-agent/src/ice-cognee-env.ts:52-69"
+      ],
+      "entry_ids": [
+        "COG-001",
+        "COG-002",
+        "COG-003"
+      ]
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/docs/ice-cognee.md",
+      "ranges": [
+        [
+          1,
+          177
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-client.ts",
+      "ranges": [
+        [
+          1,
+          1014
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-env.ts",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-observer.ts",
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-skills/cognee-remember/SKILL.md",
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-skills/cognee-search/SKILL.md",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee-skills/cognee-sync/SKILL.md",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/ice-cognee.ts",
+      "ranges": [
+        [
+          1,
+          2530
+        ]
+      ],
+      "notes": "Full assigned source/document read."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-cognee.test.ts",
+      "ranges": [
+        [
+          1,
+          1770
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-cognee-transport.test.ts",
+      "ranges": [
+        [
+          1,
+          447
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-cognee-browse.test.ts",
+      "ranges": [
+        [
+          1,
+          219
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-cognee-observer.test.ts",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/observe-cognee.test.ts",
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "notes": "Existing test read, not executed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/redact.ts",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/legacy-compat/env.ts",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/config.ts",
+      "ranges": [
+        [
+          1,
+          605
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/actions.rs",
+      "ranges": [
+        [
+          381,
+          499
+        ],
+        [
+          881,
+          923
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-agent/src/hooks.rs",
+      "ranges": [
+        [
+          99,
+          130
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-harness/src/compaction/compaction.rs",
+      "ranges": [
+        [
+          749,
+          804
+        ]
+      ]
+    },
+    {
+      "path": "rust:crates/ice-plugin-sdk/src/events.rs",
+      "ranges": [
+        [
+          1,
+          224
+        ]
+      ]
+    }
+  ],
+  "rust_only": [],
+  "dependency_requests": [],
+  "unverified": [
+    {
+      "entry_id": "COG-043",
+      "finding": "External ice-memory plugin implementation is not in the local checkout and network access is prohibited. No parity claim is made about that external package."
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q-COG-01",
+      "question": "Should Rust retain enabled capture/recall by default and unrestricted HTTP/S endpoint selection, or add an explicit consent/trust boundary before sending prompt/tool data?",
+      "entries": [
+        "COG-001",
+        "COG-007",
+        "COG-046",
+        "COG-047"
+      ]
+    },
+    {
+      "id": "Q-COG-02",
+      "question": "Should ambiguous manual remembers and warmup writes be quarantined rather than automatically replayed, and should pending records gain path validation and cross-process claims?",
+      "entries": [
+        "COG-032",
+        "COG-034",
+        "COG-035",
+        "COG-036",
+        "COG-064"
+      ]
+    },
+    {
+      "id": "Q-COG-03",
+      "question": "Should late capture/registration/observation completions be fenced to their original session, and should all state reset when one extension instance changes session?",
+      "entries": [
+        "COG-043",
+        "COG-044",
+        "COG-059",
+        "COG-062"
+      ]
+    },
+    {
+      "id": "Q-COG-04",
+      "question": "Should health and shutdown receive hard total deadlines, all observed fields be redacted, and successful improve mean a confirmed server job completion rather than request acceptance?",
+      "entries": [
+        "COG-010",
+        "COG-017",
+        "COG-045",
+        "COG-049",
+        "COG-054",
+        "COG-059"
+      ]
+    },
+    {
+      "id": "Q-COG-05",
+      "question": "Should manual improve obey enabled/claim/in-flight policy, settings writes be awaited/serialized, and the displayed settings values refresh from loaded configuration?",
+      "entries": [
+        "COG-057",
+        "COG-065",
+        "COG-066"
+      ]
+    }
+  ],
+  "dependency_request_history": [
+    {
+      "entry_id": "COG-001",
+      "area": "settings",
+      "capability": "canonical agent directory and no-op legacy environment normalization"
+    },
+    {
+      "entry_id": "COG-003",
+      "area": "settings",
+      "capability": "credential directory location and source-safe diagnostic handling"
+    },
+    {
+      "entry_id": "COG-007",
+      "area": "misc",
+      "capability": "shared credential redaction regexes and UTF-16 compatibility"
+    },
+    {
+      "entry_id": "COG-043",
+      "area": "extensions",
+      "capability": "hidden before-user extension initialization, session identity and lifecycle delivery"
+    },
+    {
+      "entry_id": "COG-044",
+      "area": "extensions",
+      "capability": "tool-result argument/result payload and session-safe lifecycle contexts"
+    },
+    {
+      "entry_id": "COG-046",
+      "area": "extensions",
+      "capability": "before_agent_start system-prompt replacement and cancellation"
+    },
+    {
+      "entry_id": "COG-051",
+      "area": "session",
+      "capability": "compaction preparation/reason/signal and host session identity"
+    },
+    {
+      "entry_id": "COG-052",
+      "area": "extensions",
+      "capability": "session_before_compact override protocol"
+    },
+    {
+      "entry_id": "COG-053",
+      "area": "session",
+      "capability": "post-compaction event details and ordered custom-entry persistence"
+    },
+    {
+      "entry_id": "COG-055",
+      "area": "extensions",
+      "capability": "tool registration with schema/cancellation/details and active-tool state"
+    },
+    {
+      "entry_id": "COG-057",
+      "area": "extensions",
+      "capability": "namespaced settings descriptors and change callbacks"
+    },
+    {
+      "entry_id": "COG-058",
+      "area": "settings",
+      "capability": "bundled skill discovery through the resource loader"
+    },
+    {
+      "entry_id": "COG-059",
+      "area": "observability",
+      "capability": "live Cognee observation projection into the run recorder"
+    },
+    {
+      "entry_id": "COG-061",
+      "area": "tui",
+      "capability": "status slots and safe lifecycle of retired UI contexts"
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "COG-001",
+      "area": "settings",
+      "capability": "canonical agent directory and no-op legacy environment normalization",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "SET-001",
+        "CLI-018"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-008",
+      "rationale": "The pure configuration resolver already specifies the shallow-copy environment normalizer. Canonical agent-directory lookup is performed by connection/storage callers, not by resolveIceCogneeConfig itself. Keep these exact identity helpers as shared references; do not require the whole settings subsystem to implement the pure validator.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-003",
+      "area": "settings",
+      "capability": "credential directory location and source-safe diagnostic handling",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-001"
+      ],
+      "related_entry_ids": [
+        "CLI-018"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-009",
+      "rationale": "Connection lookup calls canonical getAgentDir and the exact ice-cognee path helper. keySource labels and omission of secret text are already COG-003 behavior; they do not require provider OAuth or an observability database.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-007",
+      "area": "misc",
+      "capability": "shared credential redaction regexes and UTF-16 compatibility",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "OBS-012"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-010",
+      "rationale": "Both entries use utils/redact.ts. COG-007 already includes the exact credential-text regexes and UTF-16 cap; OBS-012 adds store-specific key redaction and SQLite retention. Treat OBS-012 as the shared-helper owner/reference, not a prerequisite to initialize SQLite before formatting Cognee memory.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-043",
+      "area": "extensions",
+      "capability": "hidden before-user extension initialization, session identity and lifecycle delivery",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-057",
+        "EXT-019",
+        "EXT-022"
+      ],
+      "related_entry_ids": [
+        "SESSION-035"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-011",
+      "rationale": "The supplied factory requires inline ordering, live guarded session identity/context and awaited lifecycle dispatch. The session binding/reload consumer is SESSION-035. Loading and background-drain state remain COG-owned.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-044",
+      "area": "extensions",
+      "capability": "tool-result argument/result payload and session-safe lifecycle contexts",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "COG-047",
+        "EXT-025",
+        "EXT-019"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-012",
+      "rationale": "The requested tool-result event belongs at COG-047, whose handler constructs the payload consumed by COG-044.storeEntry. storeEntry itself consumes an ordinary record and can also be called for QA captures. Relocate the tool-result/context prerequisites to COG-047; do not force a result-hook dependency onto the generic sender.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-046",
+      "area": "extensions",
+      "capability": "before_agent_start system-prompt replacement and cancellation",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-030",
+        "EXT-019"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-013",
+      "rationale": "The before_agent_start reducer supplies the chained transient system prompt and the live signal. Cognee owns passing that signal into recall. The host does not guarantee cancellation races, timeout, or a late-result session fence beyond the stated source behavior.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-051",
+      "area": "session",
+      "capability": "compaction preparation/reason/signal and host session identity",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-013",
+        "SESSION-016",
+        "SESSION-017",
+        "EXT-019"
+      ],
+      "related_entry_ids": [
+        "BLACK-037"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-014",
+      "rationale": "The producer needs actual compaction preparation, manual/automatic reason and signal, and current host session identity. BLACK-037 consumes the optional file; it is not required to create the producer or to perform ordinary Cognee recall.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-052",
+      "area": "extensions",
+      "capability": "session_before_compact override protocol",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-022"
+      ],
+      "related_entry_ids": [
+        "SESSION-016",
+        "SESSION-017"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-015",
+      "rationale": "The generic session_before_compact reducer owns ordered whole-result replacement and cancel handling. Session owners apply/save the result; COG-052's deterministic own-summary compiler does not append its own checkpoint.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-053",
+      "area": "session",
+      "capability": "post-compaction event details and ordered custom-entry persistence",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-016",
+        "SESSION-017",
+        "SESSION-031",
+        "EXT-053"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-016",
+      "rationale": "Manual and automatic session_compact events follow the committed checkpoint and expose entry/details/fromExtension. Cognee then appends its separate queue-state custom entry through EXT-053 using session persistence. Do not create or persist a second compaction entry.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-055",
+      "area": "extensions",
+      "capability": "tool registration with schema/cancellation/details and active-tool state",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-011",
+        "EXT-012",
+        "EXT-054"
+      ],
+      "related_entry_ids": [
+        "AI-012"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-017",
+      "rationale": "Registration, fresh-context execution with signal/details, and active-tool mutation are required. The shared execution validator remains AI-012; provider sampling or successful registration does not validate an invocation.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-057",
+      "area": "extensions",
+      "capability": "namespaced settings descriptors and change callbacks",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-016"
+      ],
+      "related_entry_ids": [
+        "TUI-025"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-018",
+      "rationale": "The named settings descriptor/onChange host API is EXT-016. TUI-025 displays and dispatches those descriptors. Cognee owns its separate JSON persistence and its nonawaited save behavior; these are not core settings.json keys.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-058",
+      "area": "settings",
+      "capability": "bundled skill discovery through the resource loader",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-001",
+        "SET-021",
+        "SET-030",
+        "EXT-031"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-019",
+      "rationale": "Bundled path derivation, resource reload/admission, skill discovery and attributed resources_discover results are actual integration prerequisites. Cognee advertises the directory even while disabled; the resource loader owns use and trust of the returned Markdown.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-059",
+      "area": "observability",
+      "capability": "live Cognee observation projection into the run recorder",
+      "status": "resolved",
+      "resolved_entry_ids": [],
+      "related_entry_ids": [
+        "OBS-008"
+      ],
+      "relation": "shared-contract",
+      "review_id": "DEPQA-020",
+      "rationale": "Cognee emits observations before its own serialized file append. OBS-008 subscribes and projects them; it already depends on COG-059. The producer must not acquire a reverse dependency on the recorder.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "COG-061",
+      "area": "tui",
+      "capability": "status slots and safe lifecycle of retired UI contexts",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-042",
+        "EXT-010"
+      ],
+      "related_entry_ids": [
+        "TUI-037"
+      ],
+      "relation": "prerequisite",
+      "review_id": "DEPQA-021",
+      "rationale": "The required public capability is keyed setStatus plus stale-context invalidation. TUI-037 owns the footer map/display consumer; it is not a prerequisite for headless or RPC-capable Cognee execution. Cognee owns its 180 ms timer and stale-access catch.",
+      "previous_confirmed_entry_ids": []
+    }
+  ],
+  "source_evidence_coordinate_system": "Historical read/provenance records retain ff9270f coordinates and hashes; current rust: comparison citations and surfaces are remapped to 1891337. Canonical read-coverage.json separately records current source identity and exact transferred credit.",
+  "draft_complete": true,
+  "published": true,
+  "accepted_phase": "active-source-verified"
+}

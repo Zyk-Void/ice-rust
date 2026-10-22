@@ -1,0 +1,1987 @@
+{
+  "area": "cli-packaging",
+  "draft_complete": false,
+  "method": "Source inspection only. No source edits, tests, application runs, installs, network commands or actual user-state reads.",
+  "baseline": {
+    "ice": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "read_ranges": [
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/cli.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b",
+      "baseline": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/register-bedrock.ts",
+      "start": 1,
+      "end": 5,
+      "total": 5,
+      "sha256": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b",
+      "baseline": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "start": 1,
+      "end": 37,
+      "total": 37,
+      "sha256": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194",
+      "baseline": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli.ts",
+      "start": 1,
+      "end": 22,
+      "total": 22,
+      "sha256": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc",
+      "baseline": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "start": 1,
+      "end": 6,
+      "total": 6,
+      "sha256": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6",
+      "baseline": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "start": 1,
+      "end": 10,
+      "total": 10,
+      "sha256": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af",
+      "baseline": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/env.ts",
+      "start": 1,
+      "end": 32,
+      "total": 32,
+      "sha256": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+      "baseline": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "start": 1,
+      "end": 11,
+      "total": 11,
+      "sha256": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+      "baseline": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "start": 1,
+      "end": 37,
+      "total": 37,
+      "sha256": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+      "baseline": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "start": 1,
+      "end": 7,
+      "total": 7,
+      "sha256": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+      "baseline": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/initial-message.ts",
+      "start": 1,
+      "end": 44,
+      "total": 44,
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "baseline": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/piped-stdin.ts",
+      "start": 1,
+      "end": 56,
+      "total": 56,
+      "sha256": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "baseline": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/config-selector.ts",
+      "start": 1,
+      "end": 57,
+      "total": 57,
+      "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "baseline": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/session-picker.ts",
+      "start": 1,
+      "end": 56,
+      "total": 56,
+      "sha256": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97",
+      "baseline": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice.ts",
+      "start": 1,
+      "end": 131,
+      "total": 131,
+      "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "baseline": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/args.ts",
+      "start": 1,
+      "end": 444,
+      "total": 444,
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "baseline": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/credential-print.ts",
+      "start": 1,
+      "end": 152,
+      "total": 152,
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "baseline": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/list-models.ts",
+      "start": 1,
+      "end": 116,
+      "total": 116,
+      "sha256": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151",
+      "baseline": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/startup-ui.ts",
+      "start": 1,
+      "end": 240,
+      "total": 240,
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "baseline": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/migrations.ts",
+      "start": 1,
+      "end": 315,
+      "total": 315,
+      "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "baseline": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/main.ts",
+      "start": 1,
+      "end": 500,
+      "total": 1008,
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "baseline": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/main.ts",
+      "start": 501,
+      "end": 1008,
+      "total": 1008,
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "baseline": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/args.rs",
+      "start": 1,
+      "end": 500,
+      "total": 1121,
+      "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "baseline": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "start": 1,
+      "end": 1,
+      "total": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/lib.rs",
+      "start": 1,
+      "end": 90,
+      "total": 90,
+      "sha256": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "baseline": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/args.rs",
+      "start": 501,
+      "end": 1121,
+      "total": 1121,
+      "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "baseline": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/bin/ice.rs",
+      "start": 1,
+      "end": 22,
+      "total": 22,
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "baseline": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "start": 1,
+      "end": 95,
+      "total": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "notes": "Connector-redacted line 96 excluded."
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "start": 97,
+      "end": 430,
+      "total": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "notes": "Connector-redacted line 96 excluded."
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "start": 431,
+      "end": 1015,
+      "total": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/development.md",
+      "start": 1,
+      "end": 72,
+      "total": 72,
+      "sha256": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b",
+      "baseline": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/quickstart.md",
+      "start": 1,
+      "end": 166,
+      "total": 166,
+      "sha256": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5",
+      "baseline": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/shell-aliases.md",
+      "start": 1,
+      "end": 14,
+      "total": 14,
+      "sha256": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604",
+      "baseline": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/windows.md",
+      "start": 1,
+      "end": 18,
+      "total": 18,
+      "sha256": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478",
+      "baseline": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/termux.md",
+      "start": 1,
+      "end": 128,
+      "total": 128,
+      "sha256": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd",
+      "baseline": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/usage.md",
+      "start": 1,
+      "end": 324,
+      "total": 324,
+      "sha256": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456",
+      "baseline": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/file-processor.ts",
+      "start": 1,
+      "end": 101,
+      "total": 101,
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "baseline": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 60,
+      "end": 250,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 1560,
+      "end": 1612,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/credential-print.test.ts",
+      "start": 1,
+      "end": 105,
+      "total": 105,
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/initial-message.test.ts",
+      "start": 1,
+      "end": 49,
+      "total": 49,
+      "sha256": "8b95eb212ced64c20423f7dd5ffa9a972652f6d5ab1abb205a424cff2e17b356"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/piped-stdin.test.ts",
+      "start": 1,
+      "end": 54,
+      "total": 54,
+      "sha256": "8d7ec91cd814d9cf580f0bd599418a017ab8cfc319f663ccd47e32abccbbc33a"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/first-time-setup.test.ts",
+      "start": 1,
+      "end": 96,
+      "total": 96,
+      "sha256": "c66796eaa8e4ec21000169fc1f6671d68a16acb707c10686f5121173e021480e"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "start": 1,
+      "end": 40,
+      "total": 40,
+      "sha256": "84442c2875ec70c0536b984a3a192faeabb4976012fd535f9934087483f56a2d"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/startup-session-name.test.ts",
+      "start": 1,
+      "end": 136,
+      "total": 136,
+      "sha256": "671c91057777d97bfa4f06ac6efc9afdefa71c70e36b26401dd5e7bb3b5eb806"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/args.test.ts",
+      "start": 1,
+      "end": 467,
+      "total": 467,
+      "sha256": "258fac826243fe9696f75f781ece605f6303649e03d339f973a8c8aabea5910d"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/paths-and-cli.test.ts",
+      "start": 1,
+      "end": 41,
+      "total": 41,
+      "sha256": "1e2d67f18efe1784abaa16110cdb2b92a58a566d3193fb211d23e8ae59496c55"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/restore-sandbox-env.test.ts",
+      "start": 1,
+      "end": 78,
+      "total": 78,
+      "sha256": "14485f0f5f478475206f15ebd48191090c437f40b79ebfdf2d652d4681e71d02"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/identity-inputs.test.ts",
+      "start": 1,
+      "end": 35,
+      "total": 35,
+      "sha256": "21d7d4b216ea53f9cf6229ac1ec34ddf20d19cd92f8b2ada473648cdd1419eed"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/config-references.test.ts",
+      "start": 1,
+      "end": 47,
+      "total": 47,
+      "sha256": "76fa0181c59191bec4bdc1698981837c615ca18162338a476239f099636739ff"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "start": 1,
+      "end": 213,
+      "total": 213,
+      "sha256": "d3eca3a0f570ad39503615a18d765ec9d97c6d9a6ebcaf2901a81d61f522ca71"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "start": 1,
+      "end": 118,
+      "total": 118,
+      "sha256": "9d0837d33c091fba4164442168e630cebe30f32aa6da7c0d29c6191ac3e374cc"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/max-thinking.test.ts",
+      "start": 1,
+      "end": 65,
+      "total": 65,
+      "sha256": "be1cc17b81c7f1c3268d4f978c73654a4142880a7e0a2f26aea67bcf14bc528d"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/image-resize-callers.test.ts",
+      "start": 1,
+      "end": 54,
+      "total": 54,
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/block-images.test.ts",
+      "start": 1,
+      "end": 149,
+      "total": 149,
+      "sha256": "739ffc6dc4c9cc9de971e8bac12cd73e3e6e5b9f266a56228238f66ccb4673b8"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/extras.rs",
+      "start": 1,
+      "end": 95,
+      "total": 95,
+      "sha256": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5",
+      "baseline": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 100,
+      "end": 240,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 260,
+      "end": 275,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 402,
+      "end": 428,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui.rs",
+      "start": 992,
+      "end": 1030,
+      "total": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "baseline": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/resume_picker.rs",
+      "start": 1,
+      "end": 247,
+      "total": 247,
+      "sha256": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d",
+      "baseline": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth.rs",
+      "start": 1,
+      "end": 150,
+      "total": 739,
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "baseline": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 3670,
+      "end": 3840,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 328,
+      "end": 466,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 2050,
+      "end": 2200,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 3839,
+      "end": 3915,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/config-value-migration.test.ts",
+      "start": 1,
+      "end": 179,
+      "total": 179,
+      "sha256": "9ac59f1e2fd11d0e7ef1bdd980727e4b8c5a73c22ba7ca3baa515e9ad90648f5"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 2200,
+      "end": 2340,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 2480,
+      "end": 2544,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 2676,
+      "end": 2708,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "start": 2709,
+      "end": 2735,
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5661-uppercase-header-values.test.ts",
+      "start": 1,
+      "end": 92,
+      "total": 92,
+      "sha256": "0ffc9a48b0f980339bd8748d7064ea2e832e7a817441de29f68ad94695ac7149"
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/docs/development.md",
+      "lines": 71,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/packages.md",
+      "lines": 230,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/quickstart.md",
+      "lines": 165,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/shell-aliases.md",
+      "lines": 13,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/termux.md",
+      "lines": 127,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/usage.md",
+      "lines": 323,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/docs/windows.md",
+      "lines": 17,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/bun/cli.ts",
+      "lines": 15,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/bun/register-bedrock.ts",
+      "lines": 4,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "lines": 36,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli.ts",
+      "lines": 21,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/args.ts",
+      "lines": 443,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/config-selector.ts",
+      "lines": 56,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/credential-print.ts",
+      "lines": 151,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/file-processor.ts",
+      "lines": 100,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/initial-message.ts",
+      "lines": 43,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/list-models.ts",
+      "lines": 115,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/piped-stdin.ts",
+      "lines": 55,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/session-picker.ts",
+      "lines": 55,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/cli/startup-ui.ts",
+      "lines": 239,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "lines": 5,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "lines": 9,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/env.ts",
+      "lines": 31,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "lines": 36,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "lines": 10,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "lines": 6,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "lines": 2696,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/ice.ts",
+      "lines": 130,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/main.ts",
+      "lines": 1007,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/migrations.ts",
+      "lines": 314,
+      "area": "cli-packaging"
+    },
+    {
+      "path": "packages/coding-agent/src/package-manager-cli.ts",
+      "lines": 905,
+      "area": "cli-packaging"
+    }
+  ],
+  "candidate_inventory_count": 122,
+  "delegation": {
+    "agent": "/root/audit_tools",
+    "reserved_entry_ids": "CLI-020 through CLI-039",
+    "scope": "Two TS package-manager implementations, docs/packages.md, directly relevant suites and native packages/install/updates counterpart. Independent supplement pending."
+  },
+  "remaining": [
+    "Complete native app.rs except connector-redacted line 96 and trace concrete startup helpers.",
+    "Read all own assigned CLI documentation and directly relevant tests, crediting exact adjacent-area read manifests where applicable.",
+    "Author CLI-001 through CLI-019, reconcile candidate surfaces and first-pass claims, integrate package supplement and submit proposal."
+  ],
+  "limitations": [
+    "No CLI entries or final coverage claim yet. Bounded native app.rs line 1 metadata alone is not a full read.",
+    "Connector-redacted app.rs line 96 remains unavailable; no hidden content is reconstructed.",
+    "Native migration partial-transfer recovery/count defect and TS pre-write credential migration mutation are source-derived findings; neither was executed."
+  ],
+  "stage": "CLI-001–019 authored; own candidate/claim proposal saved; package supplement and MISC dependencies pending.",
+  "source_stores": [
+    "clitsSmall0",
+    "clitsSmall1",
+    "clitsArgs",
+    "clitsStartupMigration",
+    "clitsMain0",
+    "clitsMain1",
+    "cliNativeArgs0",
+    "cliNativeArgs1",
+    "cliNativeApp0",
+    "cliNativeApp1",
+    "cliDocs0",
+    "cliDocs1",
+    "cliNativeMigration0",
+    "cliTests0",
+    "cliTests1",
+    "cliTests2",
+    "cliNativeExtras",
+    "cliNativeResume",
+    "cliNativeSessionHelpers"
+  ],
+  "reserved_entries": [
+    "CLI-001",
+    "CLI-002",
+    "CLI-003",
+    "CLI-004",
+    "CLI-005",
+    "CLI-006",
+    "CLI-007",
+    "CLI-008",
+    "CLI-009",
+    "CLI-010",
+    "CLI-011",
+    "CLI-012",
+    "CLI-013",
+    "CLI-014",
+    "CLI-015",
+    "CLI-016",
+    "CLI-017",
+    "CLI-018",
+    "CLI-019"
+  ],
+  "first_pass_source": {
+    "path": "/home/mewtwo/Zykairotis/ice-rust/ICE_PORTING.md",
+    "sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d",
+    "ranges": [
+      [
+        395,
+        444
+      ],
+      [
+        628,
+        651
+      ]
+    ]
+  },
+  "shared_tui_tests": [
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup.test.ts",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "sha256": "c66796eaa8e4ec21000169fc1f6671d68a16acb707c10686f5121173e021480e",
+      "total_lines": 96,
+      "notes": "Entire visible test source read by /root/audit_session; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "sha256": "84442c2875ec70c0536b984a3a192faeabb4976012fd535f9934087483f56a2d",
+      "total_lines": 40,
+      "notes": "Entire visible test source read by /root/audit_session; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "sha256": "d3eca3a0f570ad39503615a18d765ec9d97c6d9a6ebcaf2901a81d61f522ca71",
+      "total_lines": 213,
+      "notes": "Entire visible test source read by /root/audit_session; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "sha256": "9d0837d33c091fba4164442168e630cebe30f32aa6da7c0d29c6191ac3e374cc",
+      "total_lines": 118,
+      "notes": "Entire visible test source read by /root/audit_session; no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/max-thinking.test.ts",
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "sha256": "be1cc17b81c7f1c3268d4f978c73654a4142880a7e0a2f26aea67bcf14bc528d",
+      "total_lines": 65,
+      "notes": "Entire visible test source read by /root/audit_session; no execution."
+    }
+  ],
+  "reused_test_reads": [
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/keybindings-migration.test.ts",
+      "sha256": "c4a60d6014e09c645855ae377b8a63459d97ed2dfde34462f8e0cf2480c39d31",
+      "total": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "fully_read": true,
+      "owner": "/root/audit_extensions",
+      "artifact": "docs/ice-gap/evidence/tui-source-review.json",
+      "notes": "TUI-048 owns pure transformation; CLI owns on-disk caller."
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/extensions-discovery.test.ts",
+      "sha256": "4b527ecc3378a6195a7566bc8019614561e8a5e1b576256765b987b5bbc27230",
+      "total": 531,
+      "ranges": [
+        [
+          1,
+          531
+        ]
+      ],
+      "fully_read": true,
+      "owner": "/root/audit_extensions",
+      "artifact": "docs/ice-gap/evidence/proposal-extensions.json",
+      "notes": "Coordinator confirmed full frozen source read; extension discovery implementation remains EXT ownership."
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-subagent-task-contract.test.ts",
+      "sha256": "d1d91048cfe0d24015e6764c79d6f81c5f7e870b2f66110f35fc077a32e62367",
+      "total": 500,
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ],
+      "fully_read": true,
+      "owner": "/root/audit_tools",
+      "artifact": "docs/ice-gap/evidence/proposal-subagents.json",
+      "notes": "Coordinator confirmed full clean tracked frozen Git revision body, absent initial manifest; SUB owns task contract."
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-test-utils.ts",
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "total": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true,
+      "owner": "/root/audit_session",
+      "artifact": "docs/ice-gap/evidence/rpc-source-review.json",
+      "notes": "Reused complete helper source read from RPC pass; no execution."
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/harness.ts",
+      "sha256": "c8cd19cf5f20fe394f404f128b793fc5b3bb3f79bd7f74d9a88ee6e1c1fcc347",
+      "total": 225,
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true,
+      "owner": "/root/audit_session",
+      "artifact": "docs/ice-gap/evidence/rpc-source-review.json",
+      "notes": "Reused complete source-only helper read from RPC pass."
+    }
+  ],
+  "merged_reads": [
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/cli.ts",
+      "sha256": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b",
+      "total": 16,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "baseline": "d4e2f847548edf90e151792327a7bbe0c63579ac8d73201ce463a2796efa963b",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/register-bedrock.ts",
+      "sha256": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b",
+      "total": 5,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "baseline": "cf6e24e4cc32a8d485af113e7cb7c693056283ba181ebce90b658b8bf49b974b",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/bun/restore-sandbox-env.ts",
+      "sha256": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194",
+      "total": 37,
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "baseline": "4dbbbc01b6e701457651c1c116d37a0a4f3f0143bc52047fc49c0891464c6194",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli.ts",
+      "sha256": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc",
+      "total": 22,
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "baseline": "8248c666b01d3c8f167f600ce6550fca18a6f75cb89d7cb2119379e7d647fabc",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/bootstrap.ts",
+      "sha256": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6",
+      "total": 6,
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "baseline": "b0d8a088813c1efbb7b05873b6f04009bf3f74ee11232ebe91841c7e13c167a6",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/cognee.ts",
+      "sha256": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af",
+      "total": 10,
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "baseline": "10b11ba53257cc7245f5fb6d30c1011649a360446c7e34823c572aeb14a269af",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/env.ts",
+      "sha256": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+      "total": 32,
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "baseline": "26e1674d94d28399ea6dda2b72eda7d4f92257fdf7854ac6a16c7cbe22e1c103",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/identity.ts",
+      "sha256": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+      "total": 11,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "baseline": "5cb4ee1ebd3cfe98b4b206c964a941ca2861a0bccff5c8b6065f558723d92b71",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/extension-aliases.ts",
+      "sha256": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+      "total": 37,
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "baseline": "ff49680e500779828521e351a160d5582da2b096117daa38f14d8f16df565a81",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/legacy-compat/paths.ts",
+      "sha256": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+      "total": 7,
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "baseline": "bffdff2cc79727e56063a8ce4285803a1d352f1497271bd6fd54e1522798ea0c",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/initial-message.ts",
+      "sha256": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "total": 44,
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "baseline": "b3820fcc2d607eb5c0f40ec01e533378436711573a087dba754133e687acf7f0",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/piped-stdin.ts",
+      "sha256": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "total": 56,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "baseline": "be479b6d1ce2b9956897f3958268cdc757cb5256db06c9313b7298a1bd9bf613",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/config-selector.ts",
+      "sha256": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "total": 57,
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "baseline": "573f7eeeed56d2f95d0a378fa9ec86067b08be1fa39ae7c8da647a5f890e1dc7",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/session-picker.ts",
+      "sha256": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97",
+      "total": 56,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "baseline": "fde66d460850f578ee3926cee9f0f443e3b9013576cc75149becaf6cc5cafc97",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice.ts",
+      "sha256": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "total": 131,
+      "ranges": [
+        [
+          1,
+          131
+        ]
+      ],
+      "baseline": "66d9eb2c9787012692314bf6c472e7ee29e82e1e0447c2586ae3027ea38de731",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/args.ts",
+      "sha256": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "total": 444,
+      "ranges": [
+        [
+          1,
+          444
+        ]
+      ],
+      "baseline": "b43b4514cd323b91691d853e6d4a5c4b35076942c647b6cfbdfc82bfacb6c478",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/credential-print.ts",
+      "sha256": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "total": 152,
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "baseline": "6e19ac1a3673a577a3a3d9e38e48f3b98daafb99a9246b62b4f662f3db786d39",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/list-models.ts",
+      "sha256": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151",
+      "total": 116,
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "baseline": "89ca421d0b27f8f2f70d42f31f183fa215ffdf43970fecd83fe2e0519b486151",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/startup-ui.ts",
+      "sha256": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "total": 240,
+      "ranges": [
+        [
+          1,
+          240
+        ]
+      ],
+      "baseline": "77a989092c3c015abb9a04e7255017803f03350aad7b307564f8ab9512ec5a36",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/migrations.ts",
+      "sha256": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "total": 315,
+      "ranges": [
+        [
+          1,
+          315
+        ]
+      ],
+      "baseline": "921f2d87cd0e001e7cb19c25472b775a23a9b351991c9763ac0c27aabaf07d04",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/main.ts",
+      "sha256": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "total": 1008,
+      "ranges": [
+        [
+          1,
+          1008
+        ]
+      ],
+      "baseline": "5fabe38848924975069b96d63a556667b851c9f192417b7e1d73eea1229ea9b3",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/args.rs",
+      "sha256": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "total": 1121,
+      "ranges": [
+        [
+          1,
+          1121
+        ]
+      ],
+      "baseline": "32949177b6627d96ba2771eb53526c23ef09df2744131254e132bb573d5b2196",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "total": 1015,
+      "ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          97,
+          1015
+        ]
+      ],
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "unread": [
+        [
+          96,
+          96
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/lib.rs",
+      "sha256": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "total": 90,
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "baseline": "83bdcad29a732b48bfa0c34956a4757e86bc0b9bc7943754a79183a1897d3478",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/bin/ice.rs",
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "total": 22,
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "baseline": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/development.md",
+      "sha256": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b",
+      "total": 72,
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "baseline": "6b5c261120d71c3f21cc3fdee2390c41216989bb0f198d7f2dacb19e377c9f9b",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/quickstart.md",
+      "sha256": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5",
+      "total": 166,
+      "ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "baseline": "26e42dd657e3126f7cca243f315f87ad9d550c3ea9ef4d87f01f7a511e0088a5",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/shell-aliases.md",
+      "sha256": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604",
+      "total": 14,
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "baseline": "52bfdc758316c8506919ca8e438da63f3e97caa51156ec60c86e425eea4ff604",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/windows.md",
+      "sha256": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478",
+      "total": 18,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "baseline": "d5186e93218c89923525215b808394a834c6f4f0d3cea2ce55afffc8b2d9e478",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/termux.md",
+      "sha256": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd",
+      "total": 128,
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "baseline": "3ec1ab10e1687b9f38e383a81429f249214eae0e42e58becb9ac497abfe091dd",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/usage.md",
+      "sha256": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456",
+      "total": 324,
+      "ranges": [
+        [
+          1,
+          324
+        ]
+      ],
+      "baseline": "dfa824ebbf9756824d50a25542a0c303ba25197ada24c4c492e98d37999e1456",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/cli/file-processor.ts",
+      "sha256": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "total": 101,
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "baseline": "399b9148c99bd820e3c1a0256840dbed4f0e7a01ad4be8edab3d20cecfcf2162",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total": 1761,
+      "ranges": [
+        [
+          60,
+          250
+        ],
+        [
+          260,
+          275
+        ],
+        [
+          402,
+          428
+        ],
+        [
+          1560,
+          1612
+        ]
+      ],
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "unread": [
+        [
+          1,
+          59
+        ],
+        [
+          251,
+          259
+        ],
+        [
+          276,
+          401
+        ],
+        [
+          429,
+          1559
+        ],
+        [
+          1613,
+          1761
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/credential-print.test.ts",
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "total": 105,
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/initial-message.test.ts",
+      "sha256": "8b95eb212ced64c20423f7dd5ffa9a972652f6d5ab1abb205a424cff2e17b356",
+      "total": 49,
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/piped-stdin.test.ts",
+      "sha256": "8d7ec91cd814d9cf580f0bd599418a017ab8cfc319f663ccd47e32abccbbc33a",
+      "total": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/first-time-setup.test.ts",
+      "sha256": "c66796eaa8e4ec21000169fc1f6671d68a16acb707c10686f5121173e021480e",
+      "total": 96,
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "sha256": "84442c2875ec70c0536b984a3a192faeabb4976012fd535f9934087483f56a2d",
+      "total": 40,
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/startup-session-name.test.ts",
+      "sha256": "671c91057777d97bfa4f06ac6efc9afdefa71c70e36b26401dd5e7bb3b5eb806",
+      "total": 136,
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/args.test.ts",
+      "sha256": "258fac826243fe9696f75f781ece605f6303649e03d339f973a8c8aabea5910d",
+      "total": 467,
+      "ranges": [
+        [
+          1,
+          467
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/paths-and-cli.test.ts",
+      "sha256": "1e2d67f18efe1784abaa16110cdb2b92a58a566d3193fb211d23e8ae59496c55",
+      "total": 41,
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/restore-sandbox-env.test.ts",
+      "sha256": "14485f0f5f478475206f15ebd48191090c437f40b79ebfdf2d652d4681e71d02",
+      "total": 78,
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/identity-inputs.test.ts",
+      "sha256": "21d7d4b216ea53f9cf6229ac1ec34ddf20d19cd92f8b2ada473648cdd1419eed",
+      "total": 35,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/config-references.test.ts",
+      "sha256": "76fa0181c59191bec4bdc1698981837c615ca18162338a476239f099636739ff",
+      "total": 47,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "sha256": "d3eca3a0f570ad39503615a18d765ec9d97c6d9a6ebcaf2901a81d61f522ca71",
+      "total": 213,
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "sha256": "9d0837d33c091fba4164442168e630cebe30f32aa6da7c0d29c6191ac3e374cc",
+      "total": 118,
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/max-thinking.test.ts",
+      "sha256": "be1cc17b81c7f1c3268d4f978c73654a4142880a7e0a2f26aea67bcf14bc528d",
+      "total": 65,
+      "ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/image-resize-callers.test.ts",
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c",
+      "total": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/block-images.test.ts",
+      "sha256": "739ffc6dc4c9cc9de971e8bac12cd73e3e6e5b9f266a56228238f66ccb4673b8",
+      "total": 149,
+      "ranges": [
+        [
+          1,
+          149
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/extras.rs",
+      "sha256": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5",
+      "total": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "baseline": "61e83e2da92a4751cb60d0bf70ea624f6907604cb7eeed9679c70cf187f749f5",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "total": 4016,
+      "ranges": [
+        [
+          100,
+          240
+        ],
+        [
+          328,
+          466
+        ],
+        [
+          2050,
+          2340
+        ],
+        [
+          2480,
+          2544
+        ],
+        [
+          2676,
+          2735
+        ],
+        [
+          3670,
+          3915
+        ]
+      ],
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "unread": [
+        [
+          1,
+          99
+        ],
+        [
+          241,
+          327
+        ],
+        [
+          467,
+          2049
+        ],
+        [
+          2341,
+          2479
+        ],
+        [
+          2545,
+          2675
+        ],
+        [
+          2736,
+          3669
+        ],
+        [
+          3916,
+          4016
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total": 3398,
+      "ranges": [
+        [
+          992,
+          1030
+        ]
+      ],
+      "baseline": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "unread": [
+        [
+          1,
+          991
+        ],
+        [
+          1031,
+          3398
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/resume_picker.rs",
+      "sha256": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d",
+      "total": 247,
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "baseline": "ea7e40fd60897a161c3550c403ff10f01891ff0ba8dab6cc9a307cc932eae97d",
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth.rs",
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "total": 739,
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "baseline": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "unread": [
+        [
+          151,
+          739
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/config-value-migration.test.ts",
+      "sha256": "9ac59f1e2fd11d0e7ef1bdd980727e4b8c5a73c22ba7ca3baa515e9ad90648f5",
+      "total": 179,
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5661-uppercase-header-values.test.ts",
+      "sha256": "0ffc9a48b0f980339bd8748d7064ea2e832e7a817441de29f68ad94695ac7149",
+      "total": 92,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "baseline": null,
+      "unread": [],
+      "fully_read": true
+    }
+  ],
+  "redactions": [
+    {
+      "key": "cliNativeApp0",
+      "path": "crates/ice-cli/src/app.rs",
+      "line": " 96 |         let token= [REDACTED_SECRET](&argv);"
+    }
+  ],
+  "own_entries_complete": true,
+  "package_reserved_entries": "CLI-020 through CLI-049",
+  "candidate_disposition": {
+    "total": 122,
+    "own_mapped": 95,
+    "own_excluded": 1,
+    "pending_package": 26
+  },
+  "qa": {
+    "citation_range_errors": [],
+    "surface_range_errors": []
+  }
+}

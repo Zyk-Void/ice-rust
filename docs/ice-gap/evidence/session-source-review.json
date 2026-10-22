@@ -1,0 +1,2901 @@
+{
+  "area": "session",
+  "phase": "source and complete additional test review; coordinator reconciliation",
+  "spec_entry_count": 38,
+  "assigned_ledger_files": 48,
+  "source_identities": {
+    "ice_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust_revision": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "manifest": "evidence/resume-source-identities-2026-10-19T222055Z.json",
+    "dirty_agent_session_sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+    "notes": "Current dirty agent-session source matches the preserved manifest; no source edits performed."
+  },
+  "summary": {
+    "read_files": 153,
+    "fully_read_files": 149,
+    "partially_read_rust_callers": 4,
+    "fully_read_ts_assigned_source_files": 48,
+    "fully_read_ts_test_files": 73,
+    "additional_unread_test_files": 0,
+    "cited_source_ranges_without_read_coverage": 0
+  },
+  "files": [
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/compaction/branch-summarization.ts",
+      "total": 281,
+      "sha256": "30d6923ad311d72ce9d1b3a50ed8fc1deb7e2d8ab43ba001c41907de2bc50ec9",
+      "baseline": "30d6923ad311d72ce9d1b3a50ed8fc1deb7e2d8ab43ba001c41907de2bc50ec9",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          281
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/compaction/compaction.ts",
+      "total": 849,
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "baseline": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          849
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/compaction/utils.ts",
+      "total": 133,
+      "sha256": "6070668fb9669dc09fc6b95e126d334fa4943adba22ef2d6d52fae4e0f138610",
+      "baseline": "6070668fb9669dc09fc6b95e126d334fa4943adba22ef2d6d52fae4e0f138610",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/context.ts",
+      "total": 101,
+      "sha256": "dc8c32bebff5aabd896044994e70e8d47ced06e5170ff80aa1c6318680cbed9c",
+      "baseline": "dc8c32bebff5aabd896044994e70e8d47ced06e5170ff80aa1c6318680cbed9c",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/index.ts",
+      "total": 5,
+      "sha256": "a5aa1fb05de8d8606f66f1f1929406a884f12c102b617830802d1400a43aaed1",
+      "baseline": "a5aa1fb05de8d8606f66f1f1929406a884f12c102b617830802d1400a43aaed1",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/memory.ts",
+      "total": 357,
+      "sha256": "3c77f1ae45a476de0e4d3dbf2140ee77011e59fe4912908a46ea32d1fc383e08",
+      "baseline": "3c77f1ae45a476de0e4d3dbf2140ee77011e59fe4912908a46ea32d1fc383e08",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          357
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/search.ts",
+      "total": 72,
+      "sha256": "eb9fada3a1b6133f78dede7769913aa2d8e0f4fcbb3258fe5f18aead537be803",
+      "baseline": "eb9fada3a1b6133f78dede7769913aa2d8e0f4fcbb3258fe5f18aead537be803",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/session.ts",
+      "total": 286,
+      "sha256": "b2dc72058cea0909ab5748a76160a4276ce67de1c09ccdffe31607f7d44e2ec2",
+      "baseline": "b2dc72058cea0909ab5748a76160a4276ce67de1c09ccdffe31607f7d44e2ec2",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          286
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/testing/conformance.ts",
+      "total": 832,
+      "sha256": "491322900fff521f9a58068b4c732df20855334588d0dd7f65fdae59bd010972",
+      "baseline": "491322900fff521f9a58068b4c732df20855334588d0dd7f65fdae59bd010972",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          832
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/testing/index.ts",
+      "total": 7,
+      "sha256": "b1d7bd712ad162383ff0d36a27b732ad62d68710b7269c54d51d3e0dee3d1b16",
+      "baseline": "b1d7bd712ad162383ff0d36a27b732ad62d68710b7269c54d51d3e0dee3d1b16",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/testing/types.ts",
+      "total": 17,
+      "sha256": "1ab3f2b81e03d9ece4fb34cc2643e1574c4950a436750d77ecacd77e685dd72c",
+      "baseline": "1ab3f2b81e03d9ece4fb34cc2643e1574c4950a436750d77ecacd77e685dd72c",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/src/harness/session/types.ts",
+      "total": 362,
+      "sha256": "72c87b1e4e692d5c966dd523d0046e22a5afe314608460318e7b49cf367be074",
+      "baseline": "72c87b1e4e692d5c966dd523d0046e22a5afe314608460318e7b49cf367be074",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          362
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/test/harness/compaction.test.ts",
+      "total": 698,
+      "sha256": "7417b54beb6126d3d8fc9aae0408b5b76c757730781a26b4c1026bbf1bab8522",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          698
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/agent/test/harness/session-test-utils.ts",
+      "total": 21,
+      "sha256": "5c20ee21395f2778eb7586687251d6cda5338ee52b3884bfb46399d0a032d73a",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/compaction.md",
+      "total": 498,
+      "sha256": "80a67ebc0b40afd2be0bd1ff98e5843194f8f3a4d0ccf25a7189f845217039dd",
+      "baseline": "80a67ebc0b40afd2be0bd1ff98e5843194f8f3a4d0ccf25a7189f845217039dd",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          498
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/sdk.md",
+      "total": 1254,
+      "sha256": "b619c95e93b3a4d496be43b62ba3ae8b17109a70ca655a31a56723d9d98a723b",
+      "baseline": "b619c95e93b3a4d496be43b62ba3ae8b17109a70ca655a31a56723d9d98a723b",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          1254
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/session-format.md",
+      "total": 439,
+      "sha256": "809504d9b8939a2775dca8d408ab098f3a4e24d3524963ded978e25434ade9ee",
+      "baseline": "809504d9b8939a2775dca8d408ab098f3a4e24d3524963ded978e25434ade9ee",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          439
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/sessions.md",
+      "total": 150,
+      "sha256": "e8f405002f8a3457f74eaa6e6dadb380de0c902894684e7575cb1666b3e5554e",
+      "baseline": "e8f405002f8a3457f74eaa6e6dadb380de0c902894684e7575cb1666b3e5554e",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/agent-session-runtime.ts",
+      "total": 476,
+      "sha256": "4d0afdbd3280bffeb6224b906ee66ec3af0854ad9eb7b98aeb6855a59df948c7",
+      "baseline": "4d0afdbd3280bffeb6224b906ee66ec3af0854ad9eb7b98aeb6855a59df948c7",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          476
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/agent-session-services.ts",
+      "total": 224,
+      "sha256": "0526cf8a643300c0e0e314d62c9bae42575808bd06940f52c981d2fc90737f4a",
+      "baseline": "0526cf8a643300c0e0e314d62c9bae42575808bd06940f52c981d2fc90737f4a",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          224
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/agent-session.ts",
+      "total": 4036,
+      "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "baseline": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          4036
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/cache-stats.ts",
+      "total": 165,
+      "sha256": "bc6326ffc5022f9f9bfc4e2a10889d8d805057aa6ab04309fd9a9e3e7dcd742b",
+      "baseline": "bc6326ffc5022f9f9bfc4e2a10889d8d805057aa6ab04309fd9a9e3e7dcd742b",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "total": 377,
+      "sha256": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "baseline": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/compaction/compaction.ts",
+      "total": 1024,
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "baseline": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          1024
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/compaction/index.ts",
+      "total": 8,
+      "sha256": "f82bde781410ae1a638989ff91bde9cc7045341a76bb9757de2ea6beea4c077d",
+      "baseline": "f82bde781410ae1a638989ff91bde9cc7045341a76bb9757de2ea6beea4c077d",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/compaction/utils.ts",
+      "total": 159,
+      "sha256": "1c9402db5fc48c5b38f1a7636702cc179a4da3c9e1d17d1d8f719294b848359d",
+      "baseline": "1c9402db5fc48c5b38f1a7636702cc179a4da3c9e1d17d1d8f719294b848359d",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/context-breakdown.ts",
+      "total": 230,
+      "sha256": "f12691e3c60b9388de4c1ab5d0a4e3816974e5aed3cfc4d0a04adca8d23b03b3",
+      "baseline": "f12691e3c60b9388de4c1ab5d0a4e3816974e5aed3cfc4d0a04adca8d23b03b3",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          230
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/messages.ts",
+      "total": 196,
+      "sha256": "9f98da15594e143b8da46896ad1436222292c378648282e9b389d34685b70235",
+      "baseline": "9f98da15594e143b8da46896ad1436222292c378648282e9b389d34685b70235",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/sdk.ts",
+      "total": 414,
+      "sha256": "735504dabffe0fa780826fa826ee4cdcec944b21bc71670622a088c3228c17eb",
+      "baseline": "735504dabffe0fa780826fa826ee4cdcec944b21bc71670622a088c3228c17eb",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          414
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/session-cwd.ts",
+      "total": 60,
+      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
+      "baseline": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/session-manager.ts",
+      "total": 1840,
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "baseline": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          1840
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/usage-totals.ts",
+      "total": 116,
+      "sha256": "ae43787b5b28702eea398c6583b1eb9d486ebf21a6e594d5a220eb6e72d85fae",
+      "baseline": "ae43787b5b28702eea398c6583b1eb9d486ebf21a6e594d5a220eb6e72d85fae",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-auto-compaction-queue.test.ts",
+      "total": 451,
+      "sha256": "3f342e6a74ec13a976d8c2da2aacb0096c4ba5e6ef3a5f67ae33b793d45b4b7f",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          451
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-branching.test.ts",
+      "total": 157,
+      "sha256": "d3eaa718035bd919a4b4a15b606c56067764255cd4a6df1b8c22f2a906498268",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          157
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-compaction.test.ts",
+      "total": 210,
+      "sha256": "37906f0f224fce9311323e33db63156bb910727218dee72b3a75e0b3ab1c0f9f",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          210
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-concurrent.test.ts",
+      "total": 630,
+      "sha256": "2be07a4e836dc999ac98cf9b3c4d9fa74eb63a03b3ca7b6d3adc939ff6a9d6d4",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          630
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-dynamic-provider.test.ts",
+      "total": 180,
+      "sha256": "bf49eaa359d118783b1280cfe970dcc5882e6e30d8823019050eae6d54ad5d9f",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          180
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-dynamic-tools.test.ts",
+      "total": 257,
+      "sha256": "5a89c0620c4e523ff18e5bd653f8e6383e1625c1174fa15176f29089f3562a41",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          257
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-retry.test.ts",
+      "total": 454,
+      "sha256": "3dd10511ddb80914486d50e0a24eb56c745fadf86a108b399f59d53abf528d30",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          454
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-runtime-events.test.ts",
+      "total": 258,
+      "sha256": "dbed420342d68a955198756b1eba1397779a26236c7d96c213dc0fdfa181f849",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          258
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-stats.test.ts",
+      "total": 284,
+      "sha256": "82378c17f612ffa67231dd720dd1e293b3ef0ef3dd4fce9f80fe3fc7eecfb969",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          284
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/agent-session-tree-navigation.test.ts",
+      "total": 324,
+      "sha256": "26030678b0a8e9044bb3c021477eb1e7b4945eb2f7f06328544ce93eac7471d7",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          324
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/cache-stats.test.ts",
+      "total": 144,
+      "sha256": "9972e367b4e4f552a31eb7fc22370ab3bd3ba25c8554d50e2b7b704ea90c5faa",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/compaction-extensions-example.test.ts",
+      "total": 153,
+      "sha256": "47ea053fd8c1c27cd150fa73b23a9fbd6d6cb8dbe66ba49ddeb5df5ffccb4b24",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          153
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/compaction-extensions.test.ts",
+      "total": 417,
+      "sha256": "ba48645a4399a2aea97eef6ca2674a7c33d3204911722e11443005c031c22cbb",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          417
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/compaction-serialization.test.ts",
+      "total": 80,
+      "sha256": "12ec120efff04d2b3fca3247021493b3cf1d59a3b302d349517aeb1da9270958",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/compaction-summary-reasoning.test.ts",
+      "total": 168,
+      "sha256": "e0b415d43d94b2f0659afb2a4ee2d85d0453083422f88820fe7dafe2ff3842c0",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/compaction.test.ts",
+      "total": 657,
+      "sha256": "7bb7b2d62c96c30cc4aef1a4ad92ad1c927dbf5ca619bdceea9eb2398aa38d54",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          657
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/context-breakdown.test.ts",
+      "total": 215,
+      "sha256": "5916ad843820d26eb263553673effce7675bca50c8f25695b091cd769d292a7a",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          215
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/sdk-session-manager.test.ts",
+      "total": 132,
+      "sha256": "9e2561b79f9004188fb5054ac398780debc7633cde6d505fa9297f0f60ff9ba2",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-cwd.test.ts",
+      "total": 92,
+      "sha256": "17f5257a1bd05b71ad8dcd5de88eb6156459438b3462437379da02472b16dbdb",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-file-invalid.test.ts",
+      "total": 66,
+      "sha256": "d79b7e2f15ee917667591f0cf46e91f1495043a3351a6799ed7511340abceec2",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-header.test.ts",
+      "total": 106,
+      "sha256": "d82d8c4d943c029d47bb8c2328541cb63ea25a8e43c9221dd964f940aea20f87",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-id-readonly.test.ts",
+      "total": 191,
+      "sha256": "d82d0f0af09b03c1a5d622f6ea0b9e54e0a6567940031dab5939add9625a8f40",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          191
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-info-modified-timestamp.test.ts",
+      "total": 84,
+      "sha256": "28857d99a13e16ab915d309b168bf7f173afe8e24bf74c2c1311c3fe09382a53",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager-events.test.ts",
+      "total": 63,
+      "sha256": "63a8f682f1d3a27b3ef4341eb2b88d7ba8c26af8b5e263fd0b3b9db1096ebb71",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/build-context.test.ts",
+      "total": 306,
+      "sha256": "e4f1c5ef931609100a5350129151d147f7d58bea4df0d9e1676fe60d06aed6c0",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          306
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/custom-session-id.test.ts",
+      "total": 170,
+      "sha256": "aa3c45085470d899a626d1dbd2fa9e70599b3008ba2853f41b1c7a2ee830ad1a",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          170
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/file-operations.test.ts",
+      "total": 377,
+      "sha256": "6135d347c162dbda83372160ec67e3655adcb7b80e3a52b11ba86345be75c3cc",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/fork-integrity.test.ts",
+      "total": 47,
+      "sha256": "b08df7f679e6edcf6de457c7b56b6ac9c1e16c4746702d06ecea4bfa7e6b6b43",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/labels.test.ts",
+      "total": 212,
+      "sha256": "072829ad416a5c73c1618c8761bb63bcd8d4b80b589f742ef768ee822714234d",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          212
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/migration.test.ts",
+      "total": 79,
+      "sha256": "7e936fe5402e4225854eeaf4fb0505ece574e3774e1aef97a8c121c34fd48877",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/save-entry.test.ts",
+      "total": 56,
+      "sha256": "530b961602e351e7d3ff987487350888218e8e51be3f8e6eebf12677b2dd622e",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/tree-traversal.test.ts",
+      "total": 597,
+      "sha256": "c411ff9400ef04580c810dfc5d5749dbb41a89f1daef545ca0c17d8d2f9022c8",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          597
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/session-manager/unterminated-tail.test.ts",
+      "total": 47,
+      "sha256": "05da342eede8e085b9357f54e8568b73e14c0a155d215b1d7a70c218f8f66ab8",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/compaction-summary-validation.test.ts",
+      "total": 129,
+      "sha256": "cb209381097f18dac8d3f05f5a88a9f943501a6b54635ae9891995382815ffac",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/usage-totals.test.ts",
+      "total": 83,
+      "sha256": "963025fa01312ea437c12bd5480d68ba2d44916eb01b9a16689c94aeef8641c7",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/index.ts",
+      "total": 171,
+      "sha256": "5c5b28894e1dea2e1d4eef37a87fba4747165fd9f239cc6d77e3d41e29a1aeff",
+      "baseline": "5c5b28894e1dea2e1d4eef37a87fba4747165fd9f239cc6d77e3d41e29a1aeff",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/branch-cache.ts",
+      "total": 106,
+      "sha256": "f93887640db460f95e98cb86c544913d239894f6c929d87d5af0cd062293a00e",
+      "baseline": "f93887640db460f95e98cb86c544913d239894f6c929d87d5af0cd062293a00e",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/index.ts",
+      "total": 18,
+      "sha256": "7e57b76577a0c4920bc1b321621314aa7ca298f03d19f7fff7350f5bfc436fa6",
+      "baseline": "7e57b76577a0c4920bc1b321621314aa7ca298f03d19f7fff7350f5bfc436fa6",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/migrations.ts",
+      "total": 52,
+      "sha256": "c243b1e9bd63dd058e3fcc2cd7bbbe26395f508db6201ce0b0e285b3be278fcb",
+      "baseline": "c243b1e9bd63dd058e3fcc2cd7bbbe26395f508db6201ce0b0e285b3be278fcb",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/migrations/001_initial.sql",
+      "total": 125,
+      "sha256": "2102bf1459f272f6bf012ed8940e3575733ac163ef52cd6c64d3a13413e56eb0",
+      "baseline": "2102bf1459f272f6bf012ed8940e3575733ac163ef52cd6c64d3a13413e56eb0",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/repo.ts",
+      "total": 915,
+      "sha256": "ac66f1e422915201eda4dd04633461ba3bd8307dd42623451b2284554a4ae1a3",
+      "baseline": "ac66f1e422915201eda4dd04633461ba3bd8307dd42623451b2284554a4ae1a3",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          915
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/search-backend.ts",
+      "total": 130,
+      "sha256": "9492b91ba53936d6466948bcf3789373b90184be1f6057366b811f063caaff8e",
+      "baseline": "9492b91ba53936d6466948bcf3789373b90184be1f6057366b811f063caaff8e",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/branch-entries.ts",
+      "total": 147,
+      "sha256": "193df592857865ce47d1c54996a7ad2cca783ef03c998ed2dc74c9159d00d947",
+      "baseline": "193df592857865ce47d1c54996a7ad2cca783ef03c998ed2dc74c9159d00d947",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/branch-tips.ts",
+      "total": 41,
+      "sha256": "5b99bab85ca4317d9f81d1b950fdbec50cb3719df57c959c95874549d66f5fbd",
+      "baseline": "5b99bab85ca4317d9f81d1b950fdbec50cb3719df57c959c95874549d66f5fbd",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/entries.ts",
+      "total": 76,
+      "sha256": "13adc475c95dbb23b77ad159f561f37aa16d9637a0a4307f92c43a2a90c730cf",
+      "baseline": "13adc475c95dbb23b77ad159f561f37aa16d9637a0a4307f92c43a2a90c730cf",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/facts.ts",
+      "total": 74,
+      "sha256": "6afe000803f4d30e4520d7a52f136f825a4538614d181683c1c8b77c4f34f7fc",
+      "baseline": "6afe000803f4d30e4520d7a52f136f825a4538614d181683c1c8b77c4f34f7fc",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/lanes.ts",
+      "total": 117,
+      "sha256": "906b7af3da4c523e28189cb2fa48defd8e970a4b7169c394fdbd942006563a91",
+      "baseline": "906b7af3da4c523e28189cb2fa48defd8e970a4b7169c394fdbd942006563a91",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/leases.ts",
+      "total": 66,
+      "sha256": "6310631a9a1d4ea3e864c5d5ba07e7d09024d0dfc9463b495112d68c48b01b91",
+      "baseline": "6310631a9a1d4ea3e864c5d5ba07e7d09024d0dfc9463b495112d68c48b01b91",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/records.ts",
+      "total": 96,
+      "sha256": "d9e59d2b5112774875e989f6c917ffe4f8c5062df72dfe409acc7600879c2797",
+      "baseline": "d9e59d2b5112774875e989f6c917ffe4f8c5062df72dfe409acc7600879c2797",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/session-sequences.ts",
+      "total": 29,
+      "sha256": "23e1d9e65c2257bf72aaf1a1e6ebf8fa0edbe6b2220089bfd013fd74d1a99f88",
+      "baseline": "23e1d9e65c2257bf72aaf1a1e6ebf8fa0edbe6b2220089bfd013fd74d1a99f88",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/session-stats.ts",
+      "total": 64,
+      "sha256": "0c74aede8d9a40778c91df170e25716895456a95339bae8e203851b83894b0ad",
+      "baseline": "0c74aede8d9a40778c91df170e25716895456a95339bae8e203851b83894b0ad",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/storage/sessions.ts",
+      "total": 93,
+      "sha256": "dcbaf0c873123c7f5405374cd6873da768028864e5260e910a3f368738c2a5a1",
+      "baseline": "dcbaf0c873123c7f5405374cd6873da768028864e5260e910a3f368738c2a5a1",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/src/sqlite/types.ts",
+      "total": 49,
+      "sha256": "7f0363cb447f8428eda9e93a7be026b6c8eaf1d073aed115b502455f3b1fc608",
+      "baseline": "7f0363cb447f8428eda9e93a7be026b6c8eaf1d073aed115b502455f3b1fc608",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/adapter.test.ts",
+      "total": 58,
+      "sha256": "b14ecb55dc4c12f1f5209d596901e6330b1ecbab17e2a2ca6a4344329afa5f4d",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/branch-cache.test.ts",
+      "total": 221,
+      "sha256": "0bcf71cfd20b0d7fdf3d34ac59f15899ca1307b2fd34f652cd044dd2f19cd551",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          221
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/conformance.test.ts",
+      "total": 55,
+      "sha256": "03078ffe9f9796966ee11e99361c421a9fbbb9e47535b68162758357b848f442",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/leases.test.ts",
+      "total": 159,
+      "sha256": "39278fcfad18de79bdc5adc0097ff32dfebd38c07fb8abbc9369ff60de1029ee",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/migrations.test.ts",
+      "total": 42,
+      "sha256": "6e100eab5f48653728f2329eba1451500aa9c5bdecce1ff4661a51c4655343a5",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/repository.test.ts",
+      "total": 431,
+      "sha256": "1d8b313b928c4dc6dcf6be4da9b0660df5e14b99a3eaa5837c5969e08a4218cf",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          431
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/search.test.ts",
+      "total": 168,
+      "sha256": "1de48166df2609e62b872a8593aadb63fbfa92e5eb4f9c9a4aae4046fdcc2f14",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/storage/sqlite-node/test/test-utils.ts",
+      "total": 145,
+      "sha256": "586b3e43e393632f6243cdbd544775bd95e14cae274baadf1df599d431c44f3d",
+      "baseline": null,
+      "baseline_matched": null,
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "fully_read": true,
+      "git_content_verified_against": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/agent_session.rs",
+      "total": 613,
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "baseline": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          613
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/export.rs",
+      "total": 367,
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "baseline": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          367
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui.rs",
+      "total": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "baseline": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          543,
+          720
+        ],
+        [
+          1385,
+          1510
+        ],
+        [
+          2890,
+          2955
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui/events.rs",
+      "total": 510,
+      "sha256": "305045059eef3be87ecae1b9f8aeb37e7478622cd49c275f5ec86ef602cc56b7",
+      "baseline": "305045059eef3be87ecae1b9f8aeb37e7478622cd49c275f5ec86ef602cc56b7",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          140,
+          220
+        ],
+        [
+          452,
+          510
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui/rendering.rs",
+      "total": 562,
+      "sha256": "8591b67159e2033020428f7d38c889379f0634b9e963a18e04965ac1b5ed1317",
+      "baseline": "8591b67159e2033020428f7d38c889379f0634b9e963a18e04965ac1b5ed1317",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          490,
+          556
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui/sessions.rs",
+      "total": 679,
+      "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "baseline": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          679
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session_cwd.rs",
+      "total": 142,
+      "sha256": "6b4d63e50b57a5d6cd7999ffbdb15ee8b54dc74abb4bbf591338346b29bff897",
+      "baseline": "6b4d63e50b57a5d6cd7999ffbdb15ee8b54dc74abb4bbf591338346b29bff897",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          142
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session_driver.rs",
+      "total": 704,
+      "sha256": "920d1e0b7454015bddbf0e5d6015226dee04ce5958ed19b331653c12dc35b211",
+      "baseline": "920d1e0b7454015bddbf0e5d6015226dee04ce5958ed19b331653c12dc35b211",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          704
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/session.rs",
+      "total": 4016,
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          4016
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/agent_harness.rs",
+      "total": 5844,
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "baseline": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          682,
+          810
+        ],
+        [
+          1000,
+          1613
+        ],
+        [
+          2011,
+          2320
+        ],
+        [
+          3175,
+          3260
+        ],
+        [
+          3500,
+          4990
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/cache_stats.rs",
+      "total": 341,
+      "sha256": "5a8179ce396595db5100697439557fd621ab0c1c659d641735be430c9b9e5a6b",
+      "baseline": "5a8179ce396595db5100697439557fd621ab0c1c659d641735be430c9b9e5a6b",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          341
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/branch_summary.rs",
+      "total": 468,
+      "sha256": "4a00ad4bf1b06d3369a9da9eb5b268c586b1082b04253d26d0e6c44f4cc2dad7",
+      "baseline": "4a00ad4bf1b06d3369a9da9eb5b268c586b1082b04253d26d0e6c44f4cc2dad7",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          468
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/compaction.rs",
+      "total": 943,
+      "sha256": "01d4cc50d85522d7d889686c50c9fdec10c90e7d3ef91d42b05b761b85dc3713",
+      "baseline": "01d4cc50d85522d7d889686c50c9fdec10c90e7d3ef91d42b05b761b85dc3713",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          943
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/cut_point.rs",
+      "total": 247,
+      "sha256": "fbf406a6d946921420cf4641c412d76bd96866c1d0f78d617c09c371badd3f47",
+      "baseline": "fbf406a6d946921420cf4641c412d76bd96866c1d0f78d617c09c371badd3f47",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/mod.rs",
+      "total": 40,
+      "sha256": "e629b6c5190890d211cbc87a94512ae6be890f9d2362595cce1104aace0acfe9",
+      "baseline": "e629b6c5190890d211cbc87a94512ae6be890f9d2362595cce1104aace0acfe9",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/settings.rs",
+      "total": 83,
+      "sha256": "8d04a6af3ade2a6e25c11e85341233a80a514d32b933bc42f82742112754e7e6",
+      "baseline": "8d04a6af3ade2a6e25c11e85341233a80a514d32b933bc42f82742112754e7e6",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/compaction/tokens.rs",
+      "total": 479,
+      "sha256": "d47333382a77e4de30aebf218f86be690648738e63149eeea998e864d403e053",
+      "baseline": "d47333382a77e4de30aebf218f86be690648738e63149eeea998e864d403e053",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          479
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/events.rs",
+      "total": 661,
+      "sha256": "8ed6d7304989859715fb14e2dbc2c3ab20f0b918a6a718b886b482c1cbc76e3c",
+      "baseline": "8ed6d7304989859715fb14e2dbc2c3ab20f0b918a6a718b886b482c1cbc76e3c",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          661
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/context.rs",
+      "total": 464,
+      "sha256": "a0038eb6c17315a05e89605b8335c39a1b86894fbd6dd28e4e9a63158150362a",
+      "baseline": "a0038eb6c17315a05e89605b8335c39a1b86894fbd6dd28e4e9a63158150362a",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          464
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/codec.rs",
+      "total": 612,
+      "sha256": "1b71390fa7ce534c8192a008cc93875102a68c9feef9983bcec9cc9853a1a298",
+      "baseline": "1b71390fa7ce534c8192a008cc93875102a68c9feef9983bcec9cc9853a1a298",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          612
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/errors.rs",
+      "total": 74,
+      "sha256": "d007e2d2e0605ff54dd31128b86f488b3929354dfebc029e4b45850540ff3b81",
+      "baseline": "d007e2d2e0605ff54dd31128b86f488b3929354dfebc029e4b45850540ff3b81",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/mod.rs",
+      "total": 27,
+      "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "baseline": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/repo.rs",
+      "total": 1105,
+      "sha256": "6b3a08cc251d3cc2471f2bb06773fffef3e3c447c1f732772efc56ca36c92dda",
+      "baseline": "6b3a08cc251d3cc2471f2bb06773fffef3e3c447c1f732772efc56ca36c92dda",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          1105
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/storage.rs",
+      "total": 931,
+      "sha256": "29553513222ea80e8bfe8a9519b03e3113f93fa7479ac3e2a808bb5f14df7abb",
+      "baseline": "29553513222ea80e8bfe8a9519b03e3113f93fa7479ac3e2a808bb5f14df7abb",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          931
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/jsonl/types.rs",
+      "total": 152,
+      "sha256": "3ae9a894a6ffb80ed4f5354f82a5f5faf0fc350f2227764f7b77d07e60cf0b92",
+      "baseline": "3ae9a894a6ffb80ed4f5354f82a5f5faf0fc350f2227764f7b77d07e60cf0b92",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/memory.rs",
+      "total": 654,
+      "sha256": "93485e8bbaa5ee68dcb770f0b79ffd681312a83a719f88699e2395934453396f",
+      "baseline": "93485e8bbaa5ee68dcb770f0b79ffd681312a83a719f88699e2395934453396f",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          654
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/search.rs",
+      "total": 458,
+      "sha256": "f256746528377d268d027eb60f4658b8050963c2a220e8c4e946781e44444941",
+      "baseline": "f256746528377d268d027eb60f4658b8050963c2a220e8c4e946781e44444941",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          458
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/session.rs",
+      "total": 848,
+      "sha256": "a591c714489b3cf32354743cd7315b34c542f60d42879eeaac556bb6b4ef9638",
+      "baseline": "a591c714489b3cf32354743cd7315b34c542f60d42879eeaac556bb6b4ef9638",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          848
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/sqlite.rs",
+      "total": 494,
+      "sha256": "d39f13a3da7afd603e67fd54f5ec6c74e7869ef9801f85b486041c094737b447",
+      "baseline": "d39f13a3da7afd603e67fd54f5ec6c74e7869ef9801f85b486041c094737b447",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          494
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/state.rs",
+      "total": 684,
+      "sha256": "a48e7d4809041ff9669631c297d092396292c59f1c2fbdeffd5d410623d8e1b6",
+      "baseline": "a48e7d4809041ff9669631c297d092396292c59f1c2fbdeffd5d410623d8e1b6",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          684
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-harness/src/session/types.rs",
+      "total": 1400,
+      "sha256": "d6387de5c6aa13d47f5110fd027cd52927f91e8bafa1fa167d75342d51461320",
+      "baseline": "d6387de5c6aa13d47f5110fd027cd52927f91e8bafa1fa167d75342d51461320",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          1400
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-telemetry/src/context.rs",
+      "total": 105,
+      "sha256": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61",
+      "baseline": "ecfd835dd3618988f0ca3eba776586f664f668bc77c4995ef9804fdeffd84a61",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-bash-persistence.test.ts",
+      "total": 338,
+      "sha256": "223eae2a1b45fb42fe6b4f4a3efbaff6cb048d0ec7beea0b72f9100c22b6fe36",
+      "baseline": "223eae2a1b45fb42fe6b4f4a3efbaff6cb048d0ec7beea0b72f9100c22b6fe36",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          338
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts",
+      "total": 386,
+      "sha256": "52d92e5dcf2eaac57cb07adf78b1bf37745512b40f83da3c1861d6713af0ba51",
+      "baseline": "52d92e5dcf2eaac57cb07adf78b1bf37745512b40f83da3c1861d6713af0ba51",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          386
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-compaction.test.ts",
+      "total": 705,
+      "sha256": "dce9a66fcb82bcc9953ceb235e154ede07b19e03e30a0e45a218c50bad37d03d",
+      "baseline": "dce9a66fcb82bcc9953ceb235e154ede07b19e03e30a0e45a218c50bad37d03d",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          705
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-configuration-events.test.ts",
+      "total": 145,
+      "sha256": "c24db91c32eb8ce71d61e49278311cc9ab0b67ef9d9acde6562ae68b3fd587a5",
+      "baseline": "c24db91c32eb8ce71d61e49278311cc9ab0b67ef9d9acde6562ae68b3fd587a5",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+      "total": 398,
+      "sha256": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "baseline": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          398
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-operation-cancellation.test.ts",
+      "total": 231,
+      "sha256": "41526305c21ce0c6965c9bfb6b24d4eee47e9396112632be70668757fc6bb8e2",
+      "baseline": "41526305c21ce0c6965c9bfb6b24d4eee47e9396112632be70668757fc6bb8e2",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          231
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-prompt.test.ts",
+      "total": 444,
+      "sha256": "c9afec10bb86a97c259ab8d590fa5239e120dd3318593d5905b66c246e88ab86",
+      "baseline": "c9afec10bb86a97c259ab8d590fa5239e120dd3318593d5905b66c246e88ab86",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          444
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-queue.test.ts",
+      "total": 479,
+      "sha256": "a647208ab5f18d8d18243b15d11f6a044702b9b436e9c052e45c945242581a87",
+      "baseline": "a647208ab5f18d8d18243b15d11f6a044702b9b436e9c052e45c945242581a87",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          479
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-retry-events.test.ts",
+      "total": 371,
+      "sha256": "19bacaef935d4b15c6e3d6e216ec905547d0b3bf9d042c01d64fe380c2749e9a",
+      "baseline": "19bacaef935d4b15c6e3d6e216ec905547d0b3bf9d042c01d64fe380c2749e9a",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          371
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-runtime.test.ts",
+      "total": 664,
+      "sha256": "804e4a9651277b35bba07523de5a34d84125247568b5ab678a4d68707acbb4fd",
+      "baseline": "804e4a9651277b35bba07523de5a34d84125247568b5ab678a4d68707acbb4fd",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          664
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/agent-session-tool-result-images.test.ts",
+      "total": 110,
+      "sha256": "feb536c276222f98656c6b1fd9e77be438658b95a7ad8bec5296904b265a1942",
+      "baseline": "feb536c276222f98656c6b1fd9e77be438658b95a7ad8bec5296904b265a1942",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/blackhole-compaction.test.ts",
+      "total": 578,
+      "sha256": "8e2a2f98e862d69a0983f90aa83a9885f575f8273dc1d1a6dc97134ff40d6903",
+      "baseline": "8e2a2f98e862d69a0983f90aa83a9885f575f8273dc1d1a6dc97134ff40d6903",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          578
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/1717-2113-agent-session-event-settlement.test.ts",
+      "total": 96,
+      "sha256": "2eda63723612e2c1d64e69a688c47162a98c9e4fb81ed47fe829e7337c3175ec",
+      "baseline": "2eda63723612e2c1d64e69a688c47162a98c9e4fb81ed47fe829e7337c3175ec",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/2860-replaced-session-context.test.ts",
+      "total": 280,
+      "sha256": "b716b622596b025e148bf7f022800159dfd64f32dd0fe72f88d194003a6e7018",
+      "baseline": "b716b622596b025e148bf7f022800159dfd64f32dd0fe72f88d194003a6e7018",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/3686-session-name-event.test.ts",
+      "total": 62,
+      "sha256": "a994595450975f3216f0b73b7ea430aa818e90fdb3578f5f76d0843d05ec858d",
+      "baseline": "a994595450975f3216f0b73b7ea430aa818e90fdb3578f5f76d0843d05ec858d",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5217-compaction-reason.test.ts",
+      "total": 96,
+      "sha256": "c787a7d9aec5000938aca9890dfc39fa6a8b70824fcab4658060d6b741f8fdc0",
+      "baseline": "c787a7d9aec5000938aca9890dfc39fa6a8b70824fcab4658060d6b741f8fdc0",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "total": 523,
+      "sha256": "6b1b5807cf0886aa199de17452f2310f917d1c0f84e509a50ce078663ea22ef0",
+      "baseline": "6b1b5807cf0886aa199de17452f2310f917d1c0f84e509a50ce078663ea22ef0",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          523
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5996-session-name-newlines.test.ts",
+      "total": 41,
+      "sha256": "f3d7cb50c29bb3a5cc1580ac29564405c0698cff59c071b84dde5f56a5257928",
+      "baseline": "f3d7cb50c29bb3a5cc1580ac29564405c0698cff59c071b84dde5f56a5257928",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6647-compaction-retries-transient-stream-drop.test.ts",
+      "total": 193,
+      "sha256": "dbdb9d7c205db905956988de53bc98af2e297d97e7befbf9a9550c07cd9c2397",
+      "baseline": "dbdb9d7c205db905956988de53bc98af2e297d97e7befbf9a9550c07cd9c2397",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          193
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6768-copilot-compaction-base-url.test.ts",
+      "total": 115,
+      "sha256": "045b5acb3845b13e58977e575651e0b62329b665ff2b3ffab19823ef5c7dec09",
+      "baseline": "045b5acb3845b13e58977e575651e0b62329b665ff2b3ffab19823ef5c7dec09",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+      "total": 92,
+      "sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "baseline": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7497-session-discovery-symlink.test.ts",
+      "total": 76,
+      "sha256": "e94fa649047b6ef68b3deadc21750107f90b2584f6489c929cd87a9c5deaf834",
+      "baseline": "e94fa649047b6ef68b3deadc21750107f90b2584f6489c929cd87a9c5deaf834",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/9178-tree-during-compaction.test.ts",
+      "total": 188,
+      "sha256": "1be72788c7004a796cb7e5636236f07b9fb1b0e7bbf512ce1a37fa23fdf41d89",
+      "baseline": "1be72788c7004a796cb7e5636236f07b9fb1b0e7bbf512ce1a37fa23fdf41d89",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+      "total": 132,
+      "sha256": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "baseline": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/9340-message-queue-integrity.test.ts",
+      "total": 152,
+      "sha256": "b4d37ee91d1fa290ee73fc67fb6776a95a3e45e30a08a5c3adb336e693a6eb6f",
+      "baseline": "b4d37ee91d1fa290ee73fc67fb6776a95a3e45e30a08a5c3adb336e693a6eb6f",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/9340-runtime-session-settlement.test.ts",
+      "total": 205,
+      "sha256": "58d0766ba115d36d5d60a7f4af9f231d66e05c597c61f47e8953a12cc520c979",
+      "baseline": "58d0766ba115d36d5d60a7f4af9f231d66e05c597c61f47e8953a12cc520c979",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          205
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/pre-prompt-compaction-no-continue.test.ts",
+      "total": 76,
+      "sha256": "a91812c3d0a65689af52e6de3770ab219e1b8489f2ac43fb0dac899a474ca085",
+      "baseline": "a91812c3d0a65689af52e6de3770ab219e1b8489f2ac43fb0dac899a474ca085",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "total": 82,
+      "sha256": "d37e741d73ca8b532b3a48117330add00466965c5724a52bd1169f542bf41ee7",
+      "baseline": "d37e741d73ca8b532b3a48117330add00466965c5724a52bd1169f542bf41ee7",
+      "baseline_matched": true,
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "fully_read": true,
+      "reviewer": "coordinator"
+    }
+  ],
+  "partial_rust_unread": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "unread_ranges": [
+        [
+          1,
+          542
+        ],
+        [
+          721,
+          1384
+        ],
+        [
+          1511,
+          2889
+        ],
+        [
+          2956,
+          3398
+        ]
+      ],
+      "reason": "Only the listed read ranges participate in session caller/wiring comparisons. Remaining methods/rendering paths are outside these bounded claims; no full-file read asserted."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "total": 510,
+      "sha256": "305045059eef3be87ecae1b9f8aeb37e7478622cd49c275f5ec86ef602cc56b7",
+      "unread_ranges": [
+        [
+          1,
+          139
+        ],
+        [
+          221,
+          451
+        ]
+      ],
+      "reason": "Only the listed read ranges participate in session caller/wiring comparisons. Remaining methods/rendering paths are outside these bounded claims; no full-file read asserted."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/rendering.rs",
+      "total": 562,
+      "sha256": "8591b67159e2033020428f7d38c889379f0634b9e963a18e04965ac1b5ed1317",
+      "unread_ranges": [
+        [
+          1,
+          489
+        ],
+        [
+          557,
+          562
+        ]
+      ],
+      "reason": "Only the listed read ranges participate in session caller/wiring comparisons. Remaining methods/rendering paths are outside these bounded claims; no full-file read asserted."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "total": 5844,
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "unread_ranges": [
+        [
+          1,
+          681
+        ],
+        [
+          811,
+          999
+        ],
+        [
+          1614,
+          2010
+        ],
+        [
+          2321,
+          3174
+        ],
+        [
+          3261,
+          3499
+        ],
+        [
+          4991,
+          5844
+        ]
+      ],
+      "reason": "Only the listed read ranges participate in session caller/wiring comparisons. Remaining methods/rendering paths are outside these bounded claims; no full-file read asserted."
+    }
+  ],
+  "additional_unread_tests": [],
+  "test_identity_verification": {
+    "revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "tracked_paths": [
+      "packages/agent/test/harness/compaction.test.ts",
+      "packages/agent/test/harness/session-test-utils.ts",
+      "packages/coding-agent/test/agent-session-auto-compaction-queue.test.ts",
+      "packages/coding-agent/test/agent-session-branching.test.ts",
+      "packages/coding-agent/test/agent-session-compaction.test.ts",
+      "packages/coding-agent/test/agent-session-concurrent.test.ts",
+      "packages/coding-agent/test/agent-session-dynamic-provider.test.ts",
+      "packages/coding-agent/test/agent-session-dynamic-tools.test.ts",
+      "packages/coding-agent/test/agent-session-retry.test.ts",
+      "packages/coding-agent/test/agent-session-runtime-events.test.ts",
+      "packages/coding-agent/test/agent-session-stats.test.ts",
+      "packages/coding-agent/test/agent-session-tree-navigation.test.ts",
+      "packages/coding-agent/test/cache-stats.test.ts",
+      "packages/coding-agent/test/compaction-extensions-example.test.ts",
+      "packages/coding-agent/test/compaction-extensions.test.ts",
+      "packages/coding-agent/test/compaction-serialization.test.ts",
+      "packages/coding-agent/test/compaction-summary-reasoning.test.ts",
+      "packages/coding-agent/test/compaction.test.ts",
+      "packages/coding-agent/test/context-breakdown.test.ts",
+      "packages/coding-agent/test/sdk-session-manager.test.ts",
+      "packages/coding-agent/test/session-cwd.test.ts",
+      "packages/coding-agent/test/session-file-invalid.test.ts",
+      "packages/coding-agent/test/session-header.test.ts",
+      "packages/coding-agent/test/session-id-readonly.test.ts",
+      "packages/coding-agent/test/session-info-modified-timestamp.test.ts",
+      "packages/coding-agent/test/session-manager-events.test.ts",
+      "packages/coding-agent/test/session-manager/build-context.test.ts",
+      "packages/coding-agent/test/session-manager/custom-session-id.test.ts",
+      "packages/coding-agent/test/session-manager/file-operations.test.ts",
+      "packages/coding-agent/test/session-manager/fork-integrity.test.ts",
+      "packages/coding-agent/test/session-manager/labels.test.ts",
+      "packages/coding-agent/test/session-manager/migration.test.ts",
+      "packages/coding-agent/test/session-manager/save-entry.test.ts",
+      "packages/coding-agent/test/session-manager/tree-traversal.test.ts",
+      "packages/coding-agent/test/session-manager/unterminated-tail.test.ts",
+      "packages/coding-agent/test/suite/agent-session-bash-persistence.test.ts",
+      "packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts",
+      "packages/coding-agent/test/suite/agent-session-compaction.test.ts",
+      "packages/coding-agent/test/suite/agent-session-configuration-events.test.ts",
+      "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+      "packages/coding-agent/test/suite/agent-session-operation-cancellation.test.ts",
+      "packages/coding-agent/test/suite/agent-session-prompt.test.ts",
+      "packages/coding-agent/test/suite/agent-session-queue.test.ts",
+      "packages/coding-agent/test/suite/agent-session-retry-events.test.ts",
+      "packages/coding-agent/test/suite/agent-session-runtime.test.ts",
+      "packages/coding-agent/test/suite/agent-session-tool-result-images.test.ts",
+      "packages/coding-agent/test/suite/blackhole-compaction.test.ts",
+      "packages/coding-agent/test/suite/compaction-summary-validation.test.ts",
+      "packages/coding-agent/test/suite/regressions/1717-2113-agent-session-event-settlement.test.ts",
+      "packages/coding-agent/test/suite/regressions/2860-replaced-session-context.test.ts",
+      "packages/coding-agent/test/suite/regressions/3686-session-name-event.test.ts",
+      "packages/coding-agent/test/suite/regressions/5217-compaction-reason.test.ts",
+      "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "packages/coding-agent/test/suite/regressions/5996-session-name-newlines.test.ts",
+      "packages/coding-agent/test/suite/regressions/6647-compaction-retries-transient-stream-drop.test.ts",
+      "packages/coding-agent/test/suite/regressions/6768-copilot-compaction-base-url.test.ts",
+      "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+      "packages/coding-agent/test/suite/regressions/7497-session-discovery-symlink.test.ts",
+      "packages/coding-agent/test/suite/regressions/9178-tree-during-compaction.test.ts",
+      "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+      "packages/coding-agent/test/suite/regressions/9340-message-queue-integrity.test.ts",
+      "packages/coding-agent/test/suite/regressions/9340-runtime-session-settlement.test.ts",
+      "packages/coding-agent/test/suite/regressions/pre-prompt-compaction-no-continue.test.ts",
+      "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "packages/coding-agent/test/usage-totals.test.ts",
+      "packages/storage/sqlite-node/test/adapter.test.ts",
+      "packages/storage/sqlite-node/test/branch-cache.test.ts",
+      "packages/storage/sqlite-node/test/conformance.test.ts",
+      "packages/storage/sqlite-node/test/leases.test.ts",
+      "packages/storage/sqlite-node/test/migrations.test.ts",
+      "packages/storage/sqlite-node/test/repository.test.ts",
+      "packages/storage/sqlite-node/test/search.test.ts",
+      "packages/storage/sqlite-node/test/test-utils.ts"
+    ],
+    "tracked_count": 73,
+    "git_ls_files_exit_code": 0,
+    "git_diff_exit_code": 0,
+    "changed_paths": [],
+    "explanation": "Read-only git metadata checks, not application/test execution. All 73 tracked inspected/inventoried test files matched the recorded revision; current SHA-256 values are recorded without inventing prior manifest hashes."
+  },
+  "retrieval_limitations": [
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/search-backend.ts",
+      "ranges": [
+        [
+          45,
+          45
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "The exact FTS tokenizer declaration was not visible; inspected search tests establish substring/trigram behavior, not undisclosed tokenizer options. SESSION-009 explicitly retains this limitation."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "ranges": [
+        [
+          3855,
+          3855
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "The context-token helper expression was not visible. Surrounding positive-usage control flow and inspected stats tests support only the described behavior."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/context-breakdown.ts",
+      "ranges": [
+        [
+          215,
+          215
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "Inspected context-breakdown tests establish measured-token precedence and null fallback; source literal is not invented."
+    },
+    {
+      "path": "rust:crates/ice-harness/src/cache_stats.rs",
+      "ranges": [
+        [
+          95,
+          95
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "Tests 301-325 and surrounding source support bounded cache diagnostics; exact formula literal not certified."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "ranges": [
+        [
+          471,
+          471
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "The caller's positive-usage gate was visible; the hidden helper expression is not treated as separately verified."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "ranges": [
+        [
+          2170,
+          2170
+        ]
+      ],
+      "status": "redacted-call-site-with-visible-helper",
+      "impact": "The actual modelAwareReserveTokens helper at compaction/compaction.ts:271-273 was read and establishes min(maxTokens,floor(contextWindow/2)); no hidden call-site argument is invented."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "ranges": [
+        [
+          2283,
+          2283
+        ]
+      ],
+      "status": "redacted-expression",
+      "impact": "Extension compaction result tokensBefore assignment is bounded by the visible result schema and surrounding code; hidden literal expression is not reproduced."
+    }
+  ],
+  "verification": {
+    "type": "source-only",
+    "application_tests_run": false,
+    "application_execution": false,
+    "source_modified": false,
+    "network_commands": false,
+    "forbidden_home_state_access": false,
+    "citation_checker": "inspect-spec.mjs validates referenced file existence and line bounds only; it does not validate behavior, coverage, or runtime outcomes.",
+    "behavioral_evidence": "Full assigned implementation reads, genuine Rust counterpart/caller reads, relevant test assertions read as source, and manually checked control flow."
+  },
+  "dependencies": [
+    {
+      "entry_ids": [
+        "SESSION-011",
+        "SESSION-012",
+        "SESSION-014",
+        "SESSION-018"
+      ],
+      "target": "AI-001",
+      "status": "stable-id-reserved-by-coordinator",
+      "reason": "Shared stream retry classification/policy is AI-owned; session entries retain caller routing, callback lifecycle and cancellation differences."
+    },
+    {
+      "entry_ids": [
+        "SESSION-035"
+      ],
+      "target": "SET-003",
+      "status": "stable-id-reserved-by-coordinator",
+      "reason": "Project-trust persistence/decision policy is Settings-owned; session entry covers extension/resource loading and reload order."
+    },
+    {
+      "entry_ids": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "target": "TOOLS-002 through TOOLS-013",
+      "status": "stable-ids-confirmed",
+      "reason": "Do not duplicate environment injection, process registry, shell control, stdin, watch/timer mechanics. Session owns dynamic registration, delivery/wake and disposal."
+    },
+    {
+      "entry_ids": [
+        "SESSION-019",
+        "SESSION-020",
+        "SESSION-022",
+        "SESSION-026",
+        "SESSION-035"
+      ],
+      "target": "EXT-008/009/010/019/020/021/022/024/030/031",
+      "status": "stable-ids-confirmed",
+      "reason": "Extension dispatch/reducer/context behavior is Extensions-owned. Session entries specify hook caller order and mutation boundaries."
+    },
+    {
+      "entry_ids": [
+        "SESSION-036"
+      ],
+      "target": "providers-auth area (next assigned review)",
+      "status": "bounded-follow-up",
+      "reason": "Provider/model catalog and reasoning-level policy, including the ultra lead in ICE_PORTING.md, require the next area's reconciliation. SESSION-036 describes actual session selection/restoration calls without claiming catalog completeness."
+    },
+    {
+      "entry_ids": [
+        "SESSION-038"
+      ],
+      "target": "export/UI owner",
+      "status": "integration-description-only",
+      "reason": "Session passes current theme/tool renderer to HTML export; detailed HTML rendering/export UI belongs to its assigned area. No future ID invented."
+    }
+  ],
+  "defect_candidates": [
+    {
+      "title": "Concurrent final-clone SpanGuard callback risk",
+      "refs": [
+        "rust:crates/ice-telemetry/src/context.rs:83-103"
+      ],
+      "notes": "Independent source analysis sent to coordinator: two final clones can both observe strong_count>1 before decrement and return without invoking on_drop. Coordinator verified upstream provenance and owns the separate Rust-only defect record. No reproduction was run."
+    },
+    {
+      "title": "WatchHandle buffered-event start race",
+      "refs": [
+        "rust:crates/ice-harness/src/events.rs:303-306",
+        "rust:crates/ice-harness/src/events.rs:419-440"
+      ],
+      "notes": "Independent source analysis sent to coordinator: an emit after the final empty drain but before started=true may enqueue an event that is not re-drained. Preserve native watch capability while fixing this separate defect; do not present it as evidence of implemented TS v2 scaffolding. No reproduction was run."
+    }
+  ],
+  "next_action": "Publish the reviewed session draft, retaining global reconciliation and active-checkout validation gates.",
+  "closed_test_backlog": [
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-bash-persistence.test.ts",
+      "sha256": "223eae2a1b45fb42fe6b4f4a3efbaff6cb048d0ec7beea0b72f9100c22b6fe36",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-compaction-lock.test.ts",
+      "sha256": "52d92e5dcf2eaac57cb07adf78b1bf37745512b40f83da3c1861d6713af0ba51",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-compaction.test.ts",
+      "sha256": "dce9a66fcb82bcc9953ceb235e154ede07b19e03e30a0e45a218c50bad37d03d",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-configuration-events.test.ts",
+      "sha256": "c24db91c32eb8ce71d61e49278311cc9ab0b67ef9d9acde6562ae68b3fd587a5",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+      "sha256": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-operation-cancellation.test.ts",
+      "sha256": "41526305c21ce0c6965c9bfb6b24d4eee47e9396112632be70668757fc6bb8e2",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-prompt.test.ts",
+      "sha256": "c9afec10bb86a97c259ab8d590fa5239e120dd3318593d5905b66c246e88ab86",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-queue.test.ts",
+      "sha256": "a647208ab5f18d8d18243b15d11f6a044702b9b436e9c052e45c945242581a87",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-retry-events.test.ts",
+      "sha256": "19bacaef935d4b15c6e3d6e216ec905547d0b3bf9d042c01d64fe380c2749e9a",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-runtime.test.ts",
+      "sha256": "804e4a9651277b35bba07523de5a34d84125247568b5ab678a4d68707acbb4fd",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-tool-result-images.test.ts",
+      "sha256": "feb536c276222f98656c6b1fd9e77be438658b95a7ad8bec5296904b265a1942",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/blackhole-compaction.test.ts",
+      "sha256": "8e2a2f98e862d69a0983f90aa83a9885f575f8273dc1d1a6dc97134ff40d6903",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/1717-2113-agent-session-event-settlement.test.ts",
+      "sha256": "2eda63723612e2c1d64e69a688c47162a98c9e4fb81ed47fe829e7337c3175ec",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/2860-replaced-session-context.test.ts",
+      "sha256": "b716b622596b025e148bf7f022800159dfd64f32dd0fe72f88d194003a6e7018",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/3686-session-name-event.test.ts",
+      "sha256": "a994595450975f3216f0b73b7ea430aa818e90fdb3578f5f76d0843d05ec858d",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5217-compaction-reason.test.ts",
+      "sha256": "c787a7d9aec5000938aca9890dfc39fa6a8b70824fcab4658060d6b741f8fdc0",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "sha256": "6b1b5807cf0886aa199de17452f2310f917d1c0f84e509a50ce078663ea22ef0",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5996-session-name-newlines.test.ts",
+      "sha256": "f3d7cb50c29bb3a5cc1580ac29564405c0698cff59c071b84dde5f56a5257928",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6647-compaction-retries-transient-stream-drop.test.ts",
+      "sha256": "dbdb9d7c205db905956988de53bc98af2e297d97e7befbf9a9550c07cd9c2397",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6768-copilot-compaction-base-url.test.ts",
+      "sha256": "045b5acb3845b13e58977e575651e0b62329b665ff2b3ffab19823ef5c7dec09",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+      "sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7497-session-discovery-symlink.test.ts",
+      "sha256": "e94fa649047b6ef68b3deadc21750107f90b2584f6489c929cd87a9c5deaf834",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9178-tree-during-compaction.test.ts",
+      "sha256": "1be72788c7004a796cb7e5636236f07b9fb1b0e7bbf512ce1a37fa23fdf41d89",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+      "sha256": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-message-queue-integrity.test.ts",
+      "sha256": "b4d37ee91d1fa290ee73fc67fb6776a95a3e45e30a08a5c3adb336e693a6eb6f",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-runtime-session-settlement.test.ts",
+      "sha256": "58d0766ba115d36d5d60a7f4af9f231d66e05c597c61f47e8953a12cc520c979",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/pre-prompt-compaction-no-continue.test.ts",
+      "sha256": "a91812c3d0a65689af52e6de3770ab219e1b8489f2ac43fb0dac899a474ca085",
+      "closure": "qa-session-test-closure.json"
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "sha256": "d37e741d73ca8b532b3a48117330add00466965c5724a52bd1169f542bf41ee7",
+      "closure": "qa-session-test-closure.json"
+    }
+  ]
+}

@@ -47,22 +47,28 @@ pub(crate) async fn perform(
         };
     }
 
-    let mut lock_name = path.as_os_str().to_os_string();
-    lock_name.push(".lock");
-    let lock = std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(std::path::PathBuf::from(lock_name))
-        .map_err(|error| format!("Could not open the session lock: {error}"))?;
-    fs2::FileExt::try_lock_exclusive(&lock)
-        .map_err(|_| "This session is open in an icers process. Close that session's process before changing it here.".to_string())?;
-    validate_snapshot(row)?;
     match action {
         SessionAction::Delete => {
+            // Rename opens the session through the storage layer, which takes
+            // this same lock; only a delete needs the sidecar lock directly.
+            let mut lock_name = path.as_os_str().to_os_string();
+            lock_name.push(".lock");
+            let lock = std::fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(std::path::PathBuf::from(lock_name))
+                .map_err(|error| format!("Could not open the session lock: {error}"))?;
+            fs2::FileExt::try_lock_exclusive(&lock)
+            .map_err(|_| "This session is open in an icers process. Close that session's process before changing it here.".to_string())?;
+            validate_snapshot(row)?;
             std::fs::remove_file(&path).map_err(|error| error.to_string())?;
+            // Keep the sidecar inode: removing it could let a new writer lock a
+            // second inode while another process still uses the original.
+            drop(lock);
         }
         SessionAction::Rename(name) => {
             let name = valid_name(name)?;
+            validate_snapshot(row)?;
             // The normal loader may repair torn or duplicate records. A name
             // edit must not silently rewrite history, so reject such files first.
             validate_log_for_rename(&path)?;
@@ -84,9 +90,6 @@ pub(crate) async fn perform(
                 .map_err(|error| error.to_string())?;
         }
     }
-    // Keep the sidecar inode: removing it could let a new writer lock a second
-    // inode while another process is still using the original lock file.
-    drop(lock);
     Ok(())
 }
 
@@ -252,21 +255,15 @@ mod tests {
     async fn changed_or_locked_files_are_not_modified() {
         let temp = tempfile::tempdir().unwrap();
         let (storage, row) = fixture(temp.path()).await;
-        let lock_path = format!("{}.lock", row.path.display());
-        let lock = std::fs::OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(lock_path)
-            .unwrap();
-        fs2::FileExt::try_lock_exclusive(&lock).unwrap();
+        // The fixture's live storage handle owns the session's writer lock.
         let bytes = std::fs::read(&row.path).unwrap();
         assert!(perform(&row, &SessionAction::Delete, None)
             .await
             .unwrap_err()
             .contains("open in"));
         assert_eq!(std::fs::read(&row.path).unwrap(), bytes);
-        drop(lock);
         storage.set_name(Some("external change")).await.unwrap();
+        drop(storage);
         assert!(perform(&row, &SessionAction::Delete, None)
             .await
             .unwrap_err()

@@ -32,7 +32,9 @@ pub fn event_tag_for(event: &AgentEvent) -> Option<EventTag> {
         AgentEvent::AgentStart => Some(EventTag::AgentStart),
         AgentEvent::AgentEnd { .. } => Some(EventTag::AgentEnd),
         // Host-only lifecycle metadata; no plugin ABI variant is introduced.
-        AgentEvent::RetryScheduled { .. } | AgentEvent::RunSettled { .. } => None,
+        AgentEvent::RetryScheduled { .. }
+        | AgentEvent::RetryRefused { .. }
+        | AgentEvent::RunSettled { .. } => None,
         AgentEvent::TurnStart => Some(EventTag::TurnStart),
         AgentEvent::TurnEnd { .. } => Some(EventTag::TurnEnd),
         AgentEvent::MessageStart { .. } => Some(EventTag::MessageStart),
@@ -118,7 +120,9 @@ pub fn translate(event: &AgentEvent) -> Option<StablePluginEvent> {
         | AgentEvent::AgentEnd { .. }
         | AgentEvent::TurnEnd { .. } => Some(StablePluginEvent::empty(tag)),
 
-        AgentEvent::RetryScheduled { .. } | AgentEvent::RunSettled { .. } => None,
+        AgentEvent::RetryScheduled { .. }
+        | AgentEvent::RetryRefused { .. }
+        | AgentEvent::RunSettled { .. } => None,
     }
 }
 

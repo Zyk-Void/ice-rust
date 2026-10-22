@@ -1,0 +1,9 @@
+path,lines,area,entry_ids,status,notes
+packages/coding-agent/docs/extensions.md,3009,extensions,,pending,
+packages/coding-agent/src/core/event-bus.ts,33,extensions,,pending,
+packages/coding-agent/src/core/extensions/index.ts,190,extensions,,pending,
+packages/coding-agent/src/core/extensions/loader.ts,929,extensions,,pending,
+packages/coding-agent/src/core/extensions/runner.ts,1354,extensions,,pending,
+packages/coding-agent/src/core/extensions/types.ts,1810,extensions,,pending,
+packages/coding-agent/src/core/extensions/wrapper.ts,45,extensions,,pending,
+packages/coding-agent/src/core/ice-manifest.ts,61,extensions,,pending,

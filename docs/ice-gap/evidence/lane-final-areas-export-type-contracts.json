@@ -1,0 +1,1864 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "records": [
+    {
+      "symbol": "ResourceCollision",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/diagnostics.ts:1",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/core/diagnostics.ts",
+      "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+      "range": [
+        1,
+        8
+      ],
+      "declaration": "export interface ResourceCollision {\n\tresourceType: \"extension\" | \"skill\" | \"prompt\" | \"theme\";\n\tname: string; // skill name, command/tool/flag name, prompt name, theme name\n\twinnerPath: string;\n\tloserPath: string;\n\twinnerSource?: string; // e.g., \"npm:foo\", \"git:...\", \"local\"\n\tloserSource?: string;\n}"
+    },
+    {
+      "symbol": "SlashCommandSource",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/slash-commands.ts:4",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/core/slash-commands.ts",
+      "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+      "range": [
+        4,
+        4
+      ],
+      "declaration": "export type SlashCommandSource = \"extension\" | \"prompt\" | \"skill\";"
+    },
+    {
+      "symbol": "BuiltinSlashCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/slash-commands.ts:13",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/core/slash-commands.ts",
+      "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+      "range": [
+        13,
+        17
+      ],
+      "declaration": "export interface BuiltinSlashCommand {\n\tname: string;\n\tdescription: string;\n\targumentHint?: string;\n}"
+    },
+    {
+      "symbol": "LlamaModelStatus",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:1",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/client.ts",
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "range": [
+        1,
+        1
+      ],
+      "declaration": "export type LlamaModelStatus = \"unloaded\" | \"loading\" | \"loaded\" | \"downloading\" | \"sleeping\";"
+    },
+    {
+      "symbol": "LlamaModelInfo",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:3",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/client.ts",
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "range": [
+        3,
+        24
+      ],
+      "declaration": "export interface LlamaModelInfo {\n\tid: string;\n\taliases?: string[];\n\tstatus: {\n\t\tvalue: LlamaModelStatus;\n\t\targs?: string[];\n\t\tfailed?: boolean;\n\t\texit_code?: number;\n\t\tprogress?: Record<string, { done: number; total: number }>;\n\t};\n\tarchitecture?: {\n\t\tinput_modalities?: string[];\n\t\toutput_modalities?: string[];\n\t};\n\tsource?: string;\n\tmeta?: {\n\t\tn_ctx?: number;\n\t\tn_ctx_train?: number;\n\t\tsize?: number;\n\t\tftype?: string;\n\t};\n}"
+    },
+    {
+      "symbol": "LlamaModelsResponse",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:26",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/client.ts",
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "range": [
+        26,
+        29
+      ],
+      "declaration": "export interface LlamaModelsResponse {\n\tdata: LlamaModelInfo[];\n\tobject?: string;\n}"
+    },
+    {
+      "symbol": "LlamaModelEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:31",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/client.ts",
+      "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+      "range": [
+        31,
+        35
+      ],
+      "declaration": "export interface LlamaModelEvent {\n\tmodel: string;\n\tevent: string;\n\tdata?: unknown;\n}"
+    },
+    {
+      "symbol": "HuggingFaceModel",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:10",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "range": [
+        10,
+        13
+      ],
+      "declaration": "export interface HuggingFaceModel {\n\tid: string;\n\tdownloads: number;\n}"
+    },
+    {
+      "symbol": "HuggingFaceQuantization",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:15",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "range": [
+        15,
+        18
+      ],
+      "declaration": "export interface HuggingFaceQuantization {\n\tname: string;\n\tsize?: number;\n}"
+    },
+    {
+      "symbol": "HuggingFaceModelDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:20",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "range": [
+        20,
+        24
+      ],
+      "declaration": "export interface HuggingFaceModelDetails {\n\tid: string;\n\tgated: false | \"auto\" | \"manual\";\n\tquantizations: HuggingFaceQuantization[];\n}"
+    },
+    {
+      "symbol": "LlamaManagerAction",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/ui.ts:25",
+      "covering_entries": [
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+      "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+      "range": [
+        25,
+        25
+      ],
+      "declaration": "export type LlamaManagerAction = { type: \"model\"; model: LlamaModelInfo } | { type: \"download\" } | { type: \"close\" };"
+    },
+    {
+      "symbol": "LlamaUi",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/ui.ts:77",
+      "covering_entries": [
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/extensions/llama/ui.ts",
+      "sha256": "1ee9f6c2e065c8b0b3d936e3423b87d97a0129eddd0802ed55a61339cd95065e",
+      "range": [
+        77,
+        88
+      ],
+      "declaration": "export interface LlamaUi {\n\tshowModels(serverUrl: string, models: LlamaModelInfo[]): Promise<LlamaManagerAction>;\n\tselect(title: string, options: string[]): Promise<string | undefined>;\n\tconfirm(title: string, message: string): Promise<boolean>;\n\tconnectionError(serverUrl: string, message: string): Promise<\"retry\" | \"close\">;\n\tsearchModels(\n\t\tsearch: (query: string, signal: AbortSignal) => Promise<HuggingFaceModel[]>,\n\t): Promise<string | undefined>;\n\tshowStatus(title: string, message: string): void;\n\tprogress(state: ProgressState): Promise<void>;\n\tupdateProgress(state: ProgressState): void;\n}"
+    },
+    {
+      "symbol": "PrintModeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/print-mode.ts:18",
+      "covering_entries": [
+        "MISC-015"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/print-mode.ts",
+      "sha256": "5562a121cc75a477d16fb11f79715afb26e1ab28c8158b7d8cc61570200203c9",
+      "range": [
+        18,
+        27
+      ],
+      "declaration": "export interface PrintModeOptions {\n\t/** Output mode: \"text\" for final response only, \"json\" for all events */\n\tmode: \"text\" | \"json\";\n\t/** Array of additional prompts to send after initialMessage */\n\tmessages?: string[];\n\t/** First message to send (may contain @file content) */\n\tinitialMessage?: string;\n\t/** Images to attach to the initial message */\n\tinitialImages?: ImageContent[];\n}"
+    },
+    {
+      "symbol": "ProcessImageOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-process.ts:4",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/image-process.ts",
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "range": [
+        4,
+        9
+      ],
+      "declaration": "export interface ProcessImageOptions {\n\t/** Whether to resize images to inline provider limits. Default: true */\n\tautoResizeImages?: boolean;\n\t/** Optional resize overrides. Uses resizeImage defaults when omitted. */\n\tresizeOptions?: ImageResizeOptions;\n}"
+    },
+    {
+      "symbol": "ProcessImageResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-process.ts:11",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/image-process.ts",
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "range": [
+        11,
+        21
+      ],
+      "declaration": "export type ProcessImageResult =\n\t| {\n\t\t\tok: true;\n\t\t\tdata: string;\n\t\t\tmimeType: string;\n\t\t\thints: string[];\n\t  }\n\t| {\n\t\t\tok: false;\n\t\t\tmessage: string;\n\t  };"
+    },
+    {
+      "symbol": "ImageResizeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-resize-core.ts:4",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+      "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+      "range": [
+        4,
+        9
+      ],
+      "declaration": "export interface ImageResizeOptions {\n\tmaxWidth?: number; // Default: 2000\n\tmaxHeight?: number; // Default: 2000\n\tmaxBytes?: number; // Default: 4.5MB of base64 payload (below Anthropic's 5MB limit)\n\tjpegQuality?: number; // Default: 80\n}"
+    },
+    {
+      "symbol": "ResizedImage",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/image-resize-core.ts:11",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/image-resize-core.ts",
+      "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+      "range": [
+        11,
+        19
+      ],
+      "declaration": "export interface ResizedImage {\n\tdata: string; // base64\n\tmimeType: string;\n\toriginalWidth: number;\n\toriginalHeight: number;\n\twidth: number;\n\theight: number;\n\twasResized: boolean;\n}"
+    },
+    {
+      "symbol": "PathInputOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/paths.ts:9",
+      "covering_entries": [
+        "CLI-020",
+        "SET-001",
+        "TOOLS-020"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/paths.ts",
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "range": [
+        9,
+        20
+      ],
+      "declaration": "export interface PathInputOptions {\n\t/** Trim leading/trailing whitespace before normalization. */\n\ttrim?: boolean;\n\t/** Expand leading `~` to a home directory. Defaults to true. */\n\texpandTilde?: boolean;\n\t/** Home directory used for `~` expansion. Defaults to `os.homedir()`. */\n\thomeDir?: string;\n\t/** Strip a leading `@`, used for CLI @file paths. */\n\tstripAtPrefix?: boolean;\n\t/** Normalize unicode space variants to regular spaces. */\n\tnormalizeUnicodeSpaces?: boolean;\n}"
+    },
+    {
+      "symbol": "HighlightFormatter",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/syntax-highlight.ts:4",
+      "covering_entries": [
+        "TUI-005"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+      "sha256": "14cc46cfbf5c0ef65bd1e9560a7d35fbb064ae3248f0a76ce99c1c8a12289814",
+      "range": [
+        4,
+        4
+      ],
+      "declaration": "export type HighlightFormatter = (text: string) => string;"
+    },
+    {
+      "symbol": "NormalizeToolResultImagesOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/tool-result-images.ts:6",
+      "covering_entries": [
+        "MISC-003"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/tool-result-images.ts",
+      "sha256": "fa013df57d97cd75b93ab8331f2803b37c35354a93c422186ddd0acb071914d7",
+      "range": [
+        6,
+        9
+      ],
+      "declaration": "export interface NormalizeToolResultImagesOptions {\n\t/** Whether oversized images are resized to inline provider limits. Default: true */\n\tautoResizeImages?: boolean;\n}"
+    },
+    {
+      "symbol": "LatestIceRelease",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/utils/version-check.ts:11",
+      "covering_entries": [
+        "MISC-001"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/utils/version-check.ts",
+      "sha256": "dff17c50f8779bce49a57eceaa4132825da16c4b22a6c16192f13aa4e8ed3e32",
+      "range": [
+        11,
+        15
+      ],
+      "declaration": "export interface LatestIceRelease {\n\tversion: string;\n\tpackageName?: string;\n\tnote?: string;\n}"
+    },
+    {
+      "symbol": "EvalHarnessIterationArtifact",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:12",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "range": [
+        12,
+        20
+      ],
+      "declaration": "export type EvalHarnessIterationArtifact = {\n\tschemaVersion: 1;\n\tevalSet: string;\n\tgroupKey: string;\n\tharness: string;\n\tbaseline: string;\n\tcandidates: string[];\n\trepetition: number;\n};"
+    },
+    {
+      "symbol": "EvalHarnessTableRow",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:22",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "range": [
+        22,
+        26
+      ],
+      "declaration": "export type EvalHarnessTableRow<TInput, TOutput extends JsonValue | undefined> = {\n\tharness: Harness<TInput, TOutput>;\n\tname: string;\n\trepetition: number;\n};"
+    },
+    {
+      "symbol": "EvalHarnessTablePairOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:28",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "range": [
+        28,
+        32
+      ],
+      "declaration": "export type EvalHarnessTablePairOptions<TInput, TOutput extends JsonValue | undefined> = {\n\tbaseline: Harness<TInput, TOutput>;\n\tcandidate: Harness<TInput, TOutput>;\n\trepetitions?: number;\n};"
+    },
+    {
+      "symbol": "EvalHarnessTableCandidatesOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:34",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "range": [
+        34,
+        38
+      ],
+      "declaration": "export type EvalHarnessTableCandidatesOptions<TInput, TOutput extends JsonValue | undefined> = {\n\tbaseline: Harness<TInput, TOutput>;\n\tcandidates: readonly Harness<TInput, TOutput>[];\n\trepetitions?: number;\n};"
+    },
+    {
+      "symbol": "EvalHarnessTableOptions",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/harness-table.ts:40",
+      "covering_entries": [
+        "MISC-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "range": [
+        40,
+        42
+      ],
+      "declaration": "export type EvalHarnessTableOptions<TInput, TOutput extends JsonValue | undefined> =\n\t| EvalHarnessTablePairOptions<TInput, TOutput>\n\t| EvalHarnessTableCandidatesOptions<TInput, TOutput>;"
+    },
+    {
+      "symbol": "CorrectnessLiftSummary",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:30",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "range": [
+        30,
+        39
+      ],
+      "declaration": "export type CorrectnessLiftSummary = {\n\ttotalPairs: number;\n\teligiblePairs: number;\n\tbaselinePassRate: number | null;\n\tcandidatePassRate: number | null;\n\tlift: number | null;\n\tbaselineWins: number;\n\tcandidateWins: number;\n\tties: number;\n};"
+    },
+    {
+      "symbol": "HarnessPairComparison",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:41",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "range": [
+        41,
+        48
+      ],
+      "declaration": "export type HarnessPairComparison = {\n\tbaseline: string;\n\tcandidate: string;\n\tcorrectness: CorrectnessLiftSummary;\n\ttotalTokens: PairedMetricSummary;\n\ttotalMs: PairedMetricSummary;\n\testimatedCostUsd: PairedMetricSummary;\n};"
+    },
+    {
+      "symbol": "HarnessComparisonDiagnostic",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:50",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "range": [
+        50,
+        58
+      ],
+      "declaration": "export type HarnessComparisonDiagnostic = {\n\tevalSet: string;\n\tgroupKey: string;\n\ttestName: string;\n\tfile: string;\n\trepetition: number;\n\tharness: string;\n\treason: \"missing-observation\" | \"duplicate-observation\" | \"harness-error\" | \"missing-score\" | \"unscorable-outcome\";\n};"
+    },
+    {
+      "symbol": "HarnessEvalSetReport",
+      "kind": "type",
+      "ts": "ice:packages/evals/src/vitest-evals/summary.ts:60",
+      "covering_entries": [
+        "MISC-047"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "range": [
+        60,
+        63
+      ],
+      "declaration": "export type HarnessEvalSetReport = {\n\tevalSet: string;\n\tcomparisons: HarnessPairComparison[];\n};"
+    },
+    {
+      "symbol": "GitPaths",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/footer-data-provider.ts:6",
+      "covering_entries": [
+        "TUI-037"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/core/footer-data-provider.ts",
+      "sha256": "36d817a29de32009855af6eb5010452e246e644571b9f595d952a1b66fe82bb2",
+      "range": [
+        6,
+        10
+      ],
+      "declaration": "export type GitPaths = {\n\trepoDir: string;\n\tcommonGitDir: string;\n\theadPath: string;\n};"
+    },
+    {
+      "symbol": "GitWorkingStatus",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/footer-data-provider.ts:84",
+      "covering_entries": [
+        "TUI-037"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/core/footer-data-provider.ts",
+      "sha256": "36d817a29de32009855af6eb5010452e246e644571b9f595d952a1b66fe82bb2",
+      "range": [
+        84,
+        88
+      ],
+      "declaration": "export interface GitWorkingStatus {\n\tahead: number;\n\tbehind: number;\n\tdirty: number;\n}"
+    },
+    {
+      "symbol": "ProfileResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:16",
+      "covering_entries": [
+        "TUI-011"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts",
+      "sha256": "406247f42db4806b2331a76dcf615e3a7a4531cb7158b6577eb5869d170a0838",
+      "range": [
+        16,
+        19
+      ],
+      "declaration": "export interface ProfileResult {\n\tsuccess: boolean;\n\terror?: string;\n}"
+    },
+    {
+      "symbol": "BundleImportResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts:314",
+      "covering_entries": [
+        "TUI-012"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-profiles.ts",
+      "sha256": "406247f42db4806b2331a76dcf615e3a7a4531cb7158b6577eb5869d170a0838",
+      "range": [
+        314,
+        319
+      ],
+      "declaration": "export interface BundleImportResult {\n\tsuccess: boolean;\n\tbundle?: AppearanceBundleV2;\n\terror?: string;\n\tappearanceIssues?: string[];\n}"
+    },
+    {
+      "symbol": "AppearanceColorRole",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts:5",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-resolve.ts",
+      "sha256": "839e6dcfaa3b5a82fc87d3880ccf6d8cf70eb509d32d7404ff100319013f47c6",
+      "range": [
+        5,
+        5
+      ],
+      "declaration": "export type AppearanceColorRole = \"fg\" | \"bg\";"
+    },
+    {
+      "symbol": "AppearanceBorderStyle",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:23",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        23,
+        34
+      ],
+      "declaration": "export type AppearanceBorderStyle =\n\t| \"none\"\n\t| \"single\"\n\t| \"double\"\n\t| \"round\"\n\t| \"bold\"\n\t| \"single-double\"\n\t| \"double-single\"\n\t| \"classic\"\n\t| \"top-bottom-single\"\n\t| \"top-bottom-double\"\n\t| \"top-bottom-bold\";"
+    },
+    {
+      "symbol": "AppearanceInputBorderStyle",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:37",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        37,
+        37
+      ],
+      "declaration": "export type AppearanceInputBorderStyle = \"none\" | \"single\" | \"double\" | \"round\" | \"bold\";"
+    },
+    {
+      "symbol": "AppearanceTableStyle",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:58",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        58,
+        58
+      ],
+      "declaration": "export type AppearanceTableStyle = \"unicode\" | \"ascii\" | \"clean\" | \"clean-top-bottom\" | \"raw\";"
+    },
+    {
+      "symbol": "StatusIndicatorAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:67",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        67,
+        70
+      ],
+      "declaration": "export interface StatusIndicatorAppearance {\n\tindicator: IndicatorAppearance;\n\tlabel: TextPresentation;\n}"
+    },
+    {
+      "symbol": "InputBoxAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:84",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        84,
+        89
+      ],
+      "declaration": "export interface InputBoxAppearance {\n\tborderStyle: AppearanceInputBorderStyle;\n\tidleBorderColor: AppearanceColor;\n\tactiveBorderColor: AppearanceColor;\n\tpaddingX: number;\n}"
+    },
+    {
+      "symbol": "AssistantMessageAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:91",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        91,
+        97
+      ],
+      "declaration": "export interface AssistantMessageAppearance {\n\tpaddingX: number;\n\tpaddingY: number;\n\tbackground: AppearanceColor;\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n}"
+    },
+    {
+      "symbol": "ThinkingLabelAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:99",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        99,
+        103
+      ],
+      "declaration": "export interface ThinkingLabelAppearance {\n\tformat: string;\n\tverbs: string[];\n\tselection: \"cycle\" | \"random\";\n}"
+    },
+    {
+      "symbol": "ThinkingBlockAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:105",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        105,
+        110
+      ],
+      "declaration": "export interface ThinkingBlockAppearance {\n\tshowByDefault: boolean;\n\thiddenLabel: string;\n\tstyles: AppearanceTextStyle[];\n\tforeground: AppearanceColor;\n}"
+    },
+    {
+      "symbol": "MarkdownHeadingAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:112",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        112,
+        124
+      ],
+      "declaration": "export interface MarkdownHeadingAppearance {\n\t/** Shared heading presentation applied to every level. */\n\tbase: TextPresentation;\n\t/** Optional per-level refinements on top of the shared style. */\n\toverrides: {\n\t\th1?: TextPresentation;\n\t\th2?: TextPresentation;\n\t\th3?: TextPresentation;\n\t\th4?: TextPresentation;\n\t\th5?: TextPresentation;\n\t\th6?: TextPresentation;\n\t};\n}"
+    },
+    {
+      "symbol": "MarkdownCodeBlockAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:126",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        126,
+        133
+      ],
+      "declaration": "export interface MarkdownCodeBlockAppearance {\n\ttext: TextPresentation;\n\tbackground: AppearanceColor;\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n\tpaddingX: number;\n\tpaddingY: number;\n}"
+    },
+    {
+      "symbol": "MarkdownQuoteAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:135",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        135,
+        140
+      ],
+      "declaration": "export interface MarkdownQuoteAppearance {\n\ttext: TextPresentation;\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n\tpaddingX: number;\n}"
+    },
+    {
+      "symbol": "ToolStateAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:158",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        158,
+        160
+      ],
+      "declaration": "export interface ToolStateAppearance {\n\tbackground: AppearanceColor;\n}"
+    },
+    {
+      "symbol": "ToolAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:162",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        162,
+        172
+      ],
+      "declaration": "export interface ToolAppearance {\n\tpaddingX: number;\n\tpaddingY: number;\n\ttitle: TextPresentation;\n\toutput: TextPresentation;\n\tstates: {\n\t\tpending: ToolStateAppearance;\n\t\tsuccess: ToolStateAppearance;\n\t\terror: ToolStateAppearance;\n\t};\n}"
+    },
+    {
+      "symbol": "BashAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:174",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        174,
+        181
+      ],
+      "declaration": "export interface BashAppearance {\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n\tpaddingX: number;\n\tcommand: TextPresentation;\n\toutput: TextPresentation;\n\tstatus: TextPresentation;\n}"
+    },
+    {
+      "symbol": "DiffAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:183",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        183,
+        187
+      ],
+      "declaration": "export interface DiffAppearance {\n\tadded: TextPresentation;\n\tremoved: TextPresentation;\n\tcontext: TextPresentation;\n}"
+    },
+    {
+      "symbol": "FooterFieldId",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:199",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        199,
+        210
+      ],
+      "declaration": "export type FooterFieldId =\n\t| \"cwd\"\n\t| \"branch\"\n\t| \"session\"\n\t| \"usage\"\n\t| \"cache\"\n\t| \"cost\"\n\t| \"context\"\n\t| \"provider\"\n\t| \"model\"\n\t| \"thinking\"\n\t| \"extensions\";"
+    },
+    {
+      "symbol": "FooterAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:212",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        212,
+        219
+      ],
+      "declaration": "export interface FooterAppearance {\n\torder: FooterFieldId[];\n\tvisible: Record<FooterFieldId, boolean>;\n\tseparator: string;\n\tprimary: TextPresentation;\n\tsecondary: TextPresentation;\n\textensions: TextPresentation;\n}"
+    },
+    {
+      "symbol": "ChromeAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:221",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        221,
+        231
+      ],
+      "declaration": "export interface ChromeAppearance {\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n\tselectedForeground: AppearanceColor;\n\tselectedBackground: AppearanceColor;\n\tselectedStyles: AppearanceTextStyle[];\n\tdescription: TextPresentation;\n\thint: TextPresentation;\n\tscrollbarTrack: AppearanceColor;\n\tscrollbarThumb: AppearanceColor;\n}"
+    },
+    {
+      "symbol": "SubagentChromeAppearance",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:233",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        233,
+        244
+      ],
+      "declaration": "export interface SubagentChromeAppearance {\n\tborderStyle: AppearanceBorderStyle;\n\tborderColor: AppearanceColor;\n\tselectedForeground: AppearanceColor;\n\tselectedBackground: AppearanceColor;\n\tselectedStyles: AppearanceTextStyle[];\n\trunning: TextPresentation;\n\tcompleted: TextPresentation;\n\tfailed: TextPresentation;\n\tattention: TextPresentation;\n\tmuted: TextPresentation;\n}"
+    },
+    {
+      "symbol": "AppearanceInputHighlighterRule",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:246",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        246,
+        260
+      ],
+      "declaration": "export interface AppearanceInputHighlighterRule {\n\tid: string;\n\tname: string;\n\tenabled: boolean;\n\tmatcher: {\n\t\tkind: \"literal\";\n\t\tpattern: string;\n\t\t/** v1 matching was case-sensitive; true preserves that behavior. */\n\t\tcaseSensitive: boolean;\n\t};\n\tstyles: AppearanceTextStyle[];\n\tforeground: AppearanceColor;\n\tbackground: AppearanceColor;\n\tpriority: number;\n}"
+    },
+    {
+      "symbol": "AppearanceSettingsV1",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:348",
+      "covering_entries": [
+        "TUI-009",
+        "TUI-012"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        348,
+        370
+      ],
+      "declaration": "export interface AppearanceSettingsV1 {\n\tversion: 1;\n\tuserMessage: UserMessageAppearance;\n\tinputBox: InputBoxAppearance;\n\tthinking: {\n\t\tindicator: IndicatorAppearance;\n\t\tlabel: ThinkingLabelAppearance;\n\t\tblock: ThinkingBlockAppearance;\n\t};\n\tmarkdown: {\n\t\ttableStyle: AppearanceTableStyle;\n\t};\n\tinputHighlighters: {\n\t\tid: string;\n\t\tname: string;\n\t\tenabled: boolean;\n\t\tmatcher: { kind: \"literal\"; pattern: string };\n\t\tstyles: AppearanceTextStyle[];\n\t\tforeground: AppearanceColor;\n\t\tbackground: AppearanceColor;\n\t\tpriority: number;\n\t}[];\n}"
+    },
+    {
+      "symbol": "AppearanceProfileV1",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:372",
+      "covering_entries": [
+        "TUI-009",
+        "TUI-012"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        372,
+        378
+      ],
+      "declaration": "export interface AppearanceProfileV1 {\n\tversion: 1;\n\tname: string;\n\tdescription?: string;\n\ttheme?: string;\n\tappearance: DeepPartial<AppearanceSettingsV1> & { version: 1 };\n}"
+    },
+    {
+      "symbol": "AppearanceBundleV1",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts:380",
+      "covering_entries": [
+        "TUI-009",
+        "TUI-012"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-types.ts",
+      "sha256": "4f1027a223e2d7169fd580b91c720a86c0c28e6424ead276bcbf1bbc2264d42d",
+      "range": [
+        380,
+        388
+      ],
+      "declaration": "export interface AppearanceBundleV1 {\n\tversion: 1;\n\tname?: string;\n\tdescription?: string;\n\tauthor?: string;\n\tthemeName?: string;\n\ttheme?: Record<string, unknown>;\n\tappearance?: DeepPartial<AppearanceSettingsV1> & { version: 1 };\n}"
+    },
+    {
+      "symbol": "AppearanceValidationIssue",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts:15",
+      "covering_entries": [
+        "TUI-009"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/appearance-validate.ts",
+      "sha256": "decc7dd123b81516a66bcab1ca8f835b691655674b6ae0fc321ff85d404353ca",
+      "range": [
+        15,
+        18
+      ],
+      "declaration": "export interface AppearanceValidationIssue {\n\tpath: string;\n\tmessage: string;\n}"
+    },
+    {
+      "symbol": "CustomizationApplyResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts:14",
+      "covering_entries": [
+        "TUI-016"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/customization-draft-session.ts",
+      "sha256": "f6b094e20916695249b627dabd53aae501d834e233890f3cf2e95d57e2f81331",
+      "range": [
+        14,
+        19
+      ],
+      "declaration": "export interface CustomizationApplyResult {\n\tsuccess: boolean;\n\terror?: string;\n\t/** Concrete theme to display after apply (member of the pair when automatic). */\n\tselectedTheme?: string;\n}"
+    },
+    {
+      "symbol": "HighlightSpan",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:14",
+      "covering_entries": [
+        "TUI-017"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts",
+      "sha256": "68920842380eed62809f75b8490bee7b5e99fa7350a9fa34251256f41b8c3f80",
+      "range": [
+        14,
+        20
+      ],
+      "declaration": "export interface HighlightSpan {\n\tstart: number;\n\tend: number;\n\tstyles: AppearanceTextStyle[];\n\tforeground: string | null;\n\tbackground: string | null;\n}"
+    },
+    {
+      "symbol": "TextDecorationSpan",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts:138",
+      "covering_entries": [
+        "TUI-017"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/input-highlighters.ts",
+      "sha256": "68920842380eed62809f75b8490bee7b5e99fa7350a9fa34251256f41b8c3f80",
+      "range": [
+        138,
+        143
+      ],
+      "declaration": "export interface TextDecorationSpan {\n\tstart: number;\n\tend: number;\n\tprefix: string;\n\tsuffix: string;\n}"
+    },
+    {
+      "symbol": "ThemeDraftCommitResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts:28",
+      "covering_entries": [
+        "TUI-014"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/theme-draft-session.ts",
+      "sha256": "fdbade3f525965cdd5e398680bf0fd87f5bc3194cbf2a681609d6aa96cc03761",
+      "range": [
+        28,
+        30
+      ],
+      "declaration": "export interface ThemeDraftCommitResult extends ThemeLibraryResult {\n\tselectedTheme?: string;\n}"
+    },
+    {
+      "symbol": "ThemeLibraryResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/theme-library.ts:12",
+      "covering_entries": [
+        "TUI-013"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/theme-library.ts",
+      "sha256": "5b85835447d0b634add0becef51d53699e46fbb7501a192c18745468c35e592f",
+      "range": [
+        12,
+        15
+      ],
+      "declaration": "export interface ThemeLibraryResult {\n\tsuccess: boolean;\n\terror?: string;\n}"
+    },
+    {
+      "symbol": "UserMessagePresentation",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts:4",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/modes/interactive/appearance/user-message-presentation.ts",
+      "sha256": "d6e827df541a57a85a9d4feb6273d9ff3985bd7cf7f56c3921346ded2641f82a",
+      "range": [
+        4,
+        18
+      ],
+      "declaration": "export interface UserMessagePresentation {\n\tformat: string;\n\tbold: boolean;\n\titalic: boolean;\n\tunderline: boolean;\n\tstrikethrough: boolean;\n\tinverse: boolean;\n\tborderStyle: AppearanceBorderStyle;\n\tpaddingX: number;\n\tpaddingY: number;\n\tfitToContent: boolean;\n\tcolor: (text: string) => string;\n\tbackground: (text: string) => string;\n\tborderColor: (text: string) => string;\n}"
+    },
+    {
+      "symbol": "AppearanceProfileActionResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:36",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+      "sha256": "a4f367e1a56d9abcf8cb1a4b25289412c5e41c0a19b5741d14ac1a62a95d99ce",
+      "range": [
+        36,
+        39
+      ],
+      "declaration": "export interface AppearanceProfileActionResult {\n\tappearance?: AppearanceSettingsV2;\n\ttheme?: string;\n}"
+    },
+    {
+      "symbol": "AppearanceCustomizerCallbacks",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts:41",
+      "covering_entries": [
+        "TUI-019"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+      "sha256": "a4f367e1a56d9abcf8cb1a4b25289412c5e41c0a19b5741d14ac1a62a95d99ce",
+      "range": [
+        41,
+        52
+      ],
+      "declaration": "export interface AppearanceCustomizerCallbacks {\n\tonDraftChange: (draft: AppearanceSettingsV2) => void;\n\tonApply: () => void;\n\tonCancel: () => void;\n\tonThemePreview?: (theme: Theme, name: string) => void;\n\tonProfileAction?: (\n\t\taction: string,\n\t\tname: string | undefined,\n\t\tdraft: AppearanceSettingsV2,\n\t\tthemeName: string,\n\t) => AppearanceProfileActionResult | undefined;\n}"
+    },
+    {
+      "symbol": "PreviewScene",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/appearance-preview.ts:34",
+      "covering_entries": [
+        "TUI-023"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/appearance-preview.ts",
+      "sha256": "f97369dd1e85e277bfebe5871ce5e2deb70c17469b81ba1e9b99f522813b1e72",
+      "range": [
+        34,
+        34
+      ],
+      "declaration": "export type PreviewScene = \"all\" | \"conversation\" | \"markdown\" | \"tools\" | \"input\" | \"chrome\" | \"footer\";"
+    },
+    {
+      "symbol": "RenderDiffOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/diff.ts:126",
+      "covering_entries": [
+        "TUI-036"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/diff.ts",
+      "sha256": "7650b07f051c9136342fe27e59262ae6e9f8d0fd9e048b0f340f32f6a8806dab",
+      "range": [
+        126,
+        131
+      ],
+      "declaration": "export interface RenderDiffOptions {\n\t/** File path (unused, kept for API compatibility) */\n\tfilePath?: string;\n\t/** Pad tinted rows to this width (and truncate longer ones) so the background spans the view. */\n\twidth?: number;\n}"
+    },
+    {
+      "symbol": "ExtensionInputOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/extension-input.ts:11",
+      "covering_entries": [
+        "EXT-040"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/extension-input.ts",
+      "sha256": "b13738ed38d26634a3e011fad97bb70fbfb6c3e4fd896720269b9ae71164c684",
+      "range": [
+        11,
+        15
+      ],
+      "declaration": "export interface ExtensionInputOptions {\n\ttui?: TUI;\n\ttimeout?: number;\n\tinitialValue?: string;\n}"
+    },
+    {
+      "symbol": "ExtensionSelectorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/extension-selector.ts:12",
+      "covering_entries": [
+        "EXT-040"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
+      "sha256": "c67a4d68512424886271408b3f9681c6091d07016aad3c0678108887a60a36a3",
+      "range": [
+        12,
+        17
+      ],
+      "declaration": "export interface ExtensionSelectorOptions {\n\ttui?: TUI;\n\ttimeout?: number;\n\tcontent?: string;\n\tonToggleToolsExpanded?: () => void;\n}"
+    },
+    {
+      "symbol": "KeyTextFormatOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts:8",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
+      "sha256": "df86808bf6f3743ed801d6e06d966454ec0ae732343657b81555c79255360d89",
+      "range": [
+        8,
+        10
+      ],
+      "declaration": "export interface KeyTextFormatOptions {\n\tcapitalize?: boolean;\n}"
+    },
+    {
+      "symbol": "StatusIndicatorKind",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/status-indicator.ts:11",
+      "covering_entries": [
+        "TUI-041"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/status-indicator.ts",
+      "sha256": "98f1622b1e887ec517b86c8585d7d02089cf83c77e7a54f3b27ae6812f4a6760",
+      "range": [
+        11,
+        11
+      ],
+      "declaration": "export type StatusIndicatorKind = \"working\" | \"retry\" | \"compaction\" | \"branchSummary\";"
+    },
+    {
+      "symbol": "SubagentFooterAttention",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:26",
+      "covering_entries": [
+        "TUI-060"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts",
+      "sha256": "f75109c2f622535d6adf5c203f4355bc5d04d767baed67a262ea8ad1c509e1bc",
+      "range": [
+        26,
+        32
+      ],
+      "declaration": "export interface SubagentFooterAttention {\n\treadonly phase: SubagentRuntimeAttention[\"phase\"];\n\treadonly state: SubagentRuntimeAttention[\"state\"];\n\treadonly activeElapsedMs: number;\n\treadonly recentActivities: readonly SubagentFooterActivity[];\n\treadonly repeatedFailureCount?: number;\n}"
+    },
+    {
+      "symbol": "SubagentFooterEntry",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:34",
+      "covering_entries": [
+        "TUI-060"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts",
+      "sha256": "f75109c2f622535d6adf5c203f4355bc5d04d767baed67a262ea8ad1c509e1bc",
+      "range": [
+        34,
+        44
+      ],
+      "declaration": "export interface SubagentFooterEntry {\n\treadonly id: string;\n\treadonly label: string;\n\treadonly kind: \"subagent\" | \"historical-subagent\";\n\treadonly live: boolean;\n\treadonly retentionState?: \"reusable\" | \"history-only\";\n\treadonly status: string;\n\treadonly needsAttention: boolean;\n\treadonly attention?: SubagentFooterAttention;\n\treadonly checkIn?: SubagentCheckInState;\n}"
+    },
+    {
+      "symbol": "SubagentFooterSnapshot",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts:46",
+      "covering_entries": [
+        "TUI-060"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/subagent-view-switcher.ts",
+      "sha256": "f75109c2f622535d6adf5c203f4355bc5d04d767baed67a262ea8ad1c509e1bc",
+      "range": [
+        46,
+        58
+      ],
+      "declaration": "export interface SubagentFooterSnapshot {\n\treadonly children: readonly SubagentFooterEntry[];\n\treadonly liveCount: number;\n\t/** Live children whose session is currently streaming. */\n\treadonly workingCount: number;\n\t/** Live children whose turn waits for a concurrency slot; the rest of liveCount is idle. */\n\treadonly queuedCount?: number;\n\treadonly retainedCount: number;\n\treadonly attentionCount: number;\n\treadonly mainAgentDisplayed: boolean;\n\treadonly selectedChild?: SubagentFooterEntry;\n\treadonly selectedChildIndex?: number;\n}"
+    },
+    {
+      "symbol": "ToolExecutionOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/tool-execution.ts:27",
+      "covering_entries": [
+        "EXT-036",
+        "TUI-031"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
+      "sha256": "3c161a1c0270783f874276cc242daed25eb8172d41dbd25475e624eb7f99aab0",
+      "range": [
+        27,
+        37
+      ],
+      "declaration": "export interface ToolExecutionOptions {\n\tshowImages?: boolean;\n\timageWidthCells?: number;\n\t/** Optional appearance override; defaults reproduce current rendering. */\n\ttoolsAppearance?: ToolAppearance;\n\t/**\n\t * Render as a bullet row with a one-line outcome under a gutter instead of a\n\t * padded background box. Full renderer output appears only when expanded.\n\t */\n\tcompact?: boolean;\n}"
+    },
+    {
+      "symbol": "ToolExecutionState",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/tool-execution.ts:39",
+      "covering_entries": [
+        "EXT-036",
+        "TUI-031"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
+      "sha256": "3c161a1c0270783f874276cc242daed25eb8172d41dbd25475e624eb7f99aab0",
+      "range": [
+        39,
+        39
+      ],
+      "declaration": "export type ToolExecutionState = \"pending\" | \"success\" | \"error\";"
+    },
+    {
+      "symbol": "ToolResultLike",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/tool-summary.ts:9",
+      "covering_entries": [
+        "TUI-032",
+        "TUI-033"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/tool-summary.ts",
+      "sha256": "ed50d543e766368c4e22837b4e68d106ee25c293cb772c41667129909254a225",
+      "range": [
+        9,
+        13
+      ],
+      "declaration": "export interface ToolResultLike {\n\tcontent: Array<{ type: string; text?: string }>;\n\tdetails?: unknown;\n\tisError?: boolean;\n}"
+    },
+    {
+      "symbol": "ExplorationLine",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/tool-summary.ts:15",
+      "covering_entries": [
+        "TUI-032",
+        "TUI-033"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/tool-summary.ts",
+      "sha256": "ed50d543e766368c4e22837b4e68d106ee25c293cb772c41667129909254a225",
+      "range": [
+        15,
+        18
+      ],
+      "declaration": "export interface ExplorationLine {\n\tverb: \"Read\" | \"Search\" | \"List\";\n\ttarget: string;\n}"
+    },
+    {
+      "symbol": "VisualTruncateResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/components/visual-truncate.ts:8",
+      "covering_entries": [
+        "TUI-035"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/components/visual-truncate.ts",
+      "sha256": "054a6ee0414a0f37898c2f12ad9d5b1a3364ba73b0e0886156225503e5828534",
+      "range": [
+        8,
+        13
+      ],
+      "declaration": "export interface VisualTruncateResult {\n\t/** The visual lines to display */\n\tvisualLines: string[];\n\t/** Number of visual lines that were skipped (hidden) */\n\tskippedCount: number;\n}"
+    },
+    {
+      "symbol": "InteractiveModeOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts:366",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "sha256": "e1d7045794738e1679b5bbbc678544a565dcbcdabe417dccaccbc53df2702702",
+      "range": [
+        366,
+        387
+      ],
+      "declaration": "export interface InteractiveModeOptions {\n\t/** Providers that were migrated to auth.json (shows warning) */\n\tmigratedProviders?: string[];\n\t/** Warning message if session model couldn't be restored */\n\tmodelFallbackMessage?: string;\n\t/** Startup lines (such as the --observe dashboard URL) that stderr cannot show once the TUI owns the screen. */\n\tstartupNotices?: string[];\n\t/** Cwd to trust after reload if it gained a .ice directory during this implicitly trusted session. */\n\tautoTrustOnReloadCwd?: string;\n\t/** Initial message to send on startup (can include @file content) */\n\tinitialMessage?: string;\n\t/** Images to attach to the initial message */\n\tinitialImages?: ImageContent[];\n\t/** Additional messages to send after the initial message */\n\tinitialMessages?: string[];\n\t/** Force verbose startup (overrides quietStartup setting) */\n\tverbose?: boolean;\n\t/** UI layout mode. */\n\tuiMode?: UiMode;\n\t/** Optional ICE-only bridge for viewing live and historical subagents. */\n\tagentViewBridge?: IceAgentViewBridge;\n}"
+    },
+    {
+      "symbol": "ModelSearchItem",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/model-search.ts:1",
+      "covering_entries": [
+        "TUI-044",
+        "TUI-045"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/model-search.ts",
+      "sha256": "9be620174c0f25516b0c537dcd4ef9be7c9c9a145e6489e186cc6c4787b25412",
+      "range": [
+        1,
+        5
+      ],
+      "declaration": "export interface ModelSearchItem {\n\tid: string;\n\tprovider: string;\n\tname?: string;\n}"
+    },
+    {
+      "symbol": "ThemeColorValue",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:110",
+      "covering_entries": [
+        "TUI-001"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        110,
+        110
+      ],
+      "declaration": "export type ThemeColorValue = Static<typeof ColorValueSchema>;"
+    },
+    {
+      "symbol": "ThemeColor",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:114",
+      "covering_entries": [
+        "TUI-001"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        114,
+        161
+      ],
+      "declaration": "export type ThemeColor =\n\t| \"accent\"\n\t| \"border\"\n\t| \"borderAccent\"\n\t| \"borderMuted\"\n\t| \"success\"\n\t| \"error\"\n\t| \"warning\"\n\t| \"muted\"\n\t| \"dim\"\n\t| \"text\"\n\t| \"thinkingText\"\n\t| \"userMessageText\"\n\t| \"customMessageText\"\n\t| \"customMessageLabel\"\n\t| \"toolTitle\"\n\t| \"toolOutput\"\n\t| \"mdHeading\"\n\t| \"mdLink\"\n\t| \"mdLinkUrl\"\n\t| \"mdCode\"\n\t| \"mdCodeBlock\"\n\t| \"mdCodeBlockBorder\"\n\t| \"mdQuote\"\n\t| \"mdQuoteBorder\"\n\t| \"mdHr\"\n\t| \"mdListBullet\"\n\t| \"toolDiffAdded\"\n\t| \"toolDiffRemoved\"\n\t| \"toolDiffContext\"\n\t| \"syntaxComment\"\n\t| \"syntaxKeyword\"\n\t| \"syntaxFunction\"\n\t| \"syntaxVariable\"\n\t| \"syntaxString\"\n\t| \"syntaxNumber\"\n\t| \"syntaxType\"\n\t| \"syntaxOperator\"\n\t| \"syntaxPunctuation\"\n\t| \"thinkingOff\"\n\t| \"thinkingMinimal\"\n\t| \"thinkingLow\"\n\t| \"thinkingMedium\"\n\t| \"thinkingHigh\"\n\t| \"thinkingXhigh\"\n\t| \"thinkingMax\"\n\t| \"thinkingUltra\"\n\t| \"bashMode\";"
+    },
+    {
+      "symbol": "ThemeBg",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:163",
+      "covering_entries": [
+        "TUI-001"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        163,
+        170
+      ],
+      "declaration": "export type ThemeBg =\n\t| \"selectedBg\"\n\t| \"scrollbarThumb\"\n\t| \"userMessageBg\"\n\t| \"customMessageBg\"\n\t| \"toolPendingBg\"\n\t| \"toolSuccessBg\"\n\t| \"toolErrorBg\";"
+    },
+    {
+      "symbol": "TerminalThemeDetection",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:862",
+      "covering_entries": [
+        "TUI-002",
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        862,
+        867
+      ],
+      "declaration": "export interface TerminalThemeDetection {\n\ttheme: TerminalTheme;\n\tsource: \"terminal background\" | \"COLORFGBG\" | \"fallback\";\n\tdetail: string;\n\tconfidence: \"high\" | \"low\";\n}"
+    },
+    {
+      "symbol": "TerminalThemeDetectionOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:869",
+      "covering_entries": [
+        "TUI-002",
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        869,
+        871
+      ],
+      "declaration": "export interface TerminalThemeDetectionOptions {\n\tenv?: NodeJS.ProcessEnv;\n}"
+    },
+    {
+      "symbol": "TerminalBackgroundThemeDetector",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:873",
+      "covering_entries": [
+        "TUI-002",
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        873,
+        875
+      ],
+      "declaration": "export interface TerminalBackgroundThemeDetector {\n\tqueryTerminalBackgroundColor({ timeoutMs }: { timeoutMs: number }): Promise<RgbColor | undefined>;\n}"
+    },
+    {
+      "symbol": "TerminalAutoThemeDetector",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:877",
+      "covering_entries": [
+        "TUI-002",
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        877,
+        879
+      ],
+      "declaration": "export interface TerminalAutoThemeDetector extends TerminalBackgroundThemeDetector {\n\tqueryTerminalColorScheme?({ timeoutMs }: { timeoutMs: number }): Promise<TerminalTheme | undefined>;\n}"
+    },
+    {
+      "symbol": "TerminalBackgroundThemeDetectionOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:881",
+      "covering_entries": [
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        881,
+        884
+      ],
+      "declaration": "export interface TerminalBackgroundThemeDetectionOptions extends TerminalThemeDetectionOptions {\n\tui: TerminalBackgroundThemeDetector;\n\ttimeoutMs: number;\n}"
+    },
+    {
+      "symbol": "TerminalAutoThemeDetectionOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/modes/interactive/theme/theme.ts:886",
+      "covering_entries": [
+        "TUI-007"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "sha256": "57c31705967ea4f4a692d6e5ea35dad1b1f133685b841bbdd4f9f35fd00a856a",
+      "range": [
+        886,
+        889
+      ],
+      "declaration": "export interface TerminalAutoThemeDetectionOptions extends TerminalThemeDetectionOptions {\n\tui: TerminalAutoThemeDetector;\n\ttimeoutMs: number;\n}"
+    },
+    {
+      "symbol": "TextChunk",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:97",
+      "covering_entries": [
+        "TUI-244",
+        "TUI-250"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "range": [
+        97,
+        101
+      ],
+      "declaration": "export interface TextChunk {\n\ttext: string;\n\tstartIndex: number;\n\tendIndex: number;\n}"
+    },
+    {
+      "symbol": "EditorBorderStyle",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:229",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "range": [
+        229,
+        229
+      ],
+      "declaration": "export type EditorBorderStyle = \"none\" | \"single\" | \"double\" | \"round\" | \"bold\";"
+    },
+    {
+      "symbol": "EditorTheme",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:231",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "range": [
+        231,
+        234
+      ],
+      "declaration": "export interface EditorTheme {\n\tborderColor: (str: string) => string;\n\tselectList: SelectListTheme;\n}"
+    },
+    {
+      "symbol": "TextDecoration",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:236",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "range": [
+        236,
+        243
+      ],
+      "declaration": "export interface TextDecoration {\n\tstart: number;\n\tend: number;\n\tprefix: string;\n\tsuffix: string;\n\t/** Source characters at the start of this span hidden only in the rendered editor. */\n\tconcealPrefix?: number;\n}"
+    },
+    {
+      "symbol": "TextDecorationProvider",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/editor.ts:245",
+      "covering_entries": [
+        "TUI-242",
+        "TUI-251"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "range": [
+        245,
+        245
+      ],
+      "declaration": "export type TextDecorationProvider = (line: string) => TextDecoration[];"
+    },
+    {
+      "symbol": "ImageOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/components/image.ts:17",
+      "covering_entries": [
+        "TUI-229"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/components/image.ts",
+      "sha256": "cdef2f757008ce2fecfde6c0108366ebdc160bac70355db855fd264aec8d53f8",
+      "range": [
+        17,
+        23
+      ],
+      "declaration": "export interface ImageOptions {\n\tmaxWidthCells?: number;\n\tmaxHeightCells?: number;\n\tfilename?: string;\n\t/** Kitty image ID. If provided, reuses this ID (for animations/updates). */\n\timageId?: number;\n}"
+    },
+    {
+      "symbol": "KeyEventType",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/keys.ts:505",
+      "covering_entries": [
+        "TUI-206"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/keys.ts",
+      "sha256": "b972facce4233a4623239fc38029e28cae15d0fb326558c0c09dc02cf4345fa7",
+      "range": [
+        505,
+        505
+      ],
+      "declaration": "export type KeyEventType = \"press\" | \"repeat\" | \"release\";"
+    },
+    {
+      "symbol": "StackLayoutEntry",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:10",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/layout-node.ts",
+      "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+      "range": [
+        10,
+        18
+      ],
+      "declaration": "export interface StackLayoutEntry {\n\tcomponent: Component;\n\tbasis?: number | \"auto\";\n\tgrow?: number;\n\tshrink?: number;\n\tminSize?: number;\n\tmaxSize?: number;\n\tvisible?: (viewport: LayoutViewport) => boolean;\n}"
+    },
+    {
+      "symbol": "ScrollLayoutState",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:27",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/layout-node.ts",
+      "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+      "range": [
+        27,
+        34
+      ],
+      "declaration": "export interface ScrollLayoutState {\n\treadonly scrollTop: number;\n\treadonly primary: boolean;\n\treadonly overscroll: \"chain\" | \"contain\";\n\treadonly viewportHeight: number;\n\tgetContentWidth(width: number): number;\n\tupdateLayout(contentHeight: number, viewportHeight: number, requestRender: () => void): void;\n}"
+    },
+    {
+      "symbol": "LayoutComponent",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/layout-node.ts:44",
+      "covering_entries": [
+        "TUI-212"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/layout-node.ts",
+      "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+      "range": [
+        44,
+        46
+      ],
+      "declaration": "export interface LayoutComponent extends Component {\n\t[LAYOUT_NODE](): LayoutNode;\n}"
+    },
+    {
+      "symbol": "ModifierKey",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/native-modifiers.ts:7",
+      "covering_entries": [
+        "TUI-208"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/native-modifiers.ts",
+      "sha256": "480532c99bec123ef544c79e090c62dfbce5d4564aed29d07fed13c38f573987",
+      "range": [
+        7,
+        7
+      ],
+      "declaration": "export type ModifierKey = \"shift\" | \"command\" | \"control\" | \"option\";"
+    },
+    {
+      "symbol": "StdinBufferOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/stdin-buffer.ts:257",
+      "covering_entries": [
+        "TUI-207"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/stdin-buffer.ts",
+      "sha256": "2a29562c1482ed69e77737f3a8a55034951e38f51abbd1979e479716ec1ee6bd",
+      "range": [
+        257,
+        263
+      ],
+      "declaration": "export type StdinBufferOptions = {\n\t/**\n\t * Maximum time to wait for sequence completion (default: 10ms)\n\t * After this time, the buffer is flushed even if incomplete\n\t */\n\ttimeout?: number;\n};"
+    },
+    {
+      "symbol": "StdinBufferEventMap",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/stdin-buffer.ts:265",
+      "covering_entries": [
+        "TUI-207"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/stdin-buffer.ts",
+      "sha256": "2a29562c1482ed69e77737f3a8a55034951e38f51abbd1979e479716ec1ee6bd",
+      "range": [
+        265,
+        268
+      ],
+      "declaration": "export type StdinBufferEventMap = {\n\tdata: [string];\n\tpaste: [string];\n};"
+    },
+    {
+      "symbol": "TerminalColorScheme",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-colors.ts:7",
+      "covering_entries": [
+        "TUI-220"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/terminal-colors.ts",
+      "sha256": "2aa702f6e59dc51d78be64516f40c46981780a00d1f0900fb5504ad9da67b9e6",
+      "range": [
+        7,
+        7
+      ],
+      "declaration": "export type TerminalColorScheme = \"dark\" | \"light\";"
+    },
+    {
+      "symbol": "ImageProtocol",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:6",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/terminal-image.ts",
+      "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+      "range": [
+        6,
+        6
+      ],
+      "declaration": "export type ImageProtocol = \"kitty\" | \"iterm2\" | null;"
+    },
+    {
+      "symbol": "ImageRenderOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:24",
+      "covering_entries": [
+        "TUI-225"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/terminal-image.ts",
+      "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+      "range": [
+        24,
+        32
+      ],
+      "declaration": "export interface ImageRenderOptions {\n\tmaxWidthCells?: number;\n\tmaxHeightCells?: number;\n\tpreserveAspectRatio?: boolean;\n\t/** Kitty image ID. If provided, reuses/replaces existing image with this ID. */\n\timageId?: number;\n\t/** Whether Kitty should apply its default cursor movement after placement. */\n\tmoveCursor?: boolean;\n}"
+    },
+    {
+      "symbol": "ImageCellSize",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal-image.ts:268",
+      "covering_entries": [
+        "TUI-227"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/terminal-image.ts",
+      "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+      "range": [
+        268,
+        271
+      ],
+      "declaration": "export interface ImageCellSize {\n\tcolumns: number;\n\trows: number;\n}"
+    },
+    {
+      "symbol": "KeyboardProtocolNegotiationSequence",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/terminal.ts:20",
+      "covering_entries": [
+        "TUI-208"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/terminal.ts",
+      "sha256": "bac9932448e21d559f1665074051fd3fe7e8f8ce94a6a60e18b6fb97d7095643",
+      "range": [
+        20,
+        22
+      ],
+      "declaration": "export type KeyboardProtocolNegotiationSequence =\n\t| { type: \"kitty-flags\"; flags: number }\n\t| { type: \"device-attributes\" };"
+    },
+    {
+      "symbol": "TuiInputListenerResult",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:50",
+      "covering_entries": [
+        "TUI-217"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        50,
+        50
+      ],
+      "declaration": "export type TuiInputListenerResult = { consume?: boolean; data?: string } | undefined;"
+    },
+    {
+      "symbol": "TuiInputListener",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:51",
+      "covering_entries": [
+        "TUI-217"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        51,
+        51
+      ],
+      "declaration": "export type TuiInputListener = (data: string) => TuiInputListenerResult;"
+    },
+    {
+      "symbol": "OverlayAnchor",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:87",
+      "covering_entries": [
+        "TUI-218",
+        "TUI-219"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        87,
+        96
+      ],
+      "declaration": "export type OverlayAnchor =\n\t| \"center\"\n\t| \"top-left\"\n\t| \"top-right\"\n\t| \"bottom-left\"\n\t| \"bottom-right\"\n\t| \"top-center\"\n\t| \"bottom-center\"\n\t| \"left-center\"\n\t| \"right-center\";"
+    },
+    {
+      "symbol": "SizeValue",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:109",
+      "covering_entries": [
+        "TUI-218",
+        "TUI-219"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        109,
+        109
+      ],
+      "declaration": "export type SizeValue = number | `${number}%`;"
+    },
+    {
+      "symbol": "OverlayUnfocusOptions",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:166",
+      "covering_entries": [
+        "TUI-218"
+      ],
+      "action": "name-in-entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        166,
+        169
+      ],
+      "declaration": "export interface OverlayUnfocusOptions {\n\t/** Explicit target to focus after releasing this overlay. */\n\ttarget: Component | null;\n}"
+    },
+    {
+      "symbol": "TuiMode",
+      "kind": "type",
+      "ts": "ice:packages/tui/src/tui.ts:285",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "path": "packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "range": [
+        285,
+        285
+      ],
+      "declaration": "export type TuiMode = \"regular\" | \"fullscreen\";"
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "area": "tui",
+  "entries": 151,
+  "ledger": 224,
+  "surfaces": 1151,
+  "candidates": {
+    "original": 923,
+    "mapped": 897,
+    "excluded": 26,
+    "pending": 0,
+    "mechanical_review_complete": true,
+    "manual_additional_surfaces": 75
+  },
+  "source_records": 440,
+  "source_visible_lines": 135550,
+  "fully_read_files": 427,
+  "excluded_source_files": [
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+      "redacted": [
+        883
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/compaction-summary-message.ts",
+      "redacted": [
+        35
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/tree-selector.ts",
+      "redacted": [
+        337
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+      "redacted": [
+        7027
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "redacted": [
+        19
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/oauth-selector.test.ts",
+      "redacted": [
+        54
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/tui/src/components/editor.ts",
+      "redacted": [
+        2405
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/tui/src/components/markdown.ts",
+      "redacted": [
+        245
+      ],
+      "unverified": []
+    },
+    {
+      "path": "ice:packages/tui/src/utils.ts",
+      "redacted": [
+        902
+      ],
+      "unverified": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "redacted": [
+        471
+      ],
+      "unverified": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+      "redacted": [],
+      "unverified": [
+        627
+      ]
+    }
+  ],
+  "identity_conflicts": [],
+  "total_line_count_conflicts": [],
+  "unresolved_required_source": [],
+  "partial_tests": [
+    {
+      "path": "ice:packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "total_lines": 90,
+      "ranges": [
+        [
+          1,
+          18
+        ],
+        [
+          20,
+          90
+        ]
+      ],
+      "excluded_redacted_lines": [
+        19
+      ],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    },
+    {
+      "path": "ice:packages/coding-agent/test/oauth-selector.test.ts",
+      "total_lines": 148,
+      "ranges": [
+        [
+          1,
+          53
+        ],
+        [
+          55,
+          148
+        ]
+      ],
+      "excluded_redacted_lines": [
+        54
+      ],
+      "excluded_unverified_lines": [],
+      "ordinary_missing_ranges": []
+    }
+  ],
+  "claims": 14,
+  "supplemental_ledger": 139
+}

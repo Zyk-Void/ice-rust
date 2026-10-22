@@ -113,7 +113,7 @@ async fn scripted_harness(
     (harness, events)
 }
 
-fn test_terminal() -> Arc<TuiAltScreen> {
+pub(super) fn test_terminal() -> Arc<TuiAltScreen> {
     Arc::new(TuiAltScreen::new(
         Box::new(ProcessTerminal::new()),
         true,
@@ -233,6 +233,8 @@ fn session_drain_shared_switch_import_fork_paths_consume_real_old_events() {
             .await
             .unwrap();
             let target_path = target.storage().persistence_path().unwrap();
+            // The target is reopened by the switch; release its writer lock first.
+            drop(target);
             let context =
                 ice_extensions::ToolCallContext::new(cwd.path().to_string_lossy().into_owned());
             let lane = harness.lane("main");
@@ -407,16 +409,19 @@ fn session_drain_deferred_bash_is_persisted_to_old_session_before_new() {
         let old = ice_harness::session::Session::new(harness.session().storage(), None);
         let state = test_tui_state();
         state.pending_bash_messages.lock().unwrap().push(
-            ice_harness::messages::bash_execution_message(
-                "printf old-bash",
-                "old-bash",
-                Some(0),
-                false,
-                false,
-                None,
-                Some(false),
-                now_ms(),
-            ),
+            crate::interactive_tui::BufferedBashMessage {
+                storage: harness.session().storage(),
+                message: ice_harness::messages::bash_execution_message(
+                    "printf old-bash",
+                    "old-bash",
+                    Some(0),
+                    false,
+                    false,
+                    None,
+                    Some(false),
+                    now_ms(),
+                ),
+            },
         );
         let requests = state.event_drain.install();
         let lane = harness.lane("main");
@@ -923,7 +928,7 @@ fn run_summary_stopped_consumer_does_not_hide_authoritative_provider_error() {
         let state = test_tui_state();
         drop(state.event_drain.install());
         run_prompt_streaming(
-            &harness.lane("main"),
+            &harness,
             "prompt",
             false,
             &test_terminal(),
@@ -949,7 +954,7 @@ fn run_summary_blocking_completion_follows_final_response() {
         .await;
         let state = test_tui_state();
         run_prompt_streaming(
-            &harness.lane("main"),
+            &harness,
             "prompt",
             false,
             &test_terminal(),

@@ -1,0 +1,356 @@
+{
+  "area": "tui",
+  "owner": "coordinator",
+  "tests_executed": false,
+  "application_executed": false,
+  "source_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "total_lines": 510,
+      "sha256": "305045059eef3be87ecae1b9f8aeb37e7478622cd49c275f5ec86ef602cc56b7",
+      "ranges": [
+        [
+          1,
+          239
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "total_lines": 725,
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "ranges": [
+        [
+          166,
+          299
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "total_lines": 510,
+      "sha256": "305045059eef3be87ecae1b9f8aeb37e7478622cd49c275f5ec86ef602cc56b7",
+      "ranges": [
+        [
+          283,
+          510
+        ]
+      ],
+      "excluded_redacted_lines": [
+        471
+      ],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested available body source-read; listed connector-redacted lines excluded and not reconstructed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "total_lines": 725,
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "ranges": [
+        [
+          441,
+          725
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          536,
+          800
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          801,
+          946
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          1076,
+          1179
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          1271,
+          1373
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/transcript_view.rs",
+      "total_lines": 1306,
+      "sha256": "c022a798eebe4ce4dcff924caccb4ed8a103f607da0dbaff54d74401f4c4bd9e",
+      "ranges": [
+        [
+          1,
+          310
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/transcript_view.rs",
+      "total_lines": 1306,
+      "sha256": "c022a798eebe4ce4dcff924caccb4ed8a103f607da0dbaff54d74401f4c4bd9e",
+      "ranges": [
+        [
+          311,
+          625
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/transcript_view.rs",
+      "total_lines": 1306,
+      "sha256": "c022a798eebe4ce4dcff924caccb4ed8a103f607da0dbaff54d74401f4c4bd9e",
+      "ranges": [
+        [
+          626,
+          943
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/transcript_view.rs",
+      "total_lines": 1306,
+      "sha256": "c022a798eebe4ce4dcff924caccb4ed8a103f607da0dbaff54d74401f4c4bd9e",
+      "ranges": [
+        [
+          991,
+          1306
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Requested numbered body source-read, no connector redaction markers. No application or tests executed."
+    }
+  ],
+  "reviewed_numbered_lines": 2763,
+  "excluded_redacted_lines": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "lines": [
+        471
+      ]
+    }
+  ],
+  "combined_coverage": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+      "total_lines": 510,
+      "other_owner_ranges": [
+        [
+          240,
+          282
+        ]
+      ],
+      "union": [
+        [
+          1,
+          510
+        ]
+      ],
+      "excluded_redacted_lines": [
+        471
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "total_lines": 725,
+      "other_owner_ranges": [
+        [
+          1,
+          165
+        ],
+        [
+          300,
+          440
+        ]
+      ],
+      "union": [
+        [
+          1,
+          725
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "other_owner_ranges": [
+        [
+          1,
+          535
+        ],
+        [
+          947,
+          1075
+        ],
+        [
+          1180,
+          1270
+        ]
+      ],
+      "union": [
+        [
+          1,
+          1373
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/transcript_view.rs",
+      "total_lines": 1306,
+      "other_owner_ranges": [
+        [
+          944,
+          990
+        ]
+      ],
+      "union": [
+        [
+          1,
+          1306
+        ]
+      ],
+      "excluded_redacted_lines": []
+    }
+  ],
+  "findings": [
+    {
+      "topic": "Queue restoration during a run",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/events.rs:15-148"
+      ],
+      "behavior": "Queue recovery is spawned independently of the prompt-owning main mailbox. It clears the lane queue, restores images, concatenates steering before follow-up text, expands the current folded-paste draft before replacement, puts the caret at the final UTF-8 byte boundary, refreshes dock state, and reports the text-message count. Abort awaits restoration before lane.abort. clear_queue errors render a failure and return zero; handle_dequeue then also emits the no-messages note. Image-only restoration has count zero even though images were restored."
+    },
+    {
+      "topic": "Local event drain and recovery limits",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/events.rs:150-237,283-475"
+      ],
+      "behavior": "Broadcast lag is ignored and relies on later full assistant snapshots; close stops the task. AgentEnd finalizes assistant state, goes idle, appends pending user-Bash records and refreshes the queue. Snapshot updates drive shared TranscriptView tool/assistant panels. MessageEnd adds usage, cache-hit rate, cache notice, extension usage text and provider diagnostic. ToolEnd adds tool images and forces an immediate render. The context-token expression at 471 is redacted and excluded; surrounding visible code skips aborted/error responses and nonpositive counts."
+    },
+    {
+      "topic": "Run outcome reconciliation and compaction reporting",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/run.rs:166-299"
+      ],
+      "behavior": "The prompt outcome reconciles an authoritative final assistant snapshot before detaching, resets status and queue display, and updates context usage as a fallback after broadcast lag. Streaming failure diagnostics are suppressed when final_message is Some based on assumed event rendering; blocking paths show errors/abort text or final assistant text. Suspended outcomes have an explicit unsupported-resume message. run_compact treats any Ok(_) as Conversation compacted; verify its outcome against SESSION-016 rather than infer success from the Result wrapper."
+    },
+    {
+      "topic": "Copied image paths and previews",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/run.rs:443-725"
+      ],
+      "behavior": "With clipboard support, macOS invokes osascript alias-list conversion; Windows reads CF_HDROP with an RAII CloseClipboard guard and UTF-16 length queries. Other platform/feature combinations return None for copied file paths. Attachment parsing first tries a single trimmed/quote-stripped existing file, otherwise newline paths or quote/escape-aware tokens, and succeeds only if every path yields an image. Preview decodes base64, converts non-PNG MIME through image processing, sets width 60 and [Attached image], and uses show_images only for visibility. The helper has no SSH or blockImages guard; caller policy must be assessed separately."
+    },
+    {
+      "topic": "Production Windows paste state differs from older test-only heuristic",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/state.rs:541-680",
+        "rust:crates/ice-cli/src/interactive_tui/tests.rs:3188-3318"
+      ],
+      "behavior": "PASTE_PROBE is 4 ms; feed marks burst for gaps <=20 ms; flush grace is 15 ms for an unconfirmed run and 120 ms after burst. The queued native text fast path begins at >=64 bytes. Production windows_enter_in_paste accepts queued content, otherwise requires a nonempty burst with clipboard CR/LF normalization, run-text-plus-newline prefix, and at least 10 newlines. enter_is_paste_burst is #[cfg(test)] and accepts a <20 ms timing signal; its tests do not establish production trailing-Enter behavior. probe_paste_input drops key-release events but counts any other queued event, not only character content."
+    },
+    {
+      "topic": "Immediate exit, suspend and draft ownership",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/state.rs:685-865"
+      ],
+      "behavior": "Emergency exit stops/restores the TUI then process::exit(130); Unix suspend brackets SIGTSTP with suspend/resume and non-Unix is a no-op. History trims, skips blanks/consecutive duplicates and resets browsing only after insertion. navigate_history stores get_text, not expanded folded paste, and sets caret row 0 using the whole string byte length even for multiline recalled text; the cited history test uses one line. submit_draft ignores a failed mailbox send after reserving working state/taking images. Auto-send clears the editor before its final try_start_working call; concurrent state changes need explicit ownership if ported."
+    },
+    {
+      "topic": "Extension editor notifications and display preferences",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui/state.rs:1076-1179,1271-1373"
+      ],
+      "behavior": "Injected text sets a programmatic marker and optional positive-millisecond countdown. Housekeeping clears are marked programmatic. Countdown cleanup clears only its own footer prefix; a user key cancels countdown but is dispatched normally. EditorChange is polled and consumes its payload before checking subscriber existence. Current model updates footer label and context window. Local TranscriptView shares retained component maps; transformer reload reinstalls only the current assistant. Restored images are prepended to newer pending images, and show_images updates existing standalone/assistant image components."
+    },
+    {
+      "topic": "Shared local and remote transcript renderer",
+      "refs": [
+        "rust:crates/ice-cli/src/transcript_view.rs:1-340"
+      ],
+      "behavior": "UiEvent decouples normalized rendering from the local/wire provider types. The view keeps one current assistant and tool/Bash maps, creates a missing assistant on update, updates content snapshots in place and finalizes on end. Future assistants use current thinking/image/transformer preferences. set_expanded walks generic ToolExecutionComponent children and active tool/Bash maps; finished Bash children are not traversed as BashExecutionComponent. set_hide_thinking updates only the current assistant here; host-level functions can impose a broader policy."
+    },
+    {
+      "topic": "Tool, plan, todo and ask_user presentation",
+      "refs": [
+        "rust:crates/ice-cli/src/transcript_view.rs:342-681,754-943"
+      ],
+      "behavior": "Finalized snapshot tool calls coalesce with lifecycle start by ID. Empty-command Bash is deferred; Bash update before an existing panel is dropped. Generic updates can create panels before start when text/details has payload; end creates a fallback panel if no start exists. Plan/todo calls skip start/update and successful valid details update/move one current panel; errors retain separate generic panels. ask_user and ask_user_question use readable question/context/options/suggestion summaries, progress fallback and Answer recorded fallback. Markdown is boolean opt-in; edit diff application is keyed to edit. Skill badges infer SKILL.md parent from read arguments."
+    },
+    {
+      "topic": "Wire normalization and inline tests",
+      "refs": [
+        "rust:crates/ice-cli/src/transcript_view.rs:683-752,991-1306"
+      ],
+      "behavior": "Assistant text/thinking/image blocks preserve order while image data is base64-decoded and PNG-signature checked or converted; malformed/empty images are skipped. Tool calls require exact toolCall type, nonempty ID and nonblank name. Inline tests exercise view.apply for invisible empty assistant frames, content order, PNG/JPEG handling, call extraction, Markdown opt-in, skill badges, readable ask_user, separate Bash routing, deferred blank Bash, expansion and single plan/todo panels preserving errors. No tests were executed; root begins the first inline case at 991 and uses the other reviewer's 944–990 for the fixture/header boundary."
+    }
+  ]
+}

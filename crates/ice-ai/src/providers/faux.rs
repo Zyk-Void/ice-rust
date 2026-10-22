@@ -494,6 +494,27 @@ impl Provider for FauxProvider {
         tokio::spawn(async move {
             state.call_count.fetch_add(1, Ordering::Relaxed);
 
+            // Validate the request before shifting the scripted queue: invalid
+            // authority/options must not consume a response intended for a
+            // later valid request. Scripted output itself is never truncated.
+            if opts.hard_max_output_tokens.is_some() {
+                if let Err(error) = crate::provider::request_max_tokens(&model, &ctx, &opts) {
+                    let error = AssistantMessage::terminal(
+                        model.api.clone(),
+                        id.clone(),
+                        model.id.clone(),
+                        StopReason::Error,
+                        error,
+                        faux_now(),
+                    );
+                    prod.push(AssistantMessageEvent::Error {
+                        reason: ErrorReason::Error,
+                        error,
+                    });
+                    return;
+                }
+            }
+
             let step = script.shift();
             let mut message = match step {
                 None => AssistantMessage::terminal(
@@ -924,4 +945,96 @@ fn faux_next_u32() -> u32 {
     x ^= x >> 17;
     x ^= x << 5;
     x
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::provider::{Provider, SimpleStreamOptions};
+
+    async fn run_stream(
+        provider: &FauxProvider,
+        options: &SimpleStreamOptions,
+    ) -> (Vec<AssistantMessageEvent>, AssistantMessage) {
+        let context = Context::new(Vec::new());
+        let mut stream = provider
+            .stream_simple(provider.default_model(), &context, options)
+            .await;
+        let mut events = Vec::new();
+        while let Some(event) = stream.next().await {
+            events.push(event);
+        }
+        let message = stream.result().await.expect("terminal stream result");
+        (events, message)
+    }
+
+    #[tokio::test]
+    async fn invalid_hard_limits_error_without_consuming_scripted_steps() {
+        for hard_limit in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let script = FauxScript::new().with_text("queued response");
+            let provider = FauxProvider::new(script.clone());
+            let mut options = SimpleStreamOptions::default();
+            options.hard_max_output_tokens = Some(hard_limit);
+
+            let (events, error) = run_stream(&provider, &options).await;
+            assert_eq!(error.stop_reason, StopReason::Error);
+            assert!(error
+                .error_message
+                .as_deref()
+                .unwrap_or_default()
+                .contains("hardMaxOutputTokens"));
+            assert!(events
+                .iter()
+                .any(|event| matches!(event, AssistantMessageEvent::Error { .. })));
+            assert_eq!(script.pending_count(), 1);
+
+            // The invalid request did not steal the queued step from a later
+            // valid call.
+            options.hard_max_output_tokens = Some(100.0);
+            let (_, response) = run_stream(&provider, &options).await;
+            assert_eq!(response.stop_reason, StopReason::Stop);
+            assert_eq!(
+                content_to_assistant_text(&response.content),
+                "queued response"
+            );
+            assert_eq!(script.pending_count(), 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn explicit_zero_request_errors_without_consuming_scripted_step() {
+        let script = FauxScript::new().with_text("queued response");
+        let provider = FauxProvider::new(script.clone());
+        let mut options = SimpleStreamOptions::default();
+        options.hard_max_output_tokens = Some(8.0);
+        options.max_tokens = Some(0);
+
+        let (events, error) = run_stream(&provider, &options).await;
+        assert_eq!(error.stop_reason, StopReason::Error);
+        assert!(error
+            .error_message
+            .as_deref()
+            .unwrap_or_default()
+            .contains("maxTokens"));
+        assert!(events
+            .iter()
+            .any(|event| matches!(event, AssistantMessageEvent::Error { .. })));
+        assert_eq!(script.pending_count(), 1);
+    }
+
+    #[tokio::test]
+    async fn no_hard_limit_preserves_faux_behavior_even_with_zero_request() {
+        let script = FauxScript::new().with_text("still emitted without authority");
+        let provider = FauxProvider::new(script);
+        let mut options = SimpleStreamOptions::default();
+        options.max_tokens = Some(0);
+
+        let (_, message) = run_stream(&provider, &options).await;
+        assert_eq!(message.stop_reason, StopReason::Stop);
+        assert_eq!(
+            content_to_assistant_text(&message.content),
+            "still emitted without authority"
+        );
+        assert!(message.usage.output > 0);
+    }
 }

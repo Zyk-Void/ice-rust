@@ -1,0 +1,1605 @@
+{
+  "owner": "/root",
+  "source_only": true,
+  "records": [
+    {
+      "symbol": "BashToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/bash.ts:18",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/bash.ts",
+      "sha256": "9dbd536990ba542a2beb9c42ccffb195ab841ea926cff48c838d53f6b4d24ee3",
+      "ranges": [
+        [
+          18,
+          29
+        ]
+      ],
+      "excerpt": "18 | export interface BashToolDetails {\n19 | \ttruncation?: TruncationResult;\n20 | \tfullOutputPath?: string;\n21 | }\n22 | \n23 | export interface BashExecution {\n24 | \tcommand: string;\n25 | \tcwd: string;\n26 | \tenv: Record<string, string>;\n27 | \tinheritEnv: boolean;\n28 | }\n29 | "
+    },
+    {
+      "symbol": "detectLineEnding",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:7",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          7,
+          18
+        ]
+      ],
+      "excerpt": "7 | export function detectLineEnding(content: string): \"\\r\\n\" | \"\\n\" {\n8 | \tconst crlfIdx = content.indexOf(\"\\r\\n\");\n9 | \tconst lfIdx = content.indexOf(\"\\n\");\n10 | \tif (lfIdx === -1) return \"\\n\";\n11 | \tif (crlfIdx === -1) return \"\\n\";\n12 | \treturn crlfIdx < lfIdx ? \"\\r\\n\" : \"\\n\";\n13 | }\n14 | \n15 | export function normalizeToLF(text: string): string {\n16 | \treturn text.replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\");\n17 | }\n18 | "
+    },
+    {
+      "symbol": "normalizeToLF",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:15",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          15,
+          26
+        ]
+      ],
+      "excerpt": "15 | export function normalizeToLF(text: string): string {\n16 | \treturn text.replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\");\n17 | }\n18 | \n19 | export function restoreLineEndings(text: string, ending: \"\\r\\n\" | \"\\n\"): string {\n20 | \treturn ending === \"\\r\\n\" ? text.replace(/\\n/g, \"\\r\\n\") : text;\n21 | }\n22 | \n23 | /**\n24 |  * Normalize text for fuzzy matching. Applies progressive transformations:\n25 |  * - Strip trailing whitespace from each line\n26 |  * - Normalize smart quotes to ASCII equivalents"
+    },
+    {
+      "symbol": "restoreLineEndings",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:19",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          19,
+          30
+        ]
+      ],
+      "excerpt": "19 | export function restoreLineEndings(text: string, ending: \"\\r\\n\" | \"\\n\"): string {\n20 | \treturn ending === \"\\r\\n\" ? text.replace(/\\n/g, \"\\r\\n\") : text;\n21 | }\n22 | \n23 | /**\n24 |  * Normalize text for fuzzy matching. Applies progressive transformations:\n25 |  * - Strip trailing whitespace from each line\n26 |  * - Normalize smart quotes to ASCII equivalents\n27 |  * - Normalize Unicode dashes/hyphens to ASCII hyphen\n28 |  * - Normalize special Unicode spaces to regular space\n29 |  */\n30 | export function normalizeForFuzzyMatch(text: string): string {"
+    },
+    {
+      "symbol": "normalizeForFuzzyMatch",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:30",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          30,
+          41
+        ]
+      ],
+      "excerpt": "30 | export function normalizeForFuzzyMatch(text: string): string {\n31 | \treturn (\n32 | \t\ttext\n33 | \t\t\t.normalize(\"NFKC\")\n34 | \t\t\t// Strip trailing whitespace per line\n35 | \t\t\t.split(\"\\n\")\n36 | \t\t\t.map((line) => line.trimEnd())\n37 | \t\t\t.join(\"\\n\")\n38 | \t\t\t// Smart single quotes → '\n39 | \t\t\t.replace(/[\\u2018\\u2019\\u201A\\u201B]/g, \"'\")\n40 | \t\t\t// Smart double quotes → \"\n41 | \t\t\t.replace(/[\\u201C\\u201D\\u201E\\u201F]/g, '\"')"
+    },
+    {
+      "symbol": "applyReplacementsPreservingUnchangedLines",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:128",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          128,
+          139
+        ]
+      ],
+      "excerpt": "128 | export function applyReplacementsPreservingUnchangedLines(\n129 | \toriginalContent: string,\n130 | \tbaseContent: string,\n131 | \treplacements: TextReplacement[],\n132 | ): string {\n133 | \tconst originalLines = splitLinesWithEndings(originalContent);\n134 | \tconst baseLines = getLineSpans(baseContent);\n135 | \tif (originalLines.length !== baseLines.length) {\n136 | \t\tthrow new Error(\"Cannot preserve unchanged lines because the base content has a different line count.\");\n137 | \t}\n138 | \n139 | \tconst groups: Array<{ startLine: number; endLine: number; replacements: TextReplacement[] }> = [];"
+    },
+    {
+      "symbol": "FuzzyMatchResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:171",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          171,
+          182
+        ]
+      ],
+      "excerpt": "171 | export interface FuzzyMatchResult {\n172 | \t/** Whether a match was found */\n173 | \tfound: boolean;\n174 | \t/** The index where the match starts (in the content that should be used for replacement) */\n175 | \tindex: number;\n176 | \t/** Length of the matched text */\n177 | \tmatchLength: number;\n178 | \t/** Whether fuzzy matching was used (false = exact match) */\n179 | \tusedFuzzyMatch: boolean;\n180 | \t/**\n181 | \t * The content to use for replacement operations.\n182 | \t * When exact match: original content. When fuzzy match: normalized content."
+    },
+    {
+      "symbol": "AppliedEditsResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:192",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          192,
+          203
+        ]
+      ],
+      "excerpt": "192 | export interface AppliedEditsResult {\n193 | \tbaseContent: string;\n194 | \tnewContent: string;\n195 | }\n196 | \n197 | /**\n198 |  * Find oldText in content, trying exact match first, then fuzzy match.\n199 |  * When fuzzy matching is used, the returned contentForReplacement is the\n200 |  * fuzzy-normalized version of the content (trailing whitespace stripped,\n201 |  * Unicode quotes/dashes normalized to ASCII).\n202 |  */\n203 | export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {"
+    },
+    {
+      "symbol": "fuzzyFindText",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:203",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          203,
+          214
+        ]
+      ],
+      "excerpt": "203 | export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {\n204 | \t// Try exact match first\n205 | \tconst exactIndex = content.indexOf(oldText);\n206 | \tif (exactIndex !== -1) {\n207 | \t\treturn {\n208 | \t\t\tfound: true,\n209 | \t\t\tindex: exactIndex,\n210 | \t\t\tmatchLength: oldText.length,\n211 | \t\t\tusedFuzzyMatch: false,\n212 | \t\t\tcontentForReplacement: content,\n213 | \t\t};\n214 | \t}"
+    },
+    {
+      "symbol": "stripBom",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:244",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          244,
+          255
+        ]
+      ],
+      "excerpt": "244 | export function stripBom(content: string): { bom: string; text: string } {\n245 | \treturn content.startsWith(\"\\uFEFF\") ? { bom: \"\\uFEFF\", text: content.slice(1) } : { bom: \"\", text: content };\n246 | }\n247 | \n248 | function countOccurrences(content: string, oldText: string): number {\n249 | \tconst fuzzyContent = normalizeForFuzzyMatch(content);\n250 | \tconst fuzzyOldText = normalizeForFuzzyMatch(oldText);\n251 | \treturn fuzzyContent.split(fuzzyOldText).length - 1;\n252 | }\n253 | \n254 | function getNotFoundError(path: string, editIndex: number, totalEdits: number): Error {\n255 | \tif (totalEdits === 1) {"
+    },
+    {
+      "symbol": "applyEditsToNormalizedContent",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit-diff.ts:301",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "ranges": [
+        [
+          301,
+          312
+        ]
+      ],
+      "excerpt": "301 | export function applyEditsToNormalizedContent(\n302 | \tnormalizedContent: string,\n303 | \tedits: Edit[],\n304 | \tpath: string,\n305 | ): AppliedEditsResult {\n306 | \tconst normalizedEdits = edits.map((edit) => ({\n307 | \t\toldText: normalizeToLF(edit.oldText),\n308 | \t\tnewText: normalizeToLF(edit.newText),\n309 | \t}));\n310 | \n311 | \tfor (let i = 0; i < normalizedEdits.length; i++) {\n312 | \t\tif (normalizedEdits[i].oldText.length === 0) {"
+    },
+    {
+      "symbol": "EditToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/edit.ts:42",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit.ts",
+      "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+      "ranges": [
+        [
+          42,
+          53
+        ]
+      ],
+      "excerpt": "42 | export interface EditToolDetails {\n43 | \tdiff: string;\n44 | \tpatch: string;\n45 | \tfirstChangedLine?: number;\n46 | }\n47 | \n48 | function prepareEditArguments(input: unknown): EditToolInput {\n49 | \tif (!input || typeof input !== \"object\") return input as EditToolInput;\n50 | \tconst args = input as Record<string, unknown>;\n51 | \tif (typeof args.edits === \"string\") {\n52 | \t\ttry {\n53 | \t\t\tconst parsed: unknown = JSON.parse(args.edits);"
+    },
+    {
+      "symbol": "createEditTool",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/edit.ts:77",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/edit.ts",
+      "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+      "ranges": [
+        [
+          77,
+          88
+        ]
+      ],
+      "excerpt": "77 | export function createEditTool<TContext extends ExecutionToolContext = ExecutionToolContext>(): AgentHarnessTool<\n78 | \tTContext,\n79 | \ttypeof editSchema,\n80 | \tEditToolDetails | undefined\n81 | > {\n82 | \treturn {\n83 | \t\tname: \"edit\",\n84 | \t\tlabel: \"edit\",\n85 | \t\tdescription:\n86 | \t\t\t\"Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.\",\n87 | \t\tparameters: editSchema,\n88 | \t\tprepareArguments: prepareEditArguments,"
+    },
+    {
+      "symbol": "encodeBase64",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/image.ts:12",
+      "covering_entries": [
+        "TOOLS-023"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/image.ts",
+      "sha256": "d63af23f90abd2925b80d555ac5c5915ee1b7f512a2490b95a727c8bd0e8d97b",
+      "ranges": [
+        [
+          12,
+          23
+        ]
+      ],
+      "excerpt": "12 | export function encodeBase64(bytes: Uint8Array): string {\n13 | \tconst alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";\n14 | \tlet output = \"\";\n15 | \tfor (let index = 0; index < bytes.length; index += 3) {\n16 | \t\tconst first = bytes[index] ?? 0;\n17 | \t\tconst second = bytes[index + 1];\n18 | \t\tconst third = bytes[index + 2];\n19 | \t\toutput += alphabet[first >> 2];\n20 | \t\toutput += alphabet[((first & 0x03) << 4) | ((second ?? 0) >> 4)];\n21 | \t\toutput += second === undefined ? \"=\" : alphabet[((second & 0x0f) << 2) | ((third ?? 0) >> 6)];\n22 | \t\toutput += third === undefined ? \"=\" : alphabet[third & 0x3f];\n23 | \t}"
+    },
+    {
+      "symbol": "ReadToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/read.ts:24",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/read.ts",
+      "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+      "ranges": [
+        [
+          24,
+          35
+        ]
+      ],
+      "excerpt": "24 | export interface ReadToolDetails {\n25 | \ttruncation?: TruncationResult;\n26 | }\n27 | \n28 | export type ReadImageProcessorResult =\n29 | \t| { ok: true; data: string; mimeType: string; hints: string[] }\n30 | \t| { ok: false; message: string };\n31 | \n32 | export type ReadImageProcessor = (\n33 | \tbytes: Uint8Array,\n34 | \tmimeType: string,\n35 | \toptions: { autoResizeImages: boolean },"
+    },
+    {
+      "symbol": "ReadImageProcessorResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/tools/read.ts:28",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/read.ts",
+      "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+      "ranges": [
+        [
+          28,
+          39
+        ]
+      ],
+      "excerpt": "28 | export type ReadImageProcessorResult =\n29 | \t| { ok: true; data: string; mimeType: string; hints: string[] }\n30 | \t| { ok: false; message: string };\n31 | \n32 | export type ReadImageProcessor = (\n33 | \tbytes: Uint8Array,\n34 | \tmimeType: string,\n35 | \toptions: { autoResizeImages: boolean },\n36 | ) => Promise<ReadImageProcessorResult>;\n37 | \n38 | export interface ReadToolOptions {\n39 | \t/** Whether an injected image processor should resize images. Default: true. */"
+    },
+    {
+      "symbol": "createWriteTool",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/tools/write.ts:15",
+      "covering_entries": [
+        "TOOLS-024"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/tools/write.ts",
+      "sha256": "3881a6947b6c632cced62c0a233af9ab435f422d8a77b176caafc5e6f41763d2",
+      "ranges": [
+        [
+          15,
+          26
+        ]
+      ],
+      "excerpt": "15 | export function createWriteTool<TContext extends ExecutionToolContext = ExecutionToolContext>(): AgentHarnessTool<\n16 | \tTContext,\n17 | \ttypeof writeSchema,\n18 | \tundefined\n19 | > {\n20 | \treturn {\n21 | \t\tname: \"write\",\n22 | \t\tlabel: \"write\",\n23 | \t\tdescription:\n24 | \t\t\t\"Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.\",\n25 | \t\tparameters: writeSchema,\n26 | \t\tasync execute(_toolCallId, { path, content }, signal, _onUpdate, { env }) {"
+    },
+    {
+      "symbol": "ShellCaptureProgress",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:4",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/utils/shell-output.ts",
+      "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+      "ranges": [
+        [
+          4,
+          15
+        ]
+      ],
+      "excerpt": "4 | export interface ShellCaptureProgress {\n5 | \toutput: string;\n6 | \ttruncation: TruncationResult;\n7 | \tfullOutputPath?: string;\n8 | \tlastLineBytes: number;\n9 | }\n10 | \n11 | export interface ShellCaptureOptions extends Omit<ShellExecOptions, \"onStdout\" | \"onStderr\"> {\n12 | \tonChunk?: (chunk: string, getProgress: () => ShellCaptureProgress) => void;\n13 | \t/** Return shell execution failures with captured output instead of as a failed Result. */\n14 | \treturnExecutionErrors?: boolean;\n15 | }"
+    },
+    {
+      "symbol": "ShellCaptureOptions",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:11",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/utils/shell-output.ts",
+      "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+      "ranges": [
+        [
+          11,
+          22
+        ]
+      ],
+      "excerpt": "11 | export interface ShellCaptureOptions extends Omit<ShellExecOptions, \"onStdout\" | \"onStderr\"> {\n12 | \tonChunk?: (chunk: string, getProgress: () => ShellCaptureProgress) => void;\n13 | \t/** Return shell execution failures with captured output instead of as a failed Result. */\n14 | \treturnExecutionErrors?: boolean;\n15 | }\n16 | \n17 | export interface ShellCaptureResult extends ShellCaptureProgress {\n18 | \texitCode: number | undefined;\n19 | \tcancelled: boolean;\n20 | \ttruncated: boolean;\n21 | \texecutionError?: ExecutionError;\n22 | }"
+    },
+    {
+      "symbol": "ShellCaptureResult",
+      "kind": "type",
+      "ts": "ice:packages/agent/src/harness/utils/shell-output.ts:17",
+      "covering_entries": [
+        "TOOLS-015"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/utils/shell-output.ts",
+      "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+      "ranges": [
+        [
+          17,
+          28
+        ]
+      ],
+      "excerpt": "17 | export interface ShellCaptureResult extends ShellCaptureProgress {\n18 | \texitCode: number | undefined;\n19 | \tcancelled: boolean;\n20 | \ttruncated: boolean;\n21 | \texecutionError?: ExecutionError;\n22 | }\n23 | \n24 | function toExecutionError(error: unknown): ExecutionError {\n25 | \tif (error instanceof ExecutionError) return error;\n26 | \tconst cause = toError(error);\n27 | \treturn new ExecutionError(\"unknown\", cause.message, cause);\n28 | }"
+    },
+    {
+      "symbol": "GREP_MAX_LINE_LENGTH",
+      "kind": "runtime",
+      "ts": "ice:packages/agent/src/harness/utils/truncate.ts:13",
+      "covering_entries": [
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/agent/src/harness/utils/truncate.ts",
+      "sha256": "8a00ec12753e667056a8c2b5a4f31fd45ccc2bdca7df17a57138fe836c09f7fe",
+      "ranges": [
+        [
+          13,
+          24
+        ]
+      ],
+      "excerpt": "13 | export const GREP_MAX_LINE_LENGTH = 500; // Max chars per grep match line\n14 | \n15 | export interface TruncationResult {\n16 | \t/** The truncated content */\n17 | \tcontent: string;\n18 | \t/** Whether truncation occurred */\n19 | \ttruncated: boolean;\n20 | \t/** Which limit was hit: \"lines\", \"bytes\", or null if not truncated */\n21 | \ttruncatedBy: \"lines\" | \"bytes\" | null;\n22 | \t/** Total number of lines in the original content */\n23 | \ttotalLines: number;\n24 | \t/** Total number of bytes in the original content */"
+    },
+    {
+      "symbol": "BashExecutorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/bash-executor.ts:22",
+      "covering_entries": [
+        "TOOLS-016"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/bash-executor.ts",
+      "sha256": "977b512e30ff671c55e1148f055781dc786d75323e9821f3f7a9c3e327120003",
+      "ranges": [
+        [
+          22,
+          33
+        ]
+      ],
+      "excerpt": "22 | export interface BashExecutorOptions {\n23 | \t/** Callback for streaming output chunks (already sanitized) */\n24 | \tonChunk?: (chunk: string) => void;\n25 | \t/** AbortSignal for cancellation */\n26 | \tsignal?: AbortSignal;\n27 | }\n28 | \n29 | export interface BashResult {\n30 | \t/** Combined stdout + stderr output (sanitized, possibly truncated) */\n31 | \toutput: string;\n32 | \t/** Process exit code (undefined if killed/cancelled) */\n33 | \texitCode: number | undefined;"
+    },
+    {
+      "symbol": "isStdoutTakenOver",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/output-guard.ts:110",
+      "covering_entries": [
+        "RPC-017",
+        "TOOLS-031"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/output-guard.ts",
+      "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+      "ranges": [
+        [
+          110,
+          121
+        ]
+      ],
+      "excerpt": "110 | export function isStdoutTakenOver(): boolean {\n111 | \treturn stdoutTakeoverState !== undefined;\n112 | }\n113 | \n114 | export function writeRawStdout(text: string): void {\n115 | \tif (text.length === 0) {\n116 | \t\treturn;\n117 | \t}\n118 | \tconst bytes = Buffer.byteLength(text, \"utf8\");\n119 | \tif (rawStdoutLimit !== undefined) {\n120 | \t\tif (bytes > rawStdoutLimit) throw new RawStdoutLimitError(\"output_too_large\");\n121 | \t\tif (bytes > rawStdoutLimit - rawStdoutQueuedBytes) throw new RawStdoutLimitError(\"output_overflow\");"
+    },
+    {
+      "symbol": "BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:27",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "ranges": [
+        [
+          27,
+          38
+        ]
+      ],
+      "excerpt": "27 | export const BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE = \"bash_background_completed\";\n28 | \n29 | /** A command's first line, with a count of the rest (a heredoc script can run to dozens of lines). */\n30 | export function summarizeShellCommand(command: string): string {\n31 | \tconst lines = command.trimEnd().split(\"\\n\");\n32 | \treturn lines.length > 1 ? `${lines[0]} (+${lines.length - 1} more lines)` : lines[0]!;\n33 | }\n34 | \n35 | export interface BashBackgroundCompletion {\n36 | \ttaskId: string;\n37 | \tcommand: string;\n38 | \t/** Final tool text (output plus exit status), as the foreground call would have returned it. */"
+    },
+    {
+      "symbol": "summarizeShellCommand",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:30",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "ranges": [
+        [
+          30,
+          41
+        ]
+      ],
+      "excerpt": "30 | export function summarizeShellCommand(command: string): string {\n31 | \tconst lines = command.trimEnd().split(\"\\n\");\n32 | \treturn lines.length > 1 ? `${lines[0]} (+${lines.length - 1} more lines)` : lines[0]!;\n33 | }\n34 | \n35 | export interface BashBackgroundCompletion {\n36 | \ttaskId: string;\n37 | \tcommand: string;\n38 | \t/** Final tool text (output plus exit status), as the foreground call would have returned it. */\n39 | \ttext: string;\n40 | \tisError: boolean;\n41 | \tdurationMs: number;"
+    },
+    {
+      "symbol": "BashBackgroundCompletion",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:35",
+      "covering_entries": [
+        "TOOLS-005"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "ranges": [
+        [
+          35,
+          46
+        ]
+      ],
+      "excerpt": "35 | export interface BashBackgroundCompletion {\n36 | \ttaskId: string;\n37 | \tcommand: string;\n38 | \t/** Final tool text (output plus exit status), as the foreground call would have returned it. */\n39 | \ttext: string;\n40 | \tisError: boolean;\n41 | \tdurationMs: number;\n42 | \t/** The user stopped it from the Shells panel; it did not exit on its own. */\n43 | \tstoppedByUser?: boolean;\n44 | \t/** Exit code when the command ran to its end (not aborted, timed out, or killed). */\n45 | \texitCode?: number;\n46 | \t/** The model's short description of the command, when it gave one. */"
+    },
+    {
+      "symbol": "BackgroundShellRead",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-background.ts:133",
+      "covering_entries": [
+        "TOOLS-005"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "ranges": [
+        [
+          133,
+          144
+        ]
+      ],
+      "excerpt": "133 | export interface BackgroundShellRead {\n134 | \tshell: BackgroundShellSnapshot;\n135 | \t/** Output written since the previous read (only the retained part). */\n136 | \tnewOutput: string;\n137 | \t/** Characters of new output that were already dropped from the retained tail. */\n138 | \tomittedChars: number;\n139 | }\n140 | \n141 | export class BashBackgroundRegistry {\n142 | \tprivate readonly foreground = new Map<string, ForegroundCall>();\n143 | \tprivate readonly shells = new Map<string, BackgroundShell>();\n144 | \tprivate readonly listeners = new Set<(completion: BashBackgroundCompletion) => void>();"
+    },
+    {
+      "symbol": "BASH_SHELL_TOOL_NAMES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:19",
+      "covering_entries": [
+        "TOOLS-006"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          19,
+          30
+        ]
+      ],
+      "excerpt": "19 | export const BASH_SHELL_TOOL_NAMES = [\"bash_output\", \"bash_kill\", \"bash_watch\", \"bash_input\"] as const;\n20 | \n21 | /** Longest single `bash_output` wait; longer waits are split across calls so the turn stays interruptible. */\n22 | export const MAX_WAIT_SECONDS = 300;\n23 | /** Longest accepted `grep` pattern. */\n24 | const MAX_GREP_PATTERN_LENGTH = 500;\n25 | /** A group containing a quantifier, followed by another quantifier: the classic catastrophic-backtracking shape. */\n26 | const NESTED_QUANTIFIER = /\\((?:[^()\\\\]|\\\\.)*[+*}](?:[^()\\\\]|\\\\.)*\\)\\s*(?:[+*]|\\{\\d*,?\\d*\\})/;\n27 | /** Matching lines `grep` returns when `tail_lines` is not given. */\n28 | const DEFAULT_GREP_LINES = 100;\n29 | \n30 | const bashOutputSchema = Type.Object({"
+    },
+    {
+      "symbol": "MAX_WAIT_SECONDS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:22",
+      "covering_entries": [
+        "TOOLS-006",
+        "TOOLS-007"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          22,
+          33
+        ]
+      ],
+      "excerpt": "22 | export const MAX_WAIT_SECONDS = 300;\n23 | /** Longest accepted `grep` pattern. */\n24 | const MAX_GREP_PATTERN_LENGTH = 500;\n25 | /** A group containing a quantifier, followed by another quantifier: the classic catastrophic-backtracking shape. */\n26 | const NESTED_QUANTIFIER = /\\((?:[^()\\\\]|\\\\.)*[+*}](?:[^()\\\\]|\\\\.)*\\)\\s*(?:[+*]|\\{\\d*,?\\d*\\})/;\n27 | /** Matching lines `grep` returns when `tail_lines` is not given. */\n28 | const DEFAULT_GREP_LINES = 100;\n29 | \n30 | const bashOutputSchema = Type.Object({\n31 | \tid: Type.Optional(\n32 | \t\tType.String({ description: \"Background shell id (for example bash-1). Omit to list every background shell.\" }),\n33 | \t),"
+    },
+    {
+      "symbol": "BashKillInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:63",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          63,
+          74
+        ]
+      ],
+      "excerpt": "63 | export type BashKillInput = Static<typeof bashKillSchema>;\n64 | \n65 | export function formatShellRuntime(ms: number): string {\n66 | \tconst seconds = Math.max(0, Math.floor(ms / 1000));\n67 | \tif (seconds < 60) return `${seconds}s`;\n68 | \tconst minutes = Math.floor(seconds / 60);\n69 | \tif (minutes < 60) return `${minutes}m ${seconds % 60}s`;\n70 | \treturn `${Math.floor(minutes / 60)}h ${minutes % 60}m`;\n71 | }\n72 | \n73 | function statusLine(shell: BackgroundShellSnapshot, now: number): string {\n74 | \tconst runtime = formatShellRuntime((shell.endedAt ?? now) - shell.startedAt);"
+    },
+    {
+      "symbol": "createBashOutputToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:87",
+      "covering_entries": [
+        "TOOLS-006"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          87,
+          98
+        ]
+      ],
+      "excerpt": "87 | export function createBashOutputToolDefinition(\n88 | \tregistry: BashBackgroundRegistry,\n89 | \tnow: () => number = Date.now,\n90 | ): ToolDefinition<typeof bashOutputSchema, { shells: BackgroundShellSnapshot[\"status\"][]; shellIds: string[] }> {\n91 | \treturn {\n92 | \t\tname: \"bash_output\",\n93 | \t\tlabel: \"bash_output\",\n94 | \t\tdescription:\n95 | \t\t\t\"Check background shells started with bash run_in_background (or moved there by the user). With an id, returns the shell's status and the output written since your last check; wait_seconds waits for it to finish first. tail_lines and grep read the shell's full log instead, for example the last 20 lines or only the error lines of a noisy server. Without an id, lists every background shell. A shell's final output arrives as a message when it exits, so do not poll or wait repeatedly.\",\n96 | \t\tpromptSnippet: \"Check background shells: status, new output, or tail/grep of the full log\",\n97 | \t\tparameters: bashOutputSchema,\n98 | \t\tasync execute("
+    },
+    {
+      "symbol": "createBashKillToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:214",
+      "covering_entries": [
+        "TOOLS-008"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          214,
+          225
+        ]
+      ],
+      "excerpt": "214 | export function createBashKillToolDefinition(\n215 | \tregistry: BashBackgroundRegistry,\n216 | ): ToolDefinition<typeof bashKillSchema, undefined> {\n217 | \treturn {\n218 | \t\tname: \"bash_kill\",\n219 | \t\tlabel: \"bash_kill\",\n220 | \t\tdescription: \"Stop a running background shell (started with bash run_in_background) and its child processes.\",\n221 | \t\tpromptSnippet: \"Stop a background shell\",\n222 | \t\tparameters: bashKillSchema,\n223 | \t\tasync execute(_toolCallId, { id }: BashKillInput) {\n224 | \t\t\tconst shell = registry.get(id);\n225 | \t\t\tif (!shell) throw new Error(`Unknown background shell \"${id}\".`);"
+    },
+    {
+      "symbol": "BashInputInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:249",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          249,
+          260
+        ]
+      ],
+      "excerpt": "249 | export type BashInputInput = Static<typeof bashInputSchema>;\n250 | \n251 | /** `ask`: confirm each bash_input with the user (denied without a UI). `allow`: send without asking. */\n252 | export type BashInputApproval = \"ask\" | \"allow\";\n253 | \n254 | export function createBashInputToolDefinition(\n255 | \tregistry: BashBackgroundRegistry,\n256 | \tapproval: () => BashInputApproval,\n257 | ): ToolDefinition<typeof bashInputSchema, { bytes: number }> {\n258 | \treturn {\n259 | \t\tname: \"bash_input\",\n260 | \t\tlabel: \"bash_input\","
+    },
+    {
+      "symbol": "BashInputApproval",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:252",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          252,
+          263
+        ]
+      ],
+      "excerpt": "252 | export type BashInputApproval = \"ask\" | \"allow\";\n253 | \n254 | export function createBashInputToolDefinition(\n255 | \tregistry: BashBackgroundRegistry,\n256 | \tapproval: () => BashInputApproval,\n257 | ): ToolDefinition<typeof bashInputSchema, { bytes: number }> {\n258 | \treturn {\n259 | \t\tname: \"bash_input\",\n260 | \t\tlabel: \"bash_input\",\n261 | \t\tdescription:\n262 | \t\t\t\"Send text (and optionally end-of-input) to a background shell that was started with bash run_in_background: true and stdin: true, for example to answer a prompt it is waiting on. Prefer non-interactive flags or piped input when the command supports them. Input can run actions in that program, so it needs the same care as a bash command; by default the user is asked first.\",\n263 | \t\tpromptSnippet: \"Send input to a background shell started with stdin: true\","
+    },
+    {
+      "symbol": "createBashInputToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-shells.ts:254",
+      "covering_entries": [
+        "TOOLS-009"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "ranges": [
+        [
+          254,
+          265
+        ]
+      ],
+      "excerpt": "254 | export function createBashInputToolDefinition(\n255 | \tregistry: BashBackgroundRegistry,\n256 | \tapproval: () => BashInputApproval,\n257 | ): ToolDefinition<typeof bashInputSchema, { bytes: number }> {\n258 | \treturn {\n259 | \t\tname: \"bash_input\",\n260 | \t\tlabel: \"bash_input\",\n261 | \t\tdescription:\n262 | \t\t\t\"Send text (and optionally end-of-input) to a background shell that was started with bash run_in_background: true and stdin: true, for example to answer a prompt it is waiting on. Prefer non-interactive flags or piped input when the command supports them. Input can run actions in that program, so it needs the same care as a bash command; by default the user is asked first.\",\n263 | \t\tpromptSnippet: \"Send input to a background shell started with stdin: true\",\n264 | \t\tparameters: bashInputSchema,\n265 | \t\tasync execute(_toolCallId, { id, text, eof }: BashInputInput, _signal, _onUpdate, ctx) {"
+    },
+    {
+      "symbol": "BashWatchKind",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:13",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          13,
+          24
+        ]
+      ],
+      "excerpt": "13 | export type BashWatchKind = \"pattern\" | \"silence\" | \"interval\";\n14 | \n15 | /** Custom message type for a delivered watch alert. */\n16 | export const BASH_WATCH_FIRED_CUSTOM_TYPE = \"bash_watch_fired\";\n17 | \n18 | export interface BashWatchSpec {\n19 | \t/** Background shell id, for example bash-1. */\n20 | \ttarget: string;\n21 | \tkind: BashWatchKind;\n22 | \t/** Literal text for `pattern` (not a regular expression). */\n23 | \tpattern?: string;\n24 | \t/** Silence length for `silence`, in milliseconds. */"
+    },
+    {
+      "symbol": "BASH_WATCH_FIRED_CUSTOM_TYPE",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:16",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          16,
+          27
+        ]
+      ],
+      "excerpt": "16 | export const BASH_WATCH_FIRED_CUSTOM_TYPE = \"bash_watch_fired\";\n17 | \n18 | export interface BashWatchSpec {\n19 | \t/** Background shell id, for example bash-1. */\n20 | \ttarget: string;\n21 | \tkind: BashWatchKind;\n22 | \t/** Literal text for `pattern` (not a regular expression). */\n23 | \tpattern?: string;\n24 | \t/** Silence length for `silence`, in milliseconds. */\n25 | \tsilenceMs?: number;\n26 | \t/** Period for `interval`, in milliseconds. */\n27 | \tintervalMs?: number;"
+    },
+    {
+      "symbol": "BashWatchSpec",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:18",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          18,
+          29
+        ]
+      ],
+      "excerpt": "18 | export interface BashWatchSpec {\n19 | \t/** Background shell id, for example bash-1. */\n20 | \ttarget: string;\n21 | \tkind: BashWatchKind;\n22 | \t/** Literal text for `pattern` (not a regular expression). */\n23 | \tpattern?: string;\n24 | \t/** Silence length for `silence`, in milliseconds. */\n25 | \tsilenceMs?: number;\n26 | \t/** Period for `interval`, in milliseconds. */\n27 | \tintervalMs?: number;\n28 | \t/** Fires before the watch is removed. */\n29 | \tmaxFires?: number;"
+    },
+    {
+      "symbol": "BashWatchSnapshot",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:34",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          34,
+          45
+        ]
+      ],
+      "excerpt": "34 | export interface BashWatchSnapshot {\n35 | \tid: string;\n36 | \ttarget: string;\n37 | \tkind: BashWatchKind | \"prompt\";\n38 | \tpattern?: string;\n39 | \tsilenceMs?: number;\n40 | \tintervalMs?: number;\n41 | \tmaxFires: number;\n42 | \tfires: number;\n43 | \tarmed: boolean;\n44 | \trearm: \"manual\" | \"on_activity\";\n45 | \t/** Created by Ice for every background shell rather than by the model. */"
+    },
+    {
+      "symbol": "BashWatchFire",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:49",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          49,
+          60
+        ]
+      ],
+      "excerpt": "49 | export interface BashWatchFire {\n50 | \twatchId: string;\n51 | \ttarget: string;\n52 | \tkind: BashWatchKind | \"prompt\";\n53 | \t/** One line saying why it fired. */\n54 | \treason: string;\n55 | \t/** Newest output lines of the shell. */\n56 | \ttail: string;\n57 | \tlogPath?: string;\n58 | \t/** Created by Ice; a default silence alert should not start a turn on its own. */\n59 | \tauto: boolean;\n60 | \t/** `${watchId}#${sequence}`: unique per fire, even across rearms, for de-duplication. */"
+    },
+    {
+      "symbol": "MIN_SILENCE_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:66",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          66,
+          77
+        ]
+      ],
+      "excerpt": "66 | export const MIN_SILENCE_MS = 5_000;\n67 | export const MIN_INTERVAL_MS = 30_000;\n68 | export const MAX_WATCH_FIRES = 10;\n69 | const MAX_PATTERN_LENGTH = 200;\n70 | const TAIL_LINES = 20;\n71 | const TAIL_CHARS = 2_000;\n72 | \n73 | /** Last non-empty line looks like a prompt waiting for an answer. Conservative: an observation, not proof. */\n74 | const PROMPT_LINE =\n75 | \t/\\b(y\\/n|yes\\/no)\\b|\\[y\\/n\\]|\\[Y\\/n\\]|\\[y\\/N\\]|press (enter|return|any key)|\\b(continue|proceed|overwrite)\\?|password( for [^:]*)?:\\s*$|passphrase[^:]*:\\s*$|\\?\\s*$/i;\n76 | \n77 | export interface BashWatchDefaults {"
+    },
+    {
+      "symbol": "MIN_INTERVAL_MS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:67",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          67,
+          78
+        ]
+      ],
+      "excerpt": "67 | export const MIN_INTERVAL_MS = 30_000;\n68 | export const MAX_WATCH_FIRES = 10;\n69 | const MAX_PATTERN_LENGTH = 200;\n70 | const TAIL_LINES = 20;\n71 | const TAIL_CHARS = 2_000;\n72 | \n73 | /** Last non-empty line looks like a prompt waiting for an answer. Conservative: an observation, not proof. */\n74 | const PROMPT_LINE =\n75 | \t/\\b(y\\/n|yes\\/no)\\b|\\[y\\/n\\]|\\[Y\\/n\\]|\\[y\\/N\\]|press (enter|return|any key)|\\b(continue|proceed|overwrite)\\?|password( for [^:]*)?:\\s*$|passphrase[^:]*:\\s*$|\\?\\s*$/i;\n76 | \n77 | export interface BashWatchDefaults {\n78 | \t/** Silence alert for every background shell; 0 disables it. */"
+    },
+    {
+      "symbol": "MAX_WATCH_FIRES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:68",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          68,
+          79
+        ]
+      ],
+      "excerpt": "68 | export const MAX_WATCH_FIRES = 10;\n69 | const MAX_PATTERN_LENGTH = 200;\n70 | const TAIL_LINES = 20;\n71 | const TAIL_CHARS = 2_000;\n72 | \n73 | /** Last non-empty line looks like a prompt waiting for an answer. Conservative: an observation, not proof. */\n74 | const PROMPT_LINE =\n75 | \t/\\b(y\\/n|yes\\/no)\\b|\\[y\\/n\\]|\\[Y\\/n\\]|\\[y\\/N\\]|press (enter|return|any key)|\\b(continue|proceed|overwrite)\\?|password( for [^:]*)?:\\s*$|passphrase[^:]*:\\s*$|\\?\\s*$/i;\n76 | \n77 | export interface BashWatchDefaults {\n78 | \t/** Silence alert for every background shell; 0 disables it. */\n79 | \tsilenceAlertMs: number;"
+    },
+    {
+      "symbol": "BashWatchDefaults",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:77",
+      "covering_entries": [
+        "TOOLS-011",
+        "TOOLS-013"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          77,
+          88
+        ]
+      ],
+      "excerpt": "77 | export interface BashWatchDefaults {\n78 | \t/** Silence alert for every background shell; 0 disables it. */\n79 | \tsilenceAlertMs: number;\n80 | \t/** A silent shell whose last line looks like a prompt is reported after this long; 0 disables it. */\n81 | \tpromptAlertMs: number;\n82 | }\n83 | \n84 | interface Watch extends BashWatchSnapshot {\n85 | \t/** Fires over the watch's whole life (not reset by rearm), so every fire id is unique. */\n86 | \tsequence: number;\n87 | \t/** Pattern search carries this many trailing chars so a match split across chunks is still found. */\n88 | \tcarry: string;"
+    },
+    {
+      "symbol": "BashWatchInput",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:128",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          128,
+          139
+        ]
+      ],
+      "excerpt": "128 | export type BashWatchInput = Static<typeof bashWatchSchema>;\n129 | \n130 | function describeWatch(watch: BashWatchSnapshot): string {\n131 | \tconst what =\n132 | \t\twatch.kind === \"pattern\"\n133 | \t\t\t? `prints \"${watch.pattern}\"`\n134 | \t\t\t: watch.kind === \"interval\"\n135 | \t\t\t\t? `every ${watch.intervalMs! / 1000}s`\n136 | \t\t\t\t: watch.kind === \"prompt\"\n137 | \t\t\t\t\t? `waits for input (silent ${watch.silenceMs! / 1000}s on a prompt-like line)`\n138 | \t\t\t\t\t: `silent for ${watch.silenceMs! / 1000}s`;\n139 | \treturn `${watch.id}: ${watch.target} ${what}; ${watch.fires}/${watch.maxFires} alerts, ${watch.armed ? \"armed\" : \"waiting to re-arm\"} (${watch.rearm})${watch.auto ? \" [default]\" : \"\"}`;"
+    },
+    {
+      "symbol": "createBashWatchToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash-watch.ts:142",
+      "covering_entries": [
+        "TOOLS-011"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "ranges": [
+        [
+          142,
+          153
+        ]
+      ],
+      "excerpt": "142 | export function createBashWatchToolDefinition(\n143 | \twatches: BashWatchRegistry,\n144 | ): ToolDefinition<typeof bashWatchSchema, { watches: BashWatchSnapshot[] }> {\n145 | \treturn {\n146 | \t\tname: \"bash_watch\",\n147 | \t\tlabel: \"bash_watch\",\n148 | \t\tdescription:\n149 | \t\t\t\"Watch a background shell and get an alert message instead of polling: when it prints a literal pattern (for example a 'ready' line or 'ERROR'), when it goes silent, or on an interval. Alerts arrive as messages; while you are busy they end blocking waits. After arming a watch, continue other work or end your turn. Every background shell already has default alerts for long silence and for a prompt-like line waiting for input; its exit always arrives as a message.\",\n150 | \t\tpromptSnippet: \"Alert on a background shell's output pattern, silence, or interval instead of polling\",\n151 | \t\tparameters: bashWatchSchema,\n152 | \t\tasync execute(_toolCallId, input: BashWatchInput) {\n153 | \t\t\tconst result = (text: string, list: BashWatchSnapshot[]) => ({"
+    },
+    {
+      "symbol": "BashToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/bash.ts:80",
+      "covering_entries": [
+        "TOOLS-001"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/bash.ts",
+      "sha256": "9b59f5b97743d815b84fca1c0961d38824a36740af2e7de5d1276831c2dbf918",
+      "ranges": [
+        [
+          80,
+          91
+        ]
+      ],
+      "excerpt": "80 | export interface BashToolDetails {\n81 | \ttruncation?: TruncationResult;\n82 | \tfullOutputPath?: string;\n83 | \t/** Set when the command runs as a background shell; the result holds output so far. */\n84 | \tbackgroundTaskId?: string;\n85 | \t/** Who sent it there: the model (`run_in_background`) or the user (ctrl+b). */\n86 | \tbackgroundOrigin?: \"model\" | \"user\";\n87 | }\n88 | \n89 | /**\n90 |  * Pluggable operations for the bash tool.\n91 |  * Override these to delegate command execution to remote systems (for example SSH)."
+    },
+    {
+      "symbol": "detectLineEnding",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:10",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          10,
+          21
+        ]
+      ],
+      "excerpt": "10 | export function detectLineEnding(content: string): \"\\r\\n\" | \"\\n\" {\n11 | \tconst crlfIdx = content.indexOf(\"\\r\\n\");\n12 | \tconst lfIdx = content.indexOf(\"\\n\");\n13 | \tif (lfIdx === -1) return \"\\n\";\n14 | \tif (crlfIdx === -1) return \"\\n\";\n15 | \treturn crlfIdx < lfIdx ? \"\\r\\n\" : \"\\n\";\n16 | }\n17 | \n18 | export function normalizeToLF(text: string): string {\n19 | \treturn text.replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\");\n20 | }\n21 | "
+    },
+    {
+      "symbol": "normalizeToLF",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:18",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          18,
+          29
+        ]
+      ],
+      "excerpt": "18 | export function normalizeToLF(text: string): string {\n19 | \treturn text.replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\");\n20 | }\n21 | \n22 | export function restoreLineEndings(text: string, ending: \"\\r\\n\" | \"\\n\"): string {\n23 | \treturn ending === \"\\r\\n\" ? text.replace(/\\n/g, \"\\r\\n\") : text;\n24 | }\n25 | \n26 | /**\n27 |  * Normalize text for fuzzy matching. Applies progressive transformations:\n28 |  * - Strip trailing whitespace from each line\n29 |  * - Normalize smart quotes to ASCII equivalents"
+    },
+    {
+      "symbol": "restoreLineEndings",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:22",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          22,
+          33
+        ]
+      ],
+      "excerpt": "22 | export function restoreLineEndings(text: string, ending: \"\\r\\n\" | \"\\n\"): string {\n23 | \treturn ending === \"\\r\\n\" ? text.replace(/\\n/g, \"\\r\\n\") : text;\n24 | }\n25 | \n26 | /**\n27 |  * Normalize text for fuzzy matching. Applies progressive transformations:\n28 |  * - Strip trailing whitespace from each line\n29 |  * - Normalize smart quotes to ASCII equivalents\n30 |  * - Normalize Unicode dashes/hyphens to ASCII hyphen\n31 |  * - Normalize special Unicode spaces to regular space\n32 |  */\n33 | export function normalizeForFuzzyMatch(text: string): string {"
+    },
+    {
+      "symbol": "normalizeForFuzzyMatch",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:33",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          33,
+          44
+        ]
+      ],
+      "excerpt": "33 | export function normalizeForFuzzyMatch(text: string): string {\n34 | \treturn normalizeFuzzyCharacters(\n35 | \t\ttext\n36 | \t\t\t.normalize(\"NFKC\")\n37 | \t\t\t// Strip trailing whitespace per line\n38 | \t\t\t.split(\"\\n\")\n39 | \t\t\t.map((line) => line.trimEnd())\n40 | \t\t\t.join(\"\\n\"),\n41 | \t);\n42 | }\n43 | \n44 | /** The character-level part of fuzzy normalization; it never adds or removes line breaks. */"
+    },
+    {
+      "symbol": "applyReplacementsPreservingUnchangedLines",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:138",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          138,
+          149
+        ]
+      ],
+      "excerpt": "138 | export function applyReplacementsPreservingUnchangedLines(\n139 | \toriginalContent: string,\n140 | \tbaseContent: string,\n141 | \treplacements: TextReplacement[],\n142 | ): string {\n143 | \tconst originalLines = splitLinesWithEndings(originalContent);\n144 | \tconst baseLines = getLineSpans(baseContent);\n145 | \tif (originalLines.length !== baseLines.length) {\n146 | \t\tthrow new Error(\"Cannot preserve unchanged lines because the base content has a different line count.\");\n147 | \t}\n148 | \n149 | \tconst groups: Array<{ startLine: number; endLine: number; replacements: TextReplacement[] }> = [];"
+    },
+    {
+      "symbol": "FuzzyMatchResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:181",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          181,
+          192
+        ]
+      ],
+      "excerpt": "181 | export interface FuzzyMatchResult {\n182 | \t/** Whether a match was found */\n183 | \tfound: boolean;\n184 | \t/** The index where the match starts (in the content that should be used for replacement) */\n185 | \tindex: number;\n186 | \t/** Length of the matched text */\n187 | \tmatchLength: number;\n188 | \t/** Whether fuzzy matching was used (false = exact match) */\n189 | \tusedFuzzyMatch: boolean;\n190 | \t/**\n191 | \t * The content to use for replacement operations.\n192 | \t * When exact match: original content. When fuzzy match: normalized content."
+    },
+    {
+      "symbol": "AppliedEditsResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:202",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          202,
+          213
+        ]
+      ],
+      "excerpt": "202 | export interface AppliedEditsResult {\n203 | \tbaseContent: string;\n204 | \tnewContent: string;\n205 | }\n206 | \n207 | /**\n208 |  * Find oldText in content, trying exact match first, then fuzzy match.\n209 |  * When fuzzy matching is used, the returned contentForReplacement is the\n210 |  * fuzzy-normalized version of the content (trailing whitespace stripped,\n211 |  * Unicode quotes/dashes normalized to ASCII).\n212 |  */\n213 | export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {"
+    },
+    {
+      "symbol": "fuzzyFindText",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:213",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          213,
+          224
+        ]
+      ],
+      "excerpt": "213 | export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {\n214 | \t// Try exact match first\n215 | \tconst exactIndex = content.indexOf(oldText);\n216 | \tif (exactIndex !== -1) {\n217 | \t\treturn {\n218 | \t\t\tfound: true,\n219 | \t\t\tindex: exactIndex,\n220 | \t\t\tmatchLength: oldText.length,\n221 | \t\t\tusedFuzzyMatch: false,\n222 | \t\t\tcontentForReplacement: content,\n223 | \t\t};\n224 | \t}"
+    },
+    {
+      "symbol": "stripBom",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:254",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          254,
+          265
+        ]
+      ],
+      "excerpt": "254 | export function stripBom(content: string): { bom: string; text: string } {\n255 | \treturn content.startsWith(\"\\uFEFF\") ? { bom: \"\\uFEFF\", text: content.slice(1) } : { bom: \"\", text: content };\n256 | }\n257 | \n258 | function countOccurrences(content: string, text: string): number {\n259 | \treturn content.split(text).length - 1;\n260 | }\n261 | \n262 | /**\n263 |  * Map an offset in LF-normalized content to the same position in its fuzzy-normalized form.\n264 |  * Fuzzy normalization keeps every line break, so the line is found by count and only the\n265 |  * prefix within that line is normalized."
+    },
+    {
+      "symbol": "applyEditsToNormalizedContent",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:324",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          324,
+          335
+        ]
+      ],
+      "excerpt": "324 | export function applyEditsToNormalizedContent(\n325 | \tnormalizedContent: string,\n326 | \tedits: Edit[],\n327 | \tpath: string,\n328 | ): AppliedEditsResult {\n329 | \tconst normalizedEdits = edits.map((edit) => ({\n330 | \t\toldText: normalizeToLF(edit.oldText),\n331 | \t\tnewText: normalizeToLF(edit.newText),\n332 | \t}));\n333 | \n334 | \tfor (let i = 0; i < normalizedEdits.length; i++) {\n335 | \t\tif (normalizedEdits[i].oldText.length === 0) {"
+    },
+    {
+      "symbol": "EditDiffResult",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:539",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          539,
+          550
+        ]
+      ],
+      "excerpt": "539 | export interface EditDiffResult {\n540 | \tdiff: string;\n541 | \tfirstChangedLine: number | undefined;\n542 | }\n543 | \n544 | export interface EditDiffError {\n545 | \terror: string;\n546 | }\n547 | \n548 | /**\n549 |  * Compute the diff for one or more edit operations without applying them.\n550 |  * Used for preview rendering in the TUI before the tool executes."
+    },
+    {
+      "symbol": "EditDiffError",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:544",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          544,
+          555
+        ]
+      ],
+      "excerpt": "544 | export interface EditDiffError {\n545 | \terror: string;\n546 | }\n547 | \n548 | /**\n549 |  * Compute the diff for one or more edit operations without applying them.\n550 |  * Used for preview rendering in the TUI before the tool executes.\n551 |  */\n552 | export async function computeEditsDiff(\n553 | \tpath: string,\n554 | \tedits: Edit[],\n555 | \tcwd: string,"
+    },
+    {
+      "symbol": "computeEditDiff",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit-diff.ts:587",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "ranges": [
+        [
+          587,
+          595
+        ]
+      ],
+      "excerpt": "587 | export async function computeEditDiff(\n588 | \tpath: string,\n589 | \toldText: string,\n590 | \tnewText: string,\n591 | \tcwd: string,\n592 | ): Promise<EditDiffResult | EditDiffError> {\n593 | \treturn computeEditsDiff(path, [{ oldText, newText }], cwd);\n594 | }\n595 | "
+    },
+    {
+      "symbol": "EditToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:61",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "ranges": [
+        [
+          61,
+          72
+        ]
+      ],
+      "excerpt": "61 | export interface EditToolDetails {\n62 | \t/** Display-oriented diff of the changes made */\n63 | \tdiff: string;\n64 | \t/** Standard unified patch of the changes made */\n65 | \tpatch: string;\n66 | \t/** Line number of the first change in the new file (for editor navigation) */\n67 | \tfirstChangedLine?: number;\n68 | }\n69 | \n70 | /**\n71 |  * Pluggable operations for the edit tool.\n72 |  * Override these to delegate file editing to remote systems (for example SSH)."
+    },
+    {
+      "symbol": "EditToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:89",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "ranges": [
+        [
+          89,
+          100
+        ]
+      ],
+      "excerpt": "89 | export interface EditToolOptions {\n90 | \t/** Custom operations for file editing. Default: local filesystem */\n91 | \toperations?: EditOperations;\n92 | }\n93 | \n94 | function prepareEditArguments(input: unknown): EditToolInput {\n95 | \tif (!input || typeof input !== \"object\") {\n96 | \t\treturn input as EditToolInput;\n97 | \t}\n98 | \n99 | \tconst args = input as Record<string, unknown>;\n100 | "
+    },
+    {
+      "symbol": "createEditToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:287",
+      "covering_entries": [
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "ranges": [
+        [
+          287,
+          298
+        ]
+      ],
+      "excerpt": "287 | export function createEditToolDefinition(\n288 | \tcwd: string,\n289 | \toptions?: EditToolOptions,\n290 | ): ToolDefinition<typeof editSchema, EditToolDetails | undefined, EditRenderState> {\n291 | \tconst ops = options?.operations ?? defaultEditOperations;\n292 | \treturn {\n293 | \t\tname: \"edit\",\n294 | \t\tlabel: \"edit\",\n295 | \t\tdescription:\n296 | \t\t\t\"Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.\",\n297 | \t\tpromptSnippet:\n298 | \t\t\t\"Make precise file edits with exact text replacement, including multiple disjoint edits in one call\","
+    },
+    {
+      "symbol": "createEditTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/edit.ts:435",
+      "covering_entries": [
+        "TOOLS-025"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "ranges": [
+        [
+          435,
+          438
+        ]
+      ],
+      "excerpt": "435 | export function createEditTool(cwd: string, options?: EditToolOptions): AgentTool<typeof editSchema> {\n436 | \treturn wrapToolDefinition(createEditToolDefinition(cwd, options));\n437 | }\n438 | "
+    },
+    {
+      "symbol": "FindToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:41",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "ranges": [
+        [
+          41,
+          52
+        ]
+      ],
+      "excerpt": "41 | export interface FindToolDetails {\n42 | \ttruncation?: TruncationResult;\n43 | \tresultLimitReached?: number;\n44 | }\n45 | \n46 | /**\n47 |  * Pluggable operations for the find tool.\n48 |  * Override these to delegate file search to remote systems (for example SSH).\n49 |  */\n50 | export interface FindOperations {\n51 | \t/** Check if path exists */\n52 | \texists: (absolutePath: string) => Promise<boolean> | boolean;"
+    },
+    {
+      "symbol": "FindToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:63",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "ranges": [
+        [
+          63,
+          74
+        ]
+      ],
+      "excerpt": "63 | export interface FindToolOptions {\n64 | \t/** Custom operations for find. Default: local filesystem plus fd */\n65 | \toperations?: FindOperations;\n66 | }\n67 | \n68 | function formatFindCall(args: { pattern: string; path?: string; limit?: number } | undefined, theme: Theme): string {\n69 | \tconst pattern = str(args?.pattern);\n70 | \tconst rawPath = str(args?.path);\n71 | \tconst path = rawPath !== null ? shortenPath(rawPath || \".\") : null;\n72 | \tconst limit = args?.limit;\n73 | \tconst invalidArg = invalidArgText(theme);\n74 | \tlet text ="
+    },
+    {
+      "symbol": "createFindTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/find.ts:375",
+      "covering_entries": [
+        "TOOLS-028"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "ranges": [
+        [
+          375,
+          378
+        ]
+      ],
+      "excerpt": "375 | export function createFindTool(cwd: string, options?: FindToolOptions): AgentTool<typeof findSchema> {\n376 | \treturn wrapToolDefinition(createFindToolDefinition(cwd, options));\n377 | }\n378 | "
+    },
+    {
+      "symbol": "GrepToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:41",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "ranges": [
+        [
+          41,
+          52
+        ]
+      ],
+      "excerpt": "41 | export interface GrepToolDetails {\n42 | \ttruncation?: TruncationResult;\n43 | \tmatchLimitReached?: number;\n44 | \tlinesTruncated?: boolean;\n45 | }\n46 | \n47 | /**\n48 |  * Pluggable operations for the grep tool.\n49 |  * Override these to delegate search to remote systems (for example SSH).\n50 |  */\n51 | export interface GrepOperations {\n52 | \t/** Check if path is a directory. Throws if path does not exist. */"
+    },
+    {
+      "symbol": "GrepToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:63",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "ranges": [
+        [
+          63,
+          74
+        ]
+      ],
+      "excerpt": "63 | export interface GrepToolOptions {\n64 | \t/** Custom operations for grep. Default: local filesystem plus ripgrep */\n65 | \toperations?: GrepOperations;\n66 | }\n67 | \n68 | function formatGrepCall(\n69 | \targs: { pattern: string; path?: string; glob?: string; limit?: number } | undefined,\n70 | \ttheme: Theme,\n71 | ): string {\n72 | \tconst pattern = str(args?.pattern);\n73 | \tconst rawPath = str(args?.path);\n74 | \tconst path = rawPath !== null ? shortenPath(rawPath || \".\") : null;"
+    },
+    {
+      "symbol": "createGrepTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/grep.ts:383",
+      "covering_entries": [
+        "TOOLS-029"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "ranges": [
+        [
+          383,
+          386
+        ]
+      ],
+      "excerpt": "383 | export function createGrepTool(cwd: string, options?: GrepToolOptions): AgentTool<typeof grepSchema> {\n384 | \treturn wrapToolDefinition(createGrepToolDefinition(cwd, options));\n385 | }\n386 | "
+    },
+    {
+      "symbol": "ToolDef",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/index.ts:82",
+      "covering_entries": [
+        "TOOLS-018"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/index.ts",
+      "sha256": "1c299edad4472e06d9232e694378c1555bfe3f3514247f1831e13821e4204684",
+      "ranges": [
+        [
+          82,
+          93
+        ]
+      ],
+      "excerpt": "82 | export type ToolDef = ToolDefinition<any, any>;\n83 | export type ToolName = \"read\" | \"bash\" | \"edit\" | \"write\" | \"grep\" | \"find\" | \"ls\";\n84 | export const allToolNames: Set<ToolName> = new Set([\"read\", \"bash\", \"edit\", \"write\", \"grep\", \"find\", \"ls\"]);\n85 | \n86 | export interface ToolsOptions {\n87 | \tread?: ReadToolOptions;\n88 | \tbash?: BashToolOptions;\n89 | \twrite?: WriteToolOptions;\n90 | \tedit?: EditToolOptions;\n91 | \tgrep?: GrepToolOptions;\n92 | \tfind?: FindToolOptions;\n93 | \tls?: LsToolOptions;"
+    },
+    {
+      "symbol": "LsToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:23",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+      "ranges": [
+        [
+          23,
+          34
+        ]
+      ],
+      "excerpt": "23 | export interface LsToolDetails {\n24 | \ttruncation?: TruncationResult;\n25 | \tentryLimitReached?: number;\n26 | }\n27 | \n28 | /**\n29 |  * Pluggable operations for the ls tool.\n30 |  * Override these to delegate directory listing to remote systems (for example SSH).\n31 |  */\n32 | export interface LsOperations {\n33 | \t/** Check if path exists */\n34 | \texists: (absolutePath: string) => Promise<boolean> | boolean;"
+    },
+    {
+      "symbol": "LsToolOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:47",
+      "covering_entries": [
+        "TOOLS-027",
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+      "ranges": [
+        [
+          47,
+          58
+        ]
+      ],
+      "excerpt": "47 | export interface LsToolOptions {\n48 | \t/** Custom operations for directory listing. Default: local filesystem */\n49 | \toperations?: LsOperations;\n50 | }\n51 | \n52 | function formatLsCall(args: { path?: string; limit?: number } | undefined, theme: Theme, cwd: string): string {\n53 | \tconst limit = args?.limit;\n54 | \tconst pathDisplay = renderToolPath(str(args?.path), theme, cwd, { emptyFallback: \".\" });\n55 | \tlet text = `${theme.fg(\"toolTitle\", theme.bold(\"ls\"))} ${pathDisplay}`;\n56 | \tif (limit !== undefined) {\n57 | \t\ttext += theme.fg(\"toolOutput\", ` (limit ${limit})`);\n58 | \t}"
+    },
+    {
+      "symbol": "createLsTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/ls.ts:223",
+      "covering_entries": [
+        "TOOLS-030"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+      "ranges": [
+        [
+          223,
+          226
+        ]
+      ],
+      "excerpt": "223 | export function createLsTool(cwd: string, options?: LsToolOptions): AgentTool<typeof lsSchema> {\n224 | \treturn wrapToolDefinition(createLsToolDefinition(cwd, options));\n225 | }\n226 | "
+    },
+    {
+      "symbol": "OutputAccumulatorOptions",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:7",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+      "ranges": [
+        [
+          7,
+          18
+        ]
+      ],
+      "excerpt": "7 | export interface OutputAccumulatorOptions {\n8 | \tmaxLines?: number;\n9 | \tmaxBytes?: number;\n10 | \ttempFilePrefix?: string;\n11 | \t/** Bytes written to the full-output file before it stops growing. Default {@link MAX_LOG_FILE_BYTES}. */\n12 | \tmaxFileBytes?: number;\n13 | }\n14 | \n15 | /** Full-output file cap: a runaway command cannot fill the temp directory. */\n16 | export const MAX_LOG_FILE_BYTES = 64 * 1024 * 1024;\n17 | /** Space kept under the cap for the truncation marker. */\n18 | const LOG_MARKER_RESERVE_BYTES = 256;"
+    },
+    {
+      "symbol": "MAX_LOG_FILE_BYTES",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:16",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+      "ranges": [
+        [
+          16,
+          27
+        ]
+      ],
+      "excerpt": "16 | export const MAX_LOG_FILE_BYTES = 64 * 1024 * 1024;\n17 | /** Space kept under the cap for the truncation marker. */\n18 | const LOG_MARKER_RESERVE_BYTES = 256;\n19 | \n20 | /** Why the full-output file is incomplete, when it is. */\n21 | export type LogFileIssue = { kind: \"truncated\"; maxBytes: number } | { kind: \"write_failed\"; error: string };\n22 | \n23 | export function describeLogFileIssue(issue: LogFileIssue): string {\n24 | \treturn issue.kind === \"truncated\"\n25 | \t\t? `log stopped at ${formatSize(issue.maxBytes)}; later output is only in the retained tail`\n26 | \t\t: `log write failed (${issue.error}); output after that is only in the retained tail`;\n27 | }"
+    },
+    {
+      "symbol": "OutputSnapshot",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts:29",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+      "ranges": [
+        [
+          29,
+          40
+        ]
+      ],
+      "excerpt": "29 | export interface OutputSnapshot {\n30 | \tcontent: string;\n31 | \ttruncation: TruncationResult;\n32 | \tfullOutputPath?: string;\n33 | }\n34 | \n35 | function defaultTempFilePath(prefix: string): string {\n36 | \tconst id = randomBytes(8).toString(\"hex\");\n37 | \treturn join(tmpdir(), `${prefix}-${id}.log`);\n38 | }\n39 | \n40 | function byteLength(text: string): number {"
+    },
+    {
+      "symbol": "ReadToolDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/read.ts:28",
+      "covering_entries": [
+        "TOOLS-022"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/read.ts",
+      "sha256": "4b3f61291a9f314c582caeaa735eb38f8a736dd68ac711425bfd0650febb1fa1",
+      "ranges": [
+        [
+          28,
+          39
+        ]
+      ],
+      "excerpt": "28 | export interface ReadToolDetails {\n29 | \ttruncation?: TruncationResult;\n30 | }\n31 | \n32 | interface CompactReadClassification {\n33 | \tkind: \"docs\" | \"resource\" | \"skill\";\n34 | \tlabel: string;\n35 | }\n36 | \n37 | const COMPACT_RESOURCE_FILE_NAMES = new Set([\"AGENTS.md\", \"AGENTS.MD\", \"CLAUDE.md\", \"CLAUDE.MD\"]);\n38 | \n39 | /**"
+    },
+    {
+      "symbol": "ToolRenderResultLike",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/tools/render-utils.ts:66",
+      "covering_entries": [
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/render-utils.ts",
+      "sha256": "fded002274529fc617ccac4623ec3d5a4b776a752ad534446eed8be67d29bafc",
+      "ranges": [
+        [
+          66,
+          77
+        ]
+      ],
+      "excerpt": "66 | export type ToolRenderResultLike<TDetails> = {\n67 | \tcontent: (TextContent | ImageContent)[];\n68 | \tdetails: TDetails;\n69 | };\n70 | \n71 | export function invalidArgText(theme: Theme): string {\n72 | \treturn theme.fg(\"error\", \"[invalid arg]\");\n73 | }\n74 | \n75 | export function renderToolPath(\n76 | \trawPath: string | null,\n77 | \ttheme: Theme,"
+    },
+    {
+      "symbol": "GREP_MAX_LINE_LENGTH",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/truncate.ts:13",
+      "covering_entries": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/truncate.ts",
+      "sha256": "104e61ea602c7f7894097b2771dad8c68de75c5a10ea6222e615c4ad144451c7",
+      "ranges": [
+        [
+          13,
+          24
+        ]
+      ],
+      "excerpt": "13 | export const GREP_MAX_LINE_LENGTH = 500; // Max chars per grep match line\n14 | \n15 | export interface TruncationResult {\n16 | \t/** The truncated content */\n17 | \tcontent: string;\n18 | \t/** Whether truncation occurred */\n19 | \ttruncated: boolean;\n20 | \t/** Which limit was hit: \"lines\", \"bytes\", or null if not truncated */\n21 | \ttruncatedBy: \"lines\" | \"bytes\" | null;\n22 | \t/** Total number of lines in the original content */\n23 | \ttotalLines: number;\n24 | \t/** Total number of bytes in the original content */"
+    },
+    {
+      "symbol": "createWriteToolDefinition",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/write.ts:181",
+      "covering_entries": [
+        "TOOLS-024",
+        "TOOLS-027"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/write.ts",
+      "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+      "ranges": [
+        [
+          181,
+          192
+        ]
+      ],
+      "excerpt": "181 | export function createWriteToolDefinition(\n182 | \tcwd: string,\n183 | \toptions?: WriteToolOptions,\n184 | ): ToolDefinition<typeof writeSchema, undefined> {\n185 | \tconst ops = options?.operations ?? defaultWriteOperations;\n186 | \treturn {\n187 | \t\tname: \"write\",\n188 | \t\tlabel: \"write\",\n189 | \t\tdescription:\n190 | \t\t\t\"Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.\",\n191 | \t\tpromptSnippet: \"Create or overwrite files\",\n192 | \t\tpromptGuidelines: [\"Use write only for new files or complete rewrites.\"],"
+    },
+    {
+      "symbol": "createWriteTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/tools/write.ts:265",
+      "covering_entries": [
+        "TOOLS-024"
+      ],
+      "action": "name-in-entry",
+      "area": "tools",
+      "path": "ice:packages/coding-agent/src/core/tools/write.ts",
+      "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+      "ranges": [
+        [
+          265,
+          268
+        ]
+      ],
+      "excerpt": "265 | export function createWriteTool(cwd: string, options?: WriteToolOptions): AgentTool<typeof writeSchema> {\n266 | \treturn wrapToolDefinition(createWriteToolDefinition(cwd, options));\n267 | }\n268 | "
+    }
+  ]
+}

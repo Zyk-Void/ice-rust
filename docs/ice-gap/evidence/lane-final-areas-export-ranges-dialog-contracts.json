@@ -1,0 +1,45 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "scope": "Only displayed ranges independently read for export reconciliation.",
+  "files": [
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
+      "sha256": "c67a4d68512424886271408b3f9681c6091d07016aad3c0678108887a60a36a3",
+      "total_lines": 129,
+      "ranges": [
+        [
+          27,
+          69
+        ]
+      ],
+      "text": "27 | \tprivate countdown: CountdownTimer | undefined;\n28 | \tprivate onToggleToolsExpanded: (() => void) | undefined;\n29 | \tprivate reviewScrollView: ScrollView | undefined;\n30 | \n31 | \tconstructor(\n32 | \t\ttitle: string,\n33 | \t\toptions: string[],\n34 | \t\tonSelect: (option: string) => void,\n35 | \t\tonCancel: () => void,\n36 | \t\topts?: ExtensionSelectorOptions,\n37 | \t) {\n38 | \t\tsuper();\n39 | \n40 | \t\tthis.options = options;\n41 | \t\tthis.onSelectCallback = onSelect;\n42 | \t\tthis.onCancelCallback = onCancel;\n43 | \t\tthis.onToggleToolsExpanded = opts?.onToggleToolsExpanded;\n44 | \t\tthis.baseTitle = title;\n45 | \n46 | \t\tthis.addChild(new DynamicBorder(), { shrink: 0 });\n47 | \t\tthis.addChild(new Spacer(1), { shrink: 0 });\n48 | \n49 | \t\tthis.titleText = new Text(theme.fg(\"accent\", theme.bold(title)), 1, 0);\n50 | \t\tthis.addChild(this.titleText, { shrink: 0 });\n51 | \t\tthis.addChild(new Spacer(1), { shrink: 0 });\n52 | \t\tif (opts?.content) {\n53 | \t\t\tthis.reviewScrollView = new ScrollView(new Markdown(opts.content, 1, 0, getMarkdownTheme()), {\n54 | \t\t\t\tscrollbar: \"auto\",\n55 | \t\t\t\toverscroll: \"contain\",\n56 | \t\t\t});\n57 | \t\t\tthis.addChild(this.reviewScrollView, { basis: \"auto\", grow: 1, shrink: 1, minSize: 1 });\n58 | \t\t\tthis.addChild(new Spacer(1), { shrink: 0 });\n59 | \t\t}\n60 | \n61 | \t\tif (opts?.timeout && opts.timeout > 0 && opts.tui) {\n62 | \t\t\tthis.countdown = new CountdownTimer(\n63 | \t\t\t\topts.timeout,\n64 | \t\t\t\topts.tui,\n65 | \t\t\t\t(s) => this.titleText.setText(theme.fg(\"accent\", theme.bold(`${this.baseTitle} (${s}s)`))),\n66 | \t\t\t\t() => this.onCancelCallback(),\n67 | \t\t\t);\n68 | \t\t}\n69 | "
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/modes/interactive/components/extension-input.ts",
+      "sha256": "b13738ed38d26634a3e011fad97bb70fbfb6c3e4fd896720269b9ae71164c684",
+      "total_lines": 90,
+      "ranges": [
+        [
+          25,
+          60
+        ]
+      ],
+      "text": "25 | \t// Focusable implementation - propagate to input for IME cursor positioning\n26 | \tprivate _focused = false;\n27 | \tget focused(): boolean {\n28 | \t\treturn this._focused;\n29 | \t}\n30 | \tset focused(value: boolean) {\n31 | \t\tthis._focused = value;\n32 | \t\tthis.input.focused = value;\n33 | \t}\n34 | \n35 | \tconstructor(\n36 | \t\ttitle: string,\n37 | \t\t_placeholder: string | undefined,\n38 | \t\tonSubmit: (value: string) => void,\n39 | \t\tonCancel: () => void,\n40 | \t\topts?: ExtensionInputOptions,\n41 | \t) {\n42 | \t\tsuper();\n43 | \n44 | \t\tthis.onSubmitCallback = onSubmit;\n45 | \t\tthis.onCancelCallback = onCancel;\n46 | \t\tthis.baseTitle = title;\n47 | \n48 | \t\tthis.addChild(new DynamicBorder());\n49 | \t\tthis.addChild(new Spacer(1));\n50 | \n51 | \t\tthis.titleText = new Text(theme.fg(\"accent\", title), 1, 0);\n52 | \t\tthis.addChild(this.titleText);\n53 | \t\tthis.addChild(new Spacer(1));\n54 | \n55 | \t\tif (opts?.timeout && opts.timeout > 0 && opts.tui) {\n56 | \t\t\tthis.countdown = new CountdownTimer(\n57 | \t\t\t\topts.timeout,\n58 | \t\t\t\topts.tui,\n59 | \t\t\t\t(s) => this.titleText.setText(theme.fg(\"accent\", `${this.baseTitle} (${s}s)`)),\n60 | \t\t\t\t() => this.onCancelCallback(),"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/modes/interactive/components/extension-editor.ts",
+      "sha256": "82c5ea3c36613bd1289a4f2b810295f1b11470b45f2f9e72e7cf5dfe3c0b983c",
+      "total_lines": 133,
+      "ranges": [
+        [
+          12,
+          68
+        ]
+      ],
+      "text": "12 | \tSpacer,\n13 | \tText,\n14 | \ttype TUI,\n15 | } from \"@zykairotis/ice-tui\";\n16 | import type { KeybindingsManager } from \"../../../core/keybindings.ts\";\n17 | import { editInExternalEditor } from \"../external-editor.ts\";\n18 | import { getEditorTheme, theme } from \"../theme/theme.ts\";\n19 | import { DynamicBorder } from \"./dynamic-border.ts\";\n20 | import { keyHint } from \"./keybinding-hints.ts\";\n21 | \n22 | export class ExtensionEditorComponent extends Container implements Focusable {\n23 | \tprivate editor: Editor;\n24 | \tprivate onSubmitCallback: (value: string) => void;\n25 | \tprivate onCancelCallback: () => void;\n26 | \tprivate tui: TUI;\n27 | \tprivate keybindings: KeybindingsManager;\n28 | \tprivate externalEditorCommand: string;\n29 | \n30 | \tprivate _focused = false;\n31 | \tget focused(): boolean {\n32 | \t\treturn this._focused;\n33 | \t}\n34 | \tset focused(value: boolean) {\n35 | \t\tthis._focused = value;\n36 | \t\tthis.editor.focused = value;\n37 | \t}\n38 | \n39 | \tconstructor(\n40 | \t\ttui: TUI,\n41 | \t\tkeybindings: KeybindingsManager,\n42 | \t\ttitle: string,\n43 | \t\tprefill: string | undefined,\n44 | \t\tonSubmit: (value: string) => void,\n45 | \t\tonCancel: () => void,\n46 | \t\toptions?: EditorOptions,\n47 | \t\texternalEditorCommand?: string,\n48 | \t) {\n49 | \t\tsuper();\n50 | \n51 | \t\tthis.tui = tui;\n52 | \t\tthis.keybindings = keybindings;\n53 | \t\tthis.externalEditorCommand =\n54 | \t\t\texternalEditorCommand ||\n55 | \t\t\tprocess.env.VISUAL ||\n56 | \t\t\tprocess.env.EDITOR ||\n57 | \t\t\t(process.platform === \"win32\" ? \"notepad\" : \"nano\");\n58 | \t\tthis.onSubmitCallback = onSubmit;\n59 | \t\tthis.onCancelCallback = onCancel;\n60 | \n61 | \t\t// Add top border\n62 | \t\tthis.addChild(new DynamicBorder());\n63 | \t\tthis.addChild(new Spacer(1));\n64 | \n65 | \t\t// Add title\n66 | \t\tthis.addChild(new Text(theme.fg(\"accent\", title), 1, 0));\n67 | \t\tthis.addChild(new Spacer(1));\n68 | "
+    }
+  ]
+}

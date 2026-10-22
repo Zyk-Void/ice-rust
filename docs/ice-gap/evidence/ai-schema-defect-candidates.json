@@ -1,0 +1,87 @@
+{
+  "area": "ai",
+  "fragment": "shared-schema",
+  "owner": "audit_tools",
+  "source_only": true,
+  "executed": false,
+  "existing": [
+    {
+      "id": "RUST-035",
+      "entry_id": "AI-019",
+      "notes": "Reuse the already catalogued tooluse/toolUse mismatch. Native event serializer writes outer reason via as_str and nested AssistantMessage via Serialize; remote/protocol.rs207 is the reviewed active caller. No duplicate ID or LOC."
+    }
+  ],
+  "candidates": [
+    {
+      "candidate_id": "AI-SCHEMA-RAW-ROLE",
+      "title": "Outer Message serializer may emit duplicate role keys before Value normalization",
+      "severity": "bounded_interoperability_candidate",
+      "classification": "source-derived serializer behavior; no runtime reproduction or observed production failure",
+      "entry_ids": [
+        "AI-019"
+      ],
+      "primary_source": {
+        "path": "crates/ice-ai/src/types.rs",
+        "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+        "ranges": [
+          [
+            578,
+            604
+          ],
+          [
+            616,
+            652
+          ],
+          [
+            654,
+            698
+          ],
+          [
+            755,
+            793
+          ],
+          [
+            857,
+            866
+          ]
+        ]
+      },
+      "supporting_source": [
+        {
+          "path": "crates/ice-ai/src/types.rs",
+          "ranges": [
+            [
+              200,
+              223
+            ]
+          ],
+          "reason": "Content manually delegates Serialize to inner structs to avoid duplicate discriminator tags."
+        },
+        {
+          "path": "crates/ice-ai/tests/content_json.rs",
+          "sha256": "744f675660dd52bff4ff4f876542e668e261d57b3b9c130027cd7142539dfe74",
+          "ranges": [
+            [
+              39,
+              118
+            ]
+          ],
+          "reason": "Raw discriminator uniqueness is asserted for Content, while message round trips use concrete UserMessage/AssistantMessage/ToolResultMessage; Message enum itself is not instantiated by this suite."
+        }
+      ],
+      "mechanism": "Message derives Serialize with #[serde(tag=\"role\", rename_all=\"camelCase\")]. Every inner concrete variant also serializes its own role field. A raw map serializer that writes the derived tag and all payload fields is therefore expected to receive the same role key twice. Message's custom Deserialize first materializes serde_json::Value, which can normalize duplicate keys before role dispatch.",
+      "reachable_conditions": [
+        "A caller serializes the public ice_ai::Message directly, or a Context.messages collection containing it, through a raw JSON writer instead of first projecting to a deduplicating Value/object.",
+        "The serializer honors the derived internally tagged enum and the inner struct's role field as authored."
+      ],
+      "bounds": [
+        "No application or test was executed; no raw bytes were captured.",
+        "No current production consumer of raw Message/Context JSON was fully traced in this supplement. This is a public-library serialization boundary candidate, not a claimed session-load or network failure.",
+        "The inspected active RPC MessageUpdate caller uses serde_json::to_value on AssistantMessageEvent, whose nested messages are concrete AssistantMessage; it establishes the separate RUST-035 spelling path, not this duplicate-role path.",
+        "Native AgentMessage kind encoding is separate (AGENT-001) and is not conflated with the base Message role enum."
+      ],
+      "suggested_verification": "At implementation time, count raw role keys for each Message variant and a Context array, then compare raw and Value round trips. Do not use Value-only equality as proof of raw discriminator uniqueness.",
+      "coordinator_action": "Independently inspect serializer generation/callers, classify with these bounds, allocate an ID only if supported. Preserve current single-type concrete serializer behavior."
+    }
+  ]
+}

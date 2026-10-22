@@ -1,0 +1,547 @@
+{
+  "generated_at": "2026-10-20T03:04:18.752Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/api/openai-responses-shared.ts",
+      "sha256": "7864efb0fd637d114ccb6576ae3cd1a87f35f44906e2fdeeb92159c3315fd24a",
+      "emitted_ranges": [
+        [
+          104,
+          153
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OpenAIResponsesStreamOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:105",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ConvertResponsesMessagesOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:118",
+          "covering_entries": [
+            "AI-054"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ConvertResponsesToolsOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/openai-responses-shared.ts:125",
+          "covering_entries": [
+            "AI-054"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openai-responses.lazy.ts",
+      "sha256": "ea6bf6019f6b2f949bce4ad248ec1e0fa25dd058a009cf70fb5eb0e99b4c94db",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openAIResponsesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/openai-responses.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/openrouter-images.lazy.ts",
+      "sha256": "04c18f8c065779c2f705850e593cee4e0d6207a4121473540a223fc83026a8f4",
+      "emitted_ranges": [
+        [
+          2,
+          11
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openrouterImagesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/openrouter-images.lazy.ts:3",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/simple-options.ts",
+      "sha256": "aa4616f753b9e5481986850686fded0e77ea4a75da7a96c274dca63754893b38",
+      "emitted_ranges": [
+        [
+          14,
+          33
+        ],
+        [
+          95,
+          114
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "clampMaxTokensToContext",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/simple-options.ts:15",
+          "covering_entries": [
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "adjustMaxTokensForThinking",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/simple-options.ts:96",
+          "covering_entries": [
+            "AI-005",
+            "AI-006"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/compat.ts",
+      "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+      "emitted_ranges": [
+        [
+          70,
+          125
+        ],
+        [
+          143,
+          178
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ApiStreamFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat.ts:71",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ApiStreamSimpleFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat.ts:77",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ApiProvider",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat.ts:83",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "getApiProviders",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/compat.ts:144",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "registerFauxProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/compat.ts:160",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/compat/extension-oauth-types.ts",
+      "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+      "emitted_ranges": [
+        [
+          3,
+          46
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OAuthPrompt",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OAuthAuthInfo",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:11",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OAuthDeviceCodeInfo",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:17",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OAuthSelectOption",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:24",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "OAuthSelectPrompt",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/compat/extension-oauth-types.ts:29",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/images-api-registry.ts",
+      "sha256": "604636b0a4b59d1798d79aad48a1dfdd96ee79e3f16b16cdc54dbd1b81c44ffe",
+      "emitted_ranges": [
+        [
+          2,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ImagesApiFunction",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/images-api-registry.ts:3",
+          "covering_entries": [
+            "AI-015"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ImagesApiProvider",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/images-api-registry.ts:9",
+          "covering_entries": [
+            "AI-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/images-models.ts",
+      "sha256": "9a3a2bf47263e577925850b182d2b508d0bbf0e1437124b1240bff95b8deeb3a",
+      "emitted_ranges": [
+        [
+          230,
+          249
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CreateImagesProviderOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/images-models.ts:231",
+          "covering_entries": [
+            "AI-015"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/legacy-api-aliases.ts",
+      "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+      "emitted_ranges": [
+        [
+          28,
+          109
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "streamAnthropic",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:29",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleAnthropic",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:34",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamAzureOpenAIResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:40",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleAzureOpenAIResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:45",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamGoogle",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:51",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleGoogle",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:53",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamGoogleVertex",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:59",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleGoogleVertex",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:61",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamMistral",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:67",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleMistral",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:72",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamOpenAICodexResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:78",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleOpenAICodexResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:83",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamOpenAICompletions",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:89",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleOpenAICompletions",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:94",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamOpenAIResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:100",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "streamSimpleOpenAIResponses",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/legacy-api-aliases.ts:105",
+          "covering_entries": [
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/models.ts",
+      "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+      "emitted_ranges": [
+        [
+          63,
+          104
+        ],
+        [
+          231,
+          250
+        ],
+        [
+          738,
+          757
+        ],
+        [
+          873,
+          926
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "ModelsRefreshOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:64",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsRefreshResult",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:73",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsRequestTransforms",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:78",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsApiStreamOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:83",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsSimpleStreamOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:84",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsDeferredFetchOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:85",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ModelsDeferredCancelOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:86",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateModelsOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:232",
+          "covering_entries": [
+            "AI-002"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CreateProviderOptions",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/models.ts:739",
+          "covering_entries": [
+            "AI-002",
+            "AI-003"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "hasApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/models.ts:874",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "calculateCost",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/models.ts:878",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    }
+  ]
+}

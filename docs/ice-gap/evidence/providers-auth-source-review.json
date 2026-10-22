@@ -1,0 +1,5293 @@
+{
+  "area": "providers-auth",
+  "complete": false,
+  "reads": [
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/types.ts",
+      "start": 1,
+      "end": 238,
+      "total": 238,
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "baseline": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/context.ts",
+      "start": 1,
+      "end": 46,
+      "total": 46,
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "baseline": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/credential-store.ts",
+      "start": 1,
+      "end": 68,
+      "total": 68,
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "baseline": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/helpers.ts",
+      "start": 1,
+      "end": 54,
+      "total": 54,
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "baseline": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/resolve.ts",
+      "start": 1,
+      "end": 206,
+      "total": 206,
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "baseline": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/all.ts",
+      "start": 1,
+      "end": 154,
+      "total": 154,
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "baseline": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/model-catalog.ts",
+      "start": 1,
+      "end": 28,
+      "total": 28,
+      "sha256": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "baseline": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/models-store.ts",
+      "start": 1,
+      "end": 46,
+      "total": 46,
+      "sha256": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "baseline": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/credentials.rs",
+      "start": 1,
+      "end": 221,
+      "total": 221,
+      "sha256": "679203dc4a4794ac60776030fd68a7b6be4417372960bc5ba577d4e3bf4e1f0a",
+      "baseline": "679203dc4a4794ac60776030fd68a7b6be4417372960bc5ba577d4e3bf4e1f0a",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/model.rs",
+      "start": 1,
+      "end": 284,
+      "total": 284,
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "baseline": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "start": 1,
+      "end": 188,
+      "total": 188,
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "baseline": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "start": 1,
+      "end": 220,
+      "total": 419,
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "baseline": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "start": 221,
+      "end": 419,
+      "total": 419,
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "baseline": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth.rs",
+      "start": 1,
+      "end": 260,
+      "total": 739,
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "baseline": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth.rs",
+      "start": 261,
+      "end": 739,
+      "total": 739,
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "baseline": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth-auth.test.ts",
+      "start": 1,
+      "end": 159,
+      "total": 159,
+      "sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+      "matched": true,
+      "baseline": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/auth-storage.test.ts",
+      "start": 1,
+      "end": 270,
+      "total": 488,
+      "sha256": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "matched": true,
+      "baseline": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 1,
+      "end": 430,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/auth-storage.test.ts",
+      "start": 271,
+      "end": 488,
+      "total": 488,
+      "sha256": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "matched": true,
+      "baseline": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 430,
+      "end": 590,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 976,
+      "end": 1050,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 1,
+      "end": 420,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 421,
+      "end": 850,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider/binding.rs",
+      "start": 1,
+      "end": 104,
+      "total": 104,
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "baseline": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider/factories.rs",
+      "start": 1,
+      "end": 330,
+      "total": 623,
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "baseline": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 851,
+      "end": 1100,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider/factories.rs",
+      "start": 331,
+      "end": 623,
+      "total": 623,
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "baseline": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/models-runtime.test.ts",
+      "start": 1,
+      "end": 125,
+      "total": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "matched": true,
+      "baseline": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/models-runtime.test.ts",
+      "start": 617,
+      "end": 1075,
+      "total": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "matched": true,
+      "baseline": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/pkce.ts",
+      "start": 1,
+      "end": 35,
+      "total": 35,
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "baseline": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/bedrock-provider.ts",
+      "start": 1,
+      "end": 7,
+      "total": 7,
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "baseline": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/bun-oauth.ts",
+      "start": 1,
+      "end": 22,
+      "total": 22,
+      "sha256": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "baseline": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/oauth.ts",
+      "start": 1,
+      "end": 11,
+      "total": 11,
+      "sha256": "1250a2a276dc310849e64a0fd306a896d42e47ad0fc8d9394279eaee4e11cdff",
+      "baseline": "1250a2a276dc310849e64a0fd306a896d42e47ad0fc8d9394279eaee4e11cdff",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/amazon-bedrock.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "baseline": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/ant-ling.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "da223d56dbe033f48b96ed451591498cb7ffa8d4851785ea9ad7542377f6c855",
+      "baseline": "da223d56dbe033f48b96ed451591498cb7ffa8d4851785ea9ad7542377f6c855",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/ant-ling.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "20ba100f8a9150f809fc42bf60f1d23840cc358d636793f1ec9fddf0e9feb2a7",
+      "baseline": "20ba100f8a9150f809fc42bf60f1d23840cc358d636793f1ec9fddf0e9feb2a7",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/anthropic.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "35fb58e216e45b3d1319b610f3f3021ef30e699a9e44250cbfcbefeeaaea2ff7",
+      "baseline": "35fb58e216e45b3d1319b610f3f3021ef30e699a9e44250cbfcbefeeaaea2ff7",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/anthropic.ts",
+      "start": 1,
+      "end": 56,
+      "total": 56,
+      "sha256": "7c7f814308749b01d1ba31ccb82256035a3ddf4f0778bdd4ac352c9c50d86da4",
+      "baseline": "7c7f814308749b01d1ba31ccb82256035a3ddf4f0778bdd4ac352c9c50d86da4",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/azure-openai-responses.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "9d0525eab9472b48dee748f7c6d2f3b65f25467389ff1facbf34dc2d40732717",
+      "baseline": "9d0525eab9472b48dee748f7c6d2f3b65f25467389ff1facbf34dc2d40732717",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/azure-openai-responses.ts",
+      "start": 1,
+      "end": 15,
+      "total": 15,
+      "sha256": "76e9f5cde761fcd516370d4d99519e4658e0db1029518746d0d0c0550ce54fa5",
+      "baseline": "76e9f5cde761fcd516370d4d99519e4658e0db1029518746d0d0c0550ce54fa5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/baseten.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "c3844bac330f9b0d04eef4349a37dbd6cbe5b6782b9f6726277148526c03ea0a",
+      "baseline": "c3844bac330f9b0d04eef4349a37dbd6cbe5b6782b9f6726277148526c03ea0a",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/baseten.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "c3833be0c64c4d5c96810403e23e966bb779bf2c045619b6fbac18ff27ac92f5",
+      "baseline": "c3833be0c64c4d5c96810403e23e966bb779bf2c045619b6fbac18ff27ac92f5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cerebras.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "45412b6f921b67cf7b82276bac1d8b95f164c5bf2ff3297b950f94f773162c57",
+      "baseline": "45412b6f921b67cf7b82276bac1d8b95f164c5bf2ff3297b950f94f773162c57",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cerebras.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "457fc35499abea92be4ad7add4f08502d069293380be61bf05b11ae5352bce4f",
+      "baseline": "457fc35499abea92be4ad7add4f08502d069293380be61bf05b11ae5352bce4f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "c90e50ce6cd8b536e893ca7180a5b9731581d76b31125aff5bdfc62bd17efe26",
+      "baseline": "c90e50ce6cd8b536e893ca7180a5b9731581d76b31125aff5bdfc62bd17efe26",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.ts",
+      "start": 1,
+      "end": 24,
+      "total": 24,
+      "sha256": "b40b3329e44148afbbe93f5e9562fa5be2329fac8a5a7180e50572583eba54fc",
+      "baseline": "b40b3329e44148afbbe93f5e9562fa5be2329fac8a5a7180e50572583eba54fc",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-stream.ts",
+      "start": 1,
+      "end": 29,
+      "total": 29,
+      "sha256": "866117c0e12f6bba9da36842271d0208b200364dc785dc968fa5d31b6da6594b",
+      "baseline": "866117c0e12f6bba9da36842271d0208b200364dc785dc968fa5d31b6da6594b",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "95da6a78965178d952b46a4de4e2ea52723ac051ad37583537a3b79e4033ecde",
+      "baseline": "95da6a78965178d952b46a4de4e2ea52723ac051ad37583537a3b79e4033ecde",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "5ab1575a34fd66e35706fcae8a38516d7c2e427521b7f8680e1f756d8420ec9c",
+      "baseline": "5ab1575a34fd66e35706fcae8a38516d7c2e427521b7f8680e1f756d8420ec9c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/data-json.d.ts",
+      "start": 1,
+      "end": 5,
+      "total": 5,
+      "sha256": "d30c397c753fb4c6a608ab2e2d95e50c763a369b591bcc2bd6e02147016f8aff",
+      "baseline": "d30c397c753fb4c6a608ab2e2d95e50c763a369b591bcc2bd6e02147016f8aff",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/deepseek.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "afce9b250edda8c9df66e800cfa791f1a2c2546503956c45c5262204265624cf",
+      "baseline": "afce9b250edda8c9df66e800cfa791f1a2c2546503956c45c5262204265624cf",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/deepseek.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "4d4ac9870d3dcdb13a90627a95598314459f5cc2f8a122f802fab3b0d2840fee",
+      "baseline": "4d4ac9870d3dcdb13a90627a95598314459f5cc2f8a122f802fab3b0d2840fee",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/fireworks.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "68f77ac268a3e643944401e96fdc71abe7b34e1ccc3c50f885eb3e236b4fb45e",
+      "baseline": "68f77ac268a3e643944401e96fdc71abe7b34e1ccc3c50f885eb3e236b4fb45e",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/fireworks.ts",
+      "start": 1,
+      "end": 20,
+      "total": 20,
+      "sha256": "72dbb53e3bb8b0bc6c42dd7937ec11dd0126efe3176f11153b1d599a0c7776af",
+      "baseline": "72dbb53e3bb8b0bc6c42dd7937ec11dd0126efe3176f11153b1d599a0c7776af",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/github-copilot.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "6bd4c4ae054ea91fe4c9eea8c8372901584e851532352cb621a9e9de6ecece5c",
+      "baseline": "6bd4c4ae054ea91fe4c9eea8c8372901584e851532352cb621a9e9de6ecece5c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/github-copilot.ts",
+      "start": 1,
+      "end": 35,
+      "total": 35,
+      "sha256": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "baseline": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google-vertex.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+      "baseline": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+      "baseline": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+      "baseline": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/groq.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "41fbe59a9104788078b57b490ebf2312291905e579a67ceaeff803ff41ffc9c0",
+      "baseline": "41fbe59a9104788078b57b490ebf2312291905e579a67ceaeff803ff41ffc9c0",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/groq.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "baseline": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/huggingface.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "baseline": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/huggingface.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "baseline": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/images/register-builtins.ts",
+      "start": 1,
+      "end": 51,
+      "total": 51,
+      "sha256": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "baseline": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/kimi-coding.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "baseline": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/kimi-coding.ts",
+      "start": 1,
+      "end": 24,
+      "total": 24,
+      "sha256": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "baseline": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax-cn.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "baseline": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax-cn.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "baseline": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "baseline": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "baseline": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/mistral.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "baseline": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/mistral.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "baseline": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai-cn.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "baseline": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai-cn.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "baseline": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "baseline": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "baseline": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/nvidia.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "baseline": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/nvidia.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "baseline": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai-codex.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "baseline": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai-codex.ts",
+      "start": 1,
+      "end": 19,
+      "total": 19,
+      "sha256": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "baseline": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "baseline": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "baseline": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode-go.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "baseline": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode-go.ts",
+      "start": 1,
+      "end": 25,
+      "total": 25,
+      "sha256": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "baseline": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "baseline": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode.ts",
+      "start": 1,
+      "end": 25,
+      "total": 25,
+      "sha256": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "baseline": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter-images.ts",
+      "start": 1,
+      "end": 23,
+      "total": 23,
+      "sha256": "921e057fa1880412c29a849505ddd7dbe466996d78087c0c0628437ec2051880",
+      "baseline": "921e057fa1880412c29a849505ddd7dbe466996d78087c0c0628437ec2051880",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "baseline": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter.ts",
+      "start": 1,
+      "end": 24,
+      "total": 24,
+      "sha256": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "baseline": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "baseline": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "baseline": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "baseline": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "baseline": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/together.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "baseline": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/together.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "baseline": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "baseline": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "baseline": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xai.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "baseline": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xai.ts",
+      "start": 1,
+      "end": 28,
+      "total": 28,
+      "sha256": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "baseline": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "baseline": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "baseline": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "baseline": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "baseline": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "baseline": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "baseline": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "baseline": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "baseline": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai-coding-cn.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "baseline": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai-coding-cn.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "baseline": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai.models.ts",
+      "start": 1,
+      "end": 9,
+      "total": 9,
+      "sha256": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "baseline": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "baseline": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/auth-guidance.ts",
+      "start": 1,
+      "end": 26,
+      "total": 26,
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "baseline": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/radius.ts",
+      "start": 1,
+      "end": 2,
+      "total": 2,
+      "sha256": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "baseline": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/runtime-credentials.ts",
+      "start": 1,
+      "end": 53,
+      "total": 53,
+      "sha256": "ff9b851af45a63120863a4de5981f211c5b277d2e6f6302458fa0f3b3c1c8937",
+      "baseline": "ff9b851af45a63120863a4de5981f211c5b277d2e6f6302458fa0f3b3c1c8937",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-extensions/src/oauth.rs",
+      "start": 1,
+      "end": 299,
+      "total": 299,
+      "sha256": "4c17aefa14428c65c8713eacd5cde0cad53a32a73e66472da2ff248bada15500",
+      "baseline": "4c17aefa14428c65c8713eacd5cde0cad53a32a73e66472da2ff248bada15500",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/amazon-bedrock.ts",
+      "start": 1,
+      "end": 91,
+      "total": 91,
+      "sha256": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+      "baseline": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-auth.ts",
+      "start": 1,
+      "end": 104,
+      "total": 104,
+      "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "baseline": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google-vertex.ts",
+      "start": 1,
+      "end": 101,
+      "total": 101,
+      "sha256": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+      "baseline": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/radius-config.ts",
+      "start": 1,
+      "end": 98,
+      "total": 98,
+      "sha256": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "baseline": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/radius.ts",
+      "start": 1,
+      "end": 83,
+      "total": 83,
+      "sha256": "2e5b3c47fbb04f8e9698ca6c6580264f910d9433385b440df41309b606ff163c",
+      "baseline": "2e5b3c47fbb04f8e9698ca6c6580264f910d9433385b440df41309b606ff163c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/load.ts",
+      "start": 1,
+      "end": 69,
+      "total": 69,
+      "sha256": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "baseline": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/device-code.ts",
+      "start": 1,
+      "end": 99,
+      "total": 99,
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "baseline": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/oauth-page.ts",
+      "start": 1,
+      "end": 110,
+      "total": 110,
+      "sha256": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "baseline": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/models-store.ts",
+      "start": 1,
+      "end": 75,
+      "total": 75,
+      "sha256": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "baseline": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/types.rs",
+      "start": 460,
+      "end": 525,
+      "total": 1157,
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "baseline": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/export.rs",
+      "start": 119,
+      "end": 154,
+      "total": 367,
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "baseline": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-config.ts",
+      "start": 1,
+      "end": 288,
+      "total": 288,
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "baseline": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/types.ts",
+      "start": 65,
+      "end": 95,
+      "total": 848,
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "baseline": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/provider-attribution.ts",
+      "start": 1,
+      "end": 104,
+      "total": 104,
+      "sha256": "6b676c90436c6c91bdbbe123b97fca80e9ef91d6ff01fc2aef63b0d53e1a8604",
+      "baseline": "6b676c90436c6c91bdbbe123b97fca80e9ef91d6ff01fc2aef63b0d53e1a8604",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "start": 1,
+      "end": 136,
+      "total": 136,
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "baseline": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-registry.ts",
+      "start": 1,
+      "end": 163,
+      "total": 163,
+      "sha256": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "baseline": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "start": 1,
+      "end": 320,
+      "total": 592,
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "baseline": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "start": 321,
+      "end": 592,
+      "total": 592,
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "baseline": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-runtime.ts",
+      "start": 1,
+      "end": 330,
+      "total": 811,
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "baseline": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "packages/provider-runtime/README.md",
+      "start": 1,
+      "end": 7,
+      "total": 7,
+      "sha256": "56d8810c0e72f525cfe65c6de01438428cc5e994f26ac4a47a457fcc283e4a62",
+      "baseline": "56d8810c0e72f525cfe65c6de01438428cc5e994f26ac4a47a457fcc283e4a62",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth_guidance.rs",
+      "start": 1,
+      "end": 61,
+      "total": 61,
+      "sha256": "7b0b46745b0599446aaf52e00e439eeada2252c826a801241e467055a03a08da",
+      "baseline": "7b0b46745b0599446aaf52e00e439eeada2252c826a801241e467055a03a08da",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-runtime.ts",
+      "start": 331,
+      "end": 811,
+      "total": 811,
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "baseline": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/model_registry.rs",
+      "start": 1,
+      "end": 416,
+      "total": 416,
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "baseline": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 1101,
+      "end": 1440,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "packages/provider-runtime/src/lib.rs",
+      "start": 1,
+      "end": 346,
+      "total": 346,
+      "sha256": "818627d407a8524a9e71c82dcac140fa84fabb7aca4682a9909259b9787171c6",
+      "baseline": "818627d407a8524a9e71c82dcac140fa84fabb7aca4682a9909259b9787171c6",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 590,
+      "end": 760,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "docs/architecture/provider-packages.md",
+      "start": 1,
+      "end": 182,
+      "total": 182,
+      "sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "baseline": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "docs/extensions/provider-integration.md",
+      "start": 1,
+      "end": 251,
+      "total": 251,
+      "sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "baseline": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 760,
+      "end": 975,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/all.ts",
+      "start": 87,
+      "end": 154,
+      "total": 154,
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "baseline": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/utils/legacy-protocol.ts",
+      "start": 1,
+      "end": 4,
+      "total": 4,
+      "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "baseline": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/providers.md",
+      "start": 1,
+      "end": 311,
+      "total": 311,
+      "sha256": "254a1bf541a24edf13e2ab1686697767f1fd3192d7be939a9ef5ccd278f64c97",
+      "baseline": "254a1bf541a24edf13e2ab1686697767f1fd3192d7be939a9ef5ccd278f64c97",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/anthropic.ts",
+      "start": 1,
+      "end": 364,
+      "total": 364,
+      "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "baseline": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "start": 1,
+      "end": 270,
+      "total": 544,
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "baseline": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "start": 271,
+      "end": 544,
+      "total": 544,
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "baseline": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/github-copilot.ts",
+      "start": 1,
+      "end": 220,
+      "total": 412,
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "baseline": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/github-copilot.ts",
+      "start": 221,
+      "end": 412,
+      "total": 412,
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "baseline": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/kimi-coding.ts",
+      "start": 1,
+      "end": 310,
+      "total": 310,
+      "sha256": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "baseline": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/openrouter.ts",
+      "start": 1,
+      "end": 312,
+      "total": 312,
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "baseline": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/xai.ts",
+      "start": 1,
+      "end": 239,
+      "total": 239,
+      "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "baseline": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/radius.ts",
+      "start": 1,
+      "end": 405,
+      "total": 405,
+      "sha256": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "baseline": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/types.ts",
+      "start": 115,
+      "end": 238,
+      "total": 238,
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "baseline": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/anthropic-oauth.test.ts",
+      "start": 1,
+      "end": 145,
+      "total": 145,
+      "sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+      "matched": true,
+      "baseline": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openrouter-oauth.test.ts",
+      "start": 1,
+      "end": 323,
+      "total": 323,
+      "sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+      "matched": true,
+      "baseline": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth-device-code.test.ts",
+      "start": 1,
+      "end": 146,
+      "total": 146,
+      "sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+      "matched": true,
+      "baseline": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/radius-oauth.test.ts",
+      "start": 1,
+      "end": 130,
+      "total": 130,
+      "sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+      "matched": true,
+      "baseline": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth.ts",
+      "start": 1,
+      "end": 86,
+      "total": 86,
+      "sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+      "matched": true,
+      "baseline": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/kimi-coding-oauth.test.ts",
+      "start": 1,
+      "end": 271,
+      "total": 271,
+      "sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+      "matched": true,
+      "baseline": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/xai-oauth.test.ts",
+      "start": 1,
+      "end": 336,
+      "total": 336,
+      "sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+      "matched": true,
+      "baseline": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openai-codex-oauth.test.ts",
+      "start": 1,
+      "end": 487,
+      "total": 487,
+      "sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+      "matched": true,
+      "baseline": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/github-copilot-oauth.test.ts",
+      "start": 1,
+      "end": 453,
+      "total": 453,
+      "sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+      "matched": true,
+      "baseline": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/models-runtime.test.ts",
+      "start": 126,
+      "end": 616,
+      "total": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "matched": true,
+      "baseline": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/models-runtime.test.ts",
+      "start": 1076,
+      "end": 1160,
+      "total": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "matched": true,
+      "baseline": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-resolver.ts",
+      "start": 1,
+      "end": 775,
+      "total": 775,
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "baseline": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice-provider-settings.ts",
+      "start": 1,
+      "end": 235,
+      "total": 235,
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "baseline": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice-provider.ts",
+      "start": 1,
+      "end": 360,
+      "total": 360,
+      "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "baseline": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/faux.ts",
+      "start": 1,
+      "end": 355,
+      "total": 710,
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "baseline": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/faux.ts",
+      "start": 356,
+      "end": 710,
+      "total": 710,
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "baseline": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/providers/faux.rs",
+      "start": 1,
+      "end": 400,
+      "total": 928,
+      "sha256": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "baseline": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/providers/faux.rs",
+      "start": 401,
+      "end": 928,
+      "total": 928,
+      "sha256": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "baseline": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/tests/faux.rs",
+      "start": 1,
+      "end": 224,
+      "total": 224,
+      "sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "baseline": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/faux-provider.test.ts",
+      "start": 1,
+      "end": 641,
+      "total": 641,
+      "sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+      "matched": true,
+      "baseline": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider-fast-mode.test.ts",
+      "start": 1,
+      "end": 19,
+      "total": 19,
+      "sha256": "cbe2e33e9a2695ccc7da49ba54ef4ee4889aa02cda7a0fdee410f4e5fc422a3d",
+      "matched": true,
+      "baseline": "cbe2e33e9a2695ccc7da49ba54ef4ee4889aa02cda7a0fdee410f4e5fc422a3d",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider-settings.test.ts",
+      "start": 1,
+      "end": 90,
+      "total": 90,
+      "sha256": "a4bd16284cae9643b749a5ee5f95ac65d28d6921ae31a9c17a79f60743537b3c",
+      "matched": true,
+      "baseline": "a4bd16284cae9643b749a5ee5f95ac65d28d6921ae31a9c17a79f60743537b3c",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider.test.ts",
+      "start": 1,
+      "end": 506,
+      "total": 506,
+      "sha256": "7f353536e39a76a2954ef11c1c2766725c5566b554fd2e11313a540d31c208dd",
+      "matched": true,
+      "baseline": "7f353536e39a76a2954ef11c1c2766725c5566b554fd2e11313a540d31c208dd",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/models.md",
+      "start": 1,
+      "end": 568,
+      "total": 568,
+      "sha256": "941b3e00f3409c930d4549a7ccce9aa2f5b5351532791578ef03c6f085788cbf",
+      "baseline": "941b3e00f3409c930d4549a7ccce9aa2f5b5351532791578ef03c6f085788cbf",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/custom-provider.md",
+      "start": 1,
+      "end": 775,
+      "total": 775,
+      "sha256": "6f8e0536c9aecfa5a432ad4df8ec2b054dd8ccc62ed9ceb6240ca0713488bc1a",
+      "baseline": "6f8e0536c9aecfa5a432ad4df8ec2b054dd8ccc62ed9ceb6240ca0713488bc1a",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/anthropic-auth-token.test.ts",
+      "start": 1,
+      "end": 188,
+      "total": 188,
+      "sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+      "matched": true,
+      "baseline": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/provider-env-legacy-compat.test.ts",
+      "start": 1,
+      "end": 23,
+      "total": 23,
+      "sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+      "matched": true,
+      "baseline": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/bedrock-credentials.test.ts",
+      "start": 1,
+      "end": 116,
+      "total": 116,
+      "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "matched": true,
+      "baseline": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-resolver.test.ts",
+      "start": 1,
+      "end": 798,
+      "total": 798,
+      "sha256": "f9565a02fbd1aafee5aae01dcf7918c2b0611a3e6a4d35a614fa1ad2fef82656",
+      "matched": true,
+      "baseline": "f9565a02fbd1aafee5aae01dcf7918c2b0611a3e6a4d35a614fa1ad2fef82656",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/runtime-credentials.test.ts",
+      "start": 1,
+      "end": 87,
+      "total": 87,
+      "sha256": "cdfc938374154a739fd7cb34073ba46a83bfffd01795c49d0e4758e621c0c98c",
+      "matched": true,
+      "baseline": "cdfc938374154a739fd7cb34073ba46a83bfffd01795c49d0e4758e621c0c98c",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/models-store.test.ts",
+      "start": 1,
+      "end": 125,
+      "total": 125,
+      "sha256": "e3c6cd048724745d5f72433a99a8ecd467b512151edfebd214819e053348243f",
+      "matched": true,
+      "baseline": "e3c6cd048724745d5f72433a99a8ecd467b512151edfebd214819e053348243f",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-test-utils.ts",
+      "start": 1,
+      "end": 26,
+      "total": 26,
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "matched": true,
+      "baseline": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 1441,
+      "end": 2200,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 1051,
+      "end": 1400,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 2201,
+      "end": 2900,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "start": 1401,
+      "end": 1761,
+      "total": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "baseline": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 2901,
+      "end": 3458,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/tests/provider_packages.rs",
+      "start": 1,
+      "end": 430,
+      "total": 767,
+      "sha256": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "baseline": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/tests/provider_packages.rs",
+      "start": 431,
+      "end": 767,
+      "total": 767,
+      "sha256": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "baseline": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 374,
+      "end": 558,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 1050,
+      "end": 1386,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "start": 90,
+      "end": 105,
+      "total": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "baseline": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "matched": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-registry.test.ts",
+      "start": 1,
+      "end": 700,
+      "total": 2052,
+      "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "matched": true,
+      "baseline": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-modify-models-compat.test.ts",
+      "start": 1,
+      "end": 333,
+      "total": 333,
+      "sha256": "c6fc16bc6ac6957e1c7244c6b9003cad8958ab9490ad5c9f948b36b551236c27",
+      "matched": true,
+      "baseline": "c6fc16bc6ac6957e1c7244c6b9003cad8958ab9490ad5c9f948b36b551236c27",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-registry.test.ts",
+      "start": 701,
+      "end": 1400,
+      "total": 2052,
+      "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "matched": true,
+      "baseline": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-credential-sync.test.ts",
+      "start": 1,
+      "end": 376,
+      "total": 376,
+      "sha256": "a8ee2d28e0eccd2c2bdee89713fe139c51df8ef3553763266fcdbe82c914c33b",
+      "matched": true,
+      "baseline": "a8ee2d28e0eccd2c2bdee89713fe139c51df8ef3553763266fcdbe82c914c33b",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-registry.test.ts",
+      "start": 1401,
+      "end": 2052,
+      "total": 2052,
+      "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "matched": true,
+      "baseline": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-auth-options.test.ts",
+      "start": 1,
+      "end": 293,
+      "total": 293,
+      "sha256": "4f459831caccf9fa8f367ea473ef27675cba0fb765d75c82f3f2596faa7d5646",
+      "matched": true,
+      "baseline": "4f459831caccf9fa8f367ea473ef27675cba0fb765d75c82f3f2596faa7d5646",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-cloudflare-compat.test.ts",
+      "start": 1,
+      "end": 107,
+      "total": 107,
+      "sha256": "5f9835a1a7085abe6358286d82bb815c1b05d7b417764e0090cfdc6005c87cff",
+      "matched": true,
+      "baseline": "5f9835a1a7085abe6358286d82bb815c1b05d7b417764e0090cfdc6005c87cff",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/providers.test.ts",
+      "start": 1,
+      "end": 630,
+      "total": 630,
+      "sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+      "matched": true,
+      "baseline": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/together-models.test.ts",
+      "start": 1,
+      "end": 81,
+      "total": 81,
+      "sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+      "matched": true,
+      "baseline": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/xiaomi-models.test.ts",
+      "start": 1,
+      "end": 18,
+      "total": 18,
+      "sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+      "matched": true,
+      "baseline": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/qwen-token-plan-models.test.ts",
+      "start": 1,
+      "end": 239,
+      "total": 239,
+      "sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+      "matched": true,
+      "baseline": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/fireworks-models.test.ts",
+      "start": 1,
+      "end": 328,
+      "total": 328,
+      "sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+      "matched": true,
+      "baseline": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/bedrock-models.test.ts",
+      "start": 1,
+      "end": 71,
+      "total": 71,
+      "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "matched": true,
+      "baseline": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/baseten-models.test.ts",
+      "start": 1,
+      "end": 142,
+      "total": 142,
+      "sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+      "matched": true,
+      "baseline": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openrouter-cache-control-models.test.ts",
+      "start": 1,
+      "end": 16,
+      "total": 16,
+      "sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+      "matched": true,
+      "baseline": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/remote-catalog-provider.test.ts",
+      "start": 1,
+      "end": 258,
+      "total": 258,
+      "sha256": "29663c2be986588a85d83398b2e16e5d1017889acf008919c9ddb9241ab4db17",
+      "matched": true,
+      "baseline": "29663c2be986588a85d83398b2e16e5d1017889acf008919c9ddb9241ab4db17",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/credential-print.test.ts",
+      "start": 1,
+      "end": 105,
+      "total": 105,
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "matched": true,
+      "baseline": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+      "start": 1,
+      "end": 105,
+      "total": 105,
+      "sha256": "8dbd7701172395915eff2b768370e4c7f9431ae139386360b4d651388f9c3beb",
+      "matched": true,
+      "baseline": "8dbd7701172395915eff2b768370e4c7f9431ae139386360b4d651388f9c3beb",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6999-models-json-hot-reload.test.ts",
+      "start": 1,
+      "end": 85,
+      "total": 85,
+      "sha256": "1558a9f6bbcd7b6399456e791da2fedd198c87d27f9a23fdb3fcbbb0f30ec26f",
+      "matched": true,
+      "baseline": "1558a9f6bbcd7b6399456e791da2fedd198c87d27f9a23fdb3fcbbb0f30ec26f",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+      "start": 1,
+      "end": 161,
+      "total": 161,
+      "sha256": "d93cb53808d012856913c910fe88f7bb48c9b1df51e792f61b63f188ceb1cc10",
+      "matched": true,
+      "baseline": "d93cb53808d012856913c910fe88f7bb48c9b1df51e792f61b63f188ceb1cc10",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+      "start": 1,
+      "end": 108,
+      "total": 108,
+      "sha256": "36c697f0d20fe542eaf1116204066bb04838c54a725fb44672ea0251901b80d2",
+      "matched": true,
+      "baseline": "36c697f0d20fe542eaf1116204066bb04838c54a725fb44672ea0251901b80d2",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "start": 1,
+      "end": 126,
+      "total": 126,
+      "sha256": "ab7df0db39dc6c15116818ff9c9c7309bd0ae546a2a327decc342e3851260170",
+      "matched": true,
+      "baseline": "ab7df0db39dc6c15116818ff9c9c7309bd0ae546a2a327decc342e3851260170",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "start": 1,
+      "end": 47,
+      "total": 47,
+      "sha256": "052c24aa2d145f30dc386a5982225cc8bfb0deb67da237d49d3e25923c56d4ba",
+      "matched": true,
+      "baseline": "052c24aa2d145f30dc386a5982225cc8bfb0deb67da237d49d3e25923c56d4ba",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "start": 1,
+      "end": 120,
+      "total": 120,
+      "sha256": "dd4d85d37cdfa4ad5886b2878dd71c4f02bda34f653f7d30defb1aa507dfb3ec",
+      "matched": true,
+      "baseline": "dd4d85d37cdfa4ad5886b2878dd71c4f02bda34f653f7d30defb1aa507dfb3ec",
+      "baseline_method": "tracked file and empty git diff --name-only against 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "start": 245,
+      "end": 317,
+      "total": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "matched": true,
+      "baseline": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/agent_session.rs",
+      "start": 180,
+      "end": 255,
+      "total": 613,
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "matched": true,
+      "baseline": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/settings.rs",
+      "start": 510,
+      "end": 590,
+      "total": 1221,
+      "sha256": "41a1a99a8295384989ed27e52ee112656e6171d1a19d37957fcf27c7a7d870d8",
+      "matched": true,
+      "baseline": "41a1a99a8295384989ed27e52ee112656e6171d1a19d37957fcf27c7a7d870d8"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui/settings.rs",
+      "start": 1850,
+      "end": 1944,
+      "total": 1944,
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "matched": true,
+      "baseline": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3"
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui.rs",
+      "start": 1350,
+      "end": 1385,
+      "total": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "matched": true,
+      "baseline": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f"
+    }
+  ],
+  "entry_ids": [
+    "AUTH-001",
+    "AUTH-002",
+    "AUTH-003",
+    "AUTH-004",
+    "AUTH-005",
+    "AUTH-006",
+    "AUTH-007",
+    "AUTH-008",
+    "AUTH-009",
+    "AUTH-010",
+    "AUTH-011",
+    "AUTH-012",
+    "AUTH-013",
+    "AUTH-014",
+    "AUTH-015",
+    "AUTH-016",
+    "AUTH-017",
+    "AUTH-018",
+    "AUTH-019",
+    "AUTH-020",
+    "AUTH-021",
+    "AUTH-022",
+    "AUTH-023",
+    "AUTH-024",
+    "AUTH-025",
+    "AUTH-026",
+    "AUTH-027",
+    "AUTH-028",
+    "AUTH-029",
+    "AUTH-030",
+    "AUTH-031",
+    "AUTH-032",
+    "AUTH-033"
+  ],
+  "limitations": [
+    "Concrete external ice-package provider implementations are outside authorized scope and unverified; docs acknowledge them, generic host/bridge was read.",
+    "config.rs887 max_tokens initializer and provider-composer.ts79 alias initializer were redacted; not used to infer exact behavior.",
+    "OpenRouter OAuth TOKEN_URL literal is redacted in both source21 and test9; exact endpoint is unverified.",
+    "ice-provider.ts188/200 callee initializers and faux.ts446 pacing initializer were connector-redacted. Described only unredacted surrounding logic and independently visible test assertions."
+  ],
+  "pending": [
+    "Draft complete: 33 entries, 124 ledger dispositions, 333 reviewed surfaces, all 70 mechanical candidates disposed (68 mapped, 2 excluded). Coordinator owns final QA/publication and adjacent AI/TUI/SESSION source-read reconciliation."
+  ],
+  "pending_assigned": [
+    {
+      "path": "packages/ai/test/provider-retry.test.ts",
+      "total_lines": 103,
+      "sha256": "409c595f1d1a69005f1179f53f28abf6b80a366676d4e868ab32f3e08f480f4a",
+      "unread_ranges": [
+        [
+          1,
+          103
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/provider-error-body-regression.test.ts",
+      "total_lines": 214,
+      "sha256": "af225fb685018861042ac30cdec3bb3e61a3360253ea1c45972d9b1d69fc6e47",
+      "unread_ranges": [
+        [
+          1,
+          214
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/provider-error-body-passthrough.test.ts",
+      "total_lines": 79,
+      "sha256": "477e3a30169999bff87bd1f82e66befaca10ab693f6132e9ba5527612aa42688",
+      "unread_ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/provider-continuation-diag.test.ts",
+      "total_lines": 68,
+      "sha256": "770376882c218b31f6b3ed00995df69f576e670aff109ecbbb64eba757cb325f",
+      "unread_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/openai-completions-response-model.test.ts",
+      "total_lines": 141,
+      "sha256": "9657044e00ef3a46bf1c60b69afc876ad6b88827c3d1cb278cd3db2fc5ae214b",
+      "unread_ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/model-data-validation.test.ts",
+      "total_lines": 165,
+      "sha256": "79e7f0d7096438e0210e91a3787358cce686b3045881011846a38b5154cafe87",
+      "unread_ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/model-catalog-types.test.ts",
+      "total_lines": 16,
+      "sha256": "8acfd837de0419bc9da5ccdeb98da55b3e64703da40eb3823d6413efe919e126",
+      "unread_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/images-models.test.ts",
+      "total_lines": 210,
+      "sha256": "81e706c209a74725ef75d4b15271975039dba4281a55b7ee9f7a9c39c18b8a4a",
+      "unread_ranges": [
+        [
+          1,
+          210
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/image-model-data.test.ts",
+      "total_lines": 48,
+      "sha256": "6232831b8b2759f4017ba5b6ece41a5537763f955d9c0b4c7130c0e9f7ee50a1",
+      "unread_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/cross-provider-handoff.test.ts",
+      "total_lines": 508,
+      "sha256": "5600959f81584ca2c3f37ed28687a209878d3d711f366038e3ac01ab419380b4",
+      "unread_ranges": [
+        [
+          1,
+          508
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/ai/test/anthropic-adaptive-thinking-models.test.ts",
+      "total_lines": 42,
+      "sha256": "ffdc8e61da463f3e82743810fcd4819692237667f44da8022a36f82351613ef1",
+      "unread_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "owner": "AI coordinator",
+      "reason": "Shared AI catalog/protocol/retry/image behavior is assigned to AI coordinator; not omitted from overall audit scope."
+    },
+    {
+      "path": "packages/coding-agent/test/footer-data-provider.test.ts",
+      "total_lines": 322,
+      "sha256": "d86c78ceb1585688aed1d9a30d3a09c525d2f4f41bdd3adb1d2608b14753042f",
+      "unread_ranges": [
+        [
+          1,
+          322
+        ]
+      ],
+      "owner": "TUI owner",
+      "reason": "Widget/UI behavior is assigned to TUI; AUTH covers provider submenu and pure resolver, not generic component implementation."
+    },
+    {
+      "path": "packages/coding-agent/test/oauth-selector.test.ts",
+      "total_lines": 148,
+      "sha256": "c3ffef12085ea5cbdfad7a73a59b7144c5c7152ea56a0c62de7fe066f82241ce",
+      "unread_ranges": [
+        [
+          1,
+          148
+        ]
+      ],
+      "owner": "TUI owner",
+      "reason": "Widget/UI behavior is assigned to TUI; AUTH covers provider submenu and pure resolver, not generic component implementation."
+    },
+    {
+      "path": "packages/coding-agent/test/model-selector.test.ts",
+      "total_lines": 163,
+      "sha256": "93716d0e03402f596db65a133b610cd86f07bad400a0f2549d0a2d7d9153aacc",
+      "unread_ranges": [
+        [
+          1,
+          163
+        ]
+      ],
+      "owner": "TUI owner",
+      "reason": "Widget/UI behavior is assigned to TUI; AUTH covers provider submenu and pure resolver, not generic component implementation."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+      "total_lines": 398,
+      "sha256": "162fb68c1af8a994746fdd1a0c40db5f1fa3560037552125c9fccc9dc18432e2",
+      "unread_ranges": [
+        [
+          1,
+          398
+        ]
+      ],
+      "owner": "SESSION coordinator closure",
+      "reason": "Session integration suite; coordinator reports full source closure in qa-session-test-closure.json. Not claimed read in the AUTH pass."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6324-branch-summary-ambient-auth.test.ts",
+      "total_lines": 63,
+      "sha256": "4eb0e0d8c5eb2715428cbb7d60aee01a81484e068d0fedeb1b8c2bf47ec8f486",
+      "unread_ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "owner": "SESSION coordinator closure",
+      "reason": "Session integration suite; coordinator reports full source closure in qa-session-test-closure.json. Not claimed read in the AUTH pass."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/6019-explicit-provider-retry-message.test.ts",
+      "total_lines": 32,
+      "sha256": "7aa6646e544ef35555b484312b1315dc1d4645bd91aa92f5ce7e4c1e57d94edc",
+      "unread_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "owner": "AI/SET coordinator",
+      "reason": "Root explicitly accepted full source-read closure with AI; not claimed read in this AUTH pass."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7209-model-selector-filter-resets-selection.test.ts",
+      "total_lines": 129,
+      "sha256": "78c87e065637cf83205dd03cfbc956b613a6b290bb1b5f162eaf0ad0eb1b9a7f",
+      "unread_ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "owner": "TUI owner",
+      "reason": "Widget/UI behavior is assigned to TUI; AUTH covers provider submenu and pure resolver, not generic component implementation."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+      "total_lines": 132,
+      "sha256": "27218f0be92c5d76a715c4aa3f1ad1d4e9290f44fdde2ac7cff1a07f4436977f",
+      "unread_ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "owner": "SESSION coordinator closure",
+      "reason": "Session integration suite; coordinator reports full source closure in qa-session-test-closure.json. Not claimed read in the AUTH pass."
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7572-provider-retry-settings-merge.test.ts",
+      "total_lines": 36,
+      "sha256": "7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a",
+      "unread_ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "owner": "SET coordinator closure",
+      "reason": "Root reports fully source-read and persisted in evidence/qa-settings-test-closure.json; not claimed read by this AUTH worker. Local metadata SHA 7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a; coordinator reported total one line higher, so retain local 36-line metadata and request final newline/count reconciliation."
+    },
+    {
+      "path": "packages/coding-agent/test/agent-session-dynamic-provider.test.ts",
+      "total_lines": 180,
+      "sha256": "bf49eaa359d118783b1280cfe970dcc5882e6e30d8823019050eae6d54ad5d9f",
+      "unread_ranges": [
+        [
+          1,
+          180
+        ]
+      ],
+      "owner": "SESSION coordinator closure",
+      "reason": "Session integration suite; coordinator reports full source closure in qa-session-test-closure.json. Not claimed read in the AUTH pass."
+    }
+  ],
+  "full_read_manifest": [
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/types.ts",
+      "total_lines": 238,
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "ranges": [
+        [
+          1,
+          238
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/context.ts",
+      "total_lines": 46,
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/credential-store.ts",
+      "total_lines": 68,
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/helpers.ts",
+      "total_lines": 54,
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/resolve.ts",
+      "total_lines": 206,
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "ranges": [
+        [
+          1,
+          206
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/all.ts",
+      "total_lines": 154,
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/model-catalog.ts",
+      "total_lines": 28,
+      "sha256": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/models-store.ts",
+      "total_lines": 46,
+      "sha256": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/credentials.rs",
+      "total_lines": 221,
+      "sha256": "679203dc4a4794ac60776030fd68a7b6be4417372960bc5ba577d4e3bf4e1f0a",
+      "ranges": [
+        [
+          1,
+          221
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/model.rs",
+      "total_lines": 284,
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "ranges": [
+        [
+          1,
+          284
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "total_lines": 188,
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "total_lines": 419,
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "ranges": [
+        [
+          1,
+          419
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth.rs",
+      "total_lines": 739,
+      "sha256": "9ded86f02b245abea292f8ed03cc657d450070b4dc0c6f20e3882dd622972f6b",
+      "ranges": [
+        [
+          1,
+          739
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth-auth.test.ts",
+      "total_lines": 159,
+      "sha256": "ec70ffb47b4aedf1bda6f8107182db3a5c265867bba4ccb6d614aba2f536ad05",
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/auth-storage.test.ts",
+      "total_lines": 488,
+      "sha256": "18ed4fc246e213736095e4d2e3cb11bac00177f2dab08fa3519dc3e083970ed8",
+      "ranges": [
+        [
+          1,
+          488
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/config.rs",
+      "total_lines": 1761,
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "ranges": [
+        [
+          1,
+          1761
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider.rs",
+      "total_lines": 3458,
+      "sha256": "a2b5839eaf758bd94aa2e38aafb2c74100d84e455b96b1bd1dbea2a527e3a7c0",
+      "ranges": [
+        [
+          1,
+          3458
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider/binding.rs",
+      "total_lines": 104,
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/provider/factories.rs",
+      "total_lines": 623,
+      "sha256": "11512f63294696d4364d9a4cb9ebb8c4d2ecc48e98c79725cc047227319f6daa",
+      "ranges": [
+        [
+          1,
+          623
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/models-runtime.test.ts",
+      "total_lines": 1160,
+      "sha256": "49c86cd856972ee8453da6a3d0e546a8465e1426f48e0a1220f5756707e07dc8",
+      "ranges": [
+        [
+          1,
+          1160
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/pkce.ts",
+      "total_lines": 35,
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/bedrock-provider.ts",
+      "total_lines": 7,
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/bun-oauth.ts",
+      "total_lines": 22,
+      "sha256": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/oauth.ts",
+      "total_lines": 11,
+      "sha256": "1250a2a276dc310849e64a0fd306a896d42e47ad0fc8d9394279eaee4e11cdff",
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/amazon-bedrock.models.ts",
+      "total_lines": 9,
+      "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/ant-ling.models.ts",
+      "total_lines": 9,
+      "sha256": "da223d56dbe033f48b96ed451591498cb7ffa8d4851785ea9ad7542377f6c855",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/ant-ling.ts",
+      "total_lines": 16,
+      "sha256": "20ba100f8a9150f809fc42bf60f1d23840cc358d636793f1ec9fddf0e9feb2a7",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/anthropic.models.ts",
+      "total_lines": 9,
+      "sha256": "35fb58e216e45b3d1319b610f3f3021ef30e699a9e44250cbfcbefeeaaea2ff7",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/anthropic.ts",
+      "total_lines": 56,
+      "sha256": "7c7f814308749b01d1ba31ccb82256035a3ddf4f0778bdd4ac352c9c50d86da4",
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/azure-openai-responses.models.ts",
+      "total_lines": 9,
+      "sha256": "9d0525eab9472b48dee748f7c6d2f3b65f25467389ff1facbf34dc2d40732717",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/azure-openai-responses.ts",
+      "total_lines": 15,
+      "sha256": "76e9f5cde761fcd516370d4d99519e4658e0db1029518746d0d0c0550ce54fa5",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/baseten.models.ts",
+      "total_lines": 9,
+      "sha256": "c3844bac330f9b0d04eef4349a37dbd6cbe5b6782b9f6726277148526c03ea0a",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/baseten.ts",
+      "total_lines": 16,
+      "sha256": "c3833be0c64c4d5c96810403e23e966bb779bf2c045619b6fbac18ff27ac92f5",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cerebras.models.ts",
+      "total_lines": 9,
+      "sha256": "45412b6f921b67cf7b82276bac1d8b95f164c5bf2ff3297b950f94f773162c57",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cerebras.ts",
+      "total_lines": 16,
+      "sha256": "457fc35499abea92be4ad7add4f08502d069293380be61bf05b11ae5352bce4f",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.models.ts",
+      "total_lines": 9,
+      "sha256": "c90e50ce6cd8b536e893ca7180a5b9731581d76b31125aff5bdfc62bd17efe26",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.ts",
+      "total_lines": 24,
+      "sha256": "b40b3329e44148afbbe93f5e9562fa5be2329fac8a5a7180e50572583eba54fc",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-stream.ts",
+      "total_lines": 29,
+      "sha256": "866117c0e12f6bba9da36842271d0208b200364dc785dc968fa5d31b6da6594b",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.models.ts",
+      "total_lines": 9,
+      "sha256": "95da6a78965178d952b46a4de4e2ea52723ac051ad37583537a3b79e4033ecde",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.ts",
+      "total_lines": 16,
+      "sha256": "5ab1575a34fd66e35706fcae8a38516d7c2e427521b7f8680e1f756d8420ec9c",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/data-json.d.ts",
+      "total_lines": 5,
+      "sha256": "d30c397c753fb4c6a608ab2e2d95e50c763a369b591bcc2bd6e02147016f8aff",
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/deepseek.models.ts",
+      "total_lines": 9,
+      "sha256": "afce9b250edda8c9df66e800cfa791f1a2c2546503956c45c5262204265624cf",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/deepseek.ts",
+      "total_lines": 16,
+      "sha256": "4d4ac9870d3dcdb13a90627a95598314459f5cc2f8a122f802fab3b0d2840fee",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/fireworks.models.ts",
+      "total_lines": 9,
+      "sha256": "68f77ac268a3e643944401e96fdc71abe7b34e1ccc3c50f885eb3e236b4fb45e",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/fireworks.ts",
+      "total_lines": 20,
+      "sha256": "72dbb53e3bb8b0bc6c42dd7937ec11dd0126efe3176f11153b1d599a0c7776af",
+      "ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/github-copilot.models.ts",
+      "total_lines": 9,
+      "sha256": "6bd4c4ae054ea91fe4c9eea8c8372901584e851532352cb621a9e9de6ecece5c",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/github-copilot.ts",
+      "total_lines": 35,
+      "sha256": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google-vertex.models.ts",
+      "total_lines": 9,
+      "sha256": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google.models.ts",
+      "total_lines": 9,
+      "sha256": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google.ts",
+      "total_lines": 16,
+      "sha256": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/groq.models.ts",
+      "total_lines": 9,
+      "sha256": "41fbe59a9104788078b57b490ebf2312291905e579a67ceaeff803ff41ffc9c0",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/groq.ts",
+      "total_lines": 16,
+      "sha256": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/huggingface.models.ts",
+      "total_lines": 9,
+      "sha256": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/huggingface.ts",
+      "total_lines": 16,
+      "sha256": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/images/register-builtins.ts",
+      "total_lines": 51,
+      "sha256": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/kimi-coding.models.ts",
+      "total_lines": 9,
+      "sha256": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/kimi-coding.ts",
+      "total_lines": 24,
+      "sha256": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax-cn.models.ts",
+      "total_lines": 9,
+      "sha256": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax-cn.ts",
+      "total_lines": 16,
+      "sha256": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax.models.ts",
+      "total_lines": 9,
+      "sha256": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/minimax.ts",
+      "total_lines": 16,
+      "sha256": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/mistral.models.ts",
+      "total_lines": 9,
+      "sha256": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/mistral.ts",
+      "total_lines": 16,
+      "sha256": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai-cn.models.ts",
+      "total_lines": 9,
+      "sha256": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai-cn.ts",
+      "total_lines": 16,
+      "sha256": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai.models.ts",
+      "total_lines": 9,
+      "sha256": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/moonshotai.ts",
+      "total_lines": 16,
+      "sha256": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/nvidia.models.ts",
+      "total_lines": 9,
+      "sha256": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/nvidia.ts",
+      "total_lines": 16,
+      "sha256": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai-codex.models.ts",
+      "total_lines": 9,
+      "sha256": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai-codex.ts",
+      "total_lines": 19,
+      "sha256": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai.models.ts",
+      "total_lines": 9,
+      "sha256": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openai.ts",
+      "total_lines": 16,
+      "sha256": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode-go.models.ts",
+      "total_lines": 9,
+      "sha256": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode-go.ts",
+      "total_lines": 25,
+      "sha256": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode.models.ts",
+      "total_lines": 9,
+      "sha256": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/opencode.ts",
+      "total_lines": 25,
+      "sha256": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter-images.ts",
+      "total_lines": 23,
+      "sha256": "921e057fa1880412c29a849505ddd7dbe466996d78087c0c0628437ec2051880",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter.models.ts",
+      "total_lines": 9,
+      "sha256": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/openrouter.ts",
+      "total_lines": 24,
+      "sha256": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.models.ts",
+      "total_lines": 9,
+      "sha256": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.ts",
+      "total_lines": 16,
+      "sha256": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan.models.ts",
+      "total_lines": 9,
+      "sha256": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/qwen-token-plan.ts",
+      "total_lines": 16,
+      "sha256": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/together.models.ts",
+      "total_lines": 9,
+      "sha256": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/together.ts",
+      "total_lines": 16,
+      "sha256": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.models.ts",
+      "total_lines": 9,
+      "sha256": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.ts",
+      "total_lines": 16,
+      "sha256": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xai.models.ts",
+      "total_lines": 9,
+      "sha256": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xai.ts",
+      "total_lines": 28,
+      "sha256": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.models.ts",
+      "total_lines": 9,
+      "sha256": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.ts",
+      "total_lines": 16,
+      "sha256": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.models.ts",
+      "total_lines": 9,
+      "sha256": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.ts",
+      "total_lines": 16,
+      "sha256": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts",
+      "total_lines": 9,
+      "sha256": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.ts",
+      "total_lines": 16,
+      "sha256": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi.models.ts",
+      "total_lines": 9,
+      "sha256": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/xiaomi.ts",
+      "total_lines": 16,
+      "sha256": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai-coding-cn.models.ts",
+      "total_lines": 9,
+      "sha256": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai-coding-cn.ts",
+      "total_lines": 16,
+      "sha256": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai.models.ts",
+      "total_lines": 9,
+      "sha256": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/zai.ts",
+      "total_lines": 16,
+      "sha256": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/auth-guidance.ts",
+      "total_lines": 26,
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/radius.ts",
+      "total_lines": 2,
+      "sha256": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/runtime-credentials.ts",
+      "total_lines": 53,
+      "sha256": "ff9b851af45a63120863a4de5981f211c5b277d2e6f6302458fa0f3b3c1c8937",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-extensions/src/oauth.rs",
+      "total_lines": 299,
+      "sha256": "4c17aefa14428c65c8713eacd5cde0cad53a32a73e66472da2ff248bada15500",
+      "ranges": [
+        [
+          1,
+          299
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/amazon-bedrock.ts",
+      "total_lines": 91,
+      "sha256": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/cloudflare-auth.ts",
+      "total_lines": 104,
+      "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/google-vertex.ts",
+      "total_lines": 101,
+      "sha256": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/radius-config.ts",
+      "total_lines": 98,
+      "sha256": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/radius.ts",
+      "total_lines": 83,
+      "sha256": "2e5b3c47fbb04f8e9698ca6c6580264f910d9433385b440df41309b606ff163c",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/load.ts",
+      "total_lines": 69,
+      "sha256": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/device-code.ts",
+      "total_lines": 99,
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/oauth-page.ts",
+      "total_lines": 110,
+      "sha256": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/models-store.ts",
+      "total_lines": 75,
+      "sha256": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/types.rs",
+      "total_lines": 1157,
+      "sha256": "5d368fca9211995ac0cfae3d4d51592540ab171fb28240f2e006547b9772e4d9",
+      "ranges": [
+        [
+          460,
+          525
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/export.rs",
+      "total_lines": 367,
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "ranges": [
+        [
+          119,
+          154
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-config.ts",
+      "total_lines": 288,
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "ranges": [
+        [
+          1,
+          288
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/types.ts",
+      "total_lines": 848,
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "ranges": [
+        [
+          65,
+          95
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/provider-attribution.ts",
+      "total_lines": 104,
+      "sha256": "6b676c90436c6c91bdbbe123b97fca80e9ef91d6ff01fc2aef63b0d53e1a8604",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "total_lines": 136,
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-registry.ts",
+      "total_lines": 163,
+      "sha256": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "ranges": [
+        [
+          1,
+          163
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "total_lines": 592,
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "ranges": [
+        [
+          1,
+          592
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-runtime.ts",
+      "total_lines": 811,
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "ranges": [
+        [
+          1,
+          811
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "packages/provider-runtime/README.md",
+      "total_lines": 7,
+      "sha256": "56d8810c0e72f525cfe65c6de01438428cc5e994f26ac4a47a457fcc283e4a62",
+      "ranges": [
+        [
+          1,
+          7
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/auth_guidance.rs",
+      "total_lines": 61,
+      "sha256": "7b0b46745b0599446aaf52e00e439eeada2252c826a801241e467055a03a08da",
+      "ranges": [
+        [
+          1,
+          61
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/model_registry.rs",
+      "total_lines": 416,
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "ranges": [
+        [
+          1,
+          416
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "packages/provider-runtime/src/lib.rs",
+      "total_lines": 346,
+      "sha256": "818627d407a8524a9e71c82dcac140fa84fabb7aca4682a9909259b9787171c6",
+      "ranges": [
+        [
+          1,
+          346
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "docs/architecture/provider-packages.md",
+      "total_lines": 182,
+      "sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "ranges": [
+        [
+          1,
+          182
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "docs/extensions/provider-integration.md",
+      "total_lines": 251,
+      "sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "ranges": [
+        [
+          1,
+          251
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/utils/legacy-protocol.ts",
+      "total_lines": 4,
+      "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "ranges": [
+        [
+          1,
+          4
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/providers.md",
+      "total_lines": 311,
+      "sha256": "254a1bf541a24edf13e2ab1686697767f1fd3192d7be939a9ef5ccd278f64c97",
+      "ranges": [
+        [
+          1,
+          311
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/anthropic.ts",
+      "total_lines": 364,
+      "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "ranges": [
+        [
+          1,
+          364
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "total_lines": 544,
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "ranges": [
+        [
+          1,
+          544
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/github-copilot.ts",
+      "total_lines": 412,
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "ranges": [
+        [
+          1,
+          412
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/kimi-coding.ts",
+      "total_lines": 310,
+      "sha256": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "ranges": [
+        [
+          1,
+          310
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/openrouter.ts",
+      "total_lines": 312,
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "ranges": [
+        [
+          1,
+          312
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/xai.ts",
+      "total_lines": 239,
+      "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "ranges": [
+        [
+          1,
+          239
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/auth/oauth/radius.ts",
+      "total_lines": 405,
+      "sha256": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "ranges": [
+        [
+          1,
+          405
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/anthropic-oauth.test.ts",
+      "total_lines": 145,
+      "sha256": "8671f7f284a6927770dc5bc71f4783b8e753102932c8d91b8747b633ff6aaad5",
+      "ranges": [
+        [
+          1,
+          145
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openrouter-oauth.test.ts",
+      "total_lines": 323,
+      "sha256": "fe79c782a94b5e673f66dc9fd4ac0584648495638c0b874b64b6138289bfd5cf",
+      "ranges": [
+        [
+          1,
+          323
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth-device-code.test.ts",
+      "total_lines": 146,
+      "sha256": "0402a6238bf9ab3be4ce8879f9068e2383475cb2a6a9fad9da33f3acbd8e0f1e",
+      "ranges": [
+        [
+          1,
+          146
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/radius-oauth.test.ts",
+      "total_lines": 130,
+      "sha256": "7e744c72d5b94e6a7d270665401824dd6f30cd871dc9a2e8df34895d9727c286",
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/oauth.ts",
+      "total_lines": 86,
+      "sha256": "1a5dad94f4532f92d35651bace9982f5e94c37970a029e5dbfb422e4b90e65bc",
+      "ranges": [
+        [
+          1,
+          86
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/kimi-coding-oauth.test.ts",
+      "total_lines": 271,
+      "sha256": "a0cce566b219ce880c0559f1cede8aec295c694166d595595d2075c4300872f0",
+      "ranges": [
+        [
+          1,
+          271
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/xai-oauth.test.ts",
+      "total_lines": 336,
+      "sha256": "2ed49317526c7e494eb6cef914e22b87f22052410fdc5666fbe4e4cd71316a2d",
+      "ranges": [
+        [
+          1,
+          336
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openai-codex-oauth.test.ts",
+      "total_lines": 487,
+      "sha256": "82d9746892b5e8a8b8bef1037dd6cca40f37427a3a317a43d8028f5cb7031f8e",
+      "ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/github-copilot-oauth.test.ts",
+      "total_lines": 453,
+      "sha256": "71da9ba1a152eb82514ebd012133c70228ccf30e1d102c064a4f78e101cdf39f",
+      "ranges": [
+        [
+          1,
+          453
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/core/model-resolver.ts",
+      "total_lines": 775,
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "ranges": [
+        [
+          1,
+          775
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice-provider-settings.ts",
+      "total_lines": 235,
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "ranges": [
+        [
+          1,
+          235
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/src/ice-provider.ts",
+      "total_lines": 360,
+      "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "ranges": [
+        [
+          1,
+          360
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/src/providers/faux.ts",
+      "total_lines": 710,
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "ranges": [
+        [
+          1,
+          710
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/src/providers/faux.rs",
+      "total_lines": 928,
+      "sha256": "a8e6386241d919e5db8c3f2b366b225dad15c3dcde9dc503ba276fd2e33683eb",
+      "ranges": [
+        [
+          1,
+          928
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-ai/tests/faux.rs",
+      "total_lines": 224,
+      "sha256": "9c4245d838f683435c332a16e94bf866b867ed8868dd1903613f87e8f4d2b2a9",
+      "ranges": [
+        [
+          1,
+          224
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/faux-provider.test.ts",
+      "total_lines": 641,
+      "sha256": "8652eeeda7cb6885c27db24d900d427f6bcfc43fbce4b92ca8854c8d16bb9e8c",
+      "ranges": [
+        [
+          1,
+          641
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider-fast-mode.test.ts",
+      "total_lines": 19,
+      "sha256": "cbe2e33e9a2695ccc7da49ba54ef4ee4889aa02cda7a0fdee410f4e5fc422a3d",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider-settings.test.ts",
+      "total_lines": 90,
+      "sha256": "a4bd16284cae9643b749a5ee5f95ac65d28d6921ae31a9c17a79f60743537b3c",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/ice-provider.test.ts",
+      "total_lines": 506,
+      "sha256": "7f353536e39a76a2954ef11c1c2766725c5566b554fd2e11313a540d31c208dd",
+      "ranges": [
+        [
+          1,
+          506
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/models.md",
+      "total_lines": 568,
+      "sha256": "941b3e00f3409c930d4549a7ccce9aa2f5b5351532791578ef03c6f085788cbf",
+      "ranges": [
+        [
+          1,
+          568
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/docs/custom-provider.md",
+      "total_lines": 775,
+      "sha256": "6f8e0536c9aecfa5a432ad4df8ec2b054dd8ccc62ed9ceb6240ca0713488bc1a",
+      "ranges": [
+        [
+          1,
+          775
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/anthropic-auth-token.test.ts",
+      "total_lines": 188,
+      "sha256": "e9e37c348c74411d6b25d07ecb9110a1e11db64cbf8eef3a010d4fa5b5117ed0",
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/provider-env-legacy-compat.test.ts",
+      "total_lines": 23,
+      "sha256": "68ca286fb72b9da9c17c15b93d0b637ac8e1eeff203d31eb87c035241b1e5913",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/bedrock-credentials.test.ts",
+      "total_lines": 116,
+      "sha256": "fc662838b0e0562546aa7a41fe16a80ee3be45104a120624e0ddbc9ffe4b042f",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-resolver.test.ts",
+      "total_lines": 798,
+      "sha256": "f9565a02fbd1aafee5aae01dcf7918c2b0611a3e6a4d35a614fa1ad2fef82656",
+      "ranges": [
+        [
+          1,
+          798
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/runtime-credentials.test.ts",
+      "total_lines": 87,
+      "sha256": "cdfc938374154a739fd7cb34073ba46a83bfffd01795c49d0e4758e621c0c98c",
+      "ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/models-store.test.ts",
+      "total_lines": 125,
+      "sha256": "e3c6cd048724745d5f72433a99a8ecd467b512151edfebd214819e053348243f",
+      "ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-test-utils.ts",
+      "total_lines": 26,
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/tests/provider_packages.rs",
+      "total_lines": 767,
+      "sha256": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d",
+      "ranges": [
+        [
+          1,
+          767
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-registry.test.ts",
+      "total_lines": 2052,
+      "sha256": "3b659c80361d6a06620c2179890b3c84335441aed20c3f4e7d50bb79be9f0430",
+      "ranges": [
+        [
+          1,
+          2052
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-modify-models-compat.test.ts",
+      "total_lines": 333,
+      "sha256": "c6fc16bc6ac6957e1c7244c6b9003cad8958ab9490ad5c9f948b36b551236c27",
+      "ranges": [
+        [
+          1,
+          333
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-credential-sync.test.ts",
+      "total_lines": 376,
+      "sha256": "a8ee2d28e0eccd2c2bdee89713fe139c51df8ef3553763266fcdbe82c914c33b",
+      "ranges": [
+        [
+          1,
+          376
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-auth-options.test.ts",
+      "total_lines": 293,
+      "sha256": "4f459831caccf9fa8f367ea473ef27675cba0fb765d75c82f3f2596faa7d5646",
+      "ranges": [
+        [
+          1,
+          293
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/model-runtime-cloudflare-compat.test.ts",
+      "total_lines": 107,
+      "sha256": "5f9835a1a7085abe6358286d82bb815c1b05d7b417764e0090cfdc6005c87cff",
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/providers.test.ts",
+      "total_lines": 630,
+      "sha256": "66e8db3fc57d3e8a2b18b4482c1bf789a5b5c2520df15c669a3f5993f0f3b86d",
+      "ranges": [
+        [
+          1,
+          630
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/together-models.test.ts",
+      "total_lines": 81,
+      "sha256": "6acf64f25cd699dd8d49f81a94dbbcab1186c30a18690d33a5b570a30617ac8d",
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/xiaomi-models.test.ts",
+      "total_lines": 18,
+      "sha256": "ffe9191f89eb71ea307a7bc764bd6caa414bf3efaef6b7a5456bd2a00c96ecf3",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/qwen-token-plan-models.test.ts",
+      "total_lines": 239,
+      "sha256": "f5a348f293434d24e91a51685f19b169f80396d09c7c12385acf18e841cfddc7",
+      "ranges": [
+        [
+          1,
+          239
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/fireworks-models.test.ts",
+      "total_lines": 328,
+      "sha256": "ae1b91907fb2a0b5f20659a1bd1915665e45a22dcb5cdc64a582f42f46e19d37",
+      "ranges": [
+        [
+          1,
+          328
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/bedrock-models.test.ts",
+      "total_lines": 71,
+      "sha256": "adb580d3fd5fba8e916f540bdd6711bdc65a977714bc411115cf5fff6f008550",
+      "ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/baseten-models.test.ts",
+      "total_lines": 142,
+      "sha256": "ece9a0e6045d35740fc178574c9c4c41e2b8aad98a57f7efa2e6c8a3cbf032ae",
+      "ranges": [
+        [
+          1,
+          142
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/ai/test/openrouter-cache-control-models.test.ts",
+      "total_lines": 16,
+      "sha256": "262ce84e4f793236b8b2e6cafbb0809ceef38ea14aa17e5ff1729b4c577422a6",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/remote-catalog-provider.test.ts",
+      "total_lines": 258,
+      "sha256": "29663c2be986588a85d83398b2e16e5d1017889acf008919c9ddb9241ab4db17",
+      "ranges": [
+        [
+          1,
+          258
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/credential-print.test.ts",
+      "total_lines": 105,
+      "sha256": "3b4a240c1a9a11ecbf24c69a9bb20d689612cbee7ab18d4c5ea978daa8dd99d0",
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+      "total_lines": 105,
+      "sha256": "8dbd7701172395915eff2b768370e4c7f9431ae139386360b4d651388f9c3beb",
+      "ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6999-models-json-hot-reload.test.ts",
+      "total_lines": 85,
+      "sha256": "1558a9f6bbcd7b6399456e791da2fedd198c87d27f9a23fdb3fcbbb0f30ec26f",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+      "total_lines": 161,
+      "sha256": "d93cb53808d012856913c910fe88f7bb48c9b1df51e792f61b63f188ceb1cc10",
+      "ranges": [
+        [
+          1,
+          161
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+      "total_lines": 108,
+      "sha256": "36c697f0d20fe542eaf1116204066bb04838c54a725fb44672ea0251901b80d2",
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "total_lines": 126,
+      "sha256": "ab7df0db39dc6c15116818ff9c9c7309bd0ae546a2a327decc342e3851260170",
+      "ranges": [
+        [
+          1,
+          126
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "total_lines": 47,
+      "sha256": "052c24aa2d145f30dc386a5982225cc8bfb0deb67da237d49d3e25923c56d4ba",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "ice",
+      "path": "packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "total_lines": 120,
+      "sha256": "dd4d85d37cdfa4ad5886b2878dd71c4f02bda34f653f7d30defb1aa507dfb3ec",
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/app.rs",
+      "total_lines": 1015,
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "ranges": [
+        [
+          245,
+          317
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/agent_session.rs",
+      "total_lines": 613,
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "ranges": [
+        [
+          180,
+          255
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/settings.rs",
+      "total_lines": 1221,
+      "sha256": "41a1a99a8295384989ed27e52ee112656e6171d1a19d37957fcf27c7a7d870d8",
+      "ranges": [
+        [
+          510,
+          590
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui/settings.rs",
+      "total_lines": 1944,
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "ranges": [
+        [
+          1850,
+          1944
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "repo": "rust",
+      "path": "crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1350,
+          1385
+        ]
+      ],
+      "fully_read": false
+    }
+  ],
+  "baseline_checks": [
+    {
+      "repo": "ice",
+      "commit": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "paths": [
+        "packages/ai/test/together-models.test.ts",
+        "packages/ai/test/providers.test.ts",
+        "packages/ai/test/provider-retry.test.ts",
+        "packages/ai/test/provider-env-legacy-compat.test.ts",
+        "packages/ai/test/xiaomi-models.test.ts",
+        "packages/ai/test/xai-oauth.test.ts",
+        "packages/ai/test/radius-oauth.test.ts",
+        "packages/ai/test/qwen-token-plan-models.test.ts",
+        "packages/ai/test/provider-error-body-regression.test.ts",
+        "packages/ai/test/provider-error-body-passthrough.test.ts",
+        "packages/ai/test/provider-continuation-diag.test.ts",
+        "packages/ai/test/openrouter-oauth.test.ts",
+        "packages/ai/test/openrouter-cache-control-models.test.ts",
+        "packages/ai/test/openai-completions-response-model.test.ts",
+        "packages/ai/test/openai-codex-oauth.test.ts",
+        "packages/ai/test/oauth.ts",
+        "packages/ai/test/oauth-device-code.test.ts",
+        "packages/ai/test/oauth-auth.test.ts",
+        "packages/ai/test/models-runtime.test.ts",
+        "packages/ai/test/model-data-validation.test.ts",
+        "packages/ai/test/model-catalog-types.test.ts",
+        "packages/ai/test/kimi-coding-oauth.test.ts",
+        "packages/ai/test/images-models.test.ts",
+        "packages/ai/test/image-model-data.test.ts",
+        "packages/ai/test/github-copilot-oauth.test.ts",
+        "packages/ai/test/fireworks-models.test.ts",
+        "packages/ai/test/faux-provider.test.ts",
+        "packages/ai/test/cross-provider-handoff.test.ts",
+        "packages/ai/test/bedrock-models.test.ts",
+        "packages/ai/test/bedrock-credentials.test.ts",
+        "packages/ai/test/baseten-models.test.ts",
+        "packages/ai/test/anthropic-oauth.test.ts",
+        "packages/ai/test/anthropic-auth-token.test.ts",
+        "packages/ai/test/anthropic-adaptive-thinking-models.test.ts",
+        "packages/coding-agent/test/model-runtime-modify-models-compat.test.ts",
+        "packages/coding-agent/test/model-runtime-credential-sync.test.ts",
+        "packages/coding-agent/test/model-runtime-cloudflare-compat.test.ts",
+        "packages/coding-agent/test/model-runtime-auth-options.test.ts",
+        "packages/coding-agent/test/model-resolver.test.ts",
+        "packages/coding-agent/test/model-registry.test.ts",
+        "packages/coding-agent/test/footer-data-provider.test.ts",
+        "packages/coding-agent/test/ice-provider-fast-mode.test.ts",
+        "packages/coding-agent/test/ice-provider-settings.test.ts",
+        "packages/coding-agent/test/ice-provider.test.ts",
+        "packages/coding-agent/test/oauth-selector.test.ts",
+        "packages/coding-agent/test/models-store.test.ts",
+        "packages/coding-agent/test/model-selector.test.ts",
+        "packages/coding-agent/test/model-runtime-test-utils.ts",
+        "packages/coding-agent/test/runtime-credentials.test.ts",
+        "packages/coding-agent/test/remote-catalog-provider.test.ts",
+        "packages/coding-agent/test/suite/agent-session-model-extension.test.ts",
+        "packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+        "packages/coding-agent/test/suite/regressions/6999-models-json-hot-reload.test.ts",
+        "packages/coding-agent/test/credential-print.test.ts",
+        "packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+        "packages/coding-agent/test/suite/regressions/6324-branch-summary-ambient-auth.test.ts",
+        "packages/coding-agent/test/suite/regressions/6019-explicit-provider-retry-message.test.ts",
+        "packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+        "packages/coding-agent/test/suite/regressions/7209-model-selector-filter-resets-selection.test.ts",
+        "packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+        "packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+        "packages/coding-agent/test/suite/regressions/9340-compaction-auth-cancellation.test.ts",
+        "packages/coding-agent/test/suite/regressions/7572-provider-retry-settings-merge.test.ts",
+        "packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+        "packages/coding-agent/test/agent-session-dynamic-provider.test.ts",
+        "packages/coding-agent/test/auth-storage.test.ts"
+      ],
+      "tracked_check": {
+        "command": "git ls-files --error-unmatch -- <66 inventoried test paths>",
+        "exit_code": 0,
+        "all_paths_listed": true
+      },
+      "diff_check": {
+        "command": "git diff --name-only 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0 -- <same 66 paths>",
+        "exit_code": 0,
+        "stdout": ""
+      },
+      "notes": "All 66 inventoried tests are tracked and unchanged relative to the frozen source commit; per-file current SHA-256 values are retained in this manifest. This read-only identity check is not test execution."
+    }
+  ],
+  "recovered_evidence": [
+    "Anthropic token environment names recovered from unredacted anthropic-auth-token.test.ts80–118 fixtures and assertions; no secret values sought."
+  ],
+  "assigned_ledger": {
+    "total": 124,
+    "fully_read": 124,
+    "unread": []
+  },
+  "test_inventory": {
+    "total": 66,
+    "fully_read_in_auth": 45,
+    "assigned_elsewhere": 21,
+    "executed": 0
+  },
+  "proposal": "docs/ice-gap/evidence/proposal-providers-auth.json"
+}

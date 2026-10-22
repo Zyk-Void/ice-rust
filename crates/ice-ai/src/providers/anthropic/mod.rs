@@ -226,7 +226,13 @@ async fn run_anthropic_stream(
     };
 
     // ---- build params (is_oauth = false in v1) ----
-    let built = build_params(model, ctx, false, opts);
+    let built = match build_params(model, ctx, false, opts) {
+        Ok(built) => built,
+        Err(message) => {
+            emit_terminal_error(prod, &mut state, message, false);
+            return;
+        }
+    };
     let mut body = match serde_json::to_value(&built.request) {
         Ok(v) => v,
         Err(e) => {
@@ -244,6 +250,12 @@ async fn run_anthropic_stream(
         body["stream"] = serde_json::Value::Bool(false);
         strip_cache_control(&mut body);
         simplify_non_stream_request(&mut body);
+    }
+    if let Err(message) =
+        enforce_serialized_output_authority(&mut body, opts.hard_max_output_tokens)
+    {
+        emit_terminal_error(prod, &mut state, message, false);
+        return;
     }
 
     // ---- assemble headers (createClient, API-key arm) ----
@@ -438,6 +450,20 @@ async fn run_anthropic_stream(
     let cost_model = model.cost.clone();
     let cost_fn = move |usage: &Usage| calculate_cost(&cost_model, usage);
     run_mapper(&mut sse, prod, &mut state, cost_fn).await;
+}
+
+fn enforce_serialized_output_authority(
+    body: &mut serde_json::Value,
+    hard_max_output_tokens: Option<f64>,
+) -> Result<(), String> {
+    let Some(payload) = body.as_object_mut() else {
+        return Err("serialized Anthropic request body must be a JSON object.".into());
+    };
+    crate::provider::enforce_hard_max_tokens_in_record(
+        payload,
+        "max_tokens",
+        hard_max_output_tokens,
+    )
 }
 
 fn strip_cache_control(value: &mut serde_json::Value) {
@@ -658,6 +684,43 @@ mod tests {
             crate::model::AnthropicMessagesCompat::default(),
         ));
         m
+    }
+
+    #[test]
+    fn serialized_output_authority_floors_fractional_limit() {
+        let mut body = serde_json::json!({ "max_tokens": 50_000 });
+        enforce_serialized_output_authority(&mut body, Some(4096.5)).unwrap();
+        assert_eq!(body["max_tokens"], 4096);
+    }
+
+    #[tokio::test]
+    async fn invalid_hard_authority_is_a_terminal_stream_error() {
+        let mut model = test_model();
+        model.reasoning = true;
+        let provider = AnthropicProvider::with_models(
+            Some("test-key".into()),
+            reqwest::Client::new(),
+            vec![model.clone()],
+        );
+        let context = crate::types::Context {
+            system_prompt: None,
+            messages: vec![crate::types::Message::User(crate::types::UserMessage::new(
+                "hi", 0,
+            ))],
+            tools: vec![],
+        };
+        let mut options = SimpleStreamOptions::default();
+        options.reasoning = Some(crate::types::ThinkingLevel::High);
+        options.hard_max_output_tokens = Some(512.0);
+
+        let stream = provider.stream_simple(&model, &context, &options).await;
+        let result = stream.result().await.expect("terminal assistant message");
+        assert_eq!(result.stop_reason, StopReason::Error);
+        assert!(result
+            .error_message
+            .as_deref()
+            .unwrap_or_default()
+            .contains("below the minimum ordinary output size"));
     }
 
     #[test]

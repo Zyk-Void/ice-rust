@@ -189,24 +189,132 @@ pub(super) fn reconcile_streamed_assistant_completion(
     }
 }
 
-/// Drive a single prompt through the lane. When `streaming` is true, the
-/// `AgentEvent` drain task renders the response live and the completed outcome
-/// reconciles its final snapshot. When false (no `event_rx`), this falls back
-/// to the blocking await-final-text path.
-
-/// Drive a single prompt through the lane. When `streaming` is true, the
-/// `AgentEvent` drain task renders the response live and the completed outcome
-/// reconciles its final snapshot. When false (no `event_rx`), this falls back
-/// to the blocking await-final-text path.
-pub(super) async fn run_prompt_streaming(
+/// Persist buffered shell results before prompt settlement releases the UI.
+/// Event rendering must never perform this write against a later session.
+pub(super) async fn flush_pending_bash_messages(
+    harness: &AgentHarness,
     lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    session_id: &str,
+) {
+    let pending = std::mem::take(&mut *state.pending_bash_messages.lock().unwrap());
+    if harness.session().storage().metadata().id != session_id {
+        if !pending.is_empty() {
+            add_note_message(
+                &state.chat_container,
+                "Discarded buffered bash results because the session changed.",
+            );
+        }
+        return;
+    }
+    for item in pending {
+        if !Arc::ptr_eq(&item.storage, &harness.session().storage()) {
+            add_note_message(
+                &state.chat_container,
+                "Discarded a buffered shell result because its session was replaced.",
+            );
+            continue;
+        }
+        if let Err(error) = lane.append_message(item.message).await {
+            add_error_message(
+                &state.chat_container,
+                &format!("Could not record bash result: {error}"),
+            );
+        }
+    }
+}
+
+/// Record an out-of-band shell result at a turn boundary.
+pub(super) async fn finish_user_bash(
+    harness: &AgentHarness,
+    state: &Arc<TuiState>,
+    report: UserBashReport,
+) {
+    state.finish_user_bash();
+    if !Arc::ptr_eq(&report.storage, &harness.session().storage()) {
+        add_note_message(
+            &state.chat_container,
+            "Discarded a shell result because its session was replaced.",
+        );
+        return;
+    }
+    let message = ice_harness::messages::bash_execution_message(
+        report.command,
+        report.output,
+        report.exit_code,
+        report.cancelled,
+        report.truncated,
+        report.full_output_path,
+        Some(report.exclude_from_context),
+        now_ms(),
+    );
+    // Defer during a run to preserve complete tool-call/result sequences.
+    // The prompt owner flushes these before releasing the UI to another run.
+    if *state.status.lock().unwrap() == RunStatus::Idle {
+        if let Err(error) = harness.lane("main").append_message(message).await {
+            add_error_message(
+                &state.chat_container,
+                &format!("Could not record bash result: {error}"),
+            );
+        }
+    } else {
+        state
+            .pending_bash_messages
+            .lock()
+            .unwrap()
+            .push(BufferedBashMessage {
+                storage: report.storage,
+                message,
+            });
+    }
+}
+
+/// Drive the startup batch through the same prompt owner as interactive input.
+pub(super) async fn run_initial_prompts(
+    harness: &AgentHarness,
+    prompts: Vec<String>,
+    mut images: Vec<ice_ai::types::ImageContent>,
+    tui: &Arc<TuiAltScreen>,
+    state: &Arc<TuiState>,
+    streaming: bool,
+    running: &Arc<Mutex<bool>>,
+) {
+    for prompt in prompts {
+        if !*running.lock().unwrap() {
+            break;
+        }
+        // Direct prompts do not receive a user MessageStart event.
+        add_user_message(&state.chat_container, &prompt);
+        add_image_previews(&state.chat_container, &images, state.images_visible());
+        tui.request_render(false);
+        if !run_prompt_streaming(
+            harness,
+            &prompt,
+            false,
+            tui,
+            state,
+            streaming,
+            std::mem::take(&mut images),
+        )
+        .await
+        {
+            break;
+        }
+    }
+}
+
+/// Drive one prompt, reconcile its final response, and settle buffered writes.
+pub(super) async fn run_prompt_streaming(
+    harness: &AgentHarness,
     prompt: &str,
     resume: bool,
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
     streaming: bool,
     images: Vec<ice_ai::types::ImageContent>,
-) {
+) -> bool {
+    let lane = harness.lane("main");
+    let session_id = harness.session().storage().metadata().id;
     state.set_status(RunStatus::Working);
     tui.request_render(false);
 
@@ -219,9 +327,10 @@ pub(super) async fn run_prompt_streaming(
             // Nothing to resume after all: leave the status alone and let the
             // normal prompt path take over.
             Ok(None) => {
+                flush_pending_bash_messages(harness, &lane, state, &session_id).await;
                 state.set_status(RunStatus::Idle);
                 tui.request_render(false);
-                return;
+                return true;
             }
             Err(error) => Err(error),
         }
@@ -246,6 +355,7 @@ pub(super) async fn run_prompt_streaming(
     } else {
         false
     };
+    flush_pending_bash_messages(harness, &lane, state, &session_id).await;
 
     if streaming {
         // Broadcast delivery is asynchronous: the harness result can resolve
@@ -272,23 +382,13 @@ pub(super) async fn run_prompt_streaming(
     // Guarantee the pending-messages display reconciles at the end of every
     // run/prompt — covers aborts and the non-streaming path, where no
     // `AgentEnd` event necessarily reaches the drain task.
-    refresh_pending_messages(state, lane).await;
+    refresh_pending_messages(state, &lane).await;
 
-    // Authoritative context-badge fallback. The streaming drain normally
-    // updates it from `MessageEnd`, but a `Lagged` broadcast or the blocking
-    // path can skip that event; reconcile from the run outcome so the badge
-    // always reflects the newest real response.
-    if let Ok(result) = &outcome {
-        let final_message: Option<&AssistantMessage> = match &result.outcome {
-            HarnessRunOutcome::Completed { final_message, .. }
-            | HarnessRunOutcome::Aborted { final_message, .. } => Some(final_message),
-            HarnessRunOutcome::Failed { final_message, .. } => final_message.as_ref(),
-            HarnessRunOutcome::Suspended { .. } => None,
-        };
-        if let Some(a) = final_message {
-            record_context_usage(&state.footer, a);
-        }
-    }
+    record_context_usage(&state.footer, harness).await;
+    let completed = matches!(
+        &outcome,
+        Ok(result) if matches!(result.outcome, HarnessRunOutcome::Completed { .. })
+    );
 
     match outcome {
         Ok(result) => match &result.outcome {
@@ -348,30 +448,43 @@ pub(super) async fn run_prompt_streaming(
     }
 
     tui.request_render(false);
+    completed
+}
+
+pub(super) fn compact_outcome_message(outcome: CompactionOutcome) -> Result<(), String> {
+    match outcome {
+        CompactionOutcome::Completed { .. } => Ok(()),
+        CompactionOutcome::Declined { .. } => Err("Nothing to compact.".into()),
+        CompactionOutcome::Aborted { .. } => Err("Compaction cancelled.".into()),
+        CompactionOutcome::Failed { error, .. } => {
+            Err(format!("Compact failed: {}", error.message))
+        }
+    }
 }
 
 /// `/compact`: drive a compaction on the lane (mirrors TS `app.compact`).
 /// Reports the outcome as a transcript note; the harness progress watcher
 /// displays the compaction indicator while the summary is generated.
 pub(super) async fn run_compact(
-    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
 ) {
     state.set_status(RunStatus::Working);
     tui.request_render(false);
-    match lane.compact(None).await {
-        Ok(_) => {
-            add_note_message(&state.chat_container, "Conversation compacted.");
-            // The last assistant usage describes the pre-compaction context;
-            // reset the badge to `?` until the next response reports the new
-            // (much smaller) prompt size — mirrors pi's `percent: null`.
-            state.footer.set_context_tokens(None);
-        }
-        Err(e) => {
-            add_error_message(&state.chat_container, &format!("Compact failed: {e}"));
+    match harness.lane("main").compact(None).await {
+        Ok(result) => match compact_outcome_message(result.outcome) {
+            Ok(()) => {
+                add_note_message(&state.chat_container, "Conversation compacted.");
+                // Refresh below also handles cancellation after a saved checkpoint.
+            }
+            Err(message) => add_error_message(&state.chat_container, &message),
+        },
+        Err(error) => {
+            add_error_message(&state.chat_container, &format!("Compact failed: {error}"));
         }
     }
+    record_context_usage(&state.footer, harness).await;
     state.set_status(RunStatus::Idle);
     tui.request_render(false);
 }

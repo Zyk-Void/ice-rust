@@ -1,0 +1,322 @@
+{
+  "area": "tui",
+  "owner": "coordinator",
+  "assigned_task": "Close exact previously unread native interactive controller ranges",
+  "tests_executed": false,
+  "application_executed": false,
+  "source_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          281,
+          558
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          631,
+          959
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1146,
+          1217
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1291,
+          1510
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1511,
+          1724
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          2046,
+          2239
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          2336,
+          2615
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          2616,
+          2894
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          2926,
+          2961
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          3026,
+          3085
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          3291,
+          3398
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Complete requested range displayed and source-read; no redaction markers. No code execution."
+    }
+  ],
+  "reviewed_lines": 2350,
+  "combined_coverage": {
+    "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+    "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+    "total_lines": 3398,
+    "other_owner": "audit_extensions",
+    "other_owner_ranges": [
+      [
+        559,
+        630
+      ],
+      [
+        960,
+        1145
+      ],
+      [
+        1218,
+        1290
+      ],
+      [
+        1725,
+        2045
+      ],
+      [
+        2240,
+        2335
+      ],
+      [
+        2895,
+        2925
+      ],
+      [
+        2962,
+        3025
+      ],
+      [
+        3086,
+        3290
+      ]
+    ],
+    "union": [
+      [
+        1,
+        3398
+      ]
+    ],
+    "limits": "Full coverage is the union of explicitly attributed reviews; the coordinator independently read only the listed supplemental ranges."
+  },
+  "findings": [
+    {
+      "topic": "Markdown transformation chain",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:130-227"
+      ],
+      "behavior": "Checks snapshot active once before the chain; captures renderers from that snapshot; serializes markdown input and owns/free output irrespective of return code. Serialization or nonzero return stops and retains current text; malformed JSON or absent/nonstring markdown retains current then continues to later renderers. catch_unwind exists, but external callback ABI/unwind behavior must qualify any claim of panic recovery."
+    },
+    {
+      "topic": "Slash dispatch and visibility",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:279-366",
+        "rust:crates/ice-cli/src/interactive_tui.rs:514-524"
+      ],
+      "behavior": "Registration appends without uniqueness check; find uses first exact canonical/alias match. Canonical visibility requires nonempty description, but visible aliases are appended independently. Dispatch split_whitespace/join changes internal whitespace in the argument remainder. Unknown slash input falls through to prompt."
+    },
+    {
+      "topic": "Extension key ownership",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:390-505"
+      ],
+      "behavior": "Only registered named keys with Input handlers are dispatched; function keys work with a draft while ordinary keys require empty editor. Modal/search state blocks a new claim. Claimed Press records KeyCode; its Release removes ownership first and may bypass modal/draft checks. Payload carries press/repeat/release and modifier booleans; ASCII graphic keys lowercase."
+    },
+    {
+      "topic": "Startup preferences and identity",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:802-867",
+        "rust:crates/ice-cli/src/interactive_tui.rs:895-959",
+        "rust:crates/ice-cli/src/interactive_tui.rs:1190-1198"
+      ],
+      "behavior": "Uses reload_context cwd/trust snapshot; untrusted project values are ignored. First explicit project option wins, including false/zero. Padding defaults1 caps16; completion rows default5 clamp1..20; terminal progress defaults true. Stored session hide-thinking and tool-output-expanded preferences override global defaults; these are native capabilities to preserve."
+    },
+    {
+      "topic": "Prompt and queue admission",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:1398-1497",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2617-2695"
+      ],
+      "behavior": "Submit trims text, routes registered slash then user shell before prompt. Busy input calls lane.steer asynchronously; direct prompt reserves Working, paints/history-adds and sends to main channel. Busy follow-up and dequeue also spawn immediate lane work because the main loop awaits a run. Queue errors restore images and display an error; cleared text is not restored in those branches. Follow-up clears editor before its status/reservation check, and its idle send ignores channel failure unlike ordinary submit."
+    },
+    {
+      "topic": "Model and thinking hotkeys",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:2336-2421"
+      ],
+      "behavior": "Model cycles restrict the scoped catalog to the current provider, update visible current model before spawned set_model, and ignore set_model failure. Thinking cycle reads actual lane model/level, uses catalog supported levels (fallback Medium), and updates footer only after success."
+    },
+    {
+      "topic": "Clipboard/paste/search/autocomplete dispatch",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:2425-2615",
+        "rust:crates/ice-cli/src/interactive_tui.rs:2698-2772"
+      ],
+      "behavior": "Clipboard file paths precede image and text lookup; only the text branch checks SSH_CONNECTION. Text paste tries image-path attachment before editor paste. Transcript search is a fixed Ctrl+Shift+uppercase-F chord; search character handling occurs after earlier global controls. Bare Tab always consumes the key, even without a suggestion. Up/down prefers autocomplete, then history only for empty editor or existing history browsing. Windows text runs use queued-event probing and optional clipboard suffix checks before treating Enter as paste or submit; helpers own exact timing."
+    },
+    {
+      "topic": "Render and live bridges",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:1499-1656"
+      ],
+      "behavior": "Starts scheduled rendering and readerless terminal before streaming/reload/tick tasks. The tick ensures geometry, side-question state, panel/status revisions, pet state, editor injection/change and auto-send; Working with a live tool/bash panel rebuilds transcript while idle spinner-only frames reuse scroll content. Reload signals are forwarded through a separate mailbox into main processing."
+    },
+    {
+      "topic": "Session lifecycle and input order",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:2776-2894"
+      ],
+      "behavior": "SessionStart runs after terminal/key worker starts; a veto is advisory. Initial and extra prompts run before draining main input messages, and pending recovery resumes only with no explicit prompts. Initial images are consumed on the first prompt. Main UserInput clears editor programmatically then invokes streaming; no version check for a newer draft is present in that visible clear call."
+    },
+    {
+      "topic": "Interrupt and shutdown",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:2077-2239",
+        "rust:crates/ice-cli/src/interactive_tui.rs:3352-3393"
+      ],
+      "behavior": "Clear-key fresh presses clear text/images or trigger double-press exit; Repeat does not arm/consume the timer. Busy exit takes emergency_exit rather than queued Exit. Empty-editor exit behaves similarly; interrupt sets Aborting and starts queue-restoring abort. Normal exit shuts down ask-user bridge, sets running false, aborts/awaits update tasks, joins key worker before restoring terminal, aborts other tasks, clears reload mailbox, prints resume command and returns0. Polling50ms cannot guarantee a50ms join if a synchronous key handler is blocked. TUI support checks stdout terminal only."
+    },
+    {
+      "topic": "Reload presentation",
+      "refs": [
+        "rust:crates/ice-cli/src/interactive_tui.rs:3293-3346"
+      ],
+      "behavior": "Successful reload refreshes resource listing; transformer is rebuilt from the new snapshot and installed even on an error outcome. This branch does not rebuild the startup command registry or autocomplete list; the area owner should combine helper evidence before assigning a missing reload contract."
+    }
+  ]
+}

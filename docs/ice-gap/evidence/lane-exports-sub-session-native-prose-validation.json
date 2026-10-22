@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "reviewer": "/root/exports_sub_session",
+  "source_only": true,
+  "method": "Read-only JSON parsing and exact expected-old field/occurrence validation against the old-root accepted artifacts. No application tests or builds.",
+  "proposal": "/home/mewtwo/Zks/ice-rust/docs/ice-gap/evidence/lane-exports-sub-session-native-prose-replacements.json",
+  "proposal_sha256": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+  "all_exact_field_guards_pass": true,
+  "results": [
+    {
+      "kind": "spec",
+      "area": "session",
+      "id": "SESSION-023",
+      "field": "rust",
+      "current_sha256": "bf070480003b3a40a828b92766a33d7b447651ff975550c41442a53478bd04ef",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "spec",
+      "area": "subagents",
+      "id": "SUB-034",
+      "field": "rust",
+      "current_sha256": "d6323b97206d88c117dbb67d82e6511f7195ac8940eea9971f8d0201e235dc0c",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "spec",
+      "area": "tui",
+      "id": "TUI-050",
+      "field": "rust",
+      "current_sha256": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "spec",
+      "area": "tui",
+      "id": "TUI-208",
+      "field": "rust",
+      "current_sha256": "5b6e03cdaa80e8e64e8fa0ef4db9819c8478d3da6f0b3462e131cca6e8843363",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "spec",
+      "area": "observability",
+      "id": "OBS-002",
+      "field": "rust",
+      "current_sha256": "f5671f4818323c1536fece8b2b1facbd72b7824a368c2e3380b9c46e01ed35be",
+      "snapshot_sha_matches": false,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "spec",
+      "area": "blackhole",
+      "id": "BLACK-002",
+      "field": "port",
+      "current_sha256": "4e4cfbeed75c1e2a6ed72462df19020ea75fe34109c70e1971f9a0e180a9956b",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "manifest",
+      "area": "subagents",
+      "pointer": "/claims/0/finding",
+      "current_sha256": "e1fb7844fa0b4c8d35bad861cb73c4e52e2b9cb716591e15432b2e9aca936c7b",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    },
+    {
+      "kind": "manifest",
+      "area": "subagents",
+      "pointer": "/open_questions/0/question",
+      "current_sha256": "e1fb7844fa0b4c8d35bad861cb73c4e52e2b9cb716591e15432b2e9aca936c7b",
+      "snapshot_sha_matches": true,
+      "field_exists": true,
+      "whole_field_matches": true,
+      "old_occurrences": 1,
+      "proposed_field_matches": true
+    }
+  ],
+  "catalog_id_uninserted": true,
+  "protected_original_claims_modified": false,
+  "notes": [
+    "OBS accepted spec changed after its scan snapshot, but the complete OBS-002 rust field is unchanged and its exact replacement guard passes. This proposal does not overwrite a whole accepted file.",
+    "RUST-069 remains a proposal; the existing catalog has not been changed.",
+    "claims original/claim/source/report_excerpt values are not targeted."
+  ]
+}

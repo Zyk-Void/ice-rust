@@ -1,0 +1,50 @@
+{
+  "id": "RUST-068",
+  "entry_ids": [
+    "TUI-074"
+  ],
+  "title": "Failed UI queue admission does not recover the cleared prompt draft",
+  "severity": "medium; conditional input loss",
+  "evidence_level": "source-read; independently reviewed; not reproduced",
+  "sources": [
+    "rust:crates/ice-tui/src/editor.rs:1184-1204",
+    "rust:crates/ice-cli/src/interactive_tui.rs:1425-1460",
+    "rust:crates/ice-cli/src/interactive_tui.rs:2600-2613",
+    "rust:crates/ice-cli/src/interactive_tui.rs:2650-2695",
+    "rust:crates/ice-cli/src/interactive_tui/state.rs:738-750",
+    "rust:crates/ice-cli/src/interactive_tui/state.rs:833-864",
+    "rust:crates/ice-cli/src/interactive_tui/state.rs:972-984",
+    "rust:crates/ice-harness/src/agent_harness.rs:4668-4683"
+  ],
+  "behavior": "A failed busy steering/follow-up request restores pending images but leaves the submitted text absent from the editor and queue. The follow-up path also clears the draft before idle admission and can lose it when the run-slot reservation fails.",
+  "technical_explanation": "Editor::submit stores expanded text in its own history, clears undo/redo, calls a callback with no acceptance result, and clears unconditionally. The busy callback spawns lane.steer and restores only images on Err. Follow-up bypasses submit, clears first, then either reserves the idle slot or spawns lane.follow_up; its error branch also restores only images. A failed try_start_working has no recovery branch, and the idle channel-send result is discarded. The normal native Up/Down handler uses a separate TuiState history, so the Editor-internal history does not establish normal UI recovery of the busy submission.",
+  "parity_relation": "Overlaps TUI-074 input admission/recovery while remaining a defect in existing native queue UI. Correct expanded-text dequeue and image restoration are separately preserved; this finding does not claim that all queueing fails.",
+  "assumptions": "Requires queue rejection (including a failed image normalization or enqueue), competing idle reservation, or a closed main input channel. Normal successful admission is unaffected. The source contains an internal Editor history copy for ordinary Enter, so permanent loss from all memory is not asserted. No interactive run or failing queue request was executed.",
+  "independent_review": "evidence/coordinator-queue-abort-review.json",
+  "provenance_status": "pending-local-Git-review",
+  "provenance": "Local Git attribution will be reviewed before final publication.",
+  "provenance_targets": [
+    {
+      "file": "crates/ice-tui/src/editor.rs",
+      "range": [
+        1184,
+        1204
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/interactive_tui.rs",
+      "range": [
+        1425,
+        1460
+      ]
+    },
+    {
+      "file": "crates/ice-cli/src/interactive_tui.rs",
+      "range": [
+        2650,
+        2695
+      ]
+    }
+  ],
+  "provenance_evidence": "evidence/rust-defect-provenance.json"
+}

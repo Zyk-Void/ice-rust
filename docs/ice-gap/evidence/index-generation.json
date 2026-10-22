@@ -1,0 +1,237 @@
+{
+  "captured_at": "2026-10-20T07:52:37.525127+00:00",
+  "source_only": true,
+  "mode": "complete",
+  "entries": 791,
+  "groups": 546,
+  "cyclic_groups": [
+    {
+      "group": "G018",
+      "size": 3
+    },
+    {
+      "group": "G107",
+      "size": 3
+    },
+    {
+      "group": "G321",
+      "size": 8
+    },
+    {
+      "group": "G364",
+      "size": 2
+    },
+    {
+      "group": "G365",
+      "size": 3
+    },
+    {
+      "group": "G394",
+      "size": 191
+    },
+    {
+      "group": "G395",
+      "size": 3
+    },
+    {
+      "group": "G412",
+      "size": 2
+    },
+    {
+      "group": "G413",
+      "size": 3
+    },
+    {
+      "group": "G424",
+      "size": 2
+    },
+    {
+      "group": "G459",
+      "size": 2
+    },
+    {
+      "group": "G468",
+      "size": 5
+    },
+    {
+      "group": "G519",
+      "size": 2
+    },
+    {
+      "group": "G522",
+      "size": 18
+    },
+    {
+      "group": "G524",
+      "size": 4
+    },
+    {
+      "group": "G527",
+      "size": 2
+    },
+    {
+      "group": "G540",
+      "size": 9
+    }
+  ],
+  "top_priority_order": [
+    {
+      "order": 1,
+      "group": "G001",
+      "entry_id": "AI-006",
+      "area": "ai",
+      "priority": "P0",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 2,
+      "group": "G002",
+      "entry_id": "AI-012",
+      "area": "ai",
+      "priority": "P0",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 3,
+      "group": "G003",
+      "entry_id": "TOOLS-019",
+      "area": "tools",
+      "priority": "P0",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 4,
+      "group": "G004",
+      "entry_id": "SET-004",
+      "area": "settings",
+      "priority": "P0",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 5,
+      "group": "G005",
+      "entry_id": "SET-003",
+      "area": "settings",
+      "priority": "P0",
+      "prerequisites": "SET-004",
+      "related_entries": ""
+    },
+    {
+      "order": 6,
+      "group": "G006",
+      "entry_id": "CLI-039",
+      "area": "cli-packaging",
+      "priority": "P0",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 7,
+      "group": "G007",
+      "entry_id": "AI-001",
+      "area": "ai",
+      "priority": "P1",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 8,
+      "group": "G008",
+      "entry_id": "AI-004",
+      "area": "ai",
+      "priority": "P1",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 9,
+      "group": "G009",
+      "entry_id": "AI-005",
+      "area": "ai",
+      "priority": "P1",
+      "prerequisites": "",
+      "related_entries": ""
+    },
+    {
+      "order": 10,
+      "group": "G010",
+      "entry_id": "AI-007",
+      "area": "ai",
+      "priority": "P1",
+      "prerequisites": "",
+      "related_entries": ""
+    }
+  ],
+  "native_strengths": 54,
+  "question_records": 61,
+  "inputs": [
+    {
+      "area": "ai",
+      "sha256": "c594ffddadcf35b2a1b86459b7663a41b940cbde92f3bcafdd8861a995b221dc"
+    },
+    {
+      "area": "agent",
+      "sha256": "1d153acbf379c632040baeacbf493ff515e153af2e929f622cba80a653ccbd68"
+    },
+    {
+      "area": "tools",
+      "sha256": "c87a7107c8714e09f3afec2cb16f27fc6935c999049d52da1bd362fb97add4bd"
+    },
+    {
+      "area": "session",
+      "sha256": "dd8309ccdf2301f7d3e3e12e1b32f8a67a2eed108dc633266f61025ea8c83a6b"
+    },
+    {
+      "area": "settings",
+      "sha256": "d3de20a43ead677c2143a6460a59dd425afcf561ceac1056b0b8aadafe2f540d"
+    },
+    {
+      "area": "extensions",
+      "sha256": "c75a09bd97b73056a8c7683dc183d5def967fedb4a663f7747c434ae7d9f1ab1"
+    },
+    {
+      "area": "rpc-remote",
+      "sha256": "7019badc05e6dc8387076e2e7522eff3fb6015de06f8193ef5a1a5456dae7e27"
+    },
+    {
+      "area": "tui",
+      "sha256": "a4ef502f9b3d4bc8fb503fab16c06fd1881396d1801b80cd6ad0a9fbad799148"
+    },
+    {
+      "area": "subagents",
+      "sha256": "4e68f861d21e0e6cfbfaaa25863778e059b4097ce10f419c034b2d7f7aec1055"
+    },
+    {
+      "area": "safe-verify",
+      "sha256": "95c1c1db36cf71cceb22926f835ab33739e8612503f757396db5ebc659575d5c"
+    },
+    {
+      "area": "observability",
+      "sha256": "2d6b69adca51bd9e98b362df8ac05a3094b5d57ea8843b727e5d6eea8a8bfbbf"
+    },
+    {
+      "area": "cognee",
+      "sha256": "26f243d3f1e362455abfb68b58fc5657117a609f28a5a882fd28c15fc6c3c4d4"
+    },
+    {
+      "area": "blackhole",
+      "sha256": "0ea3bf03578dcaeb228ed268617ddd77ab47066615dd0113a3b6ee23f1513e0d"
+    },
+    {
+      "area": "providers-auth",
+      "sha256": "741586050838293f71d1ddb5792378e7aca55d25b244758ec684af89c4e2bc65"
+    },
+    {
+      "area": "cli-packaging",
+      "sha256": "080ad904b3284a6ac63508d096ad9ed8880ac188583cbaf82a63b882ce48061e"
+    },
+    {
+      "area": "misc",
+      "sha256": "d816be32db4f1e05a2d21e93935b0b17f99a0e1258e3b2cd3468237eb1a8601e"
+    }
+  ]
+}

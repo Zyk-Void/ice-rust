@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T06:59:22.281Z",
+  "owner": "/root/native_closeout",
+  "status": "prepared-and-original-projection-verified",
+  "passed": true,
+  "source_only": true,
+  "application_or_test_execution": false,
+  "tool": "tools/coordinator-active-closeout.mjs",
+  "tool_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+  "syntax_check": {
+    "command": "node --check docs/ice-gap/tools/coordinator-active-closeout.mjs",
+    "exit_code": 0
+  },
+  "saved_mapping_check": {
+    "status": "passed",
+    "range_records_checked": 9950,
+    "remapper_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+    "source_map_sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d",
+    "hunk_map_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+    "independent_review_sha256": "ebf9835bd323170cb3c716b91a6f2101ce8b8c66a0e9eb204bf98207cd3f59f5",
+    "new_source_read_credit": 0,
+    "source_hunks_reaudited": false
+  },
+  "sequence": [
+    "original residual spacing and positive proof",
+    "passing original gate",
+    "copy",
+    "certified citation remap",
+    "fresh active prose preview and guarded apply",
+    "fresh catalog preview and guarded apply",
+    "helper migration",
+    "render-pending",
+    "active validation and finalization"
+  ],
+  "guarded_native_changes": {
+    "immutable_proposals_rewritten": false,
+    "residual_proof_verified_before_module_import": true,
+    "old_new_fields_normalized_in_memory": true,
+    "current_fields_compared_after_active_projection": true,
+    "rendering_deferred_until_migration": true,
+    "completion_replaces_current_resume_header": true,
+    "historical_checkpoints_retained_byte_for_byte": true
+  },
+  "catalog_review": {
+    "rust_045_origin_provenance": "introduced-by-local-rebrand-in-frozen-checkout",
+    "rust_045_provenance_status": "fixed-in-active-checkout",
+    "rust_045_active_status": "fixed",
+    "rust_045_active_citations": [
+      "rust-active:crates/ice-cli/src/prebuilt_release.rs:11",
+      "rust-active:crates/ice-cli/src/changelog.rs:27"
+    ],
+    "url_guards": [
+      {
+        "file": "crates/ice-cli/src/prebuilt_release.rs",
+        "line": 11,
+        "literal": "https://github.com/zyk-void/ice-rust"
+      },
+      {
+        "file": "crates/ice-cli/src/changelog.rs",
+        "line": 27,
+        "literal": "https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md"
+      }
+    ],
+    "original_provenance_sha256": "19d87cfd2d6d69779f67c92b54baac27b8648a22118a5d1087fe69c8523e170b",
+    "original_provenance_fields_guarded": true,
+    "rust_069_coordinate_space": "already-active",
+    "rust_069_entry_ids": [],
+    "rust_069_insert_after_remap": true
+  },
+  "evidence_integrity_incident": "evidence/lane-native-final-spacing-preview-incident.json",
+  "remaining": [],
+  "projection_preview": {
+    "path": "evidence/active-native-prose-preview.json",
+    "sha256": "14fba3aa192434303030615ec9cfadd50f5b03377dc5e887f96a6f2ce4dd4f6f",
+    "qa": "evidence/lane-native-final-projection-qa.json",
+    "qa_sha256": "58a09d9bc66ee6bc98adc5c5f180d065a48c83c900b629b4fe923dac42ccb25c",
+    "exact_field_guards": 52,
+    "files": 21,
+    "projection_citation_occurrences": 3439,
+    "original_gate_sha256": "683a10db593b7400d63e990780ba05febba114e1d5820dda9207486bab52ed88",
+    "virtual_original_preview": true,
+    "active_preview_required_after_copy_and_remap": true
+  },
+  "applied_spacing": {
+    "tool_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+    "validation": "evidence/spacing-residual-validation.json",
+    "validation_sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36"
+  },
+  "peer_review": {
+    "owner": "/root/helper_migration",
+    "tool_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+    "read_only": true,
+    "result": "No concrete migration integration defects. Import proof barrier, immutable proposal projection, exact field/hash guards, deferred rendering and exact RESUME history suffix preservation reviewed."
+  },
+  "identity_entry_map": {
+    "path": "evidence/lane-native-final-identity-entry-map.json",
+    "sha256": "54799744cce9d71ce0cd247551107040616daff7bca80818777cb5bce116454a",
+    "explicit_deliberate_identity_policy_entries": [
+      "CLI-018",
+      "SET-001"
+    ],
+    "corrected_entry_count": 25
+  },
+  "coordinator_execution_sequence": [
+    "Original gate/checkpoint",
+    "Exact active copy",
+    "Certified citation remap",
+    "Fresh active prose preview and apply",
+    "Fresh catalog preview and apply",
+    "Helper migration",
+    "render-pending before metadata finalization",
+    "Active gate, completion metadata and complete-checkpoint"
+  ]
+}

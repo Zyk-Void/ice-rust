@@ -1,0 +1,1335 @@
+{
+  "area": "extensions",
+  "status": "verified-proposal",
+  "generated_at": "2026-10-20T03:10:16.438Z",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "method": "Reviewed all 57 declaration records in both source files against current published mechanisms. Added the few unquoted DTOs and exact identity/type-guard contracts. SDK response-hook caller was independently located and read. Overload declarations remain separate QA records while sharing one runtime function.",
+  "totals": {
+    "records": 57,
+    "runtime": 18,
+    "type": 39,
+    "unresolved": 0
+  },
+  "entry_updates": [
+    {
+      "id": "EXT-020",
+      "source_append": "Exported symbols: `SwitchSessionHandler`, `ReloadHandler` (ice:packages/coding-agent/src/core/extensions/runner.ts:199; ice:packages/coding-agent/src/core/extensions/runner.ts:204)."
+    },
+    {
+      "id": "EXT-019",
+      "source_append": "Exported symbols: `ShutdownHandler` (ice:packages/coding-agent/src/core/extensions/runner.ts:206)."
+    },
+    {
+      "id": "EXT-022",
+      "source_append": "Exported symbols: `emitSessionShutdownEvent` (ice:packages/coding-agent/src/core/extensions/runner.ts:212).\nExported symbols: `SessionStartEvent`, `SessionCompactEvent`, `SessionShutdownEvent`, `SessionTreeEvent`, `SessionEvent`, `AfterProviderResponseEvent` (ice:packages/coding-agent/src/core/extensions/types.ts:616; ice:packages/coding-agent/src/core/extensions/types.ts:659; ice:packages/coding-agent/src/core/extensions/types.ts:670; ice:packages/coding-agent/src/core/extensions/types.ts:700; ice:packages/coding-agent/src/core/extensions/types.ts:708; ice:packages/coding-agent/src/core/extensions/types.ts:746).",
+      "mechanism_append": "`emitSessionShutdownEvent(runner, event)` returns false when there are no session_shutdown handlers; otherwise it awaits the existing generic emitter and returns true. True means emission was attempted, not that every handler succeeded, since normal handler errors are handled by emit. The SDK's provider onResponse callback likewise looks up the current runner, skips absent after_provider_response handlers, and awaits generic emission with status and headers. Supported provider adapters call this hook after response headers and before consuming the body; return values do not replace the response (ice:packages/coding-agent/src/core/extensions/runner.ts:212-221; ice:packages/coding-agent/src/core/sdk.ts:353-362).",
+      "interfaces_append": "Exact additional DTOs: `SessionStartEvent { type: 'session_start'; reason: 'startup' | 'reload' | 'new' | 'resume' | 'fork'; previousSessionFile?: string }`; `SessionCompactEvent { type: 'session_compact'; compactionEntry: CompactionEntry; fromExtension: boolean; reason: 'manual' | 'threshold' | 'overflow'; willRetry: boolean }`; `SessionShutdownEvent { type: 'session_shutdown'; reason: 'quit' | 'reload' | 'new' | 'resume' | 'fork'; targetSessionFile?: string }`; `SessionTreeEvent { type: 'session_tree'; newLeafId: string | null; oldLeafId: string | null; summaryEntry?: BranchSummaryEntry; fromExtension?: boolean }`. `SessionEvent` is the union of these records, SessionInfoChangedEvent, and the four before-event types already quoted. `AfterProviderResponseEvent { type: 'after_provider_response'; status: number; headers: Record<string,string> }` is a response-header notification (ice:packages/coding-agent/src/core/extensions/types.ts:616-717; ice:packages/coding-agent/src/core/extensions/types.ts:746-750)."
+    },
+    {
+      "id": "EXT-011",
+      "source_append": "Exported symbols: `defineTool` (ice:packages/coding-agent/src/core/extensions/types.ts:563).",
+      "mechanism_append": "`defineTool(tool)` returns the identical descriptor reference through a TypeScript intersection cast to `ToolDefinition & AnyToolDefinition`. It neither clones nor registers the tool and performs no runtime validation; the object-schema check remains in registerTool (ice:packages/coding-agent/src/core/extensions/types.ts:563-567)."
+    },
+    {
+      "id": "EXT-034",
+      "source_append": "Exported symbols: `ProjectTrustHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:592)."
+    },
+    {
+      "id": "EXT-053",
+      "source_append": "Exported symbols: `SessionInfoChangedEvent`, `AppendEntryHandler`, `SetSessionNameHandler`, `GetSessionNameHandler`, `SetLabelHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:625; ice:packages/coding-agent/src/core/extensions/types.ts:1640; ice:packages/coding-agent/src/core/extensions/types.ts:1642; ice:packages/coding-agent/src/core/extensions/types.ts:1644; ice:packages/coding-agent/src/core/extensions/types.ts:1667).",
+      "interfaces_append": "`SessionInfoChangedEvent { type: 'session_info_changed'; name: string | undefined }` uses a required name property whose value may be undefined when cleared. The named action aliases at types.ts:1640-1644 and types.ts:1667 have the same generic append/void name-and-label signatures already quoted (ice:packages/coding-agent/src/core/extensions/types.ts:625-629; ice:packages/coding-agent/src/core/extensions/types.ts:1640-1644; ice:packages/coding-agent/src/core/extensions/types.ts:1667)."
+    },
+    {
+      "id": "EXT-033",
+      "source_append": "Exported symbols: `AgentStartEvent`, `AgentSettledEvent`, `MessageStartEvent` (ice:packages/coding-agent/src/core/extensions/types.ts:766; ice:packages/coding-agent/src/core/extensions/types.ts:777; ice:packages/coding-agent/src/core/extensions/types.ts:797).",
+      "interfaces_append": "Minimal lifecycle schemas also include `AgentStartEvent { type: 'agent_start' }`, `AgentSettledEvent { type: 'agent_settled' }` and `MessageStartEvent { type: 'message_start'; message: AgentMessage }`. The settled marker carries no additional DTO fields; scheduling and retry completion remain runtime-owned (ice:packages/coding-agent/src/core/extensions/types.ts:766-779; ice:packages/coding-agent/src/core/extensions/types.ts:797-800)."
+    },
+    {
+      "id": "EXT-025",
+      "source_append": "Exported symbols: `BashToolResultEvent`, `ReadToolResultEvent`, `EditToolResultEvent`, `WriteToolResultEvent`, `GrepToolResultEvent`, `FindToolResultEvent`, `LsToolResultEvent`, `CustomToolResultEvent`, `isBashToolResult`, `isReadToolResult`, `isEditToolResult`, `isWriteToolResult`, `isGrepToolResult`, `isFindToolResult`, `isLsToolResult` (ice:packages/coding-agent/src/core/extensions/types.ts:978; ice:packages/coding-agent/src/core/extensions/types.ts:983; ice:packages/coding-agent/src/core/extensions/types.ts:988; ice:packages/coding-agent/src/core/extensions/types.ts:993; ice:packages/coding-agent/src/core/extensions/types.ts:998; ice:packages/coding-agent/src/core/extensions/types.ts:1003; ice:packages/coding-agent/src/core/extensions/types.ts:1008; ice:packages/coding-agent/src/core/extensions/types.ts:1013; ice:packages/coding-agent/src/core/extensions/types.ts:1030; ice:packages/coding-agent/src/core/extensions/types.ts:1033; ice:packages/coding-agent/src/core/extensions/types.ts:1036; ice:packages/coding-agent/src/core/extensions/types.ts:1039; ice:packages/coding-agent/src/core/extensions/types.ts:1042; ice:packages/coding-agent/src/core/extensions/types.ts:1045; ice:packages/coding-agent/src/core/extensions/types.ts:1048).",
+      "mechanism_append": "The seven `is*ToolResult` helpers compare only `event.toolName` to the corresponding exact built-in name. They do not inspect event.type, input, content or details, and therefore must not be treated as validation or an authorization gate. Built-in result subtypes specialize the common ToolResultEventBase: bash/read/edit/grep/find/ls use their respective Details type or undefined, write has details:undefined, and CustomToolResultEvent has toolName:string with details:unknown (ice:packages/coding-agent/src/core/extensions/types.ts:978-1049)."
+    },
+    {
+      "id": "EXT-024",
+      "source_append": "Exported symbols: `isToolCallEventType` (ice:packages/coding-agent/src/core/extensions/types.ts:1072; ice:packages/coding-agent/src/core/extensions/types.ts:1073; ice:packages/coding-agent/src/core/extensions/types.ts:1074; ice:packages/coding-agent/src/core/extensions/types.ts:1075; ice:packages/coding-agent/src/core/extensions/types.ts:1076; ice:packages/coding-agent/src/core/extensions/types.ts:1077; ice:packages/coding-agent/src/core/extensions/types.ts:1078; ice:packages/coding-agent/src/core/extensions/types.ts:1079; ice:packages/coding-agent/src/core/extensions/types.ts:1083).",
+      "mechanism_append": "All seven built-in `isToolCallEventType` overloads plus the custom generic overload share one implementation: return `event.toolName === toolName`. The custom overload only asserts a compile-time `{ toolName: TName; input: TInput }` intersection; it does not validate custom arguments. The nine QA declaration records are overloads plus one implementation, not nine independent runtime functions (ice:packages/coding-agent/src/core/extensions/types.ts:1072-1085)."
+    },
+    {
+      "id": "EXT-008",
+      "source_append": "Exported symbols: `ExtensionEvent`, `ExtensionHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:1088; ice:packages/coding-agent/src/core/extensions/types.ts:1249).",
+      "interfaces_append": "`ExtensionHandler<E, R = undefined> = (event: E, ctx: ExtensionContext) => Promise<R | void> | R | void`. `ExtensionEvent` is the union of ProjectTrustEvent, ResourcesDiscoverEvent, SessionEvent, ContextEvent, BeforeProviderRequestEvent, BeforeProviderHeadersEvent, AfterProviderResponseEvent, BeforeAgentStartEvent, AgentStartEvent, AgentEndEvent, AgentSettledEvent, TurnStartEvent, TurnEndEvent, MessageStartEvent, MessageUpdateEvent, MessageEndEvent, ToolExecutionStartEvent, ToolExecutionUpdateEvent, ToolExecutionEndEvent, ModelSelectEvent, ThinkingLevelSelectEvent, UserBashEvent, InputEvent, ToolCallEvent and ToolResultEvent. These declarations do not add event-name validation to the runtime string-keyed map (ice:packages/coding-agent/src/core/extensions/types.ts:1088-1113; ice:packages/coding-agent/src/core/extensions/types.ts:1249)."
+    },
+    {
+      "id": "EXT-051",
+      "source_append": "Exported symbols: `SendMessageHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:1630)."
+    },
+    {
+      "id": "EXT-052",
+      "source_append": "Exported symbols: `SendUserMessageHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:1635)."
+    },
+    {
+      "id": "EXT-054",
+      "source_append": "Exported symbols: `GetActiveToolsHandler`, `GetAllToolsHandler`, `GetCommandsHandler`, `SetActiveToolsHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:1646; ice:packages/coding-agent/src/core/extensions/types.ts:1653; ice:packages/coding-agent/src/core/extensions/types.ts:1655; ice:packages/coding-agent/src/core/extensions/types.ts:1657)."
+    },
+    {
+      "id": "EXT-009",
+      "source_append": "Exported symbols: `RefreshToolsHandler`, `ExtensionRuntimeState` (ice:packages/coding-agent/src/core/extensions/types.ts:1659; ice:packages/coding-agent/src/core/extensions/types.ts:1673).",
+      "interfaces_append": "`RefreshToolsHandler = () => void`. `ExtensionRuntimeState` holds flagValues:Map<string,boolean|string>; pendingProviderRegistrations:Array<{name,config,extensionPath}>; pendingNativeProviderRegistrations:Array<{provider,extensionPath}>; assertActive:()=>void; invalidate:(message?:string)=>void; registerProvider:(name,config,extensionPath?)=>void; registerNativeProvider:(provider,extensionPath?)=>void; unregisterProvider:(name,extensionPath?)=>void. The callback/state declarations do not change the pre-bind queue and first-stale-cause semantics already described (ice:packages/coding-agent/src/core/extensions/types.ts:1659; ice:packages/coding-agent/src/core/extensions/types.ts:1673-1692)."
+    },
+    {
+      "id": "EXT-055",
+      "source_append": "Exported symbols: `SetModelHandler`, `GetThinkingLevelHandler`, `SetThinkingLevelHandler` (ice:packages/coding-agent/src/core/extensions/types.ts:1661; ice:packages/coding-agent/src/core/extensions/types.ts:1663; ice:packages/coding-agent/src/core/extensions/types.ts:1665)."
+    }
+  ],
+  "dispositions": [
+    {
+      "symbol": "SwitchSessionHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:199",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-020"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias is the named bound command-context function whose replacement/reload behavior is already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+        "reviewed_range": [
+          198,
+          260
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ReloadHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:204",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-020"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias is the named bound command-context function whose replacement/reload behavior is already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+        "reviewed_range": [
+          198,
+          260
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ShutdownHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:206",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-019"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The void shutdown callback is the bound host control exposed by the base live context.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+        "reviewed_range": [
+          198,
+          260
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "emitSessionShutdownEvent",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:212",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+        "reviewed_range": [
+          198,
+          260
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "defineTool",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:563",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-011"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The helper is a runtime identity cast for tool definitions; registration validation remains the separate host operation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          562,
+          611
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ProjectTrustHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:592",
+      "covering_entries": [
+        "EXT-034"
+      ],
+      "entry_ids": [
+        "EXT-034"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The callback consumes the already specified restricted trust event/context and returns the existing decision shape synchronously or asynchronously.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          562,
+          611
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionStartEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:616",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          615,
+          688
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionInfoChangedEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:625",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The metadata event/alias is the named schema of existing name, label or durable custom-entry behavior.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          615,
+          688
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionCompactEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:659",
+      "covering_entries": [
+        "EXT-022"
+      ],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          615,
+          688
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionShutdownEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:670",
+      "covering_entries": [
+        "EXT-022"
+      ],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          615,
+          688
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionTreeEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:700",
+      "covering_entries": [
+        "EXT-022"
+      ],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          699,
+          726
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SessionEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:708",
+      "covering_entries": [
+        "EXT-022"
+      ],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          699,
+          726
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AfterProviderResponseEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:746",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-022"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "This lifecycle record or emission helper belongs to generic awaited event dispatch; exact DTO/helper cases are added without changing event aggregation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          745,
+          815
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AgentStartEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:766",
+      "covering_entries": [
+        "EXT-033"
+      ],
+      "entry_ids": [
+        "EXT-033"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The agent/message lifecycle marker is part of the ABI event payload domain already examined here; exact minimal shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          745,
+          815
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AgentSettledEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:777",
+      "covering_entries": [
+        "EXT-033"
+      ],
+      "entry_ids": [
+        "EXT-033"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The agent/message lifecycle marker is part of the ABI event payload domain already examined here; exact minimal shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          745,
+          815
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "MessageStartEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:797",
+      "covering_entries": [
+        "EXT-033"
+      ],
+      "entry_ids": [
+        "EXT-033"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The agent/message lifecycle marker is part of the ABI event payload domain already examined here; exact minimal shapes are added.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          745,
+          815
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "BashToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:978",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ReadToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:983",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "EditToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:988",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "WriteToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:993",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GrepToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:998",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "FindToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1003",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "LsToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1008",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "CustomToolResultEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1013",
+      "covering_entries": [
+        "EXT-025"
+      ],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isBashToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1030",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isReadToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1033",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isEditToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1036",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isWriteToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1039",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isGrepToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1042",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isFindToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1045",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isLsToolResult",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1048",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-025"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The built-in/custom result subtype and name predicate provide type narrowing for the already specified result patch chain; they do not validate details.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1072",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1073",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1074",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1075",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1076",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1077",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1078",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1079",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "isToolCallEventType",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1083",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-024"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The overloads share one equality-only implementation for narrowing tool-call events; no input validation or authorization is performed.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ExtensionEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1088",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-008"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "These are the type-only event union and generic callback contract used by dynamic event registration, not a runtime validator.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          977,
+          1136
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ExtensionHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1249",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-008"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "These are the type-only event union and generic callback contract used by dynamic event registration, not a runtime validator.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1248,
+          1297
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SendMessageHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1630",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-051"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias preserves the existing generic custom-message payload and void global-API delivery contract.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SendUserMessageHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1635",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-052"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias preserves string or text/image-array user input and the existing steer/followUp options.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "AppendEntryHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1640",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The metadata event/alias is the named schema of existing name, label or durable custom-entry behavior.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SetSessionNameHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1642",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The metadata event/alias is the named schema of existing name, label or durable custom-entry behavior.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GetSessionNameHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1644",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The metadata event/alias is the named schema of existing name, label or durable custom-entry behavior.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GetActiveToolsHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1646",
+      "covering_entries": [
+        "EXT-054"
+      ],
+      "entry_ids": [
+        "EXT-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The alias names the exact synchronous tool or command inventory/selection signature already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GetAllToolsHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1653",
+      "covering_entries": [
+        "EXT-054"
+      ],
+      "entry_ids": [
+        "EXT-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The alias names the exact synchronous tool or command inventory/selection signature already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GetCommandsHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1655",
+      "covering_entries": [
+        "EXT-054"
+      ],
+      "entry_ids": [
+        "EXT-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The alias names the exact synchronous tool or command inventory/selection signature already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SetActiveToolsHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1657",
+      "covering_entries": [
+        "EXT-054"
+      ],
+      "entry_ids": [
+        "EXT-054"
+      ],
+      "disposition": "named-existing-contract",
+      "reason": "The alias names the exact synchronous tool or command inventory/selection signature already specified.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "RefreshToolsHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1659",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-009"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias/state schema specifies the pre-bind runtime fields and later bound refresh function; lifecycle semantics already belong to the runtime entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SetModelHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1661",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-055"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The callback type matches the documented asynchronous model-selection or synchronous thinking-level operation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "GetThinkingLevelHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1663",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-055"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The callback type matches the documented asynchronous model-selection or synchronous thinking-level operation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SetThinkingLevelHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1665",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-055"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The callback type matches the documented asynchronous model-selection or synchronous thinking-level operation.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "SetLabelHandler",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1667",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-053"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The metadata event/alias is the named schema of existing name, label or durable custom-entry behavior.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    },
+    {
+      "symbol": "ExtensionRuntimeState",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1673",
+      "covering_entries": [],
+      "entry_ids": [
+        "EXT-009"
+      ],
+      "disposition": "named-corrected-or-extended-contract",
+      "reason": "The alias/state schema specifies the pre-bind runtime fields and later bound refresh function; lifecycle semantics already belong to the runtime entry.",
+      "source_review": {
+        "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+        "reviewed_range": [
+          1629,
+          1721
+        ]
+      },
+      "reviewer": "/root/exports_rpc_ai_auth"
+    }
+  ],
+  "extra_source_reviews": [
+    {
+      "side": "ice",
+      "path": "packages/coding-agent/src/core/sdk.ts",
+      "range": [
+        351,
+        366
+      ],
+      "method": "visible contextual search excerpt"
+    }
+  ],
+  "new_ids": []
+}

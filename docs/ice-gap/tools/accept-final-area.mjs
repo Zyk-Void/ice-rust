@@ -1,0 +1,26 @@
+// Coordinator acceptance gate for the final two area handoffs.
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import {execFileSync} from 'node:child_process';
+const base=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),E=path.join(base,'evidence');
+const [area,expectedSpec,expectedProposal]=process.argv.slice(2);
+if(!['misc','tui'].includes(area))throw Error('Only final MISC/TUI handoffs');
+const read=n=>JSON.parse(fs.readFileSync(path.join(E,n),'utf8'));
+const hash=n=>crypto.createHash('sha256').update(fs.readFileSync(path.join(E,n))).digest('hex');
+if(read('progress.json').complete||fs.existsSync(path.join(E,area+'.json')))throw Error('Already accepted or completed');
+if(area==='tui'&&!fs.existsSync(path.join(E,'misc.json')))throw Error('MISC must be published first');
+if(hash('spec-'+area+'.json')!==expectedSpec||hash('proposal-'+area+'.json')!==expectedProposal)throw Error('Handoff changed');
+const validation=JSON.parse(execFileSync(process.execPath,[path.join(base,'tools/verify-area-evidence.mjs'),area],{encoding:'utf8'}));
+if(validation.problems.length)throw Error('Area validation problems');
+const m=read('proposal-'+area+'.json'),s=read('spec-'+area+'.json');
+if(m.entries.length!==(area==='misc'?43:151)||s.entries.length!==m.entries.length)throw Error('Unexpected count');
+const qa={status:'reviewed',reviewer:'/root',source_only:true,validation,source_review:area==='misc'?['evidence/misc-source-review.json','evidence/misc-claude-sdk-source-review.json','evidence/misc-evals-source-review.json','evidence/misc-coordinator-docs-review.json','evidence/coordinator-additional-tui-eval-review.json','evidence/coordinator-queue-abort-review.json']:['evidence/tui-source-review.json','evidence/tui-closeout-qa.json','evidence/tui-closeout-source-review.json','evidence/tui-closeout-coverage.json','evidence/coordinator-native-defect-review.json','evidence/coordinator-additional-tui-eval-review.json','evidence/coordinator-native-command-review.json','evidence/coordinator-queue-abort-review.json'],notes:area==='misc'?'All 43 narrative entries reviewed against owner evidence and independently read sensitive interface/control-flow cases. Exact abort helper argument order/fallback, inner finally precedence and canonical object-key ordering qualifications retained. Native anchors and global dependency classification will receive the reviewed final normalization.':'All 151 entry definitions and the thirteen final contracts were reconciled with owner evidence. Independently checked queue failure/history, shell scope, terminal helper defects and source/candidate gaps. Redactions and baseline-dirty test qualifications are retained; no runtime verification claimed.'};
+m.owner_qa_before_acceptance=m.independent_qa??null;
+m.independent_qa=qa;m.complete=false;m.draft_complete=true;m.accepted_by='/root';
+m.acceptance={captured_at:new Date().toISOString(),spec_sha256:expectedSpec,proposal_sha256:expectedProposal,global_completion_pending:true};
+fs.writeFileSync(path.join(E,area+'.json'),JSON.stringify(m,null,2)+'\n');
+fs.writeFileSync(path.join(E,'proposal-'+area+'.json'),JSON.stringify(m,null,2)+'\n');
+fs.writeFileSync(path.join(E,'qa-'+area+'-coordinator-acceptance.json'),JSON.stringify(qa,null,2)+'\n');
+process.stdout.write(execFileSync(process.execPath,[path.join(base,'tools/publish-area.mjs'),area],{cwd:path.resolve(base,'../..'),encoding:'utf8',maxBuffer:16*1024*1024}));

@@ -1,0 +1,315 @@
+{
+  "generated_at": "2026-10-20T03:03:55.218Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/api/anthropic-messages.lazy.ts",
+      "sha256": "5d1925e8b2664c91a11ef4c73d8c400b4075597c8c4e8beb085f8e4ba137fc08",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "anthropicMessagesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/anthropic-messages.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/anthropic-messages.ts",
+      "sha256": "cc77875a3585aa8a9984e1851daa31a0f65bb8dbc7334a3c0fa7b1493f66a123",
+      "emitted_ranges": [
+        [
+          171,
+          192
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "AnthropicEffort",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/anthropic-messages.ts:172",
+          "covering_entries": [
+            "AI-021"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AnthropicThinkingDisplay",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/anthropic-messages.ts:174",
+          "covering_entries": [
+            "AI-021"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/azure-openai-responses.lazy.ts",
+      "sha256": "de36a9a2749ac4cb45a5449356bceadb676d1a16e6d46f4fc5522a3f700aa2fd",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "azureOpenAIResponsesApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/azure-openai-responses.lazy.ts:4",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+      "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+      "emitted_ranges": [
+        [
+          25,
+          31
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "bedrockConverseStreamApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/bedrock-converse-stream.lazy.ts:26",
+          "covering_entries": [
+            "AI-030"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "emitted_ranges": [
+        [
+          68,
+          117
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "BedrockThinkingDisplay",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/bedrock-converse-stream.ts:69",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/cloudflare.ts",
+      "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+      "emitted_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "CLOUDFLARE_WORKERS_AI_BASE_URL",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/cloudflare.ts:2",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "CLOUDFLARE_AI_GATEWAY_COMPAT_BASE_URL",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/cloudflare.ts:6",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "CLOUDFLARE_AI_GATEWAY_OPENAI_BASE_URL",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/cloudflare.ts:10",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "CLOUDFLARE_AI_GATEWAY_ANTHROPIC_BASE_URL",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/cloudflare.ts:14",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/constrained-sampling.ts",
+      "sha256": "a3b93e37aae53bb24b171c49101eb0c1f0d69f6cb670ec6cf9e3b6ef4bf28487",
+      "emitted_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "GrammarConstrainedSampling",
+          "kind": "type",
+          "ts": "ice:packages/ai/src/api/constrained-sampling.ts:9",
+          "covering_entries": [
+            "AI-013"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/github-copilot-headers.ts",
+      "sha256": "32d154965223d746140957ca6754f69955f1c631ed5e8445dcf2be11bb4b5180",
+      "emitted_ranges": [
+        [
+          4,
+          38
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "inferCopilotInitiator",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:5",
+          "covering_entries": [
+            "AI-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "hasCopilotVisionInput",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:11",
+          "covering_entries": [
+            "AI-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "buildCopilotDynamicHeaders",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/github-copilot-headers.ts:23",
+          "covering_entries": [
+            "AI-022"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/google-generative-ai.lazy.ts",
+      "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+      "emitted_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "googleGenerativeAIApi",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-generative-ai.lazy.ts:4",
+          "covering_entries": [
+            "AI-034"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/api/google-shared.ts",
+      "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+      "emitted_ranges": [
+        [
+          34,
+          66
+        ],
+        [
+          303,
+          328
+        ],
+        [
+          340,
+          359
+        ],
+        [
+          372,
+          391
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "isThinkingPart",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:35",
+          "covering_entries": [
+            "AI-037",
+            "AI-039"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "retainThoughtSignature",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:48",
+          "covering_entries": [
+            "AI-037",
+            "AI-039"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "supportsGoogleStrictToolSampling",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:304",
+          "covering_entries": [
+            "AI-038"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "mapToolChoice",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:310",
+          "covering_entries": [
+            "AI-038"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "mapStopReason",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:341",
+          "covering_entries": [
+            "AI-039"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "mapStopReasonString",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/api/google-shared.ts:373",
+          "covering_entries": [
+            "AI-039"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

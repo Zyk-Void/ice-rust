@@ -1,0 +1,571 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+StopReason.toolUse,packages/ai/src/types.ts:405,,partial,RPC-017
+AssistantMessage.diagnostics,packages/ai/src/types.ts:435,,missing,AI-009
+AssistantMessage.responseModel,packages/ai/src/types.ts:433,,partial,AI-052
+AssistantMessage.rawStopReason,packages/ai/src/types.ts:440,,partial,AI-053
+ToolResultMessage.addedToolNames,packages/ai/src/types.ts:457,,partial,AI-024
+DeferredHandle,packages/ai/src/types.ts:409,,partial,AI-003
+TextContent.textSignature,packages/ai/src/types.ts:355,,partial,AI-054
+ThinkingContent.thinkingSignature,packages/ai/src/types.ts:361,,partial,AI-014
+ThinkingContent.redacted,packages/ai/src/types.ts:365,,partial,AI-014
+ToolCall.thoughtSignature,packages/ai/src/types.ts:379,,missing,AI-037
+Usage.cacheWrite1h,packages/ai/src/types.ts:388,,partial,AI-024
+Usage.reasoning,packages/ai/src/types.ts:394,,missing,AI-039
+AssistantMessage.deferred,packages/ai/src/types.ts:438,,partial,AI-003
+AssistantImages,packages/ai/src/types.ts:473,,partial,AI-015
+child client:get_capabilities,packages/coding-agent/src/modes/rpc/rpc-client.ts:240,crates/ice-cli/src/remote/client.rs:169,missing,RPC-032
+child client:prompt,packages/coding-agent/src/modes/rpc/rpc-client.ts:345,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:steer,packages/coding-agent/src/modes/rpc/rpc-client.ts:352,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:follow_up,packages/coding-agent/src/modes/rpc/rpc-client.ts:359,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_queue,packages/coding-agent/src/modes/rpc/rpc-client.ts:378,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:clear_queue,packages/coding-agent/src/modes/rpc/rpc-client.ts:383,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_capabilities,packages/coding-agent/src/modes/rpc/rpc-client.ts:388,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:remove_queued_message,packages/coding-agent/src/modes/rpc/rpc-client.ts:393,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort,packages/coding-agent/src/modes/rpc/rpc-client.ts:401,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:new_session,packages/coding-agent/src/modes/rpc/rpc-client.ts:410,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_state,packages/coding-agent/src/modes/rpc/rpc-client.ts:418,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_settings,packages/coding-agent/src/modes/rpc/rpc-client.ts:424,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_setting,packages/coding-agent/src/modes/rpc/rpc-client.ts:442,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_subagents,packages/coding-agent/src/modes/rpc/rpc-client.ts:448,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:respond_subagent_approval,packages/coding-agent/src/modes/rpc/rpc-client.ts:454,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:subagent_control,packages/coding-agent/src/modes/rpc/rpc-client.ts:461,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:subagent_patch,packages/coding-agent/src/modes/rpc/rpc-client.ts:471,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_subagent_messages,packages/coding-agent/src/modes/rpc/rpc-client.ts:477,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_tools,packages/coding-agent/src/modes/rpc/rpc-client.ts:483,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_active_tools,packages/coding-agent/src/modes/rpc/rpc-client.ts:489,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_system_prompt,packages/coding-agent/src/modes/rpc/rpc-client.ts:494,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_diagnostics,packages/coding-agent/src/modes/rpc/rpc-client.ts:499,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_ui_state,packages/coding-agent/src/modes/rpc/rpc-client.ts:503,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_completions,packages/coding-agent/src/modes/rpc/rpc-client.ts:507,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_resources,packages/coding-agent/src/modes/rpc/rpc-client.ts:512,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_changelog,packages/coding-agent/src/modes/rpc/rpc-client.ts:518,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_scoped_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:524,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_scoped_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:529,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:reload,packages/coding-agent/src/modes/rpc/rpc-client.ts:535,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:stop_after_turn,packages/coding-agent/src/modes/rpc/rpc-client.ts:540,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_flags,packages/coding-agent/src/modes/rpc/rpc-client.ts:545,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_shortcuts,packages/coding-agent/src/modes/rpc/rpc-client.ts:550,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:invoke_shortcut,packages/coding-agent/src/modes/rpc/rpc-client.ts:555,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_shells,packages/coding-agent/src/modes/rpc/rpc-client.ts:560,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_shell,packages/coding-agent/src/modes/rpc/rpc-client.ts:567,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:kill_shell,packages/coding-agent/src/modes/rpc/rpc-client.ts:576,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:background_bash,packages/coding-agent/src/modes/rpc/rpc-client.ts:582,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_model,packages/coding-agent/src/modes/rpc/rpc-client.ts:590,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:cycle_model,packages/coding-agent/src/modes/rpc/rpc-client.ts:602,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:refresh_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:619,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort_models_refresh,packages/coding-agent/src/modes/rpc/rpc-client.ts:624,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_providers,packages/coding-agent/src/modes/rpc/rpc-client.ts:629,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:636,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_available_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:643,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_available_models,packages/coding-agent/src/modes/rpc/rpc-client.ts:650,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_thinking_level,packages/coding-agent/src/modes/rpc/rpc-client.ts:657,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_fast_mode,packages/coding-agent/src/modes/rpc/rpc-client.ts:661,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:cycle_thinking_level,packages/coding-agent/src/modes/rpc/rpc-client.ts:668,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_available_thinking_levels,packages/coding-agent/src/modes/rpc/rpc-client.ts:676,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_steering_mode,packages/coding-agent/src/modes/rpc/rpc-client.ts:684,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_follow_up_mode,packages/coding-agent/src/modes/rpc/rpc-client.ts:691,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:compact,packages/coding-agent/src/modes/rpc/rpc-client.ts:698,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_auto_compaction,packages/coding-agent/src/modes/rpc/rpc-client.ts:706,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_auto_retry,packages/coding-agent/src/modes/rpc/rpc-client.ts:713,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort_retry,packages/coding-agent/src/modes/rpc/rpc-client.ts:720,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:bash,packages/coding-agent/src/modes/rpc/rpc-client.ts:731,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort_bash,packages/coding-agent/src/modes/rpc/rpc-client.ts:741,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_session_stats,packages/coding-agent/src/modes/rpc/rpc-client.ts:748,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:export_html,packages/coding-agent/src/modes/rpc/rpc-client.ts:756,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:switch_session,packages/coding-agent/src/modes/rpc/rpc-client.ts:765,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:fork,packages/coding-agent/src/modes/rpc/rpc-client.ts:774,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:clone,packages/coding-agent/src/modes/rpc/rpc-client.ts:783,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:list_sessions,packages/coding-agent/src/modes/rpc/rpc-client.ts:789,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:list_sessions,packages/coding-agent/src/modes/rpc/rpc-client.ts:797,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:import_session,packages/coding-agent/src/modes/rpc/rpc-client.ts:802,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:export_jsonl,packages/coding-agent/src/modes/rpc/rpc-client.ts:807,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:delete_session,packages/coding-agent/src/modes/rpc/rpc-client.ts:813,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:rename_session,packages/coding-agent/src/modes/rpc/rpc-client.ts:818,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:navigate_tree,packages/coding-agent/src/modes/rpc/rpc-client.ts:833,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_entry_label,packages/coding-agent/src/modes/rpc/rpc-client.ts:841,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:cancel_request,packages/coding-agent/src/modes/rpc/rpc-client.ts:846,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort_compaction,packages/coding-agent/src/modes/rpc/rpc-client.ts:850,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:abort_branch_summary,packages/coding-agent/src/modes/rpc/rpc-client.ts:854,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_fork_messages,packages/coding-agent/src/modes/rpc/rpc-client.ts:861,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_entries,packages/coding-agent/src/modes/rpc/rpc-client.ts:869,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_tree,packages/coding-agent/src/modes/rpc/rpc-client.ts:877,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_tree,packages/coding-agent/src/modes/rpc/rpc-client.ts:884,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_last_assistant_text,packages/coding-agent/src/modes/rpc/rpc-client.ts:891,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:set_session_name,packages/coding-agent/src/modes/rpc/rpc-client.ts:899,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_messages,packages/coding-agent/src/modes/rpc/rpc-client.ts:906,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_messages,packages/coding-agent/src/modes/rpc/rpc-client.ts:911,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_commands,packages/coding-agent/src/modes/rpc/rpc-client.ts:918,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:get_command_schema,packages/coding-agent/src/modes/rpc/rpc-client.ts:931,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:invoke_command,packages/coding-agent/src/modes/rpc/rpc-client.ts:951,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:compact,packages/coding-agent/src/modes/rpc/rpc-client.ts:1166,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:navigate_tree,packages/coding-agent/src/modes/rpc/rpc-client.ts:1166,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+child client:bash,packages/coding-agent/src/modes/rpc/rpc-client.ts:1166,crates/ice-cli/src/remote/client.rs:169,missing,RPC-033
+slash-command presentation:form,packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:439,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+response envelope emission,packages/coding-agent/src/modes/rpc/rpc-mode.ts:282,crates/ice-cli/src/modes.rs:450,partial,RPC-017
+response envelope emission,packages/coding-agent/src/modes/rpc/rpc-mode.ts:284,crates/ice-cli/src/modes.rs:450,partial,RPC-017
+response envelope emission,packages/coding-agent/src/modes/rpc/rpc-mode.ts:293,crates/ice-cli/src/modes.rs:450,partial,RPC-017
+models_changed,packages/coding-agent/src/modes/rpc/rpc-mode.ts:300,crates/ice-cli/src/modes.rs:450,partial,RPC-023
+extension_ui_request,packages/coding-agent/src/modes/rpc/rpc-mode.ts:366,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:notify,packages/coding-agent/src/modes/rpc/rpc-mode.ts:401,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setStatus,packages/coding-agent/src/modes/rpc/rpc-mode.ts:417,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingMessage,packages/coding-agent/src/modes/rpc/rpc-mode.ts:427,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingVisible,packages/coding-agent/src/modes/rpc/rpc-mode.ts:436,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingIndicator,packages/coding-agent/src/modes/rpc/rpc-mode.ts:445,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWidget,packages/coding-agent/src/modes/rpc/rpc-mode.ts:465,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setFooter,packages/coding-agent/src/modes/rpc/rpc-mode.ts:479,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setHeader,packages/coding-agent/src/modes/rpc/rpc-mode.ts:488,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setTitle,packages/coding-agent/src/modes/rpc/rpc-mode.ts:498,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:set_editor_text,packages/coding-agent/src/modes/rpc/rpc-mode.ts:518,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+session_changed,packages/coding-agent/src/modes/rpc/rpc-mode.ts:583,crates/ice-cli/src/modes.rs:450,partial,RPC-020
+extension_error,packages/coding-agent/src/modes/rpc/rpc-mode.ts:628,crates/ice-cli/src/modes.rs:450,partial,RPC-020
+catalog_changed,packages/coding-agent/src/modes/rpc/rpc-mode.ts:635,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+settings_changed,packages/coding-agent/src/modes/rpc/rpc-mode.ts:638,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+shells_update,packages/coding-agent/src/modes/rpc/rpc-mode.ts:655,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+subagents_update,packages/coding-agent/src/modes/rpc/rpc-mode.ts:696,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+patch wrapper:tool_call,packages/coding-agent/src/modes/rpc/rpc-mode.ts:715,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+patch wrapper:text,packages/coding-agent/src/modes/rpc/rpc-mode.ts:729,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+patch wrapper:tool_result,packages/coding-agent/src/modes/rpc/rpc-mode.ts:733,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+get_commands,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1001,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+user_bash,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1466,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+settings command invocation:form,packages/coding-agent/src/modes/rpc/rpc-mode.ts:1783,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+extension_ui_response,packages/coding-agent/src/modes/rpc/rpc-mode.ts:2073,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+settings schema:RpcSettingsConstraints.min,packages/coding-agent/src/modes/rpc/rpc-settings.ts:19,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsConstraints.max,packages/coding-agent/src/modes/rpc/rpc-settings.ts:20,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsConstraints.integer,packages/coding-agent/src/modes/rpc/rpc-settings.ts:21,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsConstraints.maxItems,packages/coding-agent/src/modes/rpc/rpc-settings.ts:22,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsConstraints.maxLength,packages/coding-agent/src/modes/rpc/rpc-settings.ts:23,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.key,packages/coding-agent/src/modes/rpc/rpc-settings.ts:27,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.label,packages/coding-agent/src/modes/rpc/rpc-settings.ts:28,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.description,packages/coding-agent/src/modes/rpc/rpc-settings.ts:29,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.group,packages/coding-agent/src/modes/rpc/rpc-settings.ts:30,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.kind,packages/coding-agent/src/modes/rpc/rpc-settings.ts:31,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.scope,packages/coding-agent/src/modes/rpc/rpc-settings.ts:32,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.projectOverride,packages/coding-agent/src/modes/rpc/rpc-settings.ts:33,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.effectiveSource,packages/coding-agent/src/modes/rpc/rpc-settings.ts:35,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.restartRequired,packages/coding-agent/src/modes/rpc/rpc-settings.ts:36,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.hostOnly,packages/coding-agent/src/modes/rpc/rpc-settings.ts:37,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.value,packages/coding-agent/src/modes/rpc/rpc-settings.ts:38,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.effectiveValue,packages/coding-agent/src/modes/rpc/rpc-settings.ts:39,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.options,packages/coding-agent/src/modes/rpc/rpc-settings.ts:40,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsFieldBase.constraints,packages/coding-agent/src/modes/rpc/rpc-settings.ts:41,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsDiagnostic.code,packages/coding-agent/src/modes/rpc/rpc-settings.ts:47,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsDiagnostic.scope,packages/coding-agent/src/modes/rpc/rpc-settings.ts:48,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsDiagnostic.message,packages/coding-agent/src/modes/rpc/rpc-settings.ts:49,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsSnapshot.protocolVersion,packages/coding-agent/src/modes/rpc/rpc-settings.ts:53,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsSnapshot.cwd,packages/coding-agent/src/modes/rpc/rpc-settings.ts:54,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsSnapshot.projectTrusted,packages/coding-agent/src/modes/rpc/rpc-settings.ts:55,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsSnapshot.fields,packages/coding-agent/src/modes/rpc/rpc-settings.ts:56,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+settings schema:RpcSettingsSnapshot.diagnostics,packages/coding-agent/src/modes/rpc/rpc-settings.ts:57,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+prompt,packages/coding-agent/src/modes/rpc/rpc-types.ts:43,crates/ice-cli/src/modes.rs:493,partial,RPC-021
+steer,packages/coding-agent/src/modes/rpc/rpc-types.ts:50,crates/ice-cli/src/modes.rs:450,missing,RPC-021
+follow_up,packages/coding-agent/src/modes/rpc/rpc-types.ts:51,crates/ice-cli/src/modes.rs:450,missing,RPC-021
+remove_queued_message,packages/coding-agent/src/modes/rpc/rpc-types.ts:52,crates/ice-cli/src/modes.rs:450,missing,RPC-021
+get_queue,packages/coding-agent/src/modes/rpc/rpc-types.ts:53,crates/ice-cli/src/modes.rs:450,missing,RPC-021
+clear_queue,packages/coding-agent/src/modes/rpc/rpc-types.ts:54,crates/ice-cli/src/modes.rs:450,missing,RPC-021
+abort,packages/coding-agent/src/modes/rpc/rpc-types.ts:55,crates/ice-cli/src/modes.rs:546,partial,RPC-021
+cancel_request,packages/coding-agent/src/modes/rpc/rpc-types.ts:56,crates/ice-cli/src/modes.rs:450,missing,RPC-019
+new_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:57,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+get_capabilities,packages/coding-agent/src/modes/rpc/rpc-types.ts:60,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_state,packages/coding-agent/src/modes/rpc/rpc-types.ts:61,crates/ice-cli/src/modes.rs:556,partial,RPC-022
+set_fast_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:62,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_tools,packages/coding-agent/src/modes/rpc/rpc-types.ts:63,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+set_active_tools,packages/coding-agent/src/modes/rpc/rpc-types.ts:64,crates/ice-cli/src/modes.rs:559,partial,RPC-022
+get_system_prompt,packages/coding-agent/src/modes/rpc/rpc-types.ts:65,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_diagnostics,packages/coding-agent/src/modes/rpc/rpc-types.ts:66,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_ui_state,packages/coding-agent/src/modes/rpc/rpc-types.ts:67,crates/ice-cli/src/modes.rs:450,missing,RPC-028
+get_completions,packages/coding-agent/src/modes/rpc/rpc-types.ts:68,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_resources,packages/coding-agent/src/modes/rpc/rpc-types.ts:69,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_changelog,packages/coding-agent/src/modes/rpc/rpc-types.ts:70,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_scoped_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:71,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_scoped_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:72,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+reload,packages/coding-agent/src/modes/rpc/rpc-types.ts:73,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+stop_after_turn,packages/coding-agent/src/modes/rpc/rpc-types.ts:74,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_flags,packages/coding-agent/src/modes/rpc/rpc-types.ts:75,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_shortcuts,packages/coding-agent/src/modes/rpc/rpc-types.ts:76,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+invoke_shortcut,packages/coding-agent/src/modes/rpc/rpc-types.ts:77,crates/ice-cli/src/modes.rs:450,missing,RPC-022
+get_shells,packages/coding-agent/src/modes/rpc/rpc-types.ts:80,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+get_shell,packages/coding-agent/src/modes/rpc/rpc-types.ts:81,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+kill_shell,packages/coding-agent/src/modes/rpc/rpc-types.ts:82,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+background_bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:83,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+get_settings,packages/coding-agent/src/modes/rpc/rpc-types.ts:86,crates/ice-cli/src/modes.rs:450,missing,RPC-029
+set_setting,packages/coding-agent/src/modes/rpc/rpc-types.ts:87,crates/ice-cli/src/modes.rs:450,missing,RPC-030
+set_setting,packages/coding-agent/src/modes/rpc/rpc-types.ts:88,crates/ice-cli/src/modes.rs:450,missing,RPC-030
+get_subagents,packages/coding-agent/src/modes/rpc/rpc-types.ts:91,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+respond_subagent_approval,packages/coding-agent/src/modes/rpc/rpc-types.ts:92,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+get_subagent_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:93,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+subagent_control,packages/coding-agent/src/modes/rpc/rpc-types.ts:94,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+subagent_patch,packages/coding-agent/src/modes/rpc/rpc-types.ts:95,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+set_model,packages/coding-agent/src/modes/rpc/rpc-types.ts:98,crates/ice-cli/src/modes.rs:557,partial,RPC-023
+cycle_model,packages/coding-agent/src/modes/rpc/rpc-types.ts:99,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_available_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:100,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_providers,packages/coding-agent/src/modes/rpc/rpc-types.ts:101,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:102,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+refresh_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:105,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+abort_models_refresh,packages/coding-agent/src/modes/rpc/rpc-types.ts:111,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_thinking_level,packages/coding-agent/src/modes/rpc/rpc-types.ts:114,crates/ice-cli/src/modes.rs:558,partial,RPC-023
+cycle_thinking_level,packages/coding-agent/src/modes/rpc/rpc-types.ts:115,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+get_available_thinking_levels,packages/coding-agent/src/modes/rpc/rpc-types.ts:116,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_steering_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:119,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_follow_up_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:120,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+compact,packages/coding-agent/src/modes/rpc/rpc-types.ts:123,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_auto_compaction,packages/coding-agent/src/modes/rpc/rpc-types.ts:124,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+set_auto_retry,packages/coding-agent/src/modes/rpc/rpc-types.ts:127,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+abort_retry,packages/coding-agent/src/modes/rpc/rpc-types.ts:128,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+abort_compaction,packages/coding-agent/src/modes/rpc/rpc-types.ts:129,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+abort_branch_summary,packages/coding-agent/src/modes/rpc/rpc-types.ts:130,crates/ice-cli/src/modes.rs:450,missing,RPC-023
+bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:133,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+abort_bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:134,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+get_session_stats,packages/coding-agent/src/modes/rpc/rpc-types.ts:137,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+export_html,packages/coding-agent/src/modes/rpc/rpc-types.ts:138,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+switch_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:139,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+fork,packages/coding-agent/src/modes/rpc/rpc-types.ts:140,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+list_sessions,packages/coding-agent/src/modes/rpc/rpc-types.ts:141,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+import_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:142,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+export_jsonl,packages/coding-agent/src/modes/rpc/rpc-types.ts:143,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+delete_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:144,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+rename_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:145,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+navigate_tree,packages/coding-agent/src/modes/rpc/rpc-types.ts:148,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+set_entry_label,packages/coding-agent/src/modes/rpc/rpc-types.ts:156,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+clone,packages/coding-agent/src/modes/rpc/rpc-types.ts:157,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+get_fork_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:158,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+get_entries,packages/coding-agent/src/modes/rpc/rpc-types.ts:159,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+get_tree,packages/coding-agent/src/modes/rpc/rpc-types.ts:160,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+get_last_assistant_text,packages/coding-agent/src/modes/rpc/rpc-types.ts:161,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+set_session_name,packages/coding-agent/src/modes/rpc/rpc-types.ts:162,crates/ice-cli/src/modes.rs:450,missing,RPC-025
+get_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:165,crates/ice-cli/src/modes.rs:450,missing,RPC-024
+get_commands,packages/coding-agent/src/modes/rpc/rpc-types.ts:168,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+get_command_schema,packages/coding-agent/src/modes/rpc/rpc-types.ts:171,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+invoke_command,packages/coding-agent/src/modes/rpc/rpc-types.ts:178,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+slash-command invocation:form,packages/coding-agent/src/modes/rpc/rpc-types.ts:204,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+slash-command invocation:text,packages/coding-agent/src/modes/rpc/rpc-types.ts:204,crates/ice-cli/src/modes.rs:450,missing,RPC-031
+provider auth-kind:api_key,packages/coding-agent/src/modes/rpc/rpc-types.ts:240,crates/ice-cli/src/modes.rs:450,partial,RPC-023
+provider auth-kind:oauth,packages/coding-agent/src/modes/rpc/rpc-types.ts:240,crates/ice-cli/src/modes.rs:450,partial,RPC-023
+models_changed,packages/coding-agent/src/modes/rpc/rpc-types.ts:282,crates/ice-cli/src/modes.rs:450,partial,RPC-023
+response:prompt,packages/coding-agent/src/modes/rpc/rpc-types.ts:343,crates/ice-cli/src/modes.rs:493,partial,RPC-034
+response:steer,packages/coding-agent/src/modes/rpc/rpc-types.ts:344,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:follow_up,packages/coding-agent/src/modes/rpc/rpc-types.ts:345,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:remove_queued_message,packages/coding-agent/src/modes/rpc/rpc-types.ts:346,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_queue|clear_queue,packages/coding-agent/src/modes/rpc/rpc-types.ts:347,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort,packages/coding-agent/src/modes/rpc/rpc-types.ts:348,crates/ice-cli/src/modes.rs:546,partial,RPC-034
+response:cancel_request,packages/coding-agent/src/modes/rpc/rpc-types.ts:349,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:new_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:350,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_capabilities,packages/coding-agent/src/modes/rpc/rpc-types.ts:353,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_state,packages/coding-agent/src/modes/rpc/rpc-types.ts:354,crates/ice-cli/src/modes.rs:556,partial,RPC-034
+response:get_tools,packages/coding-agent/src/modes/rpc/rpc-types.ts:355,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_active_tools,packages/coding-agent/src/modes/rpc/rpc-types.ts:356,crates/ice-cli/src/modes.rs:559,partial,RPC-034
+response:get_system_prompt,packages/coding-agent/src/modes/rpc/rpc-types.ts:357,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_diagnostics,packages/coding-agent/src/modes/rpc/rpc-types.ts:358,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_ui_state,packages/coding-agent/src/modes/rpc/rpc-types.ts:359,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_completions,packages/coding-agent/src/modes/rpc/rpc-types.ts:360,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_resources,packages/coding-agent/src/modes/rpc/rpc-types.ts:361,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_changelog,packages/coding-agent/src/modes/rpc/rpc-types.ts:362,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_scoped_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:365,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_scoped_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:372,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:reload,packages/coding-agent/src/modes/rpc/rpc-types.ts:377,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:stop_after_turn,packages/coding-agent/src/modes/rpc/rpc-types.ts:378,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_flags,packages/coding-agent/src/modes/rpc/rpc-types.ts:379,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_shortcuts,packages/coding-agent/src/modes/rpc/rpc-types.ts:382,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:invoke_shortcut,packages/coding-agent/src/modes/rpc/rpc-types.ts:387,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_shells,packages/coding-agent/src/modes/rpc/rpc-types.ts:390,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_shell,packages/coding-agent/src/modes/rpc/rpc-types.ts:391,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:kill_shell,packages/coding-agent/src/modes/rpc/rpc-types.ts:392,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:background_bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:393,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_settings,packages/coding-agent/src/modes/rpc/rpc-types.ts:396,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_setting,packages/coding-agent/src/modes/rpc/rpc-types.ts:397,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_subagents,packages/coding-agent/src/modes/rpc/rpc-types.ts:400,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:respond_subagent_approval,packages/coding-agent/src/modes/rpc/rpc-types.ts:403,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:subagent_control,packages/coding-agent/src/modes/rpc/rpc-types.ts:408,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:subagent_patch,packages/coding-agent/src/modes/rpc/rpc-types.ts:409,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_subagent_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:413,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_model,packages/coding-agent/src/modes/rpc/rpc-types.ts:422,crates/ice-cli/src/modes.rs:557,partial,RPC-034
+response:cycle_model,packages/coding-agent/src/modes/rpc/rpc-types.ts:429,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_available_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:436,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_providers,packages/coding-agent/src/modes/rpc/rpc-types.ts:441,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:442,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:refresh_models,packages/coding-agent/src/modes/rpc/rpc-types.ts:443,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort_models_refresh,packages/coding-agent/src/modes/rpc/rpc-types.ts:444,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_thinking_level,packages/coding-agent/src/modes/rpc/rpc-types.ts:447,crates/ice-cli/src/modes.rs:558,partial,RPC-034
+response:set_fast_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:448,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:cycle_thinking_level,packages/coding-agent/src/modes/rpc/rpc-types.ts:451,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_available_thinking_levels,packages/coding-agent/src/modes/rpc/rpc-types.ts:458,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_steering_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:465,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_follow_up_mode,packages/coding-agent/src/modes/rpc/rpc-types.ts:466,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:compact,packages/coding-agent/src/modes/rpc/rpc-types.ts:469,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_auto_compaction,packages/coding-agent/src/modes/rpc/rpc-types.ts:470,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_auto_retry,packages/coding-agent/src/modes/rpc/rpc-types.ts:473,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort_retry,packages/coding-agent/src/modes/rpc/rpc-types.ts:474,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort_compaction,packages/coding-agent/src/modes/rpc/rpc-types.ts:475,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort_branch_summary,packages/coding-agent/src/modes/rpc/rpc-types.ts:476,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:479,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:abort_bash,packages/coding-agent/src/modes/rpc/rpc-types.ts:480,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_session_stats,packages/coding-agent/src/modes/rpc/rpc-types.ts:485,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:export_html,packages/coding-agent/src/modes/rpc/rpc-types.ts:490,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:switch_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:491,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:fork,packages/coding-agent/src/modes/rpc/rpc-types.ts:492,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:clone,packages/coding-agent/src/modes/rpc/rpc-types.ts:493,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:list_sessions,packages/coding-agent/src/modes/rpc/rpc-types.ts:494,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:import_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:495,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:export_jsonl,packages/coding-agent/src/modes/rpc/rpc-types.ts:496,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:delete_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:497,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:rename_session,packages/coding-agent/src/modes/rpc/rpc-types.ts:498,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:navigate_tree,packages/coding-agent/src/modes/rpc/rpc-types.ts:501,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_entry_label,packages/coding-agent/src/modes/rpc/rpc-types.ts:506,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_fork_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:509,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_entries,packages/coding-agent/src/modes/rpc/rpc-types.ts:516,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_tree,packages/coding-agent/src/modes/rpc/rpc-types.ts:523,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_last_assistant_text,packages/coding-agent/src/modes/rpc/rpc-types.ts:530,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:set_session_name,packages/coding-agent/src/modes/rpc/rpc-types.ts:535,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_messages,packages/coding-agent/src/modes/rpc/rpc-types.ts:538,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_commands,packages/coding-agent/src/modes/rpc/rpc-types.ts:543,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:get_command_schema,packages/coding-agent/src/modes/rpc/rpc-types.ts:550,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:invoke_command,packages/coding-agent/src/modes/rpc/rpc-types.ts:557,crates/ice-cli/src/modes.rs:450,missing,RPC-034
+response:failure,packages/coding-agent/src/modes/rpc/rpc-types.ts:566,crates/ice-cli/src/remote/protocol.rs:328,partial,RPC-017
+prompt attachment:text,packages/coding-agent/src/modes/rpc/rpc-types.ts:575,crates/ice-cli/src/modes.rs:450,partial,RPC-021
+prompt attachment:image,packages/coding-agent/src/modes/rpc/rpc-types.ts:576,crates/ice-cli/src/modes.rs:450,partial,RPC-021
+prompt attachment:file,packages/coding-agent/src/modes/rpc/rpc-types.ts:578,crates/ice-cli/src/modes.rs:450,partial,RPC-021
+extension flag type:boolean,packages/coding-agent/src/modes/rpc/rpc-types.ts:590,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+extension flag type:string,packages/coding-agent/src/modes/rpc/rpc-types.ts:590,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+shells_update,packages/coding-agent/src/modes/rpc/rpc-types.ts:685,crates/ice-cli/src/modes.rs:450,missing,RPC-026
+subagents_update,packages/coding-agent/src/modes/rpc/rpc-types.ts:703,crates/ice-cli/src/modes.rs:450,missing,RPC-027
+session_changed,packages/coding-agent/src/modes/rpc/rpc-types.ts:709,crates/ice-cli/src/modes.rs:450,partial,RPC-020
+catalog_changed,packages/coding-agent/src/modes/rpc/rpc-types.ts:725,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+settings_changed,packages/coding-agent/src/modes/rpc/rpc-types.ts:726,crates/ice-cli/src/modes.rs:450,partial,RPC-022
+extension_ui_request:select,packages/coding-agent/src/modes/rpc/rpc-types.ts:735,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:confirm,packages/coding-agent/src/modes/rpc/rpc-types.ts:743,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:input,packages/coding-agent/src/modes/rpc/rpc-types.ts:745,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:editor,packages/coding-agent/src/modes/rpc/rpc-types.ts:752,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:notify,packages/coding-agent/src/modes/rpc/rpc-types.ts:754,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setStatus,packages/coding-agent/src/modes/rpc/rpc-types.ts:761,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWidget,packages/coding-agent/src/modes/rpc/rpc-types.ts:768,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingMessage,packages/coding-agent/src/modes/rpc/rpc-types.ts:775,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingVisible,packages/coding-agent/src/modes/rpc/rpc-types.ts:776,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setWorkingIndicator,packages/coding-agent/src/modes/rpc/rpc-types.ts:778,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setHeader,packages/coding-agent/src/modes/rpc/rpc-types.ts:783,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:setTitle,packages/coding-agent/src/modes/rpc/rpc-types.ts:784,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_request:set_editor_text,packages/coding-agent/src/modes/rpc/rpc-types.ts:785,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_response:variant@793,packages/coding-agent/src/modes/rpc/rpc-types.ts:793,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_response:variant@794,packages/coding-agent/src/modes/rpc/rpc-types.ts:794,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+extension_ui_response:variant@795,packages/coding-agent/src/modes/rpc/rpc-types.ts:795,crates/ice-cli/src/modes.rs:451,partial,RPC-028
+binary command:list,packages/protocol/src/schemas.ts:287,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:create,packages/protocol/src/schemas.ts:289,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:attach,packages/protocol/src/schemas.ts:295,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:detach,packages/protocol/src/schemas.ts:296,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:prompt,packages/protocol/src/schemas.ts:297,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:steer,packages/protocol/src/schemas.ts:298,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:abort,packages/protocol/src/schemas.ts:299,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:set_model,packages/protocol/src/schemas.ts:301,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary command:set_thinking,packages/protocol/src/schemas.ts:306,crates/ice-cli/src/remote/protocol.rs:280,missing,RPC-003
+binary envelope:hello(client),packages/protocol/src/schemas.ts:382,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:hello(server),packages/protocol/src/schemas.ts:409,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:hello_error,packages/protocol/src/schemas.ts:415,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:request,packages/protocol/src/schemas.ts:388,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:response(ok),packages/protocol/src/schemas.ts:420,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:response(error),packages/protocol/src/schemas.ts:426,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary envelope:event,packages/protocol/src/schemas.ts:433,crates/ice-cli/src/remote/codec.rs:44,missing,RPC-003
+binary event:server_snapshot,packages/protocol/src/schemas.ts:397,crates/ice-cli/src/remote/protocol.rs:30,missing,RPC-003
+binary event:session_snapshot,packages/protocol/src/schemas.ts:398,crates/ice-cli/src/remote/protocol.rs:30,missing,RPC-003
+binary event:session_progress,packages/protocol/src/schemas.ts:400,crates/ice-cli/src/remote/protocol.rs:30,missing,RPC-003
+binary event:session_removed,packages/protocol/src/schemas.ts:404,crates/ice-cli/src/remote/protocol.rs:30,missing,RPC-003
+binary progress:item_started,packages/protocol/src/schemas.ts:207,crates/ice-cli/src/remote/protocol.rs:72,missing,RPC-003
+binary progress:assistant_delta,packages/protocol/src/schemas.ts:211,crates/ice-cli/src/remote/protocol.rs:72,missing,RPC-003
+binary progress:item_updated,packages/protocol/src/schemas.ts:218,crates/ice-cli/src/remote/protocol.rs:72,missing,RPC-003
+binary progress:item_finished,packages/protocol/src/schemas.ts:222,crates/ice-cli/src/remote/protocol.rs:72,missing,RPC-003
+binary error:version,packages/protocol/src/schemas.ts:268,crates/ice-cli/src/remote/protocol.rs:328,missing,RPC-003
+binary error:busy,packages/protocol/src/schemas.ts:269,crates/ice-cli/src/remote/protocol.rs:328,missing,RPC-003
+binary error:session_locked,packages/protocol/src/schemas.ts:270,crates/ice-cli/src/remote/protocol.rs:328,missing,RPC-003
+binary error:not_found,packages/protocol/src/schemas.ts:271,crates/ice-cli/src/remote/protocol.rs:328,missing,RPC-003
+binary error:invalid_request,packages/protocol/src/schemas.ts:272,crates/ice-cli/src/remote/protocol.rs:328,missing,RPC-003
+binary thinking:off,packages/protocol/src/schemas.ts:27,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:minimal,packages/protocol/src/schemas.ts:28,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:low,packages/protocol/src/schemas.ts:29,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:medium,packages/protocol/src/schemas.ts:30,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:high,packages/protocol/src/schemas.ts:31,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:xhigh,packages/protocol/src/schemas.ts:32,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:max,packages/protocol/src/schemas.ts:33,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary thinking:ultra,packages/protocol/src/schemas.ts:34,crates/ice-cli/src/remote/protocol.rs:305,missing,RPC-003
+binary session phase:idle,packages/protocol/src/schemas.ts:40,crates/ice-cli/src/remote/session.rs:168,missing,RPC-003
+binary session phase:turn,packages/protocol/src/schemas.ts:41,crates/ice-cli/src/remote/session.rs:168,missing,RPC-003
+binary session phase:compaction,packages/protocol/src/schemas.ts:42,crates/ice-cli/src/remote/session.rs:168,missing,RPC-003
+binary session phase:branch_summary,packages/protocol/src/schemas.ts:43,crates/ice-cli/src/remote/session.rs:168,missing,RPC-003
+binary session phase:retry,packages/protocol/src/schemas.ts:44,crates/ice-cli/src/remote/session.rs:168,missing,RPC-003
+IceClient.disposed,packages/client/src/client.ts:80,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.connectionState,packages/client/src/client.ts:84,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.connected,packages/client/src/client.ts:88,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.snapshot,packages/client/src/client.ts:92,crates/ice-cli/src/remote/client.rs:24,missing,RPC-011
+IceClient.connect factory,packages/client/src/client.ts:96,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.connect,packages/client/src/client.ts:107,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.reconnect,packages/client/src/client.ts:113,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.disconnect,packages/client/src/client.ts:117,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.subscribe,packages/client/src/client.ts:121,crates/ice-cli/src/remote/client.rs:24,missing,RPC-011
+IceClient.onEvent,packages/client/src/client.ts:126,crates/ice-cli/src/remote/client.rs:24,missing,RPC-011
+IceClient.onConnectionStateChange,packages/client/src/client.ts:131,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+IceClient.listSessions,packages/client/src/client.ts:137,crates/ice-cli/src/remote/client.rs:24,missing,RPC-011
+IceClient.createSession,packages/client/src/client.ts:141,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+IceClient.attachSession,packages/client/src/client.ts:147,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+IceClient.acquireSession,packages/client/src/client.ts:151,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+IceClient.dispose,packages/client/src/client.ts:342,crates/ice-cli/src/remote/client.rs:24,missing,RPC-010
+SessionLease.attached,packages/client/src/session-handle.ts:56,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.active,packages/client/src/session-handle.ts:60,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.snapshot,packages/client/src/session-handle.ts:64,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.subscribe,packages/client/src/session-handle.ts:68,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.onEvent,packages/client/src/session-handle.ts:72,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.detach,packages/client/src/session-handle.ts:76,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.dispose,packages/client/src/session-handle.ts:80,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.prompt,packages/client/src/session-handle.ts:88,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.steer,packages/client/src/session-handle.ts:92,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.abort,packages/client/src/session-handle.ts:96,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.setModel,packages/client/src/session-handle.ts:100,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+SessionLease.setThinking,packages/client/src/session-handle.ts:104,crates/ice-cli/src/remote/client.rs:24,missing,RPC-012
+IceServer constructor/options,packages/server/src/server.ts:49,crates/ice-cli/src/remote/client.rs:24,missing,RPC-005
+IceServer.addresses,packages/server/src/server.ts:76,crates/ice-cli/src/remote/client.rs:24,missing,RPC-006
+IceServer.start,packages/server/src/server.ts:80,crates/ice-cli/src/remote/client.rs:24,missing,RPC-006
+IceServer.accept,packages/server/src/server.ts:107,crates/ice-cli/src/remote/client.rs:24,missing,RPC-005
+IceServer.close,packages/server/src/server.ts:147,crates/ice-cli/src/remote/client.rs:24,missing,RPC-006
+RemoteSession.id,packages/coding-agent/src/client/remote-session.ts:88,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.state,packages/coding-agent/src/client/remote-session.ts:92,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.snapshot,packages/coding-agent/src/client/remote-session.ts:100,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.phase,packages/coding-agent/src/client/remote-session.ts:104,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.operation,packages/coding-agent/src/client/remote-session.ts:108,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.models,packages/coding-agent/src/client/remote-session.ts:112,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.sessions,packages/coding-agent/src/client/remote-session.ts:116,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.connectionState,packages/coding-agent/src/client/remote-session.ts:120,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.disposed,packages/coding-agent/src/client/remote-session.ts:124,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.subscribe,packages/coding-agent/src/client/remote-session.ts:128,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.onConnectionStateChange,packages/coding-agent/src/client/remote-session.ts:135,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.open factory,packages/coding-agent/src/client/remote-session.ts:140,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.open,packages/coding-agent/src/client/remote-session.ts:151,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.create factory,packages/coding-agent/src/client/remote-session.ts:156,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.create,packages/coding-agent/src/client/remote-session.ts:171,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.submit,packages/coding-agent/src/client/remote-session.ts:175,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.abort,packages/coding-agent/src/client/remote-session.ts:188,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.setModel,packages/coding-agent/src/client/remote-session.ts:197,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.setThinking,packages/coding-agent/src/client/remote-session.ts:205,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.reconnect,packages/coding-agent/src/client/remote-session.ts:213,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RemoteSession.dispose,packages/coding-agent/src/client/remote-session.ts:226,crates/ice-cli/src/remote/client.rs:24,missing,RPC-014
+RpcRequestError,packages/coding-agent/src/modes/rpc/rpc-client.ts:122,crates/ice-cli/src/remote/client.rs:24,missing,RPC-033
+RpcClient.start,packages/coding-agent/src/modes/rpc/rpc-client.ts:160,crates/ice-cli/src/remote/client.rs:24,missing,RPC-032
+RpcClient.stop,packages/coding-agent/src/modes/rpc/rpc-client.ts:280,crates/ice-cli/src/remote/client.rs:24,missing,RPC-032
+RpcClient.onEvent,packages/coding-agent/src/modes/rpc/rpc-client.ts:310,crates/ice-cli/src/remote/client.rs:24,missing,RPC-035
+RpcClient.getStderr,packages/coding-agent/src/modes/rpc/rpc-client.ts:323,crates/ice-cli/src/remote/client.rs:24,missing,RPC-032
+RpcClient.respondUI,packages/coding-agent/src/modes/rpc/rpc-client.ts:363,crates/ice-cli/src/remote/client.rs:24,missing,RPC-033
+RpcClient.waitForIdle,packages/coding-agent/src/modes/rpc/rpc-client.ts:970,crates/ice-cli/src/remote/client.rs:24,missing,RPC-035
+RpcClient.collectEvents,packages/coding-agent/src/modes/rpc/rpc-client.ts:1005,crates/ice-cli/src/remote/client.rs:24,missing,RPC-035
+RpcClient.promptAndWait,packages/coding-agent/src/modes/rpc/rpc-client.ts:1066,crates/ice-cli/src/remote/client.rs:24,missing,RPC-035
+DEFAULT_MAX_FRAME_LENGTH,packages/protocol/src/framing.ts:6,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+FrameDecoderOptions,packages/protocol/src/framing.ts:8,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+FrameError,packages/protocol/src/framing.ts:12,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+encodeFrame,packages/protocol/src/framing.ts:28,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+assertCompleteFrame,packages/protocol/src/framing.ts:42,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+FrameDecoder,packages/protocol/src/framing.ts:58,crates/ice-cli/src/remote/framing.rs:1,partial,RPC-001
+encodeCbor,packages/protocol/src/cbor/encoder.ts:211,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+decodeCbor,packages/protocol/src/cbor/decoder.ts:161,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+UINT32_BASE,packages/protocol/src/cbor/options.ts:1,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+MAX_UINT32,packages/protocol/src/cbor/options.ts:2,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+DEFAULT_MAX_CBOR_BYTE_LENGTH,packages/protocol/src/cbor/options.ts:6,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+DEFAULT_MAX_CBOR_CONTAINER_LENGTH,packages/protocol/src/cbor/options.ts:7,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+DEFAULT_MAX_CBOR_DEPTH,packages/protocol/src/cbor/options.ts:8,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+CborOptions,packages/protocol/src/cbor/options.ts:10,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+ResolvedCborOptions,packages/protocol/src/cbor/options.ts:19,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+CborError,packages/protocol/src/cbor/options.ts:25,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+textEncoder,packages/protocol/src/cbor/options.ts:32,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+textDecoder,packages/protocol/src/cbor/options.ts:33,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+resolveOptions,packages/protocol/src/cbor/options.ts:42,crates/ice-cli/src/remote/cbor.rs:1,partial,RPC-002
+ProtocolValidationError,packages/protocol/src/codec.ts:18,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+parseClientMessage,packages/protocol/src/codec.ts:41,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+parseServerMessage,packages/protocol/src/codec.ts:48,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+encodeClientMessage,packages/protocol/src/codec.ts:79,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+encodeServerMessage,packages/protocol/src/codec.ts:84,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+ClientMessageDecoder,packages/protocol/src/codec.ts:129,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+ServerMessageDecoder,packages/protocol/src/codec.ts:146,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+createClientMessageDecoder,packages/protocol/src/codec.ts:162,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+createServerMessageDecoder,packages/protocol/src/codec.ts:166,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+isSupportedProtocolVersion,packages/protocol/src/codec.ts:170,crates/ice-cli/src/remote/client.rs:24,missing,RPC-003
+UnixTransportOptions,packages/client/src/unix.ts:7,crates/ice-cli/src/remote/client.rs:24,missing,RPC-009
+createUnixTransportFactory,packages/client/src/unix.ts:13,crates/ice-cli/src/remote/client.rs:24,missing,RPC-009
+IceServerOptions,packages/server/src/types.ts:14,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+MaybePromise,packages/server/src/types.ts:22,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+PromptInput,packages/server/src/types.ts:24,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+SteerInput,packages/server/src/types.ts:25,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+CreateSessionOptions,packages/server/src/types.ts:27,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+IceSessionRuntimeEvent,packages/server/src/types.ts:36,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+IceSessionRuntime,packages/server/src/types.ts:42,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+IceSessionBackend,packages/server/src/types.ts:55,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+SessionRuntime,packages/server/src/types.ts:62,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+SessionBackend,packages/server/src/types.ts:63,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+SessionRuntimeEvent,packages/server/src/types.ts:64,crates/ice-cli/src/remote/client.rs:24,missing,RPC-007
+createUnixServer,packages/server/src/transports/unix/preset.ts:7,crates/ice-cli/src/remote/client.rs:24,missing,RPC-008
+TranscriptState,packages/coding-agent/src/client/transcript.ts:3,crates/ice-cli/src/remote/client.rs:24,missing,RPC-013
+createTranscriptState,packages/coding-agent/src/client/transcript.ts:28,crates/ice-cli/src/remote/client.rs:24,missing,RPC-013
+applyTranscriptSnapshot,packages/coding-agent/src/client/transcript.ts:37,crates/ice-cli/src/remote/client.rs:24,missing,RPC-013
+applyTranscriptProgress,packages/coding-agent/src/client/transcript.ts:42,crates/ice-cli/src/remote/client.rs:24,missing,RPC-013
+selectTranscript,packages/coding-agent/src/client/transcript.ts:77,crates/ice-cli/src/remote/client.rs:24,missing,RPC-013
+serializeJsonLine,packages/coding-agent/src/modes/rpc/jsonl.ts:10,crates/ice-cli/src/remote/client.rs:24,partial,RPC-016
+JsonlReaderOptions,packages/coding-agent/src/modes/rpc/jsonl.ts:21,crates/ice-cli/src/remote/client.rs:24,partial,RPC-016
+attachJsonlLineReader,packages/coding-agent/src/modes/rpc/jsonl.ts:28,crates/ice-cli/src/remote/client.rs:24,partial,RPC-016
+RPC_MAX_PENDING_COMMANDS,packages/coding-agent/src/modes/rpc/rpc-command-coordinator.ts:4,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RpcCommandCoordinator,packages/coding-agent/src/modes/rpc/rpc-command-coordinator.ts:13,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RPC_MAX_RETAINED_INPUT_BYTES,packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:5,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RPC_MAX_CONTROL_INPUT_BYTES,packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:6,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RPC_MAX_LIVE_CONTROLS,packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:7,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RpcInputAdmission,packages/coding-agent/src/modes/rpc/rpc-input-admission.ts:10,crates/ice-cli/src/remote/client.rs:24,missing,RPC-018
+RpcRequestExecutionError,packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:3,crates/ice-cli/src/remote/client.rs:24,missing,RPC-019
+RPC_MAX_REQUEST_TIMEOUT_MS,packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:14,crates/ice-cli/src/remote/client.rs:24,missing,RPC-019
+RPC_CANCELLABLE_COMMANDS,packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:15,crates/ice-cli/src/remote/client.rs:24,missing,RPC-019
+RpcRequestScope,packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:18,crates/ice-cli/src/remote/client.rs:24,missing,RPC-019
+RpcRequestTracker,packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts:33,crates/ice-cli/src/remote/client.rs:24,missing,RPC-019
+validateRpcResponse,packages/coding-agent/src/modes/rpc/rpc-response-validation.ts:631,crates/ice-cli/src/remote/client.rs:24,missing,RPC-034
+JSONL assistant stopReason:toolUse,packages/coding-agent/src/modes/rpc/rpc-response-validation.ts:92,crates/ice-cli/src/remote/client.rs:24,partial,RPC-017
+GET /api/services/claude-sdk/status,packages/coding-agent/src/claude-sdk/adapter.ts:208,,missing,MISC-031
+claude-sdk status authentication.state subscription|api_auth|not_logged_in|unknown,packages/coding-agent/src/claude-sdk/adapter.ts:218,,missing,MISC-031
+claude-sdk status authentication.ready literal true,packages/coding-agent/src/claude-sdk/adapter.ts:221,,missing,MISC-031
+POST /api/services/claude-sdk/step,packages/coding-agent/src/claude-sdk/adapter.ts:328,,missing,MISC-033
+claude-sdk step.version,packages/coding-agent/src/claude-sdk/adapter.ts:290,,missing,MISC-033
+claude-sdk step.requestId,packages/coding-agent/src/claude-sdk/adapter.ts:291,,missing,MISC-033
+claude-sdk step.sessionId,packages/coding-agent/src/claude-sdk/adapter.ts:292,,missing,MISC-033
+claude-sdk step.handle,packages/coding-agent/src/claude-sdk/adapter.ts:293,,missing,MISC-033
+claude-sdk step.model,packages/coding-agent/src/claude-sdk/adapter.ts:294,,missing,MISC-033
+claude-sdk step.systemPrompt,packages/coding-agent/src/claude-sdk/adapter.ts:295,,missing,MISC-033
+claude-sdk step.messages,packages/coding-agent/src/claude-sdk/adapter.ts:296,,missing,MISC-033
+claude-sdk step.tools,packages/coding-agent/src/claude-sdk/adapter.ts:297,,missing,MISC-033
+claude-sdk step.thinking,packages/coding-agent/src/claude-sdk/adapter.ts:305,,missing,MISC-033
+claude-sdk step.maxTokens,packages/coding-agent/src/claude-sdk/adapter.ts:306,,missing,MISC-033
+claude-sdk NDJSON application/x-ndjson prefix,packages/coding-agent/src/claude-sdk/adapter.ts:116,,missing,MISC-034
+claude-sdk response wire limit 8388608 bytes,packages/coding-agent/src/claude-sdk/adapter.ts:128,,missing,MISC-034
+claude-sdk decoded line limit 3145728 UTF-16 units,packages/coding-agent/src/claude-sdk/adapter.ts:134,,missing,MISC-034
+claude-sdk record-count limit 65536 lines,packages/coding-agent/src/claude-sdk/adapter.ts:134,,missing,MISC-034
+claude-sdk ready,packages/coding-agent/src/claude-sdk/adapter.ts:351,,missing,MISC-035
+claude-sdk ready.version,packages/coding-agent/src/claude-sdk/adapter.ts:354,,missing,MISC-035
+claude-sdk ready.transport,packages/coding-agent/src/claude-sdk/adapter.ts:355,,missing,MISC-035
+claude-sdk ready.billing,packages/coding-agent/src/claude-sdk/adapter.ts:356,,missing,MISC-035
+claude-sdk ready.handle,packages/coding-agent/src/claude-sdk/adapter.ts:357,,missing,MISC-035
+claude-sdk turn.handle,packages/coding-agent/src/claude-sdk/adapter.ts:376,,missing,MISC-035
+claude-sdk turn.message,packages/coding-agent/src/claude-sdk/adapter.ts:380,,missing,MISC-035
+claude-sdk turn.message.content,packages/coding-agent/src/claude-sdk/adapter.ts:381,,missing,MISC-035
+claude-sdk turn.message.stopReason,packages/coding-agent/src/claude-sdk/adapter.ts:384,,missing,MISC-035
+claude-sdk turn.message.usage,packages/coding-agent/src/claude-sdk/adapter.ts:391,,missing,MISC-035
+claude-sdk turn.message.usage.input,packages/coding-agent/src/claude-sdk/adapter.ts:392,,missing,MISC-035
+claude-sdk turn.message.usage.output,packages/coding-agent/src/claude-sdk/adapter.ts:393,,missing,MISC-035
+claude-sdk turn.message.usage.cacheRead,packages/coding-agent/src/claude-sdk/adapter.ts:394,,missing,MISC-035
+claude-sdk turn.message.usage.cacheWrite,packages/coding-agent/src/claude-sdk/adapter.ts:395,,missing,MISC-035
+claude-sdk content.text,packages/coding-agent/src/claude-sdk/adapter.ts:97,,missing,MISC-035
+claude-sdk content.thinking,packages/coding-agent/src/claude-sdk/adapter.ts:98,,missing,MISC-035
+claude-sdk content.thinkingSignature,packages/coding-agent/src/claude-sdk/adapter.ts:102,,missing,MISC-035
+claude-sdk content.redacted,packages/coding-agent/src/claude-sdk/adapter.ts:103,,missing,MISC-035
+claude-sdk content.toolCall,packages/coding-agent/src/claude-sdk/adapter.ts:105,,missing,MISC-035
+claude-sdk toolCall.name/id,packages/coding-agent/src/claude-sdk/adapter.ts:108,,missing,MISC-035
+claude-sdk toolCall.arguments,packages/coding-agent/src/claude-sdk/adapter.ts:110,,missing,MISC-035
+claude-sdk text_delta.delta,packages/coding-agent/src/claude-sdk/adapter.ts:363,,missing,MISC-036
+claude-sdk preview limit 2097152 bytes,packages/coding-agent/src/claude-sdk/adapter.ts:366,,missing,MISC-036
+POST /api/services/claude-sdk/cancel,packages/coding-agent/src/claude-sdk/adapter.ts:184,,missing,MISC-037
+claude-sdk cancel.version,packages/coding-agent/src/claude-sdk/adapter.ts:188,,missing,MISC-037
+claude-sdk cancel.sessionId,packages/coding-agent/src/claude-sdk/adapter.ts:188,,missing,MISC-037
+claude-sdk cancel.handle,packages/coding-agent/src/claude-sdk/adapter.ts:188,,missing,MISC-037
+claude-sdk error.code subscription_required,packages/coding-agent/src/claude-sdk/adapter.ts:153,,missing,MISC-037
+claude-sdk error.code unauthorized,packages/coding-agent/src/claude-sdk/adapter.ts:155,,missing,MISC-037
+claude-sdk error.code session_lost,packages/coding-agent/src/claude-sdk/adapter.ts:156,,missing,MISC-037
+claude-sdk error.code session_conflict,packages/coding-agent/src/claude-sdk/adapter.ts:158,,missing,MISC-037
+claude-sdk error.code tool_protocol,packages/coding-agent/src/claude-sdk/adapter.ts:159,,missing,MISC-037
+claude-sdk error.code capacity,packages/coding-agent/src/claude-sdk/adapter.ts:160,,missing,MISC-037
+claude-sdk error.code unsupported,packages/coding-agent/src/claude-sdk/adapter.ts:161,,missing,MISC-037
+claude-sdk error.code timeout,packages/coding-agent/src/claude-sdk/adapter.ts:162,,missing,MISC-037
+claude-sdk error.code upstream,packages/coding-agent/src/claude-sdk/adapter.ts:163,,missing,MISC-037

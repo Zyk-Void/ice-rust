@@ -1,0 +1,23 @@
+{
+  "typescript_version": "5.9.3",
+  "candidate_count": 2277,
+  "category_counts": {
+    "cli": 142,
+    "slash-commands": 10,
+    "keybindings": 0,
+    "settings": 558,
+    "environment": 101,
+    "tools": 23,
+    "rpc": 306,
+    "extension-api": 219,
+    "session-types": 84,
+    "paths": 354,
+    "providers-auth": 49,
+    "tui": 335,
+    "hooks": 87,
+    "observability": 9
+  },
+  "symbol_count": 5435,
+  "rust_candidate_count": 3534,
+  "warning": "Candidate extraction only. Exact identifiers suggest lookup locations, not behavioral equivalence. Final surface rows must be confirmed by reading source and tests; dynamic expressions must be resolved or explicitly explained."
+}

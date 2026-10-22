@@ -1,0 +1,726 @@
+{
+  "owner": "/root/exports_sub_session",
+  "method": "Direct source ranges returned by lane inspector; hash alone is not reading credit",
+  "reads": [
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/compaction/branch-summarization.ts",
+      "ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "sha256": "30d6923ad311d72ce9d1b3a50ed8fc1deb7e2d8ab43ba001c41907de2bc50ec9",
+      "captured_at": "2026-10-20T03:01:25.684Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "captured_at": "2026-10-20T03:01:34.370Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "ranges": [
+        [
+          315,
+          424
+        ]
+      ],
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "captured_at": "2026-10-20T03:01:43.398Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "ranges": [
+        [
+          600,
+          708
+        ]
+      ],
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "captured_at": "2026-10-20T03:01:51.770Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/compaction/utils.ts",
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "sha256": "6070668fb9669dc09fc6b95e126d334fa4943adba22ef2d6d52fae4e0f138610",
+      "captured_at": "2026-10-20T03:02:00.327Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/session/context.ts",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "sha256": "dc8c32bebff5aabd896044994e70e8d47ced06e5170ff80aa1c6318680cbed9c",
+      "captured_at": "2026-10-20T03:02:08.852Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/session/testing/types.ts",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "sha256": "1ab3f2b81e03d9ece4fb34cc2643e1574c4950a436750d77ecacd77e685dd72c",
+      "captured_at": "2026-10-20T03:02:17.245Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/session/types.ts",
+      "ranges": [
+        [
+          1,
+          362
+        ]
+      ],
+      "sha256": "72c87b1e4e692d5c966dd523d0046e22a5afe314608460318e7b49cf367be074",
+      "captured_at": "2026-10-20T03:02:25.747Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/agent/src/harness/session/testing/conformance.ts",
+      "ranges": [
+        [
+          70,
+          120
+        ]
+      ],
+      "sha256": "491322900fff521f9a58068b4c732df20855334588d0dd7f65fdae59bd010972",
+      "captured_at": "2026-10-20T03:02:54.089Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/agent-session-runtime.ts",
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "sha256": "4d0afdbd3280bffeb6224b906ee66ec3af0854ad9eb7b98aeb6855a59df948c7",
+      "captured_at": "2026-10-20T03:02:54.118Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/agent-session-services.ts",
+      "ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "sha256": "0526cf8a643300c0e0e314d62c9bae42575808bd06940f52c981d2fc90737f4a",
+      "captured_at": "2026-10-20T03:02:54.167Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "ranges": [
+        [
+          155,
+          310
+        ]
+      ],
+      "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "captured_at": "2026-10-20T03:02:54.196Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/cache-stats.ts",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "sha256": "bc6326ffc5022f9f9bfc4e2a10889d8d805057aa6ab04309fd9a9e3e7dcd742b",
+      "captured_at": "2026-10-20T03:02:54.230Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "ranges": [
+        [
+          25,
+          75
+        ]
+      ],
+      "sha256": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "captured_at": "2026-10-20T03:02:54.262Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "ranges": [
+        [
+          290,
+          377
+        ]
+      ],
+      "sha256": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "captured_at": "2026-10-20T03:02:54.293Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "ranges": [
+        [
+          25,
+          60
+        ]
+      ],
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "captured_at": "2026-10-20T03:02:54.326Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "ranges": [
+        [
+          125,
+          165
+        ]
+      ],
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "captured_at": "2026-10-20T03:02:54.356Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "ranges": [
+        [
+          250,
+          295
+        ]
+      ],
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "captured_at": "2026-10-20T03:02:54.446Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "ranges": [
+        [
+          380,
+          500
+        ]
+      ],
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "captured_at": "2026-10-20T03:02:54.479Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "ranges": [
+        [
+          760,
+          870
+        ]
+      ],
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "captured_at": "2026-10-20T03:03:55.799Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/compaction/utils.ts",
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "sha256": "1c9402db5fc48c5b38f1a7636702cc179a4da3c9e1d17d1d8f719294b848359d",
+      "captured_at": "2026-10-20T03:03:55.829Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/context-breakdown.ts",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "sha256": "f12691e3c60b9388de4c1ab5d0a4e3816974e5aed3cfc4d0a04adca8d23b03b3",
+      "captured_at": "2026-10-20T03:03:55.870Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/sdk.ts",
+      "ranges": [
+        [
+          85,
+          105
+        ]
+      ],
+      "sha256": "735504dabffe0fa780826fa826ee4cdcec944b21bc71670622a088c3228c17eb",
+      "captured_at": "2026-10-20T03:03:55.944Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/session-cwd.ts",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
+      "captured_at": "2026-10-20T03:03:56.024Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "ranges": [
+        [
+          33,
+          135
+        ]
+      ],
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "captured_at": "2026-10-20T03:03:56.054Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "ranges": [
+        [
+          315,
+          337
+        ]
+      ],
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "captured_at": "2026-10-20T03:03:56.084Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "ranges": [
+        [
+          487,
+          505
+        ]
+      ],
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "captured_at": "2026-10-20T03:03:56.114Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "ranges": [
+        [
+          770,
+          790
+        ]
+      ],
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "captured_at": "2026-10-20T03:03:56.143Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/coding-agent/src/core/usage-totals.ts",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "sha256": "ae43787b5b28702eea398c6583b1eb9d486ebf21a6e594d5a220eb6e72d85fae",
+      "captured_at": "2026-10-20T03:03:56.174Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/index.ts",
+      "ranges": [
+        [
+          130,
+          171
+        ]
+      ],
+      "sha256": "5c5b28894e1dea2e1d4eef37a87fba4747165fd9f239cc6d77e3d41e29a1aeff",
+      "captured_at": "2026-10-20T03:04:22.244Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/branch-cache.ts",
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "sha256": "f93887640db460f95e98cb86c544913d239894f6c929d87d5af0cd062293a00e",
+      "captured_at": "2026-10-20T03:04:22.279Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/migrations.ts",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "sha256": "c243b1e9bd63dd058e3fcc2cd7bbbe26395f508db6201ce0b0e285b3be278fcb",
+      "captured_at": "2026-10-20T03:04:22.310Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/repo.ts",
+      "ranges": [
+        [
+          80,
+          113
+        ]
+      ],
+      "sha256": "ac66f1e422915201eda4dd04633461ba3bd8307dd42623451b2284554a4ae1a3",
+      "captured_at": "2026-10-20T03:04:22.343Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/search-backend.ts",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "sha256": "9492b91ba53936d6466948bcf3789373b90184be1f6057366b811f063caaff8e",
+      "captured_at": "2026-10-20T03:04:22.377Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/branch-entries.ts",
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "sha256": "193df592857865ce47d1c54996a7ad2cca783ef03c998ed2dc74c9159d00d947",
+      "captured_at": "2026-10-20T03:04:22.410Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/branch-tips.ts",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "sha256": "5b99bab85ca4317d9f81d1b950fdbec50cb3719df57c959c95874549d66f5fbd",
+      "captured_at": "2026-10-20T03:04:22.443Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/entries.ts",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "sha256": "13adc475c95dbb23b77ad159f561f37aa16d9637a0a4307f92c43a2a90c730cf",
+      "captured_at": "2026-10-20T03:04:22.472Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/facts.ts",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "sha256": "6afe000803f4d30e4520d7a52f136f825a4538614d181683c1c8b77c4f34f7fc",
+      "captured_at": "2026-10-20T03:04:22.501Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/lanes.ts",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "sha256": "906b7af3da4c523e28189cb2fa48defd8e970a4b7169c394fdbd942006563a91",
+      "captured_at": "2026-10-20T03:04:22.540Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/leases.ts",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "sha256": "6310631a9a1d4ea3e864c5d5ba07e7d09024d0dfc9463b495112d68c48b01b91",
+      "captured_at": "2026-10-20T03:04:22.570Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/records.ts",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "sha256": "d9e59d2b5112774875e989f6c917ffe4f8c5062df72dfe409acc7600879c2797",
+      "captured_at": "2026-10-20T03:04:22.601Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/session-sequences.ts",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "sha256": "23e1d9e65c2257bf72aaf1a1e6ebf8fa0edbe6b2220089bfd013fd74d1a99f88",
+      "captured_at": "2026-10-20T03:04:22.631Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/session-stats.ts",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "sha256": "0c74aede8d9a40778c91df170e25716895456a95339bae8e203851b83894b0ad",
+      "captured_at": "2026-10-20T03:04:22.662Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/sessions.ts",
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "sha256": "dcbaf0c873123c7f5405374cd6873da768028864e5260e910a3f368738c2a5a1",
+      "captured_at": "2026-10-20T03:04:22.691Z"
+    },
+    {
+      "area": "session",
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/types.ts",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "sha256": "7f0363cb447f8428eda9e93a7be026b6c8eaf1d073aed115b502455f3b1fc608",
+      "captured_at": "2026-10-20T03:04:22.726Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/results/report.ts",
+      "ranges": [
+        [
+          380,
+          475
+        ]
+      ],
+      "sha256": "ad84d9970c4b2dc39db7e35e48bd59a4903d7d1c4d9d63862403ba1b1c5a95a9",
+      "captured_at": "2026-10-20T03:15:22.578Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/runtime/helpers.ts",
+      "ranges": [
+        [
+          198,
+          277
+        ]
+      ],
+      "sha256": "81a484ececf6e79eb19ef4029a1ab8c928dadd6d7edf504fc9102d7749eebf34",
+      "captured_at": "2026-10-20T03:15:22.608Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/cli.ts",
+      "ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "sha256": "453e8a069bb1928ebdf27153b403d58a6ff364cb5cf84055ec9320e2fac3322d",
+      "captured_at": "2026-10-20T03:15:22.638Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+      "ranges": [
+        [
+          143,
+          232
+        ]
+      ],
+      "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+      "captured_at": "2026-10-20T03:15:22.670Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/results/report.ts",
+      "ranges": [
+        [
+          232,
+          278
+        ]
+      ],
+      "sha256": "ad84d9970c4b2dc39db7e35e48bd59a4903d7d1c4d9d63862403ba1b1c5a95a9",
+      "captured_at": "2026-10-20T03:15:34.965Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+      "ranges": [
+        [
+          232,
+          328
+        ]
+      ],
+      "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+      "captured_at": "2026-10-20T03:15:34.997Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime-support.ts",
+      "ranges": [
+        [
+          319,
+          377
+        ]
+      ],
+      "sha256": "1975ae1df96c344219a339ca8580c5e41b0eec4902508cb8f11f1cc4a1c3451d",
+      "captured_at": "2026-10-20T03:15:35.029Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/runtime/helpers.ts",
+      "ranges": [
+        [
+          322,
+          389
+        ]
+      ],
+      "sha256": "81a484ececf6e79eb19ef4029a1ab8c928dadd6d7edf504fc9102d7749eebf34",
+      "captured_at": "2026-10-20T03:16:35.747Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/runtime/live-session.ts",
+      "ranges": [
+        [
+          444,
+          464
+        ]
+      ],
+      "sha256": "4d1fae0e4ae337edbd277e64ebabf635015b25d3abab4e3457115e34726a576f",
+      "captured_at": "2026-10-20T03:16:35.779Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/permissions/approval.ts",
+      "ranges": [
+        [
+          77,
+          145
+        ]
+      ],
+      "sha256": "ffdc0d750f001fe2d51198fa394cde66c045e333eba2c621ebae2d9bd4b92007",
+      "captured_at": "2026-10-20T03:16:35.813Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/settings.ts",
+      "ranges": [
+        [
+          600,
+          647
+        ]
+      ],
+      "sha256": "8c8253c3ea8dece454a956147d4f3c78d8a1cc70eaf0c1adb8afcb4ba1b39c78",
+      "captured_at": "2026-10-20T03:16:35.845Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/results/report.ts",
+      "ranges": [
+        [
+          476,
+          541
+        ]
+      ],
+      "sha256": "ad84d9970c4b2dc39db7e35e48bd59a4903d7d1c4d9d63862403ba1b1c5a95a9",
+      "captured_at": "2026-10-20T03:19:05.916Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/settings.ts",
+      "ranges": [
+        [
+          868,
+          885
+        ]
+      ],
+      "sha256": "8c8253c3ea8dece454a956147d4f3c78d8a1cc70eaf0c1adb8afcb4ba1b39c78",
+      "captured_at": "2026-10-20T03:19:05.950Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+      "ranges": [
+        [
+          1804,
+          1824
+        ]
+      ],
+      "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+      "captured_at": "2026-10-20T03:19:05.983Z"
+    },
+    {
+      "area": "subagents",
+      "path": "ice:packages/coding-agent/src/subagents/v2/runtime.ts",
+      "ranges": [
+        [
+          2357,
+          2408
+        ]
+      ],
+      "sha256": "ed5953197a86bf3af638bbd07c623210fb3befe8475b35ba734b90695e4f1d0f",
+      "captured_at": "2026-10-20T03:19:06.021Z"
+    }
+  ]
+}

@@ -1,0 +1,444 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T02:39:59.656Z",
+  "reviewed_draft": "coordinator-dependency-resolutions-draft.json",
+  "reviewed_draft_sha256": "836c819e737ffd427b8303ed285374dbf6356994963267cabf547c96d182d2e7",
+  "method": "The coordinator reviewed all 141 grouped requests against current entry contracts. Preserve existing findings; classify consumers/shared contracts explicitly instead of adding reverse prerequisite edges. Grouped prerequisite requests use the per-entry maps below or their already-declared intersection; no all-to-all expansion.",
+  "group_overrides": {
+    "3": {
+      "entry_ids": [
+        "TUI-031",
+        "TUI-032",
+        "TUI-035",
+        "TUI-036",
+        "TUI-055",
+        "TUI-074"
+      ],
+      "kind": "consumer",
+      "rationale": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel."
+    },
+    "6": {
+      "entry_ids": [
+        "CLI-009",
+        "MISC-010"
+      ],
+      "kind": "shared-contract",
+      "rationale": "Attachment assembly consumes image processing. Managed fd/rg installation is MISC-010, not MISC-001 release metadata."
+    },
+    "55": {
+      "entry_ids": [
+        "AI-005",
+        "AI-019"
+      ],
+      "kind": "prerequisite",
+      "rationale": "RPC-003's existing AI-005 relation is retained; AI-019 is an explicitly shared structural reference rather than an implementation prerequisite (per per-edge override)."
+    },
+    "56": {
+      "entry_ids": [
+        "AI-005",
+        "AI-019"
+      ],
+      "kind": "prerequisite",
+      "rationale": "AI-019 owns provider message fields that the explicit transport projection reads."
+    },
+    "85": {
+      "entry_ids": [
+        "AI-019"
+      ],
+      "kind": "prerequisite",
+      "rationale": "JSONL response validation consumes shared Message/Content/Usage DTOs, distinct from AI-006 request authority."
+    },
+    "87": {
+      "entry_ids": [
+        "SAFE-019",
+        "SAFE-020",
+        "SAFE-004",
+        "SAFE-025"
+      ],
+      "kind": "prerequisite",
+      "rationale": "Direct patch binding parses the current verifier flag and invokes runVerifier; live parent mode/capability authority is separate from the optional Goals verifier."
+    },
+    "126": {
+      "entry_ids": [
+        "SAFE-001",
+        "SAFE-025"
+      ],
+      "kind": "prerequisite",
+      "rationale": "Validated mandatory factory and frozen capability/callback publication."
+    },
+    "127": {
+      "entry_ids": [
+        "COG-043"
+      ],
+      "kind": "prerequisite",
+      "rationale": "Concrete Cognee factory/lifecycle; shared inline ordering is EXT-057."
+    },
+    "130": {
+      "entry_ids": [
+        "TOOLS-020"
+      ],
+      "kind": "prerequisite",
+      "rationale": "resolveReadPath belongs specifically to path normalization; image preprocessing is separately resolved by request129."
+    },
+    "133": {
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "kind": "prerequisite",
+      "rationale": "Managed fd/rg paths and installation are MISC-010; MISC-001 is version metadata."
+    }
+  },
+  "grouped_prerequisites": {
+    "0": {
+      "TOOLS-001": [
+        "AGENT-048",
+        "AGENT-050",
+        "AGENT-052"
+      ],
+      "TOOLS-002": [
+        "AGENT-049"
+      ],
+      "TOOLS-010": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053"
+      ],
+      "TOOLS-015": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053"
+      ],
+      "TOOLS-017": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053"
+      ]
+    },
+    "2": {
+      "TOOLS-001": [
+        "SET-014"
+      ],
+      "TOOLS-004": [
+        "SET-014"
+      ],
+      "TOOLS-009": [
+        "SET-014"
+      ],
+      "TOOLS-013": [
+        "SET-014"
+      ],
+      "TOOLS-022": [
+        "SET-016"
+      ],
+      "TOOLS-023": [
+        "SET-016"
+      ]
+    },
+    "5": {
+      "TOOLS-020": [
+        "AGENT-038",
+        "AGENT-043",
+        "AGENT-045"
+      ],
+      "TOOLS-021": [
+        "AGENT-045"
+      ],
+      "TOOLS-024": [
+        "AGENT-041",
+        "AGENT-046"
+      ],
+      "TOOLS-025": [
+        "AGENT-039",
+        "AGENT-041"
+      ],
+      "TOOLS-030": [
+        "AGENT-043",
+        "AGENT-044"
+      ]
+    },
+    "12": {
+      "SESSION-023": [
+        "TOOLS-002",
+        "TOOLS-006",
+        "TOOLS-008",
+        "TOOLS-009",
+        "TOOLS-011"
+      ],
+      "SESSION-025": [
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-008",
+        "TOOLS-010",
+        "TOOLS-011",
+        "TOOLS-012",
+        "TOOLS-013"
+      ]
+    },
+    "13": {
+      "SESSION-019": [
+        "EXT-020",
+        "EXT-030"
+      ],
+      "SESSION-020": [
+        "EXT-020"
+      ],
+      "SESSION-022": [
+        "EXT-008",
+        "EXT-022"
+      ],
+      "SESSION-026": [
+        "EXT-022"
+      ],
+      "SESSION-035": [
+        "EXT-008",
+        "EXT-009",
+        "EXT-010",
+        "EXT-019",
+        "EXT-020",
+        "EXT-022",
+        "EXT-031"
+      ]
+    }
+  },
+  "grouped_relationships": {
+    "1": {
+      "TOOLS-003": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "TOOLS-004": [
+        "SESSION-025"
+      ],
+      "TOOLS-005": [
+        "SESSION-025"
+      ],
+      "TOOLS-006": [
+        "SESSION-023"
+      ],
+      "TOOLS-008": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "TOOLS-009": [
+        "SESSION-023"
+      ],
+      "TOOLS-011": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "TOOLS-012": [
+        "SESSION-025"
+      ],
+      "TOOLS-013": [
+        "SESSION-025"
+      ],
+      "TOOLS-016": [
+        "SESSION-024"
+      ],
+      "TOOLS-018": [
+        "SESSION-023"
+      ]
+    },
+    "3": {
+      "TOOLS-004": [
+        "TUI-074"
+      ],
+      "TOOLS-014": [
+        "TUI-031",
+        "TUI-032",
+        "TUI-035"
+      ],
+      "TOOLS-026": [
+        "TUI-031",
+        "TUI-036"
+      ],
+      "TOOLS-027": [
+        "TUI-031",
+        "TUI-032"
+      ]
+    },
+    "4": {
+      "TOOLS-017": [
+        "EXT-056"
+      ],
+      "TOOLS-018": [
+        "EXT-035"
+      ],
+      "TOOLS-025": [
+        "EXT-035"
+      ],
+      "TOOLS-026": [
+        "EXT-036"
+      ],
+      "TOOLS-027": [
+        "EXT-036"
+      ]
+    },
+    "6": {
+      "TOOLS-023": [
+        "CLI-009"
+      ],
+      "TOOLS-028": [
+        "MISC-010"
+      ],
+      "TOOLS-029": [
+        "MISC-010"
+      ]
+    }
+  },
+  "additional_prerequisites": {
+    "TOOLS-028": [
+      "MISC-010"
+    ],
+    "TOOLS-029": [
+      "MISC-010"
+    ],
+    "RPC-017": [
+      "TOOLS-031"
+    ],
+    "MISC-015": [
+      "TOOLS-031"
+    ],
+    "MISC-016": [
+      "TOOLS-031"
+    ],
+    "CLI-002": [
+      "EXT-057"
+    ],
+    "RPC-025": [
+      "MISC-017"
+    ]
+  },
+  "relation_overrides": [
+    {
+      "entry_id": "COG-051",
+      "target_id": "BLACK-037",
+      "kind": "consumer",
+      "reason": "Optional checkpoint-file consumer; producer does not require it."
+    },
+    {
+      "entry_id": "BLACK-037",
+      "target_id": "COG-051",
+      "kind": "shared-contract",
+      "reason": "Optional producer follows an explicit on-disk schema."
+    },
+    {
+      "entry_id": "MISC-013",
+      "target_id": "TUI-072",
+      "kind": "consumer",
+      "reason": "Changelog presentation consumes the parser."
+    },
+    {
+      "entry_id": "MISC-010",
+      "target_id": "TOOLS-028",
+      "kind": "consumer",
+      "reason": "Find consumes managed fd; installer does not require find."
+    },
+    {
+      "entry_id": "MISC-010",
+      "target_id": "TOOLS-029",
+      "kind": "consumer",
+      "reason": "Grep consumes managed rg; installer does not require grep."
+    },
+    {
+      "entry_id": "MISC-010",
+      "target_id": "RPC-022",
+      "kind": "consumer",
+      "reason": "RPC resource discovery consumes managed tooling."
+    },
+    {
+      "entry_id": "MISC-018",
+      "target_id": "TUI-078",
+      "kind": "consumer",
+      "reason": "Share exports the HTML document; offline viewer does not require the UI sharing command."
+    },
+    {
+      "entry_id": "RPC-003",
+      "target_id": "AI-019",
+      "kind": "shared-contract",
+      "reason": "The closed binary schema is independently defined. RPC-004 owns conversion and RPC-034 owns nested JSON response validation."
+    }
+  ],
+  "native_queue_provenance": {
+    "id": "RUST-068",
+    "provenance_status": "predates-local-rebrand",
+    "provenance": "The independently inspected failure/admission branches exist in upstream bigfish1913/pi-rust at 0fb2d893206981527b14e86d68e3ddbdf2c8189a. All 58 significant lines match the corresponding rpi sources after crate-prefix normalization. The only non-upstream blame in the reviewed ranges is the mechanical rpi_tui to ice_tui reference at interactive_tui.rs2653; it does not introduce the input-recovery behavior.",
+    "reviewed_targets": [
+      {
+        "file": "crates/ice-tui/src/editor.rs",
+        "range": [
+          1184,
+          1204
+        ],
+        "upstream_file": "crates/rpi-tui/src/editor.rs",
+        "matched": 12,
+        "total": 12,
+        "blame_commits": [
+          {
+            "sha": "f4670c532830f8768cc3e4e0805c27899de8977c",
+            "in_upstream": true
+          },
+          {
+            "sha": "49919ca02f135864ca589dbaae3a2191db57b950",
+            "in_upstream": true
+          },
+          {
+            "sha": "471faff3d1ff254ebea29f19364ec03eec673e3e",
+            "in_upstream": true
+          }
+        ]
+      },
+      {
+        "file": "crates/ice-cli/src/interactive_tui.rs",
+        "range": [
+          1425,
+          1460
+        ],
+        "upstream_file": "crates/rpi-cli/src/interactive_tui.rs",
+        "matched": 16,
+        "total": 16,
+        "blame_commits": [
+          {
+            "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+            "in_upstream": true
+          },
+          {
+            "sha": "af3e6a600e6d2caf0469e66cf257dce6d3386579",
+            "in_upstream": true
+          },
+          {
+            "sha": "d08824ac08633316fb2f144f76f618f13e57a839",
+            "in_upstream": true
+          }
+        ]
+      },
+      {
+        "file": "crates/ice-cli/src/interactive_tui.rs",
+        "range": [
+          2650,
+          2695
+        ],
+        "upstream_file": "crates/rpi-cli/src/interactive_tui.rs",
+        "matched": 30,
+        "total": 30,
+        "blame_commits": [
+          {
+            "sha": "539581cb90d2eb433dc4b73610d0948794995499",
+            "in_upstream": true
+          },
+          {
+            "sha": "8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb",
+            "in_upstream": false
+          },
+          {
+            "sha": "af3e6a600e6d2caf0469e66cf257dce6d3386579",
+            "in_upstream": true
+          }
+        ]
+      }
+    ]
+  }
+}

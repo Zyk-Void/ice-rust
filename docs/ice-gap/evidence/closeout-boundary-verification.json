@@ -1,0 +1,2216 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:38:47.134Z",
+  "owner": "/root",
+  "verification_completed": true,
+  "status": "passed",
+  "passed": true,
+  "overall_closeout_complete": true,
+  "strict_boundary_complete": true,
+  "source_audit_published": true,
+  "source_machine_gate_passed": true,
+  "issue_count": 0,
+  "issues": [],
+  "other_checks_passed": true,
+  "passed_check_count": 277,
+  "checks": [
+    {
+      "check": "final_prose_scan",
+      "passed": true,
+      "inputs": 50,
+      "real_prose_glue": 0,
+      "changes": 0
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-ai.json",
+      "sha256": "c594ffddadcf35b2a1b86459b7663a41b940cbde92f3bcafdd8861a995b221dc"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/ai.json",
+      "sha256": "3f3a13aaaa8bfc95d3ef6fe05e47509ced414842cd9fa8b2329f5bc046eac389"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "ai.md",
+      "sha256": "6db13bf01b2a46dc1998e2aa3552e75051d74ed72499cf6d9bc747bcd8870d5c"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-agent.json",
+      "sha256": "1d153acbf379c632040baeacbf493ff515e153af2e929f622cba80a653ccbd68"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/agent.json",
+      "sha256": "e5cdf15843a905f3f4a73a7999652c9d2139231841170b476cffd85f14e01c51"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "agent.md",
+      "sha256": "0cbdb3f0c206a8c934e6e5eb3451063729d215ecb3fc54bd6de7d6dbc104f0bb"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-tools.json",
+      "sha256": "c87a7107c8714e09f3afec2cb16f27fc6935c999049d52da1bd362fb97add4bd"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/tools.json",
+      "sha256": "fafa0da86350285c7bb84d0e1e4e8e03e5459c6210b4a50610cc4394e692dfe0"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "tools.md",
+      "sha256": "47f8ebbc3ad1829b7d13905c756182d08a866f3cb079ab9cb648e938ca400c74"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-session.json",
+      "sha256": "dd8309ccdf2301f7d3e3e12e1b32f8a67a2eed108dc633266f61025ea8c83a6b"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/session.json",
+      "sha256": "8f9df922886b694cdd5953b464bb656b62b0dbf8032bb2e1d9cf7f0a13cf9c34"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "session.md",
+      "sha256": "54dbb47251fce26cce2c65c647f75c65b4df448c0e3db2e067d6be28266ad1fd"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-settings.json",
+      "sha256": "d3de20a43ead677c2143a6460a59dd425afcf561ceac1056b0b8aadafe2f540d"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/settings.json",
+      "sha256": "bf9dd64b5b72af945ad0134fc47a4a00da1632412ced998ed6fa9d3a2fc12b30"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "settings.md",
+      "sha256": "0332dceccc1f47d8fe5f7c77758c1a39d23d2c546938853a647c31afbc23236c"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-extensions.json",
+      "sha256": "c75a09bd97b73056a8c7683dc183d5def967fedb4a663f7747c434ae7d9f1ab1"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/extensions.json",
+      "sha256": "4c23122ad5ed1f40fabbb020d0ecdbdf73c73e66aa3ab376bae0373f31ca1d53"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "extensions.md",
+      "sha256": "78d312438beae3b5515ad20732500c8eca85d3240bea55903a4b1739ad6f172a"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-rpc-remote.json",
+      "sha256": "7019badc05e6dc8387076e2e7522eff3fb6015de06f8193ef5a1a5456dae7e27"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/rpc-remote.json",
+      "sha256": "4cf76fd9452536c77414bc397bca9274d55af437dec5d5640cf113c14bac297e"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "rpc-remote.md",
+      "sha256": "f2c5f652f27a5494b357246a06dda4424471876d18031e06e90e05cfb8bdb4b7"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-tui.json",
+      "sha256": "a4ef502f9b3d4bc8fb503fab16c06fd1881396d1801b80cd6ad0a9fbad799148"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/tui.json",
+      "sha256": "91d99dc9bbd30f81ae5ef7da3620dcb2f59cbfb03ed38546a1d8a9f4dc6e11f7"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "tui.md",
+      "sha256": "3a025fdcadac9f6845a1df7a8362914e5dc3c026aa144c25a2895b91c5f840c8"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-subagents.json",
+      "sha256": "59f6949146a50b4cf5e95a25c958164f3cdfa52aa677a60c73140f6f6287c05f"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/subagents.json",
+      "sha256": "d12458ea78b9a68ec5b0f87aeffcd1d85d53af853ddf8ce29494920ac863c381"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "subagents.md",
+      "sha256": "04ebf3918d4fdde49c792e69d5a904116d6d2d941e79476008cc2e7ee082dedb"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-safe-verify.json",
+      "sha256": "95c1c1db36cf71cceb22926f835ab33739e8612503f757396db5ebc659575d5c"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/safe-verify.json",
+      "sha256": "8b47bacb1468cc5b34dfd9aa30208f4f4b4b452f7ee7650f49e23b6fa9d83b8f"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "safe-verify.md",
+      "sha256": "6da76746763fe395181fecb9b36bc5abd02c32cb6d0b8268f16e35e8eb44dd81"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-observability.json",
+      "sha256": "2d6b69adca51bd9e98b362df8ac05a3094b5d57ea8843b727e5d6eea8a8bfbbf"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/observability.json",
+      "sha256": "474848bdf538708e8ded4069ae765dfca40cdb939958ef021ae30195927e0932"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "observability.md",
+      "sha256": "f1b971021ce40ecb24a402f674a23f1c80fc6c8a909f7672b44f9d695d256660"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-cognee.json",
+      "sha256": "26f243d3f1e362455abfb68b58fc5657117a609f28a5a882fd28c15fc6c3c4d4"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/cognee.json",
+      "sha256": "ba7e30eb1c3c9e3f413898132059bf2ca96625515687026043b72c209033db40"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "cognee.md",
+      "sha256": "7ac19025c66083742337816cc2e0b4141109c3e8e3d13316b662f2e6181e940f"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-blackhole.json",
+      "sha256": "0ea3bf03578dcaeb228ed268617ddd77ab47066615dd0113a3b6ee23f1513e0d"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/blackhole.json",
+      "sha256": "82e968b2463a0e904d4312b5be6dad7c5df535196895395cdf9bcd2ff4a1698b"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "blackhole.md",
+      "sha256": "60c39dc0030703190652cf6fb8eaa6f0254f73e4120f26bdef5f9b917a2ee10e"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-providers-auth.json",
+      "sha256": "741586050838293f71d1ddb5792378e7aca55d25b244758ec684af89c4e2bc65"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/providers-auth.json",
+      "sha256": "2bbd5dce1c91a288c4ca6ecd0e5704d0011b85f1fd7dca0ee662307ddb9c1200"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "providers-auth.md",
+      "sha256": "9faf4dc4733c1735dafffcb63305192b2844d3dff2c93668c710f1769e4c0602"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-cli-packaging.json",
+      "sha256": "080ad904b3284a6ac63508d096ad9ed8880ac188583cbaf82a63b882ce48061e"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/cli-packaging.json",
+      "sha256": "cc5b4c67c14d9af8d5986915f0c093f147129f923a6e96ca740365dea9eae6e2"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "cli-packaging.md",
+      "sha256": "4aa298fe9f1f51ca53dfe0c1d37c505dbaeb0ff058651c62f2db5f33a6ff8bfe"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/spec-misc.json",
+      "sha256": "d816be32db4f1e05a2d21e93935b0b17f99a0e1258e3b2cd3468237eb1a8601e"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/misc.json",
+      "sha256": "7f49592194e08dedd5c0f2c3fcddbb2bc83a6c8c997b9b44e0fb0ddee4f1c869"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "misc.md",
+      "sha256": "d86b0e619662dff3432b66be97647a2deae21d4678deeac6f9cdc27faa9ea8e4"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "README.md",
+      "sha256": "737c14f00545c50cd68f1dbfbb0c26eea0e22271897706e44a9e1d63a1ea14f1"
+    },
+    {
+      "check": "prose_input_hash",
+      "passed": true,
+      "artifact": "evidence/RESUME.md",
+      "sha256": "d480faf7ec8eb78856e05cebd9506265c6f162d4c4ce5bc58b6aa6be760d02f1"
+    },
+    {
+      "check": "spacing_helper_hash",
+      "passed": true,
+      "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b"
+    },
+    {
+      "check": "copy_receipt_binding",
+      "passed": true,
+      "sha256": "4634be07376f6415a0d41c7c6dc0691a827ba15dc81952a67cd30f239b7f56c0"
+    },
+    {
+      "check": "original_snapshot_exact",
+      "passed": true,
+      "files": 548,
+      "bytes": 119383594,
+      "inventory_sha256": "46e6adbc1b74be6f7efb767f0987fe26f68eca9362c453edde4e3a7be3ac654e",
+      "copy_inventory_sha256": "46e6adbc1b74be6f7efb767f0987fe26f68eca9362c453edde4e3a7be3ac654e"
+    },
+    {
+      "check": "audit_and_repository_python_residue",
+      "passed": true,
+      "residue": [],
+      "audit_roots": [
+        "/home/mewtwo/Zks/ice-rust/docs/ice-gap",
+        "/home/mewtwo/Zykairotis/ice-rust/docs/ice-gap"
+      ],
+      "repository_root_names_checked": [
+        ".venv",
+        "__pycache__"
+      ]
+    },
+    {
+      "check": "original_gate_binding",
+      "passed": true,
+      "sha256": "f28f9c7fcc3e1cb5d271de94c4527585fa38ef5bbca1a9fedf9d8530532bd660",
+      "captured_at": "2026-10-20T06:59:27.030881+00:00",
+      "issues": 0,
+      "warnings": 2423,
+      "source_references": 12245
+    },
+    {
+      "check": "final_active_gate",
+      "passed": true,
+      "sha256": "565f443c7374db467568d9bf16dfc837898dceebf15f9afbbac773de2fdb511b",
+      "captured_at": "2026-10-20T07:34:56.483135+00:00",
+      "issues": 0,
+      "warnings": 2423,
+      "source_references": 12263,
+      "canonical_read_files": 1702
+    },
+    {
+      "check": "accepted_warning_kind",
+      "passed": true,
+      "kind": "terminal_empty_line_citation",
+      "count": 2423
+    },
+    {
+      "check": "git_identity_typescript",
+      "passed": true,
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void"
+    },
+    {
+      "check": "git_identity_original_rust",
+      "passed": true,
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main"
+    },
+    {
+      "check": "git_identity_active_rust",
+      "passed": true,
+      "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+      "branch": "main"
+    },
+    {
+      "check": "typescript_status_preserved",
+      "passed": true,
+      "status_sha256": "14bdd0bd9c4a472aa17a3d0d0f36bbe0cb88e848ef6a5dd5e6b3730df0101830",
+      "comparison_format": "git status --short --untracked-files=normal"
+    },
+    {
+      "check": "original_rust_status_preserved",
+      "passed": true,
+      "status_sha256": "249da2167e6f3af27cbe17af4b7c54be7be1e77de08a43788d975e4bc047cc67"
+    },
+    {
+      "check": "active_origin_and_tracked_sources",
+      "passed": true,
+      "origin": "https://github.com/Zyk-Void/ice-rust.git",
+      "tracked_diff_names": ""
+    },
+    {
+      "check": "boundary_exception_matches_current_status",
+      "passed": true,
+      "observed_status": "?? .least/\n?? docs/ice-gap/\n",
+      "expected_status": "?? docs/ice-gap/\n",
+      "blocked_path": ".least/",
+      "contents_and_provenance_verified": false
+    },
+    {
+      "check": "top_level_layout",
+      "passed": true,
+      "files": [
+        "README.md",
+        "agent.md",
+        "ai.md",
+        "blackhole.md",
+        "cli-packaging.md",
+        "cognee.md",
+        "extensions.md",
+        "ledger.csv",
+        "misc.md",
+        "observability.md",
+        "providers-auth.md",
+        "requirements.md",
+        "rpc-remote.md",
+        "safe-verify.md",
+        "session.md",
+        "settings.md",
+        "subagents.md",
+        "tools.md",
+        "tui.md"
+      ],
+      "directories": [
+        "evidence",
+        "surfaces",
+        "tools"
+      ],
+      "file_count": 19,
+      "directory_count": 3
+    },
+    {
+      "check": "helper_validation_record",
+      "passed": true,
+      "sha256": "7d03243156da61c699c4e77a7400ced2861e561e526b91ab01c0cde128d42e15",
+      "summary": {
+        "helpers": 142,
+        "syntax_passed": 142,
+        "syntax_failed": 0,
+        "safe_validator_executions": 18,
+        "safe_validator_failures": 0,
+        "issues": 0
+      }
+    },
+    {
+      "check": "all_helpers_in_tools",
+      "passed": true,
+      "helper_count": 142,
+      "inventory_sha256": "a669562dc5bf9805826e6dd5e82ff6de8a2068c63bfdd22a4839488f2889d077"
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/audit-util.mjs",
+      "sha256": "e6fda33bd0c1de276c836e7338a2345fedbd6935b0af30d652c47b36834b4168",
+      "bytes": 3438,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-agent-common.mjs",
+      "sha256": "6d5c28eab759c98c298b49e3317a3902392e70ecb5f591f496b837c043076c4b",
+      "bytes": 4382,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-agent-env.mjs",
+      "sha256": "2aee4d0098e2130a391dbf6583247f64a5f75f2ab976de5b3e24c5d6dde688c6",
+      "bytes": 31384,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-agent-loop.mjs",
+      "sha256": "8ba418ddd6a2c0200152171a5e5713808bfe60fc1408c80cc6646e919507e870",
+      "bytes": 50728,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-agent-resources.mjs",
+      "sha256": "e56916728f69a2680d99a41f65e7f8a2e9b8bc669fb4b4e5d22e819d0b4a8db7",
+      "bytes": 29602,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-agent-runtime.mjs",
+      "sha256": "9f99c656c7e1259346a88c47154081cf1960759f358d0baa4e5e1ec4b381e281",
+      "bytes": 24134,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-blackhole-rest.mjs",
+      "sha256": "f357940f86312190e3a1dc6c413bc2ce96e814e3473d255e759a5627380722c5",
+      "bytes": 45537,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-blackhole.mjs",
+      "sha256": "878c719301c2800d2d59cbe9b22220fd165138acdf6b5e818dfad767d88022fc",
+      "bytes": 36404,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-cognee-client.mjs",
+      "sha256": "6a3dc8cbb20d117c0a984cdc6922e0f5b71746e7a46a5e3cb1083c5c8e0631e3",
+      "bytes": 39536,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-cognee-runtime.mjs",
+      "sha256": "0af4f32b8bdec06997a1f7a4477c54a1d50ead19b839d45066bff9263745034f",
+      "bytes": 62543,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-extensions-common.mjs",
+      "sha256": "08d2d38a10e9c8fd4b2a3aa7b46f02d72dda189bbae37646f355d2feaca911c1",
+      "bytes": 4882,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-extensions-dispatch.mjs",
+      "sha256": "3edbb027286a54b7df89c78b9503b51985c4ba8789cd299b04b913a9a5b113d1",
+      "bytes": 36705,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-extensions-loader.mjs",
+      "sha256": "1abc01c3c537aee9eeaabd174da1d315f144f38127cbe237ffeb815cbf5a022c",
+      "bytes": 33784,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/author-safe-verify.mjs",
+      "sha256": "e98f27454469cadddb92dca2bd921075885dc9d70db3aa079e8a5d5e6a1d144e",
+      "bytes": 74549,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/compare-blackhole-copies.mjs",
+      "sha256": "f7180069cb0b48a22e528bbf0f2e0d13bcefb7da19d5ac5fd21cdf92e4859469",
+      "bytes": 1423,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/direct-source.mjs",
+      "sha256": "c86815824ee7ead424442d980dd6b49fea28ce1e830550d68f0261241a176453",
+      "bytes": 3805,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/active-checkout-compare.mjs",
+      "sha256": "ff3d89cd5dff0f0c41fa5452b98d073c479147fc363f9f6d10fb67ef56317633",
+      "bytes": 11395,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/ai-schema-read.mjs",
+      "sha256": "b06b779c556fb9dc3a56082a063696a7fdd48fc73d02941ec6c8e19465e78ee2",
+      "bytes": 1850,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/cli-packaging-supplement-read.mjs",
+      "sha256": "258e29779b1fdce43da393cd5cad57a1d8bc306549354dbba280d63265dd0b2f",
+      "bytes": 2266,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extensions-coverage-gaps.mjs",
+      "sha256": "10773b379e9ba4dfbcb7490e7fd4068bd3f0bde783f8317c1180687f9d5080ec",
+      "bytes": 1513,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extensions-final-review.mjs",
+      "sha256": "e836a30e7e3e5fcfe244961971a5f2814b9fd5e631ddd774ad85bf8c4435c6a8",
+      "bytes": 3306,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extensions-review-apply.mjs",
+      "sha256": "df6b4014e05536ca36cecfbbe1b8cd30156f210cfcb340af48655cd49c019bcb",
+      "bytes": 2691,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extensions-review-read.mjs",
+      "sha256": "75f1f0f297b773a584d8cabce2ad3940f46c674caf0f5d4f7f579de15a54d967",
+      "bytes": 2013,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/qa-observability-independent-helper.mjs",
+      "sha256": "f813b86feb067d4ea808d52a19d032e84d4056013ee1485243fc9adf32fb77e6",
+      "bytes": 1260,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/semantic-dependency-read.mjs",
+      "sha256": "60648f6af11f220f18028d6c07720b04c004e717bb1e65148ca1fe56fc840d88",
+      "bytes": 1804,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/subagents-read.mjs",
+      "sha256": "25566b7d7343116368a1aceb499898d06785a235b7b530718daf1df0ecc73d72",
+      "bytes": 2758,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tools-read-metadata.mjs",
+      "sha256": "a9d6afd86d1438e54c67e2d0c5e8a6a71321341ddd36243a284ba81c9ad1494d",
+      "bytes": 2061,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tools-read.mjs",
+      "sha256": "2ada7b6388a6b9588f839a66917ebd25759c53209b7e044af37349062fdf6557",
+      "bytes": 1871,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-candidates-read.mjs",
+      "sha256": "03873a356a1599bbed9489439fbd33dc136fd24f7914c67a906cd0bc1ea4e13d",
+      "bytes": 858,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-closeout-build-proposal.mjs",
+      "sha256": "a287438326df2e71ee6b368d68abefd621f63bf514a3c7b47d027aa9ab967688",
+      "bytes": 18393,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-closeout-inspect.mjs",
+      "sha256": "c9ef52708477e127a8b85eb4975e50f3597f97c4e4d673901851c860a0786768",
+      "bytes": 2061,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-closeout-merge-spec.mjs",
+      "sha256": "0015de75aa2cc43a30234480e04724fb5a0b122bd8898a9785dd0ce9161613b1",
+      "bytes": 6021,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-closeout-normalize.mjs",
+      "sha256": "62a3dd57f764189e2956f16b552a648d7b618c29b0b1850142ad5dc57270ee89",
+      "bytes": 2365,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-closeout-read.mjs",
+      "sha256": "89b8f7cb1ce6bc2f49bf9d4d755484c9576cbe14eb0696b2a93ff7c7f01293f3",
+      "bytes": 2593,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-owned-evidence-read.mjs",
+      "sha256": "ad6c40e76b8ae59098b931951e75f94abe12a6e679460ea499f584ac9a7cb1d7",
+      "bytes": 1805,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-publication-readonly-review.mjs",
+      "sha256": "da5c3fc177e37c6e819db85f1ec884f8d70fc38c1f7c83629575aed90151ce6a",
+      "bytes": 5631,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-review-read.mjs",
+      "sha256": "6b301c3679825ebee25b3180900398197f1a694f39f0cda7bffa4863c1b6ae7d",
+      "bytes": 2937,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/tui-terminal-read.mjs",
+      "sha256": "55b2b9ccc124a1df00b660cc69d021f81c1c61fa33ec6ffb0924f93caa2426c7",
+      "bytes": 2557,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extract-surfaces.mjs",
+      "sha256": "869fe85be87f9996469f7023aec3904cb3e9cb1ca4fbfec0161b2c76caadfc58",
+      "bytes": 12640,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-agent.mjs",
+      "sha256": "bebb7f6fe8be2af8beba7057274ab8e3dcbcf68d9f87edc4d48e0e10dd5b4b2e",
+      "bytes": 15391,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-blackhole.mjs",
+      "sha256": "582a94038733e15b39b3779f9eb64fea93adf8a57bdcd970ebac39867c1b302e",
+      "bytes": 14721,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-cognee.mjs",
+      "sha256": "41c251f74c8a2442b1ade61de2c1496578f5fd8403f5e7f36957be83be68be7f",
+      "bytes": 21216,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-extension-core-text.mjs",
+      "sha256": "00d397fe8ed9cf95376b19c858b4f162d700ff7550baf9e9f986202e2d835cc4",
+      "bytes": 11648,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-safe-verify.mjs",
+      "sha256": "de8badb238b91ac47a772f7f40c0cc37cbc88d7e939484fc468f417c9906fba4",
+      "bytes": 13426,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-blackhole.mjs",
+      "sha256": "dc873e2ff6287bcc5ba3158f97230c1c89114866b1806193216b8f62a591fa6b",
+      "bytes": 1409,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-evidence.mjs",
+      "sha256": "b147fb8306641a0d88913a0cc2fc41a60161e86500874ab520931628c2982563",
+      "bytes": 941,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-spec.mjs",
+      "sha256": "f26f28ee612b4071dc260328449a8282a91d0dd9c493c9ff1b74a41014ae3169",
+      "bytes": 1151,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inventory.mjs",
+      "sha256": "5bf09bceee5cae68517fca78880b6714053efd420ab15faec8549df4baf7bb11",
+      "bytes": 7602,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/merge-progress.mjs",
+      "sha256": "baee92068be66ad20de8bbc58a939573ff8b412345b491e9d313041511858dae",
+      "bytes": 3231,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/prepare-workers.mjs",
+      "sha256": "1cbfccb573b667b94f6fc2d55a5672f5cb0302ae6fefeb8880d23e745653a279",
+      "bytes": 13390,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/publish-area.mjs",
+      "sha256": "82b8ab42ed70f9701261d3184bcb9fa657f494df39a019cd723d99efa7da6872",
+      "bytes": 7451,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/read-evidence.mjs",
+      "sha256": "93635a781d8f1f4e0168c23d468d75298ef9aa8e9e9fa9ea0bf4e7e4f76eab7a",
+      "bytes": 1125,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/refine-blackhole-evidence.mjs",
+      "sha256": "1f4f3d33515f4da61225ff24578aa31eb9dd6637c2884eed1ea1bc90cb78818c",
+      "bytes": 4514,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/render-area.mjs",
+      "sha256": "0e724fadfabd882e4e67cd8cd58e31ed0b709434ea4db2eb37833f2baad91924",
+      "bytes": 1893,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/repair-extensions-dispatch.mjs",
+      "sha256": "86b76d23e8e21fc3e3b0decfb866d972b53264cad6d01721d55e0c71333673bd",
+      "bytes": 1228,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/resolve-extension-test-refs.mjs",
+      "sha256": "4a29117f3632459f615d5602506876c5344135361fd2b0f611d3a6b5b037ba3c",
+      "bytes": 1468,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/resume-integrity.py",
+      "sha256": "70fc6ceea777d372e0f0398919d4500b6a4a3b145cc0d997d0d11d89f4a89cbd",
+      "bytes": 10276,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/supplement-surfaces.mjs",
+      "sha256": "db0527924c2cd9faee1494cff9b9be8fb60c1b54f2b291d461ddd8f8b49fc8d2",
+      "bytes": 5270,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/accept-canonical-read-coverage.mjs",
+      "sha256": "99ad64595a419363a900949e2235bc446c5dbc2af9ce0d4b0ed8549321f19158",
+      "bytes": 2358,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/accept-final-area.mjs",
+      "sha256": "649649a50ef5fc6fdc625193ead0eb3d959aad47b9038def160a48bd0d2b4524",
+      "bytes": 3514,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/append-native-queue-defect.mjs",
+      "sha256": "06371fadffe548987a3b43907672bc75a104341d20c4af6b570a0c955a2d4660",
+      "bytes": 1089,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/apply-auth-json-precision.mjs",
+      "sha256": "a573d984ca3277cf72e57bc4a92c3fd36fff633341a3c80a0688c93e55d89d58",
+      "bytes": 2432,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/apply-native-command-provenance.mjs",
+      "sha256": "fa58c7c117ab7529866406e9867996089fad1b6ea0225305fd82c4a104e4c316",
+      "bytes": 4728,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/build-final-index.py",
+      "sha256": "053bdb4a7e5b9c482baade139a30e19cec2b7cc6f4110fb22f0874f2645cc475",
+      "bytes": 23931,
+      "corrected": true
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/clean-session-audit-aliases.mjs",
+      "sha256": "1e91fc7525b00f95b17ba2c6510131ff86a4235233658935c6d7af8794d75c50",
+      "bytes": 682,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-active-closeout.mjs",
+      "sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+      "bytes": 27233,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-build-root-export-proposal.mjs",
+      "sha256": "c64ab6c8603272f73267de193162c0e80438965ef015dd7c716036d14bc85408",
+      "bytes": 11205,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-checkpoint.mjs",
+      "sha256": "aba9507725cf0c240cf24ca4880493142f8f31ed3d437cb253fa9a76be7ebcfc",
+      "bytes": 5673,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-closeout-inspect.mjs",
+      "sha256": "7dc8373ad821908964ce307797474b951761f4531da87a1b777377a574264109",
+      "bytes": 4324,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-complete-original-publication.mjs",
+      "sha256": "c5b2723c1cc716b75709cfedd5836777fc5b36c49bd0f82373dc1cda719d8017",
+      "bytes": 2271,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-fast-preflight.py",
+      "sha256": "dcb42edc14e23d849488c5cf3ad1d3ebae7570d8230787f6bed529a8e6d046f2",
+      "bytes": 6604,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-inspect-relocation.mjs",
+      "sha256": "8c75fb3040ca2126619d51a25c996a9597f9c41f278095005d5ce9fd1a6510bd",
+      "bytes": 1422,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-merge-exports.mjs",
+      "sha256": "b882e287d245b7bbf7e2ebecca4be65e6be7e91deab68acf6df1b73d39a0cec0",
+      "bytes": 7756,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-normalize-tui-metadata.mjs",
+      "sha256": "e08ac1511f0b1615bc1313c97a7f018ac4443b4ac2ad624ad4a80aa9b13a394f",
+      "bytes": 3464,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-prepare-native-prose.mjs",
+      "sha256": "15e79b647e407a9b98c58f0d8659876f5cfd65889b0aa6b31a6adeca06e047f8",
+      "bytes": 10593,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-publish-closeout.mjs",
+      "sha256": "73c5a05e490f06548fcf776a5b0edbaa7bd9b611f639ddac10e665840e37282b",
+      "bytes": 3373,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-record-native-hunks.mjs",
+      "sha256": "c307e9081dced5ea38a17799db1a1a38be4f81064ed564bfad09ed8f609cd6da",
+      "bytes": 5766,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/coordinator-relocate-audit.mjs",
+      "sha256": "9cd00b53e87cd675cafc4a776b78729a1b1c0532f91e751383a4504589d67e44",
+      "bytes": 3280,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/extend-relocation-map.mjs",
+      "sha256": "d513d385a5ccd3dff9e799f23548396d1da5b00395fa7d843cddbe6ba65e8247",
+      "bytes": 3617,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/finalize-audit-metadata.mjs",
+      "sha256": "d485a46bf3d6a27d6edb022df25b5b319646f04e38c333d95971f15db5b0f408",
+      "bytes": 3222,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/fix-spacing.mjs",
+      "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+      "bytes": 33416,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-authored.mjs",
+      "sha256": "0880098b5dad9364f4d8a02d3210d473c384ec9165e6038008ddc2ffd9be45d3",
+      "bytes": 1234,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-closeout.mjs",
+      "sha256": "144cf74e7c8928def5bbb510c735cf92f4e545f6a1c06cbd8eb42ce045d1d003",
+      "bytes": 4216,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-final-structure.mjs",
+      "sha256": "126a00793cacec4e4b4e7aba818568a44a04515a7cbe82654663e0a656586cdc",
+      "bytes": 3331,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-global-audit.mjs",
+      "sha256": "b8ff0f3af9f11a55d1f1a7748b3787446b5fefa271ff184d5f31eab13267c194",
+      "bytes": 4736,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/inspect-prose-queues.mjs",
+      "sha256": "8777ba84391bc54d8594d7922ce90c783610fb9fc5f322445c69f982a8fc8d17",
+      "bytes": 1562,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/integrate-ai-schema-supplement.mjs",
+      "sha256": "c00d58ec15ea1353787dbd31859e1038f82a22816873ff929d074ac844bc0542",
+      "bytes": 4345,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-final-inspect.mjs",
+      "sha256": "af3cd146d4fa054f9176691d822f5445cdb6de91b656abf2c58a847c503c34d8",
+      "bytes": 9748,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-inspect.mjs",
+      "sha256": "71ad7b90701e55d06d084db5d5373781f8bc78cb6a8a562788da3e25a7c7f704",
+      "bytes": 3944,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-migration-inspect.mjs",
+      "sha256": "d24fa9cf784c48115c757ffcc158035477e49195015e39e81b00451f05fd54fa",
+      "bytes": 1953,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-native-metadata.mjs",
+      "sha256": "724aac8ff25210dc00a640203c0b5deebd9dc4004d43c45f4b5ac9cc848371e2",
+      "bytes": 1879,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-native-prose.mjs",
+      "sha256": "b7282b77014258abad114b43bf73cba03030f99666d4faca60e109fd7ec89eb5",
+      "bytes": 2486,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-batch.mjs",
+      "sha256": "1e4f53cc4ae3b5dace9d4b33c8b12ad18bbfd3c2e12caee38a3c920005ea89ea",
+      "bytes": 527,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-decls.mjs",
+      "sha256": "a597c6a2d842de7d79aa342cbf50accac98d8b6537b8a85f17b4e9acea87833c",
+      "bytes": 1684,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-inspect.mjs",
+      "sha256": "1de25de5c166f904ab89a88fec4dfef4f61c00bc0bf0e68be254bfe627a01614",
+      "bytes": 2518,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-match.mjs",
+      "sha256": "3c4cf7deb2e52e4a3c46d81bc40327b2c4e7dae117c3ef627a17ad9222cd5a3a",
+      "bytes": 518,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-native-hunks.mjs",
+      "sha256": "f778d76056e68d2d64a5afbd80e5106877150c00cc760e7b3c28dd394363a649",
+      "bytes": 1289,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-sub-session-native-prose.mjs",
+      "sha256": "c17b4d00c0625c64cd8c285b5b70f5b34e23d210cdf0eefad0abd352df87a64f",
+      "bytes": 11580,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-active-identity-proposal.mjs",
+      "sha256": "d47b5a31bffa54f6ab8402166c5f7381fc253c7be4ba0301be3c78df6d4038cd",
+      "bytes": 11162,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-active-identity.mjs",
+      "sha256": "5f579c3252a76a26b50eb194c9b1aba8ccc8e69cb7a1824dec4454d0e59e2433",
+      "bytes": 3306,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-active-noncrates-review.mjs",
+      "sha256": "cb0b54682e2ffe2f0231a333a21d619977726f33ed0fe451545abccab2de7aa3",
+      "bytes": 9555,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-active-review.mjs",
+      "sha256": "17362916b29876dd861c542ce62b8534e6af63c41edddb7e6f934de28638b30a",
+      "bytes": 1475,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-build-misc.mjs",
+      "sha256": "08c42dbc53173688646915b883e4b92919c742012640e28aae4583ebd609f2cb",
+      "bytes": 21615,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-exports.mjs",
+      "sha256": "6a2df53bd98a419746796bc6aae1a7ac44b7c2e874538cef401021c96f4947ad",
+      "bytes": 2496,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-first-pass-findings-proposal.mjs",
+      "sha256": "6693e0961123f000cb290d54d5c15d5fbb975e9851adf91e61b6ef97c376cb30",
+      "bytes": 9498,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-inspect.mjs",
+      "sha256": "56061a5d19b56cbe52c16200283c3a07b6bdef073675a433984594b25ffd10ee",
+      "bytes": 1178,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-prepare.mjs",
+      "sha256": "61343e2cbc83360c2f4badcd2b2a1ad0e530e7e33918605b9623d16fd8b213fa",
+      "bytes": 4619,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-read-coverage-inspect.mjs",
+      "sha256": "d04a7342f09ceb4afce9b7634a40e4fb336820346e18a97c837d415f920e32f4",
+      "bytes": 3976,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-read-coverage-verify.mjs",
+      "sha256": "71a0395080859d75c4b1dc5af9f16a3e8b6ba84eccf00acc36b4dba9df3d4bb5",
+      "bytes": 6537,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-read-coverage.mjs",
+      "sha256": "468855280d11b2b5b973d2ff1aff9b7378b3395dcbf3c3f66a747d4dae5abf8c",
+      "bytes": 23771,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-read-ranges.mjs",
+      "sha256": "5711934e53a12066dbe75a803f7d5f2c51d6ea7a1ad4dd7305267fb043cf7e1a",
+      "bytes": 1188,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-readme-limits-review.mjs",
+      "sha256": "fae0997215685af2714cfd55252259df6cd7205aec895e32e9bdce0fbdd1da0c",
+      "bytes": 3982,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-remap-review.mjs",
+      "sha256": "1f0972980f476ff2516797c9020fbfa91af3eb9eee96a5a2f146e01bed98a76a",
+      "bytes": 19936,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-type-contracts.mjs",
+      "sha256": "36078f2a116d08fae496164a1542c3cebe5bdc572ada5de2ce5899434a727385",
+      "bytes": 2083,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-verify-exports.mjs",
+      "sha256": "4019f8bb3654fc73af91542ee6ea981a42d9eb1353bc3b9026609437ca17abd5",
+      "bytes": 3045,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-final-areas-verify.mjs",
+      "sha256": "aac760ce7720ffd2d6557fe6deddde1177235a94f5c7dfe9003e62e733ba3b44",
+      "bytes": 4222,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lookup-read-credit.mjs",
+      "sha256": "18930e72a78e2536839bace8b006f2b2ffc7fefb2bd1922570b32cf6a886719d",
+      "bytes": 1541,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/merge-cli-fragments.mjs",
+      "sha256": "47d42a352f442672a0fe14e6dde9951187e5dd13668550b6abd885edf3daca7b",
+      "bytes": 5779,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/normalize-citations.mjs",
+      "sha256": "50c3134117d3d83277baa6e27e699718d43202a6c57fc0362899cd8fa782408d",
+      "bytes": 6821,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/normalize-final-handoff.mjs",
+      "sha256": "0c2f3c94a89ca9c8a9d273637907682ad5f889fc1d8df10dc0b7989a54106e1c",
+      "bytes": 4409,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/normalize-final-schema.mjs",
+      "sha256": "8dcd0076762028fc8fe4c7b548751a61cc78823239b1c87f3fad11a7d9ae8c87",
+      "bytes": 4540,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/prepare-citation-normalizer.mjs",
+      "sha256": "3e0e5a5276ca8df27ee2fb0e885bdad42395d2fc9676f9a31859c3873ae01415",
+      "bytes": 2414,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/qa-first-pass-read.mjs",
+      "sha256": "9ab917d29e62ceb6c3b1b1a67f6577f8c82a5fff56da391ae5b315b9c3140697",
+      "bytes": 1973,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/read-audit-json-part.mjs",
+      "sha256": "82e1c115bf37393a5a3fbe5de0f901d65b2384543387462a2ed876304bbcb614",
+      "bytes": 931,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/reconcile-final-dependencies.mjs",
+      "sha256": "10c1607a58798c9311c7113a23eacbae7a1cb1d64658a8efe1d4f2f2a8e99134",
+      "bytes": 9950,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/reconcile-final-first-pass.mjs",
+      "sha256": "ef9d68c199028121d30ff263465b1f5db5ebe76db786559ae842b904b3caacff",
+      "bytes": 8222,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/reconcile-first-pass-records.mjs",
+      "sha256": "21a8668adf4e1a83f8cb4d06642adcd56081065edb61615726582e0a58138e79",
+      "bytes": 4215,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/reconcile-readability.mjs",
+      "sha256": "ac8aff0e0d50fba0cb26f917a7c073004b2bad6c2b3488870d23b1ed16fc269d",
+      "bytes": 6741,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/remap-rust-citations.mjs",
+      "sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+      "bytes": 20182,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/repair-agent57-literal.mjs",
+      "sha256": "e81f786ffffbffe4f96161f045a898e47d7a1a70a0d6274e603d9191bca62a84",
+      "bytes": 1556,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/review-spacing.mjs",
+      "sha256": "32e4533653ccac1c995a4b637f2f105527199a83e28ad8c98863ff516fd31dde",
+      "bytes": 877,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/verify-area-evidence.mjs",
+      "sha256": "3ac52585ad67886e55f884d07dd560e865b5e5e6e7dae75bbaa4cb5d15588ec0",
+      "bytes": 4205,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/verify-complete-audit.py",
+      "sha256": "2a863d60b2f4439313e1f8a72feb046880801de61081b55c83b1c802c84739d5",
+      "bytes": 26992,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/verify-defect-provenance.mjs",
+      "sha256": "3477bdb9a92c26eb6c575e08eacb1a755d2e22622d391b2048a0d5dc68a49eff",
+      "bytes": 4514,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/verify-supplemental-baseline.mjs",
+      "sha256": "04aed28d5adff86d242507b97d0f50cfcefc7ebfb825efb7a1da462c53ad99c3",
+      "bytes": 1481,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-audit-paths.mjs",
+      "sha256": "42112063eb2fff4ed8ee0748018d1903912f746c72233768728e44d7723b5683",
+      "bytes": 420,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-completion-guard.mjs",
+      "sha256": "d4031503f1c08c94812264d0e1c1eb7bbb54ca742805eeb5b704b539d0a85509",
+      "bytes": 653,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-migration-core.mjs",
+      "sha256": "0fbdd506d0824f3cf37c2f4ae61f3b4fe797b6b27f064b41ea8c049bdecb1f6f",
+      "bytes": 8761,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-migration-qa.mjs",
+      "sha256": "3d42595c1e9e88dd0474da861eddbcd897982c4072f067b43e236900b5caebbb",
+      "bytes": 3601,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-migrate-helpers.mjs",
+      "sha256": "4f02668052ca90ac3b32e1809061643be1e1a84e326281f45b802aabd51a58da",
+      "bytes": 11046,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-prepare-migration.mjs",
+      "sha256": "816867616c229b1c88d666acb7e16bf960d9c1978bcec6904586ea040dfc0e06",
+      "bytes": 7734,
+      "corrected": false
+    },
+    {
+      "check": "helper_hash",
+      "passed": true,
+      "path": "tools/lane-exports-rpc-ai-auth-relocated-validation.mjs",
+      "sha256": "d010a2a0ede852a15cfc37dfda9dbb9a62b42889b67dec9b1b5f9be1f66ca3b5",
+      "bytes": 13529,
+      "corrected": true
+    },
+    {
+      "check": "frozen_migration_and_correction_records",
+      "passed": true,
+      "plan_sha256": "73bc41a761e791c640d0267b1755d58f4c9825e06677f5277bfb7bbbc03cd9c3",
+      "receipt_sha256": "55f09fcf112514b8311e54475624529a8ea5cdcf25360ecd110f5e384974499e",
+      "correction_record_sha256": "659e39b9484ca1e03716c62159c3219ce2a9d210bf5136526ec2496ae8303d58"
+    },
+    {
+      "check": "correction_archive",
+      "passed": true,
+      "path": "evidence/closeout-corrections/README.before.md",
+      "sha256": "77b9e7cbcf9f7cbd35c5a71b435134a69c675ae582f94218355f3e46c3d3f612"
+    },
+    {
+      "check": "correction_archive",
+      "passed": true,
+      "path": "evidence/closeout-corrections/spacing-dry-run.before.json",
+      "sha256": "359661c1c16d87315ad6cbdffb1239c768a59e73d3829e2d355ad01ac3c13de7"
+    },
+    {
+      "check": "correction_archive",
+      "passed": true,
+      "path": "evidence/closeout-corrections/relocated-helper-validation.before.json",
+      "sha256": "9160fa342d5a48437181d705a6d70b0a17fa75041cf2df1063199771232e9415"
+    },
+    {
+      "check": "correction_archive",
+      "passed": true,
+      "path": "evidence/closeout-corrections/rust-defects.before.json",
+      "sha256": "0efdf9dff8b1878e5152266889da693e45af023b1cc9f9f73e1964f2f242927d"
+    },
+    {
+      "check": "correction_archive",
+      "passed": true,
+      "path": "evidence/closeout-corrections/final-validation.before.json",
+      "sha256": "333f451f1b992af535a24bab5a7d522d576bc27a9aae2b62c85bc12195f7aac5"
+    },
+    {
+      "check": "correction_baseline_and_citation",
+      "passed": true,
+      "baseline_sha256": "bf8a3e08417974ab86af06045ee5473187ca1b8c4805dcf568336e4447ef28e0",
+      "citation_correction_sha256": "d196133e248cbbb691e9935cd7ce85ffbe2bddd6671149edade7bc1edc961db2",
+      "catalog_sha256": "0c44affdbb358cebe08ccd4245f4f546ae673ab218cf72c21648a372a4e2bf62"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/baseline.json",
+      "sha256": "8e7d216a220018ff4f2a2f740051f39e4da7d7cbe07dacef39b811f83dc39d5e"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/spacing-validation.json",
+      "sha256": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/spacing-review.json",
+      "sha256": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/citation-normalization.json",
+      "sha256": "5e240868744732b31f5f9f48030a84eae068b54806341b67dd3a7c3661e2d995"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/citation-normalization-apply.json",
+      "sha256": "5e240868744732b31f5f9f48030a84eae068b54806341b67dd3a7c3661e2d995"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/citation-normalization-preview.json",
+      "sha256": "8dbebef413c911ae2df783bb84e2e3d7ccf850c5338f21637733e3a2b6f5a9a3"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/active-checkout-source-map.json",
+      "sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d"
+    },
+    {
+      "check": "historical_evidence_preserved",
+      "passed": true,
+      "path": "evidence/active-checkout-diff-hunks.json",
+      "sha256": "fed3a68f8cb1641237b03f81f2b600411b07651dcf496a571ceb725dfd316cbe"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "captured_at"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "root"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "head"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "upstream_commit"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "remotes"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "tag_matches"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "upstream_cargo"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "method"
+    },
+    {
+      "check": "original_provenance_field_preserved",
+      "passed": true,
+      "field": "targets"
+    },
+    {
+      "check": "independent_review_archive_count",
+      "passed": true,
+      "files": 2,
+      "unfinished": true
+    },
+    {
+      "check": "independent_review_preserved",
+      "passed": true,
+      "path": "evidence/independent-review/baseline.json",
+      "sha256": "41ba223382e1f29a6c938535022bac95e15406b068f2e1dd8cec29e6a4956ef4"
+    },
+    {
+      "check": "independent_review_preserved",
+      "passed": true,
+      "path": "evidence/independent-review/README.md",
+      "sha256": "b548421dac01a89659d1d991f5a3dc57d6d1b769f4e12ff3f6b6544df16c8126"
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "ai",
+      "entries": 50
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "agent",
+      "entries": 65
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "tools",
+      "entries": 31
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "session",
+      "entries": 38
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "settings",
+      "entries": 33
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "extensions",
+      "entries": 57
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "rpc-remote",
+      "entries": 36
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "tui",
+      "entries": 151
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "subagents",
+      "entries": 44
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "safe-verify",
+      "entries": 26
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "observability",
+      "entries": 29
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "cognee",
+      "entries": 68
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "blackhole",
+      "entries": 41
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "providers-auth",
+      "entries": 33
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "cli-packaging",
+      "entries": 46
+    },
+    {
+      "check": "area_completion",
+      "passed": true,
+      "area": "misc",
+      "entries": 43
+    },
+    {
+      "check": "all_areas_and_global_status",
+      "passed": true,
+      "areas": 16,
+      "entries": 791,
+      "publication_lock": true,
+      "overall_closeout_complete": false,
+      "phase": "published-boundary-blocked"
+    },
+    {
+      "check": "completed_generator_proof",
+      "passed": true,
+      "sha256": "7e4ebccc6cc543e9ca0050af33acfbbf03a76118cadb042634c60cdbd25c0563",
+      "generated_readme_preserved_in_boundary_archive": true
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "tools/fix-spacing.mjs",
+      "sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/spacing-dry-run.json",
+      "sha256": "359661c1c16d87315ad6cbdffb1239c768a59e73d3829e2d355ad01ac3c13de7"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/spacing-validation.json",
+      "sha256": "3f209aeacef73eb7af2a2f671928654ac3dfaa5f464133fa3760068663db8257"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/spacing-review.json",
+      "sha256": "bacdf41827d8938933943572cc95979b48af3dbaec73aa65b3533a3ff382b943"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/spacing-residual-dry-run.json",
+      "sha256": "30413c47b14320dd185955e1623ddfa6d8963c72ce5e9de4515a75313cf4c280"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/lane-residual-spacing-review.json",
+      "sha256": "e848581f4710a4ab501025fe66585060b87d826b9c1fdb9059e366988e331215"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/spacing-residual-validation.json",
+      "sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36"
+    },
+    {
+      "check": "generator_spacing_artifact_still_preserved",
+      "passed": true,
+      "path": "evidence/lane-residual-spacing-render-parity.json",
+      "sha256": "8424fe313b3ec73f02f5fb5b54fb71853a463762925bbc3f2f831f74dc1a6bd9"
+    },
+    {
+      "check": "boundary_status_amendment",
+      "passed": true,
+      "sha256": "ddf23efca931a9ef9d80e0e6e712b24d313cf9aecbc99b30e777559353ad9844"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/README.before.md",
+      "sha256": "4dbec9460799db532271a00aab9b50ad19e1086d9798650b0720532a15190752"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/RESUME.before.md",
+      "sha256": "a3232f8a4d1b69bfb0d8944a9ba50973101a30e94cd322a19fe006ce625dee99"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/progress.before.json",
+      "sha256": "962b0adf42d2ef0daefedcbc5cda7758562cecbbe6f60e81a7178d880b113846"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/closeout-completion.before.json",
+      "sha256": "9a574c79e202507963e8b0fe187c87fc4a8c3bc7bfdbc9710f5d5921d8c7002e"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/final-validation.before.json",
+      "sha256": "e52e7c38de61fe1dbcb17c928f9f688e98df23e4131d751f2a3bc8f5ee659b78"
+    },
+    {
+      "check": "boundary_status_archive",
+      "passed": true,
+      "path": "evidence/closeout-boundary/final-prose-spacing-check.before.json",
+      "sha256": "090060cee7e68a8317d17808aee8fa1c56f47026162f6aa61044bf5917713761"
+    },
+    {
+      "check": "qualified_metadata_binding",
+      "passed": true,
+      "path": "README.md",
+      "sha256": "737c14f00545c50cd68f1dbfbb0c26eea0e22271897706e44a9e1d63a1ea14f1"
+    },
+    {
+      "check": "qualified_metadata_binding",
+      "passed": true,
+      "path": "evidence/RESUME.md",
+      "sha256": "d480faf7ec8eb78856e05cebd9506265c6f162d4c4ce5bc58b6aa6be760d02f1"
+    },
+    {
+      "check": "qualified_metadata_binding",
+      "passed": true,
+      "path": "evidence/progress.json",
+      "sha256": "d7b28f8a5e8a4a1a09539af0464228ae6a0d385cb423accd8b60aebcdc73b737"
+    },
+    {
+      "check": "qualified_metadata_binding",
+      "passed": true,
+      "path": "evidence/closeout-boundary/closeout-completion.qualified-before-final-gate.json",
+      "sha256": "afe37b23146aeaa3f5a232538fb927a8eb331898272defd14c91c20300442cca"
+    },
+    {
+      "check": "qualified_final_checkpoint",
+      "passed": true,
+      "checkpoint_sha256": "6a2b71e1d727e56f24f1a70cbceaf37a50b9192a561c5ccd9ca4a7838a5dba01",
+      "final_gate_sha256": "565f443c7374db467568d9bf16dfc837898dceebf15f9afbbac773de2fdb511b",
+      "source_publication_complete": true,
+      "overall_closeout_complete": false
+    },
+    {
+      "check": "current_headings_and_history",
+      "passed": true,
+      "historical_resume_suffix_sha256": "62a800055db4627b5a8cabc87b9ba7dfbf4b42ce2baf58fbb1678b2ac7a99ca1",
+      "readme_sha256": "737c14f00545c50cd68f1dbfbb0c26eea0e22271897706e44a9e1d63a1ea14f1",
+      "resume_sha256": "d480faf7ec8eb78856e05cebd9506265c6f162d4c4ce5bc58b6aa6be760d02f1"
+    },
+    {
+      "check": "previous_final_prose_check_archived",
+      "passed": true,
+      "archive": "evidence/closeout-boundary/final-prose-spacing-check.before.json"
+    }
+  ],
+  "original_audit": {
+    "root": "/home/mewtwo/Zks/ice-rust/docs/ice-gap",
+    "files": 548,
+    "bytes": 119383594,
+    "exact_copy_time_inventory_match": true,
+    "inventory_sha256": "46e6adbc1b74be6f7efb767f0987fe26f68eca9362c453edde4e3a7be3ac654e",
+    "copy_receipt_sha256": "4634be07376f6415a0d41c7c6dc0691a827ba15dc81952a67cd30f239b7f56c0",
+    "note": "This preserves the copy-time snapshot. It does not recover the unavailable original first-pass spacing preview."
+  },
+  "identities": {
+    "typescript": {
+      "root": "/home/mewtwo/Zks/ice",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void",
+      "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n",
+      "status_sha256": "14bdd0bd9c4a472aa17a3d0d0f36bbe0cb88e848ef6a5dd5e6b3730df0101830"
+    },
+    "original_rust": {
+      "root": "/home/mewtwo/Zks/ice-rust",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main",
+      "status": "?? .icers/\n?? .least/\n?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n",
+      "status_sha256": "249da2167e6f3af27cbe17af4b7c54be7be1e77de08a43788d975e4bc047cc67"
+    },
+    "active_rust": {
+      "root": "/home/mewtwo/Zykairotis/ice-rust",
+      "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+      "branch": "main",
+      "status": "?? .least/\n?? docs/ice-gap/\n",
+      "status_sha256": "e3c28e57a0089451df19a15f2c571edab2dd236286ef985b48e6ba1babe38c01"
+    }
+  },
+  "active_origin": "https://github.com/Zyk-Void/ice-rust.git",
+  "active_tracked_diff_names": "",
+  "python_residue": [],
+  "audit_totals": {
+    "areas": 16,
+    "entries": 791,
+    "statuses": {
+      "partial": 404,
+      "missing": 351,
+      "different-by-design": 36
+    },
+    "ledger": {
+      "ledger_rows": 872,
+      "mapped": 860,
+      "not_applicable": 12,
+      "pending": 0,
+      "entry_count": 791,
+      "first_pass_claims": 147,
+      "surface_counts": {
+        "cli": {
+          "total": 170,
+          "pending": 0
+        },
+        "environment": {
+          "total": 284,
+          "pending": 0
+        },
+        "extension-api": {
+          "total": 286,
+          "pending": 0
+        },
+        "hooks": {
+          "total": 182,
+          "pending": 0
+        },
+        "keybindings": {
+          "total": 186,
+          "pending": 0
+        },
+        "observability": {
+          "total": 90,
+          "pending": 0
+        },
+        "paths": {
+          "total": 254,
+          "pending": 0
+        },
+        "providers-auth": {
+          "total": 120,
+          "pending": 0
+        },
+        "rpc": {
+          "total": 570,
+          "pending": 0
+        },
+        "session-types": {
+          "total": 83,
+          "pending": 0
+        },
+        "settings": {
+          "total": 1092,
+          "pending": 0
+        },
+        "slash-commands": {
+          "total": 67,
+          "pending": 0
+        },
+        "tools": {
+          "total": 64,
+          "pending": 0
+        },
+        "tui": {
+          "total": 527,
+          "pending": 0
+        }
+      }
+    },
+    "surface_rows": 3975,
+    "native_defects": 70,
+    "native_defect_severity": {
+      "high": 26,
+      "medium": 41,
+      "low": 3
+    },
+    "first_pass_dispositions": {
+      "supported": 54,
+      "qualified": 50,
+      "corrected": 44,
+      "reviewed": 3,
+      "qualified-with-unverified-detail": 5,
+      "informational-exclusion": 1,
+      "confirmed-with-scope": 2,
+      "recommendation-reviewed": 1
+    }
+  },
+  "gate": {
+    "path": "evidence/final-validation.json",
+    "sha256": "e1909d33d38e99528f442de7075866577ae623e6684a202f0904591ca20031fc",
+    "captured_at": "2026-10-20T07:53:13.658996+00:00",
+    "phase": "active",
+    "passed": true,
+    "issues": 0,
+    "warnings": 2423,
+    "source_reference_count": 12263
+  },
+  "helper_validation": {
+    "path": "evidence/relocated-helper-validation.json",
+    "sha256": "7d03243156da61c699c4e77a7400ced2861e561e526b91ab01c0cde128d42e15",
+    "summary": {
+      "helpers": 142,
+      "syntax_passed": 142,
+      "syntax_failed": 0,
+      "safe_validator_executions": 18,
+      "safe_validator_failures": 0,
+      "issues": 0
+    },
+    "current_helper_inventory_sha256": "a669562dc5bf9805826e6dd5e82ff6de8a2068c63bfdd22a4839488f2889d077"
+  },
+  "final_prose_check": {
+    "path": "evidence/final-prose-spacing-check.json",
+    "sha256": "730767961b3393f25f770af7fed4a4f8cd58301fba92fefd240e04a49fbe74fb",
+    "passed": true,
+    "remaining_real_prose_glue": 0,
+    "inputs": 50,
+    "actual_command": "node docs/ice-gap/tools/fix-spacing.mjs residual-check",
+    "exit_code": 0
+  },
+  "checkpoint": {
+    "path": "evidence/closeout-completion.json",
+    "sha256": "6a2b71e1d727e56f24f1a70cbceaf37a50b9192a561c5ccd9ca4a7838a5dba01"
+  },
+  "integrity_exception": {
+    "original_first_pass_preview_recovered": false,
+    "full_first_pass_validation_and_review_preserved": true,
+    "correction_record": "evidence/active-closeout-corrections.json",
+    "correction_record_sha256": "659e39b9484ca1e03716c62159c3219ce2a9d210bf5136526ec2496ae8303d58"
+  },
+  "independent_review": {
+    "unfinished": true,
+    "moved_unchanged": true,
+    "files": [
+      {
+        "path": "evidence/independent-review/baseline.json",
+        "sha256": "41ba223382e1f29a6c938535022bac95e15406b068f2e1dd8cec29e6a4956ef4"
+      },
+      {
+        "path": "evidence/independent-review/README.md",
+        "sha256": "b548421dac01a89659d1d991f5a3dc57d6d1b769f4e12ff3f6b6544df16c8126"
+      }
+    ]
+  },
+  "scope": {
+    "source_only": true,
+    "application_or_test_execution": false,
+    "no_commits_branches_pushes_installs_or_network_operations": true,
+    "blocked_directory_not_inspected_or_modified": true,
+    "no_application_source_changes_by_this_closeout": true
+  },
+  "recovery_point": "evidence/RESUME.md",
+  "remaining_action": "None.",
+  "resolved_issues": [
+    {
+      "id": "BOUNDARY-001",
+      "kind": "unexpected_active_checkout_path",
+      "path": ".least/",
+      "expected_status": "?? docs/ice-gap/\n",
+      "actual_status": "?? .least/\n?? docs/ice-gap/\n",
+      "access_blocked": true,
+      "contents_and_provenance_unverified": true,
+      "exception": "evidence/closeout-boundary-exception.json"
+    }
+  ],
+  "resolved_at": "2026-10-20T07:53:42.329970+00:00",
+  "resolution": "evidence/closeout-boundary-resolution.json"
+}

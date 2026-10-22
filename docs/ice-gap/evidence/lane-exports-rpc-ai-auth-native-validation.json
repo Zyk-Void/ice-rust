@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "review_date": "2026-10-20",
+  "artifact": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+  "artifact_sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7",
+  "source_map": "evidence/active-checkout-diff-hunks-complete.json",
+  "source_map_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+  "totals": {
+    "files": 67,
+    "hunks": 365,
+    "exact_change_blocks": 367,
+    "redaction_markers": 0
+  },
+  "checks": [
+    "Exact assigned changed-file set matches the captured map.",
+    "Old/active paths, full-file SHA-256 values, and captured diff hashes match.",
+    "Every hunk has exact old/active ranges, body text, classification, and confirmation.",
+    "Hunk body old/new line counts match each unified header; every exact change block is covered once.",
+    "This validates saved review evidence; no application/build/test execution occurred."
+  ],
+  "errors": []
+}

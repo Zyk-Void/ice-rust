@@ -16,7 +16,9 @@ use ice_ai::Provider;
 use ice_harness::agent_harness::{AgentHarness, AgentLane, HarnessRunOutcome, SendMessageResult};
 use ice_harness::messages::create_custom_message;
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
-use ice_harness::session::types::{Entry, EntryOrder, EntryQuery, RecordQuery, SessionMetadata};
+use ice_harness::session::types::{
+    Entry, EntryOrder, EntryQuery, ProvisionedEntry, ProvisionedKind, RecordQuery, SessionMetadata,
+};
 use ice_harness::session::{DefaultIdGenerator, Session};
 use ice_harness::types::{AgentHarnessOptions, HarnessTool, MessageDelivery, SendMessageOptions};
 use ice_tools::{create_write_tool, ExecutionToolContext, InMemoryExecutionEnv};
@@ -44,6 +46,7 @@ struct AppendDuringEvent {
     message: AgentMessage,
     send: Option<SendMessageOptions>,
     pause_after_delivery: bool,
+    pause_on_context_message_start: bool,
     delivered: Arc<tokio::sync::Notify>,
 }
 
@@ -62,6 +65,7 @@ impl AppendDuringEvent {
             message: context_message(),
             send: None,
             pause_after_delivery: false,
+            pause_on_context_message_start: false,
             delivered: Default::default(),
         }
     }
@@ -80,10 +84,20 @@ impl AgentEmitter for AppendDuringEvent {
         let injected_message = self.message.clone();
         let send = self.send;
         let pause_after_delivery = self.pause_after_delivery;
+        let pause_on_context_message_start = self.pause_on_context_message_start;
         let delivered = Arc::clone(&self.delivered);
         Box::pin(async move {
             observed.lock().unwrap().push(event.clone());
             let Some(harness) = harness else { return };
+            if pause_on_context_message_start
+                && matches!(
+                    &event,
+                    AgentEvent::MessageStart { message } if message == &context_message()
+                )
+            {
+                ready.notify_one();
+                proceed.notified().await;
+            }
             if inject {
                 // This await is inside the tool's event callback. Waiting for
                 // the run to end here would deadlock the tool itself.
@@ -179,8 +193,26 @@ async fn harness_with_compaction(
     restore: bool,
     compact: bool,
 ) -> (Arc<AgentHarness>, Arc<FauxProvider>) {
+    harness_with_env(
+        session,
+        script,
+        emitter,
+        restore,
+        compact,
+        Arc::new(InMemoryExecutionEnv::new()),
+    )
+    .await
+}
+
+async fn harness_with_env(
+    session: Session,
+    script: FauxScript,
+    emitter: Option<Arc<AppendDuringEvent>>,
+    restore: bool,
+    compact: bool,
+    env: Arc<InMemoryExecutionEnv>,
+) -> (Arc<AgentHarness>, Arc<FauxProvider>) {
     let provider = FauxProvider::new(script);
-    let env = Arc::new(InMemoryExecutionEnv::new());
     let tools = vec![HarnessTool::new(create_write_tool(
         &ExecutionToolContext::new(env.clone(), Some(env)),
     ))];
@@ -481,6 +513,184 @@ async fn acknowledged_context_survives_a_crash_and_is_not_duplicated_on_a_second
         1
     );
     validate_history(&restored).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn compacted_jsonl_history_reopens_with_tool_order_and_continues() {
+    use ice_harness::session::jsonl::{JsonlSessionStorage, JsonlV4Header};
+    use ice_harness::session::memory::{CounterIdGenerator, FakeClock};
+
+    let temp = tempfile::tempdir().unwrap();
+    let fs: Arc<dyn ice_tools::FileSystem> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        temp.path().to_path_buf(),
+    ));
+    let path = temp
+        .path()
+        .join("compacted-session.jsonl")
+        .to_string_lossy()
+        .into_owned();
+    let clock = Arc::new(FakeClock::new());
+    let ids = Arc::new(CounterIdGenerator::new());
+    let storage = JsonlSessionStorage::create(
+        fs.clone(),
+        &path,
+        JsonlV4Header::new(
+            "compacted-reopen".into(),
+            1,
+            "/project".into(),
+            None,
+            None,
+            None,
+        ),
+        clock.clone(),
+        ids.clone(),
+    )
+    .await
+    .unwrap();
+    let path = storage.jsonl_metadata().path;
+    let session = Session::new(Arc::new(storage), None);
+    session
+        .append_message(AgentMessage::User(ice_ai::types::UserMessage::new(
+            "old request",
+            1,
+        )))
+        .await
+        .unwrap();
+    session
+        .append_entry(
+            ProvisionedEntry {
+                id: "checkpoint".into(),
+                kind: ProvisionedKind::Compaction {
+                    summary: "summary retains important decisions".into(),
+                    retained_tail: vec![AgentMessage::User(ice_ai::types::UserMessage::new(
+                        "recent retained tail",
+                        2,
+                    ))],
+                    tokens_before: 900,
+                    details: None,
+                    usage: None,
+                },
+            },
+            "main",
+        )
+        .await
+        .unwrap();
+    let mut assistant_call = faux_assistant_message("", StopReason::ToolUse);
+    assistant_call.content = vec![Content::tool_call(
+        "call-1",
+        "write",
+        serde_json::json!({"path":"kept.txt", "content":"yes"}),
+    )];
+    session
+        .append_message(AgentMessage::Assistant(Box::new(assistant_call)))
+        .await
+        .unwrap();
+    session
+        .append_message(AgentMessage::ToolResult(Box::new(
+            ice_ai::types::ToolResultMessage {
+                role: ice_ai::types::ToolResultRole,
+                tool_call_id: "call-1".into(),
+                tool_name: "write".into(),
+                content: vec![Content::text("wrote kept.txt")],
+                details: None,
+                usage: None,
+                added_tool_names: Vec::new(),
+                is_error: false,
+                timestamp: 3,
+            },
+        )))
+        .await
+        .unwrap();
+    drop(session);
+
+    let reopened_storage = JsonlSessionStorage::load(fs, &path, clock, ids)
+        .await
+        .unwrap();
+    let reopened_session = Session::new(Arc::new(reopened_storage), None);
+    let script = FauxScript::new();
+    script.set_responses(vec![
+        FauxStep::factory(|ctx| {
+            assert_eq!(ctx.messages.len(), 5, "reopened provider context: {:?}", ctx.messages);
+            assert!(matches!(&ctx.messages[0], Message::User(message)
+                if matches!(&message.content, UserContent::Text(text) if text.contains("summary retains important decisions"))));
+            assert!(matches!(&ctx.messages[1], Message::User(message)
+                if matches!(&message.content, UserContent::Text(text) if text.contains("recent retained tail"))));
+            assert!(matches!(&ctx.messages[2], Message::Assistant(message)
+                if message.content.iter().any(|block| matches!(block, Content::ToolCall(call) if call.id == "call-1"))));
+            assert!(matches!(&ctx.messages[3], Message::ToolResult(result)
+                if result.tool_call_id == "call-1" && Content::text_only(&result.content, "\\n") == "wrote kept.txt"));
+            assert!(matches!(&ctx.messages[4], Message::User(message)
+                if matches!(&message.content, UserContent::Text(text) if text == "continue the work")));
+            faux_assistant_message(
+                vec![FauxBlock::tool_call(
+                    "write",
+                    serde_json::json!({"path":"continued.txt", "content":"continued"}),
+                )],
+                StopReason::ToolUse,
+            )
+        }),
+        FauxStep::factory(|ctx| {
+            let new_call = ctx.messages.iter().rev().find_map(|message| match message {
+                Message::Assistant(assistant) => assistant.content.iter().find_map(|block| match block {
+                    Content::ToolCall(call) if call.name == "write" => Some(call),
+                    _ => None,
+                }),
+                _ => None,
+            }).expect("continued tool call in context");
+            let call_index = ctx.messages.iter().position(|message| matches!(message,
+                Message::Assistant(assistant) if assistant.content.iter().any(|block|
+                    matches!(block, Content::ToolCall(call) if call.id == new_call.id))
+            )).expect("continued tool call position");
+            assert!(matches!(ctx.messages.get(call_index + 1), Some(Message::ToolResult(result))
+                if result.tool_call_id == new_call.id && Content::text_only(&result.content, "\\n").contains("continued.txt")),
+                "continued tool result must immediately follow its call: {:?}", ctx.messages);
+            faux_assistant_message("continued after compacted history", StopReason::Stop)
+        }),
+    ]);
+    let (reopened, provider) = harness(reopened_session, script, None, true).await;
+
+    let all_entries = history(&reopened, "main").await;
+    assert!(all_entries.iter().any(|entry| entry.id() == "checkpoint"));
+    assert!(all_entries
+        .iter()
+        .any(|entry| matches!(entry, Entry::Message(message)
+        if matches!(&message.message, AgentMessage::User(user)
+            if matches!(&user.content, UserContent::Text(text) if text == "old request")))));
+    let context = reopened.context_snapshot().await.unwrap().context.messages;
+    assert!(
+        matches!(&context[0], AgentMessage::Custom(message)
+        if message.role == "compactionSummary"
+            && message.data.get("summary").and_then(serde_json::Value::as_str)
+                == Some("summary retains important decisions")),
+        "reopened context should begin with the checkpoint summary: {context:?}"
+    );
+    assert!(matches!(&context[1], AgentMessage::User(message)
+        if matches!(&message.content, UserContent::Text(text) if text == "recent retained tail")));
+    let call_id = match &context[2] {
+        AgentMessage::Assistant(message) => match &message.content[0] {
+            Content::ToolCall(call) => call.id.clone(),
+            other => panic!("expected retained tool call, got {other:?}"),
+        },
+        other => panic!("expected assistant tool call, got {other:?}"),
+    };
+    assert!(matches!(&context[3], AgentMessage::ToolResult(result)
+        if result.tool_call_id == call_id && result.content == vec![Content::text("wrote kept.txt")]));
+
+    let result = reopened
+        .prompt_text("continue the work", vec![])
+        .await
+        .unwrap();
+    assert!(matches!(
+        result.outcome,
+        HarnessRunOutcome::Completed { .. }
+    ));
+    assert_eq!(provider.state().call_count.load(Ordering::SeqCst), 2);
+    let final_context = reopened.context_snapshot().await.unwrap().context.messages;
+    assert!(
+        matches!(final_context.last(), Some(AgentMessage::Assistant(message))
+        if Content::text_only(&message.content, "\n").contains("continued after compacted history"))
+    );
+    validate_history(&reopened).await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -810,6 +1020,133 @@ async fn next_turn_takes_precedence_over_trigger_and_keeps_the_reserved_entry_id
         assert_eq!(history(&h, "main").await[0].id(), entry_id);
         validate_history(&h).await;
     }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn equal_text_queued_messages_keep_distinct_ids_and_images_across_restart() {
+    use ice_ai::types::{ImageContent, ImageContentType, UserMessage};
+    use ice_harness::session::types::QueueKind;
+
+    let session = fresh_session();
+    let image_message = |data: &str, mime_type: &str| {
+        AgentMessage::User(UserMessage::new(
+            UserContent::Blocks(vec![
+                Content::text("same text"),
+                Content::Image(ImageContent {
+                    kind: ImageContentType,
+                    data: data.into(),
+                    mime_type: mime_type.into(),
+                }),
+            ]),
+            7,
+        ))
+    };
+    let gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+    let (initial_harness, _) = harness(session.clone(), FauxScript::new(), None, false).await;
+    let first = initial_harness
+        .lane("main")
+        .steer(image_message(gif, "image/gif"))
+        .await
+        .unwrap();
+    let second = initial_harness
+        .lane("main")
+        .steer(image_message(png, "image/png"))
+        .await
+        .unwrap();
+    assert_ne!(first.entry_id, second.entry_id);
+    drop(initial_harness);
+
+    let (restored, _) = harness(session, FauxScript::new(), None, true).await;
+    let records = restored
+        .session()
+        .find_records(&RecordQuery::default())
+        .await
+        .unwrap();
+    let durable_ids: Vec<_> = records
+        .iter()
+        .filter_map(|record| match record {
+            ice_harness::session::types::LaneRecord::QueueEnqueued(enqueued)
+                if enqueued.queue == QueueKind::Steer =>
+            {
+                enqueued
+                    .target
+                    .get("id")
+                    .and_then(serde_json::Value::as_str)
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(durable_ids.len(), 2);
+    assert_ne!(durable_ids[0], durable_ids[1]);
+
+    let cleared = restored.lane("main").clear_queue().await.unwrap();
+    assert_eq!(cleared.steering, vec!["same text", "same text"]);
+    assert_eq!(cleared.images.len(), 2);
+    assert!(cleared
+        .images
+        .iter()
+        .all(|image| !image.data.is_empty() && image.mime_type.starts_with("image/")));
+    assert_eq!(
+        cleared
+            .images
+            .iter()
+            .map(|image| image.mime_type.as_str())
+            .collect::<Vec<_>>(),
+        vec!["image/gif", "image/png"]
+    );
+    assert_ne!(cleared.images[0].data, cleared.images[1].data);
+    validate_history(&restored).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn queue_cancel_racing_with_consumption_reports_already_consumed_once_drained() {
+    use ice_harness::agent_harness::CancelQueuedOutcome;
+
+    let mut emitter = AppendDuringEvent::new(on_start);
+    emitter.pause_on_context_message_start = true;
+    let emitter = Arc::new(emitter);
+    let (harness, _) = harness(
+        fresh_session(),
+        FauxScript::new().with_text("completed"),
+        Some(emitter.clone()),
+        false,
+    )
+    .await;
+    let queued = harness.lane("main").steer(context_message()).await.unwrap();
+    let run = {
+        let harness = harness.clone();
+        tokio::spawn(async move { harness.prompt_text("start", vec![]).await })
+    };
+    tokio::time::timeout(std::time::Duration::from_secs(5), emitter.ready.notified())
+        .await
+        .expect("the queue item reaches the agent loop");
+
+    let cancellation = harness
+        .lane("main")
+        .cancel_queued(&queued.entry_id)
+        .await
+        .unwrap();
+    assert_eq!(cancellation.outcome, CancelQueuedOutcome::AlreadyConsumed);
+    assert!(harness.get_entry(&queued.entry_id).await.unwrap().is_none());
+
+    emitter.proceed.notify_one();
+    let result = run.await.unwrap().unwrap();
+    assert!(matches!(
+        result.outcome,
+        HarnessRunOutcome::Completed { .. }
+    ));
+    let entries = history(&harness, "main").await;
+    let delivered: Vec<_> = entries
+        .iter()
+        .filter(|entry| entry.id() == queued.entry_id)
+        .collect();
+    assert_eq!(delivered.len(), 1);
+    assert!(matches!(
+        &delivered[0],
+        Entry::Message(entry) if entry.message == context_message()
+    ));
+    validate_history(&harness).await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -1442,6 +1779,68 @@ async fn switching_sessions_restores_all_delivery_queues_and_lanes_on_a_round_tr
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn session_switch_keeps_the_harness_launch_working_directory() {
+    use ice_harness::session::jsonl::{JsonlSessionStorage, JsonlV4Header};
+    use ice_harness::session::memory::{CounterIdGenerator, FakeClock};
+    use ice_tools::FileSystem;
+
+    let temp = tempfile::tempdir().unwrap();
+    let target_path = temp.path().join("target-session.jsonl");
+    let fs: Arc<dyn ice_tools::FileSystem> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        temp.path().to_path_buf(),
+    ));
+    let target_storage = JsonlSessionStorage::create(
+        fs,
+        target_path.to_string_lossy().as_ref(),
+        JsonlV4Header::new(
+            "target-session".into(),
+            1,
+            "/session-header-cwd".into(),
+            None,
+            None,
+            None,
+        ),
+        Arc::new(FakeClock::new()),
+        Arc::new(CounterIdGenerator::new()),
+    )
+    .await
+    .unwrap();
+    assert_eq!(target_storage.jsonl_metadata().cwd, "/session-header-cwd");
+    let target = Session::new(Arc::new(target_storage), None);
+
+    let env = Arc::new(InMemoryExecutionEnv::with_cwd("/launch-root".into()));
+    let (harness, _) = harness_with_env(
+        fresh_session(),
+        FauxScript::new()
+            .with_tool_call(
+                "write",
+                serde_json::json!({"path":"result.txt", "content":"launch cwd"}),
+            )
+            .with_text("done"),
+        None,
+        false,
+        false,
+        env.clone(),
+    )
+    .await;
+    harness.set_session(target).await.unwrap();
+    let result = harness
+        .prompt_text("write after switching", vec![])
+        .await
+        .unwrap();
+    assert!(matches!(
+        result.outcome,
+        HarnessRunOutcome::Completed { .. }
+    ));
+    assert!(env.exists("/launch-root/result.txt", None).await.unwrap());
+    assert!(!env
+        .exists("/session-header-cwd/result.txt", None)
+        .await
+        .unwrap());
+    validate_history(&harness).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn session_switch_waits_for_the_old_operation_to_finish() {
     let mut emitter = AppendDuringEvent::new(on_start);
     emitter.pause = true;
@@ -1719,6 +2118,7 @@ mod resume_admission {
     struct PausedStorage {
         inner: Arc<dyn SessionStorage>,
         armed: AtomicBool,
+        fail_queue_cancellation: AtomicBool,
         ready: tokio::sync::Notify,
         proceed: tokio::sync::Notify,
     }
@@ -1741,6 +2141,13 @@ mod resume_admission {
             self.inner.append_entry(entry, lane).await
         }
         async fn append_record(&self, record: LaneRecord) -> SessionResult<LaneRecord> {
+            if matches!(record, LaneRecord::QueueCancelled(_))
+                && self.fail_queue_cancellation.load(Ordering::SeqCst)
+            {
+                return Err(ice_harness::error::SessionError::storage(
+                    "injected queue cancellation persistence failure",
+                ));
+            }
             self.inner.append_record(record).await
         }
         async fn get_entry(&self, id: &str) -> SessionResult<Option<Entry>> {
@@ -1795,6 +2202,54 @@ mod resume_admission {
         }
     }
 
+    #[tokio::test]
+    async fn failed_durable_queue_cancellation_leaves_item_queued() {
+        let session = fresh_session();
+        let storage = Arc::new(PausedStorage {
+            inner: session.storage(),
+            armed: AtomicBool::new(false),
+            fail_queue_cancellation: AtomicBool::new(false),
+            ready: Default::default(),
+            proceed: Default::default(),
+        });
+        let (harness, _) = harness(
+            Session::new(storage.clone(), None),
+            FauxScript::new(),
+            None,
+            false,
+        )
+        .await;
+        let queued = harness.lane("main").steer(context_message()).await.unwrap();
+        storage
+            .fail_queue_cancellation
+            .store(true, Ordering::SeqCst);
+
+        assert!(harness
+            .lane("main")
+            .cancel_queued(&queued.entry_id)
+            .await
+            .is_err());
+        let pending = harness.lane("main").queued_messages().await.unwrap();
+        assert_eq!(
+            pending.steering.len(),
+            1,
+            "pending queue after failed cancel: {pending:?}"
+        );
+        let records = harness
+            .session()
+            .find_records(&RecordQuery::default())
+            .await
+            .unwrap();
+        assert!(records.iter().any(|record| matches!(record,
+            LaneRecord::QueueEnqueued(enqueued)
+                if enqueued.target.get("id").and_then(serde_json::Value::as_str)
+                    == Some(queued.entry_id.as_str())
+        )));
+        assert!(!records.iter().any(|record| matches!(record,
+            LaneRecord::QueueCancelled(cancelled) if cancelled.entry_id == queued.entry_id
+        )));
+    }
+
     async fn interrupted_session() -> Session {
         let source = fresh_session();
         let mut emitter = AppendDuringEvent::new(on_start);
@@ -1827,6 +2282,7 @@ mod resume_admission {
         let storage = Arc::new(PausedStorage {
             inner: source.storage(),
             armed: AtomicBool::new(false),
+            fail_queue_cancellation: AtomicBool::new(false),
             ready: Default::default(),
             proceed: Default::default(),
         });
@@ -1909,6 +2365,7 @@ mod resume_admission {
             let storage = Arc::new(PausedStorage {
                 inner: source.storage(),
                 armed: AtomicBool::new(false),
+                fail_queue_cancellation: AtomicBool::new(false),
                 ready: Default::default(),
                 proceed: Default::default(),
             });

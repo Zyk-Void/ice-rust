@@ -1,0 +1,493 @@
+{
+  "generated_at": "2026-10-20T03:08:39.415Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/coding-agent/src/core/extensions/runner.ts",
+      "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+      "emitted_ranges": [
+        [
+          198,
+          260
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "SwitchSessionHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:199",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ReloadHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:204",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ShutdownHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:206",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "emitSessionShutdownEvent",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/runner.ts:212",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/coding-agent/src/core/extensions/types.ts",
+      "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+      "emitted_ranges": [
+        [
+          562,
+          611
+        ],
+        [
+          615,
+          688
+        ],
+        [
+          699,
+          726
+        ],
+        [
+          745,
+          815
+        ],
+        [
+          977,
+          1136
+        ],
+        [
+          1248,
+          1297
+        ],
+        [
+          1629,
+          1721
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "defineTool",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:563",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ProjectTrustHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:592",
+          "covering_entries": [
+            "EXT-034"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionStartEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:616",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SessionInfoChangedEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:625",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SessionCompactEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:659",
+          "covering_entries": [
+            "EXT-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionShutdownEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:670",
+          "covering_entries": [
+            "EXT-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionTreeEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:700",
+          "covering_entries": [
+            "EXT-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SessionEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:708",
+          "covering_entries": [
+            "EXT-022"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AfterProviderResponseEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:746",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "AgentStartEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:766",
+          "covering_entries": [
+            "EXT-033"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "AgentSettledEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:777",
+          "covering_entries": [
+            "EXT-033"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "MessageStartEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:797",
+          "covering_entries": [
+            "EXT-033"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "BashToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:978",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "ReadToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:983",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "EditToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:988",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "WriteToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:993",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "GrepToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:998",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "FindToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1003",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "LsToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1008",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "CustomToolResultEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1013",
+          "covering_entries": [
+            "EXT-025"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "isBashToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1030",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isReadToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1033",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isEditToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1036",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isWriteToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1039",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isGrepToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1042",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isFindToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1045",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isLsToolResult",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1048",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1072",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1073",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1074",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1075",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1076",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1077",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1078",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1079",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "isToolCallEventType",
+          "kind": "runtime",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1083",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ExtensionEvent",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1088",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ExtensionHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1249",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SendMessageHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1630",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SendUserMessageHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1635",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "AppendEntryHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1640",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SetSessionNameHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1642",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "GetSessionNameHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1644",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "GetActiveToolsHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1646",
+          "covering_entries": [
+            "EXT-054"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "GetAllToolsHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1653",
+          "covering_entries": [
+            "EXT-054"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "GetCommandsHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1655",
+          "covering_entries": [
+            "EXT-054"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "SetActiveToolsHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1657",
+          "covering_entries": [
+            "EXT-054"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "RefreshToolsHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1659",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SetModelHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1661",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "GetThinkingLevelHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1663",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SetThinkingLevelHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1665",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "SetLabelHandler",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1667",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        },
+        {
+          "symbol": "ExtensionRuntimeState",
+          "kind": "type",
+          "ts": "ice:packages/coding-agent/src/core/extensions/types.ts:1673",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    }
+  ]
+}

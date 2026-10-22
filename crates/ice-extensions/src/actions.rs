@@ -606,6 +606,46 @@ impl ActionBridge {
     pub(crate) fn invocation_key(&self) -> Option<&str> {
         self.invocation.as_ref().map(|(_, key, _)| key.as_str())
     }
+    /// Stop admission from cancelled tool invocations. Cleanup mailboxes and
+    /// child-handle reclamation retain their own cancellation policies.
+    fn ensure_dispatchable(&self, action: RuntimeActionId) -> Result<(), String> {
+        if !self.is_active() {
+            return Err("runtime_action on a stale ActionBridge (session reloaded/swapped)".into());
+        }
+        let mutates_session = matches!(
+            action,
+            RuntimeActionId::SendMessage
+                | RuntimeActionId::SendUserMessage
+                | RuntimeActionId::AppendEntry
+                | RuntimeActionId::SetSessionName
+                | RuntimeActionId::SetActiveTools
+                | RuntimeActionId::SetModel
+                | RuntimeActionId::SetThinkingLevel
+                | RuntimeActionId::Compact
+                | RuntimeActionId::NewSession
+                | RuntimeActionId::Fork
+                | RuntimeActionId::NavigateTree
+                | RuntimeActionId::SwitchSession
+                | RuntimeActionId::Reload
+        );
+        if mutates_session
+            && self
+                .invocation
+                .as_ref()
+                .is_some_and(|(_, _, signal)| signal.is_cancelled())
+        {
+            return Err("runtime_action from a cancelled tool invocation".into());
+        }
+        if self.invocation.is_some()
+            && matches!(action, RuntimeActionId::NewSession | RuntimeActionId::Fork)
+        {
+            // These hosts wait for idle; the current tool cannot wait for itself.
+            return Err(
+                "session replacement cannot wait for its calling tool invocation; use a plugin command after the run settles".into(),
+            );
+        }
+        Ok(())
+    }
     pub(crate) fn enter_invocation(self: &Arc<Self>) -> InvocationGuard {
         InvocationGuard {
             previous: CURRENT_INVOCATION.with(|slot| slot.replace(Some(self.clone()))),
@@ -1035,14 +1075,11 @@ fn run_action(
     // `runtime_action` returns nonzero + `{"error": ...}` instead of racing
     // the swap. (The new bridge's pointer was handed to the reloaded plugins;
     // this guard only catches the race window where an old call is still parked.)
-    if !bridge.is_active() {
+    if let Err(error) = bridge.ensure_dispatchable(action) {
         if out.is_null() {
             return 1;
         }
-        let json = serde_json::json!({
-            "error": "runtime_action on a stale ActionBridge (session reloaded/swapped)"
-        })
-        .to_string();
+        let json = serde_json::json!({ "error": error }).to_string();
         unsafe {
             *out = StbString::from_string(json);
         }
@@ -1185,7 +1222,13 @@ fn run_action(
             let _ = tx.send(ui_dialog.handle(args));
         });
     } else {
+        let dispatch_bridge = bridge.clone();
         bridge.runtime.spawn(async move {
+            // Cancellation or reload may happen while dispatch waits for a worker.
+            if let Err(error) = dispatch_bridge.ensure_dispatchable(action) {
+                let _ = tx.send(Err(error));
+                return;
+            }
             let mut r = if action == RuntimeActionId::Reload {
                 if let Some(cb) = reload_cb {
                     cb().await;
@@ -1436,7 +1479,8 @@ mod tests {
     #[async_trait::async_trait]
     impl RuntimeActionHost for MockHost {
         async fn send_message(&self, _: serde_json::Value) -> Result<serde_json::Value, String> {
-            unreachable!("not under test")
+            self.saw.lock().unwrap().push(RuntimeActionId::SendMessage);
+            Ok(serde_json::Value::Null)
         }
         async fn send_user_message(
             &self,
@@ -1494,10 +1538,12 @@ mod tests {
             Ok(serde_json::json!({ "prompt": self.prompt }))
         }
         async fn new_session(&self, _: serde_json::Value) -> Result<serde_json::Value, String> {
-            unreachable!("not under test")
+            self.saw.lock().unwrap().push(RuntimeActionId::NewSession);
+            Ok(serde_json::Value::Null)
         }
         async fn fork(&self, _: serde_json::Value) -> Result<serde_json::Value, String> {
-            unreachable!("not under test")
+            self.saw.lock().unwrap().push(RuntimeActionId::Fork);
+            Ok(serde_json::Value::Null)
         }
         async fn navigate_tree(&self, _: serde_json::Value) -> Result<serde_json::Value, String> {
             unreachable!("not under test")
@@ -1658,6 +1704,85 @@ mod tests {
         drop(unsafe {
             ice_plugin_sdk::callbacks::OwnedString::from_raw(out, Some(crate::host_free_string))
         });
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn tool_invocation_cannot_wait_for_its_own_session_replacement() {
+        let host = Arc::new(MockHost {
+            prompt: String::new(),
+            saw: Mutex::new(Vec::new()),
+        });
+        let host_for_assert = Arc::clone(&host);
+        let bridge = ActionBridge::new(tokio::runtime::Handle::current(), host);
+        let invocation = bridge.for_invocation(false, tokio_util::sync::CancellationToken::new());
+        for action in [RuntimeActionId::NewSession, RuntimeActionId::Fork] {
+            let mut out = StbString::empty();
+            let rc = trampoline_runtime_action(
+                action.into(),
+                StbStringRef::from_str("{}"),
+                &mut out,
+                invocation.user_data(),
+            );
+            // SAFETY: the trampoline returned this host-owned string.
+            let payload = unsafe {
+                ice_plugin_sdk::callbacks::OwnedString::from_raw(out, Some(crate::host_free_string))
+            }
+            .to_string_lossy();
+            assert_eq!(
+                rc, 1,
+                "{action:?} must not wait for its calling tool: {payload}"
+            );
+            assert!(payload.contains("tool invocation"), "{payload}");
+        }
+        assert!(host_for_assert.saw.lock().unwrap().is_empty());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn cancelled_tool_invocation_rejects_session_mutations() {
+        let host = Arc::new(MockHost {
+            prompt: String::new(),
+            saw: Mutex::new(Vec::new()),
+        });
+        let host_for_assert = Arc::clone(&host);
+        let bridge = ActionBridge::new(tokio::runtime::Handle::current(), host);
+        let signal = tokio_util::sync::CancellationToken::new();
+        let invocation = bridge.for_invocation(false, signal.clone());
+        signal.cancel();
+
+        for action in [
+            RuntimeActionId::SendMessage,
+            RuntimeActionId::SendUserMessage,
+            RuntimeActionId::AppendEntry,
+            RuntimeActionId::SetSessionName,
+            RuntimeActionId::SetActiveTools,
+            RuntimeActionId::SetModel,
+            RuntimeActionId::SetThinkingLevel,
+            RuntimeActionId::Compact,
+            RuntimeActionId::NewSession,
+            RuntimeActionId::Fork,
+            RuntimeActionId::NavigateTree,
+            RuntimeActionId::SwitchSession,
+            RuntimeActionId::Reload,
+        ] {
+            let mut out = StbString::empty();
+            let rc = trampoline_runtime_action(
+                action.into(),
+                StbStringRef::from_str("{}"),
+                &mut out,
+                invocation.user_data(),
+            );
+            // SAFETY: the trampoline owns the returned string until reclaimed here.
+            let payload = unsafe {
+                ice_plugin_sdk::callbacks::OwnedString::from_raw(out, Some(crate::host_free_string))
+            }
+            .to_string_lossy();
+            assert_eq!(
+                rc, 1,
+                "{action:?} must reject a cancelled invocation: {payload}"
+            );
+            assert!(payload.contains("cancelled"), "{action:?}: {payload}");
+        }
+        assert!(host_for_assert.saw.lock().unwrap().is_empty());
     }
 
     /// B5d: an invalidated bridge rejects `runtime_action` with a stale-bridge

@@ -1,0 +1,553 @@
+{
+  "owner": "/root/exports_sub_session",
+  "method": "Directly returned source ranges with every observed connector redaction removed; hashes identify read file bytes, not unobserved line credit.",
+  "reads": [
+    {
+      "path": "ice:packages/agent/src/harness/compaction/branch-summarization.ts",
+      "sha256": "30d6923ad311d72ce9d1b3a50ed8fc1deb7e2d8ab43ba001c41907de2bc50ec9",
+      "ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "ranges": [
+        [
+          315,
+          424
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/compaction/compaction.ts",
+      "sha256": "0d8271b7935f0b03d85d7b8e1dbe99a2cbcf70fc1d3f382c1aa42b1a6f1532e9",
+      "ranges": [
+        [
+          600,
+          648
+        ],
+        [
+          650,
+          708
+        ]
+      ],
+      "excluded_redacted_lines": [
+        649
+      ]
+    },
+    {
+      "path": "ice:packages/agent/src/harness/compaction/utils.ts",
+      "sha256": "6070668fb9669dc09fc6b95e126d334fa4943adba22ef2d6d52fae4e0f138610",
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/session/context.ts",
+      "sha256": "dc8c32bebff5aabd896044994e70e8d47ced06e5170ff80aa1c6318680cbed9c",
+      "ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/session/testing/types.ts",
+      "sha256": "1ab3f2b81e03d9ece4fb34cc2643e1574c4950a436750d77ecacd77e685dd72c",
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/session/types.ts",
+      "sha256": "72c87b1e4e692d5c966dd523d0046e22a5afe314608460318e7b49cf367be074",
+      "ranges": [
+        [
+          1,
+          362
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/agent/src/harness/session/testing/conformance.ts",
+      "sha256": "491322900fff521f9a58068b4c732df20855334588d0dd7f65fdae59bd010972",
+      "ranges": [
+        [
+          70,
+          120
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session-runtime.ts",
+      "sha256": "4d0afdbd3280bffeb6224b906ee66ec3af0854ad9eb7b98aeb6855a59df948c7",
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session-services.ts",
+      "sha256": "0526cf8a643300c0e0e314d62c9bae42575808bd06940f52c981d2fc90737f4a",
+      "ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "37cd90246dd8cc37902b4b42e724f3b160cfbfaa54e0c9bd11ab3a70553995cb",
+      "ranges": [
+        [
+          155,
+          310
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/cache-stats.ts",
+      "sha256": "bc6326ffc5022f9f9bfc4e2a10889d8d805057aa6ab04309fd9a9e3e7dcd742b",
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "sha256": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "ranges": [
+        [
+          25,
+          75
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "sha256": "92bc9cbe1d803e9aacaf10eb7adb0e4ebd39da91e80f2145d6e72551e8ac3fcf",
+      "ranges": [
+        [
+          290,
+          377
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "ranges": [
+        [
+          25,
+          60
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "ranges": [
+        [
+          125,
+          165
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "ranges": [
+        [
+          250,
+          295
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "ranges": [
+        [
+          380,
+          455
+        ],
+        [
+          457,
+          500
+        ]
+      ],
+      "excluded_redacted_lines": [
+        456
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "2cc3b67c77380ed6fe413020fca570446b397f16441d18a8ff310a62f8be02dd",
+      "ranges": [
+        [
+          760,
+          786
+        ],
+        [
+          788,
+          870
+        ]
+      ],
+      "excluded_redacted_lines": [
+        787
+      ]
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/compaction/utils.ts",
+      "sha256": "1c9402db5fc48c5b38f1a7636702cc179a4da3c9e1d17d1d8f719294b848359d",
+      "ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/context-breakdown.ts",
+      "sha256": "f12691e3c60b9388de4c1ab5d0a4e3816974e5aed3cfc4d0a04adca8d23b03b3",
+      "ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/sdk.ts",
+      "sha256": "735504dabffe0fa780826fa826ee4cdcec944b21bc71670622a088c3228c17eb",
+      "ranges": [
+        [
+          85,
+          105
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/session-cwd.ts",
+      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "ranges": [
+        [
+          33,
+          135
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "ranges": [
+        [
+          315,
+          337
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "ranges": [
+        [
+          487,
+          505
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/session-manager.ts",
+      "sha256": "b95bd0cc2a2bda112e501522acf8b8f492585ea7775306d610a772cc9e827f2c",
+      "ranges": [
+        [
+          770,
+          790
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/usage-totals.ts",
+      "sha256": "ae43787b5b28702eea398c6583b1eb9d486ebf21a6e594d5a220eb6e72d85fae",
+      "ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/index.ts",
+      "sha256": "5c5b28894e1dea2e1d4eef37a87fba4747165fd9f239cc6d77e3d41e29a1aeff",
+      "ranges": [
+        [
+          130,
+          171
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/branch-cache.ts",
+      "sha256": "f93887640db460f95e98cb86c544913d239894f6c929d87d5af0cd062293a00e",
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/migrations.ts",
+      "sha256": "c243b1e9bd63dd058e3fcc2cd7bbbe26395f508db6201ce0b0e285b3be278fcb",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/repo.ts",
+      "sha256": "ac66f1e422915201eda4dd04633461ba3bd8307dd42623451b2284554a4ae1a3",
+      "ranges": [
+        [
+          80,
+          113
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/search-backend.ts",
+      "sha256": "9492b91ba53936d6466948bcf3789373b90184be1f6057366b811f063caaff8e",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/branch-entries.ts",
+      "sha256": "193df592857865ce47d1c54996a7ad2cca783ef03c998ed2dc74c9159d00d947",
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/branch-tips.ts",
+      "sha256": "5b99bab85ca4317d9f81d1b950fdbec50cb3719df57c959c95874549d66f5fbd",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/entries.ts",
+      "sha256": "13adc475c95dbb23b77ad159f561f37aa16d9637a0a4307f92c43a2a90c730cf",
+      "ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/facts.ts",
+      "sha256": "6afe000803f4d30e4520d7a52f136f825a4538614d181683c1c8b77c4f34f7fc",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/lanes.ts",
+      "sha256": "906b7af3da4c523e28189cb2fa48defd8e970a4b7169c394fdbd942006563a91",
+      "ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/leases.ts",
+      "sha256": "6310631a9a1d4ea3e864c5d5ba07e7d09024d0dfc9463b495112d68c48b01b91",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/records.ts",
+      "sha256": "d9e59d2b5112774875e989f6c917ffe4f8c5062df72dfe409acc7600879c2797",
+      "ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/session-sequences.ts",
+      "sha256": "23e1d9e65c2257bf72aaf1a1e6ebf8fa0edbe6b2220089bfd013fd74d1a99f88",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/session-stats.ts",
+      "sha256": "0c74aede8d9a40778c91df170e25716895456a95339bae8e203851b83894b0ad",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/storage/sessions.ts",
+      "sha256": "dcbaf0c873123c7f5405374cd6873da768028864e5260e910a3f368738c2a5a1",
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "ice:packages/storage/sqlite-node/src/sqlite/types.ts",
+      "sha256": "7f0363cb447f8428eda9e93a7be026b6c8eaf1d073aed115b502455f3b1fc608",
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "excluded_redacted_lines": []
+    }
+  ],
+  "native_reads": [
+    {
+      "path": "rust:crates/ice-harness/src/session/context.rs",
+      "ranges": [
+        [
+          1,
+          230
+        ]
+      ],
+      "evidence": "Connectme direct read_many in this lane"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/cache_stats.rs",
+      "ranges": [
+        [
+          1,
+          94
+        ],
+        [
+          96,
+          218
+        ]
+      ],
+      "excluded_redacted_lines": [
+        95
+      ],
+      "evidence": "Connectme direct read_many in this lane"
+    }
+  ],
+  "limitations": [
+    "No application code, tests or builds were executed.",
+    "The cache-stat native arithmetic expression at rust:crates/ice-harness/src/cache_stats.rs:95 was connector-redacted; it is excluded and not recovered.",
+    "Generic/coding compaction token-expression lines ice:packages/agent/src/harness/compaction/compaction.ts:649 and ice:packages/coding-agent/src/core/compaction/compaction.ts:456,787 were connector-redacted; excluded from this lane read credit."
+  ]
+}

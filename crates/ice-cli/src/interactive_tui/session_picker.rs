@@ -469,14 +469,18 @@ pub(super) fn open(
         picker.clone(),
         SelectorKind::Session,
     );
-    let current = crate::session::default_session_dir(cwd);
+    let current = crate::session::session_dir(cwd);
     let directories = crate::config::agent_dir()
         .map(|agent| crate::session_catalog::known_directories(&agent, &current))
         .unwrap_or_else(|_| vec![current]);
     let weak = Arc::downgrade(&picker);
     let tui = tui.clone();
+    let chat = state.chat_container.clone();
     std::thread::spawn(move || {
-        let rows = crate::session_catalog::load_rows(&directories);
+        let (rows, skipped) = crate::session_catalog::load_rows_with_skipped(&directories);
+        if let Some(warning) = crate::session::session_discovery_warning(&skipped) {
+            add_note_message(&chat, &warning);
+        }
         if let Some(picker) = weak.upgrade() {
             *picker.rows.lock().unwrap() = Arc::new(rows);
             picker.loading.store(false, Ordering::Relaxed);

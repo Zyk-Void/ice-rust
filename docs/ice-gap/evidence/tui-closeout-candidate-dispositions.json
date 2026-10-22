@@ -1,0 +1,3338 @@
+{
+  "area": "tui",
+  "owner": "/root/tui_closeout",
+  "source_only": true,
+  "original_candidate_count": 923,
+  "pending_at_start": 390,
+  "dispositions": [
+    {
+      "candidate_id": "C000511",
+      "disposition": "mapped",
+      "entry_id": "TUI-037",
+      "reason": "Git path discovery, status parsing, WSL watcher policy and footer subscriptions are compared in the linked entry; a local path expression is not a separately fixed product filename."
+    },
+    {
+      "candidate_id": "C000512",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-037"
+      ],
+      "reason": "Mechanical filesystem target expression \"gitPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-037; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000513",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-037"
+      ],
+      "reason": "Mechanical filesystem target expression \"gitPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-037; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000514",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-037"
+      ],
+      "reason": "Mechanical filesystem target expression \"commonDirPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-037; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000515",
+      "disposition": "mapped",
+      "entry_id": "TUI-037",
+      "reason": "Git path discovery, status parsing, WSL watcher policy and footer subscriptions are compared in the linked entry; a local path expression is not a separately fixed product filename."
+    },
+    {
+      "candidate_id": "C000516",
+      "disposition": "mapped",
+      "entry_id": "TUI-037",
+      "reason": "Git path discovery, status parsing, WSL watcher policy and footer subscriptions are compared in the linked entry; a local path expression is not a separately fixed product filename."
+    },
+    {
+      "candidate_id": "C000517",
+      "disposition": "mapped",
+      "entry_id": "TUI-037",
+      "reason": "Git path discovery, status parsing, WSL watcher policy and footer subscriptions are compared in the linked entry; a local path expression is not a separately fixed product filename."
+    },
+    {
+      "candidate_id": "C000518",
+      "disposition": "mapped",
+      "entry_id": "TUI-037",
+      "reason": "Git path discovery, status parsing, WSL watcher policy and footer subscriptions are compared in the linked entry; a local path expression is not a separately fixed product filename."
+    },
+    {
+      "candidate_id": "C000519",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-037"
+      ],
+      "reason": "Mechanical filesystem target expression \"this.gitPaths.headPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-037; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000520",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-037"
+      ],
+      "reason": "Mechanical filesystem target expression \"this.gitPaths.headPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-037; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000524",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C000525",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-048"
+      ],
+      "reason": "Mechanical filesystem target expression \"path\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-048; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C000526",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001246",
+      "disposition": "mapped",
+      "entry_id": "TUI-022",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001247",
+      "disposition": "mapped",
+      "entry_id": "TUI-022",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001248",
+      "disposition": "mapped",
+      "entry_id": "TUI-019",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001249",
+      "disposition": "mapped",
+      "entry_id": "TUI-019",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001250",
+      "disposition": "mapped",
+      "entry_id": "TUI-019",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001251",
+      "disposition": "mapped",
+      "entry_id": "TUI-021",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001252",
+      "disposition": "mapped",
+      "entry_id": "TUI-022",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001253",
+      "disposition": "mapped",
+      "entry_id": "TUI-009",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001254",
+      "disposition": "mapped",
+      "entry_id": "TUI-019",
+      "reason": "Customizer callback/result or component contract; staged data and apply/cancel ownership are described in the linked entry."
+    },
+    {
+      "candidate_id": "C001255",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-021"
+      ],
+      "reason": "Mechanical filesystem target expression \"source\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-021; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001256",
+      "disposition": "mapped",
+      "entry_id": "TUI-023",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001257",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-023"
+      ],
+      "reason": "The literal customType system belongs to an appearance preview fixture; it is not a separately registered or persisted production message type. The preview scene and its cleanup are audited in TUI-023."
+    },
+    {
+      "candidate_id": "C001258",
+      "disposition": "mapped",
+      "entry_id": "TUI-071",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001259",
+      "disposition": "mapped",
+      "entry_id": "TUI-028",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001260",
+      "disposition": "mapped",
+      "entry_id": "TUI-028",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001261",
+      "disposition": "mapped",
+      "entry_id": "TUI-035",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001262",
+      "disposition": "mapped",
+      "entry_id": "TUI-042",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001263",
+      "disposition": "mapped",
+      "entry_id": "TUI-030",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001264",
+      "disposition": "mapped",
+      "entry_id": "TUI-030",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001265",
+      "disposition": "mapped",
+      "entry_id": "TUI-068",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001266",
+      "disposition": "mapped",
+      "entry_id": "TUI-068",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001267",
+      "disposition": "mapped",
+      "entry_id": "TUI-068",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001268",
+      "disposition": "mapped",
+      "entry_id": "TUI-058",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001269",
+      "disposition": "mapped",
+      "entry_id": "TUI-058",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001270",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001271",
+      "disposition": "mapped",
+      "entry_id": "TUI-049",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001272",
+      "disposition": "mapped",
+      "entry_id": "TUI-029",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001273",
+      "disposition": "mapped",
+      "entry_id": "TUI-029",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001274",
+      "disposition": "mapped",
+      "entry_id": "TUI-071",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001275",
+      "disposition": "mapped",
+      "entry_id": "TUI-036",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001276",
+      "disposition": "mapped",
+      "entry_id": "TUI-036",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001277",
+      "disposition": "mapped",
+      "entry_id": "TUI-005",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001278",
+      "disposition": "mapped",
+      "entry_id": "TUI-073",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001279",
+      "disposition": "mapped",
+      "entry_id": "TUI-073",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001280",
+      "disposition": "mapped",
+      "entry_id": "TUI-073",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001281",
+      "disposition": "mapped",
+      "entry_id": "TUI-073",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001282",
+      "disposition": "mapped",
+      "entry_id": "TUI-073",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001283",
+      "disposition": "mapped",
+      "entry_id": "TUI-070",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001284",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001285",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001286",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001287",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001288",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001289",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001290",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001291",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001292",
+      "disposition": "mapped",
+      "entry_id": "TUI-038",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001293",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "Effective configured key display, platform labels and hint formatting; this surface does not create an additional binding."
+    },
+    {
+      "candidate_id": "C001294",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "Effective configured key display, platform labels and hint formatting; this surface does not create an additional binding."
+    },
+    {
+      "candidate_id": "C001295",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "Effective configured key display, platform labels and hint formatting; this surface does not create an additional binding."
+    },
+    {
+      "candidate_id": "C001296",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "Effective configured key display, platform labels and hint formatting; this surface does not create an additional binding."
+    },
+    {
+      "candidate_id": "C001297",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "Effective configured key display, platform labels and hint formatting; this surface does not create an additional binding."
+    },
+    {
+      "candidate_id": "C001298",
+      "disposition": "mapped",
+      "entry_id": "TUI-047",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001299",
+      "disposition": "mapped",
+      "entry_id": "TUI-028",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001300",
+      "disposition": "mapped",
+      "entry_id": "TUI-044",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001301",
+      "disposition": "mapped",
+      "entry_id": "TUI-057",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001302",
+      "disposition": "mapped",
+      "entry_id": "TUI-054",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001303",
+      "disposition": "mapped",
+      "entry_id": "TUI-054",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001304",
+      "disposition": "mapped",
+      "entry_id": "TUI-046",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001305",
+      "disposition": "mapped",
+      "entry_id": "TUI-046",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001306",
+      "disposition": "mapped",
+      "entry_id": "TUI-027",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001307",
+      "disposition": "mapped",
+      "entry_id": "TUI-043",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001308",
+      "disposition": "mapped",
+      "entry_id": "TUI-043",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001309",
+      "disposition": "mapped",
+      "entry_id": "TUI-045",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001310",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001311",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001312",
+      "disposition": "mapped",
+      "entry_id": "TUI-062",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001313",
+      "disposition": "mapped",
+      "entry_id": "TUI-062",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001314",
+      "disposition": "mapped",
+      "entry_id": "TUI-062",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001315",
+      "disposition": "mapped",
+      "entry_id": "TUI-062",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001316",
+      "disposition": "mapped",
+      "entry_id": "TUI-063",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001317",
+      "disposition": "mapped",
+      "entry_id": "TUI-063",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001318",
+      "disposition": "mapped",
+      "entry_id": "TUI-064",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001319",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: autoCompact: boolean;"
+    },
+    {
+      "candidate_id": "C001320",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: compactionThresholdPercent: number;"
+    },
+    {
+      "candidate_id": "C001321",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: midRunCompaction: MidRunCompaction;"
+    },
+    {
+      "candidate_id": "C001322",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: showImages: boolean;"
+    },
+    {
+      "candidate_id": "C001323",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: imageWidthCells: number;"
+    },
+    {
+      "candidate_id": "C001324",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: autoResizeImages: boolean;"
+    },
+    {
+      "candidate_id": "C001325",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: blockImages: boolean;"
+    },
+    {
+      "candidate_id": "C001326",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: enableSkillCommands: boolean;"
+    },
+    {
+      "candidate_id": "C001327",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: steeringMode: \"all\" | \"one-at-a-time\";"
+    },
+    {
+      "candidate_id": "C001328",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: followUpMode: \"all\" | \"one-at-a-time\";"
+    },
+    {
+      "candidate_id": "C001329",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: transport: Transport;"
+    },
+    {
+      "candidate_id": "C001330",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: httpIdleTimeoutMs: number;"
+    },
+    {
+      "candidate_id": "C001331",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: thinkingLevel: ThinkingLevel;"
+    },
+    {
+      "candidate_id": "C001332",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: availableThinkingLevels: ThinkingLevel[];"
+    },
+    {
+      "candidate_id": "C001333",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: fastMode: boolean; TUI-083 and SESSION-036 own capability-gated fast-mode actions."
+    },
+    {
+      "candidate_id": "C001334",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: fastModeAvailable: boolean; TUI-083 and SESSION-036 own capability-gated fast-mode actions."
+    },
+    {
+      "candidate_id": "C001335",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: currentTheme: string;"
+    },
+    {
+      "candidate_id": "C001336",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: terminalTheme: TerminalTheme;"
+    },
+    {
+      "candidate_id": "C001337",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: availableThemes: string[];"
+    },
+    {
+      "candidate_id": "C001338",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: hideThinkingBlock: boolean;"
+    },
+    {
+      "candidate_id": "C001339",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: showCacheMissNotices: boolean;"
+    },
+    {
+      "candidate_id": "C001340",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: collapseChangelog: boolean;"
+    },
+    {
+      "candidate_id": "C001341",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: enableInstallTelemetry: boolean;"
+    },
+    {
+      "candidate_id": "C001342",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: doubleEscapeAction: \"fork\" | \"tree\" | \"none\";"
+    },
+    {
+      "candidate_id": "C001343",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: treeFilterMode: \"default\" | \"no-tools\" | \"user-only\" | \"labeled-only\" | \"all\";"
+    },
+    {
+      "candidate_id": "C001344",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: showHardwareCursor: boolean;"
+    },
+    {
+      "candidate_id": "C001345",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: editorPaddingX: number;"
+    },
+    {
+      "candidate_id": "C001346",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: outputPad: 0 | 1;"
+    },
+    {
+      "candidate_id": "C001347",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: autocompleteMaxVisible: number;"
+    },
+    {
+      "candidate_id": "C001348",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: quietStartup: boolean;"
+    },
+    {
+      "candidate_id": "C001349",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: defaultProjectTrust: DefaultProjectTrust;"
+    },
+    {
+      "candidate_id": "C001350",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: clearOnShrink: boolean;"
+    },
+    {
+      "candidate_id": "C001351",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: showTerminalProgress: boolean;"
+    },
+    {
+      "candidate_id": "C001352",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: uiMode: UiMode;"
+    },
+    {
+      "candidate_id": "C001353",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: footerStyle: \"compact\" | \"legacy\";"
+    },
+    {
+      "candidate_id": "C001354",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: toolStyle: \"compact\" | \"boxed\";"
+    },
+    {
+      "candidate_id": "C001355",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: symbols: \"auto\" | \"unicode\" | \"nerd\" | \"ascii\";"
+    },
+    {
+      "candidate_id": "C001356",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: fullscreenScrollbar: ScrollViewScrollbar;"
+    },
+    {
+      "candidate_id": "C001357",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: warnings: WarningSettings;"
+    },
+    {
+      "candidate_id": "C001358",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: tableStyle: string;"
+    },
+    {
+      "candidate_id": "C001359",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: inputBorderStyle: string;"
+    },
+    {
+      "candidate_id": "C001360",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: thinkingIntervalMs: number;"
+    },
+    {
+      "candidate_id": "C001361",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: extensionSettings?: RegisteredSettings[];"
+    },
+    {
+      "candidate_id": "C001362",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onAutoCompactChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001363",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onCompactionThresholdPercentChange: (thresholdPercent: number) => void;"
+    },
+    {
+      "candidate_id": "C001364",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onMidRunCompactionChange: (mode: MidRunCompaction) => void;"
+    },
+    {
+      "candidate_id": "C001365",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onShowImagesChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001366",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onImageWidthCellsChange: (width: number) => void;"
+    },
+    {
+      "candidate_id": "C001367",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onAutoResizeImagesChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001368",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onBlockImagesChange: (blocked: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001369",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onEnableSkillCommandsChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001370",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onSteeringModeChange: (mode: \"all\" | \"one-at-a-time\") => void;"
+    },
+    {
+      "candidate_id": "C001371",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onFollowUpModeChange: (mode: \"all\" | \"one-at-a-time\") => void;"
+    },
+    {
+      "candidate_id": "C001372",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onTransportChange: (transport: Transport) => void;"
+    },
+    {
+      "candidate_id": "C001373",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onHttpIdleTimeoutMsChange: (timeoutMs: number) => void;"
+    },
+    {
+      "candidate_id": "C001374",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onThinkingLevelChange: (level: ThinkingLevel) => void;"
+    },
+    {
+      "candidate_id": "C001375",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onFastModeChange: (enabled: boolean) => void; TUI-083 and SESSION-036 own capability-gated fast-mode actions."
+    },
+    {
+      "candidate_id": "C001376",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onThemeChange: (theme: string) => void;"
+    },
+    {
+      "candidate_id": "C001377",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onThemePreview?: (theme: string) => void;"
+    },
+    {
+      "candidate_id": "C001378",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onHideThinkingBlockChange: (hidden: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001379",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onShowCacheMissNoticesChange: (shown: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001380",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onCollapseChangelogChange: (collapsed: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001381",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onEnableInstallTelemetryChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001382",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onDoubleEscapeActionChange: (action: \"fork\" | \"tree\" | \"none\") => void;"
+    },
+    {
+      "candidate_id": "C001383",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onTreeFilterModeChange: (mode: \"default\" | \"no-tools\" | \"user-only\" | \"labeled-only\" | \"all\") => void;"
+    },
+    {
+      "candidate_id": "C001384",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onShowHardwareCursorChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001385",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onEditorPaddingXChange: (padding: number) => void;"
+    },
+    {
+      "candidate_id": "C001386",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onOutputPadChange: (padding: 0 | 1) => void;"
+    },
+    {
+      "candidate_id": "C001387",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onAutocompleteMaxVisibleChange: (maxVisible: number) => void;"
+    },
+    {
+      "candidate_id": "C001388",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onQuietStartupChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001389",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onDefaultProjectTrustChange: (defaultProjectTrust: DefaultProjectTrust) => void;"
+    },
+    {
+      "candidate_id": "C001390",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onClearOnShrinkChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001391",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "partial",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onShowTerminalProgressChange: (enabled: boolean) => void;"
+    },
+    {
+      "candidate_id": "C001392",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onUiModeChange: (mode: UiMode) => void;"
+    },
+    {
+      "candidate_id": "C001393",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onFooterStyleChange: (style: \"compact\" | \"legacy\") => void;"
+    },
+    {
+      "candidate_id": "C001394",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onToolStyleChange: (style: \"compact\" | \"boxed\") => void;"
+    },
+    {
+      "candidate_id": "C001395",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onSymbolsChange: (symbols: \"auto\" | \"unicode\" | \"nerd\" | \"ascii\") => void;"
+    },
+    {
+      "candidate_id": "C001396",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onFullscreenScrollbarChange: (mode: ScrollViewScrollbar) => void;"
+    },
+    {
+      "candidate_id": "C001397",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onWarningsChange: (warnings: WarningSettings) => void;"
+    },
+    {
+      "candidate_id": "C001398",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onTableStyleChange: (style: string) => void; This declared Change callback is not called by its menu preview row; no active callback behavior is inferred."
+    },
+    {
+      "candidate_id": "C001399",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onTableStylePreview: (style: string) => void;"
+    },
+    {
+      "candidate_id": "C001400",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onInputBorderStyleChange: (style: string) => void; This declared Change callback is not called by its menu preview row; no active callback behavior is inferred."
+    },
+    {
+      "candidate_id": "C001401",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onInputBorderStylePreview: (style: string) => void;"
+    },
+    {
+      "candidate_id": "C001402",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onThinkingIntervalChange: (intervalMs: number) => void; This declared Change callback is not called by its menu preview row; no active callback behavior is inferred."
+    },
+    {
+      "candidate_id": "C001403",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onThinkingIntervalPreview: (intervalMs: number) => void;"
+    },
+    {
+      "candidate_id": "C001404",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onAppearanceApply: () => void;"
+    },
+    {
+      "candidate_id": "C001405",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onAppearanceCancel: () => void;"
+    },
+    {
+      "candidate_id": "C001406",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onOpenAppearance: () => void;"
+    },
+    {
+      "candidate_id": "C001407",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "status": "missing",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart. Exact declaration: onCancel: () => void;"
+    },
+    {
+      "candidate_id": "C001408",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart."
+    },
+    {
+      "candidate_id": "C001409",
+      "disposition": "mapped",
+      "entry_id": "TUI-026",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart."
+    },
+    {
+      "candidate_id": "C001410",
+      "disposition": "mapped",
+      "entry_id": "TUI-026",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart."
+    },
+    {
+      "candidate_id": "C001411",
+      "disposition": "mapped",
+      "entry_id": "TUI-025",
+      "reason": "Exported UI snapshot/callback member, not an independently persisted setting key. The linked entry records its exact menu use, conversion, capability gate and native menu counterpart."
+    },
+    {
+      "candidate_id": "C001412",
+      "disposition": "mapped",
+      "entry_id": "TUI-055",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001413",
+      "disposition": "mapped",
+      "entry_id": "TUI-051",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001414",
+      "disposition": "mapped",
+      "entry_id": "TUI-026",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001415",
+      "disposition": "mapped",
+      "entry_id": "TUI-030",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001416",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001417",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001418",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001419",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001420",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001421",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001422",
+      "disposition": "mapped",
+      "entry_id": "TUI-041",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001423",
+      "disposition": "mapped",
+      "entry_id": "TUI-039",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001424",
+      "disposition": "mapped",
+      "entry_id": "TUI-056",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001425",
+      "disposition": "mapped",
+      "entry_id": "TUI-056",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001426",
+      "disposition": "mapped",
+      "entry_id": "TUI-060",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001427",
+      "disposition": "mapped",
+      "entry_id": "TUI-060",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001428",
+      "disposition": "mapped",
+      "entry_id": "TUI-060",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001429",
+      "disposition": "mapped",
+      "entry_id": "TUI-026",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001430",
+      "disposition": "mapped",
+      "entry_id": "TUI-026",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001431",
+      "disposition": "mapped",
+      "entry_id": "TUI-031",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001432",
+      "disposition": "mapped",
+      "entry_id": "TUI-033",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001433",
+      "disposition": "mapped",
+      "entry_id": "TUI-033",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001434",
+      "disposition": "mapped",
+      "entry_id": "TUI-033",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001435",
+      "disposition": "mapped",
+      "entry_id": "TUI-032",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001436",
+      "disposition": "mapped",
+      "entry_id": "TUI-032",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001437",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001438",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001439",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001440",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001441",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001442",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001443",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001444",
+      "disposition": "mapped",
+      "entry_id": "TUI-034",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001445",
+      "disposition": "mapped",
+      "entry_id": "TUI-065",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001446",
+      "disposition": "mapped",
+      "entry_id": "TUI-066",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001447",
+      "disposition": "mapped",
+      "entry_id": "TUI-066",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001448",
+      "disposition": "mapped",
+      "entry_id": "TUI-065",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001449",
+      "disposition": "mapped",
+      "entry_id": "TUI-066",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001450",
+      "disposition": "mapped",
+      "entry_id": "TUI-066",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001451",
+      "disposition": "mapped",
+      "entry_id": "TUI-065",
+      "reason": "Tree topology, filtering, viewport, labels and path rendering are split across TUI-065/066; entry linkage follows the named boundary."
+    },
+    {
+      "candidate_id": "C001452",
+      "disposition": "mapped",
+      "entry_id": "TUI-059",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001453",
+      "disposition": "mapped",
+      "entry_id": "TUI-061",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001454",
+      "disposition": "mapped",
+      "entry_id": "TUI-061",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001455",
+      "disposition": "mapped",
+      "entry_id": "TUI-027",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001456",
+      "disposition": "mapped",
+      "entry_id": "TUI-027",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001457",
+      "disposition": "mapped",
+      "entry_id": "TUI-027",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001458",
+      "disposition": "mapped",
+      "entry_id": "TUI-027",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001459",
+      "disposition": "mapped",
+      "entry_id": "TUI-035",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001460",
+      "disposition": "mapped",
+      "entry_id": "TUI-050",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001461",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-050"
+      ],
+      "reason": "Mechanical filesystem target expression \"filePath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-050; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001462",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-050"
+      ],
+      "reason": "Mechanical filesystem target expression \"filePath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-050; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001463",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001464",
+      "disposition": "mapped",
+      "entry_id": "TUI-076",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001465",
+      "disposition": "mapped",
+      "entry_id": "TUI-079",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001466",
+      "disposition": "mapped",
+      "entry_id": "TUI-079",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001467",
+      "disposition": "mapped",
+      "entry_id": "TUI-074",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001468",
+      "disposition": "mapped",
+      "entry_id": "TUI-044",
+      "reason": "Model/auth catalog refresh is skipped when ICE_OFFLINE is truthy; the refresh deadline/cancellation source is read at interactive-mode.ts1214–1244 and the model picker contract remains TUI-044."
+    },
+    {
+      "candidate_id": "C001469",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "Package-update startup check returns an empty update list while ICE_OFFLINE is truthy; resource/update presentation is TUI-040 and package semantics stay CLI."
+    },
+    {
+      "candidate_id": "C001470",
+      "disposition": "mapped",
+      "entry_id": "TUI-077",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001471",
+      "disposition": "mapped",
+      "entry_id": "TUI-072",
+      "reason": "Install-report transport is OBS-001-owned; TUI-072 supplies its first-install/version startup trigger and the truthy ICE_OFFLINE skip."
+    },
+    {
+      "candidate_id": "C001472",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001473",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001474",
+      "disposition": "mapped",
+      "entry_id": "TUI-040",
+      "reason": "Product-host boundary; full controller was read except the explicitly excluded redacted line, and independent native controller/helpers were read."
+    },
+    {
+      "candidate_id": "C001475",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-080"
+      ],
+      "reason": "Mechanical filesystem target expression \"filePath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-080; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001476",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-078"
+      ],
+      "reason": "Mechanical filesystem target expression \"tmpFile\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-078; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001477",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-084"
+      ],
+      "reason": "Mechanical filesystem target expression \"path.dirname(debugLogPath)\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-084; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001478",
+      "disposition": "excluded",
+      "entry_ids": [
+        "TUI-084"
+      ],
+      "reason": "Mechanical filesystem target expression \"debugLogPath\" is a local resolved I/O variable rather than a distinct fixed product path. Its path construction and file lifetime are audited in TUI-084; concrete user-visible names/roots are separately listed where applicable."
+    },
+    {
+      "candidate_id": "C001479",
+      "disposition": "mapped",
+      "entry_id": "TUI-044",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001480",
+      "disposition": "mapped",
+      "entry_id": "TUI-044",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001481",
+      "disposition": "mapped",
+      "entry_id": "TUI-052",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001482",
+      "disposition": "mapped",
+      "entry_id": "TUI-052",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001483",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001484",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001485",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001486",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001487",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001488",
+      "disposition": "mapped",
+      "entry_id": "TUI-053",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001489",
+      "disposition": "mapped",
+      "entry_id": "TUI-006",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001490",
+      "disposition": "mapped",
+      "entry_id": "TUI-006",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001491",
+      "disposition": "mapped",
+      "entry_id": "TUI-006",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001492",
+      "disposition": "mapped",
+      "entry_id": "TUI-006",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001493",
+      "disposition": "mapped",
+      "entry_id": "TUI-006",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C001494",
+      "disposition": "mapped",
+      "entry_id": "TUI-007",
+      "reason": "The full visible component/helper body and its callers were read; the linked entry specifies this named behavioral boundary and its native counterpart."
+    },
+    {
+      "candidate_id": "C002282",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"escape\", description: \"Cancel or abort\" }. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002283",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+c\", description: \"Clear editor\" }. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002284",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+d\", description: \"Exit when editor is empty\" }. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002285",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: process.platform === \"win32\" ? [] : \"ctrl+z\",\n\t\tdescription: \"Suspend to background\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002286",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"shift+tab\",\n\t\tdescription: \"Cycle thinking level\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002287",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Cycle to next model\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002288",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"shift+ctrl+p\",\n\t\tdescription: \"Cycle to previous model\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002289",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+l\", description: \"Open model selector\" }. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002290",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"shift+f\", description: \"Toggle favorite in model selector\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002291",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+o\", description: \"Toggle tool output\" }. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002292",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"alt+o\", description: \"Collapse all tool output\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002293",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"shift+alt+o\", description: \"Toggle the newest tool call\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002294",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"f2\", description: \"Show warnings and notices\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002295",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"d\", description: \"Notices panel: dismiss the selected notice\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002296",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"x\",\n\t\tdescription: \"Notices panel: dismiss every notice in the selected filter\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002297",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"c\", description: \"Notices panel: copy the selected notice\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002298",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"?\",\n\t\tdescription: \"Show keyboard shortcuts (only when the editor is empty)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002299",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+b\",\n\t\tdescription: \"Move a running subagent wait to the background (falls through when nothing can be backgrounded)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002300",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"down\",\n\t\tdescription:\n\t\t\t\"Open the Shells panel from an empty editor while background shells run (otherwise moves the cursor)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002301",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"x\", description: \"Shells panel: stop the selected background shell\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002302",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"f\",\n\t\tdescription: \"Shells panel: follow the selected shell's live output in the foreground\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002303",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"right\", description: \"Attach to live subagent\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002304",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+shift+a\", description: \"Open the Agent Hub\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002305",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"shift+alt+left\", description: \"Return to the main agent view\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002306",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+right\",\n\t\tdescription: \"Show the next agent view (only while subagents exist and the editor is empty)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002307",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+left\",\n\t\tdescription: \"Show the previous agent view (only while subagents exist and the editor is empty)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002308",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"ctrl+shift+enter\", description: \"Take control of live subagent\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002309",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"left\",\n\t\tdescription: \"Open the Agent Hub from an empty editor while subagents exist; closes it inside the Hub\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002310",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"s\", description: \"Agent Hub: stop the selected subagent's current turn\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002311",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"shift+d\", description: \"Agent Hub: delete the selected stopped subagent\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002312",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"y\",\n\t\tdescription: \"Agent Hub: approve the selected pending subagent request once\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002313",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: \"n\", description: \"Agent Hub: deny the selected pending subagent request\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002314",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"a\",\n\t\tdescription: \"Agent Hub: always allow the selected request's rule for that subagent\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002315",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"tab\",\n\t\tdescription: \"Agent Hub: select the next pending subagent request and its subagent\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002316",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+t\",\n\t\tdescription: \"Toggle thinking blocks\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002317",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+n\",\n\t\tdescription: \"Toggle named session filter\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002318",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+g\",\n\t\tdescription: \"Open external editor\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002319",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+x\",\n\t\tdescription: \"Copy message to clipboard\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002320",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+enter\",\n\t\tdescription: \"Queue follow-up message\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002321",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+enter\",\n\t\tdescription: \"Send now: interrupt the current turn (running commands and subagents keep going in the background)\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002322",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+up\",\n\t\tdescription: \"Restore queued messages\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002323",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "partial",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: process.platform === \"win32\" ? \"alt+v\" : \"ctrl+v\",\n\t\tdescription: \"Paste image from clipboard (text fallback)\",\n\t}. The native registry defines this action, with loader/platform/consumer differences recorded in TUI-048. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002324",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: [], description: \"Start a new session\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002325",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: [], description: \"Open session tree\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002326",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: [], description: \"Fork current session\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002327",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: { defaultKeys: [], description: \"Resume a session\" }. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002328",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: process.platform === \"darwin\" ? [\"alt+left\", \"ctrl+left\"] : [\"ctrl+left\", \"alt+left\"],\n\t\tdescription: \"Fold tree branch or move up\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002329",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: process.platform === \"darwin\" ? [\"alt+right\", \"ctrl+right\"] : [\"ctrl+right\", \"alt+right\"],\n\t\tdescription: \"Unfold tree branch or move down\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002330",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"shift+l\",\n\t\tdescription: \"Edit tree label\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002331",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"shift+t\",\n\t\tdescription: \"Toggle tree label timestamps\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002332",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Toggle session path display\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002333",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+s\",\n\t\tdescription: \"Toggle session sort mode\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002334",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+r\",\n\t\tdescription: \"Rename session\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002335",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+d\",\n\t\tdescription: \"Delete session\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002336",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+backspace\",\n\t\tdescription: \"Delete session when query is empty\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002337",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+s\",\n\t\tdescription: \"Save model selection\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002338",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+a\",\n\t\tdescription: \"Enable all models\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002339",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+x\",\n\t\tdescription: \"Clear all models\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002340",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+p\",\n\t\tdescription: \"Toggle all models for provider\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002341",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+up\",\n\t\tdescription: \"Move model up in order\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002342",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"alt+down\",\n\t\tdescription: \"Move model down in order\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002343",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+d\",\n\t\tdescription: \"Tree filter: default view\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002344",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+t\",\n\t\tdescription: \"Tree filter: hide tool results\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002345",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+u\",\n\t\tdescription: \"Tree filter: user messages only\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002346",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+l\",\n\t\tdescription: \"Tree filter: labeled entries only\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002347",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+a\",\n\t\tdescription: \"Tree filter: show all entries\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002348",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"ctrl+o\",\n\t\tdescription: \"Tree filter: cycle forward\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002349",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact application keybinding declaration: {\n\t\tdefaultKeys: \"shift+ctrl+o\",\n\t\tdescription: \"Tree filter: cycle backward\",\n\t}. This exact ID is absent from the native application registry; this is not a claim that every analogous hardcoded behavior is absent. Complete source defaults and platform expressions are preserved in tui-keybindings-catalog.json."
+    },
+    {
+      "candidate_id": "C002350",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorUp maps to \"tui.editor.cursorUp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002351",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorDown maps to \"tui.editor.cursorDown\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002352",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorLeft maps to \"tui.editor.cursorLeft\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002353",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorRight maps to \"tui.editor.cursorRight\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002354",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorWordLeft maps to \"tui.editor.cursorWordLeft\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002355",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorWordRight maps to \"tui.editor.cursorWordRight\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002356",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorLineStart maps to \"tui.editor.cursorLineStart\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002357",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cursorLineEnd maps to \"tui.editor.cursorLineEnd\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002358",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:jumpForward maps to \"tui.editor.jumpForward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002359",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:jumpBackward maps to \"tui.editor.jumpBackward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002360",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:pageUp maps to \"tui.editor.pageUp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002361",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:pageDown maps to \"tui.editor.pageDown\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002362",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteCharBackward maps to \"tui.editor.deleteCharBackward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002363",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteCharForward maps to \"tui.editor.deleteCharForward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002364",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteWordBackward maps to \"tui.editor.deleteWordBackward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002365",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteWordForward maps to \"tui.editor.deleteWordForward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002366",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteToLineStart maps to \"tui.editor.deleteToLineStart\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002367",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteToLineEnd maps to \"tui.editor.deleteToLineEnd\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002368",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:yank maps to \"tui.editor.yank\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002369",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:yankPop maps to \"tui.editor.yankPop\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002370",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:undo maps to \"tui.editor.undo\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002371",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:newLine maps to \"tui.input.newLine\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002372",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:submit maps to \"tui.input.submit\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002373",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:tab maps to \"tui.input.tab\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002374",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:copy maps to \"tui.input.copy\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002375",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectUp maps to \"tui.select.up\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002376",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectDown maps to \"tui.select.down\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002377",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectPageUp maps to \"tui.select.pageUp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002378",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectPageDown maps to \"tui.select.pageDown\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002379",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectConfirm maps to \"tui.select.confirm\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002380",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectCancel maps to \"tui.select.cancel\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002381",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:interrupt maps to \"app.interrupt\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002382",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:clear maps to \"app.clear\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002383",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:exit maps to \"app.exit\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002384",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:suspend maps to \"app.suspend\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002385",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cycleThinkingLevel maps to \"app.thinking.cycle\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002386",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cycleModelForward maps to \"app.model.cycleForward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002387",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:cycleModelBackward maps to \"app.model.cycleBackward\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002388",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:selectModel maps to \"app.model.select\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002389",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:expandTools maps to \"app.tools.expand\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002390",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:toggleThinking maps to \"app.thinking.toggle\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002391",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:toggleSessionNamedFilter maps to \"app.session.toggleNamedFilter\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002392",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:externalEditor maps to \"app.editor.external\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002393",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:followUp maps to \"app.message.followUp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002394",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:sendNow maps to \"app.message.sendNow\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002395",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:dequeue maps to \"app.message.dequeue\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002396",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:pasteImage maps to \"app.clipboard.pasteImage\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002397",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:newSession maps to \"app.session.new\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002398",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:tree maps to \"app.session.tree\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002399",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:fork maps to \"app.session.fork\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002400",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:resume maps to \"app.session.resume\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002401",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:treeFoldOrUp maps to \"app.tree.foldOrUp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002402",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:treeUnfoldOrDown maps to \"app.tree.unfoldOrDown\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002403",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:treeEditLabel maps to \"app.tree.editLabel\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002404",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:treeToggleLabelTimestamp maps to \"app.tree.toggleLabelTimestamp\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002405",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:toggleSessionPath maps to \"app.session.togglePath\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002406",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:toggleSessionSort maps to \"app.session.toggleSort\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002407",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:renameSession maps to \"app.session.rename\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002408",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteSession maps to \"app.session.delete\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    },
+    {
+      "candidate_id": "C002409",
+      "disposition": "mapped",
+      "entry_id": "TUI-048",
+      "status": "missing",
+      "reason": "Exact legacy compatibility name legacy:deleteSessionNoninvasive maps to \"app.session.deleteNoninvasive\" under insertion-order migration with explicit namespaced precedence. Native configured_keybindings has no matching legacy migration or separate keybindings.json loader; generic action support remains independently preserved in TUI-048."
+    }
+  ],
+  "manual_surfaces": [
+    {
+      "category": "settings",
+      "name": "settings-menu:anthropic-extra-usage",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:165",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:light-theme",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:386",
+      "entry_id": "TUI-026",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:dark-theme",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:404",
+      "entry_id": "TUI-026",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:apply",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:422",
+      "entry_id": "TUI-026",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:single-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:429",
+      "entry_id": "TUI-026",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:autocompact",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:526",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:compaction-threshold",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:533",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:mid-run-compaction",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:540",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:steering-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:548",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:follow-up-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:556",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:transport",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:563",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:http-idle-timeout",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:570",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:hide-thinking",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:578",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:table-style",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:585",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:input-border-style",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:592",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:thinking-interval",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:599",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:appearance-apply",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:606",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:appearance-cancel",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:613",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:cache-miss-notices",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:620",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:collapse-changelog",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:627",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:quiet-startup",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:634",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:install-telemetry",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:641",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:default-project-trust",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:648",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:double-escape-action",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:655",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:tree-filter-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:662",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:warnings",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:669",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:thinking",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:684",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:fast-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:708",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:ui-mode",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:717",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:footer-style",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:724",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:tool-style",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:731",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:symbols",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:738",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:fullscreen-scrollbar",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:745",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:appearance",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:752",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:theme",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:759",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:show-images",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:772",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:image-width-cells",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:779",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:auto-resize-images",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:789",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:block-images",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:799",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:skill-commands",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:809",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:show-hardware-cursor",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:819",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:editor-padding",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:829",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:output-padding",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:839",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:autocomplete-max-visible",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:849",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:clear-on-shrink",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:859",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "settings",
+      "name": "settings-menu:terminal-progress",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts:869",
+      "entry_id": "TUI-025",
+      "notes": "Literal UI row identity. Values, conversions, gating, callback and immediate/staged lifetime are specified in the linked entry; this is not an additional persisted setting key.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/changelog",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7842",
+      "entry_id": "TUI-072",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/reload",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7445",
+      "entry_id": "TUI-075",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/share",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7630",
+      "entry_id": "TUI-078",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/copy",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7724",
+      "entry_id": "TUI-080",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/export",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7541",
+      "entry_id": "TUI-081",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/import",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7586",
+      "entry_id": "TUI-081",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/clone",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:6691",
+      "entry_id": "TUI-081",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/new",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:8062",
+      "entry_id": "TUI-081",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/name",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7743",
+      "entry_id": "TUI-082",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/session",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7767",
+      "entry_id": "TUI-082",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/fast",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:6666",
+      "entry_id": "TUI-083",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "commands",
+      "name": "/debug",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:8077",
+      "entry_id": "TUI-084",
+      "notes": "Concrete interactive command consumer. Shared built-in declaration/catalog ownership is reconciled separately; this row supplies the source-verified host behavior.",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "env",
+      "name": "ICE_SHARE_VIEWER_URL",
+      "ice_ref": "packages/coding-agent/src/config.ts:539",
+      "entry_id": "TUI-078",
+      "notes": "Truthy configured base or https://pi.dev/session/ followed by # and extracted gist ID; no URL validation. SET owns the getter and TUI owns the /share consumer.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "paths",
+      "name": "<os.tmpdir()>/session.html",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:7644",
+      "entry_id": "TUI-078",
+      "notes": "Fixed temporary HTML export used by /share; cleanup/cancellation and partial-export failure semantics are explicit.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "paths",
+      "name": "<os.tmpdir()>/ice-clipboard-<UUID>.<ext>",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:3761",
+      "entry_id": "TUI-080",
+      "notes": "Image-paste temporary pathname; ext from MIME mapping with png fallback; no host cleanup is scheduled.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "paths",
+      "name": "<agent-dir>/<APP_NAME>-debug.log",
+      "ice_ref": "packages/coding-agent/src/config.ts:602",
+      "entry_id": "TUI-084",
+      "notes": "Application debug snapshot destination; synchronous overwrite of rendered-line widths and session message JSON.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "paths",
+      "name": "<agent-dir>/keybindings.json",
+      "ice_ref": "packages/coding-agent/src/core/keybindings.ts:440",
+      "entry_id": "TUI-048",
+      "notes": "Separate application keybinding file loaded/migrated in memory; native uses settings.keybindings and does not match this loader.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "paths",
+      "name": "~/.tmux.conf",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:1372",
+      "entry_id": "TUI-077",
+      "notes": "Diagnostic text recommends manual configuration; this code never writes the file.",
+      "status": "missing",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "UiMode.regular/fullscreen",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:424",
+      "entry_id": "TUI-079",
+      "notes": "Factory, stable proxy and live replacement contract; native modes exist but corresponding host remount/lifetime policy differs.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "SIGTERM",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5079",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "SIGHUP",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5081",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "SIGCONT",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5140",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "SIGTSTP",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5152",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "SIGINT",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5137",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "uncaughtException",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:5112",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "EIO/EPIPE/ENOTCONN",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/interactive-mode.ts:263",
+      "entry_id": "TUI-076",
+      "notes": "Product-host signal/error transition; exact cause-specific cleanup, runtime disposal, exit status and terminal restoration are documented in the linked entry.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "ExtensionSelectorComponent options: timeout/content/onExpand",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/extension-selector.ts:12",
+      "entry_id": "TUI-073",
+      "notes": "Timed title/cancellation, scrollable Markdown content and tools-expand callback; facade request lifetime remains EXT-040.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "ExtensionInputComponent initialValue/timeout",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/extension-input.ts:11",
+      "entry_id": "TUI-073",
+      "notes": "Initial value including empty, ignored placeholder in TS widget, focus-forwarded input and optional countdown.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    },
+    {
+      "category": "tui",
+      "name": "ExtensionEditorComponent externalEditor",
+      "ice_ref": "packages/coding-agent/src/modes/interactive/components/extension-editor.ts:12",
+      "entry_id": "TUI-073",
+      "notes": "Explicit command then VISUAL/EDITOR/platform fallback, ordinary editor text and stop/try/finally restart.",
+      "status": "partial",
+      "candidate_ids": [],
+      "discovered_by": "full source body review"
+    }
+  ],
+  "source_notes": [
+    "Every original lead is reconciled through exact candidate IDs. A named registry absence is kept separate from broader hardcoded capability support.",
+    "This file is a closeout input; publication belongs to the coordinator."
+  ]
+}

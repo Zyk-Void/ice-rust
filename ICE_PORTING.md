@@ -383,6 +383,30 @@ it has no `run_in_background` or `stdin` parameters.
 
 ## 6. Session, compaction, resources
 
+Native session-management work is tracked in
+[`docs/session-parity-progress.md`](docs/session-parity-progress.md), against the
+source baseline in [`docs/ice-gap/session.md`](docs/ice-gap/session.md). It covers
+branch/query correctness, safe search/import, SQLite ownership/indexing, usage
+and context projections, validated summaries, and active-branch exports. The
+checklist distinguishes tested implementations from helpers and pending runtime
+integration; it is not a claim of complete coding-session parity. Native v4 JSONL
+and canonical Rust SQLite snapshots remain deliberate format boundaries. Native
+JSONL now has storage-lifetime advisory ownership and conservative conflict
+rejection; coding overflow has one bounded recovery attempt; required final-save
+errors propagate; model/thinking UI changes follow successful runtime application;
+sharing follows the active branch. `goal.md` records acceptance evidence and the
+remaining budgeting, lifecycle, transport and review work. Known coding-request
+prompt/tool overhead and the shared provider output allowance are now included
+without double-counting measured usage; hook/custom-converter payloads and full
+tool-pair/reopen coverage remain open. Follow-up formatting, warning-as-error
+workspace checks/tests and documentation/tooling gates passed (2,125 tests
+passed, 5 ignored). MSRV and Windows runtime remain unverified. The reliable-session
+goal is not yet complete. Additional native resume-precedence, custom-root/cwd
+and disappearing-file regressions pass; private gist/clipboard stubs verify
+active-branch payloads without real transport. Full gates passed again after
+these additions (2,130 passed, 0 failed, 5 ignored); MSRV and Windows runtime
+remain unverified. No PR has been opened for this worktree yet.
+
 ### 6.1 Blackhole compaction extension
 - **ice:** `ice:coding-agent/examples/extensions/ice-blackhole/` (index + `src/{core,extract,hooks,om}`).
   It derives from `sting8k/ice-vcc`. **ice-rust:** missing. Rust compaction

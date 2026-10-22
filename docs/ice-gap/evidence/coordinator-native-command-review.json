@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T02:03:59.381Z",
+  "evidence_level": "Source-read only; no application, gh, network or clipboard execution.",
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/commands.rs",
+      "ranges": [
+        [
+          17,
+          52
+        ]
+      ],
+      "sha256": "b609a5bd9cf107eb722a55619abd4226c19f379e50748aee8342d72f8b68273d",
+      "total_lines": 871,
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "total_lines": 679,
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "ranges": [
+        [
+          2988,
+          3044
+        ]
+      ],
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ],
+      "notes": "Actual complete numbered section was displayed before a later command-path ENOENT; it is also within prior full coordinator controller coverage. No credit is claimed for failed subsequent reads."
+    }
+  ],
+  "defect_ids": [
+    "RUST-066",
+    "RUST-067"
+  ],
+  "open_question": "Should native /clear intentionally clear only visible components while /new creates a new durable session, or should both create new conversational context? The current source aliases them and changes only the display."
+}

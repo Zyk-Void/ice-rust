@@ -1,0 +1,88 @@
+{
+  "status": "passed",
+  "generated_at": "2026-10-20",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "scope": "Saved proposal structure and correspondence against the original QA records and lane read summary. This is evidence validation, not execution of application code or tests.",
+  "totals": {
+    "records": 663,
+    "runtime": 373,
+    "type": 290,
+    "entry_updates": 100
+  },
+  "per_area": [
+    {
+      "area": "ai",
+      "records": 142,
+      "runtime": 71,
+      "type": 71,
+      "entry_updates": 27,
+      "proposal": "lane-exports-rpc-ai-auth-ai.json",
+      "sha256": "25532bc97a737c099c5513ad5c978ee1e12895dcefa2363b699de5dcf7c586f4"
+    },
+    {
+      "area": "extensions",
+      "records": 57,
+      "runtime": 18,
+      "type": 39,
+      "entry_updates": 15,
+      "proposal": "lane-exports-rpc-ai-auth-extensions.json",
+      "sha256": "6433892908cee8be4dcd633d4ffd2b787c36ca3d127c7bfcb720c38d22b2a6e6"
+    },
+    {
+      "area": "providers-auth",
+      "records": 186,
+      "runtime": 148,
+      "type": 38,
+      "entry_updates": 27,
+      "proposal": "lane-exports-rpc-ai-auth-providers-auth.json",
+      "sha256": "6ec0a87084445be2be5c3e7b4d11090826b0196064d7bef53985413e9ea68328"
+    },
+    {
+      "area": "rpc-remote",
+      "records": 278,
+      "runtime": 136,
+      "type": 142,
+      "entry_updates": 31,
+      "proposal": "lane-exports-rpc-ai-auth-rpc-remote.json",
+      "sha256": "7de0c68f8632c13203b14eba22ea077432e00131b4dbec5754a7d3736ba173a4"
+    }
+  ],
+  "redaction_limits": [
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 29,
+      "visible": "29 | export const ANTHROPIC_AUTH_TOKEN_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 30,
+      "visible": "30 | export const ANTHROPIC_OAUTH_TOKEN_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 31,
+      "visible": "31 | export const ANTHROPIC_API_KEY_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "line": 79,
+      "visible": "79 | export const clearApiKeyCache= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    }
+  ],
+  "checks": [
+    "Exact multiset of original symbol/kind/TypeScript-source tuples is preserved, including distinct overload lines.",
+    "Each record has a disposition, rationale, reviewed source range, SHA-256, and matching lane read-summary row.",
+    "Each selected existing entry includes the exact symbol name and source reference in its additive source field.",
+    "Original QA covering-entry metadata is preserved without treating it as authoritative ownership.",
+    "Per-area runtime/type counts match QA; no new entry IDs."
+  ],
+  "errors": []
+}

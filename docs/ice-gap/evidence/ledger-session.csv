@@ -1,0 +1,49 @@
+path,lines,area,entry_ids,status,notes
+packages/agent/src/harness/compaction/branch-summarization.ts,280,session,,pending,
+packages/agent/src/harness/compaction/compaction.ts,848,session,,pending,
+packages/agent/src/harness/compaction/utils.ts,132,session,,pending,
+packages/agent/src/harness/session/context.ts,100,session,,pending,
+packages/agent/src/harness/session/index.ts,4,session,,pending,
+packages/agent/src/harness/session/memory.ts,356,session,,pending,
+packages/agent/src/harness/session/search.ts,71,session,,pending,
+packages/agent/src/harness/session/session.ts,285,session,,pending,
+packages/agent/src/harness/session/testing/conformance.ts,831,session,,pending,
+packages/agent/src/harness/session/testing/index.ts,6,session,,pending,
+packages/agent/src/harness/session/testing/types.ts,16,session,,pending,
+packages/agent/src/harness/session/types.ts,361,session,,pending,
+packages/coding-agent/docs/compaction.md,497,session,,pending,
+packages/coding-agent/docs/sdk.md,1253,session,,pending,
+packages/coding-agent/docs/session-format.md,438,session,,pending,
+packages/coding-agent/docs/sessions.md,149,session,,pending,
+packages/coding-agent/src/core/agent-session-runtime.ts,475,session,,pending,
+packages/coding-agent/src/core/agent-session-services.ts,223,session,,pending,
+packages/coding-agent/src/core/agent-session.ts,4035,session,,pending,
+packages/coding-agent/src/core/cache-stats.ts,164,session,,pending,
+packages/coding-agent/src/core/compaction/branch-summarization.ts,376,session,,pending,
+packages/coding-agent/src/core/compaction/compaction.ts,1023,session,,pending,
+packages/coding-agent/src/core/compaction/index.ts,7,session,,pending,
+packages/coding-agent/src/core/compaction/utils.ts,158,session,,pending,
+packages/coding-agent/src/core/context-breakdown.ts,229,session,,pending,
+packages/coding-agent/src/core/messages.ts,195,session,,pending,
+packages/coding-agent/src/core/sdk.ts,413,session,,pending,
+packages/coding-agent/src/core/session-cwd.ts,59,session,,pending,
+packages/coding-agent/src/core/session-manager.ts,1839,session,,pending,
+packages/coding-agent/src/core/usage-totals.ts,115,session,,pending,
+packages/storage/sqlite-node/src/index.ts,170,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/branch-cache.ts,105,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/index.ts,17,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/migrations.ts,51,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/migrations/001_initial.sql,124,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/repo.ts,914,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/search-backend.ts,129,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/branch-entries.ts,146,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/branch-tips.ts,40,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/entries.ts,75,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/facts.ts,73,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/lanes.ts,116,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/leases.ts,65,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/records.ts,95,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/session-sequences.ts,28,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/session-stats.ts,63,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/storage/sessions.ts,92,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.
+packages/storage/sqlite-node/src/sqlite/types.ts,48,session,,pending,Supplemental scope: nested storage/native runtime source required to trace scoped behavior.

@@ -1,0 +1,1846 @@
+{
+  "area": "tui",
+  "fragment": "terminal",
+  "scope": "Low-level packages/tui/src plus native helpers and relevant native counterparts/tests; source-only actual read evidence, owned by audit_tools.",
+  "status": "Ready for independent coordinator review and merge",
+  "source_manifest": "evidence/resume-source-identities-2026-10-19T222055Z.json",
+  "frozen_heads": {
+    "ice": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "read_records": [
+    {
+      "path": "ice:packages/tui/native/darwin/README.md",
+      "sha256": "610b5d0ad15af4ac467242bded1786e19812b1d1aed9c6ee1e64d1e31aebe6c7",
+      "total_lines": 21,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/native/darwin/src/darwin-modifiers.c",
+      "sha256": "e8205db1e31244aa3bda5fec0f120fdeb819f176b9e1131718e4142ed921e1cc",
+      "total_lines": 71,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/native/win32/src/win32-console-mode.c",
+      "sha256": "aeb598a9a8b3229c71ffe09ac4209aaf326b05f234a0ca0df99bba66f4370988",
+      "total_lines": 54,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/package.json",
+      "sha256": "095cdcc7f4ee8031e6e5a479cd07e802c4976ad5a7b71be2cd47ad3c66401601",
+      "total_lines": 52,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/README.md",
+      "sha256": "a88f2012a0375f6d6c04338e48c6bf3be6df638cf116c371a1f8b0ad6fa24fc7",
+      "total_lines": 856,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          856
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/autocomplete.ts",
+      "sha256": "10f1e74efb9aa7dce770f450c6ea436a5daadaf22ec98cdb015bd283ae212db4",
+      "total_lines": 787,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          787
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/chrome-border.ts",
+      "sha256": "f0fb965a2b293c1e27c39353188b0b3625aa1d8a970f62fc1b0cd6c31a07e2ac",
+      "total_lines": 73,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/alt-screen-flash.ts",
+      "sha256": "6d341546b59958e93e4d33fdc1766b10d13c98a779031e2c01b827f0a4c6e30c",
+      "total_lines": 52,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/box.ts",
+      "sha256": "03119c2c97690fb0904edde784cc2c2a68a6ed80c4ba559bb715cab1daca3104",
+      "total_lines": 138,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/cancellable-loader.ts",
+      "sha256": "5f0ae0a56f299e5f6c9585c79bbe16c38a845f038a7254f8dffe7a44f6082e16",
+      "total_lines": 41,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/editor.ts",
+      "sha256": "960036cbe61065c5100082242d3e3543f913f6ac5ee3245460ff5e3f6f79f8b5",
+      "total_lines": 2580,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          2580
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/h-stack.ts",
+      "sha256": "6622e1e2605e500a420c3cdf3ffcae0548b2d86ec496a0f6bf1dd5c95aeb0b6b",
+      "total_lines": 45,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/image.ts",
+      "sha256": "cdef2f757008ce2fecfde6c0108366ebdc160bac70355db855fd264aec8d53f8",
+      "total_lines": 128,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/input.ts",
+      "sha256": "b5e8bb868bffb561600f498f51f67476af636dbd86e4ff3960c2cf1b8aeb7b77",
+      "total_lines": 454,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          454
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/loader.ts",
+      "sha256": "4107db69020bc52b2fe1bd2a5147de755045b0b2601e16e3febab59cbf9b48dd",
+      "total_lines": 93,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          93
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/markdown.ts",
+      "sha256": "a9fe4b1637ad9de5e13fa8dd4ab37d93fab05011ee6723e3e562733a1127d3ed",
+      "total_lines": 956,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          956
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/scroll-view.ts",
+      "sha256": "7bfeabe42998252fa0ccbb000e6b6b4163b0e47d9096103706cbc915b0d3a3c6",
+      "total_lines": 208,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          208
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/select-list.ts",
+      "sha256": "b723d5274374d015360d0f0afded9348c55cbb70d7a3b10b05e54eebd6c48516",
+      "total_lines": 242,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          242
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/settings-list.ts",
+      "sha256": "0f7313256cc518bd2f4223de230ef68ee7f36f8cecce63b1f7ecc76da93997c9",
+      "total_lines": 302,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          302
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/spacer.ts",
+      "sha256": "b511acec1d33885dad23e7ab2108b2d04dff0589b3bfda53b1f7458be4381e66",
+      "total_lines": 29,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/stack.ts",
+      "sha256": "93208d326fa43431b930eaa3250a1e19747063d696e97ec2f002f5feaa54fc18",
+      "total_lines": 155,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          155
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/text.ts",
+      "sha256": "3765832fca4db0626fa2b787500912f3505c858ed147cb0beff42bfa15087108",
+      "total_lines": 107,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/truncated-text.ts",
+      "sha256": "c383487099d1864b51493a5838dd28a1bd3e5e440a675ec1dbcaf0177534fad0",
+      "total_lines": 66,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/components/v-stack.ts",
+      "sha256": "0f36c9417bfffe5f6b9cc5fd40d420390cf9bebae70a073a409ac5f931f1f813",
+      "total_lines": 34,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/editor-component.ts",
+      "sha256": "ddd3100720e8dffa1c963da187b693ca05cc5ad95650be8a2de81e37e008db24",
+      "total_lines": 78,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/fuzzy.ts",
+      "sha256": "8286a6feb16672e52114df5300369d20f48e27c9e87da2dc87294ea3b1223b8e",
+      "total_lines": 138,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/index.ts",
+      "sha256": "90d378cbabce80370b9b1694834975d4cad7f0ff40b4649d4066b445b92c1b20",
+      "total_lines": 160,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          160
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/keybindings.ts",
+      "sha256": "e26acdd11c61b84d16ab4e81d7d4b03a7288885a820d595ca98f756403513a98",
+      "total_lines": 275,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          275
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/keys.ts",
+      "sha256": "b972facce4233a4623239fc38029e28cae15d0fb326558c0c09dc02cf4345fa7",
+      "total_lines": 1402,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          1402
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/kill-ring.ts",
+      "sha256": "d829ae816560b12d2800a38db9f7278f76d9ef43d0e53e004a86add9b56c559a",
+      "total_lines": 47,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/layout-node.ts",
+      "sha256": "409ced193f64e4517427003fd472d2c231c5bec3583a09b8e2150c543b588cc7",
+      "total_lines": 53,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/layout.ts",
+      "sha256": "a2e117442224f02f7aab04f5d0e2aaf89f1b6c7e60a1a329b2c85775ff0a5768",
+      "total_lines": 441,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          441
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/legacy-compat.ts",
+      "sha256": "4fd2a36166c8a187c0403f80e3f999f660abdce9780e984250b7cbdd0a65d1c9",
+      "total_lines": 10,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/native-modifiers.ts",
+      "sha256": "480532c99bec123ef544c79e090c62dfbce5d4564aed29d07fed13c38f573987",
+      "total_lines": 60,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/stdin-buffer.ts",
+      "sha256": "2a29562c1482ed69e77737f3a8a55034951e38f51abbd1979e479716ec1ee6bd",
+      "total_lines": 435,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          435
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/terminal-colors.ts",
+      "sha256": "2aa702f6e59dc51d78be64516f40c46981780a00d1f0900fb5504ad9da67b9e6",
+      "total_lines": 74,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/terminal-image.ts",
+      "sha256": "f715710ec6fdd5428563228e1b18e90fc2c77f91112171aa81eb4255fab81e73",
+      "total_lines": 655,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          655
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/terminal.ts",
+      "sha256": "bac9932448e21d559f1665074051fd3fe7e8f8ce94a6a60e18b6fb97d7095643",
+      "total_lines": 533,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          533
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/tui-alt-screen.ts",
+      "sha256": "42f14156716c0b1da88c65d950e5b84b94815620dc911789804934f9a35d9110",
+      "total_lines": 939,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          939
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/tui-main-screen.ts",
+      "sha256": "fb863b85bc283c97987c2aef8ee2c494b0ac4f49e3cfa826ba158362dc476a75",
+      "total_lines": 605,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          605
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/tui.ts",
+      "sha256": "499253b1e5654e24b6fc3df4060aaa475bebd445551dd4084dd254535a1f8765",
+      "total_lines": 1268,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          1268
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/undo-stack.ts",
+      "sha256": "1373c1e0a1e2c58ac90c93d32a9e5c1226d7f53314c77dd3d0f8ec349d2b3627",
+      "total_lines": 29,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/utils.ts",
+      "sha256": "be3dc4a66bf8e01c0f7f4fdf9085fab7943bd8c695d8592b07e42abc37089fa9",
+      "total_lines": 1388,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          1388
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/src/word-navigation.ts",
+      "sha256": "b73e915a524926ac8881731e89026b0bc7b5b0bd465de67257af81a420465c7f",
+      "total_lines": 118,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/autocomplete.test.ts",
+      "sha256": "a8243d9abde46d346d7bcd91a1f753cd275cff05ad40916dce48274ba4fae61e",
+      "total_lines": 543,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          543
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/background-line.test.ts",
+      "sha256": "e7aaf2db5eff94d25805fa888e548cf3a259140bae7b590bc452687bdf7d8487",
+      "total_lines": 27,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/bug-regression-isimageline-startswith-bug.test.ts",
+      "sha256": "89f2ce2cf538aedb404b872aba345309b92c6f44375ea1882e0540c4900dfb00",
+      "total_lines": 238,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          238
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/editor.test.ts",
+      "sha256": "321af6771d3a8a7f96f8cadd13dd0c973230e259a31e82c36765f98103f8b5d1",
+      "total_lines": 4252,
+      "notes": "current supplemental dirty test snapshot; differs from frozen Git b5d9dd2b6babc0c25462e6a38a92bda75fc345897adfcfca954bf8b5ad6d458a;9 added lines; no historical audit snapshot claimed",
+      "ranges": [
+        [
+          1,
+          4252
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/fuzzy.test.ts",
+      "sha256": "5945d422c5728860dff14331a69f56a30f781d0343c87ab18b4e1a2454766798",
+      "total_lines": 113,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/input.test.ts",
+      "sha256": "92272f165be9592c5794f56b3928234a2a8db8db56bc7a573fa8a783c6d53657",
+      "total_lines": 648,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          648
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/keybindings.test.ts",
+      "sha256": "cbad08624a48dfc9b47823319c5f85803d3b0bbfe8d0f31ab08a72c9eaccf39c",
+      "total_lines": 67,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/keys.test.ts",
+      "sha256": "a5fd7e9285669f79a5ee5d242e05e5d5b90e9fc358913f3175b9d393461750d9",
+      "total_lines": 634,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          634
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/layout.test.ts",
+      "sha256": "e0bd05b23dc5a6216d5e9fd9c421236815972dabcc9c122dbb3046622d8dc0f7",
+      "total_lines": 323,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          323
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/legacy-compat.test.ts",
+      "sha256": "394f45935e945805630a41b462c30029d862d54c3989b9bce340190f0b087a54",
+      "total_lines": 39,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/markdown.test.ts",
+      "sha256": "04b5665fb3886882986455fb8ec079ec7d2ea236a4ccddeae83bf7262e8729b5",
+      "total_lines": 1517,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          1517
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/overlay-non-capturing.test.ts",
+      "sha256": "353c51e18e087c648addf59316455e8fa923e8b0bcebab1be217ea3ed0ea1cef",
+      "total_lines": 1204,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          1204
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/overlay-options.test.ts",
+      "sha256": "45b9a7cb0245dfd6f4e65dabe94c1094827fb540f980f05a154e22f8199c99f6",
+      "total_lines": 542,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          542
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/overlay-screen-position.test.ts",
+      "sha256": "0c32f7e02b271cf8294bbdffa62f7f73f47242b533dd3bfb89ef0237014feb73",
+      "total_lines": 58,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/overlay-short-content.test.ts",
+      "sha256": "f26889d16c098a5f389d7f0e03c8ff2a89e2db5e661072904fc862dfa124923b",
+      "total_lines": 63,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/regression-overlay-cjk-boundary.test.ts",
+      "sha256": "51438c36784bb4ffb6304e1d179eb9daa046b8b93c80582c87c41f6415449b20",
+      "total_lines": 47,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/regression-regional-indicator-width.test.ts",
+      "sha256": "a057bc5b61cd287e2f2f554e878222ebace84a515e6cf67b87191eba5c91ae47",
+      "total_lines": 53,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/select-list.test.ts",
+      "sha256": "c73070f836f4645a7c3d8dda0c72c5b40604886964d38717c5ee3a8ec771e695",
+      "total_lines": 151,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/settings-list.test.ts",
+      "sha256": "94c467af01763140628500f9baec1bf40dd98f3b8596a54bc3f7f79543de8e54",
+      "total_lines": 118,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/stdin-buffer.test.ts",
+      "sha256": "75f5070c9c6617f1be9e2e5c69c7c44564678396a67b3e51dbf818021c59cba4",
+      "total_lines": 459,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          459
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tab-width.test.ts",
+      "sha256": "607f581302e1816d407760d3e8453da216adce4b85ea049e172fb6745536ef13",
+      "total_lines": 89,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/terminal-colors.test.ts",
+      "sha256": "83299038dbb51f1496c2985f0d7f95c8e67c3e1d1be0f65dd1d214277d888566",
+      "total_lines": 253,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          253
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/terminal-image.test.ts",
+      "sha256": "356046da021d9dff211bcacdb9e9e1e3f191fef1d770a8ff79502a538a646905",
+      "total_lines": 625,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          625
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/terminal.test.ts",
+      "sha256": "c0f26b5c359605eb3213238714a1333a9326899075e6dd07072f1ca071822237",
+      "total_lines": 254,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          254
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/test-themes.ts",
+      "sha256": "06aee61407827856f09c7d7017dac4d79e17d617622cab603abde6f128753d00",
+      "total_lines": 39,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/truncate-to-width.test.ts",
+      "sha256": "a602f2e59a642d2828a2719a0cd49fc80fd64bd0c6b3d2e0fe2a72db7655cc19",
+      "total_lines": 120,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/truncated-text.test.ts",
+      "sha256": "ba67883169e19dcb2013498d4b6659daa82b63daf01399f8471dc2b88b598141",
+      "total_lines": 130,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tui-alt-screen.test.ts",
+      "sha256": "8aaf07e32b4b5536c45b2b40c1fe0b4c661ceb651a5c787d8a3d5b5ad65c432b",
+      "total_lines": 929,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          929
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tui-cell-size-input.test.ts",
+      "sha256": "156fc72cd71f7ad65a11b300baaf2a37a2e6bc2ec7498d66f52ac6a0e17ab2d8",
+      "total_lines": 83,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tui-overlay-style-leak.test.ts",
+      "sha256": "ef6da1f722856ab3a1d5543b7ed80a2be8bf3df70d9c17f910ad9289998c669e",
+      "total_lines": 82,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tui-render.test.ts",
+      "sha256": "6152c1be7f403a572fc28a87056349968b60ae901941a735a0cdc5aa5e7e52a3",
+      "total_lines": 809,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          809
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/tui-shrink.test.ts",
+      "sha256": "c136db2c4e886c43509f48e36a74bdf2c0897cd3c989b4cca1bd689697a3bf03",
+      "total_lines": 46,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/virtual-terminal.ts",
+      "sha256": "5c9ff8da3b5afb888448bfd6eb4dede89d301db1dc1fd3ca7e32d8149f10085a",
+      "total_lines": 219,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          219
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/word-navigation.test.ts",
+      "sha256": "63ad66c3b23643ef248292a8c72cbf38e8126bc43da3df69a83b71397bc635ac",
+      "total_lines": 192,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          192
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "ice:packages/tui/test/wrap-ansi.test.ts",
+      "sha256": "9c238d85ad676ca6d4e063caa8d44d493b0c220dd9aba9ea11a31d51c92d791d",
+      "total_lines": 267,
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "ranges": [
+        [
+          1,
+          267
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1680,
+          1855
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/autocomplete.rs",
+      "sha256": "40e60df66f1c97eb5e04f81a3940c21b5e0c988964729285345c725e85857ec1",
+      "total_lines": 202,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          202
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "total_lines": 725,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          300,
+          440
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/README.md",
+      "sha256": "89ca0f8454adf3e44fe82126c6fdb95705b00432fdc8ba278b5b36c87ce62f1e",
+      "total_lines": 95,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/ansi.rs",
+      "sha256": "e50a764f625ea53aeee0ebeadbac313ca5a42c02ecef515a7db165571c160544",
+      "total_lines": 220,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          220
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/autocomplete.rs",
+      "sha256": "0683ed26a5a5e05875781958c3b39dfcb1c67d54f942c360f47392e89bd79cc1",
+      "total_lines": 483,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          483
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/box_component.rs",
+      "sha256": "f6382f085f9419c8e66a620a8b152f2e1e6c9cad88e91402a101726b8fe2cedd",
+      "total_lines": 251,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          251
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/component.rs",
+      "sha256": "f82d7f1f400b8f415fa3ea48899e82ebedf657c3ec7e34e019c6624b752d6488",
+      "total_lines": 109,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          109
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/container.rs",
+      "sha256": "dd0d4981fb24750d1e20fab1e582731803c0a29bab57fb1ac64e4f8e30f2f58b",
+      "total_lines": 88,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "total_lines": 2420,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          2420
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/fuzzy.rs",
+      "sha256": "c4843d5cfd19d1b5e4ce2f51b460211e64a90823d922b60b4903508794d055ae",
+      "total_lines": 336,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          336
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/hstack.rs",
+      "sha256": "884b84381a4a54ce1997db402ea023f0834a3d36ef1e809f54fce7509809760b",
+      "total_lines": 272,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          272
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/image.rs",
+      "sha256": "4435e92b152cb1fdcbf81fe936a1490fa0825c2f8f7db0a7ad06d00c96f41587",
+      "total_lines": 419,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          419
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/input.rs",
+      "sha256": "dffc800da6ba556a38560df9a57afd825025ac887f8f5135ee270d62f34c99ec",
+      "total_lines": 892,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          892
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/jump_to_end.rs",
+      "sha256": "f0cb7e80231602b352b63c4394e3f8a16dcb3e1471ed0eb22aad78090a46e718",
+      "total_lines": 239,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          239
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keybindings.rs",
+      "sha256": "e78c3932b990db2179b0bde8514b3d5299af4e125dfdb93a34064e010b3c3d67",
+      "total_lines": 936,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          936
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keys.rs",
+      "sha256": "b253ce229e63eae6b348a7d979f0fd9e5a02257ff146fd31c17fbb5b1729648a",
+      "total_lines": 524,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          524
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/kill_ring.rs",
+      "sha256": "2b1e2518cfcc9177d60ce541f68c041f9625ea2f622f9c2424137fb170816784",
+      "total_lines": 225,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/latex.rs",
+      "sha256": "a936b8a393ffacfbfbef6c3d9bf112ea0d1e5c11db1188b2beea168bcfcc7fc6",
+      "total_lines": 369,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          369
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/layout_node.rs",
+      "sha256": "f6db0748e95ef7320ef5a681924a0890d2fec4d183838f5e1db68e7167ca8765",
+      "total_lines": 311,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          311
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/layout.rs",
+      "sha256": "03a639e8607e77d623bd12312fe204fbae845cc1a81a19175c5ba55d39147c52",
+      "total_lines": 980,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          980
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/lib.rs",
+      "sha256": "11a04a82edfd232112dea9e87f4bbf46f7c531fe2e863c37e493dc57b84ea61f",
+      "total_lines": 173,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          173
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/line_diff.rs",
+      "sha256": "3041ac0281b188d8e9bbd28694306e271d6f2e0af469ba26b0e06b1ab88b380f",
+      "total_lines": 358,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          358
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/loader.rs",
+      "sha256": "b1e56d91181d913395adf848fcc661c2f5e7d00c2b94362833810185d4f3a4e7",
+      "total_lines": 428,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          428
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/markdown.rs",
+      "sha256": "af32ba4d76f46b8b00d524a310e315b991602bd03022ec7b79912ce1fcaadc91",
+      "total_lines": 1289,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          1289
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/mermaid.rs",
+      "sha256": "84ef6ac746628461b8714bff11295facdd6170e06188be3ab2b1d066fbf8ed64",
+      "total_lines": 308,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          308
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/overlay.rs",
+      "sha256": "17345264f83160b1b23ee4274f7b98de29437b860fbb0165c668b8e008f81453",
+      "total_lines": 719,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          719
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/render.rs",
+      "sha256": "f51063189ec528d5a8a7c3ee4d2d1bbecef465a8866da77c3201b1abed205614",
+      "total_lines": 118,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/scroll_view.rs",
+      "sha256": "bdd9ffa1a477c89877c10418ac19c00b0f13f82b034c062aed8d31e53693a14e",
+      "total_lines": 668,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          668
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/select_list.rs",
+      "sha256": "74d2d6ef9650a358a82c89ec708f855c40b35fdf7a3854fd7a54f6f7cdb81aaf",
+      "total_lines": 679,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          679
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/settings_list.rs",
+      "sha256": "c51f1cf198a64e4d788ebbc940ccbe62e0467c3be27d7a1d571ea9a2a6e4883a",
+      "total_lines": 608,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          608
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/spacer.rs",
+      "sha256": "ab884be195e0bbc87295464c8f78c31967e5e70cfcb5bb6c76ca7822e5808d1d",
+      "total_lines": 32,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/stdin_buffer.rs",
+      "sha256": "78c2500438233acbe5a216ef0eb3f389762f9ba46a1f3220577418ff1e6d86f7",
+      "total_lines": 312,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          312
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal_colors.rs",
+      "sha256": "c9bde308d9da37fe97efe50af52bf433974f167acc0dace53ad6af0fb138598b",
+      "total_lines": 334,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          334
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal_image.rs",
+      "sha256": "af496a5584604ebf3f48cbd39bf13ff1517a907824d8e4fcbd9fbefed50d1d8f",
+      "total_lines": 559,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          559
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal.rs",
+      "sha256": "5dc9e614eb1589611e87491eb5d1dab93cd8596534e0fab107f63c472ba427bc",
+      "total_lines": 672,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          672
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/text.rs",
+      "sha256": "ce67378454745365c983b8c4f27ee8eeab382fe5f5c6b6b079d7998eb1a0810f",
+      "total_lines": 160,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          160
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/truncated_text.rs",
+      "sha256": "d5a66a504eeeb101423de5b9e0425c52e54f5d0595506d9a98e63252523313cc",
+      "total_lines": 117,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/tui_alt_screen.rs",
+      "sha256": "46cf6334c8c9484d5c4ad1c863d1c37ecd3f1eb37b1308dd2aa1d4933aa38359",
+      "total_lines": 2133,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          2133
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/tui_main_screen.rs",
+      "sha256": "4d70d3d967c6fee1dfa78618fb8b375c86bb7883a49b86d225b77c76ae43659c",
+      "total_lines": 266,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          266
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/tui.rs",
+      "sha256": "0ac5c4912c0eadae8d4214a1ddd1dd0ee8cfd8c4b5f09cda9533d460bde69f73",
+      "total_lines": 170,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          170
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/undo_stack.rs",
+      "sha256": "e9f97fd4c2b3fc517c4e70b13eaeb4afee99f10a7314259a5026d864dab246bb",
+      "total_lines": 304,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          304
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/utils.rs",
+      "sha256": "8d490360a20744cc985d84e424bfd0bfc99294b474050d82878c3bfe9818764e",
+      "total_lines": 484,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          484
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/vstack.rs",
+      "sha256": "1b3cb0de678477ea16d216a8d466c94987edc2eb1b4b3cc3304b2ba02b7dc680",
+      "total_lines": 487,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/windows_paste.rs",
+      "sha256": "6965d59b272cbca4ce00f709a071df4145ef092087cadc0c8834c4aa08aefccb",
+      "total_lines": 213,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          213
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/word_navigation.rs",
+      "sha256": "edaf5ca49ec158e34125767345279b57ffb88aace7940f47bf8c34e5f3ab6770",
+      "total_lines": 271,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          271
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/tests/main_screen_scroll_up.rs",
+      "sha256": "1fb4eb27b14a22c2da1ed109d0c1744f14b120fe97a9df43c7cdb4c7f9c1c923",
+      "total_lines": 607,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          607
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/tests/render_cache.rs",
+      "sha256": "15050cbafe865a7d771eb6a30af5ce64fe78c9a534ef84e9b893f2bfc386d7f7",
+      "total_lines": 166,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "fully_read": true
+    }
+  ],
+  "test_policy": "No tests or application code executed. Full-read flags describe visible source body coverage only. Supplemental clean tests compared to frozen Git HEAD; metadata-only inventories are not read coverage.",
+  "dirty_supplemental_test": {
+    "path": "ice:packages/tui/test/editor.test.ts",
+    "current_sha256": "321af6771d3a8a7f96f8cadd13dd0c973230e259a31e82c36765f98103f8b5d1",
+    "frozen_git_sha256": "b5d9dd2b6babc0c25462e6a38a92bda75fc345897adfcfca954bf8b5ad6d458a",
+    "notes": "Fully read current supplemental dirty snapshot absent the original source manifest; git numstat9add/0delete against frozen Git revision. Current content is not attributed to the historical baseline.",
+    "reviewed_range": [
+      1,
+      4252
+    ],
+    "review_status": "Fully read current snapshot; 9 added lines, no deletions against frozen Git revision; absent original manifest and not claimed as historical baseline."
+  },
+  "unread_work": [
+    "No unread assigned production or directly relevant test bodies. Only bounded supporting native CLI excerpts are partial; complete controller ownership belongs to audit_extensions."
+  ],
+  "source_read_defects": [
+    {
+      "topic": "width",
+      "ts": "utils.ts173–293 uses Intl graphemes, fixed tab width3, spacing-mark exceptions, RGI emoji2 and isolated regional indicator2;512-entry insertion-order cache.",
+      "rust": "utils.rs9–66 counts UnicodeWidthStr per scalar unless APC/OSC present then delegates ansi.rs15–18 whole stripped string. Tabs/control skipped. Need preserve native broader stripping but unify width model.",
+      "refs": [
+        "ice:packages/tui/src/utils.ts:1-293",
+        "rust:crates/ice-tui/src/utils.rs:1-66",
+        "rust:crates/ice-tui/src/ansi.rs:12-87"
+      ]
+    },
+    {
+      "topic": "wrap",
+      "ts": "utils.ts865–1054 does CRLF/CR/LF split, space/CJK token wrap, trimEnd, long grapheme breaks, active style/hyperlink close/reopen retaining original BEL/ST. Width<=0 lacks Rust guard; a grapheme wider than width can still exceed advertised bound.",
+      "rust": "utils.rs276–351 hard scalar wraps, drops controls/CR/tabs, loses final empty newline and retains trailing spaces; then calls the fully read line_diff::isolate_wrapped_lines223–234. TUI-202 details the native ANSI carry behavior and RGB parameter defect.",
+      "status": "source-read only; complete counterpart and inline tests read"
+    },
+    {
+      "topic": "slices_and_truncation",
+      "ts": "sliceWithWidth preserves sequences and pending prefix styles, optional strict wide end; extractSegments tracks inherited styles/hyperlinks for suffix. truncate clips oversized ellipsis, preserves contiguous grapheme prefix, resets before/after ellipsis, optional padding. applyBackground reopens after actual bg reset while skipping extended color args.",
+      "rust": "ansi.rs93–131 strips all styles despite preserve_styles flag; utils.rs71–155 scalar slices can exceed width and pads based on whole source col rather than selected width. truncate159–224 returns oversized suffix whole at zero target and adds suffix before reset; apply_background444–453 calls bg_fn once, no bg-reset segmentation."
+    },
+    {
+      "topic": "osc8_hit_test_defect",
+      "ts": "utils.ts343–365 parses second semicolon, handles clear and column inside wide grapheme.",
+      "rust": "utils.rs385–440 starts URL after first semicolon, so ordinary8;;https returns ;https; close8;; stores ; and does not clear in_osc8. It matches col==column only, not the second cell of a wide scalar. Scoped search found only definition/export; TUI-204 preserves that bounded reachability and does not assert an active native click failure.",
+      "entry": "TUI-204",
+      "status": "source-read only"
+    },
+    {
+      "topic": "native_wrapped_rgb_defect",
+      "ts": "AnsiCodeTracker handles38/48;2;r;g;b as5 params; tracks bold anddim independently.",
+      "rust": "line_diff.rs111–178 requires get(index+5) and consumes6 params for RGB; canonical5-param RGB becomes Other38/48 plus individual parameter SGRs and produces incorrect carry. With an extra SGR param present it is absorbed into the RGB slot. Intensity1/2 also share one slot. Reachable via utils.rs348–350→isolate_wrapped_lines223–234; source-only not executed."
+    },
+    {
+      "topic": "kitty_continuation",
+      "rust": "terminal_image.rs178–222 computes _m but never serializes it for4000-character chunks; reachable image.rs245–269 -> terminal_image.rs429–445. Existing inline small-image test500–520 does not cover chunk continuation.",
+      "entry": "TUI-226",
+      "status": "source-read only, no runtime reproduction"
+    },
+    {
+      "topic": "image_dimensions",
+      "rust": "terminal_image.rs VP8L dimension offsets17..20 differ from TS21..24; no VP8X. Public calculate_image_rows allows cellHeight0 division by zero.",
+      "entry": "TUI-228",
+      "status": "source-read only"
+    },
+    {
+      "topic": "loader_empty_frames",
+      "rust": "loader.rs113–115 modulo by spinner_chars.len() on every render147–181, including empty vector; running/frame_duration_ms do not gate advancement.",
+      "entry": "TUI-230",
+      "status": "source-read only"
+    },
+    {
+      "topic": "editor_word_index_units",
+      "entry": "TUI-248",
+      "rust": "editor.rs1052/1071/1085–1095 passes byte offsets into scalar-index word_navigation helpers, then uses scalar results as byte ranges. Ordinary Unicode can panic or leave invalid cursor offsets.",
+      "status": "source-read only, no execution"
+    },
+    {
+      "topic": "editor_paste_payload_collision",
+      "entry": "TUI-244",
+      "rust": "editor.rs415–450 renumbers higher HashMap entries in unsorted iteration order; deleting marker1 with entries2,3 and visiting3 before2 overwrites payload2. Backspace859–903 reaches it; native two-paste test has only one moved key.",
+      "status": "source-read only, no execution"
+    },
+    {
+      "topic": "editor_jump_slice",
+      "entry": "TUI-254",
+      "rust": "editor.rs1098–1156 uses target.len_utf8 to advance from current byte cursor. Targeting ASCII x from beginning of '你x' slices at byte1, invalid UTF8.",
+      "status": "source-read only, no execution"
+    },
+    {
+      "topic": "editor_overwide_recursion",
+      "entry": "TUI-250",
+      "ts": "editor.ts163–169 recursively wraps an overwide single real grapheme with identical width and input, reachable width1 with a two-cell grapheme.",
+      "status": "source-read only, source defect not a behavior to copy"
+    },
+    {
+      "topic": "native_transcript_copy_mapping",
+      "entry": "TUI-224",
+      "rust": "interactive_tui/run.rs341–377 re-renders at80, ignores x/viewport offsets and copies whole styled rows indexed by screen y.",
+      "status": "source-read only, active caller interactive_tui.rs1837 reviewed"
+    },
+    {
+      "topic": "native_completion_transaction",
+      "entry": "TUI-241",
+      "rust": "interactive_tui/autocomplete.rs119–162 appends insert_space after whole preserved suffix and calls Editor.set_text without undo/paste retention.",
+      "status": "source-read only"
+    }
+  ],
+  "tool_notes": [
+    "One mixed read output truncated; only fully visible stdin test retained and keybindings source/test fully reread.",
+    "One native reachability search output truncated; used as discovery only; actual host1752–1850 subsequently read with SHA.",
+    "Transport redacted utils.ts token assignment; not recovered or inferred.",
+    "A second image-regression test path was initially missing a '-bug' suffix. The first625-line test was fully visible and counted; the correct238-line regression path was subsequently read completely. No read_many source batch exceeds20 items.",
+    "Editor implementation line2405 contains a connector-redacted assignment. All other lines were reviewed; no attempt was made to recover the hidden value. File-level full read means all available content was returned, with this explicit redaction limitation.",
+    "Markdown implementation line245 token-producing expression was connector-redacted. All other available lines reviewed; hidden expression was not recovered.",
+    "Final read_many proposal-model read initially exceeded the requested file-byte guard and was retried with a larger allowed read budget; only audit artifacts were read. This was a size error, not an approval rejection. Production reads used the owned read-only helper and all requested/returned path sets were checked.",
+    "Connector workspace handles expired during finalization (Unknown workspace_id), then the same authorized repositories were reopened with unchanged IDs. A metadata-only recheck returned127/127 expected paths with identical SHA-256; no source changes occurred during the fragment review."
+  ],
+  "helper": "evidence/tui-terminal-read.mjs",
+  "native_only_preservation": [
+    {
+      "source": "rust:crates/ice-tui/src/latex.rs:1-369",
+      "exports": "rust:crates/ice-tui/src/lib.rs:108",
+      "reachability": "Scoped crates search found definitions, inline tests and lib re-export only; no Markdown or CLI call found.",
+      "details": "Native rust:crates/ice-tui/src/latex.rs:141-328 exposes render_latex/is_latex/strip_latex; scoped crates search found only definitions/tests and lib.rs108 re-export, not Markdown or CLI calls, so it must not be counted as active Markdown math rendering. Preserve these extra library APIs, but document their limits: symbol/fraction conversion occurs even when use_unicode=false; fallback_ascii is unused; max_width uses byte length/slice and can panic on multibyte cut; find_matching_brace uses scalar indices returned into byte slices, so Unicode text commands can also fail. Naive symbol replacement order can transform prefix commands such as subset before subseteq. Inline math Event arms in Markdown do not enable the parser math option.",
+      "recommendation": "Retain these native-only library APIs, but do not count them as active Markdown math rendering. Repair byte/scalar safety before broader integration; treat such hardening separately from TS table-style parity."
+    },
+    {
+      "source": "rust:crates/ice-tui/src/jump_to_end.rs:1-239",
+      "entry": "TUI-223",
+      "note": "Native host-specific jump-to-end indicator and tests fully read; preserve geometry/input behavior."
+    }
+  ],
+  "fragment_counts": {
+    "entries": 67,
+    "ledger_files": 41,
+    "ledger_lines": 15282,
+    "original_candidates": 197,
+    "original_candidate_surfaces": 185,
+    "mechanical_exclusions": 12,
+    "authored_surfaces": 79,
+    "total_surfaces": 264,
+    "read_records": 127,
+    "fully_read_records": 125,
+    "ts_tests_fully_read": 33,
+    "native_integration_tests_fully_read": 2
+  },
+  "supporting_searches": [
+    {
+      "topic": "chrome border absence",
+      "scope": "crates/ice-tui",
+      "query": "ChromeBorder|chrome_border|top-bottom-single|single-double",
+      "result": "No matches; full primitive exports/selectors separately read.",
+      "artifact": "tuiTerminalChromeSearch"
+    },
+    {
+      "topic": "native scroll indicator active mouse route",
+      "scope": "crates/ice-cli/src/interactive_tui.rs",
+      "result": "handle_scroll_to_end_indicator_mouse_event at1764 already within independently read1680–1855.",
+      "bounded": true
+    },
+    {
+      "topic": "native scroll indicator label integration",
+      "scope": "crates/ice-cli/src",
+      "result": "Search located transcript_navigation.rs8; complete label/install body belongs to audit_extensions, not this fragment's direct read claim.",
+      "bounded": true
+    }
+  ],
+  "final_qa": {
+    "mode": "Author validation of audit artifacts and read metadata only; no application execution",
+    "entry_schema": "All67 entries contain the required behavioral specification fields, valid priority/status, dependencies and ordered positive size estimates.",
+    "candidate_ownership": "Exactly197 original candidates accounted for once:185 surfaces and12 explicitly scoped mechanical exclusions.",
+    "surface_anchors_checked": 528,
+    "fully_qualified_spec_refs_checked": 317,
+    "range_errors": [],
+    "dependency_cycles": [],
+    "unresolved_dependency_ids": [],
+    "identity_check": {
+      "requested": 127,
+      "returned": 127,
+      "sha256_matches": 127,
+      "errors": [],
+      "method": "Read-only tui-terminal-read.mjs info over every recorded path after reconnect; metadata-only outputs do not add read coverage."
+    },
+    "scope_limits": "Source-only;33 TS tests and2 Rust integration suites read, not run. TS editor test current dirty snapshot is supplemental. Three connector-redacted expressions and two bounded native CLI excerpts remain explicitly disclosed."
+  }
+}

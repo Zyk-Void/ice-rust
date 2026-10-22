@@ -1,0 +1,1089 @@
+{
+  "area": "misc",
+  "fragment": "evals",
+  "owner": "audit_tools",
+  "status": "passed-worker-checks-awaiting-coordinator",
+  "source_only": true,
+  "checks": {
+    "entry_count": 9,
+    "entry_ids": [
+      "MISC-040",
+      "MISC-041",
+      "MISC-042",
+      "MISC-043",
+      "MISC-044",
+      "MISC-045",
+      "MISC-046",
+      "MISC-047",
+      "MISC-048"
+    ],
+    "required_fields_present": true,
+    "all_mechanisms_have_plain_behavioral_intro": true,
+    "source_reference_occurrences": 101,
+    "all_source_references_within_actual_read_ranges": true,
+    "surface_count": 53,
+    "single_anchor_surface_references": true,
+    "owned_ledger_rows": 8,
+    "original_candidates": 13,
+    "surface_mapped_candidates": 4,
+    "explicit_mechanical_expression_exclusions": 9,
+    "preserved_candidate_ids_names_paths_lines": true,
+    "all_current_direct_read_hashes_match_baseline": true,
+    "unknown_dependencies": 0,
+    "internal_dependency_cycles": 0,
+    "application_tests_executed": false,
+    "model_runs_executed": false,
+    "errors": []
+  },
+  "source_reference_validation": [
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "start": 1,
+      "end": 98,
+      "total_lines": 98,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 28,
+      "end": 56,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/package.json",
+      "start": 1,
+      "end": 21,
+      "total_lines": 21,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/vitest.config.ts",
+      "start": 1,
+      "end": 21,
+      "total_lines": 21,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/vitest.test.config.ts",
+      "start": 1,
+      "end": 15,
+      "total_lines": 15,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:vitest.base.ts",
+      "start": 1,
+      "end": 29,
+      "total_lines": 29,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:package.json",
+      "start": 37,
+      "end": 37,
+      "total_lines": 91,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "ice:packages/evals/test/ice-harness.test.ts",
+      "start": 1,
+      "end": 35,
+      "total_lines": 35,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "rust:Cargo.toml",
+      "start": 1,
+      "end": 24,
+      "total_lines": 89,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "source",
+      "path": "rust:crates/ice-harness/Cargo.toml",
+      "start": 1,
+      "end": 43,
+      "total_lines": 43,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "mechanism",
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "start": 16,
+      "end": 63,
+      "total_lines": 98,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "mechanism",
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "start": 8,
+      "end": 15,
+      "total_lines": 98,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-040",
+      "field": "mechanism",
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "start": 65,
+      "end": 98,
+      "total_lines": 98,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 109,
+      "end": 180,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 246,
+      "end": 259,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "source",
+      "path": "ice:packages/evals/README.md",
+      "start": 57,
+      "end": 102,
+      "total_lines": 154,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 650,
+      "end": 810,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 51,
+      "end": 128,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 115,
+      "end": 151,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 153,
+      "end": 168,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 169,
+      "end": 180,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 246,
+      "end": 259,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 682,
+      "end": 810,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-041",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 51,
+      "end": 128,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 90,
+      "end": 93,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 115,
+      "end": 165,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 204,
+      "end": 243,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 2039,
+      "end": 2047,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4636,
+      "end": 4666,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4882,
+      "end": 4914,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 115,
+      "end": 165,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 169,
+      "end": 210,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 208,
+      "end": 232,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4636,
+      "end": 4666,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4882,
+      "end": 4914,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-042",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 2039,
+      "end": 2047,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 58,
+      "end": 107,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 178,
+      "end": 203,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "start": 1,
+      "end": 13,
+      "total_lines": 13,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 95,
+      "end": 117,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 1583,
+      "end": 1588,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 3428,
+      "end": 3502,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4526,
+      "end": 4546,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 205,
+      "end": 454,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 90,
+      "end": 107,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 58,
+      "end": 88,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "mechanism",
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "start": 1,
+      "end": 13,
+      "total_lines": 13,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 178,
+      "end": 203,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 4526,
+      "end": 4546,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 205,
+      "end": 454,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-043",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 3428,
+      "end": 3502,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "start": 1,
+      "end": 113,
+      "total_lines": 113,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "start": 1,
+      "end": 9,
+      "total_lines": 9,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "start": 212,
+      "end": 232,
+      "total_lines": 260,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "ice:packages/evals/test/vitest-evals/artifacts.test.ts",
+      "start": 1,
+      "end": 104,
+      "total_lines": 104,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "start": 1,
+      "end": 27,
+      "total_lines": 27,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 263,
+      "end": 373,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "start": 13,
+      "end": 73,
+      "total_lines": 113,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "start": 1,
+      "end": 9,
+      "total_lines": 9,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "start": 87,
+      "end": 112,
+      "total_lines": 113,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-044",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "start": 1,
+      "end": 27,
+      "total_lines": 27,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "start": 1,
+      "end": 194,
+      "total_lines": 194,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "source",
+      "path": "ice:packages/evals/test/vitest-evals/harness-table.test.ts",
+      "start": 1,
+      "end": 95,
+      "total_lines": 95,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "source",
+      "path": "ice:packages/evals/README.md",
+      "start": 104,
+      "end": 150,
+      "total_lines": 154,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "start": 11,
+      "end": 32,
+      "total_lines": 33,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 51,
+      "end": 128,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "start": 114,
+      "end": 128,
+      "total_lines": 194,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "start": 157,
+      "end": 193,
+      "total_lines": 194,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "start": 66,
+      "end": 112,
+      "total_lines": 194,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-045",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "start": 130,
+      "end": 155,
+      "total_lines": 194,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "start": 1,
+      "end": 114,
+      "total_lines": 114,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "start": 1,
+      "end": 9,
+      "total_lines": 9,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "source",
+      "path": "ice:packages/evals/vitest.config.ts",
+      "start": 7,
+      "end": 15,
+      "total_lines": 21,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 336,
+      "end": 396,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "start": 11,
+      "end": 32,
+      "total_lines": 33,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "start": 14,
+      "end": 44,
+      "total_lines": 114,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "start": 42,
+      "end": 50,
+      "total_lines": 114,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "start": 96,
+      "end": 98,
+      "total_lines": 114,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "start": 53,
+      "end": 87,
+      "total_lines": 114,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-046",
+      "field": "rust",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 336,
+      "end": 396,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "source",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 1,
+      "end": 439,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "source",
+      "path": "ice:packages/evals/test/vitest-evals/summary.test.ts",
+      "start": 1,
+      "end": 233,
+      "total_lines": 233,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "source",
+      "path": "ice:packages/evals/README.md",
+      "start": 136,
+      "end": 150,
+      "total_lines": 154,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "start": 11,
+      "end": 32,
+      "total_lines": 33,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "source",
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "start": 1583,
+      "end": 1588,
+      "total_lines": 5844,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 112,
+      "end": 161,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 164,
+      "end": 210,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 284,
+      "end": 328,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 104,
+      "end": 110,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 212,
+      "end": 281,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-047",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "start": 330,
+      "end": 438,
+      "total_lines": 439,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "source",
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "start": 1,
+      "end": 18,
+      "total_lines": 18,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "source",
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "start": 1,
+      "end": 141,
+      "total_lines": 141,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "source",
+      "path": "ice:packages/evals/README.md",
+      "start": 1,
+      "end": 34,
+      "total_lines": 154,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "source",
+      "path": "ice:packages/evals/README.md",
+      "start": 104,
+      "end": 153,
+      "total_lines": 154,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "source",
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "start": 51,
+      "end": 454,
+      "total_lines": 4086,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "start": 1,
+      "end": 18,
+      "total_lines": 18,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "mechanism",
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "start": 49,
+      "end": 63,
+      "total_lines": 98,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "start": 18,
+      "end": 51,
+      "total_lines": 141,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "start": 100,
+      "end": 103,
+      "total_lines": 141,
+      "covered": true
+    },
+    {
+      "entry_id": "MISC-048",
+      "field": "mechanism",
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "start": 53,
+      "end": 98,
+      "total_lines": 141,
+      "covered": true
+    }
+  ],
+  "dependency_edges": [
+    {
+      "entry_id": "MISC-041",
+      "dependency": "MISC-040"
+    },
+    {
+      "entry_id": "MISC-041",
+      "dependency": "AI-002"
+    },
+    {
+      "entry_id": "MISC-041",
+      "dependency": "SESSION-028"
+    },
+    {
+      "entry_id": "MISC-041",
+      "dependency": "SESSION-035"
+    },
+    {
+      "entry_id": "MISC-042",
+      "dependency": "MISC-041"
+    },
+    {
+      "entry_id": "MISC-043",
+      "dependency": "MISC-041"
+    },
+    {
+      "entry_id": "MISC-043",
+      "dependency": "MISC-042"
+    },
+    {
+      "entry_id": "MISC-043",
+      "dependency": "SESSION-027"
+    },
+    {
+      "entry_id": "MISC-044",
+      "dependency": "MISC-042"
+    },
+    {
+      "entry_id": "MISC-046",
+      "dependency": "MISC-043"
+    },
+    {
+      "entry_id": "MISC-046",
+      "dependency": "MISC-044"
+    },
+    {
+      "entry_id": "MISC-046",
+      "dependency": "MISC-045"
+    },
+    {
+      "entry_id": "MISC-046",
+      "dependency": "MISC-047"
+    },
+    {
+      "entry_id": "MISC-047",
+      "dependency": "MISC-045"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-040"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-041"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-042"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-043"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-044"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-045"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "MISC-046"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "EXT-002"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "EXT-004"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "EXT-005"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "EXT-012"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "SESSION-035"
+    },
+    {
+      "entry_id": "MISC-048",
+      "dependency": "SET-001"
+    }
+  ],
+  "native_test_limit": "Direct native harness_run_e2e source ranges1–469 include complete construction/retry/write/single-turn test bodies. Remaining unrelated tests are not claimed. Shared AgentHarness runtime reads are bounded and all cited ranges are covered.",
+  "external_dependency_limit": "vitest-evals0.15.0 invocation boundaries are read, dependency implementation and real-model execution are not.",
+  "first_pass_claim": {
+    "id": "FPC-154",
+    "old_report_lines": [
+      641,
+      641
+    ],
+    "active_report_lines": [
+      641,
+      641
+    ],
+    "verdict": "qualified",
+    "entry_ids": [
+      "MISC-040",
+      "MISC-041",
+      "MISC-042",
+      "MISC-043",
+      "MISC-044",
+      "MISC-045",
+      "MISC-046",
+      "MISC-047",
+      "MISC-048"
+    ]
+  },
+  "size_estimate": {
+    "rust_loc_min": 1400,
+    "rust_loc_max": 2360,
+    "basis": "New eval adapter/report/scenario code only; existing session/model/extension/terminal prerequisites are not recounted."
+  }
+}

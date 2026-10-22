@@ -1,0 +1,3299 @@
+{
+  "status": "verified-all-four-areas",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "review_date": "2026-10-20",
+  "areas_completed": [
+    "ai",
+    "extensions",
+    "providers-auth",
+    "rpc-remote"
+  ],
+  "pending": [],
+  "read_reviews": [
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/anthropic-messages.lazy.ts",
+      "sha256": "5d1925e8b2664c91a11ef4c73d8c400b4075597c8c4e8beb085f8e4ba137fc08",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/anthropic-messages.ts",
+      "sha256": "cc77875a3585aa8a9984e1851daa31a0f65bb8dbc7334a3c0fa7b1493f66a123",
+      "reviewed_ranges": [
+        [
+          171,
+          192
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/azure-openai-responses.lazy.ts",
+      "sha256": "de36a9a2749ac4cb45a5449356bceadb676d1a16e6d46f4fc5522a3f700aa2fd",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/bedrock-converse-stream.lazy.ts",
+      "sha256": "3ee8a1b2a2cd58927bee18ab5b4150401da810e9d5f4595822b3b10ded35de86",
+      "reviewed_ranges": [
+        [
+          25,
+          31
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/bedrock-converse-stream.ts",
+      "sha256": "7481e38f026fca89139a3b8ec91656af9afac4cf7e6fd7b55cbc06f4684fd07e",
+      "reviewed_ranges": [
+        [
+          68,
+          117
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/cloudflare.ts",
+      "sha256": "6333a0f78e8cd6b75e408fdeb594d5e1e02605206247c5a921c2f56dd99cf96a",
+      "reviewed_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/constrained-sampling.ts",
+      "sha256": "a3b93e37aae53bb24b171c49101eb0c1f0d69f6cb670ec6cf9e3b6ef4bf28487",
+      "reviewed_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/github-copilot-headers.ts",
+      "sha256": "32d154965223d746140957ca6754f69955f1c631ed5e8445dcf2be11bb4b5180",
+      "reviewed_ranges": [
+        [
+          4,
+          38
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/google-generative-ai.lazy.ts",
+      "sha256": "ba7700f2e44838fb19da46f866f47f35f4e10f5068800be1ea698e9e95e1e1ce",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/google-shared.ts",
+      "sha256": "7c752f8570a5439b77a33679e9f5a5285961e9bb44c12f310d4300a01c6943a7",
+      "reviewed_ranges": [
+        [
+          34,
+          66
+        ],
+        [
+          303,
+          328
+        ],
+        [
+          340,
+          359
+        ],
+        [
+          372,
+          391
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/google-vertex.lazy.ts",
+      "sha256": "891f0e07eaaa1bb1df97f0a2d8f067df6acbab50078242108d93b96a710c4712",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/ice-messages.lazy.ts",
+      "sha256": "7003f7b27ec78b0d498ae2a3b8de681231163c41a088f859c63c6d3a87063469",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/ice-messages.ts",
+      "sha256": "23770ef5d114e4c6b99287c72cff7153750a46da6be6a37d8c66567939c694d3",
+      "reviewed_ranges": [
+        [
+          52,
+          71
+        ],
+        [
+          94,
+          113
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/lazy.ts",
+      "sha256": "ff4ce241fb72cdd1900d56865a6295815d8d073b321c2ed20435639ed74bf39a",
+      "reviewed_ranges": [
+        [
+          67,
+          86
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/mistral-conversations.lazy.ts",
+      "sha256": "74267bc430c0c2562d166e4ae9d05966634e91b226bc564010b2b199db52dd86",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-codex-responses.lazy.ts",
+      "sha256": "89e1883f937df0992b852970f574b5e1fc2a69fefaacc89628cd1d924a8af63f",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-codex-responses.ts",
+      "sha256": "654cc286cc96d58de703a6d0221fa0f84e5a43e630fadd11d298572f6ff59ef5",
+      "reviewed_ranges": [
+        [
+          880,
+          899
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-completions.lazy.ts",
+      "sha256": "a1defe07f6d7bd37de3933164cc88cfeb2d46cf390d0bbb52c85b280cc58d193",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-completions.ts",
+      "sha256": "02be1155ed483bf695482658d264d283843180453a388c4b062f6cc39441d818",
+      "reviewed_ranges": [
+        [
+          145,
+          164
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-prompt-cache.ts",
+      "sha256": "78727b9b42d5c5cdc47d17f44d532cdf951cbee3b158cacfb3e640d8f792e8a4",
+      "reviewed_ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-10.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-responses-shared.ts",
+      "sha256": "7864efb0fd637d114ccb6576ae3cd1a87f35f44906e2fdeeb92159c3315fd24a",
+      "reviewed_ranges": [
+        [
+          104,
+          153
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openai-responses.lazy.ts",
+      "sha256": "ea6bf6019f6b2f949bce4ad248ec1e0fa25dd058a009cf70fb5eb0e99b4c94db",
+      "reviewed_ranges": [
+        [
+          3,
+          5
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/openrouter-images.lazy.ts",
+      "sha256": "04c18f8c065779c2f705850e593cee4e0d6207a4121473540a223fc83026a8f4",
+      "reviewed_ranges": [
+        [
+          2,
+          11
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/api/simple-options.ts",
+      "sha256": "aa4616f753b9e5481986850686fded0e77ea4a75da7a96c274dca63754893b38",
+      "reviewed_ranges": [
+        [
+          14,
+          33
+        ],
+        [
+          95,
+          114
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/compat.ts",
+      "sha256": "b5820abd17b2198b143edaa734eeb00a684478f572db12759c41f6b1d6f9349c",
+      "reviewed_ranges": [
+        [
+          70,
+          125
+        ],
+        [
+          143,
+          178
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/compat/extension-oauth-types.ts",
+      "sha256": "52065af0c8958696c9e37852d5005bf410679f4afba1b92a6e107e9320c44ff3",
+      "reviewed_ranges": [
+        [
+          3,
+          46
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/images-api-registry.ts",
+      "sha256": "604636b0a4b59d1798d79aad48a1dfdd96ee79e3f16b16cdc54dbd1b81c44ffe",
+      "reviewed_ranges": [
+        [
+          2,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/images-models.ts",
+      "sha256": "9a3a2bf47263e577925850b182d2b508d0bbf0e1437124b1240bff95b8deeb3a",
+      "reviewed_ranges": [
+        [
+          230,
+          249
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/legacy-api-aliases.ts",
+      "sha256": "90f2233ea7de7d81bba7aff4afe26574932a3bd4cd457e19705cd19c4a50f5d4",
+      "reviewed_ranges": [
+        [
+          28,
+          109
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/models.ts",
+      "sha256": "97a52da286b98d603a46aecf34afa07de1fbed5d83fca8812d62e3891d17c678",
+      "reviewed_ranges": [
+        [
+          63,
+          104
+        ],
+        [
+          231,
+          250
+        ],
+        [
+          738,
+          757
+        ],
+        [
+          873,
+          926
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-20.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/session-resources.ts",
+      "sha256": "3e6d76f038d6b7fe515ede0b6650d41a7df16eb4b3a9f1aa91c9de329ff092e2",
+      "reviewed_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/types.ts",
+      "sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "reviewed_ranges": [
+        [
+          15,
+          138
+        ],
+        [
+          232,
+          286
+        ],
+        [
+          296,
+          331
+        ],
+        [
+          333,
+          388
+        ],
+        [
+          463,
+          538
+        ],
+        [
+          624,
+          691
+        ],
+        [
+          698,
+          758
+        ],
+        [
+          783,
+          848
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/abort-signals.ts",
+      "sha256": "320d17e2354c4e66afccf48337d79d1cdb78bc3c42a6f5be993702175711f4ab",
+      "reviewed_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/abort.ts",
+      "sha256": "e81dc16de331e82d7f15759b27e38c7d0a3d28955693e0cf157dd52dadea7035",
+      "reviewed_ranges": [
+        [
+          16,
+          51
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/event-stream.ts",
+      "sha256": "55ddd6e6e4299f377fc3f8876ea9d8073f0051d569f1629f8817ec78e28d64e6",
+      "reviewed_ranges": [
+        [
+          85,
+          89
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/headers.ts",
+      "sha256": "db52ff4621bef3e5a6b6ace56fd0ff09063ae840517c16b1690c60f89f85e106",
+      "reviewed_ranges": [
+        [
+          2,
+          19
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/legacy-protocol.ts",
+      "sha256": "9f83b4549bfb375f74d640ab28e8cc43d17aba60a27b8c79c39947263019459d",
+      "reviewed_ranges": [
+        [
+          1,
+          4
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/provider-continuation-diag.ts",
+      "sha256": "13950aecd4ef729c392439c07c4aca00629499efcf1ee7792d2842383fd1c6f3",
+      "reviewed_ranges": [
+        [
+          4,
+          25
+        ],
+        [
+          30,
+          63
+        ],
+        [
+          95,
+          165
+        ],
+        [
+          191,
+          218
+        ],
+        [
+          235,
+          246
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/sanitize-unicode.ts",
+      "sha256": "f8ef2c957f9f13a77df45ebf344f1b852dfe8f2e3d164d815127ea7290c12e22",
+      "reviewed_ranges": [
+        [
+          20,
+          26
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "reviewed_ranges": [
+        [
+          5,
+          13
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-30.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/typebox-helpers.ts",
+      "sha256": "caf756258ce20c793dc8002cb8130a8efce18a7b5262ba0c54832b96f5a76e9f",
+      "reviewed_ranges": [
+        [
+          13,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-40.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "ai",
+      "path": "packages/ai/src/utils/validation.ts",
+      "sha256": "5a008e4649f269794b8070ad7d035738d6ab6ac7ba91a4beda6a98eae0e81de2",
+      "reviewed_ranges": [
+        [
+          269,
+          288
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-ai-40.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "extensions",
+      "path": "packages/coding-agent/src/core/extensions/runner.ts",
+      "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+      "reviewed_ranges": [
+        [
+          198,
+          260
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "extensions",
+      "path": "packages/coding-agent/src/core/extensions/types.ts",
+      "sha256": "c44fa645fed3f21613671d9c6e474a7e7ac4b37dfb71c4a4a00909c0ad29722a",
+      "reviewed_ranges": [
+        [
+          562,
+          611
+        ],
+        [
+          615,
+          688
+        ],
+        [
+          699,
+          726
+        ],
+        [
+          745,
+          815
+        ],
+        [
+          977,
+          1136
+        ],
+        [
+          1248,
+          1297
+        ],
+        [
+          1629,
+          1721
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-extensions-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/context.ts",
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "reviewed_ranges": [
+        [
+          22,
+          46
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/credential-store.ts",
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "reviewed_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/helpers.ts",
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "reviewed_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/anthropic.ts",
+      "sha256": "096edd678443c82d9355b06c3f426e211aceeeba2e3ba0b0e1962fe667b8d3fb",
+      "reviewed_ranges": [
+        [
+          354,
+          364
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/device-code.ts",
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "reviewed_ranges": [
+        [
+          15,
+          36
+        ],
+        [
+          45,
+          64
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/github-copilot.ts",
+      "sha256": "178fa19dea5262947c3ecae20efe769a3d5099926e97f73dbdbb4d7378fe8f1f",
+      "reviewed_ranges": [
+        [
+          397,
+          412
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/kimi-coding.ts",
+      "sha256": "f6f6256f9e25e4c43dc16ef71ae15e63bd2bc0557646bdcb66dcdf3e1f8e43e1",
+      "reviewed_ranges": [
+        [
+          294,
+          310
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/load.ts",
+      "sha256": "2efc92129803bd2eddacaaedfc4328c24c694b2d1916b30606fcc4fceeceacef",
+      "reviewed_ranges": [
+        [
+          30,
+          69
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/oauth-page.ts",
+      "sha256": "f58b133d271be4ff47352947fd4e55ab66230dc2647b7cbc7c79a574a93de632",
+      "reviewed_ranges": [
+        [
+          93,
+          110
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "reviewed_ranges": [
+        [
+          514,
+          533
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/openrouter.ts",
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "reviewed_ranges": [
+        [
+          300,
+          312
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/pkce.ts",
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "reviewed_ranges": [
+        [
+          20,
+          35
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/radius.ts",
+      "sha256": "13ccff48be0a9e162f7c98e91b4418cbad6bb8313aa96acf7e3374312e33dd5c",
+      "reviewed_ranges": [
+        [
+          352,
+          371
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/oauth/xai.ts",
+      "sha256": "b6d620d7b3c76d85801bc54adf2801b814d81df4139e9e54c31ea277f41de3d1",
+      "reviewed_ranges": [
+        [
+          228,
+          239
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/resolve.ts",
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "reviewed_ranges": [
+        [
+          15,
+          34
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/auth/types.ts",
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "reviewed_ranges": [
+        [
+          39,
+          94
+        ],
+        [
+          116,
+          150
+        ],
+        [
+          163,
+          188
+        ],
+        [
+          233,
+          238
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "reviewed_ranges": [
+        [
+          2,
+          7
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/bun-oauth.ts",
+      "sha256": "27818a6489809c8b38cea6ca5a75ede67cbb17e3cd48de450a1d04300e95333d",
+      "reviewed_ranges": [
+        [
+          10,
+          22
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "reviewed_ranges": [
+        [
+          28,
+          49
+        ],
+        [
+          127,
+          163
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/model-catalog.ts",
+      "sha256": "49ea2292bcc7a1cec41dde2c7e263ecd7f5fd6784084619f6e5f85323fb43452",
+      "reviewed_ranges": [
+        [
+          2,
+          21
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/models-store.ts",
+      "sha256": "9b5b110a2cbd1b558f7facf4441b0b4b6824b033d34c9062add35e642a138fdf",
+      "reviewed_ranges": [
+        [
+          15,
+          45
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/all.ts",
+      "sha256": "c2672ef6091d6b642545277b589586003a6853a84f67d66ff0b5fd5bb6ef8e18",
+      "reviewed_ranges": [
+        [
+          51,
+          91
+        ],
+        [
+          141,
+          154
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/amazon-bedrock.models.ts",
+      "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/amazon-bedrock.ts",
+      "sha256": "e93502504dac28b4a44863111376f435bc765116b88fea3bca40740c4c10ad30",
+      "reviewed_ranges": [
+        [
+          81,
+          91
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/ant-ling.models.ts",
+      "sha256": "da223d56dbe033f48b96ed451591498cb7ffa8d4851785ea9ad7542377f6c855",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/ant-ling.ts",
+      "sha256": "20ba100f8a9150f809fc42bf60f1d23840cc358d636793f1ec9fddf0e9feb2a7",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/anthropic.models.ts",
+      "sha256": "35fb58e216e45b3d1319b610f3f3021ef30e699a9e44250cbfcbefeeaaea2ff7",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/anthropic.ts",
+      "sha256": "7c7f814308749b01d1ba31ccb82256035a3ddf4f0778bdd4ac352c9c50d86da4",
+      "reviewed_ranges": [
+        [
+          42,
+          56
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/azure-openai-responses.models.ts",
+      "sha256": "9d0525eab9472b48dee748f7c6d2f3b65f25467389ff1facbf34dc2d40732717",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/azure-openai-responses.ts",
+      "sha256": "76e9f5cde761fcd516370d4d99519e4658e0db1029518746d0d0c0550ce54fa5",
+      "reviewed_ranges": [
+        [
+          5,
+          15
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/baseten.models.ts",
+      "sha256": "c3844bac330f9b0d04eef4349a37dbd6cbe5b6782b9f6726277148526c03ea0a",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/baseten.ts",
+      "sha256": "c3833be0c64c4d5c96810403e23e966bb779bf2c045619b6fbac18ff27ac92f5",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cerebras.models.ts",
+      "sha256": "45412b6f921b67cf7b82276bac1d8b95f164c5bf2ff3297b950f94f773162c57",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cerebras.ts",
+      "sha256": "457fc35499abea92be4ad7add4f08502d069293380be61bf05b11ae5352bce4f",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.models.ts",
+      "sha256": "c90e50ce6cd8b536e893ca7180a5b9731581d76b31125aff5bdfc62bd17efe26",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-ai-gateway.ts",
+      "sha256": "b40b3329e44148afbbe93f5e9562fa5be2329fac8a5a7180e50572583eba54fc",
+      "reviewed_ranges": [
+        [
+          8,
+          24
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-auth.ts",
+      "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "reviewed_ranges": [
+        [
+          53,
+          92
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-stream.ts",
+      "sha256": "866117c0e12f6bba9da36842271d0208b200364dc785dc968fa5d31b6da6594b",
+      "reviewed_ranges": [
+        [
+          5,
+          24
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.models.ts",
+      "sha256": "95da6a78965178d952b46a4de4e2ea52723ac051ad37583537a3b79e4033ecde",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/cloudflare-workers-ai.ts",
+      "sha256": "5ab1575a34fd66e35706fcae8a38516d7c2e427521b7f8680e1f756d8420ec9c",
+      "reviewed_ranges": [
+        [
+          6,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/deepseek.models.ts",
+      "sha256": "afce9b250edda8c9df66e800cfa791f1a2c2546503956c45c5262204265624cf",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/deepseek.ts",
+      "sha256": "4d4ac9870d3dcdb13a90627a95598314459f5cc2f8a122f802fab3b0d2840fee",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/faux.ts",
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "reviewed_ranges": [
+        [
+          39,
+          94
+        ],
+        [
+          100,
+          162
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/fireworks.models.ts",
+      "sha256": "68f77ac268a3e643944401e96fdc71abe7b34e1ccc3c50f885eb3e236b4fb45e",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/fireworks.ts",
+      "sha256": "72dbb53e3bb8b0bc6c42dd7937ec11dd0126efe3176f11153b1d599a0c7776af",
+      "reviewed_ranges": [
+        [
+          6,
+          20
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/github-copilot.models.ts",
+      "sha256": "6bd4c4ae054ea91fe4c9eea8c8372901584e851532352cb621a9e9de6ecece5c",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/github-copilot.ts",
+      "sha256": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "reviewed_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/google-vertex.models.ts",
+      "sha256": "964109cc69cadf77329846f4fb4baf6c86b00995f33a813230c5a9e54573e93e",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/google-vertex.ts",
+      "sha256": "5e321e6d5b80824752ca96e7c9aba8a3fccce722a1793a40d5341a0406ef4878",
+      "reviewed_ranges": [
+        [
+          91,
+          101
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/google.models.ts",
+      "sha256": "cdb63f50fae431dc67c6627ae7a5b9580039b9807f014f838ebe568b11831d27",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/google.ts",
+      "sha256": "2d807d5f9273ede8c23970fe0414883ab362c677df80e4603d30b621232a2036",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/groq.models.ts",
+      "sha256": "41fbe59a9104788078b57b490ebf2312291905e579a67ceaeff803ff41ffc9c0",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-22.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/groq.ts",
+      "sha256": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/huggingface.models.ts",
+      "sha256": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/huggingface.ts",
+      "sha256": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/images/register-builtins.ts",
+      "sha256": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "reviewed_ranges": [
+        [
+          29,
+          51
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/kimi-coding.models.ts",
+      "sha256": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/kimi-coding.ts",
+      "sha256": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "reviewed_ranges": [
+        [
+          6,
+          24
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/minimax-cn.models.ts",
+      "sha256": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/minimax-cn.ts",
+      "sha256": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/minimax.models.ts",
+      "sha256": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/minimax.ts",
+      "sha256": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/mistral.models.ts",
+      "sha256": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/mistral.ts",
+      "sha256": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/moonshotai-cn.models.ts",
+      "sha256": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/moonshotai-cn.ts",
+      "sha256": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/moonshotai.models.ts",
+      "sha256": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/moonshotai.ts",
+      "sha256": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/nvidia.models.ts",
+      "sha256": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/nvidia.ts",
+      "sha256": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openai-codex.models.ts",
+      "sha256": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openai-codex.ts",
+      "sha256": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "reviewed_ranges": [
+        [
+          6,
+          19
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openai.models.ts",
+      "sha256": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openai.ts",
+      "sha256": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/opencode-go.models.ts",
+      "sha256": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/opencode-go.ts",
+      "sha256": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "reviewed_ranges": [
+        [
+          8,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/opencode.models.ts",
+      "sha256": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/opencode.ts",
+      "sha256": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "reviewed_ranges": [
+        [
+          8,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openrouter.models.ts",
+      "sha256": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/openrouter.ts",
+      "sha256": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "reviewed_ranges": [
+        [
+          6,
+          24
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.models.ts",
+      "sha256": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.ts",
+      "sha256": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/qwen-token-plan.models.ts",
+      "sha256": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/qwen-token-plan.ts",
+      "sha256": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-52.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/radius-config.ts",
+      "sha256": "fa9f58744c2d8a9ddd2d68e28b891eaf2bbd615af615e1044af5dee285dc2f2d",
+      "reviewed_ranges": [
+        [
+          4,
+          41
+        ],
+        [
+          52,
+          98
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/together.models.ts",
+      "sha256": "09e3a5b9a2afbced7314acb8bfd7f2d77a17283dab78a49ca786a04b466f9d15",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/together.ts",
+      "sha256": "cbf232b1bfe5753bba855f0a95e2c4d180db8155121effcbdffc955fe090738c",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.models.ts",
+      "sha256": "3c4227acdc66f716f4a0af4f84d1ba1e8582384763f6850ed9dcc2fdadee10c5",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/vercel-ai-gateway.ts",
+      "sha256": "57b77111d50a2238128f56b7f4cc0680415b58c7d3d2eb51cc9f88e508b40343",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xai.models.ts",
+      "sha256": "8d0a7bf9fd4fc8a0030d9cf93dab88421625bf250030a6d3b2397eea48ea2298",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xai.ts",
+      "sha256": "f4e3369e26fca433eefbc456a302bb1941f2ee9e21de0cfbc0989c9d7badbe3d",
+      "reviewed_ranges": [
+        [
+          7,
+          26
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.models.ts",
+      "sha256": "26bc2100a4471d0605e768b8aff2e82aedce9c880622b5c7046ac6e32c14fb8b",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-ams.ts",
+      "sha256": "59d03fc70eca720f8ca9a9f676aedaf241524dac26c179a78e2e30aabe116e0f",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.models.ts",
+      "sha256": "bcd190721ecfe6233f2d66e86e68f68e2a9d14a8d6afe27132131e5721793093",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-cn.ts",
+      "sha256": "255528bca12e929f0f683bcbf5a6b8ef0de779bb484b128bdda23bf2fb80caa8",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.models.ts",
+      "sha256": "26f56144eac6a3e7d6c86d558a348dc96cea1bb7ec655beea04dc6088e67d761",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi-token-plan-sgp.ts",
+      "sha256": "536da73a1588741c6a70809b5e94ab5a1ba2b8e81f24116e3ed734d6bc60b5e8",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi.models.ts",
+      "sha256": "326ec2a587d3f83a92aea6dd9548b317ba91ce9dd8dccdfd83ea14035897dcef",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/xiaomi.ts",
+      "sha256": "d0d20dbcbcecca8b02948df1506ffa474461565546f7c24dfce44aebebef2344",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/zai-coding-cn.models.ts",
+      "sha256": "b96ff0b9ebb1792993256178de1b6c89741a651dfd07a7735c38dd05bfc25708",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/zai-coding-cn.ts",
+      "sha256": "89ff82b1f7b1a7e3427498598ce03574d76217f1c38b0d1731be82b6d8ff87a7",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/zai.models.ts",
+      "sha256": "9ff2f0e33f4299651cd265543d6387ee3d9ef2715ab7315dfaf5e67130c14125",
+      "reviewed_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/providers/zai.ts",
+      "sha256": "489a48539c3abc291315dad6f8b7c5554f5f3f9bf8b2a11a60d4ab2cbd3c2f74",
+      "reviewed_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/auth-guidance.ts",
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "reviewed_ranges": [
+        [
+          5,
+          26
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "reviewed_ranges": [
+        [
+          232,
+          251
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/model-config.ts",
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "reviewed_ranges": [
+        [
+          200,
+          221
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/model-registry.ts",
+      "sha256": "f577e5be7382a90397b3957ecca1cb1af38d7bef1543990ae92572a00b937476",
+      "reviewed_ranges": [
+        [
+          16,
+          65
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/model-resolver.ts",
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "reviewed_ranges": [
+        [
+          19,
+          38
+        ],
+        [
+          165,
+          214
+        ],
+        [
+          267,
+          293
+        ],
+        [
+          361,
+          400
+        ],
+        [
+          605,
+          624
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/model-runtime.ts",
+      "sha256": "17cad48a93194aa61d1f711f22d0e56c79e1d9b4c1fa9de221f5f701ed532f8f",
+      "reviewed_ranges": [
+        [
+          65,
+          130
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/models-store.ts",
+      "sha256": "7ca6f46720b942976cfbb41b018c52ec8c9a8b8c9ae11d2676004ab552a2b917",
+      "reviewed_ranges": [
+        [
+          8,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "sha256": "d5d84e5cdee2df8032cc9f21b7a87153d5b950097467e9c35ca78dc1ecca48ef",
+      "reviewed_ranges": [
+        [
+          72,
+          97
+        ],
+        [
+          416,
+          448
+        ],
+        [
+          543,
+          592
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/radius.ts",
+      "sha256": "a60f33d04eda5d4d4df88df14dbe27c6670f29975bc3a774e6c49f487a568342",
+      "reviewed_ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "reviewed_ranges": [
+        [
+          6,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/ice-provider-settings.ts",
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "reviewed_ranges": [
+        [
+          33,
+          59
+        ],
+        [
+          198,
+          217
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/ice-provider.ts",
+      "sha256": "32bec8c7323c4ac64c74e941041af4788f0d953825a112e5327044c74f82341c",
+      "reviewed_ranges": [
+        [
+          10,
+          32
+        ],
+        [
+          55,
+          74
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-providers-auth-84.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/errors.ts",
+      "sha256": "aff5259e7a95da738422735f0d47f4cafe63a0da2ff33cb620fda55976ce25b9",
+      "reviewed_ranges": [
+        [
+          14,
+          57
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/promise.ts",
+      "sha256": "4437b54dcf657e0992ecedc7cc27dd863d21765047dfba63835b24926a20075b",
+      "reviewed_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/session-handle.ts",
+      "sha256": "1f152906d7dbcf135278034e9c1d52f1671d7a1fe597ffa2aecb398bea8526a3",
+      "reviewed_ranges": [
+        [
+          12,
+          33
+        ],
+        [
+          36,
+          65
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/transport.ts",
+      "sha256": "22ce6eea04d189d71e0037978593ae7844f024d4fed321d4bf4f2c8d7d83ef03",
+      "reviewed_ranges": [
+        [
+          7,
+          19
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/types.ts",
+      "sha256": "40006b3ff19d3d5b6948c6b99f7ea3733aab8157d653479d282066a28d122af7",
+      "reviewed_ranges": [
+        [
+          3,
+          27
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/client/src/unix.ts",
+      "sha256": "9270ae709121d9cf823c8a07f66becf126054d31a2e9486255ba3d1791b1c026",
+      "reviewed_ranges": [
+        [
+          6,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/auth.ts",
+      "sha256": "7b0cb05c95b944d6c1ef814affacda620c2ad18cd15ba251e06ecf2a705bcb85",
+      "reviewed_ranges": [
+        [
+          4,
+          22
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/command-options.ts",
+      "sha256": "0be8213b0d4161f94f9699dbdedde04e752bd3982522fc56d515fe409a842511",
+      "reviewed_ranges": [
+        [
+          5,
+          39
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/command.ts",
+      "sha256": "058db87657b0db7d45dd844d6b5a28ee48fcc1e32bc17c911a856cc5cb92913d",
+      "reviewed_ranges": [
+        [
+          4,
+          57
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/commands/client.ts",
+      "sha256": "42cfab1e646c88dec04107a592fb82b5efd9c59e6c46a8172632fb0c207bf65c",
+      "reviewed_ranges": [
+        [
+          12,
+          43
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/commands/ice.ts",
+      "sha256": "1ff997feeae524083424a90e69d5b305f08d84b7b95d0a1bf64452fda68cd837",
+      "reviewed_ranges": [
+        [
+          12,
+          44
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/commands/server.ts",
+      "sha256": "6eb3cc1d8aa4318d8948b0fc8942ab11bba199629eba1bc02c6d0209ae567ca9",
+      "reviewed_ranges": [
+        [
+          12,
+          43
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/cli/experimental/transport-address.ts",
+      "sha256": "a604f6ae2ca467e5657a2a9e88fd5de7b03afa42cf95e57accd89ffc685648a6",
+      "reviewed_ranges": [
+        [
+          2,
+          49
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/client/remote-session.ts",
+      "sha256": "2dce24d4bf0e8313ac384dba00c2f09e561c55ea75f461e9b651257483e4caa5",
+      "reviewed_ranges": [
+        [
+          25,
+          64
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-0.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/jsonl.ts",
+      "sha256": "c020a530d0aa37ec1b8b4e7841752a710b7a39fb030f8a25b421a0ee59952b2b",
+      "reviewed_ranges": [
+        [
+          20,
+          46
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
+      "sha256": "f02bb51a514c3809a14cc93ccaee15bad2676b6c38129be5249a393127d85527",
+      "reviewed_ranges": [
+        [
+          77,
+          96
+        ],
+        [
+          102,
+          129
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-coordinator.ts",
+      "sha256": "fa7385e652aeaa1578027e170fa642e1c58d11a49f92cbbe9ff1eb85944227d5",
+      "reviewed_ranges": [
+        [
+          3,
+          22
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-lanes.ts",
+      "sha256": "1cc64c008ecc4a0a94646837965a5697fa183923c856948939a703f06039b1b1",
+      "reviewed_ranges": [
+        [
+          3,
+          22
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-schema.ts",
+      "sha256": "f36e05bf4644173fadfa01705bc82612bc7625acda289bedcae6e0d861263ced",
+      "reviewed_ranges": [
+        [
+          11,
+          173
+        ],
+        [
+          250,
+          269
+        ],
+        [
+          291,
+          328
+        ],
+        [
+          388,
+          407
+        ],
+        [
+          413,
+          432
+        ],
+        [
+          444,
+          463
+        ],
+        [
+          672,
+          691
+        ],
+        [
+          695,
+          705
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-input-admission.ts",
+      "sha256": "f3b6c0da6287ef47e880fb911dbabe77a9b7c74944a29a779caa6b0b8c38d0e2",
+      "reviewed_ranges": [
+        [
+          4,
+          25
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+      "sha256": "4a97792cbea09d25bf13e4d32899a8c3e7f6be8c4d9de598d2222ea7e004f27c",
+      "reviewed_ranges": [
+        [
+          142,
+          191
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-pages.ts",
+      "sha256": "171335f191bbae7f58208b1e2c3a25ed2d20bac6f8a904f17c7dd3c8d8887833",
+      "reviewed_ranges": [
+        [
+          4,
+          48
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-request-tracker.ts",
+      "sha256": "46e367c73910fbf62e30d5946dbb846ab2f6fd62c4b1a862b8fb701e55efbc5c",
+      "reviewed_ranges": [
+        [
+          2,
+          36
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-settings.ts",
+      "sha256": "452d06b6b8878704db7637fa321a38db280b888321a719244bb5af7b4fe5455c",
+      "reviewed_ranges": [
+        [
+          13,
+          36
+        ],
+        [
+          43,
+          91
+        ],
+        [
+          1070,
+          1089
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "sha256": "549d3dbd0cf3a46408c52daab3b4619e4964dc9a1004491677b24badba709400",
+      "reviewed_ranges": [
+        [
+          38,
+          57
+        ],
+        [
+          191,
+          389
+        ],
+        [
+          573,
+          756
+        ],
+        [
+          791,
+          802
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-validation.ts",
+      "sha256": "2e10656a673e3777785e20fc32ac9588f59df009f195f64910249adeda17bbb5",
+      "reviewed_ranges": [
+        [
+          3,
+          22
+        ],
+        [
+          197,
+          228
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-views.ts",
+      "sha256": "ad77ea81c307c51c9fe447b88764b7f2bad6a2b034c3593436e176b0414729e9",
+      "reviewed_ranges": [
+        [
+          25,
+          86
+        ],
+        [
+          139,
+          158
+        ],
+        [
+          171,
+          216
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-14.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/protocol/src/cbor/options.ts",
+      "sha256": "3e26072fd679ae28b7b4a0bb810fbb6adf144aaf50a873f0ee0f23b0fa1d3f6d",
+      "reviewed_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/protocol/src/codec.ts",
+      "sha256": "33ba2f0c75f430f7bdc5356ec1916a515a2b68cdf1e899e92348742ff0fae277",
+      "reviewed_ranges": [
+        [
+          161,
+          173
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/protocol/src/framing.ts",
+      "sha256": "2cf96ebaf35c06beadcd9c652b5f7104d9cc9149c23e08bcd710ea04c2e16ffd",
+      "reviewed_ranges": [
+        [
+          5,
+          30
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/protocol/src/schemas.ts",
+      "sha256": "1b43e4a82e227f6e5fea25fb428e64327295e0a85b3cd1bb932127b632beb084",
+      "reviewed_ranges": [
+        [
+          2,
+          21
+        ],
+        [
+          23,
+          139
+        ],
+        [
+          156,
+          175
+        ],
+        [
+          188,
+          223
+        ],
+        [
+          246,
+          447
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/connection.ts",
+      "sha256": "bcaff506cd6f80c3911396c6439e7d7a0b30a1c57b6dcbfe018367c1ae665a77",
+      "reviewed_ranges": [
+        [
+          11,
+          37
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/errors.ts",
+      "sha256": "1a16b39f1719bd2f0b5b70b7f5b861ebff959573aa4d0f183bfacf1b43703adf",
+      "reviewed_ranges": [
+        [
+          2,
+          41
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/protocol.ts",
+      "sha256": "8490af2a4c3f2ef7c98c9523960e53c94278380862dec4ac421c8378d3a3dac8",
+      "reviewed_ranges": [
+        [
+          107,
+          134
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/sessions.ts",
+      "sha256": "9fac4be92a9e6e2beba4eb0685975c691f6501da8b75bbb2a943c376ad7b57c2",
+      "reviewed_ranges": [
+        [
+          42,
+          61
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/testing/backend.ts",
+      "sha256": "0c6b4b2c693b9f831099a28db1607317ae9a3eabba123c8c990860e110d5b0aa",
+      "reviewed_ranges": [
+        [
+          18,
+          100
+        ],
+        [
+          197,
+          246
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/testing/client.ts",
+      "sha256": "299022c313b537729c596f061ee1f18b02769571d8eb7d72c3d32ad2191e0d2e",
+      "reviewed_ranges": [
+        [
+          19,
+          74
+        ],
+        [
+          115,
+          148
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/testing/server.ts",
+      "sha256": "8793f8203d5db038309dfb4604ff6be7d108b0551ed70cd0ffc8c8127ae90917",
+      "reviewed_ranges": [
+        [
+          4,
+          28
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/transports/unix/listener.ts",
+      "sha256": "01afebb4530c330db398bbbeee886e2699b96669a3dc0350594f2836c1db4a84",
+      "reviewed_ranges": [
+        [
+          17,
+          36
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/transports/unix/types.ts",
+      "sha256": "9400fa85f5eadc64d6375deb3ed435bf81505b71d3830f6a85ad6b6803587c15",
+      "reviewed_ranges": [
+        [
+          2,
+          16
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    },
+    {
+      "area": "rpc-remote",
+      "path": "packages/server/src/types.ts",
+      "sha256": "f42ffa808c11f82f269324b94dc5fd6c9eeae8de56d92fa03f8a2a925db1d113",
+      "reviewed_ranges": [
+        [
+          13,
+          54
+        ],
+        [
+          61,
+          65
+        ]
+      ],
+      "artifact": "evidence/lane-exports-rpc-ai-auth-read-rpc-remote-27.json",
+      "review": "Emitted ranges were read, then declaration-to-contract correspondence evaluated. This is not a claim that intervening source or generated payloads were read."
+    }
+  ],
+  "redactions": [
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 29,
+      "visible": "29 | export const ANTHROPIC_AUTH_TOKEN_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 30,
+      "visible": "30 | export const ANTHROPIC_OAUTH_TOKEN_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/ai/src/env-api-keys.ts",
+      "line": 31,
+      "visible": "31 | export const ANTHROPIC_API_KEY_ENV= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    },
+    {
+      "area": "providers-auth",
+      "path": "packages/coding-agent/src/core/provider-composer.ts",
+      "line": 79,
+      "visible": "79 | export const clearApiKeyCache= [REDACTED_SECRET];",
+      "limitation": "Connector-redacted initializer text was not reconstructed or certified; surrounding visible declaration/mechanism only."
+    }
+  ],
+  "extra_reviews": [
+    {
+      "side": "ice",
+      "path": "packages/ai/src/utils/abort.ts",
+      "range": [
+        1,
+        51
+      ],
+      "sha256": "e81dc16de331e82d7f15759b27e38c7d0a3d28955693e0cf157dd52dadea7035"
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/providers/anthropic/cost.rs",
+      "range": [
+        1,
+        70
+      ]
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/providers/anthropic/build_params.rs",
+      "range": [
+        704,
+        709
+      ],
+      "method": "visible contextual search excerpt"
+    },
+    {
+      "side": "rust",
+      "path": "crates/ice-ai/src/images.rs",
+      "range": [
+        426,
+        433
+      ],
+      "method": "visible contextual search excerpt"
+    },
+    {
+      "side": "ice",
+      "path": "packages/coding-agent/src/core/sdk.ts",
+      "range": [
+        351,
+        366
+      ],
+      "method": "visible contextual search excerpt"
+    },
+    {
+      "path": "packages/ai/src/auth/helpers.ts",
+      "sha256": "bef479acc8e78220db47aad0546a9f8111bd02c7026660e20b29dab3be2601a8",
+      "reviewed_range": [
+        9,
+        31
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/auth/oauth/openai-codex.ts",
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "reviewed_range": [
+        533,
+        544
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/auth/types.ts",
+      "sha256": "31ff8bc0dbc2a83b40e7353b07bd06a63393a650b498a04108855bca2365f2fb",
+      "reviewed_range": [
+        170,
+        237
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/providers/faux.ts",
+      "sha256": "13330f7657090db9dee068dce628ed199b79027bc2186aec77dbf8329ea49f5a",
+      "reviewed_range": [
+        76,
+        99
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/providers/github-copilot.ts",
+      "sha256": "216e06b4d780a70eb0b5641e7a8f3d7cdb7063deb366cd15a950a3c8b1470865",
+      "reviewed_range": [
+        27,
+        35
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/bedrock-provider.ts",
+      "sha256": "427a4e76812ea4ac42133e7f41e75df99e0edaff883659c96a0e4ec78f670f9f",
+      "reviewed_range": [
+        1,
+        7
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/env-api-keys.ts",
+      "sha256": "a19e3970a0f87b81320a698fc8003af4f34645111fb262c620a1591cbd0a563d",
+      "reviewed_range": [
+        128,
+        188
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/coding-agent/src/ice-provider-settings.ts",
+      "sha256": "fec6e85a3f6fb6ac6e687d4bdddc73e36300b80d3a6b4bc60185eb41413d8ede",
+      "reviewed_range": [
+        199,
+        235
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/auth/context.ts",
+      "sha256": "03101bfa711fad214af111e25328b6f607d6b0a7ebfe289af58a89cd55baf639",
+      "reviewed_range": [
+        1,
+        46
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/providers/amazon-bedrock.models.ts",
+      "sha256": "9c9cbe9b1c977177454ed12dc48c521fdc88d257ee1b92bc3805aa77eaf9b982",
+      "reviewed_range": [
+        1,
+        9
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/providers/cloudflare-auth.ts",
+      "sha256": "d0532efb4f00126286d71dbce6fcb95e581cd9477467dc4bd20f1df1a466f03e",
+      "reviewed_range": [
+        87,
+        104
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/ai/src/auth/credential-store.ts",
+      "sha256": "50ebde56b80b5862025e031719006ea303edd9aa80fec780fbc64319bb9e2847",
+      "reviewed_range": [
+        27,
+        68
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "path": "packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "reviewed_range": [
+        249,
+        268
+      ],
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "range": [
+        58,
+        191
+      ],
+      "sha256": "549d3dbd0cf3a46408c52daab3b4619e4964dc9a1004491677b24badba709400",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "range": [
+        390,
+        573
+      ],
+      "sha256": "549d3dbd0cf3a46408c52daab3b4619e4964dc9a1004491677b24badba709400",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "range": [
+        753,
+        795
+      ],
+      "sha256": "549d3dbd0cf3a46408c52daab3b4619e4964dc9a1004491677b24badba709400",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/protocol/src/schemas.ts",
+      "range": [
+        136,
+        188
+      ],
+      "sha256": "1b43e4a82e227f6e5fea25fb428e64327295e0a85b3cd1bb932127b632beb084",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/protocol/src/schemas.ts",
+      "range": [
+        221,
+        247
+      ],
+      "sha256": "1b43e4a82e227f6e5fea25fb428e64327295e0a85b3cd1bb932127b632beb084",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/server/src/testing/backend.ts",
+      "range": [
+        74,
+        293
+      ],
+      "sha256": "0c6b4b2c693b9f831099a28db1607317ae9a3eabba123c8c990860e110d5b0aa",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/server/src/testing/client.ts",
+      "range": [
+        69,
+        115
+      ],
+      "sha256": "299022c313b537729c596f061ee1f18b02769571d8eb7d72c3d32ad2191e0d2e",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/client/src/session-handle.ts",
+      "range": [
+        64,
+        112
+      ],
+      "sha256": "1f152906d7dbcf135278034e9c1d52f1671d7a1fe597ffa2aecb398bea8526a3",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/server/src/types.ts",
+      "range": [
+        54,
+        65
+      ],
+      "sha256": "f42ffa808c11f82f269324b94dc5fd6c9eeae8de56d92fa03f8a2a925db1d113",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-settings.ts",
+      "range": [
+        26,
+        44
+      ],
+      "sha256": "452d06b6b8878704db7637fa321a38db280b888321a719244bb5af7b4fe5455c",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/cli/experimental/commands/client.ts",
+      "range": [
+        43,
+        45
+      ],
+      "sha256": "42cfab1e646c88dec04107a592fb82b5efd9c59e6c46a8172632fb0c207bf65c",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/cli/experimental/commands/server.ts",
+      "range": [
+        43,
+        45
+      ],
+      "sha256": "6eb3cc1d8aa4318d8948b0fc8942ab11bba199629eba1bc02c6d0209ae567ca9",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/cli/experimental/commands/ice.ts",
+      "range": [
+        44,
+        48
+      ],
+      "sha256": "1ff997feeae524083424a90e69d5b305f08d84b7b95d0a1bf64452fda68cd837",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-validation.ts",
+      "range": [
+        225,
+        244
+      ],
+      "sha256": "2e10656a673e3777785e20fc32ac9588f59df009f195f64910249adeda17bbb5",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-pages.ts",
+      "range": [
+        43,
+        75
+      ],
+      "sha256": "171335f191bbae7f58208b1e2c3a25ed2d20bac6f8a904f17c7dd3c8d8887833",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-command-schema.ts",
+      "range": [
+        251,
+        291
+      ],
+      "sha256": "f36e05bf4644173fadfa01705bc82612bc7625acda289bedcae6e0d861263ced",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/coding-agent/src/modes/rpc/rpc-views.ts",
+      "range": [
+        140,
+        170
+      ],
+      "sha256": "ad77ea81c307c51c9fe447b88764b7f2bad6a2b034c3593436e176b0414729e9",
+      "method": "Direct Connectme bounded source read; no source execution."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/client/src/connection.ts",
+      "range": [
+        9,
+        13
+      ],
+      "method": "Read source-context search result containing createPromiseResolvers import; SHA not included in search response. Full source identity remains the certified source inventory."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/client/src/connection.ts",
+      "range": [
+        69,
+        73
+      ],
+      "method": "Read source-context search result containing createPromiseResolvers handshake use; SHA not included in search response. Full source identity remains the certified source inventory."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/client/src/client.ts",
+      "range": [
+        20,
+        24
+      ],
+      "method": "Read source-context search result containing createPromiseResolvers import; SHA not included in search response. Full source identity remains the certified source inventory."
+    },
+    {
+      "area": "rpc-remote",
+      "side": "ice",
+      "path": "packages/client/src/client.ts",
+      "range": [
+        191,
+        195
+      ],
+      "method": "Read source-context search result containing createPromiseResolvers request use; SHA not included in search response. Full source identity remains the certified source inventory."
+    }
+  ],
+  "attribution": "Original subsystem evidence remains attributed to its original author. Lane reviews name exact exports and extend only the source contracts specified in additive proposals. No tests, builds or application code were executed; read-only inspection helpers were run."
+}

@@ -1,0 +1,98 @@
+{
+  "area": "ai",
+  "fragment": "shared-schema",
+  "owner": "audit_tools",
+  "applied": false,
+  "coordinator_review_required": true,
+  "resolves": {
+    "artifact": "docs/ice-gap/evidence/qa-semantic-dependency-suggestions.json",
+    "sha256": "b2bc5ad3b02546d65aa9efbefa2d952e87f3cdfe183156f871a2245cbcd31761",
+    "review_id": "DEPQA-031",
+    "old_disposition": "targeted_schema_followup",
+    "new_disposition": "resolved_prerequisite",
+    "new_target": "AI-019",
+    "evidence": "docs/ice-gap/evidence/spec-ai-schema-supplement.json",
+    "rationale": "The supplement now explicitly enumerates the imported nested Message/Content/Usage/Deferred/Context/event/model contracts; AI-006 remains the request-option and hard-output authority owner."
+  },
+  "dependency_patches": [
+    {
+      "spec_path": "docs/ice-gap/evidence/spec-agent.json",
+      "spec_sha256": "05544e39a827c4d126fa5245fda96f2a46fe144a6f56d9715100c3798cb8da76",
+      "entry_id": "AGENT-001",
+      "current_dependencies": [],
+      "add_dependencies": [
+        "AI-019"
+      ],
+      "related_only": [
+        "AI-006"
+      ],
+      "preserve_all_other_fields": true
+    },
+    {
+      "spec_path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+      "spec_sha256": "747f79c01c00da090acd3133bf5291cb501bba55bd56dbf129c7d119d95a8be0",
+      "entry_id": "RPC-004",
+      "current_dependencies": [
+        "RPC-003",
+        "AI-005"
+      ],
+      "add_dependencies": [
+        "AI-019"
+      ],
+      "preserve_all_other_fields": true
+    },
+    {
+      "spec_path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+      "spec_sha256": "747f79c01c00da090acd3133bf5291cb501bba55bd56dbf129c7d119d95a8be0",
+      "entry_id": "RPC-034",
+      "current_dependencies": [
+        "RPC-004",
+        "RPC-016",
+        "RPC-017",
+        "RPC-024",
+        "RPC-029",
+        "RPC-031",
+        "RPC-033"
+      ],
+      "add_dependencies": [
+        "AI-019"
+      ],
+      "preserve_all_other_fields": true
+    }
+  ],
+  "cross_reference_patches": [
+    {
+      "entry_id": "RPC-003",
+      "related_id": "AI-019",
+      "not_a_required_direct_build_edge": true,
+      "rationale": "The binary protocol declares a deliberately closed projected schema. Its actual conversion from rich AI records is RPC-004, so structural correspondence is a related reference unless coordinator chooses an explicit type-reuse implementation."
+    }
+  ],
+  "source_reference_repairs": [
+    {
+      "spec_path": "docs/ice-gap/evidence/spec-ai.json",
+      "spec_sha256": "f10af7a200b17292deeeca172bfc5051727a049de3261881b784a678678a8e42",
+      "entry_id": "AI-013",
+      "field": "source",
+      "operation": "replace_exact_reference_token",
+      "old_reference": "ice:packages/ai/src/types.ts:245-314",
+      "new_reference": "ice:packages/ai/src/types.ts:487-514",
+      "old_field_value": "ice:packages/ai/src/api/constrained-sampling.ts:1-148; ice:packages/ai/test/constrained-sampling.test.ts:1-230; ice:packages/ai/src/types.ts:245-314.",
+      "new_field_value": "ice:packages/ai/src/api/constrained-sampling.ts:1-148; ice:packages/ai/test/constrained-sampling.test.ts:1-230; ice:packages/ai/src/types.ts:487-514.",
+      "source_sha256": "4494bade16edc9ec9eeeea9c52215ee573885b6f28bf9cb0130072a3c9355aba",
+      "rationale": "GrammarFormat, GrammarVariants, ConstrainedSamplingConfig and Tool are exactly487–514. The previous245–314 span covers API dispatch/options rather than those declarations; preserve it only as a separately explained options reference if another narrative actually needs it.",
+      "preserve_all_other_fields": true
+    }
+  ],
+  "defect_cross_references": [
+    {
+      "id": "RUST-035",
+      "add_related_entries": [
+        "AI-019"
+      ],
+      "actual_reviewed_native_caller": "crates/ice-cli/src/remote/protocol.rs:207",
+      "notes": "RPC-003/004/034 are shared-contract consumers. Their future binary/validator use does not establish an additional current runtime path for this native spelling defect. Root owns final catalog links."
+    }
+  ],
+  "no_shared_edits": true
+}

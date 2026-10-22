@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "owner": "/root/audit_tools",
+  "status": "ready-for-coordinator-catalog-review",
+  "catalog_ids_assigned": false,
+  "scope": "Frozen old Rust checkout; no mutation or runtime reproduction. Root rechecks active checkout and upstream provenance before final attribution.",
+  "spec": {
+    "path": "evidence/spec-tui-terminal.json",
+    "sha256": "cb62f9230572a2a0cd5e1f70d2468cd3131a3224c3a06581d695c143e928973f"
+  },
+  "source_review": {
+    "path": "docs/ice-gap/evidence/tui-terminal-source-review.json",
+    "sha256": "573fc6af4ea1038603483461f4b170eeb52c1c90e8bf03d0fc354254d4fa05d2"
+  },
+  "findings": [
+    {
+      "candidate_key": "kitty_missing_continuation_flags",
+      "entry_ids": [
+        "TUI-226"
+      ],
+      "title": "Kitty image continuation frames omit m=1/m=0",
+      "reachability": "active component path under Kitty image capability",
+      "condition": "The encoded payload is longer than4000 base64 characters, so encode_kitty produces multiple chunks.",
+      "mechanism": "terminal_image.rs178–222 splits the payload into4000-character chunks and computes _m, but never serializes that value. The first frame has transmit controls; later frames have empty controls and neither continuation nor final m flags. This does not implement a multi-chunk Kitty transmission.",
+      "effect": "Images exceeding one encoded chunk can be interpreted as incomplete/independent protocol messages instead of one image.",
+      "rust_refs": [
+        "crates/ice-tui/src/terminal_image.rs:178-222",
+        "crates/ice-tui/src/terminal_image.rs:429-445",
+        "crates/ice-tui/src/image.rs:245-269"
+      ],
+      "caller_chain": [
+        "Image component rendering -> render_image helper -> Kitty serializer."
+      ],
+      "limits": "Source-derived protocol conclusion only; no terminal emission, downloaded image or protocol experiment was performed.",
+      "test_boundary": "Existing small-image inline fixture at terminal_image.rs500–520 does not cover multiple chunks."
+    },
+    {
+      "candidate_key": "rgb_style_carry_parameter_count",
+      "entry_ids": [
+        "TUI-202"
+      ],
+      "title": "Wrapped truecolor style parser consumes six parameters instead of five",
+      "reachability": "active wrapping and row-isolation path",
+      "condition": "Wrapped content contains standard SGR38;2;r;g;b or48;2;r;g;b and style must carry into another row.",
+      "mechanism": "update_sgr_context at line_diff.rs161–170 requires index+5 and consumes6 parameters. Standard RGB has5 parameters. A normal RGB sequence falls through into unrelated SGR slots; a following extra SGR parameter can be swallowed into the color sequence.",
+      "effect": "Subsequent wrapped rows lose/corrupt truecolor and may carry unintended attributes. The existing style-isolation feature itself is real.",
+      "rust_refs": [
+        "crates/ice-tui/src/line_diff.rs:111-178",
+        "crates/ice-tui/src/line_diff.rs:223-234",
+        "crates/ice-tui/src/utils.rs:348-350"
+      ],
+      "caller_chain": [
+        "wrap_text_with_ansi -> isolate_wrapped_lines -> ANSI atom/context update."
+      ],
+      "limits": "No rendered terminal experiment; this is not the separate Theme.fg full-reset versus selective-reset design difference (main TUI-001)."
+    },
+    {
+      "candidate_key": "osc8_public_hit_test_parser",
+      "entry_ids": [
+        "TUI-204"
+      ],
+      "title": "Exported OSC8 hit testing misparses URL and close sequences",
+      "reachability": "public library helper; no internal interactive caller established",
+      "condition": "get_osc8_link_at_column receives ordinary ESC]8;;uri termination syntax, an OSC8 close, or a click column inside a wide glyph.",
+      "mechanism": "The helper takes payload after the first semicolon rather than the second. A normal open returns ';uri'; closing8;; stores ';' and leaves link state active. Column equality also misses the second occupied cell of a wide glyph.",
+      "effect": "Callers of this helper receive malformed or stale link targets/hits.",
+      "rust_refs": [
+        "crates/ice-tui/src/utils.rs:384-440"
+      ],
+      "caller_chain": [
+        "Definition and lib re-export only in the bounded crates search; native primary mouse dispatch does not call this helper."
+      ],
+      "limits": "Do not label this as an observed browser launch, exploitable URL routing or active primary CLI link failure. line_diff.rs181–197 separately handles OSC8 carry correctly."
+    },
+    {
+      "candidate_key": "raw_kitty_key_parser",
+      "entry_ids": [
+        "TUI-206"
+      ],
+      "title": "Exported raw Kitty key parser decodes modifier/event parameters incorrectly",
+      "reachability": "public library parser; primary CLI keyboard path uses Crossterm",
+      "condition": "Raw CSI-u or extended-key bytes are passed to the exported string parser.",
+      "mechanism": "keys.rs uses Ctrl1/Shift2/Alt4 without subtracting the protocol offset, drops colon parameters via filter_map, derives event type from the wrong parameter and has additional key-number/ASCII-only assumptions. Its printable decoder does not reject modified/release input.",
+      "effect": "Raw-helper users can obtain incorrect key identities or printable text. This does not show that all native typing is affected.",
+      "rust_refs": [
+        "crates/ice-tui/src/keys.rs:1-524",
+        "crates/ice-tui/src/terminal.rs:401-415",
+        "crates/ice-tui/src/keybindings.rs:686-703"
+      ],
+      "caller_chain": [
+        "Primary terminal reads Crossterm KeyEvent and keybindings matches it directly; decode_kitty_printable_from_str has no observed internal caller beyond definition."
+      ],
+      "limits": "The complete helper and tests were read. No raw terminal injection was run."
+    },
+    {
+      "candidate_key": "stdin_split_marker_loss",
+      "entry_ids": [
+        "TUI-207"
+      ],
+      "title": "Exported StdinBuffer loses bracketed-paste markers split across calls",
+      "reachability": "public library helper; construction found only in inline tests",
+      "condition": "A paste start or end escape sequence is split between successive process(data) calls.",
+      "mechanism": "process_with_bracketed_paste searches only the current data argument for full markers at115/139. It retains no partial marker parser. A split end is appended as paste text and does not exit paste state. The batching timestamp is reset at93–95 immediately before checking elapsed at188–196, and no timer flushes delayed data.",
+      "effect": "Raw-helper users can remain in paste mode or receive unframed chunks. The nominal cap is also not strict for one oversized buffered chunk.",
+      "rust_refs": [
+        "crates/ice-tui/src/stdin_buffer.rs:87-200"
+      ],
+      "caller_chain": [
+        "Bounded crates search found StdinBuffer::new/with_options only in inline tests; primary terminal uses Crossterm typed events."
+      ],
+      "limits": "Not evidence that the active CLI's typed bracketed paste is broken. Native Windows console paste batching is a distinct retained implementation."
+    },
+    {
+      "candidate_key": "stdin_callback_reentrancy_deadlock",
+      "entry_ids": [
+        "TUI-207"
+      ],
+      "title": "StdinBuffer invokes callbacks while retaining its callback mutex",
+      "reachability": "public library helper with caller-installed reentrant callback",
+      "condition": "An event callback re-registers a callback, or re-enters an operation needing a buffer/paste lock held by the emitting path.",
+      "mechanism": "emit_event at218–222 holds callbacks.lock while invoking each callback. on_event at81–84 requires the same mutex. PasteEnd emission at118–125 and buffered flush/overflow at168–175,203–207 can also retain data locks.",
+      "effect": "A reentrant callback can deadlock the calling thread.",
+      "rust_refs": [
+        "crates/ice-tui/src/stdin_buffer.rs:80-85",
+        "crates/ice-tui/src/stdin_buffer.rs:118-125",
+        "crates/ice-tui/src/stdin_buffer.rs:168-175",
+        "crates/ice-tui/src/stdin_buffer.rs:203-228"
+      ],
+      "caller_chain": [
+        "Public callback API only; no primary CLI StdinBuffer construction established."
+      ],
+      "limits": "Source lock-order proof, not an executed hang. Does not apply automatically to the separate typed terminal input path."
+    },
+    {
+      "candidate_key": "paste_registry_unsorted_renumber",
+      "entry_ids": [
+        "TUI-244"
+      ],
+      "title": "Deleting a folded paste can overwrite another stored payload",
+      "reachability": "active Editor backspace path with registered paste markers",
+      "condition": "Delete registered marker1 while higher IDs2 and3 remain, and HashMap iteration visits3 before2.",
+      "mechanism": "remove_paste at421 collects unsorted higher keys, then423–424 removes old and immediately inserts old-1 into the same map. Moving3->2 overwrites payload2; later removing2 moves payload3 again to1. The separate regex pass436–447 decrements each original marker exactly once, leaving rewritten marker2 without its payload.",
+      "effect": "Previously pasted content is lost and remaining marker expansion no longer matches the user's original text.",
+      "rust_refs": [
+        "crates/ice-tui/src/editor.rs:415-450",
+        "crates/ice-tui/src/editor.rs:859-903"
+      ],
+      "caller_chain": [
+        "Editor backspace over a registered marker -> remove_paste -> mutable HashMap renumber -> document marker rewrite."
+      ],
+      "limits": "Outcome depends on HashMap iteration order; no runtime reproduction claimed. Native removes the selected marker before renumbering, which avoids a separate TS stale-slice issue and should be preserved.",
+      "test_boundary": "Inline paste deletion fixture2286–2320 only has one moved higher entry2->1; it does not establish collision safety."
+    },
+    {
+      "candidate_key": "editor_word_byte_scalar_mix",
+      "entry_ids": [
+        "TUI-248"
+      ],
+      "title": "Word navigation and deletion mix byte cursors with scalar indices",
+      "reachability": "active Editor word shortcuts",
+      "condition": "A current line contains multibyte Unicode and a word-move/kill shortcut is applied.",
+      "mechanism": "editor.rs1052,1071 and1085–1095 pass byte cursor_col into helpers whose indices are Unicode scalar positions, then use returned scalar positions as byte ranges/cursors. For '你' at byte3, backward lookup can index beyond its one-character vector; forward kill from0 obtains1 and drain(0..1) is not a UTF8 boundary.",
+      "effect": "Normal word editing can panic or leave a cursor inside a code point.",
+      "rust_refs": [
+        "crates/ice-tui/src/editor.rs:1044-1096",
+        "crates/ice-tui/src/word_navigation.rs:72-128",
+        "crates/ice-tui/src/editor.rs:1200-1388"
+      ],
+      "caller_chain": [
+        "Native hardcoded word shortcuts in Editor.handle_key -> kill_word_backward/forward or cursor_word_left/right -> scalar-index word helpers."
+      ],
+      "limits": "Source-only; ordinary scalar character editing/set_cursor contains separate byte-boundary protection and is not claimed wholly broken.",
+      "test_boundary": "Word tests1841–1873 are ASCII; multibyte tests2139–2168 cover character operations instead."
+    },
+    {
+      "candidate_key": "editor_jump_target_width_slice",
+      "entry_ids": [
+        "TUI-254"
+      ],
+      "title": "Character jump advances byte cursor by target width instead of source-character width",
+      "reachability": "active Editor character-jump mode",
+      "condition": "A target character's UTF8 width differs from the character at/before the current byte cursor; example line '你x', cursor0, forward target x.",
+      "mechanism": "jump_to_char computes search_from as cursor_col+target.len_utf8 or subtraction at1131–1133, then directly slices at1141/1143. In the example search_from=1 splits the three-byte '你'.",
+      "effect": "Character jump can panic on a valid Unicode line; backward search also excludes an immediately preceding target.",
+      "rust_refs": [
+        "crates/ice-tui/src/editor.rs:1117-1156",
+        "crates/ice-tui/src/editor.rs:1200-1388"
+      ],
+      "caller_chain": [
+        "Editor.handle_key pending jump state -> jump_to_char on the next plain/Shift character."
+      ],
+      "limits": "Source comment claiming byte safety is contradicted by the actual slice. No shortcut execution or crash reproduction.",
+      "test_boundary": "Inline jump tests1769–1840 are ASCII-only."
+    },
+    {
+      "candidate_key": "transcript_selection_screen_mapping",
+      "entry_ids": [
+        "TUI-224"
+      ],
+      "title": "Native transcript copy ignores selected columns and viewport geometry",
+      "reachability": "active primary CLI mouse-drag selection/copy path",
+      "condition": "A real transcript drag selects text at a width other than80, at a scrolled viewport offset, or within columns of a row.",
+      "mechanism": "Primary mouse-up calls extract_selected_text after a real drag. The helper re-renders the entire chat container at hardcoded width80, ignores both x coordinates and viewport/layout offsets, uses screen y as transcript row indices, then joins entire raw styled lines.",
+      "effect": "Clipboard content can be wrong rows, full rows instead of selected columns, and include ANSI sequences.",
+      "rust_refs": [
+        "crates/ice-cli/src/interactive_tui.rs:1752-1850",
+        "crates/ice-cli/src/interactive_tui/run.rs:341-377"
+      ],
+      "caller_chain": [
+        "MouseDown/Drag/MouseUp in primary host -> extract_selected_text(chat_container,start,end) -> native clipboard -> selection cleared."
+      ],
+      "limits": "Native drag selection and configurable copy-on-select are implemented; this is a mapping/serialization defect, not absence of selection. Source-only; no clipboard action performed."
+    }
+  ],
+  "source_records": [
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1680,
+          1855
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/run.rs",
+      "sha256": "b8c251dffd6057ff032fb5da4470b61ea152edf2a56a5fe5478676de909fc0e9",
+      "total_lines": 725,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          300,
+          440
+        ]
+      ],
+      "fully_read": false
+    },
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "total_lines": 2420,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          2420
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/image.rs",
+      "sha256": "4435e92b152cb1fdcbf81fe936a1490fa0825c2f8f7db0a7ad06d00c96f41587",
+      "total_lines": 419,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          419
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keybindings.rs",
+      "sha256": "e78c3932b990db2179b0bde8514b3d5299af4e125dfdb93a34064e010b3c3d67",
+      "total_lines": 936,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          936
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/keys.rs",
+      "sha256": "b253ce229e63eae6b348a7d979f0fd9e5a02257ff146fd31c17fbb5b1729648a",
+      "total_lines": 524,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          524
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/line_diff.rs",
+      "sha256": "3041ac0281b188d8e9bbd28694306e271d6f2e0af469ba26b0e06b1ab88b380f",
+      "total_lines": 358,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          358
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/stdin_buffer.rs",
+      "sha256": "78c2500438233acbe5a216ef0eb3f389762f9ba46a1f3220577418ff1e6d86f7",
+      "total_lines": 312,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          312
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal_image.rs",
+      "sha256": "af496a5584604ebf3f48cbd39bf13ff1517a907824d8e4fcbd9fbefed50d1d8f",
+      "total_lines": 559,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          559
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/terminal.rs",
+      "sha256": "5dc9e614eb1589611e87491eb5d1dab93cd8596534e0fab107f63c472ba427bc",
+      "total_lines": 672,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          672
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/utils.rs",
+      "sha256": "8d490360a20744cc985d84e424bfd0bfc99294b474050d82878c3bfe9818764e",
+      "total_lines": 484,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          484
+        ]
+      ],
+      "fully_read": true
+    },
+    {
+      "path": "rust:crates/ice-tui/src/word_navigation.rs",
+      "sha256": "edaf5ca49ec158e34125767345279b57ffb88aace7940f47bf8c34e5f3ab6770",
+      "total_lines": 271,
+      "notes": "coordinator source manifest",
+      "ranges": [
+        [
+          1,
+          271
+        ]
+      ],
+      "fully_read": true
+    }
+  ],
+  "rechecked_ranges": [
+    {
+      "path": "crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "range": [
+        415,
+        450
+      ],
+      "matches_frozen_source_review": true
+    },
+    {
+      "path": "crates/ice-tui/src/editor.rs",
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "range": [
+        1043,
+        1158
+      ],
+      "matches_frozen_source_review": true
+    },
+    {
+      "path": "crates/ice-tui/src/stdin_buffer.rs",
+      "sha256": "78c2500438233acbe5a216ef0eb3f389762f9ba46a1f3220577418ff1e6d86f7",
+      "range": [
+        1,
+        240
+      ],
+      "matches_frozen_source_review": true
+    },
+    {
+      "path": "crates/ice-tui/src/line_diff.rs",
+      "sha256": "3041ac0281b188d8e9bbd28694306e271d6f2e0af469ba26b0e06b1ab88b380f",
+      "range": [
+        111,
+        178
+      ],
+      "matches_frozen_source_review": true
+    }
+  ],
+  "not_promoted_to_catalog_here": [
+    "TS editor overwide-grapheme recursion is a TS defect, not a Rust defect.",
+    "Native image dimension/zero-cell-height, empty-loader-frame and completion-transaction findings remain in the full terminal spec/review for coordinator prioritization.",
+    "Theme reset differences belong main TUI-001; missing feature parity is not automatically a defect."
+  ],
+  "tests_executed": false,
+  "source_modified": false
+}

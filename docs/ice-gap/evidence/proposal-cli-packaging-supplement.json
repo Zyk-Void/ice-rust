@@ -1,0 +1,2422 @@
+{
+  "area": "cli-packaging",
+  "fragment": "package-management",
+  "owner": "audit_tools",
+  "complete": false,
+  "draft_complete": true,
+  "independent_qa": {
+    "status": "pending",
+    "owner": "coordinator",
+    "note": "Worker schema/reference/candidate checks completed separately; coordinator controls publication."
+  },
+  "entries": [
+    {
+      "id": "CLI-020",
+      "title": "Package source grammar, canonical identity and scoped local-path resolution",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [],
+      "size_min": 220,
+      "size_max": 360
+    },
+    {
+      "id": "CLI-021",
+      "title": "Scoped package settings, identity-preserving edits and payload-before-config ordering",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "SET-003",
+        "SET-007",
+        "SET-008",
+        "SET-009"
+      ],
+      "size_min": 160,
+      "size_max": 260
+    },
+    {
+      "id": "CLI-022",
+      "title": "Managed cache layout, temporary extension caches and lexical containment",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "SET-001",
+        "SET-003"
+      ],
+      "size_min": 150,
+      "size_max": 240
+    },
+    {
+      "id": "CLI-023",
+      "title": "Package subprocess environment, completion events, timeouts and progress callbacks",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-018"
+      ],
+      "size_min": 160,
+      "size_max": 280
+    },
+    {
+      "id": "CLI-024",
+      "title": "npm, pnpm and Bun package installation with legacy global-cache fallback",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "CLI-022",
+        "CLI-023",
+        "SET-002"
+      ],
+      "size_min": 240,
+      "size_max": 390
+    },
+    {
+      "id": "CLI-025",
+      "title": "Git installation, clone failure cleanup and persistent temporary checkout refresh",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "CLI-022",
+        "CLI-023",
+        "CLI-024"
+      ],
+      "size_min": 180,
+      "size_max": 300
+    },
+    {
+      "id": "CLI-026",
+      "title": "Git update reconciliation, forced remote refs and incomplete-update recovery",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-023",
+        "CLI-024",
+        "CLI-025"
+      ],
+      "size_min": 250,
+      "size_max": 420
+    },
+    {
+      "id": "CLI-027",
+      "title": "Explicit package-update selection, pin policy and bounded batch concurrency",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "CLI-021",
+        "CLI-024",
+        "CLI-026",
+        "CLI-028"
+      ],
+      "size_min": 160,
+      "size_max": 270
+    },
+    {
+      "id": "CLI-028",
+      "title": "Available package-update probes, remote-head comparison and failure suppression",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [
+        "CLI-020",
+        "CLI-022",
+        "CLI-023"
+      ],
+      "size_min": 160,
+      "size_max": 260
+    },
+    {
+      "id": "CLI-029",
+      "title": "Resource manifests, convention fallback and glob expansion by resource type",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "EXT-005",
+        "CLI-030",
+        "CLI-031"
+      ],
+      "size_min": 230,
+      "size_max": 380
+    },
+    {
+      "id": "CLI-030",
+      "title": "Resource directory walks, ignore files, symlinks and entrypoint boundaries",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "EXT-005"
+      ],
+      "size_min": 250,
+      "size_max": 410
+    },
+    {
+      "id": "CLI-031",
+      "title": "Resource filter precedence and sequential autoload-false project overrides",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [],
+      "size_min": 180,
+      "size_max": 300
+    },
+    {
+      "id": "CLI-032",
+      "title": "Effective resource resolution, global-first suppression, scope ranks and physical dedup",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-021",
+        "CLI-029",
+        "CLI-030",
+        "CLI-031",
+        "CLI-033",
+        "SET-003"
+      ],
+      "size_min": 300,
+      "size_max": 490
+    },
+    {
+      "id": "CLI-033",
+      "title": "Missing package-source policy, offline short-circuiting and local-source fallback",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-020",
+        "CLI-022",
+        "CLI-024",
+        "CLI-025",
+        "CLI-026",
+        "CLI-029"
+      ],
+      "size_min": 160,
+      "size_max": 270
+    },
+    {
+      "id": "CLI-034",
+      "title": "Package-command parsing, help/error precedence and update target matrix",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [],
+      "size_min": 180,
+      "size_max": 290
+    },
+    {
+      "id": "CLI-035",
+      "title": "Package-command project trust and saved-trust-only update policy",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "CLI-034",
+        "CLI-021",
+        "SET-003",
+        "SET-007",
+        "SET-008"
+      ],
+      "size_min": 130,
+      "size_max": 220
+    },
+    {
+      "id": "CLI-036",
+      "title": "Install/remove/list output and config-selector resolution/launch",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-021",
+        "CLI-032",
+        "CLI-034",
+        "CLI-035",
+        "CLI-016"
+      ],
+      "size_min": 130,
+      "size_max": 220
+    },
+    {
+      "id": "CLI-037",
+      "title": "Explicit model-catalog refresh through update --models",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-034",
+        "AI-002",
+        "SET-001"
+      ],
+      "size_min": 55,
+      "size_max": 95
+    },
+    {
+      "id": "CLI-038",
+      "title": "Self-update planning, global command selection and extension-before-self sequencing",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-027",
+        "CLI-034",
+        "CLI-035",
+        "SET-002",
+        "MISC-001",
+        "MISC-002"
+      ],
+      "size_min": 150,
+      "size_max": 250
+    },
+    {
+      "id": "CLI-039",
+      "title": "Native project package links: preserve Cargo workflow and close name-containment holes",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [],
+      "size_min": 100,
+      "size_max": 190
+    },
+    {
+      "id": "CLI-040",
+      "title": "Native Cargo artifact installation, ownership locking and rollback to preserve",
+      "status": "different-by-design",
+      "priority": "P3",
+      "dependencies": [],
+      "size_min": 0,
+      "size_max": 0
+    },
+    {
+      "id": "CLI-041",
+      "title": "Verified native extension prebuilt distribution and publisher provenance to preserve",
+      "status": "different-by-design",
+      "priority": "P3",
+      "dependencies": [
+        "CLI-040"
+      ],
+      "size_min": 0,
+      "size_max": 0
+    },
+    {
+      "id": "CLI-042",
+      "title": "Native startup update cache, per-entry freshness and backend-aware notices to preserve",
+      "status": "different-by-design",
+      "priority": "P3",
+      "dependencies": [
+        "CLI-041"
+      ],
+      "size_min": 0,
+      "size_max": 0
+    },
+    {
+      "id": "CLI-043",
+      "title": "Native self-update source selection, isolated builds and already-staged retry defect",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-042",
+        "CLI-044",
+        "CLI-045",
+        "CLI-046"
+      ],
+      "size_min": 55,
+      "size_max": 110
+    },
+    {
+      "id": "CLI-044",
+      "title": "Native executable activation safeguards and the post-collection output-cap defect",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [],
+      "size_min": 80,
+      "size_max": 145
+    },
+    {
+      "id": "CLI-045",
+      "title": "Native prebuilt CLI release verification and repository-case rejection defect",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-041",
+        "CLI-044"
+      ],
+      "size_min": 15,
+      "size_max": 45
+    },
+    {
+      "id": "CLI-046",
+      "title": "Windows detached native activation, status consumption and timestamp-schema mismatch",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "CLI-044"
+      ],
+      "size_min": 45,
+      "size_max": 90
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "entry_ids": [
+        "CLI-020",
+        "CLI-021",
+        "CLI-022",
+        "CLI-023",
+        "CLI-024",
+        "CLI-025",
+        "CLI-026",
+        "CLI-027",
+        "CLI-028",
+        "CLI-029",
+        "CLI-030",
+        "CLI-031",
+        "CLI-032",
+        "CLI-033"
+      ],
+      "status": "mapped",
+      "notes": "Full original body1–2696 plus terminal line2697 read. Every backend, resource collector/filter, acquisition, scope and update method accounted for."
+    },
+    {
+      "path": "packages/coding-agent/src/package-manager-cli.ts",
+      "entry_ids": [
+        "CLI-034",
+        "CLI-035",
+        "CLI-036",
+        "CLI-037",
+        "CLI-038"
+      ],
+      "status": "mapped",
+      "notes": "Full original body1–905 plus terminal line906 read. Native counterpart preservation/corrections039–046 supplement these command comparisons."
+    },
+    {
+      "path": "packages/coding-agent/docs/packages.md",
+      "entry_ids": [
+        "CLI-020",
+        "CLI-021",
+        "CLI-022",
+        "CLI-023",
+        "CLI-024",
+        "CLI-025",
+        "CLI-026",
+        "CLI-027",
+        "CLI-028",
+        "CLI-029",
+        "CLI-030",
+        "CLI-031",
+        "CLI-032",
+        "CLI-033",
+        "CLI-034",
+        "CLI-035",
+        "CLI-036",
+        "CLI-037",
+        "CLI-038",
+        "CLI-039",
+        "CLI-040",
+        "CLI-041",
+        "CLI-042",
+        "CLI-043",
+        "CLI-044",
+        "CLI-045",
+        "CLI-046"
+      ],
+      "status": "mapped",
+      "notes": "Full230 body lines plus terminal231 read. Documentation pin/current-run claims are bounded by actual exact-semver/retained-cache source behavior; native preservation entries explain distinct supported package backends."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "paths",
+      "name": "\"/proc/self/environ\"",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:12",
+      "rust_ref": "crates/ice-cli/src/install.rs:223",
+      "status": "different-by-design",
+      "entry_id": "CLI-023",
+      "candidate_ids": [
+        "C000531"
+      ],
+      "notes": "Original C000531 is a real fixed filesystem input. Linux-only, completely empty process.env fallback; native Rust does not need to reproduce the JS environment workaround."
+    },
+    {
+      "category": "environment",
+      "name": "HOME",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:215",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [
+        "C000532"
+      ],
+      "notes": "Original C000532. Home skill discovery chooses process.env.HOME or homedir; unrelated native footer HOME use is not package-resolver parity."
+    },
+    {
+      "category": "cli",
+      "name": "install",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:211",
+      "rust_ref": "crates/ice-cli/src/app.rs:151",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Resource source install; native same spelling installs Cargo/prebuilt artifacts."
+    },
+    {
+      "category": "cli",
+      "name": "remove",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:211",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Remove configured resource source; no equivalent early native remove route."
+    },
+    {
+      "category": "cli",
+      "name": "uninstall",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:209",
+      "rust_ref": "crates/ice-cli/src/app.rs:154",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Alias for TS remove; native uninstall removes owned native libraries and has different not-installed status."
+    },
+    {
+      "category": "cli",
+      "name": "list",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:800",
+      "rust_ref": "crates/ice-cli/src/packages.rs:192",
+      "status": "partial",
+      "entry_id": "CLI-036",
+      "candidate_ids": [],
+      "notes": "Raw configured packages grouped user/project, optional installed paths; native package list is a different route."
+    },
+    {
+      "category": "cli",
+      "name": "update",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:337",
+      "rust_ref": "crates/ice-cli/src/updates.rs:522",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Default self target with skipped-extension note; native parser has force/build only."
+    },
+    {
+      "category": "cli",
+      "name": "config",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:626",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-036",
+      "candidate_ids": [],
+      "notes": "Resolve global/project resources, trust gate, then CLI-016 selector wrapper."
+    },
+    {
+      "category": "cli",
+      "name": "--ice-mode",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:193",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Only leading well-formed mode arguments are stripped before this subcommand parser; generic flag ownership remains main CLI."
+    },
+    {
+      "category": "cli",
+      "name": "--ice-mode=<value>",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:197",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Inline leading mode spelling is stripped by the package/config adapter."
+    },
+    {
+      "category": "cli",
+      "name": "--local",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:240",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Package install/remove scope; config accepts its own local write scope. Invalid on update/list."
+    },
+    {
+      "category": "cli",
+      "name": "-l",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:240",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Short local scope flag, same command restrictions."
+    },
+    {
+      "category": "cli",
+      "name": "--approve",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:285",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-035",
+      "candidate_ids": [],
+      "notes": "Boolean true override; repeated approval/no-approval flags use last occurrence."
+    },
+    {
+      "category": "cli",
+      "name": "-a",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:285",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-035",
+      "candidate_ids": [],
+      "notes": "Short explicit approval flag."
+    },
+    {
+      "category": "cli",
+      "name": "--no-approve",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:290",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-035",
+      "candidate_ids": [],
+      "notes": "Boolean false override; update still uses saved-only trust absent override."
+    },
+    {
+      "category": "cli",
+      "name": "-na",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:290",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-035",
+      "candidate_ids": [],
+      "notes": "Short explicit no-approval flag."
+    },
+    {
+      "category": "cli",
+      "name": "--help",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:235",
+      "rust_ref": "crates/ice-cli/src/updates.rs:522",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Help anywhere wins over invalid options, missing values and target conflicts."
+    },
+    {
+      "category": "cli",
+      "name": "-h",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:235",
+      "rust_ref": "crates/ice-cli/src/updates.rs:522",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Short help flag with TS help-first behavior."
+    },
+    {
+      "category": "cli",
+      "name": "--force",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:295",
+      "rust_ref": "crates/ice-cli/src/updates.rs:668",
+      "status": "partial",
+      "entry_id": "CLI-038",
+      "candidate_ids": [],
+      "notes": "Update-only; TS still fetches checked release and installs exact target even if current."
+    },
+    {
+      "category": "cli",
+      "name": "--self",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:249",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Explicit CLI self-update target; can combine with --extensions only for all."
+    },
+    {
+      "category": "cli",
+      "name": "--extensions",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:258",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "All configured package updates; combines with --self; conflicts with individual/models/all forms."
+    },
+    {
+      "category": "cli",
+      "name": "--extension <source>",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:304",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Requires one non-flag source; individual extension update target."
+    },
+    {
+      "category": "cli",
+      "name": "--all",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:276",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Self plus extensions; exclusive with other explicit target forms."
+    },
+    {
+      "category": "cli",
+      "name": "--models",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:267",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-037",
+      "candidate_ids": [],
+      "notes": "Early model-catalog refresh; local create network disabled then forced refresh network enabled; 15-second abort timer."
+    },
+    {
+      "category": "cli",
+      "name": "update self",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:365",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Positional alias selecting self."
+    },
+    {
+      "category": "cli",
+      "name": "update ice",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:365",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-034",
+      "candidate_ids": [],
+      "notes": "Positional alias selecting self."
+    },
+    {
+      "category": "cli",
+      "name": "update <source>",
+      "ice_ref": "packages/coding-agent/src/package-manager-cli.ts:374",
+      "rust_ref": "crates/ice-cli/src/packages.rs:233",
+      "status": "missing",
+      "entry_id": "CLI-027",
+      "candidate_ids": [],
+      "notes": "Identity-select all raw scope matches; missing npm prefix may produce configured-source suggestion."
+    },
+    {
+      "category": "settings",
+      "name": "packages",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:800",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-021",
+      "candidate_ids": [],
+      "notes": "Scoped array of source strings or filter objects; preserve filter object on identity replacement."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].source",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:800",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-021",
+      "candidate_ids": [],
+      "notes": "Required source string for object form; source identity ignores npm version/Git ref."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].autoload",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2148",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-031",
+      "candidate_ids": [],
+      "notes": "false selects sequential matched-only overrides, used for inherited project deltas."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].extensions",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2146",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-031",
+      "candidate_ids": [],
+      "notes": "Resource filter string array; omitted differs from empty; +,-,! and glob semantics."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].skills",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2146",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-031",
+      "candidate_ids": [],
+      "notes": "Includes SKILL.md parent-path aliases in matching."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].prompts",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2146",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-031",
+      "candidate_ids": [],
+      "notes": "Package prompt filters operate after manifest candidate selection."
+    },
+    {
+      "category": "settings",
+      "name": "packages[].themes",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2146",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-031",
+      "candidate_ids": [],
+      "notes": "Package theme filters cannot re-enable manifest-excluded files."
+    },
+    {
+      "category": "settings",
+      "name": "extensions",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:888",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Top-level explicit resource paths/overrides; global own key suppresses project key under globalFirst."
+    },
+    {
+      "category": "settings",
+      "name": "skills",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:888",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Top-level skill paths plus automatic .ice/.agents roots; trust and scope ranks apply."
+    },
+    {
+      "category": "settings",
+      "name": "prompts",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:888",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Top-level prompt paths/overrides; automatic prompts scan direct files."
+    },
+    {
+      "category": "settings",
+      "name": "themes",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:888",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Top-level theme paths/overrides; automatic themes scan direct JSON files."
+    },
+    {
+      "category": "settings",
+      "name": "npmCommand",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1731",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-024",
+      "candidate_ids": [],
+      "notes": "Stored executable/argument array shared with SET-002; package-manager-specific flags here. Self-update uses only global setting."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_OFFLINE",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:46",
+      "rust_ref": "crates/ice-cli/src/updates.rs:136",
+      "status": "partial",
+      "entry_id": "CLI-028",
+      "candidate_ids": [],
+      "notes": "Package truth values: exact 1 or lowercased true/yes, no trim; skips remote update checks/updates and missing acquisition."
+    },
+    {
+      "category": "environment",
+      "name": "GIT_TERMINAL_PROMPT",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1635",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-028",
+      "candidate_ids": [],
+      "notes": "Remote Git metadata checks set 0; clone/fetch do not uniformly inject it."
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/tmp/extensions",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:219",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Created recursively and chmod 0700; cache persists beyond the run."
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/npm/node_modules",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2057",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Managed user resource package cache, separate from native artifacts."
+    },
+    {
+      "category": "paths",
+      "name": "<projectConfigDir>/npm/node_modules",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2055",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Managed project npm cache guarded by trust."
+    },
+    {
+      "category": "paths",
+      "name": "<scopeRoot>/git/<host>/<repository-path>",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2087",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Strict lexical descendant target after parsed Git host/path validation."
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/tmp/extensions/npm/<hash8>/node_modules",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2052",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Temporary source cache identity, not npm version per-run storage."
+    },
+    {
+      "category": "paths",
+      "name": "<agentDir>/tmp/extensions/git-<host>/<hash8>/<repository-path>",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2081",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Temporary Git source cache; unpinned online refresh is best-effort."
+    },
+    {
+      "category": "paths",
+      "name": ".<repository>.ice-update-incomplete",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1938",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-026",
+      "candidate_ids": [],
+      "notes": "Sibling marker written before reset/clean and retained on failure; retry completion, not rollback."
+    },
+    {
+      "category": "paths",
+      "name": "<managed-npm-root>/package.json",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1994",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Create only if absent: name ice-extensions and private true."
+    },
+    {
+      "category": "paths",
+      "name": "<managed-root>/.gitignore",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2004",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-022",
+      "candidate_ids": [],
+      "notes": "Create only if absent with '*' then '!.gitignore'."
+    },
+    {
+      "category": "paths",
+      "name": ".gitignore",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:206",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Read ignore rules only from scan root downward, prefix nested rules."
+    },
+    {
+      "category": "paths",
+      "name": ".ignore",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:206",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Additional nested ignore file with same matching normalization."
+    },
+    {
+      "category": "paths",
+      "name": ".fdignore",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:206",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Additional nested ignore file with same matching normalization."
+    },
+    {
+      "category": "paths",
+      "name": "SKILL.md",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:363",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Skill file stops recursion in its directory; ignored/nonexistent file does not."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:ice",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Own ice field wins wholesale; malformed ice does not downgrade to pi (EXT-005)."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:pi",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Legacy fallback only when own ice field absent; no merging."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:ice.extensions",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Manifest resource array/globs/overrides; existing entrypoints suppress index fallback."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:ice.skills",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Skill candidates and manifest filters precede user filters."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:ice.prompts",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Declared package prompt directories can recurse; omitted field/empty array differ by filter branch."
+    },
+    {
+      "category": "paths",
+      "name": "package.json:ice.themes",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2138",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Declared package theme resources; explicit files can bypass convention suffix check."
+    },
+    {
+      "category": "paths",
+      "name": "extensions/index.ts",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:551",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Directory entrypoint preferred before index.js after missing/empty effective manifest entries."
+    },
+    {
+      "category": "paths",
+      "name": "extensions/index.js",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:552",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-029",
+      "candidate_ids": [],
+      "notes": "Fallback entrypoint after index.ts."
+    },
+    {
+      "category": "paths",
+      "name": "extensions/",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:563",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Automatic direct TS/JS files plus one-level manifest/index subdirectories."
+    },
+    {
+      "category": "paths",
+      "name": "skills/",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:346",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "ICE-style skill discovery allows root markdown and SKILL.md subtree stopping."
+    },
+    {
+      "category": "paths",
+      "name": "prompts/",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:459",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Automatic direct .md files; package-declared directories use recursive collector."
+    },
+    {
+      "category": "paths",
+      "name": "themes/",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:496",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-030",
+      "candidate_ids": [],
+      "notes": "Automatic direct .json files; package-declared directories use recursive collector."
+    },
+    {
+      "category": "paths",
+      "name": "<ancestor>/.agents/skills",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:445",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "cwd to nearest .git boundary inclusive, or filesystem root when absent; nested SKILL.md mode."
+    },
+    {
+      "category": "paths",
+      "name": "<HOME>/.agents/skills",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2387",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Classified as user scope and excluded from the project-ancestor list."
+    },
+    {
+      "category": "paths",
+      "name": ".git",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:427",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-032",
+      "candidate_ids": [],
+      "notes": "Existence marks ancestor skill-discovery boundary; no Git subprocess used for boundary discovery."
+    },
+    {
+      "category": "hooks",
+      "name": "PackageManager progress.start",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:877",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-023",
+      "candidate_ids": [],
+      "notes": "Called before try; callback throw is not converted to wrapper error."
+    },
+    {
+      "category": "hooks",
+      "name": "PackageManager progress.complete",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:880",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-023",
+      "candidate_ids": [],
+      "notes": "Called inside try after operation; callback failure emits error."
+    },
+    {
+      "category": "hooks",
+      "name": "PackageManager progress.error",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:883",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-023",
+      "candidate_ids": [],
+      "notes": "Carries string error message, source and action before rethrow."
+    },
+    {
+      "category": "hooks",
+      "name": "ProgressEvent type=progress",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:82",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-023",
+      "candidate_ids": [],
+      "notes": "Declared event type; wrapper itself emits start/complete/error, not guaranteed periodic progress."
+    },
+    {
+      "category": "hooks",
+      "name": "MissingSourceAction",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:79",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "CLI-033",
+      "candidate_ids": [],
+      "notes": "Callback outcome install|skip|error; default install; offline missing path bypasses callback."
+    },
+    {
+      "category": "hooks",
+      "name": "ProgressEvent action",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:83",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "CLI-023",
+      "candidate_ids": [],
+      "notes": "Declared install|remove|update|clone|pull operation enum; one mutable callback."
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "01cbf5194ab5b3e048d057fb32d21c7b8d8ee1339df61282d910725a2eb1953e",
+      "total_lines": 2697,
+      "ranges": [
+        [
+          1,
+          2697
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          2697
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/package-manager-cli.ts",
+      "sha256": "7d789b8cb6cef448396725801f5f21c08d7eb33289b85b9b153883882be87e66",
+      "total_lines": 906,
+      "ranges": [
+        [
+          1,
+          906
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          906
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/packages.md",
+      "sha256": "3c41599e7f566fb3d2e60109726f5bb57b4cfb84cb7afcf954ec77a5a772cfad",
+      "total_lines": 231,
+      "ranges": [
+        [
+          1,
+          231
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          231
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/packages.rs",
+      "sha256": "fae4872621bea7dd14e580faf2f4a72cf6341d399d857daf70d805cb90a0a4ac",
+      "total_lines": 819,
+      "ranges": [
+        [
+          1,
+          819
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          819
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/install.rs",
+      "sha256": "36a298aaac7c606da2a1d6d74019f9c5c70db37c7c872ccc3741131f639f878c",
+      "total_lines": 1928,
+      "ranges": [
+        [
+          1,
+          1928
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          1928
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/updates.rs",
+      "sha256": "51f6f27301f37e3a6e7e12fb859983735574d05af4a4c9f4a0d4c5227e3841c5",
+      "total_lines": 3527,
+      "ranges": [
+        [
+          1,
+          3527
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          3527
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_extensions.rs",
+      "sha256": "ca30b4e1be3c36eb898957b2fca93e8b06c8c4b9c519ff3d58db1f5fe94a9d7e",
+      "total_lines": 1403,
+      "ranges": [
+        [
+          1,
+          1403
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          1403
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/prebuilt_release.rs",
+      "sha256": "97ab5b041b5eacb663fb37369b5cfef9497b991062f9460fb6a9d75f74e4ef64",
+      "total_lines": 373,
+      "ranges": [
+        [
+          1,
+          373
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          373
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/git.ts",
+      "sha256": "bff4590aefa988ba625026769ac5ad02f02558d59bd7d566f4728e1ee4da1da9",
+      "total_lines": 227,
+      "ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          227
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/paths.ts",
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/ice-manifest.ts",
+      "sha256": "9fba42ba374aad89ba1693738c013b0983ba32dd55db6d1c96327815134d486b",
+      "total_lines": 62,
+      "ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/readdir-order.ts",
+      "sha256": "b21f3c677fd9262e24ef80a5796d6fc3c6eed95531c4fe7d78d609ee9c4f1b17",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-manager-ssh.test.ts",
+      "sha256": "963d17222f4b23acdf67598de2aea4126ef1eebb488b8ceac276aa552fdf7a3a",
+      "total_lines": 98,
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7187-malformed-package-manifest.test.ts",
+      "sha256": "fbe046480274f44e5a9677f549c0387a1de9ab2a1076859ce613cd33330b1658",
+      "total_lines": 48,
+      "ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/pi-real-package.test.ts",
+      "sha256": "623898555f3a0202b979129abc0de8f48c98de1d57a8e1669305c01392a6e71f",
+      "total_lines": 51,
+      "ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/pi-manifest-aliases.test.ts",
+      "sha256": "6dd0556e33834da95760814483c1550ed7555f898821fa989cffaf9b001cb5a0",
+      "total_lines": 102,
+      "ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-resource-precedence.test.ts",
+      "sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+      "total_lines": 129,
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-manager.test.ts",
+      "sha256": "28fa5f1e937787bd92c4d59b662b40f92cc989c84273bfff60fc5793e807e2c0",
+      "total_lines": 2658,
+      "ranges": [
+        [
+          1,
+          2658
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          2658
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/git-update.test.ts",
+      "sha256": "111157a715f75445628eb3bdedd0f95776b4858e815b94c8b152c0ef605b3a07",
+      "total_lines": 487,
+      "ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          487
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/tests/btw_package.rs",
+      "sha256": "fb8656cc05a15c9bc1b79dea1ae3eb27b7d5ef8d7a2313cfbeb280d37aa1fa92",
+      "total_lines": 197,
+      "ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "rust:crates/ice-cli/src/app.rs",
+      "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698",
+      "total_lines": 1015,
+      "ranges": [
+        [
+          1,
+          175
+        ]
+      ],
+      "notes": "coordinator source manifest",
+      "full": false,
+      "visible_ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          97,
+          175
+        ]
+      ],
+      "full_visible": false,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/package-command-paths.test.ts",
+      "sha256": "979a5ef435ed370a8a4c0e960e12a59f73169c27734e78664869a9cba5bf2451",
+      "total_lines": 796,
+      "ranges": [
+        [
+          1,
+          796
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          796
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/git-ssh-url.test.ts",
+      "sha256": "2f502b173e2bf6c6e4d52b4f0bf3da74ebf63f6d9a2b1155ad9b8677ce058d5b",
+      "total_lines": 92,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/paths.test.ts",
+      "sha256": "b745e71348e573fb72adbcfd379445d9eaee7ae849bcc37a4ea5610946ee1112",
+      "total_lines": 151,
+      "ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/readdir-order.test.ts",
+      "sha256": "4070f7760d3100d0ce7024cdfc798469e41de40b115e6801b53d0cf275f0f401",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    },
+    {
+      "path": "ice:packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+      "sha256": "2fc0abe5189494a8c95804ef890e74a8f8536f3cb8bb4be0c1cbb5ed658acd2f",
+      "total_lines": 171,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "notes": "clean tracked frozen Git revision; not original manifest",
+      "full": true,
+      "visible_ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "full_visible": true,
+      "read_kind": "source-body",
+      "application_executed": false
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000533",
+      "category": "paths",
+      "name": "tempFolder",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:220",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (tempFolder), not a separately enumerable stable path/API. Full function behavior is documented in CLI-022 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000534",
+      "category": "paths",
+      "name": "ignorePath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:256",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (ignorePath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000535",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:308",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000536",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:319",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000537",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:360",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000538",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:371",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000539",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:394",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000540",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:467",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000541",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:476",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000542",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:504",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000543",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:513",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000544",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:578",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000545",
+      "category": "paths",
+      "name": "fullPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:589",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (fullPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-030 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000546",
+      "category": "paths",
+      "name": "resolved",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1323",
+      "entry_ids": [
+        "CLI-033"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (resolved), not a separately enumerable stable path/API. Full function behavior is documented in CLI-033 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000547",
+      "category": "paths",
+      "name": "packageJsonPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1486",
+      "entry_ids": [
+        "CLI-024"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (packageJsonPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-024 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000548",
+      "category": "paths",
+      "name": "dirname(targetDir)",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1829",
+      "entry_ids": [
+        "CLI-025"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dirname(targetDir)), not a separately enumerable stable path/API. Full function behavior is documented in CLI-025 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000549",
+      "category": "paths",
+      "name": "packageJsonPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1869",
+      "entry_ids": [
+        "CLI-026"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (packageJsonPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-026 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000550",
+      "category": "paths",
+      "name": "markerPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1938",
+      "entry_ids": [
+        "CLI-026"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (markerPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-026 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000551",
+      "category": "paths",
+      "name": "current",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1972",
+      "entry_ids": [
+        "CLI-025"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (current), not a separately enumerable stable path/API. Full function behavior is documented in CLI-025 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000552",
+      "category": "paths",
+      "name": "installRoot",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1987",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (installRoot), not a separately enumerable stable path/API. Full function behavior is documented in CLI-022 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000553",
+      "category": "paths",
+      "name": "packageJsonPath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1994",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (packageJsonPath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-022 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000554",
+      "category": "paths",
+      "name": "dir",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2000",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (dir), not a separately enumerable stable path/API. Full function behavior is documented in CLI-022 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000555",
+      "category": "paths",
+      "name": "ignorePath",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2004",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (ignorePath), not a separately enumerable stable path/API. Full function behavior is documented in CLI-022 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    },
+    {
+      "candidate_id": "C000556",
+      "category": "paths",
+      "name": "p",
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2514",
+      "entry_ids": [
+        "CLI-029"
+      ],
+      "reason": "Mechanical filesystem-target-expression names a local variable or expression (p), not a separately enumerable stable path/API. Full function behavior is documented in CLI-029 and concrete managed/ignore/manifest/marker paths are authored separately. Original candidate identity is retained; no source-read exclusion is claimed."
+    }
+  ],
+  "candidate_mapping": [
+    {
+      "candidate_id": "C000531",
+      "name": "\"/proc/self/environ\"",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 12,
+      "disposition": "surface",
+      "entry_ids": [
+        "CLI-023"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:12"
+    },
+    {
+      "candidate_id": "C000532",
+      "name": "HOME",
+      "category": "environment",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 215,
+      "disposition": "surface",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:215"
+    },
+    {
+      "candidate_id": "C000533",
+      "name": "tempFolder",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 220,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:220"
+    },
+    {
+      "candidate_id": "C000534",
+      "name": "ignorePath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 256,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:256"
+    },
+    {
+      "candidate_id": "C000535",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 308,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:308"
+    },
+    {
+      "candidate_id": "C000536",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 319,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:319"
+    },
+    {
+      "candidate_id": "C000537",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 360,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:360"
+    },
+    {
+      "candidate_id": "C000538",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 371,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:371"
+    },
+    {
+      "candidate_id": "C000539",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 394,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:394"
+    },
+    {
+      "candidate_id": "C000540",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 467,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:467"
+    },
+    {
+      "candidate_id": "C000541",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 476,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:476"
+    },
+    {
+      "candidate_id": "C000542",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 504,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:504"
+    },
+    {
+      "candidate_id": "C000543",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 513,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:513"
+    },
+    {
+      "candidate_id": "C000544",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 578,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:578"
+    },
+    {
+      "candidate_id": "C000545",
+      "name": "fullPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 589,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:589"
+    },
+    {
+      "candidate_id": "C000546",
+      "name": "resolved",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1323,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-033"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1323"
+    },
+    {
+      "candidate_id": "C000547",
+      "name": "packageJsonPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1486,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-024"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1486"
+    },
+    {
+      "candidate_id": "C000548",
+      "name": "dirname(targetDir)",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1829,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-025"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1829"
+    },
+    {
+      "candidate_id": "C000549",
+      "name": "packageJsonPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1869,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-026"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1869"
+    },
+    {
+      "candidate_id": "C000550",
+      "name": "markerPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1938,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-026"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1938"
+    },
+    {
+      "candidate_id": "C000551",
+      "name": "current",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1972,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-025"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1972"
+    },
+    {
+      "candidate_id": "C000552",
+      "name": "installRoot",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1987,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1987"
+    },
+    {
+      "candidate_id": "C000553",
+      "name": "packageJsonPath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 1994,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:1994"
+    },
+    {
+      "candidate_id": "C000554",
+      "name": "dir",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 2000,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2000"
+    },
+    {
+      "candidate_id": "C000555",
+      "name": "ignorePath",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 2004,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-022"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2004"
+    },
+    {
+      "candidate_id": "C000556",
+      "name": "p",
+      "category": "paths",
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "line": 2514,
+      "disposition": "mechanical-expression-exclusion",
+      "entry_ids": [
+        "CLI-029"
+      ],
+      "ice_ref": "packages/coding-agent/src/core/package-manager.ts:2514"
+    }
+  ],
+  "claims": [
+    {
+      "claim": "Versioned npm specs are all pinned and skipped by updates.",
+      "source": "ice:packages/coding-agent/docs/packages.md:63",
+      "status": "corrected",
+      "entry_ids": [
+        "CLI-020",
+        "CLI-024",
+        "CLI-027"
+      ],
+      "correction": "Only valid exact semver is pinned. Valid ranges and dist-tags are not all skipped; the source's exact/range/tag rules govern."
+    },
+    {
+      "claim": "Temporary extension package installation is for the current run only.",
+      "source": "ice:packages/coding-agent/docs/packages.md:45",
+      "status": "qualified",
+      "entry_ids": [
+        "CLI-022",
+        "CLI-025"
+      ],
+      "correction": "Configuration is temporary, but agentDir/tmp/extensions caches persist; temporary unpinned Git is refreshed best-effort and no per-run deletion is implemented."
+    }
+  ],
+  "dependency_requests": [],
+  "rust_only": [
+    {
+      "entry_id": "CLI-040",
+      "title": "Native Cargo artifact installation, ownership locking and rollback to preserve",
+      "source": "ice:packages/coding-agent/src/core/package-manager.ts:973-1041; ice:packages/coding-agent/src/core/package-manager.ts:2008-2135; rust:crates/ice-cli/src/install.rs:1-1928.",
+      "preservation": "Retain the Cargo backend, strict mutation registry, artifact ownership checks, lock, staging and rollback when adding resource-package commands. Do not replace them with TS's weaker payload-then-settings ordering. Keep backend-specific registries separate and expose native versus resource-package identities explicitly in the command facade. No new Rust implementation is required for this retained capability; size is zero and compatibility work is counted in the owning source/CLI entries."
+    },
+    {
+      "entry_id": "CLI-041",
+      "title": "Verified native extension prebuilt distribution and publisher provenance to preserve",
+      "source": "ice:packages/coding-agent/src/core/package-manager.ts:1352-1432; ice:packages/coding-agent/src/core/package-manager.ts:1826-1861; rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403; rust:crates/ice-cli/src/install.rs:155-221.",
+      "preservation": "Preserve the bounded manifest/archive protocol, publisher continuity, provenance and object validation while adding TS resource backends. Keep verification before activation and runtime ABI loading after it. No new Rust implementation is estimated for this retained capability. Do not loosen archive/path/hash limits to make TS package naming fit, and do not treat downloaded native libraries as equivalent to JS package directories."
+    },
+    {
+      "entry_id": "CLI-042",
+      "title": "Native startup update cache, per-entry freshness and backend-aware notices to preserve",
+      "source": "ice:packages/coding-agent/src/core/package-manager.ts:1120-1200; ice:packages/coding-agent/src/core/package-manager.ts:2138-2510; rust:crates/ice-cli/src/updates.rs:1-521; rust:crates/ice-cli/src/updates.rs:2404-3527.",
+      "preservation": "Retain native result classification, freshness, merge locking and publisher-aware keys. Add resource-package notices through explicit backend-tagged records and shared presentation only after CLI-028 exists. Preserve the distinction between automatic native disable flags and TS explicit update-service behavior. No replacement implementation is required for this retained capability; size is zero."
+    }
+  ],
+  "open_questions": [
+    {
+      "key": "project-parent-component-runtime-effect",
+      "entry_ids": [
+        "CLI-039"
+      ],
+      "question": "Exact OS behavior of recursive removal with a terminal '..' component was not executed; only the reachable unchecked path construction and matching-registry prerequisite are established.",
+      "disposition": "source-proven boundary defect; no destructive reproduction needed for audit"
+    },
+    {
+      "key": "active-checkout-prebuilt-repository-fix",
+      "entry_ids": [
+        "CLI-045"
+      ],
+      "question": "Coordinator reports the active checkout may already use a lowercase repository constant; this supplement describes only the frozen old Rust checkout.",
+      "disposition": "coordinator compares active source separately; do not attribute old behavior to current active code"
+    }
+  ],
+  "supplemental_ledger": [
+    {
+      "path": "packages/coding-agent/src/utils/git.ts",
+      "entry_ids": [
+        "CLI-020",
+        "CLI-025",
+        "CLI-026",
+        "CLI-028"
+      ],
+      "notes": "Full source/test closure; parser/helper behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/utils/paths.ts",
+      "entry_ids": [
+        "CLI-020",
+        "CLI-021",
+        "CLI-032"
+      ],
+      "notes": "Full helper read; shared generic consumers can reuse evidence."
+    },
+    {
+      "path": "packages/coding-agent/src/core/ice-manifest.ts",
+      "entry_ids": [
+        "EXT-005",
+        "CLI-029"
+      ],
+      "notes": "Full compatible manifest helper read; EXT-005 owns wholesale ICE-over-Pi selection."
+    },
+    {
+      "path": "packages/coding-agent/src/utils/readdir-order.ts",
+      "entry_ids": [
+        "CLI-030"
+      ],
+      "notes": "Full byte-order adapter/helper test read."
+    }
+  ],
+  "verification": {
+    "method": "source-only",
+    "application_tests_executed": false,
+    "candidate_count": 26,
+    "mapped_candidate_count": 2,
+    "excluded_mechanical_expression_count": 24,
+    "authored_surface_count": 73,
+    "total_surface_count": 75,
+    "source_review": "cli-packaging-supplement-source-review.json",
+    "worker_schema_reference_qa": "cli-packaging-supplement-qa.json",
+    "limits": "No app/install/network commands or real user-state access. 12 TS suites source-read; added tests compared to frozen Git, not falsely included in original manifest. app.rs is bounded, with connector redaction at96 excluded.",
+    "worker_qa_status": "passed-worker-checks-awaiting-coordinator",
+    "source_reference_occurrences": 262,
+    "surface_reference_occurrences": 85
+  }
+}

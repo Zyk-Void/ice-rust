@@ -1,0 +1,1119 @@
+{
+  "area": "rpc-remote",
+  "tests_executed": false,
+  "application_executed": false,
+  "ts_test_helper_count": 51,
+  "ts_fully_visible": 50,
+  "ts_partially_redacted": 1,
+  "ts_tests": [
+    {
+      "path": "packages/client/test/connection.test.ts",
+      "sha256": "7f5a978506df07d2cbfa955b90baedb198f849d7364f41bb219a2d10ab99e5db",
+      "total": 328,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          328
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/disposal.test.ts",
+      "sha256": "9fe75d69a91b34a276bc29c40b56e8bba10f67eafe2baa9d6576bf0646d00dfc",
+      "total": 55,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/requests.test.ts",
+      "sha256": "856c23bdf56932f4318ef1e7892f09bc5f770966f42e02a910d7bfb275d283c3",
+      "total": 69,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/sessions.test.ts",
+      "sha256": "c993f5c8cf6c180ffc6bdc8d15d469f6a5e0381e52b296a34378ae11a122a6fd",
+      "total": 262,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          262
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/state.test.ts",
+      "sha256": "0f933386e8ce839def38ca7b80f3a6195bedb3fcb256540ee389c3c8b98697eb",
+      "total": 120,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/support.ts",
+      "sha256": "e891079510c52d8fbb9e6e414d1ef3b3263516f88c9b6a3b2871ed1e1e6a3f58",
+      "total": 154,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/client/test/unix.test.ts",
+      "sha256": "619f3b4d3d5facbe3757c2cb717d74ffa3d7af9c5d0f785acd3975032cabc636",
+      "total": 224,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          224
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/client/remote-session-lifecycle.test.ts",
+      "sha256": "31a029c2db69f551ac36c21b1b6c26c27f24f9ebf41b29432228e05a0ea5cc06",
+      "total": 191,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          191
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/client/remote-session-ownership.test.ts",
+      "sha256": "cddf47e7c4c8a22804778df6fe0ce49c1ca094af5b63f340458c299bacaf45dd",
+      "total": 175,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          175
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/client/remote-session.test.ts",
+      "sha256": "93fb843f8eab685e741f58e7fca9c8835df6ecd0b45f3cc90996d1cb62f94027",
+      "total": 197,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          197
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/client/support.ts",
+      "sha256": "d10d776ddbdc3052b8294c6163ed90b25542a51038ebbb808e297a0d838e1711",
+      "total": 112,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/client/transcript.test.ts",
+      "sha256": "45223b10b2cb7fa2e0d625452d735b8356df940fff320f106dba59fdb5021405",
+      "total": 221,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          221
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/experimental-cli-command.test.ts",
+      "sha256": "ab30fb57a3a852821e282dddfc5c2f593de075df4d30512b52743e27141420c8",
+      "total": 164,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          164
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/experimental-cli-resolution.test.ts",
+      "sha256": "229c88cc053157eaf412ef1a28759d02329d767bb9256c5ae8eeec598ea2a515",
+      "total": 97,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          97
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/experimental.test.ts",
+      "sha256": "2cfe87cc5eeda57ba08bee42d8c0abc94341feedef78bef7f9b00047f32b6640",
+      "total": 45,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+      "sha256": "2fc0abe5189494a8c95804ef890e74a8f8536f3cb8bb4be0c1cbb5ed658acd2f",
+      "total": 171,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/model-runtime-test-utils.ts",
+      "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+      "total": 26,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-client-clone.test.ts",
+      "sha256": "4402c2a7b168016cd0d2fbb578843d27181a8b55353d56f607d293060aee8d6c",
+      "total": 30,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-client-contract.test.ts",
+      "sha256": "704dbd1fa57b6b6d9fe6e293f5605fd48a0c7a17c973e5c2144c0719fd229c55",
+      "total": 543,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          543
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-client-process-exit.test.ts",
+      "sha256": "dcd40193d4167a7f12ac465912444061ee4c98cfa11835b228388bfff6c57ac7",
+      "total": 45,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-command-coordinator.test.ts",
+      "sha256": "a1307e3f136c207ce5b054b6fa465435cfc364b45b66978b7c75db744da340b0",
+      "total": 191,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          191
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-command-schema.test.ts",
+      "sha256": "2decf4762ee82aa68a5e24e88b5594328fb66730f491f2125f07f715da043bc4",
+      "total": 455,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          455
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-example.ts",
+      "sha256": "da78abb266d3db24bb521e3fdcc1545d6edf014add72a773af280cd735fc3877",
+      "total": 87,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-input-admission.test.ts",
+      "sha256": "1ef32b43728e9afa0f0d6c5eeb6e4ac582358b66bf51c4ce5669323c45755226",
+      "total": 50,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-jsonl.test.ts",
+      "sha256": "3eae42a4faf3bc580c1a1e27d3a2f17d137d373823c3afead4f5f60aa8adb2d4",
+      "total": 135,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-prompt-response-semantics.test.ts",
+      "sha256": "513e5cadfa28c618b5a1006e547c6fcd2402c4ee84046e94747cbe36781caa8a",
+      "total": 457,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          457
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-request-tracker.test.ts",
+      "sha256": "a02f60bcad44ed83c7ad359dda888f58cb7effeb3d6738b05f611f9d2ae5d746",
+      "total": 87,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-response-validation.test.ts",
+      "sha256": "1d3d4083566668bcc4a353f56cd260acdf9506fef1e73ce32086adc1ecfbc186",
+      "total": 289,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          289
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-settings.test.ts",
+      "sha256": "dfc72dac256ab2cf2193a45297e3fba632fd5177ae35dba3c28e26db54878e99",
+      "total": 419,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          419
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc-validation.test.ts",
+      "sha256": "0c547842d7f5dec44f7071207719c82e8323479d2e7eb4a3d6f537e390fb8172",
+      "total": 64,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/rpc.test.ts",
+      "sha256": "38f69635f61a80f9a46b40fe16b3c800cbd56edd6c75fdf6e799858664fae759",
+      "total": 400,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          400
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/harness.ts",
+      "sha256": "c8cd19cf5f20fe394f404f128b793fc5b3bb3f79bd7f74d9a88ee6e1c1fcc347",
+      "total": 225,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/5868-rpc-unknown-command-id.test.ts",
+      "sha256": "9f7e2efe1e43b44520b82a8154a5a64e9c9a2acbd542acfc7ec8453d15ccab48",
+      "total": 116,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          116
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+      "sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+      "total": 92,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/rpc-contract.test.ts",
+      "sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+      "total": 1131,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          1131
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/rpc-introspection.test.ts",
+      "sha256": "d7331774f3498b1efff7e1821a68c5711b21a0c604f49e1d58169dcfcea47538",
+      "total": 523,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          523
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/rpc-runtime-recovery.test.ts",
+      "sha256": "4136dca5248e4038069c8a59d0225c2b55f40234bb3a83675aa3b997217572a2",
+      "total": 97,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          97
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/rpc-shutdown-contract.test.ts",
+      "sha256": "cb8d6011a2ff31957fad3a039fdb97bb0710e13918b9b557225b677210a45fa0",
+      "total": 212,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          212
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/coding-agent/test/suite/rpc-subagents.test.ts",
+      "sha256": "29428f8a8e54eed8bc47b9a8b7bbd5cee567d18f60be32925d5c54ef30144a77",
+      "total": 485,
+      "fully_read": false,
+      "read_ranges": [
+        [
+          1,
+          229
+        ],
+        [
+          231,
+          485
+        ]
+      ],
+      "unread": [
+        [
+          230,
+          230
+        ]
+      ]
+    },
+    {
+      "path": "packages/coding-agent/test/utilities.ts",
+      "sha256": "d9a0022e6b64056ebd9e85522ad00ae7d874e98345561f644ee194bac4597ad5",
+      "total": 323,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          323
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/protocol/test/cbor/cbor.test.ts",
+      "sha256": "9e1edc0e0eb3b88a8e8df03fb9e29e57c68f285a77052165e21c0a363a7152c9",
+      "total": 176,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          176
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/protocol/test/framing.test.ts",
+      "sha256": "3bd3c9dc843d97f929596a4bae8249c2c3bac9087499de2f2230ccbac23e4ea8",
+      "total": 118,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/protocol/test/protocol.test.ts",
+      "sha256": "a2218c80b8d58b61f6a773384d20c9a0ea692606e6ef6c941a033aae879c5c32",
+      "total": 383,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          383
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/conformance.test.ts",
+      "sha256": "187cd3a10b5a3bdae285be6d3612b7335fd4ad078c88ed6378b74547119eb0ee",
+      "total": 332,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          332
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/fixtures/stale-socket-server.mjs",
+      "sha256": "ee4ce29485368f6930936d2053b97d928c018e6b7dd60b5cb2ea01c7c93370d8",
+      "total": 10,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/listener.test.ts",
+      "sha256": "ab18d7d636cc4a654745a651a24032f970a68da336406ee8035dc9bfd6ef32a6",
+      "total": 58,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/protocol.test.ts",
+      "sha256": "02e647e115075d9203a50169c2ee2b47dca42194bd3afce0b45da4f8a53cbbae",
+      "total": 306,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          306
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/server.test.ts",
+      "sha256": "d076970855d664988ec5ed25bac8f876e0c8bce2dda4c2b5ebde69a291f2ca87",
+      "total": 101,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          101
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/sessions.test.ts",
+      "sha256": "640ab5090d9b5427d1d4731050f3843b5d97492f6dbc5f6b0ef2b6bf9263ca99",
+      "total": 387,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          387
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/unix-connection.test.ts",
+      "sha256": "ad686e68c2bedf94979240782ea6bb8296223f8593bf0467d7e7851c48d9c5aa",
+      "total": 66,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "unread": []
+    },
+    {
+      "path": "packages/server/test/unix.test.ts",
+      "sha256": "3a679a29a913f1c615928004f2ec8500fa9ef51bf9b56b16e1767bd094479972",
+      "total": 118,
+      "fully_read": true,
+      "read_ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "unread": []
+    }
+  ],
+  "source_identity": {
+    "commit": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "method": "All 51 files confirmed tracked by two git ls-files inventories and unchanged by git diff --name-only frozen_commit across all four test roots; exact current hashes recorded with source-read ranges.",
+    "files": [
+      {
+        "path": "packages/client/test/connection.test.ts",
+        "sha256": "7f5a978506df07d2cbfa955b90baedb198f849d7364f41bb219a2d10ab99e5db",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/disposal.test.ts",
+        "sha256": "9fe75d69a91b34a276bc29c40b56e8bba10f67eafe2baa9d6576bf0646d00dfc",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/requests.test.ts",
+        "sha256": "856c23bdf56932f4318ef1e7892f09bc5f770966f42e02a910d7bfb275d283c3",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/sessions.test.ts",
+        "sha256": "c993f5c8cf6c180ffc6bdc8d15d469f6a5e0381e52b296a34378ae11a122a6fd",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/state.test.ts",
+        "sha256": "0f933386e8ce839def38ca7b80f3a6195bedb3fcb256540ee389c3c8b98697eb",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/support.ts",
+        "sha256": "e891079510c52d8fbb9e6e414d1ef3b3263516f88c9b6a3b2871ed1e1e6a3f58",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/client/test/unix.test.ts",
+        "sha256": "619f3b4d3d5facbe3757c2cb717d74ffa3d7af9c5d0f785acd3975032cabc636",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/client/remote-session-lifecycle.test.ts",
+        "sha256": "31a029c2db69f551ac36c21b1b6c26c27f24f9ebf41b29432228e05a0ea5cc06",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/client/remote-session-ownership.test.ts",
+        "sha256": "cddf47e7c4c8a22804778df6fe0ce49c1ca094af5b63f340458c299bacaf45dd",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/client/remote-session.test.ts",
+        "sha256": "93fb843f8eab685e741f58e7fca9c8835df6ecd0b45f3cc90996d1cb62f94027",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/client/support.ts",
+        "sha256": "d10d776ddbdc3052b8294c6163ed90b25542a51038ebbb808e297a0d838e1711",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/client/transcript.test.ts",
+        "sha256": "45223b10b2cb7fa2e0d625452d735b8356df940fff320f106dba59fdb5021405",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-command.test.ts",
+        "sha256": "ab30fb57a3a852821e282dddfc5c2f593de075df4d30512b52743e27141420c8",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-resolution.test.ts",
+        "sha256": "229c88cc053157eaf412ef1a28759d02329d767bb9256c5ae8eeec598ea2a515",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/experimental.test.ts",
+        "sha256": "2cfe87cc5eeda57ba08bee42d8c0abc94341feedef78bef7f9b00047f32b6640",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+        "sha256": "2fc0abe5189494a8c95804ef890e74a8f8536f3cb8bb4be0c1cbb5ed658acd2f",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/model-runtime-test-utils.ts",
+        "sha256": "c426a14befd5b592ad74736029d9990bef5c6c59529fedf1f870ed820d4038ab",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-client-clone.test.ts",
+        "sha256": "4402c2a7b168016cd0d2fbb578843d27181a8b55353d56f607d293060aee8d6c",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-client-contract.test.ts",
+        "sha256": "704dbd1fa57b6b6d9fe6e293f5605fd48a0c7a17c973e5c2144c0719fd229c55",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-client-process-exit.test.ts",
+        "sha256": "dcd40193d4167a7f12ac465912444061ee4c98cfa11835b228388bfff6c57ac7",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-command-coordinator.test.ts",
+        "sha256": "a1307e3f136c207ce5b054b6fa465435cfc364b45b66978b7c75db744da340b0",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-command-schema.test.ts",
+        "sha256": "2decf4762ee82aa68a5e24e88b5594328fb66730f491f2125f07f715da043bc4",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-example.ts",
+        "sha256": "da78abb266d3db24bb521e3fdcc1545d6edf014add72a773af280cd735fc3877",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-input-admission.test.ts",
+        "sha256": "1ef32b43728e9afa0f0d6c5eeb6e4ac582358b66bf51c4ce5669323c45755226",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-jsonl.test.ts",
+        "sha256": "3eae42a4faf3bc580c1a1e27d3a2f17d137d373823c3afead4f5f60aa8adb2d4",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-prompt-response-semantics.test.ts",
+        "sha256": "513e5cadfa28c618b5a1006e547c6fcd2402c4ee84046e94747cbe36781caa8a",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-request-tracker.test.ts",
+        "sha256": "a02f60bcad44ed83c7ad359dda888f58cb7effeb3d6738b05f611f9d2ae5d746",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-response-validation.test.ts",
+        "sha256": "1d3d4083566668bcc4a353f56cd260acdf9506fef1e73ce32086adc1ecfbc186",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-settings.test.ts",
+        "sha256": "dfc72dac256ab2cf2193a45297e3fba632fd5177ae35dba3c28e26db54878e99",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-validation.test.ts",
+        "sha256": "0c547842d7f5dec44f7071207719c82e8323479d2e7eb4a3d6f537e390fb8172",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/rpc.test.ts",
+        "sha256": "38f69635f61a80f9a46b40fe16b3c800cbd56edd6c75fdf6e799858664fae759",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/harness.ts",
+        "sha256": "c8cd19cf5f20fe394f404f128b793fc5b3bb3f79bd7f74d9a88ee6e1c1fcc347",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/regressions/5868-rpc-unknown-command-id.test.ts",
+        "sha256": "9f7e2efe1e43b44520b82a8154a5a64e9c9a2acbd542acfc7ec8453d15ccab48",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+        "sha256": "5565484df0aab1bf0d361db2cdfff3caf106c417811bc1073e9becc3f6d0c6d9",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/rpc-contract.test.ts",
+        "sha256": "9b2de8a71dd08c0082424f870a6870ef9c38d1c45c27d866bc04ee39ca4b2d1e",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/rpc-introspection.test.ts",
+        "sha256": "d7331774f3498b1efff7e1821a68c5711b21a0c604f49e1d58169dcfcea47538",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/rpc-runtime-recovery.test.ts",
+        "sha256": "4136dca5248e4038069c8a59d0225c2b55f40234bb3a83675aa3b997217572a2",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/rpc-shutdown-contract.test.ts",
+        "sha256": "cb8d6011a2ff31957fad3a039fdb97bb0710e13918b9b557225b677210a45fa0",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/suite/rpc-subagents.test.ts",
+        "sha256": "29428f8a8e54eed8bc47b9a8b7bbd5cee567d18f60be32925d5c54ef30144a77",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/coding-agent/test/utilities.ts",
+        "sha256": "d9a0022e6b64056ebd9e85522ad00ae7d874e98345561f644ee194bac4597ad5",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/protocol/test/cbor/cbor.test.ts",
+        "sha256": "9e1edc0e0eb3b88a8e8df03fb9e29e57c68f285a77052165e21c0a363a7152c9",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/protocol/test/framing.test.ts",
+        "sha256": "3bd3c9dc843d97f929596a4bae8249c2c3bac9087499de2f2230ccbac23e4ea8",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/protocol/test/protocol.test.ts",
+        "sha256": "a2218c80b8d58b61f6a773384d20c9a0ea692606e6ef6c941a033aae879c5c32",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/conformance.test.ts",
+        "sha256": "187cd3a10b5a3bdae285be6d3612b7335fd4ad078c88ed6378b74547119eb0ee",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/fixtures/stale-socket-server.mjs",
+        "sha256": "ee4ce29485368f6930936d2053b97d928c018e6b7dd60b5cb2ea01c7c93370d8",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/listener.test.ts",
+        "sha256": "ab18d7d636cc4a654745a651a24032f970a68da336406ee8035dc9bfd6ef32a6",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/protocol.test.ts",
+        "sha256": "02e647e115075d9203a50169c2ee2b47dca42194bd3afce0b45da4f8a53cbbae",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/server.test.ts",
+        "sha256": "d076970855d664988ec5ed25bac8f876e0c8bce2dda4c2b5ebde69a291f2ca87",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/sessions.test.ts",
+        "sha256": "640ab5090d9b5427d1d4731050f3843b5d97492f6dbc5f6b0ef2b6bf9263ca99",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/unix-connection.test.ts",
+        "sha256": "ad686e68c2bedf94979240782ea6bb8296223f8593bf0467d7e7851c48d9c5aa",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      },
+      {
+        "path": "packages/server/test/unix.test.ts",
+        "sha256": "3a679a29a913f1c615928004f2ec8500fa9ef51bf9b56b16e1767bd094479972",
+        "tracked": true,
+        "differs_from_frozen_commit": false
+      }
+    ],
+    "commands": [
+      "git diff --name-only 3ab05193147f5abb8eb8ee6c0178f6dbce8918b0 -- packages/client/test packages/protocol/test packages/server/test packages/coding-agent/test",
+      "git ls-files -- packages/client/test packages/protocol/test packages/server/test packages/coding-agent/test/rpc*.ts packages/coding-agent/test/suite/rpc*.ts packages/coding-agent/test/suite/regressions/*rpc*.ts packages/coding-agent/test/client packages/coding-agent/test/experimental*.ts",
+      "git ls-files -- packages/coding-agent/test/utilities.ts packages/coding-agent/test/model-runtime-test-utils.ts packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts packages/coding-agent/test/suite/harness.ts"
+    ]
+  },
+  "native_test_reads": [
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "ranges": [
+        [
+          1,
+          1566
+        ]
+      ],
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "notes": "Fully source-read (1566 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 1566,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/cbor.rs",
+      "ranges": [
+        [
+          1,
+          378
+        ]
+      ],
+      "sha256": "6f7773ebd35659f720baf566bba93f9ce46a279e59cc78f08260816b71cdbbd0",
+      "notes": "Fully source-read (378 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 378,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/codec.rs",
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "sha256": "ad7f611ee9ec4dc04de7cd38e458f2075fcc55a9bcc377c87873fc0ed25525a6",
+      "notes": "Fully source-read (144 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 144,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/framing.rs",
+      "ranges": [
+        [
+          1,
+          214
+        ]
+      ],
+      "sha256": "7ce5ebce46213673ff90fcd5a1fdbc2c7ca56c879198912194d2b1103c9d6c8e",
+      "notes": "Fully source-read (214 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 214,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/protocol.rs",
+      "ranges": [
+        [
+          1,
+          521
+        ]
+      ],
+      "sha256": "9bca844a7f0c5ff0404e99013c4272aa9dc500933487abaa1dacc38ea3ffc939",
+      "notes": "Fully source-read (521 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 521,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/src/remote/session.rs",
+      "ranges": [
+        [
+          1,
+          493
+        ]
+      ],
+      "sha256": "cc6b4737d160d095d9a573bb83ba89daf23493f4549c15943b98aa4843b2cad9",
+      "notes": "Fully source-read (493 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 493,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    },
+    {
+      "path": "rust:crates/ice-cli/tests/remote_client_smoke.rs",
+      "ranges": [
+        [
+          1,
+          510
+        ]
+      ],
+      "sha256": "a7a465560e13b2b8f11904f99f587cdce92c9b8e2d79fe96ca96c339202b56df",
+      "notes": "Fully source-read (510 total lines). Identity checked against frozen source or tracked unchanged test baseline; no code executed.",
+      "total_lines": 510,
+      "fully_read": true,
+      "owner": "audit_session",
+      "excluded_redacted_lines": []
+    }
+  ],
+  "credited_source": {
+    "path": "evidence/rpc-source-review.json",
+    "sha256": "f860ee25c49beaafecb8e8da8cd353b77b9a5242052da0c3c4e642a6d044adad",
+    "owner": "audit_session",
+    "records": 134,
+    "fully_visible": 129,
+    "qualified_bounded": 5
+  },
+  "limits": [
+    "All tests were read as source, not executed.",
+    "The optional remote server test and provider-gated JSONL tests do not prove external services ran.",
+    "rpc-subagents.test.ts line 230 is excluded; the preserved worker artifact names exact native bounded reads."
+  ]
+}

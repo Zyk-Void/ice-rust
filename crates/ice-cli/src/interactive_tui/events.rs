@@ -235,6 +235,111 @@ pub(super) async fn handle_dequeue(
     tui.request_render(false);
 }
 
+/// Cancel one queued message by dock position and restore its text and images
+/// to the editor only after the durable cancel succeeds, so a
+/// failure or a lost race with consumption never duplicates the message.
+pub(super) async fn unqueue_message(
+    harness: AgentHarness,
+    editor: Arc<Editor>,
+    state: Arc<TuiState>,
+    tui: Arc<TuiAltScreen>,
+    position: Option<usize>,
+) {
+    use ice_harness::agent_harness::CancelQueuedOutcome;
+    use ice_harness::session::types::{LaneRecord, RecordQuery};
+
+    let lane = harness.lane("main");
+    let storage = harness.session().storage();
+
+    let note = |message: &str, error: bool| {
+        if error {
+            add_error_message(&state.chat_container, message);
+        } else {
+            add_note_message(&state.chat_container, message);
+        }
+        tui.request_render(false);
+    };
+    let queued = match lane.queued_messages().await {
+        Ok(queued) => queued,
+        Err(error) => return note(&format!("Could not read queued messages: {error}"), true),
+    };
+    let rows: Vec<(&String, &String)> = queued
+        .steering_ids
+        .iter()
+        .zip(&queued.steering)
+        .chain(queued.follow_up_ids.iter().zip(&queued.follow_up))
+        .collect();
+    let index = match position {
+        Some(n) => n - 1,
+        None => rows.len().saturating_sub(1),
+    };
+    let Some((id, text)) = rows
+        .get(index)
+        .map(|(id, text)| ((*id).clone(), (*text).clone()))
+    else {
+        return note("No such queued message", false);
+    };
+    // Queue previews contain text only. The durable enqueue owns the complete
+    // message; read it before cancellation, and restore only after cancellation
+    // wins the same storage boundary that excludes queue consumption.
+    let records = match storage
+        .find_records(&RecordQuery {
+            lane: Some("main".into()),
+            record_type: Some("queue_enqueued"),
+            ..Default::default()
+        })
+        .await
+    {
+        Ok(records) => records,
+        Err(error) => return note(&format!("Could not read queued attachments: {error}"), true),
+    };
+    let message = records.into_iter().find_map(|record| match record {
+        LaneRecord::QueueEnqueued(record)
+            if record.target.get("id").and_then(serde_json::Value::as_str) == Some(id.as_str()) =>
+        {
+            record.target.get("message").cloned()
+        }
+        _ => None,
+    });
+    let message = match message.and_then(|value| serde_json::from_value::<AgentMessage>(value).ok())
+    {
+        Some(message) => message,
+        None => {
+            return note(
+                "Could not read the queued message; it was left in the queue.",
+                true,
+            )
+        }
+    };
+    let images = match message {
+        AgentMessage::User(UserMessage {
+            content: ice_ai::types::UserContent::Blocks(blocks),
+            ..
+        }) => blocks
+            .into_iter()
+            .filter_map(|block| match block {
+                Content::Image(image) => Some(image),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    match lane.cancel_queued(&id).await {
+        Ok(result) if result.outcome == CancelQueuedOutcome::Cancelled => {
+            state.restore_pending_images(images);
+            let combined = merge_queued_into_draft(&text, &editor.get_expanded_text());
+            set_editor_text_caret_at_end(&editor, &combined);
+            refresh_pending_messages(&state, &lane).await;
+            note("Moved queued message to editor", false);
+        }
+        Ok(_) => {
+            refresh_pending_messages(&state, &lane).await;
+            note("That message was already sent to the model", false);
+        }
+        Err(error) => note(&format!("Could not cancel queued message: {error}"), true),
+    }
+}
+
 /// Cancel the active run the native-pi way: pull every queued steering /
 /// follow-up message back into the editor FIRST, then abort. upstream's
 /// `onEscape` does exactly this during streaming
@@ -378,17 +483,8 @@ pub(super) async fn handle_agent_event(
         AgentEvent::AgentEnd { .. } => {
             // Finalize any still-streaming assistant message.
             state.transcript_view().finalize_assistant();
-            state.set_status(RunStatus::Idle);
-            // Flush any `!command` results that completed mid-run: the run's
-            // tool sequence is closed, so appending now keeps transcript order
-            // intact (upstream's `flushPendingBashMessages`).
-            let pending: Vec<AgentMessage> =
-                std::mem::take(&mut *state.pending_bash_messages.lock().unwrap());
-            for message in pending {
-                if let Err(error) = lane.append_message(message).await {
-                    add_error_message(chat, &format!("Could not record bash result: {error}"));
-                }
-            }
+            // The outer prompt future owns the durable bash-result flush and
+            // transition to Idle. A delayed event may only update presentation.
             // The run drained the queue; refresh so consumed entries drop out
             // of the pending-messages display.
             refresh_pending_messages(state, lane).await;
@@ -402,6 +498,16 @@ pub(super) async fn handle_agent_event(
             ..
         } => {
             state.show_retry(attempt, max_retries, delay_ms);
+            tui.request_render(false);
+        }
+
+        AgentEvent::RetryRefused { error } => {
+            add_note_message(
+                &state.chat_container,
+                &format!(
+                    "Not retrying automatically: the failed response may already have started a tool call or effect, and replaying it could repeat that. Provider error: {error}"
+                ),
+            );
             tui.request_render(false);
         }
 
@@ -547,10 +653,8 @@ pub(super) async fn handle_agent_event(
                         .footer
                         .set_cache_hit_rate(Some(usage.cache_read as f64 / denom as f64 * 100.0));
                 }
-                // Context-window badge (`?/512k` → `63.2%/512k`): the provider
-                // reports the prompt token count for this request, which is the
-                // context size the footer displays.
-                record_context_usage(&state.footer, a);
+                // Occupancy is refreshed from the active branch by the drain,
+                // rather than copied from this possibly stale event payload.
                 let miss = state
                     .cache_tracker
                     .lock()
@@ -654,25 +758,27 @@ pub(super) async fn handle_agent_event(
     }
 }
 
-/// Update the footer's context-window badge from one assistant response.
-///
-/// `Usage::context_tokens()` is the prompt size the provider reported for that
-/// request — the value pi's footer renders as `{percent}%/{window}`. Aborted
-/// and errored turns are skipped (their usage is not a real context
-/// measurement, mirroring pi's `lastAssistantUsageInfo`) so the last valid
-/// count stays on screen instead of flickering to `?`.
-pub(super) fn record_context_usage(
+/// Refresh occupancy from the selected branch, including compaction uncertainty.
+/// Event payloads may describe an abandoned branch and are never the authority.
+pub(super) async fn record_context_usage(
     footer: &ice_tui::FooterComponent,
-    message: &ice_ai::AssistantMessage,
+    harness: &AgentHarness,
 ) {
-    if message.stop_reason == ice_ai::StopReason::Aborted
-        || message.stop_reason == ice_ai::StopReason::Error
-    {
-        return;
-    }
-    let tokens = message.usage.context_tokens();
-    if tokens > 0 {
-        footer.set_context_tokens(Some(tokens));
+    // This read-only facade shares the existing harness; catalog/cwd are unused
+    // by current_context_usage and no configuration or provider is consulted.
+    let session = crate::agent_session::AgentSession::new(
+        harness.clone(),
+        Vec::new(),
+        Vec::new(),
+        std::path::PathBuf::new(),
+    );
+    match session.current_context_usage().await {
+        Ok(Some(usage)) => footer.set_context_estimate(
+            usage.tokens,
+            usage.context_window.min(i64::MAX as u64) as i64,
+        ),
+        Ok(None) => footer.set_context_estimate(None, 0),
+        Err(_) => footer.set_context_tokens(None),
     }
 }
 

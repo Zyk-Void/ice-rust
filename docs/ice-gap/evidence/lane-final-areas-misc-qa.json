@@ -1,0 +1,713 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "created_at": "2026-10-20T03:06:21.108Z",
+  "source_only": true,
+  "spec_sha256": "329bf154f760ccdac91c5517096a90f7920f97a29f877496817c680a9614c2c7",
+  "entries": 43,
+  "ledger_rows": 82,
+  "mapped": 77,
+  "not_applicable": 5,
+  "candidate_accounting": {
+    "original": 86,
+    "mapped": 72,
+    "excluded": 14,
+    "pending": [],
+    "overlap": []
+  },
+  "surfaces": 198,
+  "read_records": 165,
+  "identity_conflicts": [],
+  "required_source_gaps": [],
+  "supplemental_ledger": 9,
+  "claims": 2,
+  "core_candidate_decisions": [
+    {
+      "candidate_id": "C000247",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Packaged HTML template resolved by getExportTemplateDir and embedded into the export."
+    },
+    {
+      "candidate_id": "C000248",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Packaged CSS is read and has resolved theme variables inserted."
+    },
+    {
+      "candidate_id": "C000249",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Packaged navigation/rendering script is embedded into the standalone HTML export."
+    },
+    {
+      "candidate_id": "C000250",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Vendored marked parser is read and embedded into offline HTML."
+    },
+    {
+      "candidate_id": "C000251",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Vendored highlight.js is read and embedded into offline HTML."
+    },
+    {
+      "candidate_id": "C000252",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "SDK/session export writes the selected outputPath; filename and assembly contract is in MISC-017."
+    },
+    {
+      "candidate_id": "C000253",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-017"
+      ],
+      "reason": "Session-file export writes the selected outputPath using the same HTML generator."
+    },
+    {
+      "candidate_id": "C000521",
+      "disposition": "mapped",
+      "entry_ids": [
+        "SET-013"
+      ],
+      "reason": "Shared dispatcher inspects HTTP_PROXY during transport setup; exact defaults/precedence already source-reviewed by settings owner."
+    },
+    {
+      "candidate_id": "C000522",
+      "disposition": "mapped",
+      "entry_ids": [
+        "SET-013"
+      ],
+      "reason": "Shared dispatcher inspects HTTPS_PROXY during transport setup; exact defaults/precedence already source-reviewed by settings owner."
+    },
+    {
+      "candidate_id": "C000759",
+      "disposition": "excluded",
+      "entry_ids": [
+        "MISC-021"
+      ],
+      "reason": "False-positive filesystem extraction: unlink is the function returned by linkSignal(signal, watcher), removing an abort listener before watcher.abort(). Source-read confirms no pathname or filesystem operation."
+    },
+    {
+      "candidate_id": "C000760",
+      "disposition": "excluded",
+      "entry_ids": [
+        "MISC-021"
+      ],
+      "reason": "False-positive filesystem extraction: unlink is the function returned by linkSignal(signal, watcher), removing an abort listener before watcher.abort(). Source-read confirms no pathname or filesystem operation."
+    },
+    {
+      "candidate_id": "C000761",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-022"
+      ],
+      "reason": "Ordered optional UTF-8 Hugging Face token-file search; errors and empty files are skipped."
+    },
+    {
+      "candidate_id": "C000762",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-024"
+      ],
+      "reason": "TUI-only /llama model-management workflow, args ignored; read failure retry and action recovery are specified."
+    },
+    {
+      "candidate_id": "C000763",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-023"
+      ],
+      "reason": "llama.cpp declares OpenAI-compatible completions with exact compat flags and loaded-only catalog mapping."
+    },
+    {
+      "candidate_id": "C000764",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-023"
+      ],
+      "reason": "LLAMA_BASE_URL supplies the URL prompt placeholder via nullish fallback."
+    },
+    {
+      "candidate_id": "C000765",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-023"
+      ],
+      "reason": "Trimmed entered URL wins, then ambient LLAMA_BASE_URL, then default router URL; normalized before authentication."
+    },
+    {
+      "candidate_id": "C002079",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-013"
+      ],
+      "reason": "parseChangelog reads the supplied changelog path; missing/read-error policies are specified."
+    },
+    {
+      "candidate_id": "C002080",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-006"
+      ],
+      "reason": "/proc/version identifies WSL at the clipboard backend boundary."
+    },
+    {
+      "candidate_id": "C002081",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-006"
+      ],
+      "reason": "WSL clipboard image transfer reads the temporary file; exact transfer/conversion ordering is specified."
+    },
+    {
+      "candidate_id": "C002082",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-006"
+      ],
+      "reason": "WSL clipboard image transfer cleans up the temporary file in its finally block."
+    },
+    {
+      "candidate_id": "C002083",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-004"
+      ],
+      "reason": "DISPLAY participates in the Linux native-module display guard."
+    },
+    {
+      "candidate_id": "C002084",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-004"
+      ],
+      "reason": "WAYLAND_DISPLAY participates in the Linux native-module display guard."
+    },
+    {
+      "candidate_id": "C002085",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-004"
+      ],
+      "reason": "TERMUX_VERSION disables eager native clipboard module loading."
+    },
+    {
+      "candidate_id": "C002086",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-004"
+      ],
+      "reason": "WAYLAND_DISPLAY gates direct wl-paste text retrieval before addon fallback."
+    },
+    {
+      "candidate_id": "C002087",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-005"
+      ],
+      "reason": "TERMUX_VERSION selects termux-clipboard-set as the first Linux write backend."
+    },
+    {
+      "candidate_id": "C002088",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-005"
+      ],
+      "reason": "WAYLAND_DISPLAY plus session detection enables wl-copy before X11/OSC fallback."
+    },
+    {
+      "candidate_id": "C002089",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-005"
+      ],
+      "reason": "DISPLAY enables the X11 fallback write branch after preferred backends."
+    },
+    {
+      "candidate_id": "C002090",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-011"
+      ],
+      "reason": "First Windows Git Bash location derives from ProgramFiles."
+    },
+    {
+      "candidate_id": "C002091",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-011"
+      ],
+      "reason": "Second Windows Git Bash location derives from ProgramFiles(x86)."
+    },
+    {
+      "candidate_id": "C002092",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-011"
+      ],
+      "reason": "First enumerable key with lowercase path is read and overwritten in copied environment when prepending getBinDir."
+    },
+    {
+      "candidate_id": "C002093",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "ICE_OFFLINE permits already discovered tools but suppresses new downloads for exact 1/true/yes case-insensitive values."
+    },
+    {
+      "candidate_id": "C002094",
+      "disposition": "excluded",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "currentDir is an internal stack element of archive extraction traversal, not an additional stable public path. Its exact recursive directory-search behavior is specified by MISC-010 and the extraction directory has a separate concrete surface."
+    },
+    {
+      "candidate_id": "C002095",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "Windows system tar lookup prefers SystemRoot then WINDIR before fallback tool probing."
+    },
+    {
+      "candidate_id": "C002096",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "Windows system tar lookup uses WINDIR only when SystemRoot is nullish."
+    },
+    {
+      "candidate_id": "C002097",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "TOOL_DIR captured from getBinDir is recursively created for managed binary provisioning."
+    },
+    {
+      "candidate_id": "C002098",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "Unique per-download extraction directory isolates fd/rg operations before move and cleanup."
+    },
+    {
+      "candidate_id": "C002099",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-010"
+      ],
+      "reason": "Selected extracted binary is renamed into managed bin directory before Unix chmod and finally cleanup."
+    },
+    {
+      "candidate_id": "C002100",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-001"
+      ],
+      "reason": "Truthy ICE_UPDATE_URL overrides registry endpoint and is checked for accepted scheme/host and rejected userinfo."
+    },
+    {
+      "candidate_id": "C002101",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-002"
+      ],
+      "reason": "Windows loaded-native quarantine parent path is created before move/copy sequencing."
+    },
+    {
+      "candidate_id": "C002102",
+      "disposition": "mapped",
+      "entry_ids": [
+        "MISC-002"
+      ],
+      "reason": "Loaded dependency path is renamed to its quarantine path before copy-back; failures propagate."
+    },
+    {
+      "candidate_id": "C002410",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-083"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:20; actual dispatcher/consumer behavior belongs to TUI-083."
+    },
+    {
+      "candidate_id": "C002411",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-025"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:21; actual dispatcher/consumer behavior belongs to TUI-025."
+    },
+    {
+      "candidate_id": "C002412",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-016"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:22; actual dispatcher/consumer behavior belongs to TUI-016."
+    },
+    {
+      "candidate_id": "C002413",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-044"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:23; actual dispatcher/consumer behavior belongs to TUI-044."
+    },
+    {
+      "candidate_id": "C002414",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-045"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:24; actual dispatcher/consumer behavior belongs to TUI-045."
+    },
+    {
+      "candidate_id": "C002415",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-081"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:25; actual dispatcher/consumer behavior belongs to TUI-081."
+    },
+    {
+      "candidate_id": "C002416",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-081"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:26; actual dispatcher/consumer behavior belongs to TUI-081."
+    },
+    {
+      "candidate_id": "C002417",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-078"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:27; actual dispatcher/consumer behavior belongs to TUI-078."
+    },
+    {
+      "candidate_id": "C002418",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-080"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:28; actual dispatcher/consumer behavior belongs to TUI-080."
+    },
+    {
+      "candidate_id": "C002419",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-082"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:29; actual dispatcher/consumer behavior belongs to TUI-082."
+    },
+    {
+      "candidate_id": "C002420",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-082"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:30; actual dispatcher/consumer behavior belongs to TUI-082."
+    },
+    {
+      "candidate_id": "C002421",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-058"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:31; actual dispatcher/consumer behavior belongs to TUI-058."
+    },
+    {
+      "candidate_id": "C002422",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-072"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:32; actual dispatcher/consumer behavior belongs to TUI-072."
+    },
+    {
+      "candidate_id": "C002423",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-051"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:33; actual dispatcher/consumer behavior belongs to TUI-051."
+    },
+    {
+      "candidate_id": "C002424",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-053"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:35; actual dispatcher/consumer behavior belongs to TUI-053."
+    },
+    {
+      "candidate_id": "C002425",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-055"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:39; actual dispatcher/consumer behavior belongs to TUI-055 (Shells first, Agent Hub SUB-037 when no shells)."
+    },
+    {
+      "candidate_id": "C002426",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-055"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:42; actual dispatcher/consumer behavior belongs to TUI-055."
+    },
+    {
+      "candidate_id": "C002427",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-068"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:43; actual dispatcher/consumer behavior belongs to TUI-068."
+    },
+    {
+      "candidate_id": "C002428",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-061"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:44; actual dispatcher/consumer behavior belongs to TUI-061."
+    },
+    {
+      "candidate_id": "C002429",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-081"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:45; actual dispatcher/consumer behavior belongs to TUI-081."
+    },
+    {
+      "candidate_id": "C002430",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-067"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:46; actual dispatcher/consumer behavior belongs to TUI-067."
+    },
+    {
+      "candidate_id": "C002431",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-059"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:47; actual dispatcher/consumer behavior belongs to TUI-059."
+    },
+    {
+      "candidate_id": "C002432",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-046"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:48; actual dispatcher/consumer behavior belongs to TUI-046."
+    },
+    {
+      "candidate_id": "C002433",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-046"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:49; actual dispatcher/consumer behavior belongs to TUI-046."
+    },
+    {
+      "candidate_id": "C002434",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-081"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:50; actual dispatcher/consumer behavior belongs to TUI-081."
+    },
+    {
+      "candidate_id": "C002435",
+      "disposition": "mapped",
+      "entry_ids": [
+        "SESSION-016"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:51; actual dispatcher/consumer behavior belongs to SESSION-016."
+    },
+    {
+      "candidate_id": "C002436",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-064"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:52; actual dispatcher/consumer behavior belongs to TUI-064."
+    },
+    {
+      "candidate_id": "C002437",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-075"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:53; actual dispatcher/consumer behavior belongs to TUI-075."
+    },
+    {
+      "candidate_id": "C002438",
+      "disposition": "mapped",
+      "entry_ids": [
+        "TUI-076"
+      ],
+      "reason": "Exact builtin command catalog source read at packages/coding-agent/src/core/slash-commands.ts:54; actual dispatcher/consumer behavior belongs to TUI-076."
+    }
+  ],
+  "ledger_special_decisions": {
+    "packages/coding-agent/src/core/slash-commands.ts": {
+      "ids": [
+        "TUI-048",
+        "TUI-051",
+        "TUI-055",
+        "TUI-083",
+        "TUI-081",
+        "TUI-075",
+        "SESSION-016",
+        "EXT-013"
+      ],
+      "reason": "BuiltinSlashCommand catalog and exported SlashCommandInfo/SlashCommandSource schemas. Every29 original command candidate is explicitly mapped to its dispatcher/consumer; named symbol closure appends exact shared schema and catalog attribution."
+    },
+    "packages/coding-agent/docs/keybindings.md": {
+      "ids": [
+        "TUI-048",
+        "TUI-049",
+        "TUI-051",
+        "TUI-206",
+        "TUI-210",
+        "SUB-037"
+      ],
+      "reason": "Namespaced key overrides, migration, editor/actions and Agent Hub documentation. Root full numbered document review is preserved in misc-coordinator-docs-review.json; actual implementation contracts belong to listed entries."
+    },
+    "packages/coding-agent/docs/theme-sources.md": {
+      "ids": [
+        "TUI-002"
+      ],
+      "reason": "Provenance/credits for the bundled palette assets, whose exact catalog identities are TUI-002; documented external links were not accessed."
+    },
+    "packages/coding-agent/docs/tui.md": {
+      "ids": [
+        "TUI-212",
+        "TUI-216",
+        "TUI-217",
+        "TUI-218",
+        "TUI-219",
+        "EXT-043",
+        "EXT-044",
+        "EXT-045",
+        "EXT-047"
+      ],
+      "reason": "Full coordinator read of TUI Component/Focusable, cursor, overlay/focus lifecycle, widgets/footer/editor APIs and examples; native implementation gaps are assigned to owning TUI/EXT contracts. Examples are not claimed as executed."
+    },
+    "packages/coding-agent/src/core/diagnostics.ts": {
+      "ids": [
+        "TUI-053",
+        "EXT-013",
+        "EXT-014"
+      ],
+      "reason": "ResourceCollision and ResourceDiagnostic are the exact shared schema of resource/command/shortcut collision diagnostics and notice projection; definitions source-read in lane-final-areas-source-supplement.json."
+    },
+    "packages/coding-agent/src/core/export-html/vendor/highlight.min.js": {
+      "ids": [
+        "MISC-017",
+        "MISC-019"
+      ],
+      "reason": "Bundled generated/vendored highlight.js implementation injected by HTML export. Full owner visible read retained; generator/library body is not a separate host capability."
+    },
+    "packages/coding-agent/src/core/export-html/vendor/marked.min.js": {
+      "ids": [
+        "MISC-017",
+        "MISC-019"
+      ],
+      "reason": "Bundled vendored marked parser injected by HTML export; generated/parser body is not a separate host capability. Explicit redacted lines38,43 remain excluded."
+    },
+    "packages/coding-agent/src/core/index.ts": {
+      "ids": [
+        "SESSION-028",
+        "SESSION-022",
+        "SESSION-024",
+        "SESSION-013",
+        "EXT-001",
+        "EXT-017",
+        "EXT-019",
+        "CLI-015"
+      ],
+      "reason": "Pure export barrel for AgentSession/runtime/services, Bash operations, compaction types, event bus, experimental helper and extension host; actual definitions remain with listed owners. No second implementation."
+    },
+    "packages/coding-agent/src/index.ts": {
+      "ids": [
+        "SESSION-028",
+        "SESSION-029",
+        "SESSION-013",
+        "EXT-001",
+        "EXT-019",
+        "EXT-040",
+        "CLI-019",
+        "RPC-001",
+        "TUI-001",
+        "TUI-027",
+        "SUB-034",
+        "TOOLS-023",
+        "MISC-005",
+        "MISC-009",
+        "MISC-011"
+      ],
+      "reason": "Public package export barrel, including session, extension, tool, run-mode, UI/theme, subagent SDK, clipboard/frontmatter/image and shell APIs. Re-exporting adds no second algorithm; defining-source contracts are mapped."
+    },
+    "packages/coding-agent/src/modes/index.ts": {
+      "ids": [
+        "TUI-074",
+        "MISC-015",
+        "MISC-016",
+        "RPC-001",
+        "RPC-003",
+        "RPC-028"
+      ],
+      "reason": "Run-mode public export barrel for InteractiveMode, print/JSON mode and RPC client/protocol/schema/settings contracts. Full body source-read; no second implementation."
+    },
+    "packages/coding-agent/src/utils/deprecation.ts": {
+      "ids": [
+        "TUI-053"
+      ],
+      "reason": "Dormant module-level Set warning helper: warnDeprecation emits each exact message once through yellow console.warn, and clearDeprecationWarningsForTests clears the Set. No caller found under coding-agent. Detailed supplemental attribution goes to console/notice contract TUI-053 without claiming active wiring."
+    },
+    "packages/coding-agent/src/utils/highlight-js-lib-index.d.ts": {
+      "ids": [],
+      "status": "not-applicable",
+      "reason": "TypeScript-only ambient module declaration for highlight.js/lib/index.js. No executable behavior or separate Rust runtime feature; actual highlight/render contracts are TUI-005 and MISC-019."
+    }
+  },
+  "publication_ready": true,
+  "status": "verified",
+  "validation": {
+    "command": "node docs/ice-gap/tools/lane-final-areas-verify.mjs misc",
+    "area": "misc",
+    "entries": 43,
+    "proposal_entries": 43,
+    "ledger_rows": 82,
+    "surfaces": 198,
+    "unique_source_references": 630,
+    "read_records": 165,
+    "problems": []
+  }
+}

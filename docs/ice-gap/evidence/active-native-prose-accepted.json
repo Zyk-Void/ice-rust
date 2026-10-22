@@ -1,0 +1,559 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:03:42.887Z",
+  "mode": "apply",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "original_gate_sha256": "f28f9c7fcc3e1cb5d271de94c4527585fa38ef5bbca1a9fedf9d8530532bd660",
+  "tool_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+  "proposals": {
+    "coordinator-native-prose-replacements.json": "e3c8a805c6cf0c66c669f93285a15a3a107d22eb7365b0cae83c57921eb13476",
+    "lane-exports-rpc-ai-auth-native-prose-replacements.json": "3ae59f65990f99fa7d587a6ddfd02ab660c5116c153825fa6342a8d3ab84428e",
+    "lane-exports-sub-session-native-prose-replacements.json": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+    "lane-final-areas-active-identity-proposal.json": "3bad2fa6387b5a5677cd166530547d36f1214467f7fa22b13c1552c6f2846f27",
+    "lane-final-areas-first-pass-findings-proposal.json": "435fd3a102c2efa1a08b434a3cae35b9bc55b849b9714e7f49f86e59e8f8b40f",
+    "lane-exports-sub-session-cli-prose-review.json": "2da3ccfff955049c4c31620c4199571ee17305081e16cfb0ca83368ab9fca410",
+    "lane-exports-sub-session-native-surfaces-review.json": "2321e72183dcb4aee9ec80601a3fec5929200fe7627baef5f1efcf33dc0e8046"
+  },
+  "projection": {
+    "coordinate_space": "active",
+    "virtual_original_preview": false,
+    "report": "relocation-rust-remap.json",
+    "report_sha256": "6787b3c138aac0e039130c18d42d27a7120c246c049d88ca8bd88c3849e17f54",
+    "remapper_sha256": "aef378c0e58ee2999e81318f7287f3bf9dc4eca3f589f540c75e8e033d40e5be",
+    "source_map_sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d",
+    "hunk_map_sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006",
+    "independent_review_sha256": "ebf9835bd323170cb3c716b91a6f2101ce8b8c66a0e9eb204bf98207cd3f59f5",
+    "reviewed_range_records_checked": 9950,
+    "spacing_tool_sha256": "590a416bf3585346ac0ea2ff7ebee15808b1e93ad44d550da4e2de9deefd229b",
+    "spacing_validation": "spacing-residual-validation.json",
+    "spacing_validation_sha256": "2e4fe4c3378f9cb510c6b8ab6e026732d8147eab35f0d5420617b12460650d36",
+    "old_head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a"
+  },
+  "files": [
+    {
+      "path": "evidence/spec-cli-packaging.json",
+      "before_sha256": "403574e532caa9060cfa7b8e2f44a272a939d8e99e697c44fb0f60eeae7143bb",
+      "after_sha256": "b8fb2b25e785233ebf0169b02f08c8c638a03d86ea87a6178014aade8d50d0a0"
+    },
+    {
+      "path": "evidence/spec-rpc-remote.json",
+      "before_sha256": "6759704aab32f695feb8692ff31d047fc59045ea3625b7bad00dab46f136dc30",
+      "after_sha256": "2285698a6e97290a70cb65016dfea4aa190cb6777e438c807a6623999b04e766"
+    },
+    {
+      "path": "evidence/spec-providers-auth.json",
+      "before_sha256": "fbcdfce045d732e829d8a441aa5feafaa1677246102d8901c661535de2a999f3",
+      "after_sha256": "30d6970865fa997d2a7379b2477801256e406e32586a4831bae2526681200da6"
+    },
+    {
+      "path": "evidence/spec-session.json",
+      "before_sha256": "39fe1d5309e3f6c1595b23efb860483fc0950f7e0d13462d30fc6edc6625bf62",
+      "after_sha256": "b1af0cf4ce44197e4bf87d16290d3de96f26194ea262d1cc226866c5320976a6"
+    },
+    {
+      "path": "evidence/spec-subagents.json",
+      "before_sha256": "2cfde1f08908159705bf491c796f41c3a4fdb9275a59025177d6aa6eb77c0538",
+      "after_sha256": "9a4907c25aa409cf8f69cdb6eff97de1470f2e33bc80b6a9b4335e938c020a0b"
+    },
+    {
+      "path": "evidence/spec-tui.json",
+      "before_sha256": "6576b944c18fbffb46360fde3e9a1cf2bc42ad03c5ba48b995274e585b711ff0",
+      "after_sha256": "aae91d897198883733eec48642839ad157551fc3955b150a138d0d9d26e6af98"
+    },
+    {
+      "path": "evidence/spec-observability.json",
+      "before_sha256": "b94898d2a861c1ab29c7b4d34a06fa93462818918a69e6cd509ff690312d42b6",
+      "after_sha256": "c4f4227102ddc2acea68c5ece85910c37a1613e44555265ee4a840f00cd35088"
+    },
+    {
+      "path": "evidence/spec-blackhole.json",
+      "before_sha256": "b5301fadfb69465649bc5068a3e41015c6b1b65eefbc49fe99f7488756eb0aa2",
+      "after_sha256": "52b87872e9f0cb5cf1ec4dae68ad8455d51656bbc288fa9f8208eca0f2b4405c"
+    },
+    {
+      "path": "evidence/subagents.json",
+      "before_sha256": "efab68e255c4e2a2bde398d507884e360cc14ddfdf499bec42583e575e4ad530",
+      "after_sha256": "7d078ade61af39093a753cfe6d0e666d85bfa92d4b488b992e90acf5043c8409"
+    },
+    {
+      "path": "evidence/spec-misc.json",
+      "before_sha256": "dd574eddd1365a856743b9a891b202e384ac2f46a990d69945606b9914f80497",
+      "after_sha256": "3b785c94ba2652f7ed5cb87421add6ac196ceb5415d9209f4f573c06efaeddb1"
+    },
+    {
+      "path": "evidence/spec-settings.json",
+      "before_sha256": "ee712d80e9d7c7efe79e020cd42e721b63f33b9461ab4986da30c45b18fab488",
+      "after_sha256": "5ab72a4e1ba824aceb3ec871bd27ccecf28e05c3839cf2504b18a3a0ba5a7ebd"
+    },
+    {
+      "path": "evidence/misc.json",
+      "before_sha256": "286b5c01ef777d77328b14223867e2e9c04f0baabe626e0e69938b9c580da347",
+      "after_sha256": "527aeb081b6f02a4839a4b84f2cb63fa09c3c3c92a01fe21291f2a6920849af6"
+    },
+    {
+      "path": "evidence/settings.json",
+      "before_sha256": "448121be95619185f566a9f86d819e3fd96f44b60a6b40540755d933cf1e616f",
+      "after_sha256": "072b019db76b0560054495f90e283d50ce1b90159c8fc12caebb1daff2ac5804"
+    },
+    {
+      "path": "evidence/qa-first-pass-coverage.json",
+      "before_sha256": "ad10021cc221930494607953c45cb575f9818477fbb49b356a69939bbc157e6c",
+      "after_sha256": "f790a60fd27c7fd4ae1a1bc81e05892076e54d708807dae4f28eb0f1e3442025"
+    },
+    {
+      "path": "evidence/cli-packaging.json",
+      "before_sha256": "24ce9b31cf6c860626968409ad3439965e2cf6fd310e7a9e394da17ed10ddfcf",
+      "after_sha256": "e3ae111d5c28f5c1832c9658da77241492a789fcd91d08f905b08beb4f160c2d"
+    },
+    {
+      "path": "evidence/rpc-remote.json",
+      "before_sha256": "30ac2c5641a0e65a6ea483751d09a4748d50aeda43b5011847f670b4e92d76e8",
+      "after_sha256": "30ac2c5641a0e65a6ea483751d09a4748d50aeda43b5011847f670b4e92d76e8"
+    },
+    {
+      "path": "evidence/providers-auth.json",
+      "before_sha256": "ac3f0d319692bc3249e0fbda0aeab4fa92ab0022221ab75ef455811fcc545edc",
+      "after_sha256": "ac3f0d319692bc3249e0fbda0aeab4fa92ab0022221ab75ef455811fcc545edc"
+    },
+    {
+      "path": "evidence/session.json",
+      "before_sha256": "cb75e0c200781f17e0415b789e7d5f4819398d1c75c3f33ee6689bd4eb8f0d9d",
+      "after_sha256": "cb75e0c200781f17e0415b789e7d5f4819398d1c75c3f33ee6689bd4eb8f0d9d"
+    },
+    {
+      "path": "evidence/tui.json",
+      "before_sha256": "f22305d74dbf44ebef632edd8911795259e157c3248f20e190dba3d65d3da414",
+      "after_sha256": "f22305d74dbf44ebef632edd8911795259e157c3248f20e190dba3d65d3da414"
+    },
+    {
+      "path": "evidence/observability.json",
+      "before_sha256": "4eb8fd40f1b6f6ddc360d3aa8974e13b6db35835198ee4e8eb9d5c33bafbd3bb",
+      "after_sha256": "4eb8fd40f1b6f6ddc360d3aa8974e13b6db35835198ee4e8eb9d5c33bafbd3bb"
+    },
+    {
+      "path": "evidence/blackhole.json",
+      "before_sha256": "a4643d44f48d1cc8ef3a3a5a0cfb7dbbe8703094455be6886779dddf3bf1f851",
+      "after_sha256": "a4643d44f48d1cc8ef3a3a5a0cfb7dbbe8703094455be6886779dddf3bf1f851"
+    }
+  ],
+  "changes": [
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/0/rust",
+      "old_value": "The native binary uses a multi-thread Tokio runtime, awaits app::run and converts its integer code to ExitCode through a u8 cast; lib.rs supplies HOST_NAME/HOST_VERSION. It has no JavaScript warning hook, Bun injection layer or empty-process.env bug to reproduce (rust:crates/ice-cli/src/bin/icers.rs:1-21; rust:crates/ice-cli/src/lib.rs:82-89). Full app.rs startup and a scoped crates search found no corresponding assignments for ICE_CODING_AGENT/AI_AGENT, or PI_CODING_AGENT_DIR launcher bridge. The environment configuration name ICE_CODING_AGENT_DIR does exist and must not be confused with the ICE_CODING_AGENT marker (rust:crates/ice-cli/src/app.rs:82-190; rust:crates/ice-cli/src/config.rs:89-108).",
+      "new_value": "The native binary, icers, uses a multi-thread Tokio runtime, awaits app::run and converts its integer code to ExitCode through a u8 cast; lib.rs supplies HOST_NAME/HOST_VERSION. It has no JavaScript warning hook, Bun injection layer or empty-process.env bug to reproduce (rust:crates/ice-cli/src/bin/icers.rs:1-21; rust:crates/ice-cli/src/lib.rs:82-89). Full app.rs startup and a scoped crates search found no corresponding assignments for ICE_CODING_AGENT/AI_AGENT, or PI_CODING_AGENT_DIR launcher bridge. The native environment configuration name ICERS_CODING_AGENT_DIR exists and must not be confused with the ICE_CODING_AGENT marker (rust:crates/ice-cli/src/app.rs:82-190; rust:crates/ice-cli/src/config.rs:89-108).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native executable/config override are renamed; absent TS ICE_CODING_AGENT/AI_AGENT markers and PI bridge remain unchanged claims."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/2/rust",
+      "old_value": "Native args.rs genuinely parses most common flags and has extensive inline tests. It additionally recognizes --base-url, --timeout, --extensions-dir/ICE_EXTENSIONS_DIR, --dev-local-only, --project-only and --debug-system-prompt. It peels '=value' for all long flags; take_value rejects a following dash-prefixed value except bare '-'. It stores unknown flags in a sorted BTreeMap; CSV values drop empty fields; theme is a last-wins scalar; --thinking lacks ultra; invalid --mode is a usage error. Native --tui-mode accepts case-insensitive regular/fullscreen and defaults to regular on macOS, fullscreen elsewhere, while TS's public flag is --ui-mode. It does not recognize fast/no-fast/observe/print-system-template as builtins. Bare '@' and '-' become messages in Rust. The -p branch lacks the TS '---' prompt exception (rust:crates/ice-cli/src/args.rs:76-270; rust:crates/ice-cli/src/args.rs:271-555; rust:crates/ice-cli/src/args.rs:718-1120).",
+      "new_value": "Native args.rs genuinely parses most common flags and has extensive inline tests. It additionally recognizes --base-url, --timeout, --extensions-dir/ICERS_EXTENSIONS_DIR, --dev-local-only, --project-only and --debug-system-prompt. It peels '=value' for all long flags; take_value rejects a following dash-prefixed value except bare '-'. It stores unknown flags in a sorted BTreeMap; CSV values drop empty fields; theme is a last-wins scalar; --thinking lacks ultra; invalid --mode is a usage error. Native --tui-mode accepts case-insensitive regular/fullscreen and defaults to regular on macOS, fullscreen elsewhere, while TS's public flag is --ui-mode. It does not recognize fast/no-fast/observe/print-system-template as builtins. Bare '@' and '-' become messages in Rust. The -p branch lacks the TS '---' prompt exception (rust:crates/ice-cli/src/args.rs:76-270; rust:crates/ice-cli/src/args.rs:271-555; rust:crates/ice-cli/src/args.rs:718-1120).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native args environment lookup changed."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/3/rust",
+      "old_value": "Native handle_parse_short_circuits checks help first, version second and parser errors third, so --help suppresses errors and beats --version. Native version prints 'ice VERSION'; its help is static and does not create services or list extension flags. It migrates its layout after cwd resolution, then handles export and list-models before provider credentials, resume and harness construction (rust:crates/ice-cli/src/app.rs:174-219; rust:crates/ice-cli/src/app.rs:523-579; rust:crates/ice-cli/src/args.rs:589-716). Native resolve_mode gives the presence of unknown flag 'server' highest priority, then rpc/json, then -p/non-TTY; later ICE_FORCE_TUI='1' can override it until a plugin stdio claim authoritatively forces RPC. A genuine JSONL branch exists; comments claiming no built-in RPC are stale (rust:crates/ice-cli/src/args.rs:556-578; rust:crates/ice-cli/src/app.rs:234-235; rust:crates/ice-cli/src/app.rs:352-381; rust:crates/ice-cli/src/app.rs:434-505).",
+      "new_value": "Native handle_parse_short_circuits checks help first, version second and parser errors third, so --help suppresses errors and beats --version. Native version prints 'icers VERSION'; its help is static and does not create services or list extension flags. It migrates its layout after cwd resolution, then handles export and list-models before provider credentials, resume and harness construction (rust:crates/ice-cli/src/app.rs:174-219; rust:crates/ice-cli/src/app.rs:523-579; rust:crates/ice-cli/src/args.rs:589-716). Native resolve_mode gives the presence of unknown flag 'server' highest priority, then rpc/json, then -p/non-TTY; later ICERS_FORCE_TUI='1' can override it until a plugin stdio claim authoritatively forces RPC. A genuine JSONL branch exists; comments claiming no built-in RPC are stale (rust:crates/ice-cli/src/args.rs:556-578; rust:crates/ice-cli/src/app.rs:234-235; rust:crates/ice-cli/src/app.rs:352-381; rust:crates/ice-cli/src/app.rs:434-505).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native version output and force-TUI control follow the active host identity."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/5/rust",
+      "old_value": "Native select_session prioritizes no_session, then continue/resume, fork, session_id, session. It applies no TS conflict validation and defaults its root to cwd/.ice/sessions, with only flag then saved setting overriding it. app resolves --resume into a picker result before provider/harness creation and requires both TTYs; the picker uses the default project directory rather than the supplied session-dir. --continue has an error when no resumable metadata exists instead of the TS fresh-session fallback (rust:crates/ice-cli/src/session.rs:154-192; rust:crates/ice-cli/src/app.rs:617-638; rust:crates/ice-cli/src/resume_picker.rs:16-26; rust:crates/ice-cli/src/session.rs:2096-2135).\n\nNative ById searches the selected directory using one first-match predicate (exact ID OR path contains query OR query contains ID); it does not perform the TS direct-path/global exact-before-prefix algorithm. Fork searches only its default root, ignores selected session-dir and requested target ID, and creates with id=None. Native name is applied during build_prepared after provider resolution, whitespace clears the name, and failures are only warned when verbose. Missing-cwd restore always warns and continues using native startup cwd, without TS interactive approval or headless failure (rust:crates/ice-cli/src/session.rs:2498-2519; rust:crates/ice-cli/src/session.rs:2137-2184; rust:crates/ice-cli/src/session.rs:400-422; rust:crates/ice-cli/src/session.rs:2676-2713).",
+      "new_value": "Native select_session prioritizes no_session, then continue/resume, fork, session_id, session. It applies no TS conflict validation and defaults its root to cwd/.icers/sessions, with only flag then saved setting overriding it. app resolves --resume into a picker result before provider/harness creation and requires both TTYs; the picker uses the default project directory rather than the supplied session-dir. --continue has an error when no resumable metadata exists instead of the TS fresh-session fallback (rust:crates/ice-cli/src/session.rs:154-192; rust:crates/ice-cli/src/app.rs:617-638; rust:crates/ice-cli/src/resume_picker.rs:16-26; rust:crates/ice-cli/src/session.rs:2096-2135).\n\nNative ById searches the selected directory using one first-match predicate (exact ID OR path contains query OR query contains ID); it does not perform the TS direct-path/global exact-before-prefix algorithm. Fork searches only its default root, ignores selected session-dir and requested target ID, and creates with id=None. Native name is applied during build_prepared after provider resolution, whitespace clears the name, and failures are only warned when verbose. Missing-cwd restore always warns and continues using native startup cwd, without TS interactive approval or headless failure (rust:crates/ice-cli/src/session.rs:2498-2519; rust:crates/ice-cli/src/session.rs:2137-2184; rust:crates/ice-cli/src/session.rs:400-422; rust:crates/ice-cli/src/session.rs:2676-2713).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native default session directory changed; TS paths remain unchanged."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/7/rust",
+      "old_value": "Native app deliberately waits until extensions are loaded to determine owns_stdio and validates the stdio lifecycle before reading. It skips reads for rpc/server or a plugin stdio claim, a native capability that should be retained (rust:crates/ice-cli/src/app.rs:221-235; rust:crates/ice-cli/src/app.rs:315-342). Its reader has an ICE_SKIP_STDIN='1' escape hatch, skips TTYs, calls blocking read_to_string and trims successful input, but maps every read/UTF-8 error to None. Thus it can proceed with remaining CLI/file input after silently losing a failed pipe. It also performs the blocking read directly in the async startup path (rust:crates/ice-cli/src/app.rs:770-800).",
+      "new_value": "Native app deliberately waits until extensions are loaded to determine owns_stdio and validates the stdio lifecycle before reading. It skips reads for rpc/server or a plugin stdio claim, a native capability that should be retained (rust:crates/ice-cli/src/app.rs:221-235; rust:crates/ice-cli/src/app.rs:315-342). Its reader has an ICERS_SKIP_STDIN='1' escape hatch, skips TTYs, calls blocking read_to_string and trims successful input, but maps every read/UTF-8 error to None. Thus it can proceed with remaining CLI/file input after silently losing a failed pipe. It also performs the blocking read directly in the async startup path (rust:crates/ice-cli/src/app.rs:770-800).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native stdin bypass control changed."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/17/rust",
+      "old_value": "Native agent_dir uses exactly ICE_CODING_AGENT_DIR when present and absolute, otherwise home/.ice/agent; its default session root is cwd/.ice/sessions. These are canonical native rules, with a separate default flat-layout migration rather than implicit .pi/PIV fallback (rust:crates/ice-cli/src/config.rs:89-108; rust:crates/ice-cli/src/config.rs:176-225; rust:crates/ice-cli/src/session.rs:189-192). Rust typed settings/environment APIs do not need literal JS shallow-copy functions, but must preserve their exact-name contract at compatibility boundaries. Native package/extension interoperability is assessed by EXT-001/002 and the package supplement; no blanket 'Rust cannot load any Pi package' conclusion is drawn from these helper files.",
+      "new_value": "Native agent_dir uses exactly ICERS_CODING_AGENT_DIR when present and absolute, otherwise home/.icers/agent; its default session root is cwd/.icers/sessions. These are canonical native rules, with a separate default flat-layout migration rather than implicit .pi/PIV fallback (rust:crates/ice-cli/src/config.rs:89-108; rust:crates/ice-cli/src/config.rs:176-225; rust:crates/ice-cli/src/session.rs:189-192). Rust typed settings/environment APIs do not need literal JS shallow-copy functions, but must preserve their exact-name contract at compatibility boundaries. Native package/extension interoperability is assessed by EXT-001/002 and the package supplement; no blanket 'Rust cannot load any Pi package' conclusion is drawn from these helper files.\n\nThe active native names deliberately differ from the TypeScript ice/.ice/ICE_* names; these path and environment rules do not establish automatic migration of historical TypeScript or old-native directories.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Explicitly distinguish native runtime identity from TypeScript compatibility names."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/18/rust",
+      "old_value": "Native run wraps run_inner and prints timing after it returns. Native offline normalization sets ICE_OFFLINE but not the TS ICE_SKIP_VERSION_CHECK marker. It has its own --connect early route, static warnings only under verbose, plugin-owned stdio validation, ICE_SKIP_STDIN/ICE_FORCE_TUI controls, and cleanup of dev watcher/context/harness after mode execution. RPC/server dispatch contains real extension lifecycle and JSONL/plugin-stdio choices (rust:crates/ice-cli/src/app.rs:73-103; rust:crates/ice-cli/src/args.rs:31-71; rust:crates/ice-cli/src/app.rs:315-381; rust:crates/ice-cli/src/app.rs:434-520; rust:crates/ice-cli/src/app.rs:640-650). The startup path lacks the TS recorder/dashboard, extension console buffering, benchmark and stdout takeover sequence; these are specific integrations rather than absence of all cleanup or timing.",
+      "new_value": "Native run wraps run_inner and prints timing after it returns. Native offline normalization sets ICERS_OFFLINE but not the TS ICE_SKIP_VERSION_CHECK marker. It has its own --connect early route, static warnings only under verbose, plugin-owned stdio validation, ICERS_SKIP_STDIN/ICERS_FORCE_TUI controls, and cleanup of dev watcher/context/harness after mode execution. RPC/server dispatch contains real extension lifecycle and JSONL/plugin-stdio choices (rust:crates/ice-cli/src/app.rs:73-103; rust:crates/ice-cli/src/args.rs:31-71; rust:crates/ice-cli/src/app.rs:315-381; rust:crates/ice-cli/src/app.rs:434-520; rust:crates/ice-cli/src/app.rs:640-650). The startup path lacks the TS recorder/dashboard, extension console buffering, benchmark and stdout takeover sequence; these are specific integrations rather than absence of all cleanup or timing.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native controls change; the explicitly TS ICE_SKIP_VERSION_CHECK marker remains."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/21/rust",
+      "old_value": "Native global installation targets the agent's native extension directory and a native package registry; project links target cwd/.ice/packages/<name>/extensions. These are valid native artifacts paths but do not implement npm/Git resource caches or the temporary TS layout. The native global installer validates flat artifact names, while project name containment is weaker and is separately corrected in CLI-039 (rust:crates/ice-cli/src/install.rs:93-154; rust:crates/ice-cli/src/packages.rs:136-166). No npm/Git cache manager was found in the fully read native package modules.",
+      "new_value": "Native global installation targets the agent's native extension directory and a native package registry; project links target cwd/.icers/packages/<name>/extensions. These are valid native artifacts paths but do not implement npm/Git resource caches or the temporary TS layout. The native global installer validates flat artifact names, while project name containment is weaker and is separately corrected in CLI-039 (rust:crates/ice-cli/src/install.rs:93-154; rust:crates/ice-cli/src/packages.rs:136-166). No npm/Git cache manager was found in the fully read native package modules.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native project package location changed."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/38/mechanism",
+      "old_value": "TS local resource installation records an existing source path without copying it. Rust's project link command instead builds a Cargo dynamic library and installs a copied artifact under the project, so its filesystem mutation boundary must be evaluated independently.\n\nNative 'package link' accepts --path, --package/-P, --name or one positional display name, --debug, --locked and --force/-f. It resolves the source against cwd, runs cargo metadata --format-version 1 --no-deps, selects the requested Cargo package or a unique cdylib candidate (preferring the canonical source-containing manifest where unambiguous), then builds using JSON compiler-artifact messages and release by default. The build occurs before the existing target/no-force check. It selects a dynamic library artifact and targets cwd/.ice/packages/<name>/extensions. Force removes the old target before copying through a fixed adjacent temporary filename and rename. Registry parsing/updating occurs after artifact activation, so a corrupt registry or later write failure can leave changed payload without matching metadata (rust:crates/ice-cli/src/packages.rs:48-190; rust:crates/ice-cli/src/packages.rs:468-605).\n\nThe project registry is {packages:[{name, version, source, cargo_package, artifacts?}]} with missing artifacts defaulting empty. Writes use .packages.json.tmp then rename, without the global installer's mutation lock or multi-file rollback. List reads only this project registry. Update strictly reads both project and global registries before rebuilding; it relinks selected project records with force, then invokes the current executable's native install command for eligible global records. It preserves custom GitHub/prebuilt versus --build backend, excludes local-source global entries, continues after individual failures and returns aggregate failure. Project --locked/debug affect Cargo rebuilds, not every global installer invocation. Unlink validates one name, requires a matching record, removes its directory before rewriting the registry, and does not have rollback (rust:crates/ice-cli/src/packages.rs:192-467).\n\nSource-proven containment defect: valid_name accepts any nonempty ASCII alphanumeric/dash/underscore/dot sequence, including '.' and '..'. Direct app dispatch reaches package::run; a supplied --name '..' passes validation. Given a valid source/build, joining that name can direct the artifact into cwd/.ice/extensions and persist '..' if the registry write succeeds. Unlink '..' then requires that registry record and calls remove_dir_all on cwd/.ice/packages/.. before updating metadata. The audit did not execute this or establish OS-specific deletion effects for a terminal parent component. Cargo-derived selected.name uses the same validator, but Cargo's own permitted-name constraints were not independently audited. Parsed registry names have no semantic revalidation, and project_package_dirs directly joins registry name/kind, so malformed stored names affect discovery as well (rust:crates/ice-cli/src/packages.rs:123-166; rust:crates/ice-cli/src/packages.rs:388-421; rust:crates/ice-cli/src/packages.rs:573-626).\n\nInline tests cover backend selection, custom repositories, continuing after failures and corrupt-global-registry early abort. The name test rejects slash traversal and empty names but does not cover '.'/'..'. All tests were read only. Native package linking copies the library, not all skills/prompts/themes; the directory-discovery interface can expose those kinds only when corresponding directories exist through other means.",
+      "new_value": "TS local resource installation records an existing source path without copying it. Rust's project link command instead builds a Cargo dynamic library and installs a copied artifact under the project, so its filesystem mutation boundary must be evaluated independently.\n\nNative 'package link' accepts --path, --package/-P, --name or one positional display name, --debug, --locked and --force/-f. It resolves the source against cwd, runs cargo metadata --format-version 1 --no-deps, selects the requested Cargo package or a unique cdylib candidate (preferring the canonical source-containing manifest where unambiguous), then builds using JSON compiler-artifact messages and release by default. The build occurs before the existing target/no-force check. It selects a dynamic library artifact and targets cwd/.icers/packages/<name>/extensions. Force removes the old target before copying through a fixed adjacent temporary filename and rename. Registry parsing/updating occurs after artifact activation, so a corrupt registry or later write failure can leave changed payload without matching metadata (rust:crates/ice-cli/src/packages.rs:48-190; rust:crates/ice-cli/src/packages.rs:468-605).\n\nThe project registry is {packages:[{name, version, source, cargo_package, artifacts?}]} with missing artifacts defaulting empty. Writes use .packages.json.tmp then rename, without the global installer's mutation lock or multi-file rollback. List reads only this project registry. Update strictly reads both project and global registries before rebuilding; it relinks selected project records with force, then invokes the current executable's native install command for eligible global records. It preserves custom GitHub/prebuilt versus --build backend, excludes local-source global entries, continues after individual failures and returns aggregate failure. Project --locked/debug affect Cargo rebuilds, not every global installer invocation. Unlink validates one name, requires a matching record, removes its directory before rewriting the registry, and does not have rollback (rust:crates/ice-cli/src/packages.rs:192-467).\n\nSource-proven containment defect: valid_name accepts any nonempty ASCII alphanumeric/dash/underscore/dot sequence, including '.' and '..'. Direct app dispatch reaches package::run; a supplied --name '..' passes validation. Given a valid source/build, joining that name can direct the artifact into cwd/.icers/extensions and persist '..' if the registry write succeeds. Unlink '..' then requires that registry record and calls remove_dir_all on cwd/.icers/packages/.. before updating metadata. The audit did not execute this or establish OS-specific deletion effects for a terminal parent component. Cargo-derived selected.name uses the same validator, but Cargo's own permitted-name constraints were not independently audited. Parsed registry names have no semantic revalidation, and project_package_dirs directly joins registry name/kind, so malformed stored names affect discovery as well (rust:crates/ice-cli/src/packages.rs:123-166; rust:crates/ice-cli/src/packages.rs:388-421; rust:crates/ice-cli/src/packages.rs:573-626).\n\nInline tests cover backend selection, custom repositories, continuing after failures and corrupt-global-registry early abort. The name test rejects slash traversal and empty names but does not cover '.'/'..'. All tests were read only. Native package linking copies the library, not all skills/prompts/themes; the directory-discovery interface can expose those kinds only when corresponding directories exist through other means.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native dot-name containment consequence follows the .icers project root; code/OS limitations are retained."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/38/interfaces",
+      "old_value": "Native commands package link/list/update/unlink; .ice/packages/<name>/extensions; .ice/packages.json and fixed .packages.json.tmp; Cargo package/display-name split. Source-only preconditions for the defect are a directly supplied dot name plus successful metadata/build/link persistence, or an existing matching malformed registry record for unlink.",
+      "new_value": "Native commands package link/list/update/unlink; .icers/packages/<name>/extensions; .icers/packages.json and fixed .packages.json.tmp; Cargo package/display-name split. Source-only preconditions for the defect are a directly supplied dot name plus successful metadata/build/link persistence, or an existing matching malformed registry record for unlink.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native project registry and artifact paths changed."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/40/rust",
+      "old_value": "The implementation and inline tests are fully present in prebuilt_extensions.rs. It is a useful native-only capability absent from TS's npm/Git package transport. The helper canonicalization is internally consistent for its canonical repository inputs; the separate CLI prebuilt caller's mixed-case constant is not proof that every extension prebuilt install is broken. Native comparison source: `rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403`; `rust:crates/ice-cli/src/install.rs:155-221`.",
+      "new_value": "The implementation and inline tests are fully present in prebuilt_extensions.rs. It is a useful native-only capability absent from TS's npm/Git package transport. The helper canonicalization is internally consistent for its canonical repository inputs; the separate CLI prebuilt caller's historical mixed-case constant is corrected in the active checkout (RUST-045), and never established that every extension prebuilt install was broken. Native comparison source: `rust:crates/ice-cli/src/prebuilt_extensions.rs:1-1403`; `rust:crates/ice-cli/src/install.rs:155-221`.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Historical CLI-only defect is fixed without changing native extension protocol assessment."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/41/mechanism",
+      "old_value": "TS package update discovery probes installed npm/Git packages and suppresses metadata errors. Native startup additionally retains recent successful version metadata and uses it only for transient lookup failures.\n\ncheck_startup ignores its cwd parameter for native package selection; it checks the global native registry and the CLI. ICE_OFFLINE or the presence of ICE_DISABLE_UPDATE_CHECK, even an empty value, disables remote checks while still consuming self-update status warnings. The startup HTTP client has a 1800 ms request timeout and the native user-agent configuration. Extension checks use buffer_unordered with concurrency four; the CLI version check runs concurrently outside that four-item pool. Locally sourced global native packages are excluded (rust:crates/ice-cli/src/updates.rs:120-253).\n\nRegistry results distinguish Found(version), Missing for HTTP 404/410, and Transient for other failures including throttling, timeouts and malformed metadata. Cached metadata is reused only on Transient and only when checkedAt>0 with age between zero and six hours inclusive. Fallback does not renew freshness. Missing removes the old result. The cache file is update-check.json with legacy checkedAt plus newer per-entry timestamps; cache updates lock, reread and merge sections before best-effort atomic writing so concurrent CLI/native results do not clobber each other. There is no claim that all cached metadata is freshly network-verified (rust:crates/ice-cli/src/updates.rs:254-357; rust:crates/ice-cli/src/updates.rs:445-493).\n\nCargo entries use a crate-name cache identity; prebuilt entries include the distribution backend, repository/name and target to avoid cross-publisher/platform reuse. Before reporting, the code rereads the installed registry and checks semver 'newer than', not mere string inequality. Notice commands preserve the appropriate native update/install backend and custom repository. CLI notices use 'ice update'. These semantics differ from TS npm/Git inequality probes and are native capabilities to preserve, not a missing one-to-one algorithm (rust:crates/ice-cli/src/updates.rs:358-419; rust:crates/ice-cli/src/updates.rs:474-521).\n\nExplicit offline self-update uses cached_latest_ice without this startup six-hour freshness check; that separate informational path is CLI-043. Full inline tests cover transient versus missing fallback, freshness boundaries, cache merging, publisher/platform keys, worker bounds and notice behavior. No network or startup check ran during this audit.",
+      "new_value": "TS package update discovery probes installed npm/Git packages and suppresses metadata errors. Native startup additionally retains recent successful version metadata and uses it only for transient lookup failures.\n\ncheck_startup ignores its cwd parameter for native package selection; it checks the global native registry and the CLI. ICERS_OFFLINE or the presence of ICERS_DISABLE_UPDATE_CHECK, even an empty value, disables remote checks while still consuming self-update status warnings. The startup HTTP client has a 1800 ms request timeout and the native user-agent configuration. Extension checks use buffer_unordered with concurrency four; the CLI version check runs concurrently outside that four-item pool. Locally sourced global native packages are excluded (rust:crates/ice-cli/src/updates.rs:120-253).\n\nRegistry results distinguish Found(version), Missing for HTTP 404/410, and Transient for other failures including throttling, timeouts and malformed metadata. Cached metadata is reused only on Transient and only when checkedAt>0 with age between zero and six hours inclusive. Fallback does not renew freshness. Missing removes the old result. The cache file is update-check.json with legacy checkedAt plus newer per-entry timestamps; cache updates lock, reread and merge sections before best-effort atomic writing so concurrent CLI/native results do not clobber each other. There is no claim that all cached metadata is freshly network-verified (rust:crates/ice-cli/src/updates.rs:254-357; rust:crates/ice-cli/src/updates.rs:445-493).\n\nCargo entries use a crate-name cache identity; prebuilt entries include the distribution backend, repository/name and target to avoid cross-publisher/platform reuse. Before reporting, the code rereads the installed registry and checks semver 'newer than', not mere string inequality. Notice commands preserve the appropriate native update/install backend and custom repository. CLI notices use 'icers update'. These semantics differ from TS npm/Git inequality probes and are native capabilities to preserve, not a missing one-to-one algorithm (rust:crates/ice-cli/src/updates.rs:358-419; rust:crates/ice-cli/src/updates.rs:474-521).\n\nExplicit offline self-update uses cached_latest_ice without this startup six-hour freshness check; that separate informational path is CLI-043. Full inline tests cover transient versus missing fallback, freshness boundaries, cache merging, publisher/platform keys, worker bounds and notice behavior. No network or startup check ran during this audit.\n\nIn the active checkout, the persisted freshness object uses the required icers field; the older ice field has no serde alias or field default. Reusing a pre-rename cache with that older freshness object makes read_cache return None on deserialization failure, so it contributes no cached metadata until rebuilt. The enclosing freshness field still defaults when entirely absent, and the aggregate checkedAt fallback remains. This is a source-derived compatibility consequence for reused/copied cache files; no private cache or runtime migration was examined (rust:crates/ice-cli/src/updates.rs:64-82; rust:crates/ice-cli/src/updates.rs:254-259; rust:crates/ice-cli/src/updates.rs:321-340; rust:crates/ice-cli/src/updates.rs:482-484).",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Native cache identity/access and update controls changed; exact serialization consequence is distinguished from source-backend parity."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/41/interfaces",
+      "old_value": "ICE_DISABLE_UPDATE_CHECK presence semantics; ICE_OFFLINE native gate; update-check.json cache; UpdateReport notices/warnings; Found/Missing/Transient classification; six-hour fallback, 1800 ms requests and concurrency four plus independent CLI request. TS ICE_SKIP_VERSION_CHECK/update-service semantics remain MISC-001.",
+      "new_value": "ICERS_DISABLE_UPDATE_CHECK presence semantics; ICERS_OFFLINE native gate; update-check.json cache; UpdateReport notices/warnings; Found/Missing/Transient classification; six-hour fallback, 1800 ms requests and concurrency four plus independent CLI request. TS ICE_SKIP_VERSION_CHECK/update-service semantics remain MISC-001.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Only native environment identities change; TS ICE_SKIP_VERSION_CHECK remains unchanged."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/43/mechanism",
+      "old_value": "TS self-update delegates activation to an external package manager. Native activation validates both staged and destination files, replaces the executable through adjacent files and attempts rollback if post-replacement validation fails.\n\nThe direct plan requires a real nonempty regular current executable and owned real staging directory, creates unique adjacent new/old paths, and preflights replacement permissions with create_new probes. It validates staged --version, copies the staged executable, verifies byte equality/version, creates a hard-link backup of the current executable, checks that the destination has not changed and rejects a downgrade, then renames the replacement. Post-activation version/byte checks can trigger rollback through the backup; rollback failure is included in the returned error. Cleanup is best-effort. These are concrete preservation requirements, not a claim of crash-atomic multi-file state or universal platform support (rust:crates/ice-cli/src/updates.rs:1051-1268).\n\nvalidate_ice_executable_version invokes the candidate with --version, requires successful exit and no stderr, and accepts one exact 'ice <semver>' line with at most its allowed terminal newline. It rejects extra lines/whitespace in the version and disallowed older versions. Downloaded release validation additionally compares the declared expected version. File validation rejects symlink leaf files/directories and checks canonical paths; it does not categorically reject every symlink in an ancestor path (rust:crates/ice-cli/src/updates.rs:877-895; rust:crates/ice-cli/src/updates.rs:1879-1989).\n\nSource-proven bound defect: run_bounded_process_blocking launches a Tokio child with kill_on_drop and wraps wait_with_output in a 10-second timeout. Only after wait_with_output completes does cap_bytes truncate stdout and stderr to 4096 bytes each. Therefore the timeout limits waiting, and returned buffers are capped, but stdout/stderr can grow without that byte bound during collection. It is incorrect to call this a streaming memory cap. A child killed on timeout is not evidence of complete descendant-process cleanup (rust:crates/ice-cli/src/updates.rs:1785-1840).\n\nThe inline tests include malformed version output, file/path checks, byte mismatch, replacement failure and rollback fixtures. They were read only. No executable probe, replacement, crash simulation or platform-specific updater was run.",
+      "new_value": "TS self-update delegates activation to an external package manager. Native activation validates both staged and destination files, replaces the executable through adjacent files and attempts rollback if post-replacement validation fails.\n\nThe direct plan requires a real nonempty regular current executable and owned real staging directory, creates unique adjacent new/old paths, and preflights replacement permissions with create_new probes. It validates staged --version, copies the staged executable, verifies byte equality/version, creates a hard-link backup of the current executable, checks that the destination has not changed and rejects a downgrade, then renames the replacement. Post-activation version/byte checks can trigger rollback through the backup; rollback failure is included in the returned error. Cleanup is best-effort. These are concrete preservation requirements, not a claim of crash-atomic multi-file state or universal platform support (rust:crates/ice-cli/src/updates.rs:1051-1268).\n\nvalidate_ice_executable_version invokes the candidate with --version, requires successful exit and no stderr, and accepts one exact 'icers <semver>' line with at most its allowed terminal newline. It rejects extra lines/whitespace in the version and disallowed older versions. Downloaded release validation additionally compares the declared expected version. File validation rejects symlink leaf files/directories and checks canonical paths; it does not categorically reject every symlink in an ancestor path (rust:crates/ice-cli/src/updates.rs:877-895; rust:crates/ice-cli/src/updates.rs:1879-1989).\n\nSource-proven bound defect: run_bounded_process_blocking launches a Tokio child with kill_on_drop and wraps wait_with_output in a 10-second timeout. Only after wait_with_output completes does cap_bytes truncate stdout and stderr to 4096 bytes each. Therefore the timeout limits waiting, and returned buffers are capped, but stdout/stderr can grow without that byte bound during collection. It is incorrect to call this a streaming memory cap. A child killed on timeout is not evidence of complete descendant-process cleanup (rust:crates/ice-cli/src/updates.rs:1785-1840).\n\nThe inline tests include malformed version output, file/path checks, byte mismatch, replacement failure and rollback fixtures. They were read only. No executable probe, replacement, crash simulation or platform-specific updater was run.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "Version parser uses APP_NAME→SDK HOST_NAME; helper function identifier validate_ice_executable_version is retained."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/title",
+      "old_value": "Native prebuilt CLI release verification and repository-case rejection defect",
+      "new_value": "Native prebuilt CLI release verification and corrected repository identity",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/status",
+      "old_value": "partial",
+      "new_value": "different-by-design",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/what",
+      "old_value": "Rust's default self-update path downloads a verified platform CLI executable. A mixed-case repository constant is compared against a lowercased canonical result, rejecting otherwise valid official release manifests before staging.",
+      "new_value": "Rust's default self-update path downloads and verifies a platform CLI executable. The active checkout corrects the repository-case rejection recorded as RUST-045; preserve the native verified-release backend while adding any TypeScript update-selection compatibility.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/mechanism",
+      "old_value": "TS self-update uses a checked npm package/version. Native prebuilt self-update instead fetches an ice-release.json manifest for the exact CLI release and verifies its archive and executable before activation.\n\nThe native manifest requires schema version 1, package name ice-cli, the requested semver, v<version> tag, the fixed official repository, a 40-character lower-case source commit, exact supported target and a flat platform binary name (ice or ice.exe). The archive must be zip/tar.gz with bounded positive size, matching SHA-256 and a release asset URL on the same repository/tag. It reuses the limited-body, safe extraction, hash and object-format validation helpers from prebuilt_extensions. Manifest fetch uses 15 seconds and archive fetch uses 180 seconds. The staged binary is create_new, synced and made executable on Unix, then its --version must match the requested version before activation (rust:crates/ice-cli/src/prebuilt_release.rs:1-189).\n\nSource-proven fatal comparison: prebuilt_release::REPOSITORY is 'https://github.com/Zyk-Void/ice-rust'. validate compares canonical_repository(manifest.repository), which lowercases owner/repository, directly with that mixed-case constant. A matching official repository therefore becomes 'https://github.com/zyk-void/ice-rust' and cannot equal the constant. The rejection happens before archive staging. The release-asset URL validator also receives that mixed-case repository constant while comparing canonical repository strings, so fixing only the first comparison would leave the same class of mismatch at the URL boundary (rust:crates/ice-cli/src/prebuilt_release.rs:11; rust:crates/ice-cli/src/prebuilt_release.rs:50; rust:crates/ice-cli/src/prebuilt_release.rs:92; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195).\n\nThe happy-path inline fixture uses the same mixed-case official constant and expects staging to succeed; the visible transformations indicate it encounters the mismatch. This is a source-derived conclusion, not a reported test execution result. An ignored real-network smoke test exists and was not run. This defect is specific to the CLI prebuilt caller and does not invalidate all native extension prebuilt distribution, whose repository values are canonicalized through its own resolver.\n\nKeep the exact manifest, hash, path, archive and executable checks after correcting repository identity. The default CLI update has no automatic Cargo fallback when the prebuilt protocol fails; users can separately select the build route.",
+      "new_value": "TS self-update uses a checked npm package/version. Native prebuilt self-update instead fetches an ice-release.json manifest for the exact CLI release and verifies its archive and executable before activation.\n\nThe native manifest requires schema version 1, package name ice-cli, the requested semver, v<version> tag, the fixed official repository, a 40-character lower-case source commit, exact supported target and a flat platform binary name (icers or icers.exe). The archive must be zip/tar.gz with bounded positive size, matching SHA-256 and a release asset URL on the same repository/tag. It reuses the limited-body, safe extraction, hash and object-format validation helpers from prebuilt_extensions. Manifest fetch uses 15 seconds and archive fetch uses 180 seconds. The staged binary is create_new, synced and made executable on Unix, then its --version must match the requested version before activation (rust:crates/ice-cli/src/prebuilt_release.rs:1-189).\n\nThe active REPOSITORY constant is the canonical lowercase https://github.com/zyk-void/ice-rust. It now agrees with canonical_repository at both manifest identity and release-asset URL validation boundaries, correcting the old checkout's source-proven case mismatch. The changelog URL uses the same lowercase owner. RUST-045 preserves the old finding and local-rebrand provenance with active_status=fixed (rust:crates/ice-cli/src/prebuilt_release.rs:11; rust:crates/ice-cli/src/prebuilt_release.rs:50; rust:crates/ice-cli/src/prebuilt_release.rs:92; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195; rust:crates/ice-cli/src/changelog.rs:27).\n\nThe positive fixture's repository now uses the corrected constant; the flat executable fixture follows icers.exe. The ignored real-network smoke test was not run. Source verification of these corrections does not establish that remote assets exist or that a platform download/activation succeeds.\n\nKeep the exact manifest, hash, path, archive and executable checks. The default CLI update still has no automatic Cargo fallback when the prebuilt protocol fails; users can separately select the build route. The manifest filename ice-release.json and crate name ice-cli remain unchanged protocol identities.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/interfaces",
+      "old_value": "GitHub release v<version>/ice-release.json; fixed official repository identity; schema 1 CLI release manifest; exact version/target/binary/archive/hash fields; --build as explicit alternative acquisition. The defect is independent of real network availability once the manifest has the expected official repository.",
+      "new_value": "GitHub release v<version>/ice-release.json; canonical official repository https://github.com/zyk-void/ice-rust; schema 1 CLI release manifest; exact version/target/binary/archive/hash fields; flat icers or icers.exe executable; --build as explicit alternative acquisition. Remote asset availability remains unverified.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/rust",
+      "old_value": "The complete protocol and tests are present in prebuilt_release.rs, but the canonicalized-lowercase versus mixed-case comparison makes the nominal official-manifest success path fail. This conclusion is bounded to the frozen source and visible helper behavior. It was not reproduced with a download or application command, and no upstream fix is assumed. Native comparison source: `rust:crates/ice-cli/src/prebuilt_release.rs:1-373`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195`; `rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803`.",
+      "new_value": "The complete protocol and inline tests are present. The active native source corrects the old mixed-case repository constant consistently for manifest and release-asset validation, so that specific rejection is fixed. The native prebuilt protocol remains a deliberate backend difference from TypeScript package-manager activation. Source verification was performed without a download, application command or runtime test. Native comparison source: rust:crates/ice-cli/src/prebuilt_release.rs:1-373; rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195; rust:crates/ice-cli/src/prebuilt_extensions.rs:425-803; rust:crates/ice-cli/src/changelog.rs:27.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/port",
+      "old_value": "Canonicalize both expected and supplied repository identities through one representation, or store the official constant in the helper's canonical form and use it consistently for manifest and asset URL checks. Preserve original casing only for display/URL construction where harmless. Recheck the existing positive fixture and negative publisher/tag/path cases in future implementation verification. Do not add a silent unverified fallback or loosen identity validation. The estimate covers the small comparison correction and consistent callers, not rebuilding the release pipeline.",
+      "new_value": "Preserve the canonical repository, publisher/tag/path constraints and positive/negative manifest fixtures when extending update command compatibility. No additional repository-case correction remains in the active checkout. Future implementation verification should exercise the retained fixtures and platform path without loosening identity checks or adding silent unverified fallback. Related acquisition, activation and command-selection work is estimated in CLI-038 and CLI-041–044.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/priority",
+      "old_value": "P1",
+      "new_value": "P2",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/priority_reason",
+      "old_value": "The default native prebuilt CLI update path rejects valid official release metadata before download/staging.",
+      "new_value": "Preserve the verified native release boundary during compatibility work; the old default-update rejection is already fixed.",
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/size_min",
+      "old_value": 15,
+      "new_value": 0,
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-cli-packaging.json",
+      "pointer": "/entries/44/size_max",
+      "old_value": 45,
+      "new_value": 0,
+      "proposal": "coordinator-native-prose-replacements.json",
+      "reason": "RUST-045 is fixed in active source; retain the distinct native prebuilt backend without scheduling a completed fix."
+    },
+    {
+      "artifact": "evidence/spec-rpc-remote.json",
+      "pointer": "/entries/14/rust",
+      "old_value": "Native app scans all argv for the first --connect value or --connect=value before local startup. Its helper does not stop at -- or reject a next value beginning '-'. Explicit --token wins verbatim; otherwise ICE_SERVER_TOKEN is trimmed and empty input ignored. It starts a TCP JSON-RPC proxy RemoteDriver, not a Unix binary client. One rust:crates/ice-cli/src/app.rs:96 expression was connector-redacted and remains unverified. Native RunMode::Rpc uses the built-in JSONL loop unless unknown_flags contains server or stdio was claimed, in which case extension I/O owns the run and the process waits for its lifecycle/interrupt. That conditional path cannot justify saying all native RPC is unimplemented (rust:crates/ice-cli/src/app.rs:43-65; rust:crates/ice-cli/src/app.rs:95; rust:crates/ice-cli/src/app.rs:97-98; rust:crates/ice-cli/src/app.rs:434-505; rust:crates/ice-cli/src/session_driver.rs:207-264).",
+      "new_value": "Native app scans all argv for the first --connect value or --connect=value before local startup. Its helper does not stop at -- or reject a next value beginning '-'. Explicit --token wins verbatim; otherwise ICERS_SERVER_TOKEN is trimmed and empty input ignored. It starts a TCP JSON-RPC proxy RemoteDriver, not a Unix binary client. One rust:crates/ice-cli/src/app.rs:96 expression was connector-redacted and remains unverified. Native RunMode::Rpc uses the built-in JSONL loop unless unknown_flags contains server or stdio was claimed, in which case extension I/O owns the run and the process waits for its lifecycle/interrupt. That conditional path cannot justify saying all native RPC is unimplemented (rust:crates/ice-cli/src/app.rs:43-65; rust:crates/ice-cli/src/app.rs:95; rust:crates/ice-cli/src/app.rs:97-98; rust:crates/ice-cli/src/app.rs:434-505; rust:crates/ice-cli/src/session_driver.rs:207-264).",
+      "proposal": "lane-exports-rpc-ai-auth-native-prose-replacements.json",
+      "reason": "The active native connection-token fallback reads the renamed ICERS_SERVER_TOKEN environment key."
+    },
+    {
+      "artifact": "evidence/spec-rpc-remote.json",
+      "pointer": "/entries/35/mechanism",
+      "old_value": "Rust's TCP proxy and shared TUI projection are existing capabilities to preserve. They use a different outer protocol from the two TypeScript clients, and their current terminal-event check can mistake ordinary content for stream completion.\n\nThe TS comparison contains two different host APIs: a child-process JSONL client with capability handshake and typed command responses (RPC-032–035), and a newer framed-CBOR client/RemoteSession with server-session handles, leases and snapshots (RPC-010–014). Neither is evidence that native TCP JSON-RPC is absent; neither provides the same outer authenticate/start_session/subscribe/send/stop_session protocol. External ice-server package implementation and its deployments are outside the inspected checkout and remain unverified (ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:160-305; ice:packages/client/src/client.ts:1-433; ice:packages/coding-agent/src/client/remote-session.ts:1-421).\n\nNative RemoteClient connects TCP, owns one BufReader and write half, and allocates numeric IDs from one. Each request serializes JSON, appends LF, writes all and flushes. authenticate returns success locally for an empty token; otherwise it calls authenticate with the token and ignores a successful result's shape. Empty-token local success does not prove that the server permits unauthenticated sessions. call writes the request before checking whether it still owns a reader. It skips blank/invalid JSON, any method-bearing notification and mismatched IDs, returns matching error.message or serialized error, and otherwise returns result or null. It has no transport deadline, line-byte ceiling, TLS layer or JSON-RPC version check in this implementation. Calling call after event-pump takeover can therefore write a request before returning the streaming-mode error (rust:crates/ice-cli/src/remote/client.rs:24-121).\n\nRemoteDriver connects, authenticates, calls start_session with an empty object, requires sessionId:string, subscribes to that session, requires subscriptionId:u64, then transfers the reader to an event pump. It best-effort sends get_state for initial chrome state. The driver exposes its event receiver once and serializes writes through a mutex. Prompt/Abort/RefreshState/SetModel/SetThinkingLevel/SetActiveTools/UiDialogResponse map to the native child command union with a separate atomic child ID. send_command wraps the command in outer method=send and returns after writing; later child responses arrive through event notifications rather than being awaited by that send. shutdown writes stop_session best-effort. Authentication-like errors get a --token retrieval hint (rust:crates/ice-cli/src/session_driver.rs:215-311; rust:crates/ice-cli/src/session_driver.rs:434-444; rust:crates/ice-cli/src/remote/client.rs:169-190).\n\nThe pump ignores invalid/blank lines, non-event methods and subscriptions whose numeric ID differs; it forwards params.event or null into an unbounded channel. Reader EOF/error or a dropped receiver ends the pump. A second attempt to start a pump returns an already-closed receiver. After forwarding each accepted event, it currently searches the complete serialized outer line for the substring containing a quoted session_end token and breaks if found. For example, a valid matching event containing a text field whose complete value is session_end is forwarded and then closes the stream, even though its event type is not terminal. Driver pump closure subsequently emits DriverEvent::Ended, so this defect is reachable from ordinary remote content. This conclusion follows directly from source, not an executed reproduction. The condition should inspect the parsed event discriminator defined by the outer server protocol, preserving genuine terminal behavior (rust:crates/ice-cli/src/remote/client.rs:127-165; rust:crates/ice-cli/src/session_driver.rs:243-264).\n\nNative RemoteSession folds ready, decoded responses and decoded RemoteEvent values; unknown/invalid payloads are ignored. Error responses set last_error and append a notice; a successful result updates SessionState only when sessionId and activeTools are present and decoding succeeds. AgentStart/AgentEnd toggle streaming and clear retry/open-block state; retries retain attempt/delay and append a notice; turn events and UI dialogs do not enter its transcript. Role reading tries kind before role, so an existing non-string kind prevents fallback to role. Assistant start creates a new block; text/thinking deltas append to lazily opened blocks, and assistant end replaces an open block only with nonempty final text or appends a nonempty final block when none is open. Tool-call deltas are ignored by this fold; tool execution start appends a tool item, update stores partial text, and end stores final text/error/done on the matching tool. Tool-result text joins supported text content. Source unit tests cover streamed text, tool errors, thinking and state/error lines (rust:crates/ice-cli/src/remote/session.rs:136-162; rust:crates/ice-cli/src/remote/session.rs:191-493).\n\nProduction RemoteDriver publishes status after every pumped line, emits an error notice only when last_error changes, and separately maps RemoteEvent to the shared UI event abstraction. This projection reads complete message snapshots for assistant start/update/end and tool calls, so the fold's ignored tool-call deltas do not imply the production TUI cannot render tool calls. UI dialog requests and closes are explicitly forwarded to the modal slot outside the transcript; turn events have no UI event. Native smoke-test source covers TCP handshake/run folding, answering/cancelling approvals, filtering request responses and token authentication. A separate optional real-server test is gated by ICE_REMOTE_E2E_ADDR and does not establish that an external server was exercised here (rust:crates/ice-cli/src/session_driver.rs:243-264; rust:crates/ice-cli/src/session_driver.rs:314-431; rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509).",
+      "new_value": "Rust's TCP proxy and shared TUI projection are existing capabilities to preserve. They use a different outer protocol from the two TypeScript clients, and their current terminal-event check can mistake ordinary content for stream completion.\n\nThe TS comparison contains two different host APIs: a child-process JSONL client with capability handshake and typed command responses (RPC-032–035), and a newer framed-CBOR client/RemoteSession with server-session handles, leases and snapshots (RPC-010–014). Neither is evidence that native TCP JSON-RPC is absent; neither provides the same outer authenticate/start_session/subscribe/send/stop_session protocol. External ice-server package implementation and its deployments are outside the inspected checkout and remain unverified (ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:160-305; ice:packages/client/src/client.ts:1-433; ice:packages/coding-agent/src/client/remote-session.ts:1-421).\n\nNative RemoteClient connects TCP, owns one BufReader and write half, and allocates numeric IDs from one. Each request serializes JSON, appends LF, writes all and flushes. authenticate returns success locally for an empty token; otherwise it calls authenticate with the token and ignores a successful result's shape. Empty-token local success does not prove that the server permits unauthenticated sessions. call writes the request before checking whether it still owns a reader. It skips blank/invalid JSON, any method-bearing notification and mismatched IDs, returns matching error.message or serialized error, and otherwise returns result or null. It has no transport deadline, line-byte ceiling, TLS layer or JSON-RPC version check in this implementation. Calling call after event-pump takeover can therefore write a request before returning the streaming-mode error (rust:crates/ice-cli/src/remote/client.rs:24-121).\n\nRemoteDriver connects, authenticates, calls start_session with an empty object, requires sessionId:string, subscribes to that session, requires subscriptionId:u64, then transfers the reader to an event pump. It best-effort sends get_state for initial chrome state. The driver exposes its event receiver once and serializes writes through a mutex. Prompt/Abort/RefreshState/SetModel/SetThinkingLevel/SetActiveTools/UiDialogResponse map to the native child command union with a separate atomic child ID. send_command wraps the command in outer method=send and returns after writing; later child responses arrive through event notifications rather than being awaited by that send. shutdown writes stop_session best-effort. Authentication-like errors get a --token retrieval hint (rust:crates/ice-cli/src/session_driver.rs:215-311; rust:crates/ice-cli/src/session_driver.rs:434-444; rust:crates/ice-cli/src/remote/client.rs:169-190).\n\nThe pump ignores invalid/blank lines, non-event methods and subscriptions whose numeric ID differs; it forwards params.event or null into an unbounded channel. Reader EOF/error or a dropped receiver ends the pump. A second attempt to start a pump returns an already-closed receiver. After forwarding each accepted event, it currently searches the complete serialized outer line for the substring containing a quoted session_end token and breaks if found. For example, a valid matching event containing a text field whose complete value is session_end is forwarded and then closes the stream, even though its event type is not terminal. Driver pump closure subsequently emits DriverEvent::Ended, so this defect is reachable from ordinary remote content. This conclusion follows directly from source, not an executed reproduction. The condition should inspect the parsed event discriminator defined by the outer server protocol, preserving genuine terminal behavior (rust:crates/ice-cli/src/remote/client.rs:127-165; rust:crates/ice-cli/src/session_driver.rs:243-264).\n\nNative RemoteSession folds ready, decoded responses and decoded RemoteEvent values; unknown/invalid payloads are ignored. Error responses set last_error and append a notice; a successful result updates SessionState only when sessionId and activeTools are present and decoding succeeds. AgentStart/AgentEnd toggle streaming and clear retry/open-block state; retries retain attempt/delay and append a notice; turn events and UI dialogs do not enter its transcript. Role reading tries kind before role, so an existing non-string kind prevents fallback to role. Assistant start creates a new block; text/thinking deltas append to lazily opened blocks, and assistant end replaces an open block only with nonempty final text or appends a nonempty final block when none is open. Tool-call deltas are ignored by this fold; tool execution start appends a tool item, update stores partial text, and end stores final text/error/done on the matching tool. Tool-result text joins supported text content. Source unit tests cover streamed text, tool errors, thinking and state/error lines (rust:crates/ice-cli/src/remote/session.rs:136-162; rust:crates/ice-cli/src/remote/session.rs:191-493).\n\nProduction RemoteDriver publishes status after every pumped line, emits an error notice only when last_error changes, and separately maps RemoteEvent to the shared UI event abstraction. This projection reads complete message snapshots for assistant start/update/end and tool calls, so the fold's ignored tool-call deltas do not imply the production TUI cannot render tool calls. UI dialog requests and closes are explicitly forwarded to the modal slot outside the transcript; turn events have no UI event. Native smoke-test source covers TCP handshake/run folding, answering/cancelling approvals, filtering request responses and token authentication. A separate optional real-server test is gated by ICERS_REMOTE_E2E_ADDR and does not establish that an external server was exercised here (rust:crates/ice-cli/src/session_driver.rs:243-264; rust:crates/ice-cli/src/session_driver.rs:314-431; rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509).",
+      "proposal": "lane-exports-rpc-ai-auth-native-prose-replacements.json",
+      "reason": "The native optional real-server test gate reads ICERS_REMOTE_E2E_ADDR. Test intent remains source-only; no external server execution is asserted."
+    },
+    {
+      "artifact": "evidence/spec-providers-auth.json",
+      "pointer": "/entries/22/rust",
+      "old_value": "Native model resolution already binds provider/custom headers and base URLs into the selected runtime while omitting credential headers from public catalog views (rust:crates/ice-cli/src/provider.rs:190-273; rust:crates/ice-cli/src/provider.rs:289-330). The native package integration test expects an OpenRouter package request to contain `x-title: ice` (rust:crates/ice-cli/tests/provider_packages.rs:349-379), so attribution is not globally absent. That test's concrete package implementation is external to the authorized source tree and was not read. The inspected native core has no equivalent helper implementing the exact OpenRouter/NVIDIA/Cloudflare/OpenCode policy, session headers, telemetry gate and same-stage merge order; the package expectation for x-title alone does not establish parity with X-OpenRouter-Title/Categories.",
+      "new_value": "Native model resolution already binds provider/custom headers and base URLs into the selected runtime while omitting credential headers from public catalog views (rust:crates/ice-cli/src/provider.rs:190-273; rust:crates/ice-cli/src/provider.rs:289-330). The native package integration test expects an OpenRouter package request to contain `x-title: icers` (rust:crates/ice-cli/tests/provider_packages.rs:349-379), so attribution is not globally absent. That test's concrete package implementation is external to the authorized source tree and was not read. The inspected native core has no equivalent helper implementing the exact OpenRouter/NVIDIA/Cloudflare/OpenCode policy, session headers, telemetry gate and same-stage merge order; the package expectation for x-title alone does not establish parity with X-OpenRouter-Title/Categories.",
+      "proposal": "lane-exports-rpc-ai-auth-native-prose-replacements.json",
+      "reason": "The active native integration-test source checks the x-title: icers prefix. This retains the explicit external-package and unexecuted-test limitations."
+    },
+    {
+      "artifact": "evidence/spec-session.json",
+      "pointer": "/entries/22/rust",
+      "old_value": "Rust has mutable set_tools/set_active_tools and executable tool registries, but the inspected harness setters replace registry/name arrays without rebuilding a coding-session prompt or emitting configuration lifecycle events (rust:crates/ice-harness/src/agent_harness.rs:2023-2042; rust:crates/ice-harness/src/agent_harness.rs:4973-4986). Native CLI construction assembles tools/resources separately; the missing background/control mechanics are recorded in Tools. Rust already republishes ICE_SESSION_ID and ToolCallContext identity on successful session activation, which must be preserved, rather than described as wholly absent session identity (rust:crates/ice-cli/src/session.rs:2521-2577).",
+      "new_value": "Rust has mutable set_tools/set_active_tools and executable tool registries, but the inspected harness setters replace registry/name arrays without rebuilding a coding-session prompt or emitting configuration lifecycle events (rust:crates/ice-harness/src/agent_harness.rs:2023-2042; rust:crates/ice-harness/src/agent_harness.rs:4973-4986). Native CLI construction assembles tools/resources separately; the missing background/control mechanics are recorded in Tools. Rust already republishes ICERS_SESSION_ID and ToolCallContext identity on successful session activation, which must be preserved, rather than described as wholly absent session identity (rust:crates/ice-cli/src/session.rs:2521-2577).",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Update the current native session-identity variable; preserve the TypeScript tool-environment facts and the native ToolCallContext behavior."
+    },
+    {
+      "artifact": "evidence/spec-subagents.json",
+      "pointer": "/entries/33/rust",
+      "old_value": "rust:crates/ice-cli/src/child_agents.rs:140-286 implements an owner-scoped native host start/poll/cancel/dispose protocol and rust:crates/ice-harness/src/agent_harness/child.rs:74-172 creates inherited child harnesses. This is useful partial infrastructure, but has no versioned per-events-owner V2 controller, plan-default SDK wrapper, durable result/patch preview or equivalent task schema. rust:crates/ice-cli/tests/subagent_packages.rs:23-375 and rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63 exercise an independently supplied DLL only when ICE_TEST_SUBAGENT_LIBRARY is set; the audited repository did not establish that package's implementation.",
+      "new_value": "rust:crates/ice-cli/src/child_agents.rs:140-286 implements an owner-scoped native host start/poll/cancel/dispose protocol and rust:crates/ice-harness/src/agent_harness/child.rs:74-172 creates inherited child harnesses. This is useful partial infrastructure, but has no versioned per-events-owner V2 controller, plan-default SDK wrapper, durable result/patch preview or equivalent task schema. rust:crates/ice-cli/tests/subagent_packages.rs:23-375 and rust:crates/ice-cli/tests/subagent_packages/lifetime.rs:3-63 exercise an independently supplied DLL only when ICERS_TEST_SUBAGENT_LIBRARY is set; the audited repository did not establish that package's implementation.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Update the native conditional DLL-test environment variable while retaining the absent companion-package limitation."
+    },
+    {
+      "artifact": "evidence/spec-tui.json",
+      "pointer": "/entries/49/rust",
+      "old_value": "Native launch_external_editor uses a worker thread, a NamedTempFile with ice-draft- prefix/.md suffix, writes the expanded draft and chooses ICE_EXTERNAL_EDITOR (nonblank), then VISUAL, EDITOR, or notepad/nano. Command::new receives the whole environment string as one executable with no argument parsing. Successful exit reads the file without stripping a trailing newline; errors are returned through TuiMessage (`rust:crates/ice-cli/src/interactive_tui/run.rs:72-118`). The key caller launches and immediately continues with no terminal stop/start or exclusive editor-operation state in this path; result handling unconditionally replaces the current draft. A late result can therefore overwrite edits made while the child was open. It sets cursor row 0 and col=text.chars().count, but Editor.set_cursor interprets col as a byte offset in that row, giving incorrect multiline/non-ASCII positioning (`rust:crates/ice-cli/src/interactive_tui.rs:2271-2280`, `rust:crates/ice-cli/src/interactive_tui.rs:2901-2912`, `rust:crates/ice-tui/src/editor.rs:548-562`). Existing native temp-file cleanup and explicit error messages remain credited.",
+      "new_value": "Native launch_external_editor uses a worker thread, a NamedTempFile with ice-draft- prefix/.md suffix, writes the expanded draft and chooses ICERS_EXTERNAL_EDITOR (nonblank), then VISUAL, EDITOR, or notepad/nano. Command::new receives the whole environment string as one executable with no argument parsing. Successful exit reads the file without stripping a trailing newline; errors are returned through TuiMessage (`rust:crates/ice-cli/src/interactive_tui/run.rs:72-118`). The key caller launches and immediately continues with no terminal stop/start or exclusive editor-operation state in this path; result handling unconditionally replaces the current draft. A late result can therefore overwrite edits made while the child was open. It sets cursor row 0 and col=text.chars().count, but Editor.set_cursor interprets col as a byte offset in that row, giving incorrect multiline/non-ASCII positioning (`rust:crates/ice-cli/src/interactive_tui.rs:2271-2280`, `rust:crates/ice-cli/src/interactive_tui.rs:2901-2912`, `rust:crates/ice-tui/src/editor.rs:548-562`). Existing native temp-file cleanup and explicit error messages remain credited.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Update the native editor override key. Preserve the unchanged ice-draft- prefix, caller timing, cursor limitations and error behavior."
+    },
+    {
+      "artifact": "evidence/spec-tui.json",
+      "pointer": "/entries/91/rust",
+      "old_value": "rust:crates/ice-tui/src/terminal.rs:16-65; rust:crates/ice-tui/src/terminal.rs:187-290; rust:crates/ice-tui/src/terminal.rs:340-369; rust:crates/ice-tui/src/terminal.rs:469-506 implements flags 7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICE_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported 4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+      "new_value": "rust:crates/ice-tui/src/terminal.rs:16-65; rust:crates/ice-tui/src/terminal.rs:187-290; rust:crates/ice-tui/src/terminal.rs:340-369; rust:crates/ice-tui/src/terminal.rs:469-506 implements flags 7 negotiation through Crossterm, caches detected support across resumes and skips unsupported modifyOtherKeys because Crossterm cannot parse it. Native ICERS_KITTY_KEYBOARD forces legacy only for value'0' and otherwise enables; macOS Otty TERM_PROGRAM/TERM bypasses protocol to preserve IME, and unmodified local Apple Terminal Enter consults CoreGraphics only outside SSH. These native safeguards and direct Unicode input tests at terminal.rs614-669 are valuable existing behavior. No TS-style DA/prefix replay state machine, generic exported 4-modifier helper or Windows N-API adapter is needed literally in Rust, but the compatibility APIs/fallback reader contract remain partial.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Update the native keyboard-protocol override key; keep all existing protocol/fallback behavior and TypeScript terminal keys."
+    },
+    {
+      "artifact": "evidence/spec-observability.json",
+      "pointer": "/entries/1/rust",
+      "old_value": "`rust:crates/ice-cli/src/timings.rs:1-109` implements namespace groups behind a Mutex, caches the same exact `ICE_TIMING=1` decision in OnceLock on first use, and uses monotonic `Instant`. Its first new-group interval is 0 ms, and print order is always main then extensions. These are concrete differences from TypeScript's import-time gate, Date.now intervals and insertion ordering. The Rust CLI wraps the entire `run_inner().await` and prints after it returns, rather than before entering a long-lived run (`rust:crates/ice-cli/src/app.rs:68-79`). Both implementations preserve the general labelled stderr report. Neither baseline environment helper implements a legacy prefix alias.",
+      "new_value": "`rust:crates/ice-cli/src/timings.rs:1-109` implements namespace groups behind a Mutex, caches an exact `ICERS_TIMING=1` decision in OnceLock on first use, and uses monotonic `Instant`. Its first new-group interval is 0 ms, and print order is always main then extensions. These are concrete differences from TypeScript's import-time gate, Date.now intervals and insertion ordering. The Rust CLI wraps the entire `run_inner().await` and prints after it returns, rather than before entering a long-lived run (`rust:crates/ice-cli/src/app.rs:68-79`). Both implementations preserve the general labelled stderr report. Neither baseline environment helper implements a legacy prefix alias.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Native and TypeScript timing gates now have different names, although both still use the exact value 1."
+    },
+    {
+      "artifact": "evidence/spec-blackhole.json",
+      "pointer": "/entries/1/port",
+      "old_value": "Use serde_json::Value for tolerant decode before constructing a typed BlackholeConfig; a strict deserialize-only implementation would reject inputs TS tolerates. Resolve the ICE data directory through the shared Rust config service, preserving the explicit directory override. Host settings UI support belongs to BLACK-005.",
+      "new_value": "Use serde_json::Value for tolerant decode before constructing a typed BlackholeConfig; a strict deserialize-only implementation would reject inputs TS tolerates. Resolve the native icers data directory through the shared Rust config service, preserving its explicit ICERS_CODING_AGENT_DIR override and ~/.icers/agent default. Host settings UI support belongs to BLACK-005.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Make the proposed native port use the current shared Rust configuration identity; preserve the TypeScript source path and override contract in mechanism/interfaces."
+    },
+    {
+      "artifact": "evidence/subagents.json",
+      "pointer": "/claims/0/finding",
+      "old_value": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICE_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "new_value": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICERS_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "The claim finding describes the native test gate, not the historical claim quotation."
+    },
+    {
+      "artifact": "evidence/subagents.json",
+      "pointer": "/open_questions/0/question",
+      "old_value": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICE_TEST_SUBAGENT_LIBRARY tests are conditional and were not run.",
+      "new_value": "Bounded repository inventory plus complete native host/DLL test reads did not establish an ice-subagents companion implementation. Treat the host as native infrastructure; external ICERS_TEST_SUBAGENT_LIBRARY tests are conditional and were not run.",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "The current open question must name the active conditional-test variable while preserving the companion-package uncertainty."
+    },
+    {
+      "artifact": "evidence/spec-misc.json",
+      "pointer": "/entries/0/rust",
+      "old_value": "Rust startup lookup uses crates.io ice-cli metadata, request timeout 1800 ms and user agent ice/<VERSION>. It distinguishes missing(404/410) from transient HTTP/JSON failures and reads crate.max_version. Its semantic comparison strips leading 'v' characters after trim, uses cmp_precedence, and returns false if either parse fails. Its disable controls are native offline_env_enabled and presence of ICE_DISABLE_UPDATE_CHECK, rather than the two TS truthy helpers (rust:crates/ice-cli/src/updates.rs:17-21; rust:crates/ice-cli/src/updates.rs:119-158; rust:crates/ice-cli/src/updates.rs:445-480). CLI-042 credits native caching, and CLI-043/045 own native release/install sources. No equivalent operator-controlled npm package handoff or TS structured note is present at this registry boundary.",
+      "new_value": "Rust startup lookup uses crates.io ice-cli metadata, request timeout 1800 ms and user agent icers/<VERSION>. It distinguishes missing(404/410) from transient HTTP/JSON failures and reads crate.max_version. Its semantic comparison strips leading 'v' characters after trim, uses cmp_precedence, and returns false if either parse fails. Its disable controls are native offline_env_enabled and presence of ICERS_DISABLE_UPDATE_CHECK, rather than the two TS truthy helpers (rust:crates/ice-cli/src/updates.rs:17-21; rust:crates/ice-cli/src/updates.rs:119-158; rust:crates/ice-cli/src/updates.rs:445-480). CLI-042 credits native caching, and CLI-043/045 own native release/install sources. No equivalent operator-controlled npm package handoff or TS structured note is present at this registry boundary.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Use the active native user agent and update-disable variable; TS version-check inputs and helper semantics remain unchanged."
+    },
+    {
+      "artifact": "evidence/spec-misc.json",
+      "pointer": "/entries/12/interfaces",
+      "old_value": "ChangelogEntry {major, minor, patch, content}; parseChangelog(path), compareVersions, getNewEntries(entries, lastVersion), normalizeChangelogLinks(markdown, version). Native public configuration additionally includes ICE_CHANGELOG_URL and allow_network; those are retained native facilities, not TS helper inputs.",
+      "new_value": "ChangelogEntry {major, minor, patch, content}; parseChangelog(path), compareVersions, getNewEntries(entries, lastVersion), normalizeChangelogLinks(markdown, version). Native public configuration additionally includes ICERS_CHANGELOG_URL and allow_network; those are retained native facilities, not TS helper inputs.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Correct only the explicitly native public configuration variable."
+    },
+    {
+      "artifact": "evidence/spec-misc.json",
+      "pointer": "/entries/12/rust",
+      "old_value": "Native changelog.rs already parses entries, embeds bundled release notes, sorts bundled entries, selects the latest release at/below the running version, distinguishes dedicated Ice baseline from compatible legacy baseline, and suppresses first-run notices for a fresh profile. It also supports optional network retrieval with allow_network, ICE_CHANGELOG_URL, a 15-second timeout and fallback to an empty list on load failure (rust:crates/ice-cli/src/changelog.rs:13-34; rust:crates/ice-cli/src/changelog.rs:96-253). Native headings are broader: it trims and accepts leading '#' levels, optional v and missing/invalid minor/patch values defaulting to zero; the heading is excluded from content, and an invalid heading stays in the preceding body. These differ from TS section boundaries. No release-pinned Markdown link normalization is present. Existing inline tests cover native baseline/entry behavior but not the TS link transformation (rust:crates/ice-cli/src/changelog.rs:35-94; rust:crates/ice-cli/src/changelog.rs:255-434).",
+      "new_value": "Native changelog.rs already parses entries, embeds bundled release notes, sorts bundled entries, selects the latest release at/below the running version, distinguishes dedicated Ice baseline from compatible legacy baseline, and suppresses first-run notices for a fresh profile. It also supports optional network retrieval with allow_network, ICERS_CHANGELOG_URL, a 15-second timeout and fallback to an empty list on load failure (rust:crates/ice-cli/src/changelog.rs:13-34; rust:crates/ice-cli/src/changelog.rs:96-253). Native headings are broader: it trims and accepts leading '#' levels, optional v and missing/invalid minor/patch values defaulting to zero; the heading is excluded from content, and an invalid heading stays in the preceding body. These differ from TS section boundaries. No release-pinned Markdown link normalization is present. Existing inline tests cover native baseline/entry behavior but not the TS link transformation (rust:crates/ice-cli/src/changelog.rs:35-94; rust:crates/ice-cli/src/changelog.rs:255-434).",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Use the current native changelog URL override; the dedicated Ice baseline name is an existing source identifier and remains."
+    },
+    {
+      "artifact": "evidence/spec-settings.json",
+      "pointer": "/entries/0/rust",
+      "old_value": "rust:crates/ice-cli/src/config.rs:42-108; rust:crates/ice-cli/src/config.rs:123-166 has a real nested agent root and concrete auth/models/settings/trust paths. Its frozen old-checkout constants are .ice and ICE_CODING_AGENT_DIR; a present empty, relative or tilde override is rejected as RelativeOverride instead of following TS truthy/normalizePath behavior. There is no package-manifest-driven application identity or Bun asset layout in this native binary. rust:crates/ice-cli/src/config.rs:168-255 has a separate legacy flat-layout migration; that is not a TypeScript alias search. The active checkout's intentional icers/.icers/ICERS_* identity must be retained during final citation relocation, never changed back to the TypeScript namespace.",
+      "new_value": "rust:crates/ice-cli/src/config.rs:42-108; rust:crates/ice-cli/src/config.rs:123-166 has a real nested agent root and concrete auth/models/settings/trust paths. The active native constants are .icers and ICERS_CODING_AGENT_DIR; a present empty, relative or tilde override is rejected as RelativeOverride instead of following TS truthy/normalizePath behavior. There is no package-manifest-driven application identity or Bun asset layout in this native binary. rust:crates/ice-cli/src/config.rs:168-255 has a separate legacy flat-layout migration; that is not a TypeScript alias search. The active checkout's intentional icers/.icers/ICERS_* identity must be retained during final citation relocation, never changed back to the TypeScript namespace.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Update the native comparison to the active checkout while keeping TS .ice/ICE_* identity and native RelativeOverride behavior unchanged."
+    },
+    {
+      "artifact": "evidence/spec-settings.json",
+      "pointer": "/entries/13/rust",
+      "old_value": "rust:crates/ice-cli/src/settings.rs:113-123 parses shellPath and shellCommandPrefix; rust:crates/ice-cli/src/settings.rs:897-910 explicitly tests parsing while noting shellPath is unconsumed. rust:crates/ice-cli/src/session.rs:1932-1955 reloads global settings for command_prefix and supplies a separate ICE_BASH_TIMEOUT default of 120 seconds. It does not pass shellPath, the TS release/alert timer settings or stdin approval policy. The Rust execution environment already exposes with_shell_path (covered by AGENT-048), so missing CLI wiring must not be mistaken for a missing low-level facility. The typed settings schema has no background timer or bashInputApproval fields.",
+      "new_value": "rust:crates/ice-cli/src/settings.rs:113-123 parses shellPath and shellCommandPrefix; rust:crates/ice-cli/src/settings.rs:897-910 explicitly tests parsing while noting shellPath is unconsumed. rust:crates/ice-cli/src/session.rs:1932-1955 reloads global settings for command_prefix and supplies a separate ICERS_BASH_TIMEOUT default of 120 seconds. It does not pass shellPath, the TS release/alert timer settings or stdin approval policy. The Rust execution environment already exposes with_shell_path (covered by AGENT-048), so missing CLI wiring must not be mistaken for a missing low-level facility. The typed settings schema has no background timer or bashInputApproval fields.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Use the active native bash timeout variable; the 120-second default and missing shellPath wiring remain the same source findings."
+    },
+    {
+      "artifact": "evidence/misc.json",
+      "pointer": "/unverified/1",
+      "old_value": "First-pass claims, complete test inventory, candidate mapping and remaining shared-owner credits not yet reconciled.",
+      "new_value": "First-pass claims, candidate mapping and shared source credits are reconciled in the accepted manifests and canonical coverage. Relevant tests have attributed source-read evidence for the documented visible ranges; no application or test execution occurred.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Remove an obsolete pending-closeout statement after the completed first-pass and original-checkout gates."
+    },
+    {
+      "artifact": "evidence/misc.json",
+      "pointer": "/unverified/3",
+      "old_value": "No direct downloader/abort/sleep utility suite was found; adjacent consumer suites require final owner reconciliation.",
+      "new_value": "No direct downloader/abort/sleep utility suite was found in the documented searches. Adjacent consumer-test source coverage is retained in the accepted owner manifests and canonical read coverage; no runtime result is claimed.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Preserve the direct-suite discovery limitation while removing the stale future owner-reconciliation requirement."
+    },
+    {
+      "artifact": "evidence/settings.json",
+      "pointer": "/unverified/description",
+      "old_value": "All 17 assigned source/document files and all 10 identified core settings/resource/trust/config test bodies were read in full. UI selector/style, RPC settings and provider settings consumer tests are owned by their corresponding area audits and must be closed there before global completion.",
+      "new_value": "All 17 assigned source/document files and all 10 identified core settings/resource/trust/config test bodies have attributed source-read evidence. UI selector/style, RPC settings and provider settings consumer tests are reconciled in their accepted area manifests and canonical coverage, with exact visible ranges and exclusions retained. No tests or application processes were executed.",
+      "proposal": "lane-final-areas-active-identity-proposal.json",
+      "reason": "Describe completed consumer-source reconciliation without implying runtime execution or overriding recorded exclusions."
+    },
+    {
+      "artifact": "evidence/qa-first-pass-coverage.json",
+      "pointer": "/claims/96/finding",
+      "old_value": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICE_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "new_value": "Native host child execution exists with allowed-tool narrowing, inherited parent hooks, owner/invocation/run/scope cancellation and strict bounds. The missing layer is TS V2's definition catalog, explicit source-sensitive permission grammar/approvals, durable contracts and persistent child lifecycle. Conditional DLL tests require ICERS_TEST_SUBAGENT_LIBRARY and do not establish a repository-shipped companion package.",
+      "proposal": "lane-final-areas-first-pass-findings-proposal.json",
+      "reason": "Correct the conditional native DLL-test environment name for the active checkout; TS names and historical report text remain as recorded."
+    },
+    {
+      "artifact": "evidence/qa-first-pass-coverage.json",
+      "pointer": "/claims/141/finding",
+      "old_value": "Core/CLI references export current session/model state into child-shell environment and remove those names during cleanup; they do not establish CLI startup defaults. Separately, the evals harness does read ICE_PROVIDER plus ICE_MODEL as its default model at ice-harness.ts:48–53, so the claim needs scope correction rather than global exclusion. That harness is assigned to MISC-040–049. No analogous general startup ICE_REASONING_LEVEL read was found in the scoped src search. MISC-040 confirms the eval runner is an actual ICE_MODEL/ICE_PROVIDER consumer with explicit defaults.",
+      "new_value": "Core/CLI references export current session/model state into child-shell environment and remove those names during cleanup; they do not establish CLI startup defaults. Separately, the evals harness does read ICE_PROVIDER plus ICE_MODEL as its default model at ice-harness.ts:48–53, so the claim needs scope correction rather than global exclusion. That harness is assigned to MISC-040–048. No analogous general startup ICE_REASONING_LEVEL read was found in the scoped src search. MISC-040 confirms the eval runner is an actual ICE_MODEL/ICE_PROVIDER consumer with explicit defaults.",
+      "proposal": "lane-final-areas-first-pass-findings-proposal.json",
+      "reason": "Correct the accepted eval-harness entry range; MISC-049 is not an accepted entry."
+    },
+    {
+      "artifact": "evidence/qa-first-pass-coverage.json",
+      "pointer": "/claims/156/finding",
+      "old_value": "The repository target is source-defined. The old mixed-case URL has a source-proven canonicalization mismatch captured in CLI-045, while the active source intentionally uses lowercase. Actual release availability was not queried, so 'none exist yet' cannot be certified. Prebuilt errors do not trigger an automatic unverified Cargo fallback.",
+      "new_value": "The native prebuilt repository target is source-defined. The mixed-case canonicalization mismatch belongs to the historical checkout; the active source uses lowercase https://github.com/zyk-void/ice-rust, so the mismatch is not an active-checkout defect. CLI-045 retains the native prebuilt-protocol comparison with TS. Actual release availability was not queried, so 'none exist yet' cannot be certified. Prebuilt errors do not trigger an automatic unverified Cargo fallback.",
+      "proposal": "lane-final-areas-first-pass-findings-proposal.json",
+      "reason": "Clarify the already-qualified historical finding in accordance with the coordinator's retained CLI-045 comparison; do not present the fixed mixed-case URL as a current defect."
+    },
+    {
+      "artifact": "evidence/cli-packaging.json",
+      "pointer": "/entries/44/title",
+      "old_value": "Native prebuilt CLI release verification and repository-case rejection defect",
+      "new_value": "Native prebuilt CLI release verification and corrected repository identity",
+      "proposal": "coordinator accepted spec",
+      "reason": "Synchronize accepted index metadata with the reviewed active specification."
+    },
+    {
+      "artifact": "evidence/cli-packaging.json",
+      "pointer": "/entries/44/status",
+      "old_value": "partial",
+      "new_value": "different-by-design",
+      "proposal": "coordinator accepted spec",
+      "reason": "Synchronize accepted index metadata with the reviewed active specification."
+    },
+    {
+      "artifact": "evidence/cli-packaging.json",
+      "pointer": "/entries/44/priority",
+      "old_value": "P1",
+      "new_value": "P2",
+      "proposal": "coordinator accepted spec",
+      "reason": "Synchronize accepted index metadata with the reviewed active specification."
+    },
+    {
+      "artifact": "evidence/cli-packaging.json",
+      "pointer": "/entries/44/size_min",
+      "old_value": 15,
+      "new_value": 0,
+      "proposal": "coordinator accepted spec",
+      "reason": "Synchronize accepted index metadata with the reviewed active specification."
+    },
+    {
+      "artifact": "evidence/cli-packaging.json",
+      "pointer": "/entries/44/size_max",
+      "old_value": 45,
+      "new_value": 0,
+      "proposal": "coordinator accepted spec",
+      "reason": "Synchronize accepted index metadata with the reviewed active specification."
+    }
+  ]
+}

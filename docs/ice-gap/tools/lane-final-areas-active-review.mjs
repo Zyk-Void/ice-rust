@@ -1,0 +1,7 @@
+import fs from 'node:fs';import path from 'node:path';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';
+const base=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),ev=path.join(base,'evidence'),args=process.argv.slice(2),read=n=>JSON.parse(fs.readFileSync(path.join(ev,n),'utf8')),h=read('active-checkout-diff-hunks-complete.json'),m=read('active-checkout-source-map.json'),paths=read('lane-final-areas-read-coverage-proposal.json').rust_non_crates.map(x=>x.path.slice(5));
+if(args[0]==='index')console.log(JSON.stringify(paths.map(p=>({path:p,diff:h.rows.filter(r=>r.old_path===p).map(r=>({old_path:r.old_path,active_path:r.active_path,category:r.category,status:r.status,old:r.old,active:r.active,changes:r.changes,line_map:r.line_map})),map:m.rows.filter(r=>r.old_path===p)}))));
+else if(args[0]==='diffs')for(const p of args.slice(1)){const r=h.rows.find(r=>r.old_path===p);console.log(JSON.stringify({path:p,old_sha256:r.old.sha256,active_sha256:r.active.sha256,diff_sha256:r.diff_sha256,unified_diff:r.unified_diff}));}
+else if(args[0]==='show')for(const p of args.slice(1)){console.log(JSON.stringify({path:p,rows:h.rows.filter(r=>r.old_path===p)}))}
+else if(args[0]==='segment'){const r=h.rows.find(r=>r.old_path===args[1]);console.log(JSON.stringify({metadata:{...r,unified_diff:undefined,changes:undefined,line_map:undefined},changes:r.changes.slice(+args[2],(+args[2])+(+args[3]||1))}));}
+else throw new Error('Unsupported');

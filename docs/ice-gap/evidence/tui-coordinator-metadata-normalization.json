@@ -1,0 +1,94 @@
+{
+  "owner": "/root",
+  "captured_at": "2026-10-20T02:54:49.722Z",
+  "area": "tui",
+  "before": {
+    "spec": "6348be7e858ee5d22c78cfe04f6fb003b00b9f9ed55b66c0271d78995c38254d",
+    "proposal": "9403cd7fd852645553548fb60bb10192b5a38386d66dc3fd24f088221e10de89"
+  },
+  "normalized_claims": [
+    "FPC-114",
+    "FPC-133",
+    "FPC-134",
+    "FPC-135",
+    "FPC-136",
+    "FPC-137",
+    "FPC-138",
+    "FPC-139",
+    "FPC-140",
+    "FPC-143",
+    "FPC-147",
+    "FPC-148",
+    "FPC-149",
+    "FPC-159"
+  ],
+  "supplemental_ledger": {
+    "classification_artifact": "evidence/tui-supplemental-ledger-classification.json",
+    "classification_sha256": "e240d2b115912ba7a9f2ba0cdb50cc00acb2685076f5a22411658031153f49fd",
+    "original_read_attribution_rows": 139,
+    "retained_as_read_dependencies": 139,
+    "excluded_test_or_helper_paths": 124,
+    "already_canonical_paths": 12,
+    "proper_non_test_supplemental_rows": 3,
+    "additions": [
+      {
+        "path": "packages/tui/native/darwin/README.md",
+        "lines": 21,
+        "entry_ids": [
+          "TUI-208"
+        ],
+        "sha256": "610b5d0ad15af4ac467242bded1786e19812b1d1aed9c6ee1e64d1e31aebe6c7",
+        "notes": "Darwin modifier-addon distribution/build guide; documentary guidance only. Full source read and clean frozen Git identity in tui-source-review.json; independent root read1-21. No build/toolchain claim was executed.",
+        "area": "tui",
+        "status": "mapped"
+      },
+      {
+        "path": "packages/tui/package.json",
+        "lines": 52,
+        "entry_ids": [
+          "TUI-208",
+          "TUI-260"
+        ],
+        "sha256": "095cdcc7f4ee8031e6e5a479cd07e802c4976ad5a7b71be2cd47ad3c66401601",
+        "notes": "TUI native addon distribution and pinned Markdown parser dependency metadata. Full source read and frozen identity recorded; no dependency was installed.",
+        "area": "tui",
+        "status": "mapped"
+      },
+      {
+        "path": "packages/tui/README.md",
+        "lines": 856,
+        "entry_ids": [
+          "TUI-212",
+          "TUI-216",
+          "TUI-217"
+        ],
+        "sha256": "a88f2012a0375f6d6c04338e48c6bf3be6df638cf116c371a1f8b0ad6fa24fc7",
+        "notes": "Published TUI/component/renderer/focus/viewport API guide. Full856-line visible read in tui-source-review.json; implementation contracts independently specified by terminal entries. Documentary examples were not executed.",
+        "area": "tui",
+        "status": "mapped"
+      }
+    ]
+  },
+  "source_anchor_additions": [
+    {
+      "id": "TUI-208",
+      "text": "ice:packages/tui/native/darwin/README.md:1-21; ice:packages/tui/package.json:7-21"
+    },
+    {
+      "id": "TUI-216",
+      "text": "ice:packages/tui/README.md:55-79"
+    },
+    {
+      "id": "TUI-212",
+      "text": "ice:packages/tui/README.md:81-95"
+    },
+    {
+      "id": "TUI-217",
+      "text": "ice:packages/tui/README.md:40-49"
+    }
+  ],
+  "after": {
+    "spec": "6f73cd0d8dbbd4dd81d1d26e1f6fd2fbc97badbe8124e845f867363be26dc1a4",
+    "proposal": "cc421cbf7a2b1056cdd2199c711d9dfb2273f222435a5001add265045c973378"
+  }
+}

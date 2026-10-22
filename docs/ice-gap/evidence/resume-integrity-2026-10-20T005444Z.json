@@ -1,0 +1,337 @@
+{
+  "captured_at": "2026-10-20T00:54:45.542094+00:00",
+  "initial_baseline_rows": 831,
+  "supplemental_rows": 32,
+  "counts": {
+    "ledger_rows": 860,
+    "mapped": 330,
+    "not_applicable": 10,
+    "pending": 520,
+    "entry_count": 481,
+    "first_pass_claims": 110,
+    "surface_counts": {
+      "cli": {
+        "total": 92,
+        "pending": 68
+      },
+      "environment": {
+        "total": 167,
+        "pending": 85
+      },
+      "extension-api": {
+        "total": 286,
+        "pending": 0
+      },
+      "hooks": {
+        "total": 126,
+        "pending": 6
+      },
+      "keybindings": {
+        "total": 186,
+        "pending": 167
+      },
+      "observability": {
+        "total": 89,
+        "pending": 0
+      },
+      "paths": {
+        "total": 259,
+        "pending": 147
+      },
+      "providers-auth": {
+        "total": 64,
+        "pending": 49
+      },
+      "rpc": {
+        "total": 320,
+        "pending": 306
+      },
+      "session-types": {
+        "total": 84,
+        "pending": 2
+      },
+      "settings": {
+        "total": 904,
+        "pending": 375
+      },
+      "slash-commands": {
+        "total": 55,
+        "pending": 31
+      },
+      "tools": {
+        "total": 64,
+        "pending": 0
+      },
+      "tui": {
+        "total": 348,
+        "pending": 335
+      }
+    }
+  },
+  "identities": {
+    "ice": {
+      "root": "/home/mewtwo/Zks/ice",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "branch": "void",
+      "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n"
+    },
+    "rust": {
+      "root": "/home/mewtwo/Zks/ice-rust",
+      "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+      "branch": "main",
+      "status": "?? .least/\n?? ASTRA_GAP_AUDIT_CONTINUE.md\n?? docs/ice-gap/\n"
+    }
+  },
+  "areas": {
+    "safe-verify": {
+      "entries": 26,
+      "statuses": {
+        "missing": 26
+      }
+    },
+    "cognee": {
+      "entries": 68,
+      "statuses": {
+        "missing": 68
+      }
+    },
+    "blackhole": {
+      "entries": 41,
+      "statuses": {
+        "missing": 33,
+        "partial": 8
+      }
+    },
+    "agent": {
+      "entries": 65,
+      "statuses": {
+        "different-by-design": 11,
+        "partial": 49,
+        "missing": 5
+      }
+    },
+    "extensions": {
+      "entries": 57,
+      "statuses": {
+        "different-by-design": 3,
+        "partial": 46,
+        "missing": 8
+      }
+    },
+    "tools": {
+      "entries": 31,
+      "statuses": {
+        "partial": 21,
+        "missing": 10
+      }
+    },
+    "session": {
+      "entries": 38,
+      "statuses": {
+        "partial": 27,
+        "different-by-design": 7,
+        "missing": 4
+      }
+    },
+    "subagents": {
+      "entries": 44,
+      "statuses": {
+        "missing": 33,
+        "partial": 11
+      }
+    },
+    "observability": {
+      "entries": 29,
+      "statuses": {
+        "missing": 28,
+        "partial": 1
+      }
+    },
+    "settings": {
+      "entries": 33,
+      "statuses": {
+        "partial": 31,
+        "different-by-design": 1,
+        "missing": 1
+      }
+    },
+    "ai": {
+      "entries": 49,
+      "statuses": {
+        "partial": 25,
+        "missing": 23,
+        "different-by-design": 1
+      }
+    }
+  },
+  "extensions_draft_entries": 57,
+  "citation_count": 2880,
+  "citation_issues": [],
+  "source_drift": [],
+  "recorded_read_hash_drift": [],
+  "issues": [],
+  "pending_cross_area_references": [
+    {
+      "kind": "ledger_unpublished_entry",
+      "path": "packages/ai/src/api/cloudflare.ts",
+      "entry": "AUTH-013"
+    },
+    {
+      "kind": "ledger_unpublished_entry",
+      "path": "packages/ai/src/compat/extension-oauth-types.ts",
+      "entry": "AUTH-015"
+    },
+    {
+      "kind": "ledger_unpublished_entry",
+      "path": "packages/ai/src/models.generated.ts",
+      "entry": "AUTH-011"
+    },
+    {
+      "kind": "ledger_unpublished_entry",
+      "path": "packages/ai/src/types.ts",
+      "entry": "RPC-017"
+    },
+    {
+      "kind": "ledger_unpublished_entry",
+      "path": "packages/ai/src/utils/headers.ts",
+      "entry": "AUTH-009"
+    },
+    {
+      "kind": "surface_unpublished_entry",
+      "category": "rpc",
+      "entry": "RPC-017"
+    }
+  ],
+  "unresolved_dependency_ids": [
+    {
+      "entry": "SUB-018",
+      "dependency": "AUTH-024"
+    },
+    {
+      "entry": "AI-002",
+      "dependency": "AUTH-001"
+    },
+    {
+      "entry": "AI-002",
+      "dependency": "AUTH-010"
+    },
+    {
+      "entry": "AI-003",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-015",
+      "dependency": "AUTH-001"
+    },
+    {
+      "entry": "AI-015",
+      "dependency": "AUTH-008"
+    },
+    {
+      "entry": "AI-017",
+      "dependency": "AUTH-015"
+    },
+    {
+      "entry": "AI-022",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-022",
+      "dependency": "AUTH-016"
+    },
+    {
+      "entry": "AI-022",
+      "dependency": "AUTH-018"
+    },
+    {
+      "entry": "AI-027",
+      "dependency": "AUTH-017"
+    },
+    {
+      "entry": "AI-028",
+      "dependency": "AUTH-011"
+    },
+    {
+      "entry": "AI-029",
+      "dependency": "AUTH-022"
+    },
+    {
+      "entry": "AI-030",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-030",
+      "dependency": "AUTH-012"
+    },
+    {
+      "entry": "AI-034",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-035",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-035",
+      "dependency": "AUTH-012"
+    },
+    {
+      "entry": "AI-040",
+      "dependency": "AUTH-009"
+    },
+    {
+      "entry": "AI-058",
+      "dependency": "AUTH-011"
+    },
+    {
+      "entry": "AI-058",
+      "dependency": "AUTH-033"
+    }
+  ],
+  "resume_file_preexisted": true,
+  "artifact_hashes": {
+    "README.md": "cfdfa792291a0b68d2e78daf6c8800c12d0d0774ba8aa21a7e014149b752352d",
+    "ledger.csv": "87d8b4cf9683782fdeac2a018bf33a1fadc427c60f5b1e5147cfc8da2e0ac953",
+    "evidence/progress.json": "4c86db272e262ac2fa793cd84b777c4b577beb8e205b61de23a0476c5e2771fd",
+    "evidence/execution-policy.json": "11eb06167bbcf9ea60ab170d26bd0cba12d77bb1476265bf9de6a87160277170",
+    "evidence/baseline.json": "8e7d216a220018ff4f2a2f740051f39e4da7d7cbe07dacef39b811f83dc39d5e",
+    "evidence/read-coverage.json": "465a31eb4e071f113fddee63b1048daf90769e15e3bfdbbbc9954e697f9701f5",
+    "surfaces/cli.csv": "c1cb94c182b5a6ceba57042cd1e2e59ad80bf16e63331b46d03e849964534c39",
+    "surfaces/environment.csv": "c28295ff4cf1f7e78b629d1d67c53519081b12397c4bd04fecea15ca944bf16c",
+    "surfaces/extension-api.csv": "8ebb389d89c06ab2c9ea56975e290091c641711da9114eca624ad29b80299e2e",
+    "surfaces/hooks.csv": "b4ba635df27ac56b8f962b6582e3392579661f41e0b33a7a44a75f6b7bafd2e4",
+    "surfaces/keybindings.csv": "a8ad44ebe4080278dc70098bc5396f1172452a3f37cf8c4896374c0d62a2c582",
+    "surfaces/observability.csv": "98ec5d553d5e8faf087de1a2d397d3fc8fe790cd9ff8233fb687478306d5cc38",
+    "surfaces/paths.csv": "f07412043723916c89e35563cead83d49aff1a1546050b3fd3443d3ad30f0473",
+    "surfaces/providers-auth.csv": "60294e44e99b5ba5ad15540307bb140667b1cc90bc5a4aaa678800eb830e9438",
+    "surfaces/rpc.csv": "2cbfcd6ac064633bfdb69cb310d20f3044607a222cb6a6f1ec52b381d8a505eb",
+    "surfaces/session-types.csv": "355ae06b0d20a8b0193c68625495f43eb2ccd722b92b6b85cb0f616f753e1e33",
+    "surfaces/settings.csv": "93921ca477b785db6fd246eae30d3b0d36b53a49ec4325b29287ce1f0a0f9dd6",
+    "surfaces/slash-commands.csv": "dd172b86f4728a83c6b612abdc7f23075c15d39b9079b8246ee7a72f9127b71d",
+    "surfaces/tools.csv": "32f7ca01602963c628781bce9243cecf1553df9657d624dc75cbe7951e67cd87",
+    "surfaces/tui.csv": "7b557958ceaf92cb7d7c3b05844086f1babced247c94952d00019eebfb07430a",
+    "safe-verify.md": "7c920ae4ec72d8ee182dff96c66be62022d5d5ed8bc0fd5106dceae65062430c",
+    "cognee.md": "79206a72c4d3a77c3d3e46eb2eb36663992631f29b87b951e63d284a7cf2885f",
+    "blackhole.md": "62ee18ecfd87e1202eb5eccfbabc1f72c8312c007c119e0ef15af35f037f8e51",
+    "agent.md": "efea86eddedffe097061ad586a9617c4b5ecbe41bbdf420a37380d7d1298726e",
+    "extensions.md": "0802320f6e00d70e4c059a2a1c49c498b9d146533a2f32fa10443ceda238e8ed",
+    "tools.md": "c54a18b04827bda911b038eaac35432deb2821a9962a0a8f1d880680a0435516",
+    "session.md": "663744acf6d2edab2b1ee5663223f519f5aebba7509c0aeee0a161152b4d92dc",
+    "subagents.md": "167e9c95f5714f735aed005fb82e9cd83e6a24502a12576d4e99b6a8acbfa660",
+    "observability.md": "cfb4993e445b0644f31f93d2b3e059828b1c6ddd88fdbb0b0e4a351430e99747",
+    "settings.md": "7b9867f753a29de0c8ad071749b7a21df1abd85e1da0de9882eb6a61b8593dc2",
+    "ai.md": "0dc078ea9a04455588f63dd988b5cd693e2cd4e61db65630785851ca49e74495",
+    "evidence/spec-safe-verify.json": "b6f1444b2b895587ab58b33a2a8f76f14903736ee2572497b1df661fb3d39137",
+    "evidence/spec-cognee.json": "79cd27f84e94352a7f5dbee9399964d611d319679d3b64dfb13d5c75c2f92487",
+    "evidence/spec-blackhole.json": "e67e2f41a3de8c7b87e2b841c8ae73c28dda5c85cc343870f0e247cf0ee3962a",
+    "evidence/spec-agent.json": "05544e39a827c4d126fa5245fda96f2a46fe144a6f56d9715100c3798cb8da76",
+    "evidence/spec-extensions.json": "0d087292bef0e4cc822ac754b1f2274a5cca7c9beb83c7fec71bdf5b855aecec",
+    "evidence/spec-tools.json": "333403c0f7d806e1678e39f1e136fcae82a714cd4a7641ea909e63b8e6fcce52",
+    "evidence/spec-session.json": "435319e6ead6ce72bf3583d70928cc6c8b2810a0f869fda7f9ed650954417d44",
+    "evidence/spec-subagents.json": "0c9aa45fcc187e7fb20fa734fda4f48db082209effaa9722e43dccd7bf928aee",
+    "evidence/spec-observability.json": "751bfa53ffdfbc1419c579172b9d94ba7f41ecabf763440dddb6b2dc66c5f874",
+    "evidence/spec-settings.json": "32c504c22170ec7432727a49227820668894f42024f2dd3624fd39f02af2c9a6",
+    "evidence/spec-ai.json": "0ac9c1ac177786d98c95723668f782a40dc8f2547b15e92076f66181d83c558e"
+  },
+  "checks_note": "Structural parsing, hashes, reference bounds and persisted-state reconciliation only; not a new semantic re-audit of certified entries."
+}

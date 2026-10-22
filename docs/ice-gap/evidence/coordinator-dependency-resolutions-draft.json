@@ -1,0 +1,2981 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T02:05:25.583Z",
+  "status": "draft-pending-final-catalog-and-independent-QA",
+  "scope": "Eight remaining published-area dependency-request groups. Original SAFE/COG/BLACK/AGENT/OBS requests are independently reviewed in the audit_tools handoff. This artifact does not mutate accepted entry dependencies.",
+  "method": "Read current owner titles/contracts and the complete stored dependency requests; retain exact source ownership, distinguish downstream consumer integration from implementation prerequisites, and correct HTML export/managed-binary ownership.",
+  "records": [
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-001",
+        "TOOLS-002",
+        "TOOLS-010",
+        "TOOLS-015",
+        "TOOLS-017"
+      ],
+      "target_area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AGENT-048",
+          "AGENT-049",
+          "AGENT-050",
+          "AGENT-051",
+          "AGENT-052",
+          "AGENT-053"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008",
+        "TOOLS-009",
+        "TOOLS-011",
+        "TOOLS-012",
+        "TOOLS-013",
+        "TOOLS-016",
+        "TOOLS-018"
+      ],
+      "target_area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "previous_confirmed_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-023",
+          "SESSION-024",
+          "SESSION-025"
+        ],
+        "kind": "consumer",
+        "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-001",
+        "TOOLS-004",
+        "TOOLS-009",
+        "TOOLS-013",
+        "TOOLS-022",
+        "TOOLS-023"
+      ],
+      "target_area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "previous_confirmed_ids": [
+        "SET-014",
+        "SET-016"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-014",
+          "SET-016"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-004",
+        "TOOLS-014",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "target_area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-031",
+          "TUI-032",
+          "TUI-035",
+          "TUI-036",
+          "TUI-055"
+        ],
+        "kind": "consumer",
+        "rationale": "Interactive rendering and shell-control views consume the tool contracts."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-017",
+        "TOOLS-018",
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "target_area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-035",
+          "EXT-036",
+          "EXT-056"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-020",
+        "TOOLS-021",
+        "TOOLS-024",
+        "TOOLS-025",
+        "TOOLS-030"
+      ],
+      "target_area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AGENT-038",
+          "AGENT-039",
+          "AGENT-041",
+          "AGENT-043",
+          "AGENT-044",
+          "AGENT-045",
+          "AGENT-046"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-023",
+        "TOOLS-028",
+        "TOOLS-029"
+      ],
+      "target_area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "CLI-009",
+          "MISC-001"
+        ],
+        "kind": "shared-contract",
+        "rationale": "CLI-009 consumes attachment processing; managed fd/rg installation actually belongs to MISC-001."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-031"
+      ],
+      "target_area": "rpc-remote",
+      "capability": "Link stdout takeover/configure/wait/flush/restore lifecycle and byte-budget error handling in RPC/print. The existing Rust 64-message RpcWriter remains useful but lacks the TS byte contract.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-017",
+          "MISC-015",
+          "MISC-016"
+        ],
+        "kind": "consumer",
+        "rationale": "Mode adapters own stdout takeover/restore around the shared byte-bounded writer."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-003",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008"
+      ],
+      "target_area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-026"
+        ],
+        "kind": "consumer",
+        "rationale": "RPC exposes existing shell snapshots/control without owning registry state."
+      }
+    },
+    {
+      "area": "tools",
+      "from": [
+        "TOOLS-009"
+      ],
+      "target_area": "settings",
+      "capability": "Scoped bashInputApproval read/write precedence and trust gates; tool owns approval consumption only.",
+      "previous_confirmed_ids": [
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-007",
+          "SET-008",
+          "SET-009",
+          "SET-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-011",
+        "SESSION-012",
+        "SESSION-014",
+        "SESSION-018"
+      ],
+      "target_area": "ai",
+      "capability": "Shared stream retry classification/policy is AI-owned; session entries retain caller routing, callback lifecycle and cancellation differences.",
+      "previous_confirmed_ids": [
+        "AI-001"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-001"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-035"
+      ],
+      "target_area": "settings",
+      "capability": "Project-trust persistence/decision policy is Settings-owned; session entry covers extension/resource loading and reload order.",
+      "previous_confirmed_ids": [
+        "SET-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "target_area": "tools",
+      "capability": "Do not duplicate environment injection, process registry, shell control, stdin, watch/timer mechanics. Session owns dynamic registration, delivery/wake and disposal.",
+      "previous_confirmed_ids": [
+        "TOOLS-002",
+        "TOOLS-006",
+        "TOOLS-008",
+        "TOOLS-009",
+        "TOOLS-011",
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-010",
+        "TOOLS-012",
+        "TOOLS-013"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-002",
+          "TOOLS-006",
+          "TOOLS-008",
+          "TOOLS-009",
+          "TOOLS-011",
+          "TOOLS-003",
+          "TOOLS-004",
+          "TOOLS-005",
+          "TOOLS-010",
+          "TOOLS-012",
+          "TOOLS-013"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-019",
+        "SESSION-020",
+        "SESSION-022",
+        "SESSION-026",
+        "SESSION-035"
+      ],
+      "target_area": "extensions",
+      "capability": "Extension dispatch/reducer/context behavior is Extensions-owned. Session entries specify hook caller order and mutation boundaries.",
+      "previous_confirmed_ids": [
+        "EXT-020",
+        "EXT-030",
+        "EXT-008",
+        "EXT-022",
+        "EXT-009",
+        "EXT-010",
+        "EXT-019",
+        "EXT-031"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-020",
+          "EXT-030",
+          "EXT-008",
+          "EXT-022",
+          "EXT-009",
+          "EXT-010",
+          "EXT-019",
+          "EXT-031"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-036"
+      ],
+      "target_area": "providers-auth",
+      "capability": "Provider/model catalog and reasoning-level policy, including the ultra lead in ICE_PORTING.md, require the next area's reconciliation. SESSION-036 describes actual session selection/restoration calls without claiming catalog completeness.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-006",
+          "AUTH-024",
+          "AUTH-026",
+          "AI-005",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "session",
+      "from": [
+        "SESSION-038"
+      ],
+      "target_area": "tui",
+      "capability": "Session passes current theme/tool renderer to HTML export; detailed HTML rendering/export UI belongs to its assigned area. No future ID invented.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "MISC-017",
+          "MISC-018",
+          "MISC-019",
+          "MISC-020",
+          "TUI-004"
+        ],
+        "kind": "shared-contract",
+        "rationale": "HTML export moved to its actual MISC owner; TUI supplies theme presentation, while SESSION-038 owns active-branch JSONL/text."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-011"
+      ],
+      "target_area": "providers-auth",
+      "capability": "Model catalog, selected reasoning levels, fast mode eligibility and model-pattern consumer behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-024",
+          "AUTH-025",
+          "AUTH-026",
+          "AI-005",
+          "AI-006"
+        ],
+        "kind": "consumer",
+        "rationale": "Model selection/capability consumers interpret the stored settings; setting storage does not implement the runtime policy."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-012"
+      ],
+      "target_area": "session",
+      "capability": "Compaction/retry runtime policies consuming the settings accessors.",
+      "previous_confirmed_ids": [
+        "SESSION-015",
+        "SESSION-016",
+        "SESSION-017",
+        "SESSION-018"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-015",
+          "SESSION-016",
+          "SESSION-018"
+        ],
+        "kind": "consumer",
+        "rationale": "Compaction and retry runtime callers consume settings; autocommit is not substituted for those policies."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-014"
+      ],
+      "target_area": "tools",
+      "capability": "Background-shell timers and input approval at execution time.",
+      "previous_confirmed_ids": [
+        "TOOLS-001",
+        "TOOLS-005",
+        "TOOLS-011",
+        "TOOLS-012"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-001",
+          "TOOLS-005",
+          "TOOLS-009",
+          "TOOLS-011",
+          "TOOLS-012",
+          "TOOLS-013"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-015"
+      ],
+      "target_area": "tui",
+      "capability": "Actual rendering/editor/key/notice consumer behavior and native settings wiring.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-025",
+          "TUI-049",
+          "TUI-052",
+          "TUI-053"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-016"
+      ],
+      "target_area": "tui",
+      "capability": "Terminal-image display and width behavior; model blocking and image resizing remain separate.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-225",
+          "TUI-228",
+          "TUI-229",
+          "TOOLS-023"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-017"
+      ],
+      "target_area": "tui",
+      "capability": "Appearance version 2 validation/resolution and theme switching.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-001",
+          "TUI-003",
+          "TUI-009",
+          "TUI-010",
+          "TUI-024"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-020"
+      ],
+      "target_area": "subagents",
+      "capability": "Native V2 settings validation, permissions/ceilings and hook compatibility namespace.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SUB-005",
+          "SUB-006",
+          "SUB-007",
+          "SUB-010"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-021"
+      ],
+      "target_area": "cli-packaging",
+      "capability": "Package manager resolve/install/filter semantics and CLI suppression/admission.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "CLI-020",
+          "CLI-029",
+          "CLI-030",
+          "CLI-031",
+          "CLI-032",
+          "CLI-033"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-027"
+      ],
+      "target_area": "session",
+      "capability": "Active tool/resource prompt rebuild and per-turn override ordering.",
+      "previous_confirmed_ids": [
+        "SESSION-023",
+        "SESSION-028"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-019",
+          "SESSION-023",
+          "SESSION-028"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-032"
+      ],
+      "target_area": "rpc-remote",
+      "capability": "get_commands refresh and command metadata response.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-022",
+          "RPC-031"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "settings",
+      "from": [
+        "SET-033"
+      ],
+      "target_area": "tui",
+      "capability": "Theme JSON/token parser and palette/catalog switching.",
+      "previous_confirmed_ids": [
+        "TUI-001",
+        "TUI-002",
+        "TUI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-001",
+          "TUI-002",
+          "TUI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-018"
+      ],
+      "target_area": "providers-auth",
+      "capability": "ProviderConfig model/OAuth/streamSimple vs Provider callback contracts and native provider registry/auth refresh.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-004",
+          "AUTH-006",
+          "AUTH-008",
+          "AUTH-009",
+          "AI-002",
+          "AI-003"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-019"
+      ],
+      "target_area": "session",
+      "capability": "Read-only session manager/context usage/idle/compaction/abort/pending/shutdown semantics behind guarded getters.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-021",
+          "SESSION-034",
+          "SESSION-037",
+          "AGENT-021",
+          "AGENT-027"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-020"
+      ],
+      "target_area": "session",
+      "capability": "new/fork/switch/reload/withSession lifecycle ordering and native navigation options accepted but ignored by underlying harness.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-021",
+          "SESSION-026",
+          "SESSION-035"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-022"
+      ],
+      "target_area": "session",
+      "capability": "Actual lifecycle emission ordering and payloads; generic reducer is owned by EXT-022.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-022"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-031"
+      ],
+      "target_area": "session",
+      "capability": "Startup/reload discovered theme paths accepted but not wired into theme catalog.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-035",
+          "SET-021",
+          "TUI-003"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-035"
+      ],
+      "target_area": "agent",
+      "capability": "Argument preparation, schema validation, constrained sampling and execution-mode enforcement.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AGENT-010",
+          "AGENT-012",
+          "AI-012",
+          "AI-013"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-035"
+      ],
+      "target_area": "tools",
+      "capability": "Plan/build access classification and tool allowlist admission.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-018",
+          "SESSION-023"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-036"
+      ],
+      "target_area": "tui",
+      "capability": "Tool-row rendering/state/caching/image/expansion behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-031",
+          "TUI-032",
+          "TUI-229"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-040"
+      ],
+      "target_area": "rpc-remote",
+      "capability": "extension_ui_request/response envelope, pending request admission, cancellation and mode capability.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-028"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-040"
+      ],
+      "target_area": "tui",
+      "capability": "Modal selection/editor focus and external editor invocation.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-073",
+          "TUI-050"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-041"
+      ],
+      "target_area": "tui",
+      "capability": "Notice service identity/category/sticky behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-052",
+          "TUI-053"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-042"
+      ],
+      "target_area": "tui",
+      "capability": "Footer data and working/thinking UI state.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-037",
+          "TUI-038",
+          "TUI-039",
+          "TUI-041"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-043"
+      ],
+      "target_area": "rpc-remote",
+      "capability": "Widget/chrome rpcText projection and remote-client behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-028"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-044"
+      ],
+      "target_area": "tui",
+      "capability": "Header/footer replacement and terminal title lifecycle.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-037",
+          "TUI-038",
+          "TUI-039",
+          "TUI-040"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-045"
+      ],
+      "target_area": "tui",
+      "capability": "Custom view focus/overlay/disposal and late async factory result.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-073",
+          "TUI-217",
+          "TUI-218",
+          "TUI-219"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-046"
+      ],
+      "target_area": "tui",
+      "capability": "Raw listener consume/data chain before key decoding.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-206",
+          "TUI-208",
+          "TUI-209"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-047"
+      ],
+      "target_area": "tui",
+      "capability": "Expanded editor text, bracketed paste, custom editor action wiring and disposal.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-049",
+          "TUI-242",
+          "TUI-243",
+          "TUI-244"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-048"
+      ],
+      "target_area": "tui",
+      "capability": "Concrete AutocompleteProviderFactory/provider result schema and composition.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-238",
+          "TUI-239",
+          "TUI-240",
+          "TUI-241",
+          "TUI-255"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-049"
+      ],
+      "target_area": "tui",
+      "capability": "Theme format/parser/catalog and compatibility of native theme representation.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-001",
+          "TUI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-049"
+      ],
+      "target_area": "settings",
+      "capability": "Named theme setting persistence and resource-discovery paths.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-017",
+          "SET-033"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-050"
+      ],
+      "target_area": "tui",
+      "capability": "Tool expansion batch anchor and per-row override state.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-031",
+          "TUI-034"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-051"
+      ],
+      "target_area": "agent",
+      "capability": "Native pending-custom/steer/follow-up/next-turn scheduling and returned outcome.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AGENT-005",
+          "AGENT-018",
+          "AGENT-019",
+          "AGENT-022",
+          "AGENT-023",
+          "SESSION-020"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-052"
+      ],
+      "target_area": "session",
+      "capability": "Prompt admission, extension source, slash handling and text/image validation.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-019",
+          "SESSION-020"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-053"
+      ],
+      "target_area": "session",
+      "capability": "CustomEntry/session-info/label record formats and durable flush behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-029",
+          "SESSION-031",
+          "SESSION-033"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-054"
+      ],
+      "target_area": "agent",
+      "capability": "Active-tool snapshot/update semantics under concurrent execution.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AGENT-018",
+          "AGENT-020",
+          "SESSION-023"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-055"
+      ],
+      "target_area": "settings",
+      "capability": "Default model/provider/thinking persistence, shared with model capability behavior.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-011"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-055"
+      ],
+      "target_area": "providers-auth",
+      "capability": "Authenticated model catalog and capability clamping.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-006",
+          "AUTH-024",
+          "AUTH-025",
+          "AI-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "extensions",
+      "from": [
+        "EXT-057"
+      ],
+      "target_area": "session",
+      "capability": "Application-owned inline guards before discovered user factories and startup display.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-028",
+          "SESSION-035",
+          "CLI-002"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-003"
+      ],
+      "target_area": "ai",
+      "capability": "RPC owns transport DTOs, field consistency and schema rejection. AI-005 owns shared thinking-level behavior; AI-006 owns model/message request data. Adapters must intentionally project rather than serialize every provider-specific field.",
+      "previous_confirmed_ids": [
+        "AI-005",
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-004"
+      ],
+      "target_area": "ai",
+      "capability": "The projection owns transport-specific omission and normalization. Shared AI wire/state semantics remain AI-owned, and the binary schema intentionally rejects deferred assistant messages.",
+      "previous_confirmed_ids": [
+        "AI-005",
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-007"
+      ],
+      "target_area": "session",
+      "capability": "SESSION-006 covers local storage lease/ownership behavior and SESSION-028 SDK construction. RPC adds connection sharing, acquisition coalescing and backend disposal timing; it does not replace storage ownership.",
+      "previous_confirmed_ids": [
+        "SESSION-006",
+        "SESSION-028"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-006",
+          "SESSION-028"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-017"
+      ],
+      "target_area": "session",
+      "capability": "Session event semantics remain SESSION-022. This entry owns their JSONL projection and the adapter's byte/ordering contract, not binary transcript encoding.",
+      "previous_confirmed_ids": [
+        "SESSION-022"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-022"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-018"
+      ],
+      "target_area": "session",
+      "capability": "Replacement/disposal belongs to the session runtime, but wire admission and reentrant host-action ordering must surround it. Controls address the currently bound session, not a future replacement.",
+      "previous_confirmed_ids": [
+        "SESSION-021"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-021"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-019"
+      ],
+      "target_area": "session",
+      "capability": "Session-owned operation controllers and pre-commit checks remain authoritative. Client-side immediate cancellation and best-effort wire cancellation are specified separately in RPC-033.",
+      "previous_confirmed_ids": [
+        "SESSION-016",
+        "SESSION-024",
+        "SESSION-026"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-016",
+          "SESSION-024",
+          "SESSION-026"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-020"
+      ],
+      "target_area": "session",
+      "capability": "This is adapter lifecycle around the existing replaceable runtime, not a second session factory. Extension live contexts and their invalidation remain owned by EXT-019 and SESSION-021.",
+      "previous_confirmed_ids": [
+        "SESSION-021"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-021"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-020"
+      ],
+      "target_area": "extensions",
+      "capability": "This is adapter lifecycle around the existing replaceable runtime, not a second session factory. Extension live contexts and their invalidation remain owned by EXT-019 and SESSION-021.",
+      "previous_confirmed_ids": [
+        "EXT-019"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-019"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-021"
+      ],
+      "target_area": "session",
+      "capability": "SESSION owns conversational semantics; this entry owns the JSONL adapter, attachment assembly and precise acknowledgment point. CLI file-helper reuse is credited as source, not a new RPC file-access sandbox.",
+      "previous_confirmed_ids": [
+        "SESSION-019",
+        "SESSION-020"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-019",
+          "SESSION-020"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-022"
+      ],
+      "target_area": "session",
+      "capability": "Underlying extension registration, settings/catalog state and autocomplete algorithms remain in their assigned areas. This adapter owns discovery shape, bounds, refresh triggers and event delivery.",
+      "previous_confirmed_ids": [
+        "SESSION-022",
+        "SESSION-023"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-022",
+          "SESSION-023"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-022"
+      ],
+      "target_area": "extensions",
+      "capability": "Underlying extension registration, settings/catalog state and autocomplete algorithms remain in their assigned areas. This adapter owns discovery shape, bounds, refresh triggers and event delivery.",
+      "previous_confirmed_ids": [
+        "EXT-019"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-019"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-023"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH owns credential/catalog composition and model matching, AI owns model collection and thinking helpers, and SESSION owns runtime application/compaction/retry. RPC exposes their contracts with cached discovery and explicit refresh ordering.",
+      "previous_confirmed_ids": [
+        "AI-002",
+        "AI-005"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002",
+          "AI-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-023"
+      ],
+      "target_area": "providers-auth",
+      "capability": "AUTH owns credential/catalog composition and model matching, AI owns model collection and thinking helpers, and SESSION owns runtime application/compaction/retry. RPC exposes their contracts with cached discovery and explicit refresh ordering.",
+      "previous_confirmed_ids": [
+        "AUTH-024"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-024"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-023"
+      ],
+      "target_area": "session",
+      "capability": "AUTH owns credential/catalog composition and model matching, AI owns model collection and thinking helpers, and SESSION owns runtime application/compaction/retry. RPC exposes their contracts with cached discovery and explicit refresh ordering.",
+      "previous_confirmed_ids": [
+        "SESSION-016",
+        "SESSION-018",
+        "SESSION-036"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-016",
+          "SESSION-018",
+          "SESSION-036"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-023"
+      ],
+      "target_area": "settings-resources",
+      "capability": "AUTH owns credential/catalog composition and model matching, AI owns model collection and thinking helpers, and SESSION owns runtime application/compaction/retry. RPC exposes their contracts with cached discovery and explicit refresh ordering.",
+      "previous_confirmed_ids": [
+        "SET-011"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-011"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-024"
+      ],
+      "target_area": "session",
+      "capability": "Native/TS session storage, indexing, branch selection and statistics are audited in SESSION; this entry owns the wire projection, ordering, cursor rules and discovered TS response inconsistency.",
+      "previous_confirmed_ids": [
+        "SESSION-027",
+        "SESSION-032",
+        "SESSION-033",
+        "SESSION-034"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-027",
+          "SESSION-032",
+          "SESSION-033",
+          "SESSION-034"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-025"
+      ],
+      "target_area": "session",
+      "capability": "This entry owns RPC orchestration, mutation validation and response shape; the runtime, session storage, fork/navigation and actual HTML/JSONL renderers remain session-owned.",
+      "previous_confirmed_ids": [
+        "SESSION-021",
+        "SESSION-026",
+        "SESSION-031",
+        "SESSION-033",
+        "SESSION-038"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-021",
+          "SESSION-026",
+          "SESSION-031",
+          "SESSION-033",
+          "SESSION-038"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-025"
+      ],
+      "target_area": "tui",
+      "capability": "This entry owns RPC orchestration, mutation validation and response shape; the runtime, session storage, fork/navigation and actual HTML/JSONL renderers remain session-owned.",
+      "previous_confirmed_ids": [
+        "TUI-004"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-004",
+          "MISC-017",
+          "MISC-018",
+          "MISC-019",
+          "MISC-020"
+        ],
+        "kind": "shared-contract",
+        "rationale": "TUI palette data and MISC HTML-export engine are distinct prerequisites from SESSION active-branch serialization."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-026"
+      ],
+      "target_area": "session",
+      "capability": "This entry owns RPC interception, cursor-independent views and coalesced notifications, not registry mechanics or watch fire identity handling.",
+      "previous_confirmed_ids": [
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-024",
+          "SESSION-025"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-026"
+      ],
+      "target_area": "tools",
+      "capability": "This entry owns RPC interception, cursor-independent views and coalesced notifications, not registry mechanics or watch fire identity handling.",
+      "previous_confirmed_ids": [
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-004",
+          "TOOLS-005",
+          "TOOLS-006",
+          "TOOLS-008"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-027"
+      ],
+      "target_area": "subagents",
+      "capability": "SUB owns child ownership/transcript policy, approval/revalidation and patch artifacts/integration. RPC must call those existing authorities through the bridge/tool hooks; it must not reconstruct authorization from UI fields.",
+      "previous_confirmed_ids": [
+        "SUB-036",
+        "SUB-016",
+        "SUB-008",
+        "SUB-019",
+        "SUB-031",
+        "SUB-032"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SUB-036",
+          "SUB-016",
+          "SUB-008",
+          "SUB-019",
+          "SUB-031",
+          "SUB-032"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-027"
+      ],
+      "target_area": "extensions",
+      "capability": "SUB owns child ownership/transcript policy, approval/revalidation and patch artifacts/integration. RPC must call those existing authorities through the bridge/tool hooks; it must not reconstruct authorization from UI fields.",
+      "previous_confirmed_ids": [
+        "EXT-024"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-024"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-028"
+      ],
+      "target_area": "extensions",
+      "capability": "EXT owns the host UI API and extension contexts; RPC owns this mode-specific bridge/defaults/snapshot. Theme resolution stays TUI-owned; no terminal renderer is introduced into RPC.",
+      "previous_confirmed_ids": [
+        "EXT-019",
+        "EXT-022"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-009",
+          "EXT-019",
+          "EXT-022",
+          "EXT-040",
+          "EXT-041",
+          "EXT-042",
+          "EXT-043",
+          "EXT-044",
+          "EXT-049"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-028"
+      ],
+      "target_area": "tui",
+      "capability": "EXT owns the host UI API and extension contexts; RPC owns this mode-specific bridge/defaults/snapshot. Theme resolution stays TUI-owned; no terminal renderer is introduced into RPC.",
+      "previous_confirmed_ids": [
+        "TUI-004"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-004"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-029"
+      ],
+      "target_area": "settings-resources",
+      "capability": "SET owns persistence/default policy, SUB owns narrowing/delegation safety, OBS owns install telemetry, and RPC owns this catalog/projection/diagnostic consumption. Do not infer native key support from a UI label alone. SUB-003 owns trust-filtered source discovery and SUB-007 owns source-sensitive permission ceilings; this settings projection must preserve their authority decisions rather than infer permission from display metadata.",
+      "previous_confirmed_ids": [
+        "SET-003",
+        "SET-011"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-003",
+          "SET-011"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-029"
+      ],
+      "target_area": "subagents",
+      "capability": "SET owns persistence/default policy, SUB owns narrowing/delegation safety, OBS owns install telemetry, and RPC owns this catalog/projection/diagnostic consumption. Do not infer native key support from a UI label alone. SUB-003 owns trust-filtered source discovery and SUB-007 owns source-sensitive permission ceilings; this settings projection must preserve their authority decisions rather than infer permission from display metadata.",
+      "previous_confirmed_ids": [
+        "SUB-005",
+        "SUB-008",
+        "SUB-003",
+        "SUB-007"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SUB-005",
+          "SUB-008",
+          "SUB-003",
+          "SUB-007"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-029"
+      ],
+      "target_area": "observability",
+      "capability": "SET owns persistence/default policy, SUB owns narrowing/delegation safety, OBS owns install telemetry, and RPC owns this catalog/projection/diagnostic consumption. Do not infer native key support from a UI label alone. SUB-003 owns trust-filtered source discovery and SUB-007 owns source-sensitive permission ceilings; this settings projection must preserve their authority decisions rather than infer permission from display metadata.",
+      "previous_confirmed_ids": [
+        "OBS-001"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "OBS-001"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-030"
+      ],
+      "target_area": "settings-resources",
+      "capability": "Underlying file writes and global/project policy are SET-owned. This entry owns validation order, namespace/extension adaptation and the saved-before-diagnostics/live-apply boundary.",
+      "previous_confirmed_ids": [
+        "SET-003",
+        "SET-007",
+        "SET-009"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-003",
+          "SET-007",
+          "SET-009"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-030"
+      ],
+      "target_area": "subagents",
+      "capability": "Underlying file writes and global/project policy are SET-owned. This entry owns validation order, namespace/extension adaptation and the saved-before-diagnostics/live-apply boundary.",
+      "previous_confirmed_ids": [
+        "SUB-005"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SUB-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-031"
+      ],
+      "target_area": "extensions",
+      "capability": "RPC owns this structured-command registry/schema layer. Extension command naming/provenance and actual settings effects remain in their owners; this validator is distinct from AI tool JSON-schema validation.",
+      "previous_confirmed_ids": [
+        "EXT-019"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-013",
+          "EXT-019"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Structured command registry uses command registration/provenance as well as current extension context."
+      }
+    },
+    {
+      "area": "rpc-remote",
+      "from": [
+        "RPC-034"
+      ],
+      "target_area": "ai",
+      "capability": "Shared AI/message types require explicit JSONL projection; the binary protocol has a different schema. This validator covers data shape and bounded admission, not full semantic validation of arbitrary extension fields or provider behavior.",
+      "previous_confirmed_ids": [
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-009"
+      ],
+      "target_area": "cli",
+      "capability": "Resolve concrete entries for --allow-external/--ice-allow-bash/--ice-mode/--mode/--print/--no-approve argv parsing and trusted startup grants; SUB owns their sub-yolo interaction only.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "CLI-002",
+          "CLI-003"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-032"
+      ],
+      "target_area": "agent",
+      "capability": "Existing safe verification/goal command classifier and execution runner, plus current build/trust authority used for patch integration. Do not infer a reviewer is launched by task-contract recommendations.",
+      "previous_confirmed_ids": [],
+      "status": "awaiting-independent-owner-QA",
+      "resolution": null
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-035"
+      ],
+      "target_area": "extensions",
+      "capability": "Concrete prerequisites for flag/command registration, event-emitter binding and dynamic built-in tool refresh; EXT-009/010 are already direct prerequisites.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-009",
+          "EXT-010",
+          "EXT-013",
+          "EXT-015",
+          "EXT-017",
+          "EXT-022",
+          "EXT-054"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-036"
+      ],
+      "target_area": "rpc",
+      "capability": "get_subagents/get_subagent_messages/respond_subagent_approval/subagent_control/subagent_patch and subagents_update transport integration. Worker read bridge implementation and RPC tests, not full RPC implementation; assign only after area audit.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "RPC-027"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-036"
+      ],
+      "target_area": "tui",
+      "capability": "Interactive parent/live/history display, transcript rendering and control handoff consume the view bridge. Native side-question UI remains a separate preserved capability.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-027",
+          "TUI-028",
+          "TUI-029",
+          "TUI-031",
+          "TUI-060"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-037"
+      ],
+      "target_area": "tui",
+      "capability": "Component render/input/dispose, width/ANSI/theme routines and tui.select/app.agents/app.subagents keybinding definitions/defaults; SUB owns Hub actions and approval semantics.",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-001",
+          "TUI-048",
+          "TUI-201",
+          "TUI-202",
+          "TUI-203",
+          "TUI-205",
+          "TUI-210",
+          "TUI-257"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-003"
+      ],
+      "target_area": "settings",
+      "capability": "SET-005 owns environment templates and strict/lenient headers; SET-006 owns command execution/cache, timeout and failure caching. AuthStorage owns when those resolvers are invoked; no network request is required for metadata enumeration.",
+      "previous_confirmed_ids": [
+        "SET-005",
+        "SET-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-005",
+          "SET-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-006"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-005 owns credential mutation/synchronization; AUTH-008 owns composed models. AI-002 owns generic Models refresh publication/epoch guards, distinct from these coding-runtime availability generations.",
+      "previous_confirmed_ids": [
+        "AI-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-007"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-008 applies semantic model defaults/overlay rules. AI-005 owns shared thinking levels, Ultra, and clamp behavior. Configuration-expression execution belongs SET-005/006 and is deferred until auth/request resolution. AUTH-033 enumerates every compatibility configuration field and nested schema.",
+      "previous_confirmed_ids": [
+        "AI-005"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-008"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-007 owns immutable config validation; AUTH-009 owns secret/header evaluation. AI-003 owns registered wire API dispatch; extension registration transport is the EXT area.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-009"
+      ],
+      "target_area": "settings",
+      "capability": "AUTH-004 defines credential selection/refresh. AUTH-008 keeps composition credential-blind. SET-005/006 own config expression grammar/cache/deadline. AI-002/003 own generic Models/stream adapters.",
+      "previous_confirmed_ids": [
+        "SET-005",
+        "SET-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-005",
+          "SET-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-009"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-004 defines credential selection/refresh. AUTH-008 keeps composition credential-blind. SET-005/006 own config expression grammar/cache/deadline. AI-002/003 own generic Models/stream adapters.",
+      "previous_confirmed_ids": [
+        "AI-002",
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002",
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-010"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-002 supplies file-lock/write mechanics, AUTH-006 coding-runtime snapshots, AI-002 generic Models publish ownership and cancellation. HTTP is an external dependency in the product only; this audit made no request.",
+      "previous_confirmed_ids": [
+        "AI-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-011"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-004 defines generic auth resolution; specialized auth/catalog behavior has separate entries. AI-002/003 own generated model content/general API lifecycle and wire dispatch. Image generation API implementation is AI-area work.",
+      "previous_confirmed_ids": [
+        "AI-002",
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002",
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-012"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-001 preserves credential env shape; AUTH-004/009 propagate it. AI-003 owns actual cloud wire/SDK implementation, signing, region/proxy behavior and ambient credential chain execution. Merely recognizing readiness does not implement those protocols.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-013"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-009 must preserve null headers and configured inline upstream auth override order; AI-003 owns wire-specific default-header removal and HTTP dispatch.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-014"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-001 preserves legacy OAuth metadata, AUTH-008 applies aliases/overrides, AUTH-010 provides ModelsStore, AI-002 owns publish guards and AI-003 ice-messages protocol. Radius OAuth login is a separate flow entry.",
+      "previous_confirmed_ids": [
+        "AI-002",
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002",
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-015"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-001/002 define credential shape/commit; AUTH-004 automatic refresh; AI-002 normalizes interaction and owns Models login lifecycle. TUI/RPC own rendering/transport of prompt and notification variants.",
+      "previous_confirmed_ids": [
+        "AI-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-016"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-015 shared PKCE/prompts/page; AUTH-004 store-owned refresh. Anthropic wire bearer interpretation and subscription headers are AI protocol work.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-017"
+      ],
+      "target_area": "ai",
+      "capability": "Shared PKCE/poll timing in AUTH-015; store expiry conversion/refresh in AUTH-001/004; Codex wire API and account headers remain AI-003 protocol implementation.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-018"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-001 retains metadata, AUTH-009 applies credential-specific baseUrl, AUTH-011 catalog filter and AUTH-015 device polling. Copilot wire headers/continuation behavior beyond authentication are AI protocol work.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-019"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-015 provides PKCE/pages/prompts. AUTH-004 should not unnecessarily refresh this effectively permanent credential. Text/image provider consumers share provider ID openrouter.",
+      "previous_confirmed_ids": [
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-020"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-015 owns shared device polling; these retry/status rules belong to the Kimi adapter, not the generic inference retry classifier AI-001. AUTH-004 owns locked automatic refresh and its15-second signal.",
+      "previous_confirmed_ids": [
+        "AI-001",
+        "AI-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002"
+        ],
+        "kind": "shared-contract",
+        "rationale": "Kimi device polling keeps its own status/retry rules; AI-001 inference retry is a related non-owner, not a polling prerequisite."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-023"
+      ],
+      "target_area": "session",
+      "capability": "AUTH-009 owns case-insensitive final request-header precedence/removal. SESSION-022 owns session event/request integration. OBS-001 owns the install-telemetry gate, including defaults and environment opt-outs.",
+      "previous_confirmed_ids": [
+        "SESSION-022"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-022"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-023"
+      ],
+      "target_area": "observability",
+      "capability": "AUTH-009 owns case-insensitive final request-header precedence/removal. SESSION-022 owns session event/request integration. OBS-001 owns the install-telemetry gate, including defaults and environment opt-outs.",
+      "previous_confirmed_ids": [
+        "OBS-001"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "OBS-001"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-024"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-006 supplies current authenticated availability; AI-005 owns valid thinking-level vocabulary; SESSION-036 applies scope/cycle state; SET-011 owns enabledModels/scopedModels persistence. TUI selectors retain their own ownership for unavailable rows, reordering and refresh UI.",
+      "previous_confirmed_ids": [
+        "AI-005"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-024"
+      ],
+      "target_area": "session",
+      "capability": "AUTH-006 supplies current authenticated availability; AI-005 owns valid thinking-level vocabulary; SESSION-036 applies scope/cycle state; SET-011 owns enabledModels/scopedModels persistence. TUI selectors retain their own ownership for unavailable rows, reordering and refresh UI.",
+      "previous_confirmed_ids": [
+        "SESSION-036"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-036"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-024"
+      ],
+      "target_area": "settings",
+      "capability": "AUTH-006 supplies current authenticated availability; AI-005 owns valid thinking-level vocabulary; SESSION-036 applies scope/cycle state; SET-011 owns enabledModels/scopedModels persistence. TUI selectors retain their own ownership for unavailable rows, reordering and refresh UI.",
+      "previous_confirmed_ids": [
+        "SET-011"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-011"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-025"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-006 defines hasConfiguredAuth semantics, AUTH-024 supplies full/fuzzy/colon parsing, AUTH-026 owns provider-default selection, and AI-005 owns the shared thinking vocabulary. CLI parsing/output and actual application of returned thinking remain their caller's responsibility.",
+      "previous_confirmed_ids": [
+        "AI-005"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-026"
+      ],
+      "target_area": "session",
+      "capability": "AUTH-025 owns CLI model parsing, AUTH-006 auth metadata/snapshots, SET-011 stored defaults, SESSION-028 SDK construction priority and SESSION-036 session model/thinking restoration. This entry does not replace their distinct integration order.",
+      "previous_confirmed_ids": [
+        "SESSION-028",
+        "SESSION-036"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SESSION-028",
+          "SESSION-036"
+        ],
+        "kind": "consumer",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-026"
+      ],
+      "target_area": "settings",
+      "capability": "AUTH-025 owns CLI model parsing, AUTH-006 auth metadata/snapshots, SET-011 stored defaults, SESSION-028 SDK construction priority and SESSION-036 session model/thinking restoration. This entry does not replace their distinct integration order.",
+      "previous_confirmed_ids": [
+        "SET-011"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-011"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-027"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-032 fetches/persists this catalog, AUTH-007/008 load and compose the resulting model definitions. AI-005 owns shared thinking vocabulary; AI-006 and protocol-specific AI entries own request option enforcement. Source comments about public Atria limits were not independently researched because network use is outside this audit.",
+      "previous_confirmed_ids": [
+        "AI-005",
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-028"
+      ],
+      "target_area": "extensions",
+      "capability": "AUTH-032 defines refetch result/error semantics and summaries; AUTH-006 owns live runtime availability. EXT-019/022 supply extension context and session lifecycle. General settings registration, selector widgets and terminal rendering belong to the TUI/extensions owner and are cross-referenced rather than duplicated here.",
+      "previous_confirmed_ids": [
+        "EXT-019",
+        "EXT-022"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-019",
+          "EXT-022"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-029"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-030 owns usage/cache estimation and AUTH-031 deferred lifetime. AI-003 owns provider registration and lazy/compat dispatch; AI-006 owns shared stream option shape. This entry compares Faux behavior rather than using Faux tests as evidence that unrelated production APIs pass.",
+      "previous_confirmed_ids": [
+        "AI-003",
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-030"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-029 determines which normal/error/deferred responses invoke the estimator; AI-006 owns request cacheRetention/sessionId/promptCacheKey fields. Session-level cache-key propagation has separate ownership.",
+      "previous_confirmed_ids": [
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-031"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-029 owns common stream/error event ordering, AUTH-030 final usage estimation, AI-003 provider capability dispatch and AI-006 shared deferred/request option types. General agent/harness deferred resume is a separate capability and must not be inferred from this test provider alone.",
+      "previous_confirmed_ids": [
+        "AI-003",
+        "AI-006"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-003",
+          "AI-006"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-032"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-027 owns endpoint conversion, AUTH-028 the caller UI, AUTH-007 config loading and AUTH-010 normal remote catalog overlays. AI-002 owns generic runtime refresh/publication. This path intentionally bypasses AUTH-002/004 credential locking/resolution in the inspected TS source.",
+      "previous_confirmed_ids": [
+        "AI-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "providers-auth",
+      "from": [
+        "AUTH-033"
+      ],
+      "target_area": "ai",
+      "capability": "AUTH-007 handles whole-file validation/errors and AUTH-008 layer precedence. AI-005 owns thinking-level behavior; AI-003 dispatch, AI-006 common options and later protocol-specific AI entries own request option/capability effects. This is model/provider configuration, not the model-facing tool schema compiler owned by AI-012.",
+      "previous_confirmed_ids": [
+        "AI-005",
+        "AI-006",
+        "AI-003"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AI-005",
+          "AI-006",
+          "AI-003"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-001"
+      ],
+      "target_area": "settings-resources",
+      "capability": "Global HTTP dispatcher implementation and replacement lifetime",
+      "previous_confirmed_ids": [
+        "SET-013"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-013"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-002"
+      ],
+      "target_area": "subagents",
+      "capability": "Early agent CLI/import commands, normalized distribution flags and live bridge registration",
+      "previous_confirmed_ids": [
+        "SUB-005",
+        "SUB-007",
+        "SUB-019",
+        "SUB-035",
+        "SUB-036"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SUB-005",
+          "SUB-007",
+          "SUB-019",
+          "SUB-035",
+          "SUB-036"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-002"
+      ],
+      "target_area": "safe-verify",
+      "capability": "Safe-verify factory and current mode/capability callbacks",
+      "previous_confirmed_ids": [],
+      "status": "awaiting-independent-owner-QA",
+      "resolution": null
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-002"
+      ],
+      "target_area": "cognee-blackhole",
+      "capability": "Builtin Cognee integration factory installation",
+      "previous_confirmed_ids": [],
+      "status": "awaiting-independent-owner-QA",
+      "resolution": null
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-005"
+      ],
+      "target_area": "settings",
+      "capability": "Global-first settings, trust/bootstrap reuse and proxy application",
+      "previous_confirmed_ids": [
+        "SET-003",
+        "SET-008",
+        "SET-013",
+        "SET-021",
+        "SET-022"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "SET-003",
+          "SET-008",
+          "SET-013",
+          "SET-021",
+          "SET-022"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-009"
+      ],
+      "target_area": "tools",
+      "capability": "Shared image MIME/conversion/resize processing invoked by file attachments",
+      "previous_confirmed_ids": [
+        "TOOLS-020",
+        "TOOLS-023"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-020",
+          "TOOLS-023"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-009"
+      ],
+      "target_area": "tools",
+      "capability": "resolveReadPath normalization",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TOOLS-020",
+          "TOOLS-023"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-013"
+      ],
+      "target_area": "providers-auth",
+      "capability": "Credential schema and serialized persistence",
+      "previous_confirmed_ids": [
+        "AUTH-001",
+        "AUTH-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "AUTH-001",
+          "AUTH-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-014"
+      ],
+      "target_area": "tui",
+      "capability": "Pure keybindings migration",
+      "previous_confirmed_ids": [
+        "TUI-048"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-048"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-014"
+      ],
+      "target_area": "misc",
+      "capability": "Managed fd/rg install paths and tool installation",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "MISC-001"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-015"
+      ],
+      "target_area": "tui",
+      "capability": "Theme detection and first-time questionnaire presentation",
+      "previous_confirmed_ids": [
+        "TUI-007",
+        "TUI-220",
+        "TUI-070"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-007",
+          "TUI-220",
+          "TUI-070"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-015"
+      ],
+      "target_area": "cli-packaging",
+      "capability": "Global-only startup theme resource resolution",
+      "previous_confirmed_ids": [],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "CLI-029",
+          "CLI-032"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Concrete owner IDs verified against current entry contracts."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-016"
+      ],
+      "target_area": "tui",
+      "capability": "Config mutation/presentation, rich session picker and generic extension input/selector widgets",
+      "previous_confirmed_ids": [
+        "TUI-062",
+        "TUI-063",
+        "TUI-064",
+        "TUI-068",
+        "TUI-069",
+        "TUI-073"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-062",
+          "TUI-063",
+          "TUI-064",
+          "TUI-068",
+          "TUI-069",
+          "TUI-073"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-017"
+      ],
+      "target_area": "tui",
+      "capability": "fuzzyFilter key/ordering utility",
+      "previous_confirmed_ids": [
+        "TUI-235"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "TUI-235"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-018"
+      ],
+      "target_area": "extensions",
+      "capability": "Exact aliases and ABI/bridge boundary",
+      "previous_confirmed_ids": [
+        "EXT-001",
+        "EXT-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "EXT-001",
+          "EXT-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-019"
+      ],
+      "target_area": "observability",
+      "capability": "Caller order for durable recorder, dashboard token/listener and timings",
+      "previous_confirmed_ids": [
+        "OBS-002",
+        "OBS-003",
+        "OBS-004",
+        "OBS-014",
+        "OBS-016"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "OBS-002",
+          "OBS-003",
+          "OBS-004",
+          "OBS-014",
+          "OBS-016"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-019"
+      ],
+      "target_area": "misc",
+      "capability": "Windows self-update quarantine cleanup and version gate helpers",
+      "previous_confirmed_ids": [
+        "MISC-001",
+        "MISC-002"
+      ],
+      "status": "reviewed-draft",
+      "resolution": {
+        "entry_ids": [
+          "MISC-001",
+          "MISC-002"
+        ],
+        "kind": "prerequisite",
+        "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary."
+      }
+    }
+  ],
+  "reserved_or_missing_definition_ids": [
+    "TUI-073"
+  ],
+  "unresolved": [
+    {
+      "area": "subagents",
+      "from": [
+        "SUB-032"
+      ],
+      "target": "agent",
+      "capability": "Existing safe verification/goal command classifier and execution runner, plus current build/trust authority used for patch integration. Do not infer a reviewer is launched by task-contract recommendations."
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-002"
+      ],
+      "target": "safe-verify",
+      "capability": "Safe-verify factory and current mode/capability callbacks"
+    },
+    {
+      "area": "cli-packaging",
+      "from": [
+        "CLI-002"
+      ],
+      "target": "cognee-blackhole",
+      "capability": "Builtin Cognee integration factory installation"
+    }
+  ],
+  "notes": [
+    "TUI-073 is explicitly reserved for extension widgets and is awaiting final publication.",
+    "Grouped references must be narrowed per entry before adding prerequisite edges; no blanket reverse edge is created for a downstream consumer.",
+    "All current entry IDs and existing explicit dependency arrays remain untouched until the final review/merge."
+  ]
+}

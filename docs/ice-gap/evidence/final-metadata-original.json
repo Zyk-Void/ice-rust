@@ -1,0 +1,36 @@
+{
+  "captured_at": "2026-10-20T03:46:15.848Z",
+  "mode": "original",
+  "gate": "2026-10-20T03:41:54.669043+00:00",
+  "changes": [
+    {
+      "id": "header-1",
+      "name": "spec-ai.json",
+      "field": "introduction",
+      "before": "Source-derived comparison of TypeScript ice-ai with the actual Rust provider and harness implementations. This area contains 49 reviewed gap entries and reconciles all 67 assigned source rows, 14 mechanical candidates and the manually discovered public surfaces. Native providers, typed events, schema support, durable partial-progress frames and compaction are credited. No application, generator, build, test or provider call was executed. Final cross-area and active-checkout verification remain prerequisites for overall completion.",
+      "after": "Source-derived comparison of TypeScript ice-ai with the actual Rust provider and harness implementations. This area contains 50 reviewed gap entries and reconciles all 67 assigned source rows, 14 mechanical candidates and the manually discovered public surfaces. Native providers, typed events, schema support, durable partial-progress frames and compaction are credited. No application, generator, build, test or provider call was executed. Final cross-area and active-checkout verification remain prerequisites for overall completion."
+    },
+    {
+      "id": "header-5",
+      "name": "spec-misc.json",
+      "field": "draft_complete",
+      "before": false,
+      "after": true
+    },
+    {
+      "id": "header-7",
+      "name": "spec-observability.json",
+      "field": "introduction",
+      "before": "This area specifies the eight observability ledger files and their runtime wiring. Findings distinguish the live in-memory projection, the redacted durable projection, replay reconstruction, HTTP/SSE transport and browser rendering. TypeScript behavior is based on the frozen dirty-worktree baseline; Rust comparisons initially target ff9270f. This is an incomplete draft until proposal review and publication.",
+      "after": "This area specifies the eight observability ledger files and their runtime wiring. Findings distinguish the live in-memory projection, the redacted durable projection, replay reconstruction, HTTP/SSE transport and browser rendering. TypeScript behavior is based on the frozen dirty-worktree baseline; Rust comparisons target ff9270f. This area is published. Overall completion awaits the active-checkout relocation."
+    },
+    {
+      "id": "header-8",
+      "name": "spec-safe-verify.json",
+      "field": "introduction",
+      "before": "All three assigned source/document ledger rows and both dedicated regression files were read completely. This specification describes current worktree behavior, including differences from architectural intent; tests were read, not executed. Source citations use repository-relative ice:/rust: prefixes. Rust line estimates are planning estimates and exclude test code. Cross-area integration requirements are named in Port notes and will be assigned dependency IDs by the final integrator.",
+      "after": "All three assigned source/document ledger rows and both dedicated regression files were read completely. This specification describes current worktree behavior, including differences from architectural intent; tests were read, not executed. Source citations use repository-relative ice:/rust: prefixes. Rust line estimates are planning estimates and exclude test code. Port notes describe cross-area integration requirements; dependency fields record the accepted prerequisite IDs."
+    }
+  ],
+  "completed_areas": []
+}

@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T02:38:00.867Z",
+  "owner": "/root",
+  "source_only": true,
+  "application_executed": false,
+  "tests_executed": false,
+  "read_evidence": [
+    {
+      "path": "rust:crates/ice-tui/src/editor.rs",
+      "total_lines": 2420,
+      "sha256": "94bc38de9630ee3cede05ea41b099de3804ab0fdf3288c812f577aa0063859a5",
+      "ranges": [
+        [
+          1180,
+          1212
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 33,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "  1180 |     pub fn working(&self) -> Option<WorkingState> {\n  1181 |         self.working.lock().ok().and_then(|guard| guard.clone())\n  1182 |     }\n  1183 | \n  1184 |     /// Submit current text (Enter).\n  1185 |     fn submit(&self) {\n  1186 |         // Send the EXPANDED draft: a folded `[paste #id …]` marker must reach\n  1187 |         // the model as the user's real content, not the placeholder.\n  1188 |         let text = self.get_expanded_text();\n  1189 |         if let Ok(mut state) = self.state.lock() {\n  1190 |             if !text.is_empty() {\n  1191 |                 state.history.push(text.clone());\n  1192 |                 state.history_index = state.history.len();\n  1193 |             }\n  1194 |         }\n  1195 |         // Submitted text is committed — don't let Ctrl+- resurrect it.\n  1196 |         self.undo_stack.lock().unwrap().clear();\n  1197 |         self.redo_stack.lock().unwrap().clear();\n  1198 |         *self.last_action.lock().unwrap() = None;\n  1199 |         if let Ok(cb) = self.on_submit.lock() {\n  1200 |             if let Some(callback) = cb.as_ref() {\n  1201 |                 callback(&text);\n  1202 |             }\n  1203 |         }\n  1204 |         self.clear();\n  1205 |     }\n  1206 | \n  1207 |     /// Notify change callback.\n  1208 |     fn notify_change(&self) {\n  1209 |         if let Ok(cb) = self.on_change.lock() {\n  1210 |             if let Some(callback) = cb.as_ref() {\n  1211 |                 let text = self.get_text();\n  1212 |                 callback(&text);"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          1400,
+          1510
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 111,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "  1400 |         if text.is_empty() && ctx_for_cb.state.pending_images.lock().unwrap().is_empty() {\n  1401 |             return;\n  1402 |         }\n  1403 | \n  1404 |         if text.starts_with('/') && dispatch_slash(text, &ctx_for_cb, &registry_for_cb) {\n  1405 |             return;\n  1406 |         }\n  1407 | \n  1408 |         // User-initiated shell mode: `!command` runs in the background and is\n  1409 |         // recorded in the session context; `!!command` is excluded from it.\n  1410 |         // Handled before the agent prompt path so it never reaches the model.\n  1411 |         // Mirrors `interactive-mode.ts:3225`.\n  1412 |         if let Some((command, exclude_from_context)) = parse_user_bash(text) {\n  1413 |             if ctx_for_cb.state.user_bash_running() {\n  1414 |                 add_error_message(\n  1415 |                     &ctx_for_cb.chat,\n  1416 |                     \"A bash command is already running. Press Esc to cancel it first.\",\n  1417 |                 );\n  1418 |                 ctx_for_cb.tui.request_render(false);\n  1419 |                 return;\n  1420 |             }\n  1421 |             start_user_bash(&ctx_for_cb, command, exclude_from_context);\n  1422 |             return;\n  1423 |         }\n  1424 | \n  1425 |         let run_status = *ctx_for_cb.state.status.lock().unwrap();\n  1426 |         if run_status != RunStatus::Idle {\n  1427 |             let images = ctx_for_cb.state.take_pending_images();\n  1428 |             let message = user_message_with_images(text, images.clone());\n  1429 |             let lane = ctx_for_cb.lane.clone();\n  1430 |             let chat = ctx_for_cb.chat.clone();\n  1431 |             let tui = ctx_for_cb.tui.clone();\n  1432 |             let state = ctx_for_cb.state.clone();\n  1433 |             tokio::spawn(async move {\n  1434 |                 // Queue immediately while the agent loop is still running.\n  1435 |                 // Routing this through the TUI's main channel delayed it until\n  1436 |                 // `prompt_text()` returned, after the loop's drain points had\n  1437 |                 // passed, so the queued message appeared to disappear.\n  1438 |                 //\n  1439 |                 // upstream's `steer()` enqueues unconditionally, even after\n  1440 |                 // the run ends, and the message stays in the queue for the\n  1441 |                 // next run. This matches the TS design and avoids the race\n  1442 |                 // between `activeRun` clearing and the status check.\n  1443 |                 if let Err(error) = lane.steer(message).await {\n  1444 |                     state.restore_pending_images(images);\n  1445 |                     add_error_message(&chat, &format!(\"Could not queue message: {error}\"));\n  1446 |                     tui.render_now(false);\n  1447 |                     return;\n  1448 |                 }\n  1449 |                 // Surface the queued entry in the pending dock immediately;\n  1450 |                 // the drain-time refresh only fires on the next agent event.\n  1451 |                 refresh_pending_messages(&state, &lane).await;\n  1452 |                 tui.request_render(false);\n  1453 |             });\n  1454 |             // A queued prompt is echoed only once the loop actually consumes\n  1455 |             // it: the run's `AgentEvent::MessageStart` renders the user bubble\n  1456 |             // (upstream renders `message_start` for user messages). Until\n  1457 |             // then it is surfaced by the pending-messages display, so the\n  1458 |             // transcript never shows a message that is still waiting.\n  1459 |             ctx_for_cb.tui.request_render(false);\n  1460 |             return;\n  1461 |         }\n  1462 | \n  1463 |         if !ctx_for_cb.state.try_start_working() {\n  1464 |             return;\n  1465 |         }\n  1466 | \n  1467 |         // Render the user bubble here, NOT from `AgentEvent::MessageStart`.\n  1468 |         //\n  1469 |         // The harness persists the prompt itself and then drives\n  1470 |         // `run_agent_loop` with an EMPTY prompts vec (so the prompt is not\n  1471 |         // double-counted in the provider context), which means the loop emits\n  1472 |         // no `message_start` for it — see\n  1473 |         // `directly_sent_prompt_emits_no_user_message_start` in\n  1474 |         // `crates/ice-harness/tests/harness_run_e2e.rs`. Queued steering /\n  1475 |         // follow-up prompts DO get a `message_start` (the loop drains those\n  1476 |         // itself), so those are deliberately rendered from the event instead.\n  1477 |         add_user_message(&ctx_for_cb.chat, text);\n  1478 |         // A new prompt starts a fresh interaction at the tail even when the\n  1479 |         // user had scrolled up to inspect older output.\n  1480 |         if let Some(scroll) = ctx_for_cb.tui.get_primary_scroll_view() {\n  1481 |             scroll.scroll_to_end();\n  1482 |         }\n  1483 |         ctx_for_cb.tui.request_render(false);\n  1484 |         // Remember the message for ↑ recall (slash commands are not part of\n  1485 |         // the replayable message history).\n  1486 |         push_history(&ctx_for_cb.state, text);\n  1487 |         if ctx_for_cb\n  1488 |             .tx\n  1489 |             .send(TuiMessage::UserInput(\n  1490 |                 text.to_string(),\n  1491 |                 ctx_for_cb.state.take_pending_images(),\n  1492 |             ))\n  1493 |             .is_err()\n  1494 |         {\n  1495 |             ctx_for_cb.state.set_status(RunStatus::Idle);\n  1496 |         }\n  1497 |     }));\n  1498 | \n  1499 |     // Turn on the native-pi frame throttle before the first frame: from here on\n  1500 |     // `request_render(false)` parks a frame and the scheduler thread paints at\n  1501 |     // most one per `MIN_RENDER_INTERVAL_MS` (16 ms). A provider that streams one\n  1502 |     // `MessageUpdate` per delta would otherwise force a full transcript\n  1503 |     // re-render + full-viewport terminal write per token, which is what made\n  1504 |     // long output saturate the terminal (and its GPU compositor). Immediate\n  1505 |     // renders (selectors, the first frame, `render_now(..)`) are unaffected.\n  1506 |     tui.start_render_scheduler();\n  1507 |     tui.start_readerless();\n  1508 | \n  1509 |     // Consume local self-update results even when network checks are disabled.\n  1510 |     // Check ice and installed registry packages in the background so startup"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "total_lines": 3398,
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "ranges": [
+        [
+          2600,
+          2715
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 116,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "  2600 |             if key.modifiers == KeyModifiers::NONE && key.code == KeyCode::Up {\n  2601 |                 let browsing = *state_for_key.history_index.lock().unwrap() != -1;\n  2602 |                 if editor_for_key.get_text().is_empty() || browsing {\n  2603 |                     navigate_history(&state_for_key, &editor_for_key, -1);\n  2604 |                     tui_for_key.request_render_reusing_scroll_content();\n  2605 |                     continue;\n  2606 |                 }\n  2607 |             }\n  2608 |             if key.modifiers == KeyModifiers::NONE && key.code == KeyCode::Down {\n  2609 |                 let browsing = *state_for_key.history_index.lock().unwrap() != -1;\n  2610 |                 if editor_for_key.get_text().is_empty() || browsing {\n  2611 |                     navigate_history(&state_for_key, &editor_for_key, 1);\n  2612 |                     tui_for_key.request_render_reusing_scroll_content();\n  2613 |                     continue;\n  2614 |                 }\n  2615 |             }\n  2616 | \n  2617 |             // `app.message.dequeue` (Alt+Q on Windows, Alt+Up elsewhere):\n  2618 |             // restore every queued steering/follow-up message into the editor\n  2619 |             // so it can be edited before resending. Mirrors upstream's\n  2620 |             // `handleDequeue`; the pending-messages display shows the hint.\n  2621 |             if keybinding_matches(\n  2622 |                 &keybindings_for_key,\n  2623 |                 &key,\n  2624 |                 ice_tui::keybindings::keys::DEQUEUE,\n  2625 |             ) {\n  2626 |                 // Handled here, on the key worker — NOT via the mailbox. The\n  2627 |                 // async main loop parks inside `run_prompt_streaming(..).await`\n  2628 |                 // for the whole run, and a queue only exists *while* a run is\n  2629 |                 // in flight, so a `TuiMessage::Dequeue` sat unread until the\n  2630 |                 // run finished (after the lane had already consumed the queue).\n  2631 |                 // Alt+Q therefore looked like a no-op while it was most needed.\n  2632 |                 // Spawn the drain so it lands while the user is still looking at\n  2633 |                 // the queue, exactly like the Alt+Enter `follow_up` path above.\n  2634 |                 // Routed through `handle_dequeue` (not the raw restore) so the\n  2635 |                 // `Restored N queued message(s)` status note fires, mirroring\n  2636 |                 // upstream's `handleDequeue`.\n  2637 |                 tokio::spawn(handle_dequeue(\n  2638 |                     lane_for_key.clone(),\n  2639 |                     editor_for_key.clone(),\n  2640 |                     state_for_key.clone(),\n  2641 |                     tui_for_key.clone(),\n  2642 |                 ));\n  2643 |                 continue;\n  2644 |             }\n  2645 | \n  2646 |             // `app.message.followUp` (Alt+Enter; Ctrl+Q and Alt+Enter on\n  2647 |             // Windows) queues a follow-up while a run is active. It is handled\n  2648 |             // here because Editor treats only a bare Enter as submit; when idle\n  2649 |             // the same key keeps the normal prompt behavior.\n  2650 |             if keybinding_matches(\n  2651 |                 &keybindings_for_key,\n  2652 |                 &key,\n  2653 |                 ice_tui::keybindings::keys::MESSAGE_FOLLOW_UP,\n  2654 |             ) {\n  2655 |                 let prompt = editor_for_key.get_expanded_text().trim().to_string();\n  2656 |                 if prompt.is_empty() && state_for_key.pending_images.lock().unwrap().is_empty() {\n  2657 |                     continue;\n  2658 |                 }\n  2659 |                 editor_for_key.clear();\n  2660 |                 let status = *state_for_key.status.lock().unwrap();\n  2661 |                 if status == RunStatus::Idle {\n  2662 |                     if state_for_key.try_start_working() {\n  2663 |                         // Direct send: the harness emits no user `message_start`\n  2664 |                         // for it, so render the bubble here (see the submit\n  2665 |                         // handler in `interactive_tui`).\n  2666 |                         add_user_message(&state_for_key.chat_container, &prompt);\n  2667 |                         push_history(&state_for_key, &prompt);\n  2668 |                         let _ = tx_for_key.send(TuiMessage::UserInput(\n  2669 |                             prompt,\n  2670 |                             state_for_key.take_pending_images(),\n  2671 |                         ));\n  2672 |                     }\n  2673 |                 } else {\n  2674 |                     // Follow-ups are echoed by the loop's\n  2675 |                     // `AgentEvent::MessageStart` once they are consumed; while\n  2676 |                     // they wait, the pending-messages display shows them.\n  2677 |                     let images = state_for_key.take_pending_images();\n  2678 |                     let message = user_message_with_images(&prompt, images.clone());\n  2679 |                     let lane = lane_for_key.clone();\n  2680 |                     let chat = state_for_key.chat_container.clone();\n  2681 |                     let tui = tui_for_key.clone();\n  2682 |                     let state = state_for_key.clone();\n  2683 |                     tokio::spawn(async move {\n  2684 |                         if let Err(error) = lane.follow_up(message).await {\n  2685 |                             state.restore_pending_images(images);\n  2686 |                             add_error_message(&chat, &format!(\"Could not queue message: {error}\"));\n  2687 |                             tui.request_render(false);\n  2688 |                             return;\n  2689 |                         }\n  2690 |                         refresh_pending_messages(&state, &lane).await;\n  2691 |                         tui.request_render(false);\n  2692 |                     });\n  2693 |                 }\n  2694 |                 tui_for_key.request_render(false);\n  2695 |                 continue;\n  2696 |             }\n  2697 | \n  2698 |             // Windows' console backend has no Event::Paste. Assemble text keys\n  2699 |             // into one payload; only absorb Enter when another key is queued\n  2700 |             // or the clipboard confirms a trailing pasted newline. A standalone\n  2701 |             // Enter must reach Editor::handle_key so it submits normally.\n  2702 |             if cfg!(windows) {\n  2703 |                 let text_key = match key.code {\n  2704 |                     KeyCode::Char(c)\n  2705 |                         if !key\n  2706 |                             .modifiers\n  2707 |                             .intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) =>\n  2708 |                     {\n  2709 |                         Some(c)\n  2710 |                     }\n  2711 |                     _ => None,\n  2712 |                 };\n  2713 |                 if let Some(ch) = text_key {\n  2714 |                     if ch == '\\r' || ch == '\\n' {\n  2715 |                         // Treat these the same as KeyCode::Enter below."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/agent_session.rs",
+      "total_lines": 613,
+      "sha256": "8a0e784cd1365aefdf2b60d16aa5d3dd10916d19a66ebbd75e8fed3134e93ea7",
+      "ranges": [
+        [
+          145,
+          188
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 44,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "   145 |     }\n   146 | \n   147 |     /// The active scoped-model set (`[]` → the full catalog is in play).\n   148 |     pub fn scoped_models(&self) -> &[ScopedModel] {\n   149 |         &self.scoped_models\n   150 |     }\n   151 | \n   152 |     // -- prompt / continue / queue -------------------------------------------\n   153 | \n   154 |     /// Send a prompt with optional image attachments. Mirrors TS\n   155 |     /// `AgentSession.prompt`.\n   156 |     pub async fn prompt(&self, text: &str, images: Vec<ImageContent>) -> HarnessResult<RunResult> {\n   157 |         self.harness.prompt_text(text, images).await\n   158 |     }\n   159 | \n   160 |     /// Send an already-built user message. Mirrors TS\n   161 |     /// `AgentSession.sendUserMessage`.\n   162 |     pub async fn send_message(&self, message: AgentMessage) -> HarnessResult<RunResult> {\n   163 |         self.harness.prompt_message(message).await\n   164 |     }\n   165 | \n   166 |     /// Queue a steering message for the in-flight run. Mirrors TS\n   167 |     /// `AgentSession.steer`.\n   168 |     pub async fn steer(&self, message: AgentMessage) -> HarnessResult<()> {\n   169 |         self.harness.steer(message).await?;\n   170 |         Ok(())\n   171 |     }\n   172 | \n   173 |     /// Queue a follow-up message for after the in-flight run. Mirrors TS\n   174 |     /// `AgentSession.followUp`.\n   175 |     pub async fn follow_up(&self, message: AgentMessage) -> HarnessResult<()> {\n   176 |         self.harness.follow_up(message).await?;\n   177 |         Ok(())\n   178 |     }\n   179 | \n   180 |     /// Abort the in-flight run. Mirrors TS `AgentSession.abort`.\n   181 |     pub async fn abort(&self) -> HarnessResult<()> {\n   182 |         self.harness.abort().await?;\n   183 |         Ok(())\n   184 |     }\n   185 | \n   186 |     // -- model / thinking ----------------------------------------------------\n   187 | \n   188 |     /// The current model."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          738,
+          770
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 33,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "   738 | pub(super) fn push_history(state: &Arc<TuiState>, text: &str) {\n   739 |     let trimmed = text.trim().to_string();\n   740 |     if trimmed.is_empty() {\n   741 |         return;\n   742 |     }\n   743 |     let mut history = state.history.lock().unwrap();\n   744 |     if history.first() == Some(&trimmed) {\n   745 |         return;\n   746 |     }\n   747 |     history.insert(0, trimmed);\n   748 |     history.truncate(HISTORY_LIMIT);\n   749 |     *state.history_index.lock().unwrap() = -1;\n   750 |     *state.history_draft.lock().unwrap() = None;\n   751 | }\n   752 | \n   753 | /// Submit a draft as a user prompt through the *same* path the Enter key takes:\n   754 | /// render the user bubble, record history, then hand the text to the main loop\n   755 | /// as [`TuiMessage::UserInput`]. Using the editor path (rather than a direct\n   756 | /// `SendUserMessage`) is what makes a voice transcription show up as a user\n   757 | /// message — the harness emits no user `message_start` for a directly-sent\n   758 | /// prompt.\n   759 | pub(super) fn submit_draft(\n   760 |     state: &Arc<TuiState>,\n   761 |     tx: &mpsc::UnboundedSender<TuiMessage>,\n   762 |     text: &str,\n   763 | ) {\n   764 |     if text.trim().is_empty() || !state.try_start_working() {\n   765 |         return;\n   766 |     }\n   767 |     add_user_message(&state.chat_container, text);\n   768 |     if let Some(tui) = &state.tui {\n   769 |         if let Some(scroll) = tui.get_primary_scroll_view() {\n   770 |             scroll.scroll_to_end();"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          833,
+          890
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 58,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "   833 | pub(super) fn navigate_history(state: &Arc<TuiState>, editor: &Arc<Editor>, direction: i32) {\n   834 |     let history = state.history.lock().unwrap();\n   835 |     if history.is_empty() {\n   836 |         return;\n   837 |     }\n   838 |     let mut index = state.history_index.lock().unwrap();\n   839 |     let new_index = *index - direction as isize;\n   840 |     if new_index < -1 || new_index >= history.len() as isize {\n   841 |         return;\n   842 |     }\n   843 |     if *index == -1 && new_index >= 0 {\n   844 |         // Entering browse mode: stash the current input.\n   845 |         *state.history_draft.lock().unwrap() = Some(editor.get_text());\n   846 |     }\n   847 |     *index = new_index;\n   848 |     if new_index == -1 {\n   849 |         // Exited browse mode: restore the draft (or clear if there was none).\n   850 |         let draft = state.history_draft.lock().unwrap().take();\n   851 |         match draft {\n   852 |             Some(d) => {\n   853 |                 let len = d.len();\n   854 |                 editor.set_text(&d);\n   855 |                 editor.set_cursor(0, len);\n   856 |             }\n   857 |             None => editor.set_text(\"\"),\n   858 |         }\n   859 |     } else {\n   860 |         let text = history[new_index as usize].clone();\n   861 |         let len = text.len();\n   862 |         editor.set_text(&text);\n   863 |         editor.set_cursor(0, len);\n   864 |     }\n   865 | }\n   866 | \n   867 | impl TuiState {\n   868 |     pub(super) fn cancel_js_preparation(&self) -> bool {\n   869 |         let cancellation = self.js_preparation_cancel.lock().unwrap().take();\n   870 |         if let Some(cancellation) = cancellation {\n   871 |             cancellation.cancel();\n   872 |             true\n   873 |         } else {\n   874 |             false\n   875 |         }\n   876 |     }\n   877 | \n   878 |     /// Whether a user-initiated `!command` shell run is currently active.\n   879 |     pub(super) fn user_bash_running(&self) -> bool {\n   880 |         self.user_bash_cancel.lock().unwrap().is_some()\n   881 |     }\n   882 | \n   883 |     /// Register a cancellation token for a new user bash run, cancelling any\n   884 |     /// previous one (mirrors `begin_js_preparation`).\n   885 |     pub(super) fn begin_user_bash(&self) -> CancellationToken {\n   886 |         let cancellation = CancellationToken::new();\n   887 |         if let Some(previous) = self\n   888 |             .user_bash_cancel\n   889 |             .lock()\n   890 |             .unwrap()"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/state.rs",
+      "total_lines": 1373,
+      "sha256": "0fa012c36282169f83da9ab4ed70458ec504e32d1cf2b3c3536c3773255c6ff7",
+      "ranges": [
+        [
+          957,
+          994
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 38,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "   957 |                 colors.muted.fg(&format!(\"Follow-up: {text}\")),\n   958 |                 1,\n   959 |                 0,\n   960 |             )));\n   961 |         }\n   962 |         container.add_child(Arc::new(Text::new(\n   963 |             colors.muted.fg(&format!(\n   964 |                 \"↳ {} to edit all queued messages\",\n   965 |                 self.dequeue_hint\n   966 |             )),\n   967 |             1,\n   968 |             0,\n   969 |         )));\n   970 |     }\n   971 | \n   972 |     /// Atomically reserve the single interactive run slot. The editor callback\n   973 |     /// runs on a different thread from the async prompt loop, so checking and\n   974 |     /// setting in separate steps would allow rapid Enter presses to queue more\n   975 |     /// than one operation.\n   976 |     pub(super) fn try_start_working(&self) -> bool {\n   977 |         let mut status = self.status.lock().unwrap();\n   978 |         if *status != RunStatus::Idle {\n   979 |             return false;\n   980 |         }\n   981 |         *status = RunStatus::Working;\n   982 |         drop(status);\n   983 |         self.apply_status(RunStatus::Working);\n   984 |         true\n   985 |     }\n   986 | \n   987 |     pub(super) fn apply_status(&self, status: RunStatus) {\n   988 |         match status {\n   989 |             RunStatus::Working => {\n   990 |                 // The status dock already shows the active loader. Keep the\n   991 |                 // footer focused on the model and shortcuts instead of\n   992 |                 // repeating a second `Working…` at the bottom of the TUI.\n   993 |                 self.footer.set_status(\"\");\n   994 |                 // Reflect the in-flight turn in the terminal window/tab title"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "total_lines": 5844,
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "ranges": [
+        [
+          4655,
+          4697
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 43,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "  4655 |                         &self.lane,\n  4656 |                         \"No active run to abort\",\n  4657 |                     ));\n  4658 |                 }\n  4659 |             }\n  4660 |         };\n  4661 |         Ok(AbortResult {\n  4662 |             run_id,\n  4663 |             steer,\n  4664 |             follow_up,\n  4665 |         })\n  4666 |     }\n  4667 | \n  4668 |     async fn steer(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  4669 |         // Mirror upstream's steering queue: enqueue unconditionally, even when\n  4670 |         // the run has ended. The loop drains via `getSteeringMessages` at each\n  4671 |         // tool-batch boundary, and a message that lands after the run finishes\n  4672 |         // stays queued for the next explicit run. This avoids the race between\n  4673 |         // `activeRun` clearing and the TUI's status check that used to send\n  4674 |         // messages to `next_run_queue` (which never auto-wakes).\n  4675 |         self.enqueue_message(normalize_user_images(message).await?, QueueKind::Steer)\n  4676 |             .await\n  4677 |     }\n  4678 | \n  4679 |     async fn follow_up(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  4680 |         // Same as steer: unconditional enqueue, drained by `getFollowUpMessages`\n  4681 |         // after the loop would otherwise stop.\n  4682 |         self.enqueue_message(normalize_user_images(message).await?, QueueKind::FollowUp)\n  4683 |             .await\n  4684 |     }\n  4685 | \n  4686 |     async fn next_run(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  4687 |         self.enqueue_message(normalize_user_images(message).await?, QueueKind::NextRun)\n  4688 |             .await\n  4689 |     }\n  4690 | \n  4691 |     async fn cancel_queued(&self, entry_id: &str) -> HarnessResult<CancelQueuedResult> {\n  4692 |         let _gate = self.message_writes.lock().await;\n  4693 |         // Scoped: the guard must not live into the awaits below (it is not\n  4694 |         // `Send`, and holding it across one makes the whole run future non-Send).\n  4695 |         let removed = {\n  4696 |             let inner = self.inner.lock().unwrap();\n  4697 |             if inner.closed {"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "total_lines": 5844,
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "ranges": [
+        [
+          5170,
+          5202
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 33,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "  5170 |         target_id: Option<&str>,\n  5171 |         summarize: bool,\n  5172 |         custom_instructions: Option<&str>,\n  5173 |         label: Option<&str>,\n  5174 |     ) -> HarnessResult<NavigationResult> {\n  5175 |         self.runner()\n  5176 |             .navigate_tree(target_id, summarize, custom_instructions, label)\n  5177 |             .await\n  5178 |     }\n  5179 | \n  5180 |     async fn abort(&self) -> HarnessResult<AbortResult> {\n  5181 |         self.runner().abort().await\n  5182 |     }\n  5183 | \n  5184 |     async fn steer(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  5185 |         self.runner().steer(message).await\n  5186 |     }\n  5187 | \n  5188 |     async fn follow_up(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  5189 |         self.runner().follow_up(message).await\n  5190 |     }\n  5191 | \n  5192 |     async fn next_run(&self, message: AgentMessage) -> HarnessResult<QueueResult> {\n  5193 |         self.runner().next_run(message).await\n  5194 |     }\n  5195 | \n  5196 |     async fn cancel_queued(&self, entry_id: &str) -> HarnessResult<CancelQueuedResult> {\n  5197 |         self.runner().cancel_queued(entry_id).await\n  5198 |     }\n  5199 | \n  5200 |     async fn queued_messages(&self) -> HarnessResult<QueuedMessages> {\n  5201 |         self.runner().queued_messages().await\n  5202 |     }"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/abort.ts",
+      "total_lines": 57,
+      "sha256": "bc6ae52d6a9ed9bfa0f677a10dc4484cea50bbb34cf0154942ed56b9536baeaa",
+      "ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 57,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "     1 | function abortReason(signal: AbortSignal): unknown {\n     2 | \tif (signal.reason !== undefined) return signal.reason;\n     3 | \tconst error = new Error(\"The operation was aborted\");\n     4 | \terror.name = \"AbortError\";\n     5 | \treturn error;\n     6 | }\n     7 | \n     8 | /** Link caller cancellation to an operation-owned controller; detach at settlement. */\n     9 | export function linkAbortSignal(controller: AbortController, signal?: AbortSignal): () => void {\n    10 | \tconst onAbort = () => controller.abort(signal?.reason);\n    11 | \tif (signal?.aborted) onAbort();\n    12 | \telse signal?.addEventListener(\"abort\", onAbort, { once: true });\n    13 | \treturn () => signal?.removeEventListener(\"abort\", onAbort);\n    14 | }\n    15 | \n    16 | /** Normalize an optional public signal without imposing a deadline. */\n    17 | export function operationSignal(signal?: AbortSignal): AbortSignal {\n    18 | \treturn signal ?? new AbortController().signal;\n    19 | }\n    20 | \n    21 | /** Stop waiting on abort while observing the abandoned operation through settlement. */\n    22 | export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSignal | undefined): Promise<T> {\n    23 | \tif (!signal) return operation;\n    24 | \tif (signal.aborted) {\n    25 | \t\tvoid operation.catch(() => {});\n    26 | \t\treturn Promise.reject(abortReason(signal));\n    27 | \t}\n    28 | \n    29 | \treturn new Promise<T>((resolve, reject) => {\n    30 | \t\tlet settled = false;\n    31 | \t\tconst cleanup = () => signal.removeEventListener(\"abort\", onAbort);\n    32 | \t\tconst onAbort = () => {\n    33 | \t\t\tif (settled) return;\n    34 | \t\t\tsettled = true;\n    35 | \t\t\tcleanup();\n    36 | \t\t\treject(abortReason(signal));\n    37 | \t\t};\n    38 | \n    39 | \t\tsignal.addEventListener(\"abort\", onAbort, { once: true });\n    40 | \t\tvoid operation.then(\n    41 | \t\t\t(value) => {\n    42 | \t\t\t\tif (settled) return;\n    43 | \t\t\t\tsettled = true;\n    44 | \t\t\t\tcleanup();\n    45 | \t\t\t\tresolve(value);\n    46 | \t\t\t},\n    47 | \t\t\t(error: unknown) => {\n    48 | \t\t\t\tif (settled) return;\n    49 | \t\t\t\tsettled = true;\n    50 | \t\t\t\tcleanup();\n    51 | \t\t\t\treject(error);\n    52 | \t\t\t},\n    53 | \t\t);\n    54 | \t\tif (signal.aborted) onAbort();\n    55 | \t});\n    56 | }\n    57 |"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/sleep.ts",
+      "total_lines": 19,
+      "sha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
+      "ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "owner": "/root",
+      "visible_lines": 19,
+      "notes": "Independently read numbered source; requested endpoints beyond EOF are not credited.",
+      "excerpt": "     1 | /**\n     2 |  * Sleep helper that respects abort signal.\n     3 |  */\n     4 | export function sleep(ms: number, signal?: AbortSignal): Promise<void> {\n     5 | \treturn new Promise((resolve, reject) => {\n     6 | \t\tif (signal?.aborted) {\n     7 | \t\t\treject(new Error(\"Aborted\"));\n     8 | \t\t\treturn;\n     9 | \t\t}\n    10 | \n    11 | \t\tconst timeout = setTimeout(resolve, ms);\n    12 | \n    13 | \t\tsignal?.addEventListener(\"abort\", () => {\n    14 | \t\t\tclearTimeout(timeout);\n    15 | \t\t\treject(new Error(\"Aborted\"));\n    16 | \t\t});\n    17 | \t});\n    18 | }\n    19 |"
+    }
+  ],
+  "findings": [
+    "Ordinary Editor submit records internal history, clears undo/redo, invokes its callback, then clears the draft without an admission result.",
+    "Busy steering and follow-up failures restore images but do not restore the cleared text or insert it into the pending queue.",
+    "Follow-up clears before reserving an idle run and ignores UserInput channel send failure; the busy branch does not push either ordinary history.",
+    "Main Up/Down interception uses TuiState.history, distinct from Editor internal history, so ordinary Up recall of a failed busy submission is not promised.",
+    "linkAbortSignal(controller, signal?) returns a detach closure; fallback is Error with name AbortError. raceWithAbortSignal observes rejected abandoned work; sleep retains its listener after normal timeout."
+  ]
+}

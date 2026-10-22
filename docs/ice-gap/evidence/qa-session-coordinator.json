@@ -1,0 +1,41 @@
+{
+  "area": "session",
+  "reviewer": "coordinator",
+  "status": "reviewed with corrections; global gates remain",
+  "independently_reviewed_entries": [
+    "SESSION-001",
+    "SESSION-004",
+    "SESSION-006",
+    "SESSION-015",
+    "SESSION-016",
+    "SESSION-025",
+    "SESSION-027",
+    "SESSION-035",
+    "SESSION-038"
+  ],
+  "checks": [
+    "All 28 additional tests read in full and hashes matched; see qa-session-test-closure.json.",
+    "Oldest-first bound bug checked against the exact TypeScript conformance fixture and Rust path construction.",
+    "Unicode search slicing, whole-state SQLite persistence, native compaction outcome mapping and raw JSONL export inspected as source.",
+    "Manual cancellation before save versus after the post-save hook reconciled; no invented source/test contradiction.",
+    "First-pass claims replaced with actual ICE_PORTING.md line ranges; general comparison corrections retained separately.",
+    "Manifest ledger/status, surface anchor, dependency request, Rust-only capability and open-question schemas normalized."
+  ],
+  "source_evidence": [
+    "ice:packages/agent/src/harness/session/testing/conformance.ts:220-289",
+    "ice:packages/agent/src/harness/session/memory.ts:173-222",
+    "rust:crates/ice-harness/src/session/state.rs:306-388",
+    "rust:crates/ice-harness/src/session/state.rs:546-580",
+    "rust:crates/ice-harness/src/session/search.rs:218-267",
+    "rust:crates/ice-harness/src/session/sqlite.rs:44-167",
+    "rust:crates/ice-cli/src/export.rs:49-117",
+    "rust:crates/ice-harness/src/agent_harness.rs:4283-4442",
+    "rust:crates/ice-cli/src/agent_session.rs:140-240",
+    "ice:packages/coding-agent/src/core/agent-session.ts:2290-2372"
+  ],
+  "limitations": [
+    "Independent review is a bounded review of the listed findings plus complete additional test backlog; it does not claim a second full reading of all subsystem source.",
+    "No tests, builds, application execution, network commands, or real home-state reads.",
+    "Global dependency/claim reconciliation and active-checkout relocation validation remain pending."
+  ]
+}

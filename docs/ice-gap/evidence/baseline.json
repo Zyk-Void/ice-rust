@@ -1,0 +1,85 @@
+{
+  "captured_at": "2026-10-19T19:19:25.487Z",
+  "scope": "git-tracked current worktree contents; all requested files plus nested storage/native runtime dependencies; generated model data kept as rows, not expanded",
+  "ts": {
+    "root": "/home/mewtwo/Zks/ice",
+    "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "branch": "void",
+    "status": "M  .gitmodules\nA  imported_extensions/ice-btw\n m imported_extensions/pi-workgraph\n M packages/coding-agent/CHANGELOG.md\n M packages/coding-agent/src/core/agent-session.ts\n M packages/coding-agent/src/core/extensions/runner.ts\n M packages/coding-agent/src/core/tools/bash-watch.ts\n M packages/coding-agent/src/modes/interactive/components/footer.ts\n M packages/coding-agent/src/modes/interactive/components/status-line.ts\n M packages/coding-agent/src/modes/interactive/interactive-mode.ts\n M packages/coding-agent/test/bash-watch.test.ts\n M packages/coding-agent/test/extensions-input-event.test.ts\n M packages/coding-agent/test/status-line.test.ts\n M packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts\n M packages/tui/src/components/editor.ts\n M packages/tui/src/editor-component.ts\n M packages/tui/test/editor.test.ts\n"
+  },
+  "rust": {
+    "root": "/home/mewtwo/Zks/ice-rust",
+    "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+    "branch": "main",
+    "status": "?? docs/ice-gap/\n"
+  },
+  "ledger_rows": 831,
+  "text_lines": 201471,
+  "generated_rows": 2,
+  "area_counts": {
+    "ai": {
+      "files": 67,
+      "lines": 16967
+    },
+    "agent": {
+      "files": 15,
+      "lines": 4754
+    },
+    "tools": {
+      "files": 33,
+      "lines": 8100
+    },
+    "session": {
+      "files": 48,
+      "lines": 17289
+    },
+    "settings": {
+      "files": 17,
+      "lines": 5999
+    },
+    "extensions": {
+      "files": 8,
+      "lines": 7431
+    },
+    "rpc-remote": {
+      "files": 63,
+      "lines": 15698
+    },
+    "tui": {
+      "files": 224,
+      "lines": 55672
+    },
+    "subagents": {
+      "files": 71,
+      "lines": 20516
+    },
+    "safe-verify": {
+      "files": 3,
+      "lines": 2005
+    },
+    "observability": {
+      "files": 8,
+      "lines": 5509
+    },
+    "cognee": {
+      "files": 8,
+      "lines": 4006
+    },
+    "blackhole": {
+      "files": 29,
+      "lines": 3207
+    },
+    "providers-auth": {
+      "files": 124,
+      "lines": 11868
+    },
+    "cli-packaging": {
+      "files": 31,
+      "lines": 7428
+    },
+    "misc": {
+      "files": 82,
+      "lines": 15022
+    }
+  }
+}

@@ -1,0 +1,4934 @@
+{
+  "area": "tools",
+  "complete": false,
+  "draft_complete": true,
+  "independent_qa": {
+    "status": "reviewed",
+    "reviewer": "/root",
+    "entries": [
+      "TOOLS-008",
+      "TOOLS-010",
+      "TOOLS-019",
+      "TOOLS-021",
+      "TOOLS-025",
+      "TOOLS-026",
+      "TOOLS-031"
+    ],
+    "notes": "Source-only independent checks confirm listed mechanisms and Rust deltas. Corrected unsupported fireId deduplication, normalized individual surface anchors, and connected known prerequisite IDs. Remaining cross-area consumer links are reconciled during global completion."
+  },
+  "entries": [
+    {
+      "id": "TOOLS-001",
+      "title": "Bash invocation schema, zero-timeout normalization and hard ceiling",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-048",
+        "AGENT-050",
+        "AGENT-052",
+        "SET-014"
+      ],
+      "size_min": 100,
+      "size_max": 180,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-048",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-050",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-052",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "SET-014",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-002",
+      "title": "Bash spawn rewriting and explicit session environment exposure",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AGENT-049",
+        "TOOLS-001"
+      ],
+      "size_min": 100,
+      "size_max": 180,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-049",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-003",
+      "title": "Immediate background launch with independent process cancellation ownership",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "TOOLS-001",
+        "TOOLS-002"
+      ],
+      "size_min": 220,
+      "size_max": 360,
+      "dependency_relations": [
+        {
+          "entry_id": "RPC-026",
+          "kind": "consumer",
+          "reason": "RPC exposes existing shell snapshots/control without owning registry state.",
+          "reviews": [
+            "ROOTDEP-009"
+          ]
+        },
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-004",
+      "title": "Foreground release by user, queued steering or elapsed-time threshold",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "SET-014",
+        "TOOLS-003",
+        "TOOLS-005"
+      ],
+      "size_min": 140,
+      "size_max": 230,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SET-014",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TUI-074",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-005",
+      "title": "Background shell snapshots, bounded retention and completion state machine",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "TOOLS-003",
+        "TOOLS-010"
+      ],
+      "size_min": 260,
+      "size_max": 420,
+      "dependency_relations": [
+        {
+          "entry_id": "RPC-026",
+          "kind": "consumer",
+          "reason": "RPC exposes existing shell snapshots/control without owning registry state.",
+          "reviews": [
+            "ROOTDEP-009"
+          ]
+        },
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-006",
+      "title": "Incremental bash_output reads and steering-interruptible waits",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "TOOLS-005"
+      ],
+      "size_min": 180,
+      "size_max": 280,
+      "dependency_relations": [
+        {
+          "entry_id": "RPC-026",
+          "kind": "consumer",
+          "reason": "RPC exposes existing shell snapshots/control without owning registry state.",
+          "reviews": [
+            "ROOTDEP-009"
+          ]
+        },
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-007",
+      "title": "Bounded background-log tail and grep without consuming incremental output",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-010"
+      ],
+      "size_min": 170,
+      "size_max": 280,
+      "dependency_relations": [
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-006",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-008",
+      "title": "Stopping running shells, lingering process groups and session disposal",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-052",
+        "AGENT-054",
+        "TOOLS-003",
+        "TOOLS-005"
+      ],
+      "size_min": 140,
+      "size_max": 240,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-052",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-054",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "RPC-026",
+          "kind": "consumer",
+          "reason": "RPC exposes existing shell snapshots/control without owning registry state.",
+          "reviews": [
+            "ROOTDEP-009"
+          ]
+        },
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-009",
+      "title": "Approved, byte-bounded stdin for a running background shell",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "SET-003",
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-014",
+        "TOOLS-003",
+        "TOOLS-005"
+      ],
+      "size_min": 180,
+      "size_max": 290,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SET-003",
+          "kind": "prerequisite",
+          "reason": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-010"
+          ]
+        },
+        {
+          "entry_id": "SET-007",
+          "kind": "prerequisite",
+          "reason": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary.",
+          "reviews": [
+            "ROOTDEP-010"
+          ]
+        },
+        {
+          "entry_id": "SET-008",
+          "kind": "prerequisite",
+          "reason": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-010"
+          ]
+        },
+        {
+          "entry_id": "SET-009",
+          "kind": "prerequisite",
+          "reason": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary.",
+          "reviews": [
+            "ROOTDEP-010"
+          ]
+        },
+        {
+          "entry_id": "SET-014",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-003",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-010",
+      "title": "Raw output accumulation, bounded live log spill and trustworthy full-output paths",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053",
+        "TOOLS-019"
+      ],
+      "size_min": 260,
+      "size_max": 420,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-050",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-051",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-053",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-011",
+      "title": "Session-local bash_watch management and exact watch schemas",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "TOOLS-005"
+      ],
+      "size_min": 180,
+      "size_max": 290,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-012",
+      "title": "Literal pattern watches with cross-chunk matching and rearm semantics",
+      "status": "missing",
+      "priority": "P1",
+      "dependencies": [
+        "TOOLS-005",
+        "TOOLS-011"
+      ],
+      "size_min": 70,
+      "size_max": 120,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-013",
+      "title": "Silence, prompt and interval watches with automatic defaults",
+      "status": "missing",
+      "priority": "P0",
+      "dependencies": [
+        "SET-014",
+        "TOOLS-005",
+        "TOOLS-011"
+      ],
+      "size_min": 180,
+      "size_max": 290,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-025",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "SET-014",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-005",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-011",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-014",
+      "title": "Bash streaming updates, elapsed-time rendering and final-result formatting",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "TOOLS-001",
+        "TOOLS-010"
+      ],
+      "size_min": 140,
+      "size_max": 230,
+      "dependency_relations": [
+        {
+          "entry_id": "TOOLS-001",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TUI-031",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        },
+        {
+          "entry_id": "TUI-032",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        },
+        {
+          "entry_id": "TUI-035",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-015",
+      "title": "Harness shell capture sanitation, early spill and failure ordering",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-047",
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053",
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "size_min": 160,
+      "size_max": 260,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-047",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-050",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-051",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-053",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-010",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-016",
+      "title": "User Bash execution helper and its distinct output contract",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "TOOLS-002",
+        "TOOLS-015",
+        "TOOLS-019"
+      ],
+      "size_min": 140,
+      "size_max": 240,
+      "dependency_relations": [
+        {
+          "entry_id": "SESSION-024",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-002",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-015",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-017",
+      "title": "Direct argv execution with capture, cancellation and timeout result",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053"
+      ],
+      "size_min": 130,
+      "size_max": 220,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-050",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-051",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-052",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "AGENT-053",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-001"
+          ]
+        },
+        {
+          "entry_id": "EXT-056",
+          "kind": "shared-contract",
+          "reason": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+          "reviews": [
+            "ROOTDEP-005"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-018",
+      "title": "Tool factories, definition adapters and execution context",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "AGENT-012",
+        "AGENT-014",
+        "AGENT-016"
+      ],
+      "size_min": 100,
+      "size_max": 170,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-012",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-014",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "AGENT-016",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "EXT-035",
+          "kind": "shared-contract",
+          "reason": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+          "reviews": [
+            "ROOTDEP-005"
+          ]
+        },
+        {
+          "entry_id": "SESSION-023",
+          "kind": "consumer",
+          "reason": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+          "reviews": [
+            "ROOTDEP-002"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-019",
+      "title": "Exact truncation metadata, UTF-8 boundaries and line numbering",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [],
+      "size_min": 80,
+      "size_max": 140,
+      "dependency_relations": []
+    },
+    {
+      "id": "TOOLS-020",
+      "title": "Tool path normalization and ordered read-path fallback",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AGENT-038",
+        "AGENT-043",
+        "AGENT-045"
+      ],
+      "size_min": 70,
+      "size_max": 130,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-038",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "AGENT-045",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-021",
+      "title": "Canonical-path mutation queue, admission order and alias ownership",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-045",
+        "TOOLS-020"
+      ],
+      "size_min": 140,
+      "size_max": 240,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-045",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-022",
+      "title": "Read-tool pagination, cancellation and model-aware image handoff",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AGENT-040",
+        "SET-016",
+        "TOOLS-019",
+        "TOOLS-020",
+        "TOOLS-023"
+      ],
+      "size_min": 110,
+      "size_max": 190,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-040",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "SET-016",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-023",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-023",
+      "title": "Image signatures, conversion, resizing and coordinate hints",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "SET-016"
+      ],
+      "size_min": 180,
+      "size_max": 310,
+      "dependency_relations": [
+        {
+          "entry_id": "CLI-009",
+          "kind": "shared-contract",
+          "reason": "Attachment assembly consumes image processing. Managed fd/rg installation is MISC-010, not MISC-001 release metadata.",
+          "reviews": [
+            "ROOTDEP-007"
+          ]
+        },
+        {
+          "entry_id": "SET-016",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-003"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-024",
+      "title": "Write-tool I/O ordering, abort bracketing and result text",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "AGENT-041",
+        "AGENT-046",
+        "TOOLS-020",
+        "TOOLS-021"
+      ],
+      "size_min": 40,
+      "size_max": 90,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-041",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "AGENT-046",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-025",
+      "title": "Atomic edit batches with exact-match precedence and localized fuzzy normalization",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "AGENT-039",
+        "AGENT-041",
+        "TOOLS-020",
+        "TOOLS-021"
+      ],
+      "size_min": 180,
+      "size_max": 300,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-039",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "AGENT-041",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "EXT-035",
+          "kind": "shared-contract",
+          "reason": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+          "reviews": [
+            "ROOTDEP-005"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-021",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-026",
+      "title": "Trustworthy edit diffs and asynchronous preflight preview",
+      "status": "partial",
+      "priority": "P0",
+      "dependencies": [
+        "TOOLS-025"
+      ],
+      "size_min": 180,
+      "size_max": 310,
+      "dependency_relations": [
+        {
+          "entry_id": "EXT-036",
+          "kind": "shared-contract",
+          "reason": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+          "reviews": [
+            "ROOTDEP-005"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-025",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TUI-031",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        },
+        {
+          "entry_id": "TUI-036",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-027",
+      "title": "Per-tool call and result renderers with streaming content previews",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "TOOLS-022",
+        "TOOLS-024",
+        "TOOLS-026",
+        "TOOLS-028",
+        "TOOLS-029",
+        "TOOLS-030"
+      ],
+      "size_min": 260,
+      "size_max": 430,
+      "dependency_relations": [
+        {
+          "entry_id": "EXT-036",
+          "kind": "shared-contract",
+          "reason": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+          "reviews": [
+            "ROOTDEP-005"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-022",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-024",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-026",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-028",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-029",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-030",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TUI-031",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        },
+        {
+          "entry_id": "TUI-032",
+          "kind": "consumer",
+          "reason": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+          "reviews": [
+            "ROOTDEP-004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-028",
+      "title": "Find glob semantics, hierarchical ignore rules and result boundaries",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "MISC-010",
+        "TOOLS-019",
+        "TOOLS-020"
+      ],
+      "size_min": 220,
+      "size_max": 380,
+      "dependency_relations": [
+        {
+          "entry_id": "MISC-010",
+          "kind": "prerequisite",
+          "reason": "Additional exact contract dependency confirmed during coordinator closeout.",
+          "reviews": [
+            "ROOTDEP-007",
+            "coordinator-additional"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-029",
+      "title": "Grep match stream, context formatting and error/cancellation semantics",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "MISC-010",
+        "TOOLS-019",
+        "TOOLS-020"
+      ],
+      "size_min": 230,
+      "size_max": 400,
+      "dependency_relations": [
+        {
+          "entry_id": "MISC-010",
+          "kind": "prerequisite",
+          "reason": "Additional exact contract dependency confirmed during coordinator closeout.",
+          "reviews": [
+            "ROOTDEP-007",
+            "coordinator-additional"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-030",
+      "title": "Directory listing symlinks, collation and per-entry failure handling",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [
+        "AGENT-043",
+        "AGENT-044",
+        "TOOLS-019",
+        "TOOLS-020"
+      ],
+      "size_min": 90,
+      "size_max": 170,
+      "dependency_relations": [
+        {
+          "entry_id": "AGENT-043",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "AGENT-044",
+          "kind": "prerequisite",
+          "reason": "Concrete owner IDs verified against current entry contracts.",
+          "reviews": [
+            "original-entry",
+            "ROOTDEP-006"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-019",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        },
+        {
+          "entry_id": "TOOLS-020",
+          "kind": "prerequisite",
+          "reason": "Previously authored entry dependency, preserved unless explicitly reclassified by the source-based review.",
+          "reviews": [
+            "original-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOOLS-031",
+      "title": "Stdout isolation, queued UTF-8 byte limits and transient sink retries",
+      "status": "partial",
+      "priority": "P1",
+      "dependencies": [],
+      "size_min": 160,
+      "size_max": 280,
+      "dependency_relations": [
+        {
+          "entry_id": "MISC-015",
+          "kind": "consumer",
+          "reason": "Mode adapters own stdout takeover/restore around the shared byte-bounded writer.",
+          "reviews": [
+            "ROOTDEP-008"
+          ]
+        },
+        {
+          "entry_id": "MISC-016",
+          "kind": "consumer",
+          "reason": "Mode adapters own stdout takeover/restore around the shared byte-bounded writer.",
+          "reviews": [
+            "ROOTDEP-008"
+          ]
+        },
+        {
+          "entry_id": "RPC-017",
+          "kind": "consumer",
+          "reason": "Mode adapters own stdout takeover/restore around the shared byte-bounded writer.",
+          "reviews": [
+            "ROOTDEP-008"
+          ]
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/agent/src/harness/tools/bash.ts",
+      "entry_ids": [
+        "TOOLS-001",
+        "TOOLS-015"
+      ],
+      "status": "mapped",
+      "notes": "All 161 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/edit-diff.ts",
+      "entry_ids": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "status": "mapped",
+      "notes": "All 500 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/edit.ts",
+      "entry_ids": [
+        "TOOLS-021",
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "status": "mapped",
+      "notes": "All 127 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/file-mutation-queue.ts",
+      "entry_ids": [
+        "TOOLS-021"
+      ],
+      "status": "mapped",
+      "notes": "All 56 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/image.ts",
+      "entry_ids": [
+        "TOOLS-023"
+      ],
+      "status": "mapped",
+      "notes": "All 104 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/index.ts",
+      "entry_ids": [
+        "TOOLS-018"
+      ],
+      "status": "mapped",
+      "notes": "All 23 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/path-utils.ts",
+      "entry_ids": [
+        "TOOLS-020"
+      ],
+      "status": "mapped",
+      "notes": "All 30 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/read.ts",
+      "entry_ids": [
+        "TOOLS-019",
+        "TOOLS-020",
+        "TOOLS-022",
+        "TOOLS-023"
+      ],
+      "status": "mapped",
+      "notes": "All 144 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/tool-context.ts",
+      "entry_ids": [
+        "TOOLS-018"
+      ],
+      "status": "mapped",
+      "notes": "All 6 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/tools/write.ts",
+      "entry_ids": [
+        "TOOLS-021",
+        "TOOLS-024"
+      ],
+      "status": "mapped",
+      "notes": "All 39 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/utils/shell-output.ts",
+      "entry_ids": [
+        "TOOLS-010",
+        "TOOLS-015",
+        "TOOLS-019"
+      ],
+      "status": "mapped",
+      "notes": "All 195 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/agent/src/harness/utils/truncate.ts",
+      "entry_ids": [
+        "TOOLS-019"
+      ],
+      "status": "mapped",
+      "notes": "All 350 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/bash-executor.ts",
+      "entry_ids": [
+        "TOOLS-016"
+      ],
+      "status": "mapped",
+      "notes": "All 156 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/exec.ts",
+      "entry_ids": [
+        "TOOLS-017"
+      ],
+      "status": "mapped",
+      "notes": "All 107 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/output-guard.ts",
+      "entry_ids": [
+        "TOOLS-031"
+      ],
+      "status": "mapped",
+      "notes": "All 147 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/bash-background.ts",
+      "entry_ids": [
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-007",
+        "TOOLS-008",
+        "TOOLS-009",
+        "TOOLS-010"
+      ],
+      "status": "mapped",
+      "notes": "All 687 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/bash-shells.ts",
+      "entry_ids": [
+        "TOOLS-006",
+        "TOOLS-007",
+        "TOOLS-008",
+        "TOOLS-009"
+      ],
+      "status": "mapped",
+      "notes": "All 300 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/bash-watch.ts",
+      "entry_ids": [
+        "TOOLS-011",
+        "TOOLS-012",
+        "TOOLS-013"
+      ],
+      "status": "mapped",
+      "notes": "All 492 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/bash.ts",
+      "entry_ids": [
+        "TOOLS-001",
+        "TOOLS-002",
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-010",
+        "TOOLS-014"
+      ],
+      "status": "mapped",
+      "notes": "All 749 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/edit-diff.ts",
+      "entry_ids": [
+        "TOOLS-025",
+        "TOOLS-026"
+      ],
+      "status": "mapped",
+      "notes": "All 594 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/edit.ts",
+      "entry_ids": [
+        "TOOLS-021",
+        "TOOLS-025",
+        "TOOLS-026",
+        "TOOLS-027"
+      ],
+      "status": "mapped",
+      "notes": "All 437 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/file-mutation-queue.ts",
+      "entry_ids": [
+        "TOOLS-021"
+      ],
+      "status": "mapped",
+      "notes": "All 78 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/find.ts",
+      "entry_ids": [
+        "TOOLS-027",
+        "TOOLS-028"
+      ],
+      "status": "mapped",
+      "notes": "All 377 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/grep.ts",
+      "entry_ids": [
+        "TOOLS-027",
+        "TOOLS-029"
+      ],
+      "status": "mapped",
+      "notes": "All 385 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/index.ts",
+      "entry_ids": [
+        "TOOLS-018"
+      ],
+      "status": "mapped",
+      "notes": "All 196 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/ls.ts",
+      "entry_ids": [
+        "TOOLS-027",
+        "TOOLS-030"
+      ],
+      "status": "mapped",
+      "notes": "All 225 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "entry_ids": [
+        "TOOLS-010",
+        "TOOLS-019"
+      ],
+      "status": "mapped",
+      "notes": "All 291 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/path-utils.ts",
+      "entry_ids": [
+        "TOOLS-020"
+      ],
+      "status": "mapped",
+      "notes": "All 118 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/read.ts",
+      "entry_ids": [
+        "TOOLS-019",
+        "TOOLS-022",
+        "TOOLS-023",
+        "TOOLS-027"
+      ],
+      "status": "mapped",
+      "notes": "All 351 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/render-utils.ts",
+      "entry_ids": [
+        "TOOLS-027"
+      ],
+      "status": "mapped",
+      "notes": "All 85 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "entry_ids": [
+        "TOOLS-018"
+      ],
+      "status": "mapped",
+      "notes": "All 47 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/truncate.ts",
+      "entry_ids": [
+        "TOOLS-019"
+      ],
+      "status": "mapped",
+      "notes": "All 276 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/write.ts",
+      "entry_ids": [
+        "TOOLS-021",
+        "TOOLS-024",
+        "TOOLS-027"
+      ],
+      "status": "mapped",
+      "notes": "All 267 ledger lines were actually read; see tools-read-evidence.json for merged ranges and verified SHA-256. Terminal empty split line, if present, is not additional source behavior."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "tools",
+      "name": "bash",
+      "ice_ref": "packages/agent/src/harness/tools/bash.ts:55",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-001",
+      "candidate_ids": [
+        "C000074"
+      ],
+      "notes": "Both harness and coding-agent export bash; foreground behavior exists. Immediate background/release is TOOLS-003/004, raw versus harness capture is TOOLS-010/015, and rendering is TOOLS-014. Full compared ranges: ice:packages/agent/src/harness/tools/bash.ts:55-55; ice:packages/coding-agent/src/core/tools/bash.ts:387-387; rust:crates/ice-tools/src/tools/bash.rs:1-426"
+    },
+    {
+      "category": "tools",
+      "name": "bash",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:387",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-001",
+      "candidate_ids": [
+        "C000736"
+      ],
+      "notes": "Both harness and coding-agent export bash; foreground behavior exists. Immediate background/release is TOOLS-003/004, raw versus harness capture is TOOLS-010/015, and rendering is TOOLS-014. Full compared ranges: ice:packages/agent/src/harness/tools/bash.ts:55-55; ice:packages/coding-agent/src/core/tools/bash.ts:387-387; rust:crates/ice-tools/src/tools/bash.rs:1-426"
+    },
+    {
+      "category": "tools",
+      "name": "edit",
+      "ice_ref": "packages/agent/src/harness/tools/edit.ts:83",
+      "rust_ref": "crates/ice-tools/src/tools/edit.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-025",
+      "candidate_ids": [
+        "C000075"
+      ],
+      "notes": "Both TS tool definitions are covered. Rust has edits but differs from current coding-agent exact-match precedence, normalization locality and preview; TOOLS-021/026/027 cover queue and display. Full compared ranges: ice:packages/agent/src/harness/tools/edit.ts:83-83; ice:packages/coding-agent/src/core/tools/edit.ts:293-293; rust:crates/ice-tools/src/tools/edit.rs:1-294; rust:crates/ice-tools/src/tools/edit_diff.rs:1-425"
+    },
+    {
+      "category": "tools",
+      "name": "edit",
+      "ice_ref": "packages/coding-agent/src/core/tools/edit.ts:293",
+      "rust_ref": "crates/ice-tools/src/tools/edit.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-025",
+      "candidate_ids": [
+        "C000738"
+      ],
+      "notes": "Both TS tool definitions are covered. Rust has edits but differs from current coding-agent exact-match precedence, normalization locality and preview; TOOLS-021/026/027 cover queue and display. Full compared ranges: ice:packages/agent/src/harness/tools/edit.ts:83-83; ice:packages/coding-agent/src/core/tools/edit.ts:293-293; rust:crates/ice-tools/src/tools/edit.rs:1-294; rust:crates/ice-tools/src/tools/edit_diff.rs:1-425"
+    },
+    {
+      "category": "tools",
+      "name": "read",
+      "ice_ref": "packages/agent/src/harness/tools/read.ts:49",
+      "rust_ref": "crates/ice-tools/src/tools/read.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-022",
+      "candidate_ids": [
+        "C000077"
+      ],
+      "notes": "Both TS definitions are covered. Existing Rust read is partial for paging metadata, fallback, cancellation, model context and image handoff; image transforms are TOOLS-023. Full compared ranges: ice:packages/agent/src/harness/tools/read.ts:49-49; ice:packages/coding-agent/src/core/tools/read.ts:210-210; rust:crates/ice-tools/src/tools/read.rs:1-350"
+    },
+    {
+      "category": "tools",
+      "name": "read",
+      "ice_ref": "packages/coding-agent/src/core/tools/read.ts:210",
+      "rust_ref": "crates/ice-tools/src/tools/read.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-022",
+      "candidate_ids": [
+        "C000748"
+      ],
+      "notes": "Both TS definitions are covered. Existing Rust read is partial for paging metadata, fallback, cancellation, model context and image handoff; image transforms are TOOLS-023. Full compared ranges: ice:packages/agent/src/harness/tools/read.ts:49-49; ice:packages/coding-agent/src/core/tools/read.ts:210-210; rust:crates/ice-tools/src/tools/read.rs:1-350"
+    },
+    {
+      "category": "tools",
+      "name": "write",
+      "ice_ref": "packages/agent/src/harness/tools/write.ts:21",
+      "rust_ref": "crates/ice-tools/src/tools/write.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-024",
+      "candidate_ids": [
+        "C000078"
+      ],
+      "notes": "Both TS definitions are covered. Rust write already exists; admission/alias order and renderer differences are TOOLS-021/027. Full compared ranges: ice:packages/agent/src/harness/tools/write.ts:21-21; ice:packages/coding-agent/src/core/tools/write.ts:187-187; rust:crates/ice-tools/src/tools/write.rs:1-154"
+    },
+    {
+      "category": "tools",
+      "name": "write",
+      "ice_ref": "packages/coding-agent/src/core/tools/write.ts:187",
+      "rust_ref": "crates/ice-tools/src/tools/write.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-024",
+      "candidate_ids": [
+        "C000751"
+      ],
+      "notes": "Both TS definitions are covered. Rust write already exists; admission/alias order and renderer differences are TOOLS-021/027. Full compared ranges: ice:packages/agent/src/harness/tools/write.ts:21-21; ice:packages/coding-agent/src/core/tools/write.ts:187-187; rust:crates/ice-tools/src/tools/write.rs:1-154"
+    },
+    {
+      "category": "tools",
+      "name": "bash_output",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-shells.ts:92",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-006",
+      "candidate_ids": [
+        "C000732"
+      ],
+      "notes": "No model-facing retained-shell output tool. This surface includes incremental cursor and interruptible wait; bounded full-log tail/grep is TOOLS-007. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-shells.ts:92-92; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/tools/bash.rs:1-426"
+    },
+    {
+      "category": "tools",
+      "name": "bash_kill",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-shells.ts:218",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-008",
+      "candidate_ids": [
+        "C000733"
+      ],
+      "notes": "Foreground cancellation exists but no named registry stop, lingering-group stop or per-shell cleanup API. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-shells.ts:218-218; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/os_env.rs:903-1075"
+    },
+    {
+      "category": "tools",
+      "name": "bash_input",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-shells.ts:259",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-009",
+      "candidate_ids": [
+        "C000734"
+      ],
+      "notes": "No retained writable shell stream or model-facing input approval/budget tool; command transport via stdin is not this feature. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-shells.ts:259-259; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/env.rs:96-111"
+    },
+    {
+      "category": "tools",
+      "name": "bash_watch",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-watch.ts:146",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-011",
+      "candidate_ids": [
+        "C000735"
+      ],
+      "notes": "Missing session-local watch tool/registry; literal matching is TOOLS-012, timed/default triggers TOOLS-013. Session owns delivery and wake. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-watch.ts:146-146; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/tools/bash.rs:1-426"
+    },
+    {
+      "category": "tools",
+      "name": "find",
+      "ice_ref": "packages/coding-agent/src/core/tools/find.ts:124",
+      "rust_ref": "crates/ice-tools/src/tools/find.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-028",
+      "candidate_ids": [
+        "C000741"
+      ],
+      "notes": "Present Rust in-process search differs in glob normalization, gitignore hierarchy, limits and cancellation; no requirement to discard the native search design. Full compared ranges: ice:packages/coding-agent/src/core/tools/find.ts:124-124; rust:crates/ice-tools/src/tools/find.rs:1-300"
+    },
+    {
+      "category": "tools",
+      "name": "grep",
+      "ice_ref": "packages/coding-agent/src/core/tools/grep.ts:129",
+      "rust_ref": "crates/ice-tools/src/tools/grep.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-029",
+      "candidate_ids": [
+        "C000742"
+      ],
+      "notes": "Present Rust grep differs from rg JSON match/context behavior, ignore rules, encoding and output boundaries. Full compared ranges: ice:packages/coding-agent/src/core/tools/grep.ts:129-129; rust:crates/ice-tools/src/tools/grep.rs:1-436"
+    },
+    {
+      "category": "tools",
+      "name": "ls",
+      "ice_ref": "packages/coding-agent/src/core/tools/ls.ts:101",
+      "rust_ref": "crates/ice-tools/src/tools/ls.rs:1",
+      "status": "partial",
+      "entry_id": "TOOLS-030",
+      "candidate_ids": [
+        "C000744"
+      ],
+      "notes": "Present directory listing differs for root/entry symlinks, sorting and entry-level stat failures. Full compared ranges: ice:packages/coding-agent/src/core/tools/ls.ts:101-101; rust:crates/ice-tools/src/tools/ls.rs:1-226; rust:crates/ice-tools/src/os_env.rs:534-632"
+    },
+    {
+      "category": "paths",
+      "name": "harness Bash temporary full-output log (bash-*.log)",
+      "ice_ref": "packages/agent/src/harness/utils/shell-output.ts:75",
+      "rust_ref": "crates/ice-tools/src/shell_output.rs:319",
+      "status": "partial",
+      "entry_id": "TOOLS-015",
+      "candidate_ids": [
+        "C000080"
+      ],
+      "notes": "These expressions refer to an environment-allocated log artifact, not fixed configuration paths: append to an existing fullOutputPath or initialize newly allocated tempFile.value. Sanitized incremental spill/failure ordering is TOOLS-015; loss risk TOOLS-010. Full compared ranges: ice:packages/agent/src/harness/utils/shell-output.ts:75-75; ice:packages/agent/src/harness/utils/shell-output.ts:88-88; rust:crates/ice-tools/src/shell_output.rs:319-343; rust:crates/ice-tools/src/os_env.rs:702-750"
+    },
+    {
+      "category": "paths",
+      "name": "harness Bash temporary full-output log (bash-*.log)",
+      "ice_ref": "packages/agent/src/harness/utils/shell-output.ts:88",
+      "rust_ref": "crates/ice-tools/src/shell_output.rs:319",
+      "status": "partial",
+      "entry_id": "TOOLS-015",
+      "candidate_ids": [
+        "C000081"
+      ],
+      "notes": "These expressions refer to an environment-allocated log artifact, not fixed configuration paths: append to an existing fullOutputPath or initialize newly allocated tempFile.value. Sanitized incremental spill/failure ordering is TOOLS-015; loss risk TOOLS-010. Full compared ranges: ice:packages/agent/src/harness/utils/shell-output.ts:75-75; ice:packages/agent/src/harness/utils/shell-output.ts:88-88; rust:crates/ice-tools/src/shell_output.rs:319-343; rust:crates/ice-tools/src/os_env.rs:702-750"
+    },
+    {
+      "category": "paths",
+      "name": "foreground spill log ownership on registry disposal",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:271",
+      "rust_ref": "crates/ice-tools/src/os_env.rs:702",
+      "status": "missing",
+      "entry_id": "TOOLS-008",
+      "candidate_ids": [
+        "C000727"
+      ],
+      "notes": "trackLog removes immediately after disposal or retains the path for disposal cleanup. Rust temporary-file allocation does not track/remove paths in FileSystem.cleanup. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:271-271; ice:packages/coding-agent/src/core/tools/bash-background.ts:581-581; rust:crates/ice-tools/src/os_env.rs:702-750"
+    },
+    {
+      "category": "paths",
+      "name": "foreground spill log ownership on registry disposal",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:581",
+      "rust_ref": "crates/ice-tools/src/os_env.rs:702",
+      "status": "missing",
+      "entry_id": "TOOLS-008",
+      "candidate_ids": [
+        "C000729"
+      ],
+      "notes": "trackLog removes immediately after disposal or retains the path for disposal cleanup. Rust temporary-file allocation does not track/remove paths in FileSystem.cleanup. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:271-271; ice:packages/coding-agent/src/core/tools/bash-background.ts:581-581; rust:crates/ice-tools/src/os_env.rs:702-750"
+    },
+    {
+      "category": "paths",
+      "name": "background full-output log queried by tail/grep",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:469",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-007",
+      "candidate_ids": [
+        "C000728"
+      ],
+      "notes": "C000728 stats shell.logPath for grep; C000730 is not an unknown public path: file.stat operates on the handle opened from the supplied log path at bash-background.ts:653. Query uses byte/line bounds without moving incremental output cursor. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:469-469; ice:packages/coding-agent/src/core/tools/bash-background.ts:655-655; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/shell_output.rs:319-343"
+    },
+    {
+      "category": "paths",
+      "name": "background full-output log queried by tail/grep",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:655",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-007",
+      "candidate_ids": [
+        "C000730"
+      ],
+      "notes": "C000728 stats shell.logPath for grep; C000730 is not an unknown public path: file.stat operates on the handle opened from the supplied log path at bash-background.ts:653. Query uses byte/line bounds without moving incremental output cursor. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:469-469; ice:packages/coding-agent/src/core/tools/bash-background.ts:655-655; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/shell_output.rs:319-343"
+    },
+    {
+      "category": "paths",
+      "name": "background shell log eviction/disposal",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:669",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-005",
+      "candidate_ids": [
+        "C000731"
+      ],
+      "notes": "shell.logPath is removed by removeLog on pruning/disposal; no corresponding retained-shell lifecycle. The same artifact is queried by TOOLS-007 and safely persisted by TOOLS-010. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:669-669; rust:crates/ice-tools/src/tools/mod.rs:1-27; rust:crates/ice-tools/src/os_env.rs:702-750"
+    },
+    {
+      "category": "environment",
+      "name": "ICE_SESSION_ID",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:220",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:146",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "Always set from sessionManager.getSessionId when exposeSessionEnvironment and context are supplied. Rust has env preparation/filtering hooks but no equivalent automatic five-field injection at this tool entrypoint. Session host injection requires the session owner's review; this disposition does not assert global absence. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:220-220; rust:crates/ice-tools/src/tools/bash.rs:146-159; rust:crates/ice-tools/src/os_env.rs:840-867"
+    },
+    {
+      "category": "environment",
+      "name": "ICE_SESSION_FILE",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:222",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:146",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "Set only when sessionManager.getSessionFile returns a value; this is environment propagation, not a new storage path. Rust has env preparation/filtering hooks but no equivalent automatic five-field injection at this tool entrypoint. Session host injection requires the session owner's review; this disposition does not assert global absence. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:222-222; rust:crates/ice-tools/src/tools/bash.rs:146-159; rust:crates/ice-tools/src/os_env.rs:840-867"
+    },
+    {
+      "category": "environment",
+      "name": "ICE_PROVIDER",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:224",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:146",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "Set from the current model provider when a model is available. Rust has env preparation/filtering hooks but no equivalent automatic five-field injection at this tool entrypoint. Session host injection requires the session owner's review; this disposition does not assert global absence. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:224-224; rust:crates/ice-tools/src/tools/bash.rs:146-159; rust:crates/ice-tools/src/os_env.rs:840-867"
+    },
+    {
+      "category": "environment",
+      "name": "ICE_MODEL",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:225",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:146",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "Set from the current model ID when a model is available. Rust has env preparation/filtering hooks but no equivalent automatic five-field injection at this tool entrypoint. Session host injection requires the session owner's review; this disposition does not assert global absence. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:225-225; rust:crates/ice-tools/src/tools/bash.rs:146-159; rust:crates/ice-tools/src/os_env.rs:840-867"
+    },
+    {
+      "category": "environment",
+      "name": "ICE_REASONING_LEVEL",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:227",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:146",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "Set only when context thinkingLevel is truthy. Rust has env preparation/filtering hooks but no equivalent automatic five-field injection at this tool entrypoint. Session host injection requires the session owner's review; this disposition does not assert global absence. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:227-227; rust:crates/ice-tools/src/tools/bash.rs:146-159; rust:crates/ice-tools/src/os_env.rs:840-867"
+    },
+    {
+      "category": "settings",
+      "name": "bashInputApproval (tool consumer)",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-shells.ts:265",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-009",
+      "candidate_ids": [],
+      "notes": "Tool consumes approval():ask|allow; it does not parse persisted settings. SET-014 owns shell-setting definitions/defaults and SET-007/008/009 own scoped persistence/precedence/writes; no-UI denial applies to ask. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-shells.ts:265-285; rust:crates/ice-tools/src/tools/mod.rs:1-27"
+    },
+    {
+      "category": "settings",
+      "name": "autoResizeImages (read-tool option consumer)",
+      "ice_ref": "packages/coding-agent/src/core/tools/read.ts:56",
+      "rust_ref": "crates/ice-cli/src/session.rs:1972",
+      "status": "partial",
+      "entry_id": "TOOLS-023",
+      "candidate_ids": [],
+      "notes": "Read-tool option defaults true and is passed to image processing; persistent settings/default precedence are assigned to settings/session. Rust already configures native image processing. This row records the consumer contract, not a new independent stored key. Full compared ranges: ice:packages/coding-agent/src/core/tools/read.ts:56-63; ice:packages/coding-agent/src/core/tools/read.ts:207-208; ice:packages/coding-agent/src/core/tools/read.ts:249-250; rust:crates/ice-cli/src/session.rs:1972-1981; rust:crates/ice-tools/src/image_processing.rs:1-485"
+    },
+    {
+      "category": "settings",
+      "name": "autoResizeImages (read-tool option consumer)",
+      "ice_ref": "packages/coding-agent/src/core/tools/read.ts:207",
+      "rust_ref": "crates/ice-cli/src/session.rs:1972",
+      "status": "partial",
+      "entry_id": "TOOLS-023",
+      "candidate_ids": [],
+      "notes": "Read-tool option defaults true and is passed to image processing; persistent settings/default precedence are assigned to settings/session. Rust already configures native image processing. This row records the consumer contract, not a new independent stored key. Full compared ranges: ice:packages/coding-agent/src/core/tools/read.ts:56-63; ice:packages/coding-agent/src/core/tools/read.ts:207-208; ice:packages/coding-agent/src/core/tools/read.ts:249-250; rust:crates/ice-cli/src/session.rs:1972-1981; rust:crates/ice-tools/src/image_processing.rs:1-485"
+    },
+    {
+      "category": "settings",
+      "name": "autoResizeImages (read-tool option consumer)",
+      "ice_ref": "packages/coding-agent/src/core/tools/read.ts:249",
+      "rust_ref": "crates/ice-cli/src/session.rs:1972",
+      "status": "partial",
+      "entry_id": "TOOLS-023",
+      "candidate_ids": [],
+      "notes": "Read-tool option defaults true and is passed to image processing; persistent settings/default precedence are assigned to settings/session. Rust already configures native image processing. This row records the consumer contract, not a new independent stored key. Full compared ranges: ice:packages/coding-agent/src/core/tools/read.ts:56-63; ice:packages/coding-agent/src/core/tools/read.ts:207-208; ice:packages/coding-agent/src/core/tools/read.ts:249-250; rust:crates/ice-cli/src/session.rs:1972-1981; rust:crates/ice-tools/src/image_processing.rs:1-485"
+    },
+    {
+      "category": "hooks",
+      "name": "BashSpawnHook",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash.ts:200",
+      "rust_ref": "crates/ice-tools/src/tools/bash.rs:57",
+      "status": "partial",
+      "entry_id": "TOOLS-002",
+      "candidate_ids": [],
+      "notes": "TS synchronous command/cwd/env rewrite; Rust asynchronous mutable BashPrepare also carries inherit_env. Preserve native async preparation while matching per-call behavior. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash.ts:200-230; rust:crates/ice-tools/src/tools/bash.rs:57-83; rust:crates/ice-tools/src/tools/bash.rs:146-159"
+    },
+    {
+      "category": "session-types",
+      "name": "bash_background_completed (producer payload)",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:1",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-005",
+      "candidate_ids": [],
+      "notes": "This row owns the retained-shell completion producer and normal/user-stop payload differences. Session owner documents persistent custom-message delivery. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:1-110; ice:packages/coding-agent/src/core/tools/bash-background.ts:298-372; rust:crates/ice-tools/src/tools/mod.rs:1-27"
+    },
+    {
+      "category": "session-types",
+      "name": "bash_background_completed (producer payload)",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-background.ts:298",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-005",
+      "candidate_ids": [],
+      "notes": "This row owns the retained-shell completion producer and normal/user-stop payload differences. Session owner documents persistent custom-message delivery. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-background.ts:1-110; ice:packages/coding-agent/src/core/tools/bash-background.ts:298-372; rust:crates/ice-tools/src/tools/mod.rs:1-27"
+    },
+    {
+      "category": "session-types",
+      "name": "bash_watch_fired (producer payload)",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-watch.ts:1",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-011",
+      "candidate_ids": [],
+      "notes": "This row owns watchId/target/kind/reason/tail/logPath/auto/fireId production. Session owner documents message persistence and wake; no fireId deduplication is established. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-145; ice:packages/coding-agent/src/core/tools/bash-watch.ts:430-492; rust:crates/ice-tools/src/tools/mod.rs:1-27"
+    },
+    {
+      "category": "session-types",
+      "name": "bash_watch_fired (producer payload)",
+      "ice_ref": "packages/coding-agent/src/core/tools/bash-watch.ts:430",
+      "rust_ref": "crates/ice-tools/src/tools/mod.rs:1",
+      "status": "missing",
+      "entry_id": "TOOLS-011",
+      "candidate_ids": [],
+      "notes": "This row owns watchId/target/kind/reason/tail/logPath/auto/fireId production. Session owner documents message persistence and wake; no fireId deduplication is established. Full compared ranges: ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-145; ice:packages/coding-agent/src/core/tools/bash-watch.ts:430-492; rust:crates/ice-tools/src/tools/mod.rs:1-27"
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "total_lines": 688,
+      "ranges": [
+        [
+          1,
+          687
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "total_lines": 301,
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "total_lines": 493,
+      "ranges": [
+        [
+          1,
+          492
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash.ts",
+      "sha256": "9b59f5b97743d815b84fca1c0961d38824a36740af2e7de5d1276831c2dbf918",
+      "total_lines": 750,
+      "ranges": [
+        [
+          1,
+          749
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/bash.rs",
+      "sha256": "2a3d1cb5b0f38c77e3e8d04e472595fa7f3c1559d84c1f1e7c4f081f861a66ff",
+      "total_lines": 427,
+      "ranges": [
+        [
+          1,
+          426
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "total_lines": 479,
+      "ranges": [
+        [
+          1,
+          478
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/mod.rs",
+      "sha256": "a536b61f5b9fed18ef3984a8ee458e3b5f90e61c8233d627b1208946381a606c",
+      "total_lines": 28,
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+      "total_lines": 292,
+      "ranges": [
+        [
+          1,
+          291
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/truncate.ts",
+      "sha256": "104e61ea602c7f7894097b2771dad8c68de75c5a10ea6222e615c4ad144451c7",
+      "total_lines": 277,
+      "ranges": [
+        [
+          1,
+          276
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-watch.test.ts",
+      "sha256": "d9caac6a28b34495f29b3b1ea227760d15073bc7200b332665436dac4c61e579",
+      "total_lines": 196,
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-input.test.ts",
+      "sha256": "8a3c26988d045508747464c8cf22cb790afd2b2c7bc6ae3e1afab8a1e7e83a18",
+      "total_lines": 108,
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts",
+      "sha256": "753e67671a176f10b9fe8136f119f1efba3d1f38a6162ef5c363a9b7b1e665ba",
+      "total_lines": 70,
+      "ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/output-accumulator-log-safety.test.ts",
+      "sha256": "4037aec81a11490a55f9bef9fad070e620b4e6f0221755ff0e10e7faba693f5b",
+      "total_lines": 70,
+      "ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-background.test.ts",
+      "sha256": "5cc07ffc0da388c42d469b14c131edb3243a4092a5ef3d774c871ecd63ff3468",
+      "total_lines": 617,
+      "ranges": [
+        [
+          1,
+          617
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/bash-executor.ts",
+      "sha256": "977b512e30ff671c55e1148f055781dc786d75323e9821f3f7a9c3e327120003",
+      "total_lines": 157,
+      "ranges": [
+        [
+          1,
+          156
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/exec.ts",
+      "sha256": "1a55e7416847ea0c548775b28596bb817c8cd4aa97bc36b8da7403959fcd350f",
+      "total_lines": 108,
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/child-process.ts",
+      "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/index.ts",
+      "sha256": "1c299edad4472e06d9232e694378c1555bfe3f3514247f1831e13821e4204684",
+      "total_lines": 197,
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/os_env.rs",
+      "sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb",
+      "total_lines": 1141,
+      "ranges": [
+        [
+          135,
+          210
+        ],
+        [
+          385,
+          420
+        ],
+        [
+          530,
+          1110
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/env.rs",
+      "sha256": "a96ddc906dc411742b883e5af920a455c8370237eea5cf1db691dde51e4ec731",
+      "total_lines": 325,
+      "ranges": [
+        [
+          1,
+          325
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash.rs",
+      "sha256": "670e8f0c42c4931efe27b1e83ea937ad9fee3e878d02bfdfd5c8ad50cd044359",
+      "total_lines": 242,
+      "ranges": [
+        [
+          1,
+          242
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/tools.test.ts",
+      "sha256": "108b717abd235d11898c875874dcbf8201c2342966088c8e15e59309cdbfe82d",
+      "total_lines": 1214,
+      "ranges": [
+        [
+          1,
+          1214
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash_throttle.rs",
+      "sha256": "22f39b51d51878b4b57d861bcd81283718f09173fb6b4a0dd1518a55309fc68c",
+      "total_lines": 241,
+      "ranges": [
+        [
+          1,
+          241
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/shell.ts",
+      "sha256": "7f0a90bf759282f0851e70a7eb38f418b9aa2467c6a3f625aee256669c7bb4fc",
+      "total_lines": 269,
+      "ranges": [
+        [
+          190,
+          269
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/path-utils.ts",
+      "sha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/file-mutation-queue.ts",
+      "sha256": "e05311094e23fdb0c7993f01eaa8574b4771f997013ea891a4facb1f868f8400",
+      "total_lines": 79,
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "sha256": "93376195502b3f626a6a2885923e842efcbb83bc7d6d86dbceabd90c79eb8605",
+      "total_lines": 48,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/render-utils.ts",
+      "sha256": "fded002274529fc617ccac4623ec3d5a4b776a752ad534446eed8be67d29bafc",
+      "total_lines": 86,
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/output-guard.ts",
+      "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+      "total_lines": 148,
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/path_utils.rs",
+      "sha256": "8b4dd476a318556e21daf014646c1aa7bdbe8e6052002a070af1f77d46f93689",
+      "total_lines": 193,
+      "ranges": [
+        [
+          1,
+          193
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/file_mutation_queue.rs",
+      "sha256": "4b71f4eac970355a7fb85022a22bab00796b28ef15ec1210dd306508f0a7eeee",
+      "total_lines": 137,
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/read.ts",
+      "sha256": "4b3f61291a9f314c582caeaa735eb38f8a736dd68ac711425bfd0650febb1fa1",
+      "total_lines": 352,
+      "ranges": [
+        [
+          1,
+          351
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/read.rs",
+      "sha256": "432dc2251c55dcd62eb55f5b93e1b2b3e5b49a31cff4645b21cdfebf0f5be6c4",
+      "total_lines": 350,
+      "ranges": [
+        [
+          1,
+          350
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/write.ts",
+      "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+      "total_lines": 268,
+      "ranges": [
+        [
+          1,
+          267
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/write.rs",
+      "sha256": "f63d7fc222c962763109be9831c1c87cb91655bbe33424549205e61c5a2cbded",
+      "total_lines": 154,
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/write.ts",
+      "sha256": "3881a6947b6c632cced62c0a233af9ab435f422d8a77b176caafc5e6f41763d2",
+      "total_lines": 40,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/file-mutation-queue.ts",
+      "sha256": "a154095566afd94c21c7af27f1600292785ed23ebff38730a34b52d276a0ac73",
+      "total_lines": 57,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/path-utils.ts",
+      "sha256": "7ccfffe8e3ea8a7562ca86ee438f133393b2ce400de5abb05d0514b1fc6fc969",
+      "total_lines": 31,
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/tool-context.ts",
+      "sha256": "6c224cc5c58e2b9bb8ed177eddca2a26870a3604995181198163a19aea2440d9",
+      "total_lines": 7,
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/index.ts",
+      "sha256": "7b11295ec3517b9677886a717ece40183cb70dc92720741a201a9012f8f6f9a4",
+      "total_lines": 24,
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "total_lines": 438,
+      "ranges": [
+        [
+          1,
+          437
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/edit.rs",
+      "sha256": "0aef77640e3397263318ce2f24f1a6aca358b07d037543e46a5874d2700bbaa9",
+      "total_lines": 294,
+      "ranges": [
+        [
+          1,
+          294
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "total_lines": 595,
+      "ranges": [
+        [
+          1,
+          594
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/edit_diff.rs",
+      "sha256": "144c61cd225b2b82bbf1aa151d5b1daf8fb8be2be0285db209884c2282a7f436",
+      "total_lines": 847,
+      "ranges": [
+        [
+          1,
+          847
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/edit.ts",
+      "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+      "total_lines": 128,
+      "ranges": [
+        [
+          1,
+          127
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "total_lines": 501,
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-diff-exact-precedence.test.ts",
+      "sha256": "b8832fe8165f896fa6fb4fb3cba312ce1cadde4d33788cdceaade5eb718bbe49",
+      "total_lines": 52,
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-tool-legacy-input.test.ts",
+      "sha256": "20a077787a5d91efcfdc0704029a992d3c197950ec208b6e4907e585cfcf6dd1",
+      "total_lines": 117,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "total_lines": 378,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/find.rs",
+      "sha256": "79b2815a1f655b8255f67508e3b51e8b76f6472d73f4220c2a1480cbba492072",
+      "total_lines": 300,
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "total_lines": 386,
+      "ranges": [
+        [
+          1,
+          385
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/grep.rs",
+      "sha256": "361b6a5627240176da097c18a95b893ffdf970139a7e517ae6d97e5f0f252112",
+      "total_lines": 436,
+      "ranges": [
+        [
+          1,
+          436
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/ls.rs",
+      "sha256": "26379cdead8ba291783c2c443c29eced1e5bbf0a3a6d772b34ed0b398a03f1df",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          226
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/tool_context.rs",
+      "sha256": "555a5bd94a1ce8191544ec1136c8d73969fe409cff9d4e6658972506c2fc806b",
+      "total_lines": 44,
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/bash.ts",
+      "sha256": "9dbd536990ba542a2beb9c42ccffb195ab841ea926cff48c838d53f6b4d24ee3",
+      "total_lines": 162,
+      "ranges": [
+        [
+          1,
+          161
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/utils/shell-output.ts",
+      "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+      "total_lines": 196,
+      "ranges": [
+        [
+          1,
+          195
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/read.ts",
+      "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+      "total_lines": 145,
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/image.ts",
+      "sha256": "d63af23f90abd2925b80d555ac5c5915ee1b7f512a2490b95a727c8bd0e8d97b",
+      "total_lines": 105,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/utils/truncate.ts",
+      "sha256": "8a00ec12753e667056a8c2b5a4f31fd45ccc2bdca7df17a57138fe836c09f7fe",
+      "total_lines": 351,
+      "ranges": [
+        [
+          1,
+          350
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/truncate.rs",
+      "sha256": "2a12548be58e82815f0ffd9c68349918a1fa375fe5c29649dd22928b7ad07af5",
+      "total_lines": 459,
+      "ranges": [
+        [
+          1,
+          459
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/paths.ts",
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/mime.ts",
+      "sha256": "00893b8a5089c217405b5a9b2d316b3392a1845966f8d4aad8fb31c156e4d922",
+      "total_lines": 117,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image.rs",
+      "sha256": "6571d2d4c16a0b71571b8c2b6ee0da62061f37f4e17e66b1f3c8f29169e65555",
+      "total_lines": 236,
+      "ranges": [
+        [
+          1,
+          236
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-process.ts",
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "total_lines": 120,
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image_processing.rs",
+      "sha256": "4c2113df834a0c124435ae386fd4253c9b0ae91d8d23e3f7df82faa9bf7ce2b5",
+      "total_lines": 485,
+      "ranges": [
+        [
+          1,
+          485
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize.ts",
+      "sha256": "d93a007eb45a02b73b1a4777d193614dae5fbcadd9139c8b755ea35c1d649757",
+      "total_lines": 124,
+      "ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-convert.ts",
+      "sha256": "791f2a134995ecd2d337c5e881971bc257889615c1245ea54013203af1ef8e16",
+      "total_lines": 50,
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session.rs",
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "total_lines": 4016,
+      "ranges": [
+        [
+          1935,
+          2050
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "ranges": [
+        [
+          555,
+          675
+        ],
+        [
+          1370,
+          1510
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-core.ts",
+      "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+      "total_lines": 165,
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-worker.ts",
+      "sha256": "c77213875e45d2aea46deb67b6cc03bcfb57cba84c8a17ccc2158aa3e79873c7",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/photon.ts",
+      "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
+      "total_lines": 140,
+      "ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/read_truncation.rs",
+      "sha256": "07fe42488c9b1b2d797e61dd422d9d12d95d1edd7e2eebb35c984a805e43218f",
+      "total_lines": 243,
+      "ranges": [
+        [
+          1,
+          243
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/find.rs",
+      "sha256": "0b111ac0a752c8534be747e2f1675a2358665f15adb36b1bfe38a6cf7e71aed6",
+      "total_lines": 183,
+      "ranges": [
+        [
+          1,
+          183
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/test/harness/tools.test.ts",
+      "sha256": "b82da936f5f6f2deb03e2fc57549bcaa469c2e0322f0b1e2db8088d9d0d38fe9",
+      "total_lines": 623,
+      "ranges": [
+        [
+          1,
+          623
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/file-mutation-queue.test.ts",
+      "sha256": "f20a02f0993bbcb710c8f23aa97f0de06279e9da18dc59694e861af3d323e39a",
+      "total_lines": 301,
+      "ranges": [
+        [
+          1,
+          301
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/path-utils.test.ts",
+      "sha256": "cd75fb19805e66d1b77dd38e944e6fb71af1ac9642373d8c8e88b8df2773c51c",
+      "total_lines": 175,
+      "ranges": [
+        [
+          1,
+          175
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/readdir-order.test.ts",
+      "sha256": "4070f7760d3100d0ce7024cdfc798469e41de40b115e6801b53d0cf275f0f401",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/test/harness/truncate.test.ts",
+      "sha256": "4fe8d6155d468a7843c6831a83af1b79a50edd54f69160b14e893b2bb49f8aaa",
+      "total_lines": 179,
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/output-guard.test.ts",
+      "sha256": "48c6e26413635bf67573b7b874e4034ccae6c484f39f8901061b4424f40152b4",
+      "total_lines": 174,
+      "ranges": [
+        [
+          1,
+          174
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-tool-no-full-redraw.test.ts",
+      "sha256": "83c9922955bf61cf210e6cab8ade65fb43e83f2e811ded2111dab9fa966080fe",
+      "total_lines": 237,
+      "ranges": [
+        [
+          1,
+          237
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-process.test.ts",
+      "sha256": "f224c8f9d567594d7013f0ea158d2c2863cfddce0e346cff7e0b0e16bf7583dd",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-processing.test.ts",
+      "sha256": "eb5d070b5855627e1c6d4a53f1908efee8bbc4d6b8f09da967e9f5709cb03dda",
+      "total_lines": 171,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-resize-callers.test.ts",
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/grep.rs",
+      "sha256": "16a2b06fe68530561417c61d3a02a978b38570a87edefb8f84c432c244c44b5e",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          226
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/ls.rs",
+      "sha256": "183bee987784f12b2187d0f820282bceca8e366e635c5d5dbf0d8eee3d4a7ca9",
+      "total_lines": 152,
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/edit_fuzzy.rs",
+      "sha256": "ea7d92b1380bf5941020420d4fed9eaff3281d344de16653831a2dd6be0dd999",
+      "total_lines": 255,
+      "ranges": [
+        [
+          1,
+          255
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs",
+      "sha256": "202c80f30f3658974eff089751a88f2e2c031601c5647af36d41b3eac4da190f",
+      "total_lines": 111,
+      "ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/abort_bracketing.rs",
+      "sha256": "dfe16bc1bb15a0d262fbd3c4ec950ccd2ea2646166b95e27c8c0efbbcf09d61f",
+      "total_lines": 309,
+      "ranges": [
+        [
+          1,
+          309
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash_stdout_and_stdin_hold.rs",
+      "sha256": "2b9711dcce18f903e47c4d6037fbec718a0cbc5a94ba10b27f919ae0ee393b89",
+      "total_lines": 132,
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3302-find-path-glob.test.ts",
+      "sha256": "804c038893b5b9f8b32a99622a69ebac5e07b620322e407a9efb1f0ea821627b",
+      "total_lines": 81,
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3303-find-nested-gitignore.test.ts",
+      "sha256": "3962d45f7d5adb3e92fd0b89d0a13dd9dec4501158e5f7668a6057b8a3e22851",
+      "total_lines": 84,
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6104-find-root-relativization.test.ts",
+      "sha256": "608dfc6a11b92a84782551ae5fe7a16bb922c38be1eca863a2c77131f62b7652",
+      "total_lines": 92,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5208-late-bash-output.test.ts",
+      "sha256": "9d6fc0d457e6d7470246d821deec9937d428e86fdad6858d05e7d5c956802f8c",
+      "total_lines": 30,
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts",
+      "sha256": "d548355a05025c12dcdc31402689f4bb9a479b2c9480dfe279664af96b8aa89a",
+      "total_lines": 83,
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts",
+      "sha256": "a2976507f90769f90d0bc3e5a6de7b62387a7ed0403fc7d240ab93c9203a3707",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/exif-orientation.ts",
+      "sha256": "9ca969cd6226c14ff09f3f620c18ec26f148df3e2e13ae316291744637f0f265",
+      "total_lines": 184,
+      "ranges": [
+        [
+          1,
+          184
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "ranges": [
+        [
+          100,
+          146
+        ],
+        [
+          570,
+          658
+        ],
+        [
+          1109,
+          1302
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tui/src/tool_execution.rs",
+      "sha256": "8e3ea2bc77f1c0c60f8523caabf776f8e2f5a6d96b0b69e9939274c8de11b735",
+      "total_lines": 1682,
+      "ranges": [
+        [
+          1,
+          744
+        ],
+        [
+          780,
+          882
+        ],
+        [
+          1524,
+          1596
+        ],
+        [
+          1632,
+          1682
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:ICE_PORTING.md",
+      "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "total_lines": 678,
+      "ranges": [
+        [
+          281,
+          326
+        ],
+        [
+          624,
+          648
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/lib.rs",
+      "sha256": "802130ac6b403e65ab243c035bc00dc172ac523461312a3b9477c4dfa58f08fc",
+      "total_lines": 55,
+      "ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent_tool.rs",
+      "sha256": "33dde7f637117dbf86cc0413861a8e7a51ce5d24619a7112eb00008f07a036ee",
+      "total_lines": 67,
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/powershell.rs",
+      "sha256": "1555762ecea98f226690ddd152d010748a6c9f628667794dd29e1b31c5a275d7",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C000076",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is a resolved caller-supplied edit target passed to env.writeFile, not a fixed product file or configuration key. Behavior is audited in TOOLS-025.",
+      "entry_ids": [
+        "TOOLS-025"
+      ]
+    },
+    {
+      "candidate_id": "C000079",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is a resolved caller-supplied write target passed to env.writeFile. Behavior is audited in TOOLS-024.",
+      "entry_ids": [
+        "TOOLS-024"
+      ]
+    },
+    {
+      "candidate_id": "C000737",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the caller's edit target read for asynchronous preview; it does not name a fixed storage location. Behavior is audited in TOOLS-026.",
+      "entry_ids": [
+        "TOOLS-026"
+      ]
+    },
+    {
+      "candidate_id": "C000739",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the caller's edit target passed to injected readFile operations. Behavior is audited in TOOLS-025.",
+      "entry_ids": [
+        "TOOLS-025"
+      ]
+    },
+    {
+      "candidate_id": "C000740",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the same dynamic edit target passed to injected writeFile operations. Behavior is audited in TOOLS-025.",
+      "entry_ids": [
+        "TOOLS-025"
+      ]
+    },
+    {
+      "candidate_id": "C000743",
+      "reason": "Mechanical filesystem-target false positive: filePath is a dynamic matched file loaded for grep context, not a product-owned path. Behavior is audited in TOOLS-029.",
+      "entry_ids": [
+        "TOOLS-029"
+      ]
+    },
+    {
+      "candidate_id": "C000745",
+      "reason": "Mechanical filesystem-target false positive: dirPath is the directory requested in ls parameters and stat follows that dynamic input. Behavior is audited in TOOLS-030.",
+      "entry_ids": [
+        "TOOLS-030"
+      ]
+    },
+    {
+      "candidate_id": "C000746",
+      "reason": "Mechanical filesystem-target false positive: dirPath is the requested listing root passed to readdir. Behavior is audited in TOOLS-030.",
+      "entry_ids": [
+        "TOOLS-030"
+      ]
+    },
+    {
+      "candidate_id": "C000747",
+      "reason": "Mechanical filesystem-target false positive: fullPath combines the requested listing root with each returned entry for stat. Behavior is audited in TOOLS-030.",
+      "entry_ids": [
+        "TOOLS-030"
+      ]
+    },
+    {
+      "candidate_id": "C000749",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the requested read target used for image bytes; TOOLS-023 covers the image pipeline. Behavior is audited in TOOLS-022.",
+      "entry_ids": [
+        "TOOLS-022"
+      ]
+    },
+    {
+      "candidate_id": "C000750",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the requested read target used for text bytes. Behavior is audited in TOOLS-022.",
+      "entry_ids": [
+        "TOOLS-022"
+      ]
+    },
+    {
+      "candidate_id": "C000752",
+      "reason": "Mechanical filesystem-target false positive: dir is the dynamic parent directory of the requested write target, created recursively. Behavior is audited in TOOLS-024.",
+      "entry_ids": [
+        "TOOLS-024"
+      ]
+    },
+    {
+      "candidate_id": "C000753",
+      "reason": "Mechanical filesystem-target false positive: absolutePath is the caller's write target passed to injected writeFile operations. Behavior is audited in TOOLS-024.",
+      "entry_ids": [
+        "TOOLS-024"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "first_pass_lines": [
+        284,
+        285
+      ],
+      "claim": "Rust model Bash lacks background and stdin parameters.",
+      "verdict": "confirmed-with-scope",
+      "finding": "Model-facing Rust Bash is foreground-only. Rust interactive user Bash has an asynchronous task and cancellation slot, so background-like user execution must not be called wholly missing.",
+      "evidence": [
+        "rust:ICE_PORTING.md:281-290",
+        "rust:crates/ice-tools/src/tools/bash.rs:1-426",
+        "rust:crates/ice-cli/src/interactive_tui.rs:555-675"
+      ],
+      "entry_ids": [
+        "TOOLS-001",
+        "TOOLS-003",
+        "TOOLS-016"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        287,
+        299
+      ],
+      "claim": "Automatic/manual release, a <=16 running registry, completion and cleanup.",
+      "verdict": "qualified",
+      "finding": "Immediate explicit launches enforce 16 running shells; foreground adoption/release is not covered by that admission guard. Finished non-lingering retention is 20 in adoption order; lingering jobs remain. User-kill synthetic completion omits ordinary log/exit/lingering fields, and late settlement is ignored. Full-log creation/removal and process cleanup require distinct contracts.",
+      "evidence": [
+        "rust:ICE_PORTING.md:287-299",
+        "ice:packages/coding-agent/src/core/tools/bash.ts:1-749",
+        "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687"
+      ],
+      "entry_ids": [
+        "TOOLS-003",
+        "TOOLS-004",
+        "TOOLS-005",
+        "TOOLS-008",
+        "TOOLS-010"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        300,
+        306
+      ],
+      "claim": "bash_output/kill/input controls, waiting limits and input denied without UI.",
+      "verdict": "qualified",
+      "finding": "Tool names and high-level limits are correct. No-UI denial applies to approval='ask'; allow bypasses confirmation. Exact wait/cursor/tail/grep, running-state checks, byte budgets and return schemas are specified in the entries.",
+      "evidence": [
+        "rust:ICE_PORTING.md:300-306",
+        "ice:packages/coding-agent/src/core/tools/bash-shells.ts:1-300",
+        "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687"
+      ],
+      "entry_ids": [
+        "TOOLS-006",
+        "TOOLS-007",
+        "TOOLS-008",
+        "TOOLS-009"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        307,
+        313
+      ],
+      "claim": "Pattern/silence/interval watches, <=16 watches, <=10 fires and defaults.",
+      "verdict": "qualified",
+      "finding": "Explicit create limits do not bound automatically installed default watches. Pattern defaults to one fire; other explicit watches default to three, with maximum ten. Explicit silence minimum is 5 seconds, while automatic silence settings follow their separate policy. Timed prompt detection, fire IDs, rearm/carry and cleanup are material omitted contracts; session owns alert delivery/wake.",
+      "evidence": [
+        "rust:ICE_PORTING.md:307-313",
+        "ice:packages/coding-agent/src/core/tools/bash-watch.ts:1-492",
+        "ice:packages/coding-agent/test/bash-watch.test.ts:1-196"
+      ],
+      "entry_ids": [
+        "TOOLS-011",
+        "TOOLS-012",
+        "TOOLS-013"
+      ]
+    },
+    {
+      "first_pass_lines": [
+        314,
+        316
+      ],
+      "claim": "Shells panel and RPC background controls/events.",
+      "verdict": "confirmed-with-cross-area-scope",
+      "finding": "Tool registry interfaces are covered by TOOLS; RPC-026 covers named shell controls/events, and published TUI-055 supplies the shell-panel contract. Native asynchronous user-Bash streaming/cancellation is preserved; it does not imply a native model-facing background registry.",
+      "evidence": [
+        "rust:ICE_PORTING.md:314-316",
+        "ice:packages/coding-agent/src/core/tools/bash-background.ts:1-687",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:1-244",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-command-schema.ts:1-705",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-response-validation.ts:1-653",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:1-2253",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:39-190",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-validation.ts:30-177",
+        "rust:crates/ice-cli/src/modes.rs:450-566",
+        "rust:crates/ice-cli/src/remote/protocol.rs:280-315",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-mode.ts:577-697",
+        "ice:packages/coding-agent/src/modes/rpc/rpc-types.ts:685-795",
+        "rust:crates/ice-cli/src/remote/protocol.rs:24-119",
+        "rust:crates/ice-cli/src/session_driver.rs:333-351",
+        "ice:packages/coding-agent/src/modes/interactive/components/shells-panel.ts:1-290",
+        "ice:packages/coding-agent/test/shells-panel.test.ts:1-155"
+      ],
+      "entry_ids": [
+        "TOOLS-003",
+        "TOOLS-005",
+        "TOOLS-006",
+        "TOOLS-008",
+        "SESSION-025",
+        "RPC-026",
+        "TUI-055"
+      ],
+      "first_pass_source": {
+        "path": "/home/mewtwo/Zks/ice-rust/ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      }
+    },
+    {
+      "first_pass_lines": [
+        640,
+        640
+      ],
+      "claim": "Output guard requires verification.",
+      "verdict": "partial",
+      "finding": "Rust already has a bounded 64-message RPC writer with ordered drain and failure cancellation. It lacks stdout isolation, individual/aggregate UTF-8 byte reservations, typed limit errors, transient 10 ms retries and guard lifecycle; print mode drops sink failures. Context breakdown and usage totals remain other-area claims.",
+      "evidence": [
+        "rust:ICE_PORTING.md:640-640",
+        "ice:packages/coding-agent/src/core/output-guard.ts:1-147",
+        "rust:crates/ice-cli/src/modes.rs:570-658",
+        "rust:crates/ice-cli/src/modes.rs:1121-1300"
+      ],
+      "entry_ids": [
+        "TOOLS-031"
+      ]
+    }
+  ],
+  "dependency_requests": [],
+  "rust_only": [
+    {
+      "capability": "Native filesystem search/listing through ExecutionEnv",
+      "ts_comparison": "TS default find and grep provision fd/rg; Rust traverses and matches in process. Preserve that backend choice while implementing TOOLS-028/029/030 observable semantics.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/find.rs:1-300",
+        "rust:crates/ice-tools/src/tools/grep.rs:1-436",
+        "rust:crates/ice-tools/src/tools/ls.rs:1-226"
+      ]
+    },
+    {
+      "capability": "MutatingEnv capability boundary and queue held through mutation I/O",
+      "ts_comparison": "Keep Rust's explicit mutation capability and lock lifetime while adding invocation-order/canonical-alias parity.",
+      "evidence": [
+        "rust:crates/ice-tools/src/file_mutation_queue.rs:1-137",
+        "rust:crates/ice-tools/tests/abort_bracketing.rs:232-308"
+      ]
+    },
+    {
+      "capability": "Native image processing without Photon worker/WASM",
+      "ts_comparison": "The Rust image backend can remain native; its corrected orientation-aware no-transform condition is valuable. TOOLS-023 separates backend choice from MIME/quality/resize/coordinate differences.",
+      "evidence": [
+        "rust:crates/ice-tools/src/image_processing.rs:1-485"
+      ]
+    },
+    {
+      "capability": "Additional edit input compatibility and duplicate-match context",
+      "ts_comparison": "Rust accepts single edit objects and JSON-string objects and returns richer ambiguity context; current TS normalizes legacy flat input and JSON array strings. Preserve intentional Rust compatibility while fixing exact precedence.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/edit_diff.rs:1-425",
+        "rust:crates/ice-tools/tests/edit_fuzzy.rs:66-93"
+      ]
+    },
+    {
+      "capability": "Optional Windows PowerShell tool",
+      "ts_comparison": "Outside the seven-name TS factories inspected here, Rust exports a Windows-only PowerShell tool using UTF-16LE base64 EncodedCommand, fixed noninteractive options and capture cancellation/timeout. Preserve it; this is a factory comparison, not a claim that no TS extension can supply PowerShell.",
+      "evidence": [
+        "rust:crates/ice-tools/src/tools/powershell.rs:1-138",
+        "ice:packages/coding-agent/src/core/tools/index.ts:1-196"
+      ]
+    },
+    {
+      "capability": "Bounded native blocking RPC writer",
+      "ts_comparison": "Retain the 64-message channel, blocking sink isolation, ordered drain and failure cancellation while adding the distinct TOOLS-031 byte-budget/isolation contract.",
+      "evidence": [
+        "rust:crates/ice-cli/src/modes.rs:570-658",
+        "rust:crates/ice-cli/src/modes.rs:1121-1300"
+      ]
+    }
+  ],
+  "open_questions": [],
+  "supplemental_ledger": [],
+  "verification": {
+    "mode": "source-read only; no application execution, tests or runtime reproduction",
+    "ledger_files": 33,
+    "candidates": 35,
+    "source_files_read": 104,
+    "shared_partial_files": "Exact gaps are enumerated in checkpoint-tools.md; the tools ledger itself has no unread source lines.",
+    "dirty_test_limit": "Two additional dirty tests are current snapshots only, with no invented historical hashes. bash-watch.ts itself matches the coordinator's dirty baseline hash."
+  },
+  "dependency_request_history": [
+    {
+      "entry_id": "TOOLS-001",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation."
+    },
+    {
+      "entry_id": "TOOLS-002",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation."
+    },
+    {
+      "entry_id": "TOOLS-010",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation."
+    },
+    {
+      "entry_id": "TOOLS-015",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation."
+    },
+    {
+      "entry_id": "TOOLS-017",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation."
+    },
+    {
+      "entry_id": "TOOLS-003",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-005",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-006",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-008",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-011",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-012",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-013",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-016",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-018",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-001",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned."
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned."
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned."
+    },
+    {
+      "entry_id": "TOOLS-013",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned."
+    },
+    {
+      "entry_id": "TOOLS-022",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-016"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-023",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-016"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities."
+    },
+    {
+      "entry_id": "TOOLS-014",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities."
+    },
+    {
+      "entry_id": "TOOLS-026",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities."
+    },
+    {
+      "entry_id": "TOOLS-027",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities."
+    },
+    {
+      "entry_id": "TOOLS-017",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID."
+    },
+    {
+      "entry_id": "TOOLS-018",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID."
+    },
+    {
+      "entry_id": "TOOLS-025",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID."
+    },
+    {
+      "entry_id": "TOOLS-026",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID."
+    },
+    {
+      "entry_id": "TOOLS-027",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID."
+    },
+    {
+      "entry_id": "TOOLS-020",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership."
+    },
+    {
+      "entry_id": "TOOLS-021",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership."
+    },
+    {
+      "entry_id": "TOOLS-024",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership."
+    },
+    {
+      "entry_id": "TOOLS-025",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership."
+    },
+    {
+      "entry_id": "TOOLS-030",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership."
+    },
+    {
+      "entry_id": "TOOLS-023",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design."
+    },
+    {
+      "entry_id": "TOOLS-028",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design."
+    },
+    {
+      "entry_id": "TOOLS-029",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design."
+    },
+    {
+      "entry_id": "TOOLS-031",
+      "area": "rpc-remote",
+      "capability": "Link stdout takeover/configure/wait/flush/restore lifecycle and byte-budget error handling in RPC/print. The existing Rust 64-message RpcWriter remains useful but lacks the TS byte contract."
+    },
+    {
+      "entry_id": "TOOLS-003",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs."
+    },
+    {
+      "entry_id": "TOOLS-005",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs."
+    },
+    {
+      "entry_id": "TOOLS-006",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs."
+    },
+    {
+      "entry_id": "TOOLS-008",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs."
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "settings",
+      "capability": "Scoped bashInputApproval read/write precedence and trust gates; tool owns approval consumption only.",
+      "confirmed_entry_ids": [
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-003"
+      ]
+    }
+  ],
+  "dependency_resolutions": [
+    {
+      "entry_id": "TOOLS-001",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-048",
+        "AGENT-050",
+        "AGENT-052"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-001",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-002",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-049"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-001",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-010",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-001",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-015",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-053"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-001",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-017",
+      "area": "agent",
+      "capability": "Link accepted ExecutionEnv shell selection, cancellation, group ownership, pipe draining, transport UTF-8 decoding and post-exit idle-grace entries; known AGENT-050/051/053 are low-level prerequisites, distinct from tool accumulation.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-050",
+        "AGENT-051",
+        "AGENT-052",
+        "AGENT-053"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-001",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-003",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-005",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-006",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-008",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-011",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023",
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-012",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-013",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-025"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-016",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-024"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-018",
+      "area": "session",
+      "capability": "Link registry ownership, active-tool synchronization, steering wake, bash_background_completed/bash_watch_fired persistence and delivery (no fireId deduplication established), user stop/disposal and tool context. Session worker owns these integrations; tool registry entry IDs are stable.",
+      "confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SESSION-023"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-002",
+      "rationale": "Session binds and delivers the tool registry; tool mechanics remain independently owned.",
+      "previous_confirmed_entry_ids": [
+        "SESSION-023",
+        "SESSION-024",
+        "SESSION-025"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-001",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-014"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-014"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-014"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-014"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-014"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-014"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-013",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-014"
+      ],
+      "notes": "Coordinator explicitly reserved SET-014 for shell settings; final dependency publication remains coordinator-owned.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-014"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-014"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-022",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-016"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-016"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-016"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-023",
+      "area": "settings",
+      "capability": "Link Bash ceilings/automatic release and bashInputApproval, bashSilenceAlertMs, bashPromptAlertMs and images.autoResize defaults/validation/precedence. Do not infer global policy from explicit watch bounds.",
+      "confirmed_entry_ids": [
+        "SET-016"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-016"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-003",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": [
+        "SET-016"
+      ]
+    },
+    {
+      "entry_id": "TOOLS-004",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TUI-074"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-004",
+      "rationale": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-014",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TUI-031",
+        "TUI-032",
+        "TUI-035"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-004",
+      "rationale": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-026",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TUI-031",
+        "TUI-036"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-004",
+      "rationale": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-027",
+      "area": "tui",
+      "capability": "Link Ctrl+B/releaseAll and shells panel, event/component lifecycle, async preflight requestRender, per-tool render adapters, syntax/theme/image capabilities.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "TUI-031",
+        "TUI-032"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-004",
+      "rationale": "TUI-074 owns the releaseAll prompt/queue controller; TUI-055 owns the shell panel.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-017",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-056"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-005",
+      "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-018",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-035"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-005",
+      "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-025",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-035"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-005",
+      "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-026",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-036"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-005",
+      "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-027",
+      "area": "extensions",
+      "capability": "Link accepted ExtensionAPI.exec captured-cwd boundary, definition/context adapters and preflight/render hooks. Extensions worker planned EXT-056 for exec but coordinator must confirm actual published ID.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "EXT-036"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-005",
+      "rationale": "Extension definitions, render hooks and direct exec are distinct adapters around the tool primitives.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-020",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-038",
+        "AGENT-043",
+        "AGENT-045"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-006",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-021",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-045"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-006",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-024",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-041",
+        "AGENT-046"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-006",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-025",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-039",
+        "AGENT-041"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-006",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-030",
+      "area": "agent",
+      "capability": "Link accepted filesystem canonicalization, per-operation cancellation, MutatingEnv and directory/FileInfo semantics; preserve in-flight mutation lock ownership.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "AGENT-043",
+        "AGENT-044"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-006",
+      "rationale": "Concrete owner IDs verified against current entry contracts.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-023",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "CLI-009"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-007",
+      "rationale": "Attachment assembly consumes image processing. Managed fd/rg installation is MISC-010, not MISC-001 release metadata.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-028",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "MISC-010"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-007",
+      "rationale": "Attachment assembly consumes image processing. Managed fd/rg installation is MISC-010, not MISC-001 release metadata.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-029",
+      "area": "cli-packaging",
+      "capability": "Link attachment processing and native tool provisioning/ensureTool fd/rg policy without forcing replacement of the Rust-native traversal design.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "MISC-010"
+      ],
+      "related_entry_ids": [],
+      "relation": "shared-contract",
+      "review_id": "ROOTDEP-007",
+      "rationale": "Attachment assembly consumes image processing. Managed fd/rg installation is MISC-010, not MISC-001 release metadata.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-031",
+      "area": "rpc-remote",
+      "capability": "Link stdout takeover/configure/wait/flush/restore lifecycle and byte-budget error handling in RPC/print. The existing Rust 64-message RpcWriter remains useful but lacks the TS byte contract.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "RPC-017",
+        "MISC-015",
+        "MISC-016"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-008",
+      "rationale": "Mode adapters own stdout takeover/restore around the shared byte-bounded writer.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-003",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "RPC-026"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-009",
+      "rationale": "RPC exposes existing shell snapshots/control without owning registry state.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-005",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "RPC-026"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-009",
+      "rationale": "RPC exposes existing shell snapshots/control without owning registry state.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-006",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "RPC-026"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-009",
+      "rationale": "RPC exposes existing shell snapshots/control without owning registry state.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-008",
+      "area": "rpc-remote",
+      "capability": "Link background_bash/get_shells/get_shell/kill_shell/abort_bash and shells_update integration after the RPC audit assigns real IDs.",
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "RPC-026"
+      ],
+      "related_entry_ids": [],
+      "relation": "consumer",
+      "review_id": "ROOTDEP-009",
+      "rationale": "RPC exposes existing shell snapshots/control without owning registry state.",
+      "previous_confirmed_entry_ids": []
+    },
+    {
+      "entry_id": "TOOLS-009",
+      "area": "settings",
+      "capability": "Scoped bashInputApproval read/write precedence and trust gates; tool owns approval consumption only.",
+      "confirmed_entry_ids": [
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-003"
+      ],
+      "status": "resolved",
+      "resolved_entry_ids": [
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-003"
+      ],
+      "related_entry_ids": [],
+      "relation": "prerequisite",
+      "review_id": "ROOTDEP-010",
+      "rationale": "Previously confirmed owner IDs were checked against the current catalog and the stated contract boundary.",
+      "previous_confirmed_entry_ids": [
+        "SET-007",
+        "SET-008",
+        "SET-009",
+        "SET-003"
+      ]
+    }
+  ]
+}

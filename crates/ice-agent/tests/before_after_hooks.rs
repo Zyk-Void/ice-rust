@@ -15,6 +15,8 @@
 //! - "should continue after a mixed batch with one terminating blocked call" —
 //!   a parallel batch where `before_tool_call` blocks "first" (terminate) but
 //!   lets "second" run; the loop continues for a second LLM turn.
+//! - invalid schemas and invalid arguments return error tool results without
+//!   invoking the tool's `execute` method.
 
 #[path = "common/mod.rs"]
 mod common;
@@ -395,6 +397,91 @@ async fn before_tool_call_block_terminate_stops_loop() {
         text.contains("Blocked by policy"),
         "blocked tool result text must be the block reason, got: {text:?}"
     );
+}
+
+// ----------------------------------------------------------------------------
+// Schema validation prevents execution
+// ----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn invalid_tool_schema_never_reaches_execution() {
+    let (mut tool, executed) = EchoTool::new_recording();
+    tool.schema.parameters = ice_ai::types::Schema::new(serde_json::json!({
+        "type": "not-a-json-schema-type"
+    }));
+    let context = context_with_tools(vec![Arc::new(tool)]);
+
+    let stream_fn = common::mock_stream_fn(vec![
+        assistant_tool_calls(
+            vec![(
+                "tool-1",
+                "echo",
+                serde_json::json!({"value": "must not execute"}),
+            )],
+            StopReason::ToolUse,
+        ),
+        assistant_text("done", StopReason::Stop),
+    ]);
+    let (events, new_messages) = run_and_collect(
+        vec![user_message("try the malformed tool")],
+        context,
+        base_config(),
+        stream_fn,
+    )
+    .await;
+
+    assert!(
+        executed.lock().expect("executed lock").is_empty(),
+        "tool execution must not occur when its schema fails to compile"
+    );
+    assert!(events
+        .iter()
+        .any(|event| matches!(event, AgentEvent::ToolExecutionEnd { is_error: true, .. })));
+    let tool_result = new_messages.iter().find_map(|message| match message {
+        ice_agent::AgentMessage::ToolResult(result) => Some(result),
+        _ => None,
+    });
+    let tool_result = tool_result.expect("schema failure should produce a tool result");
+    assert!(tool_result.is_error);
+    let error_text = common::tool_result_text(tool_result);
+    assert!(error_text.contains("Could not compile schema for tool"));
+    assert!(error_text.contains("not-a-json-schema-type"));
+}
+
+#[tokio::test]
+async fn invalid_tool_arguments_never_reach_execution() {
+    let (tool, executed) = EchoTool::new_recording();
+    let context = context_with_tools(vec![Arc::new(tool)]);
+
+    let stream_fn = common::mock_stream_fn(vec![
+        assistant_tool_calls(
+            vec![("tool-1", "echo", serde_json::json!({}))],
+            StopReason::ToolUse,
+        ),
+        assistant_text("done", StopReason::Stop),
+    ]);
+    let (events, new_messages) = run_and_collect(
+        vec![user_message("call echo without its required value")],
+        context,
+        base_config(),
+        stream_fn,
+    )
+    .await;
+
+    assert!(
+        executed.lock().expect("executed lock").is_empty(),
+        "tool execution must not occur when arguments fail schema validation"
+    );
+    assert!(events
+        .iter()
+        .any(|event| matches!(event, AgentEvent::ToolExecutionEnd { is_error: true, .. })));
+    let tool_result = new_messages.iter().find_map(|message| match message {
+        ice_agent::AgentMessage::ToolResult(result) => Some(result),
+        _ => None,
+    });
+    let tool_result = tool_result.expect("validation failure should produce a tool result");
+    assert!(tool_result.is_error);
+    assert!(common::tool_result_text(tool_result).contains("Validation failed for tool"));
 }
 
 // ----------------------------------------------------------------------------

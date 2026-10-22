@@ -1,0 +1,10 @@
+{
+  "recorded_at": "2026-10-19T22:24:50.281Z",
+  "basis": "These two tests are dirty in the coordinator's recorded baseline status but lack historical content hashes in that source manifest. Hashes capture current inspected test content only. No evidence of post-baseline source drift is asserted or denied for these test bytes.",
+  "hashes": {
+    "ice": {
+      "packages/coding-agent/test/bash-watch.test.ts": "d9caac6a28b34495f29b3b1ea227760d15073bc7200b332665436dac4c61e579",
+      "packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts": "753e67671a176f10b9fe8136f119f1efba3d1f38a6162ef5c363a9b7b1e665ba"
+    }
+  }
+}

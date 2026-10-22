@@ -1,0 +1,122 @@
+{
+  "captured_at": "2026-10-20T03:15:47.419Z",
+  "owner": "/root",
+  "previous_sha256": "ef3e4c40fcbd4e11d74274b489fa06f51fc373f7e049e203c5df3892367d9bf0",
+  "changes": [
+    {
+      "id": "FPC-114",
+      "before": {
+        "finding": "Tool registry interfaces are covered by TOOLS; RPC-026 now independently covers all named shell controls/events, and TUI-055 supplies the panel contract in the current TUI draft. Native asynchronous user Bash is preserved; the panel remains draft-dependent until publication.",
+        "entry_ids": [
+          "TOOLS-003",
+          "TOOLS-005",
+          "TOOLS-006",
+          "TOOLS-008",
+          "RPC-026",
+          "TUI-055",
+          "SESSION-025"
+        ],
+        "disposition": "qualified"
+      },
+      "after": {
+        "finding": "Tool registry interfaces are covered by TOOLS; RPC-026 covers named shell controls/events, and published TUI-055 supplies the shell-panel contract. Native asynchronous user-Bash streaming/cancellation is preserved; it does not imply a native model-facing background registry."
+      }
+    },
+    {
+      "id": "FPC-152",
+      "before": {
+        "finding": "The MISC owner has read the five implementations, direct suite and doc, and reserved separate router/HF/provider/UI entries. They were not yet in the inspected saved spec snapshot; mark their final mapping pending instead of treating a reservation as an accepted contract.",
+        "entry_ids": [],
+        "disposition": "uncovered-assigned"
+      },
+      "after": {
+        "entry_ids": [
+          "MISC-021",
+          "MISC-022",
+          "MISC-023",
+          "MISC-024"
+        ],
+        "disposition": "confirmed-with-scope",
+        "finding": "The in-tree TypeScript router management, SSE/load/download completion, Hugging Face token/GGUF discovery, built-in llama provider lifecycle and interactive model manager are now separately documented in MISC-021–024. Native compatible inference, extensible provider identifiers, private execution binding and dynamic model registration already exist; those capabilities do not implement the management/auth/discovery/UI protocols. No matching in-tree native management implementation was found. External packages and live services remain unverified."
+      }
+    },
+    {
+      "id": "FPC-153",
+      "before": {
+        "finding": "Root is auditing the two bridge implementations and three suites. The final concrete entries were not present in the inspected MISC snapshot; source/runtime details remain a pending claim mapping.",
+        "entry_ids": [],
+        "disposition": "uncovered-assigned"
+      },
+      "after": {
+        "entry_ids": [
+          "MISC-030",
+          "MISC-031",
+          "MISC-032",
+          "MISC-033",
+          "MISC-034",
+          "MISC-035",
+          "MISC-036",
+          "MISC-037"
+        ],
+        "disposition": "confirmed-with-scope",
+        "finding": "The bridge has eight source-verified contracts: loopback configuration/private credentials; provider registration; isolated reusable handles; protected request projection; bounded NDJSON ingestion; correlated terminal-turn validation; stable preview reconciliation; cancellation and safe failures. Native direct Anthropic HTTP, cancellation and plugin streaming are real capabilities, but no in-tree client implements this distinct local bridge protocol. No bridge was contacted and no private credential file was read."
+      }
+    },
+    {
+      "id": "FPC-154",
+      "before": {
+        "finding": "Assigned eight implementations, four suites and orchestration closure will be source-read next. A native counterpart must be evaluated before confirming absence or an exact runtime contract.",
+        "entry_ids": [],
+        "disposition": "uncovered-assigned"
+      },
+      "after": {
+        "entry_ids": [
+          "MISC-040",
+          "MISC-041",
+          "MISC-042",
+          "MISC-043",
+          "MISC-044",
+          "MISC-045",
+          "MISC-046",
+          "MISC-047",
+          "MISC-048"
+        ],
+        "disposition": "qualified",
+        "finding": "The TypeScript package includes the vitest-evals runner, real temporary AgentSession adapter, strict completion and normalized telemetry, task-scoped session/source artifacts, comparative pairing/reporting, cancellation/cleanup and real-model/extension-authoring scenarios. Native deterministic FauxProvider harness tests, real tools over in-memory state, durable event assertions and session statistics already exist. The matching model-backed comparative eval package was not found in the native inventory. Both test implementations were read; neither suite was run."
+      }
+    },
+    {
+      "id": "FPC-155",
+      "before": {
+        "finding": "The MISC owner reserved deployment/documentation review. Documentation must be checked for commands/environment boundaries and must not be counted as a built-in VM implementation or executed deployment.",
+        "entry_ids": [],
+        "disposition": "uncovered-assigned"
+      },
+      "after": {
+        "entry_ids": [
+          "MISC-026"
+        ],
+        "disposition": "qualified",
+        "finding": "The TypeScript documentation describes Gondolin/Docker/OpenShell deployment recipes and isolation boundaries. These are third-party deployment guidance, not proof of a built-in VM or enforcement engine. Native installation, remote, terminal and maintenance guidance is preserved; the dedicated equivalent isolation guide was not found. No deployment recipe or external isolation claim was executed or independently verified."
+      }
+    }
+  ],
+  "summary": {
+    "claim_rows": 160,
+    "accepted_claim_records_reviewed": 147,
+    "rpc_commands": 79,
+    "settings": 28,
+    "environment_names": 39,
+    "extension_methods": 28,
+    "active_import_topics": 4,
+    "uncovered_assigned_claims": 0,
+    "stale_or_resolved_claim_record_corrections": 13,
+    "draft_dependent_claims": 0
+  },
+  "remaining_unverified": [
+    "private migration outcomes and contents",
+    "external package/release/service behavior",
+    "live deployment recipes",
+    "runtime effects not exercised"
+  ]
+}

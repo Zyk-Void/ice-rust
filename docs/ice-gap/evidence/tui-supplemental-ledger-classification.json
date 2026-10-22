@@ -1,0 +1,1320 @@
+{
+  "owner": "/root/tui_closeout",
+  "purpose": "Classify the released TUI supplemental_ledger source-read attribution rows before coordinator publication; no shared artifact is modified.",
+  "proposal": {
+    "path": "docs/ice-gap/evidence/proposal-tui.json",
+    "sha256": "9403cd7fd852645553548fb60bb10192b5a38386d66dc3fd24f088221e10de89"
+  },
+  "tracked_inventory": {
+    "path": "docs/ice-gap/evidence/tracked-files.json",
+    "sha256": "2fa5d68f5af7a4239812599fec2b26ba0f4b6f49f15b8f3bbd65aaea1ee23762",
+    "rows": 831
+  },
+  "summary": {
+    "supplemental_rows": 139,
+    "already_canonical_non_test": 12,
+    "test_or_test_helper_read_only": 124,
+    "native_read_only": 0,
+    "new_non_test_ts_repository_paths": 3
+  },
+  "classification": [
+    {
+      "index": 0,
+      "path": "packages/coding-agent/docs/keybindings.md",
+      "canonical_path": "packages/coding-agent/docs/keybindings.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 1,
+      "path": "packages/coding-agent/docs/terminal-setup.md",
+      "canonical_path": "packages/coding-agent/docs/terminal-setup.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 2,
+      "path": "packages/coding-agent/docs/theme-sources.md",
+      "canonical_path": "packages/coding-agent/docs/theme-sources.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 3,
+      "path": "packages/coding-agent/docs/themes.md",
+      "canonical_path": "packages/coding-agent/docs/themes.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 4,
+      "path": "packages/coding-agent/docs/tmux.md",
+      "canonical_path": "packages/coding-agent/docs/tmux.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 5,
+      "path": "packages/coding-agent/docs/tui.md",
+      "canonical_path": "packages/coding-agent/docs/tui.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 6,
+      "path": "packages/coding-agent/src/cli/config-selector.ts",
+      "canonical_path": "packages/coding-agent/src/cli/config-selector.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 7,
+      "path": "packages/coding-agent/src/config.ts",
+      "canonical_path": "packages/coding-agent/src/config.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 8,
+      "path": "packages/coding-agent/src/core/experimental.ts",
+      "canonical_path": "packages/coding-agent/src/core/experimental.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 9,
+      "path": "packages/coding-agent/src/utils/fs-watch.ts",
+      "canonical_path": "packages/coding-agent/src/utils/fs-watch.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 10,
+      "path": "packages/coding-agent/src/utils/json.ts",
+      "canonical_path": "packages/coding-agent/src/utils/json.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 11,
+      "path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+      "canonical_path": "packages/coding-agent/src/utils/syntax-highlight.ts",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": true,
+      "classification": "already-canonical"
+    },
+    {
+      "index": 12,
+      "path": "packages/coding-agent/test/appearance-acceptance.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-acceptance.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 13,
+      "path": "packages/coding-agent/test/appearance-assistant-borders.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-assistant-borders.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 14,
+      "path": "packages/coding-agent/test/appearance-baseline.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-baseline.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 15,
+      "path": "packages/coding-agent/test/appearance-controller.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-controller.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 16,
+      "path": "packages/coding-agent/test/appearance-customizer.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-customizer.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 17,
+      "path": "packages/coding-agent/test/appearance-input-highlighters.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-input-highlighters.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 18,
+      "path": "packages/coding-agent/test/appearance-presentation.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-presentation.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 19,
+      "path": "packages/coding-agent/test/appearance-profiles.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-profiles.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 20,
+      "path": "packages/coding-agent/test/appearance-theme-draft-session.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-theme-draft-session.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 21,
+      "path": "packages/coding-agent/test/appearance-theme-library.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-theme-library.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 22,
+      "path": "packages/coding-agent/test/appearance-user-message-layout.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-user-message-layout.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 23,
+      "path": "packages/coding-agent/test/appearance-user-message.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-user-message.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 24,
+      "path": "packages/coding-agent/test/appearance-v2-runtime.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-v2-runtime.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 25,
+      "path": "packages/coding-agent/test/appearance-validate.test.ts",
+      "canonical_path": "packages/coding-agent/test/appearance-validate.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 26,
+      "path": "packages/coding-agent/test/assistant-message.test.ts",
+      "canonical_path": "packages/coding-agent/test/assistant-message.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 27,
+      "path": "packages/coding-agent/test/bash-execution-width.test.ts",
+      "canonical_path": "packages/coding-agent/test/bash-execution-width.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 28,
+      "path": "packages/coding-agent/test/compact-tool-rows.test.ts",
+      "canonical_path": "packages/coding-agent/test/compact-tool-rows.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 29,
+      "path": "packages/coding-agent/test/context-breakdown.test.ts",
+      "canonical_path": "packages/coding-agent/test/context-breakdown.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 30,
+      "path": "packages/coding-agent/test/custom-editor-conditional-action.test.ts",
+      "canonical_path": "packages/coding-agent/test/custom-editor-conditional-action.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 31,
+      "path": "packages/coding-agent/test/custom-editor-mentions.test.ts",
+      "canonical_path": "packages/coding-agent/test/custom-editor-mentions.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 32,
+      "path": "packages/coding-agent/test/custom-editor-shell-autocomplete.test.ts",
+      "canonical_path": "packages/coding-agent/test/custom-editor-shell-autocomplete.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 33,
+      "path": "packages/coding-agent/test/custom-editor-shell-prompt.test.ts",
+      "canonical_path": "packages/coding-agent/test/custom-editor-shell-prompt.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 34,
+      "path": "packages/coding-agent/test/custom-message.test.ts",
+      "canonical_path": "packages/coding-agent/test/custom-message.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 35,
+      "path": "packages/coding-agent/test/external-editor.test.ts",
+      "canonical_path": "packages/coding-agent/test/external-editor.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 36,
+      "path": "packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "canonical_path": "packages/coding-agent/test/first-time-setup-fork.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 37,
+      "path": "packages/coding-agent/test/first-time-setup.test.ts",
+      "canonical_path": "packages/coding-agent/test/first-time-setup.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 38,
+      "path": "packages/coding-agent/test/fixtures/fake-external-editor.mjs",
+      "canonical_path": "packages/coding-agent/test/fixtures/fake-external-editor.mjs",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 39,
+      "path": "packages/coding-agent/test/footer-data-provider.test.ts",
+      "canonical_path": "packages/coding-agent/test/footer-data-provider.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 40,
+      "path": "packages/coding-agent/test/footer-width.test.ts",
+      "canonical_path": "packages/coding-agent/test/footer-width.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 41,
+      "path": "packages/coding-agent/test/format-resume-command.test.ts",
+      "canonical_path": "packages/coding-agent/test/format-resume-command.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 42,
+      "path": "packages/coding-agent/test/interactive-compaction-hold.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-compaction-hold.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 43,
+      "path": "packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 44,
+      "path": "packages/coding-agent/test/interactive-mode-bash-routing.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-bash-routing.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 45,
+      "path": "packages/coding-agent/test/interactive-mode-clone-command.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-clone-command.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 46,
+      "path": "packages/coding-agent/test/interactive-mode-compaction.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-compaction.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 47,
+      "path": "packages/coding-agent/test/interactive-mode-import-command.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-import-command.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 48,
+      "path": "packages/coding-agent/test/interactive-mode-retry-errors.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-retry-errors.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 49,
+      "path": "packages/coding-agent/test/interactive-mode-send-now.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-send-now.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 50,
+      "path": "packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-startup-input.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 51,
+      "path": "packages/coding-agent/test/interactive-mode-status.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-status.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 52,
+      "path": "packages/coding-agent/test/interactive-mode-suspend.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-mode-suspend.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 53,
+      "path": "packages/coding-agent/test/interactive-tui.test.ts",
+      "canonical_path": "packages/coding-agent/test/interactive-tui.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 54,
+      "path": "packages/coding-agent/test/json-utils.test.ts",
+      "canonical_path": "packages/coding-agent/test/json-utils.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 55,
+      "path": "packages/coding-agent/test/keybindings-migration.test.ts",
+      "canonical_path": "packages/coding-agent/test/keybindings-migration.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 56,
+      "path": "packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "canonical_path": "packages/coding-agent/test/legacy-compat/built-runtime-smoke.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 57,
+      "path": "packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+      "canonical_path": "packages/coding-agent/test/legacy-compat/runtime-contracts.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 58,
+      "path": "packages/coding-agent/test/max-thinking.test.ts",
+      "canonical_path": "packages/coding-agent/test/max-thinking.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 59,
+      "path": "packages/coding-agent/test/model-selector.test.ts",
+      "canonical_path": "packages/coding-agent/test/model-selector.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 60,
+      "path": "packages/coding-agent/test/new-messages-pill.test.ts",
+      "canonical_path": "packages/coding-agent/test/new-messages-pill.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 61,
+      "path": "packages/coding-agent/test/notice-center.test.ts",
+      "canonical_path": "packages/coding-agent/test/notice-center.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 62,
+      "path": "packages/coding-agent/test/notice-sources.test.ts",
+      "canonical_path": "packages/coding-agent/test/notice-sources.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 63,
+      "path": "packages/coding-agent/test/oauth-selector.test.ts",
+      "canonical_path": "packages/coding-agent/test/oauth-selector.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 64,
+      "path": "packages/coding-agent/test/package-command-paths.test.ts",
+      "canonical_path": "packages/coding-agent/test/package-command-paths.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 65,
+      "path": "packages/coding-agent/test/run-summary.test.ts",
+      "canonical_path": "packages/coding-agent/test/run-summary.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 66,
+      "path": "packages/coding-agent/test/scrollbar-theme.test.ts",
+      "canonical_path": "packages/coding-agent/test/scrollbar-theme.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 67,
+      "path": "packages/coding-agent/test/session-header.test.ts",
+      "canonical_path": "packages/coding-agent/test/session-header.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 68,
+      "path": "packages/coding-agent/test/session-selector-path-delete.test.ts",
+      "canonical_path": "packages/coding-agent/test/session-selector-path-delete.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 69,
+      "path": "packages/coding-agent/test/session-selector-rename.test.ts",
+      "canonical_path": "packages/coding-agent/test/session-selector-rename.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 70,
+      "path": "packages/coding-agent/test/session-selector-search.test.ts",
+      "canonical_path": "packages/coding-agent/test/session-selector-search.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 71,
+      "path": "packages/coding-agent/test/settings-selector.test.ts",
+      "canonical_path": "packages/coding-agent/test/settings-selector.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 72,
+      "path": "packages/coding-agent/test/shells-panel.test.ts",
+      "canonical_path": "packages/coding-agent/test/shells-panel.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 73,
+      "path": "packages/coding-agent/test/shortcuts-view.test.ts",
+      "canonical_path": "packages/coding-agent/test/shortcuts-view.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 74,
+      "path": "packages/coding-agent/test/status-indicator.test.ts",
+      "canonical_path": "packages/coding-agent/test/status-indicator.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 75,
+      "path": "packages/coding-agent/test/status-line.test.ts",
+      "canonical_path": "packages/coding-agent/test/status-line.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 76,
+      "path": "packages/coding-agent/test/sticky-prompt.test.ts",
+      "canonical_path": "packages/coding-agent/test/sticky-prompt.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 77,
+      "path": "packages/coding-agent/test/subagent-footer.test.ts",
+      "canonical_path": "packages/coding-agent/test/subagent-footer.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 78,
+      "path": "packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/3217-scoped-model-order.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 79,
+      "path": "packages/coding-agent/test/suite/regressions/4167-thinking-toggle-pending-tool-render.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/4167-thinking-toggle-pending-tool-render.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 80,
+      "path": "packages/coding-agent/test/suite/regressions/5080-signal-shutdown-extension-cleanup.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/5080-signal-shutdown-extension-cleanup.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 81,
+      "path": "packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/5433-extension-oauth-prompt-input.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 82,
+      "path": "packages/coding-agent/test/suite/regressions/5596-missing-theme-export.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/5596-missing-theme-export.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 83,
+      "path": "packages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 84,
+      "path": "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/5943-session-start-notify.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 85,
+      "path": "packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/6949-unavailable-scoped-model.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 86,
+      "path": "packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/7027-credential-refresh-hang.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 87,
+      "path": "packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/7153-scoped-models-refresh.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 88,
+      "path": "packages/coding-agent/test/suite/regressions/7209-model-selector-filter-resets-selection.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/7209-model-selector-filter-resets-selection.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 89,
+      "path": "packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/7443-model-command-cached-match.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 90,
+      "path": "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "canonical_path": "packages/coding-agent/test/suite/regressions/startup-session-rebind-duplicate-subscription.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 91,
+      "path": "packages/coding-agent/test/syntax-highlight.test.ts",
+      "canonical_path": "packages/coding-agent/test/syntax-highlight.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 92,
+      "path": "packages/coding-agent/test/test-theme-colors.ts",
+      "canonical_path": "packages/coding-agent/test/test-theme-colors.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 93,
+      "path": "packages/coding-agent/test/theme-detection.test.ts",
+      "canonical_path": "packages/coding-agent/test/theme-detection.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 94,
+      "path": "packages/coding-agent/test/theme-export.test.ts",
+      "canonical_path": "packages/coding-agent/test/theme-export.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 95,
+      "path": "packages/coding-agent/test/theme-picker.test.ts",
+      "canonical_path": "packages/coding-agent/test/theme-picker.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 96,
+      "path": "packages/coding-agent/test/tool-execution-component.test.ts",
+      "canonical_path": "packages/coding-agent/test/tool-execution-component.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 97,
+      "path": "packages/coding-agent/test/tree-selector.test.ts",
+      "canonical_path": "packages/coding-agent/test/tree-selector.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 98,
+      "path": "packages/coding-agent/test/trust-selector.test.ts",
+      "canonical_path": "packages/coding-agent/test/trust-selector.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 99,
+      "path": "packages/coding-agent/test/ui-style-settings.test.ts",
+      "canonical_path": "packages/coding-agent/test/ui-style-settings.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 100,
+      "path": "packages/coding-agent/test/user-message.test.ts",
+      "canonical_path": "packages/coding-agent/test/user-message.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 101,
+      "path": "packages/tui/native/darwin/README.md",
+      "canonical_path": "packages/tui/native/darwin/README.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": false,
+      "classification": "new-ts-non-test-dependency"
+    },
+    {
+      "index": 102,
+      "path": "packages/tui/package.json",
+      "canonical_path": "packages/tui/package.json",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": false,
+      "classification": "new-ts-non-test-dependency"
+    },
+    {
+      "index": 103,
+      "path": "packages/tui/README.md",
+      "canonical_path": "packages/tui/README.md",
+      "repo": "ice",
+      "is_test": false,
+      "already_canonical": false,
+      "classification": "new-ts-non-test-dependency"
+    },
+    {
+      "index": 104,
+      "path": "packages/tui/test/autocomplete.test.ts",
+      "canonical_path": "packages/tui/test/autocomplete.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 105,
+      "path": "packages/tui/test/background-line.test.ts",
+      "canonical_path": "packages/tui/test/background-line.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 106,
+      "path": "packages/tui/test/bug-regression-isimageline-startswith-bug.test.ts",
+      "canonical_path": "packages/tui/test/bug-regression-isimageline-startswith-bug.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 107,
+      "path": "packages/tui/test/editor.test.ts",
+      "canonical_path": "packages/tui/test/editor.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 108,
+      "path": "packages/tui/test/fuzzy.test.ts",
+      "canonical_path": "packages/tui/test/fuzzy.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 109,
+      "path": "packages/tui/test/input.test.ts",
+      "canonical_path": "packages/tui/test/input.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 110,
+      "path": "packages/tui/test/keybindings.test.ts",
+      "canonical_path": "packages/tui/test/keybindings.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 111,
+      "path": "packages/tui/test/keys.test.ts",
+      "canonical_path": "packages/tui/test/keys.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 112,
+      "path": "packages/tui/test/layout.test.ts",
+      "canonical_path": "packages/tui/test/layout.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 113,
+      "path": "packages/tui/test/legacy-compat.test.ts",
+      "canonical_path": "packages/tui/test/legacy-compat.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 114,
+      "path": "packages/tui/test/markdown.test.ts",
+      "canonical_path": "packages/tui/test/markdown.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 115,
+      "path": "packages/tui/test/overlay-non-capturing.test.ts",
+      "canonical_path": "packages/tui/test/overlay-non-capturing.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 116,
+      "path": "packages/tui/test/overlay-options.test.ts",
+      "canonical_path": "packages/tui/test/overlay-options.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 117,
+      "path": "packages/tui/test/overlay-screen-position.test.ts",
+      "canonical_path": "packages/tui/test/overlay-screen-position.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 118,
+      "path": "packages/tui/test/overlay-short-content.test.ts",
+      "canonical_path": "packages/tui/test/overlay-short-content.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 119,
+      "path": "packages/tui/test/regression-overlay-cjk-boundary.test.ts",
+      "canonical_path": "packages/tui/test/regression-overlay-cjk-boundary.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 120,
+      "path": "packages/tui/test/regression-regional-indicator-width.test.ts",
+      "canonical_path": "packages/tui/test/regression-regional-indicator-width.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 121,
+      "path": "packages/tui/test/select-list.test.ts",
+      "canonical_path": "packages/tui/test/select-list.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 122,
+      "path": "packages/tui/test/settings-list.test.ts",
+      "canonical_path": "packages/tui/test/settings-list.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 123,
+      "path": "packages/tui/test/stdin-buffer.test.ts",
+      "canonical_path": "packages/tui/test/stdin-buffer.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 124,
+      "path": "packages/tui/test/tab-width.test.ts",
+      "canonical_path": "packages/tui/test/tab-width.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 125,
+      "path": "packages/tui/test/terminal-colors.test.ts",
+      "canonical_path": "packages/tui/test/terminal-colors.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 126,
+      "path": "packages/tui/test/terminal-image.test.ts",
+      "canonical_path": "packages/tui/test/terminal-image.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 127,
+      "path": "packages/tui/test/terminal.test.ts",
+      "canonical_path": "packages/tui/test/terminal.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 128,
+      "path": "packages/tui/test/test-themes.ts",
+      "canonical_path": "packages/tui/test/test-themes.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 129,
+      "path": "packages/tui/test/truncate-to-width.test.ts",
+      "canonical_path": "packages/tui/test/truncate-to-width.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 130,
+      "path": "packages/tui/test/truncated-text.test.ts",
+      "canonical_path": "packages/tui/test/truncated-text.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 131,
+      "path": "packages/tui/test/tui-alt-screen.test.ts",
+      "canonical_path": "packages/tui/test/tui-alt-screen.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 132,
+      "path": "packages/tui/test/tui-cell-size-input.test.ts",
+      "canonical_path": "packages/tui/test/tui-cell-size-input.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 133,
+      "path": "packages/tui/test/tui-overlay-style-leak.test.ts",
+      "canonical_path": "packages/tui/test/tui-overlay-style-leak.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 134,
+      "path": "packages/tui/test/tui-render.test.ts",
+      "canonical_path": "packages/tui/test/tui-render.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 135,
+      "path": "packages/tui/test/tui-shrink.test.ts",
+      "canonical_path": "packages/tui/test/tui-shrink.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 136,
+      "path": "packages/tui/test/virtual-terminal.ts",
+      "canonical_path": "packages/tui/test/virtual-terminal.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 137,
+      "path": "packages/tui/test/word-navigation.test.ts",
+      "canonical_path": "packages/tui/test/word-navigation.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    },
+    {
+      "index": 138,
+      "path": "packages/tui/test/wrap-ansi.test.ts",
+      "canonical_path": "packages/tui/test/wrap-ansi.test.ts",
+      "repo": "ice",
+      "is_test": true,
+      "already_canonical": false,
+      "classification": "test-read-only"
+    }
+  ],
+  "new_dependencies": [
+    {
+      "path": "packages/tui/native/darwin/README.md",
+      "lines": 21,
+      "sha256": "610b5d0ad15af4ac467242bded1786e19812b1d1aed9c6ee1e64d1e31aebe6c7",
+      "visible_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "source_review": "docs/ice-gap/evidence/tui-source-review.json",
+      "entry_ids": [],
+      "notes": "Documentation credit fully recorded; coordinator should use final terminal documentation ownership mapping before publication."
+    },
+    {
+      "path": "packages/tui/package.json",
+      "lines": 52,
+      "sha256": "095cdcc7f4ee8031e6e5a479cd07e802c4976ad5a7b71be2cd47ad3c66401601",
+      "visible_ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "source_review": "docs/ice-gap/evidence/tui-source-review.json",
+      "entry_ids": [
+        "TUI-260"
+      ],
+      "notes": "Exact direct final entry anchor available."
+    },
+    {
+      "path": "packages/tui/README.md",
+      "lines": 856,
+      "sha256": "a88f2012a0375f6d6c04338e48c6bf3be6df638cf116c371a1f8b0ad6fa24fc7",
+      "visible_ranges": [
+        [
+          1,
+          856
+        ]
+      ],
+      "source_review": "docs/ice-gap/evidence/tui-source-review.json",
+      "entry_ids": [],
+      "notes": "Documentation credit fully recorded; coordinator should use final terminal documentation ownership mapping before publication."
+    }
+  ],
+  "recommendation": "Preserve the original 139 source-read rows under supplemental_read_dependencies. Exclude the 124 test/helper paths from the required non-test file ledger. Do not duplicate the 12 existing canonical paths. Only three paths can increase the current denominator, and only when they are not already present in the coordinator's separate supplemental ledger."
+}

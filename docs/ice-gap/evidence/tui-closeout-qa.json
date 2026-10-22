@@ -1,0 +1,212 @@
+{
+  "area": "tui",
+  "owner": "/root/tui_closeout",
+  "stage": "owner-complete-released-to-coordinator",
+  "source_only": true,
+  "application_executed": false,
+  "tests_executed": false,
+  "network_calls_made": false,
+  "source_files_modified": false,
+  "shared_publication_modified": false,
+  "frozen_heads": {
+    "ice": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+    "rust": "ff9270f26e263ea9ce54349786bf2d93c4517476"
+  },
+  "artifacts": {
+    "spec": {
+      "path": "docs/ice-gap/evidence/spec-tui.json",
+      "sha256": "6348be7e858ee5d22c78cfe04f6fb003b00b9f9ed55b66c0271d78995c38254d"
+    },
+    "proposal-tui.json": {
+      "path": "docs/ice-gap/evidence/proposal-tui.json",
+      "sha256": "9403cd7fd852645553548fb60bb10192b5a38386d66dc3fd24f088221e10de89"
+    },
+    "tui-source-review.json": {
+      "path": "docs/ice-gap/evidence/tui-source-review.json",
+      "sha256": "0cf812a4eb70b5e0bbecdd5c0263a772305ef0cb51568274c37ee5d1c366e20f"
+    },
+    "tui-closeout-coverage.json": {
+      "path": "docs/ice-gap/evidence/tui-closeout-coverage.json",
+      "sha256": "625cbe2cf2931ea2e5081a33b508333302904ee579e8b582bf871772bb2dc81d"
+    }
+  },
+  "validation_command": "node docs/ice-gap/tools/verify-area-evidence.mjs tui",
+  "validation": {
+    "area": "tui",
+    "entries": 151,
+    "proposal_entries": 151,
+    "ledger_rows": 224,
+    "surfaces": 1151,
+    "unique_source_references": 2441,
+    "read_records": 440,
+    "problems": []
+  },
+  "coverage": {
+    "entries": 151,
+    "ledger": 224,
+    "surfaces": 1151,
+    "candidates": {
+      "original": 923,
+      "mapped": 897,
+      "excluded": 26,
+      "pending": 0,
+      "mechanical_review_complete": true,
+      "manual_additional_surfaces": 75
+    },
+    "source_records": 440,
+    "source_visible_lines": 135550,
+    "fully_read_files": 427,
+    "identity_conflicts": [],
+    "total_line_count_conflicts": [],
+    "unresolved_required_source": [],
+    "partial_tests": [
+      {
+        "path": "ice:packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+        "total_lines": 90,
+        "ranges": [
+          [
+            1,
+            18
+          ],
+          [
+            20,
+            90
+          ]
+        ],
+        "excluded_redacted_lines": [
+          19
+        ],
+        "excluded_unverified_lines": [],
+        "ordinary_missing_ranges": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/oauth-selector.test.ts",
+        "total_lines": 148,
+        "ranges": [
+          [
+            1,
+            53
+          ],
+          [
+            55,
+            148
+          ]
+        ],
+        "excluded_redacted_lines": [
+          54
+        ],
+        "excluded_unverified_lines": [],
+        "ordinary_missing_ranges": []
+      }
+    ],
+    "excluded_source_files": [
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/appearance-customizer.ts",
+        "redacted": [
+          883
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/compaction-summary-message.ts",
+        "redacted": [
+          35
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/components/tree-selector.ts",
+        "redacted": [
+          337
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "redacted": [
+          7027
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/interactive-mode-anthropic-warning.test.ts",
+        "redacted": [
+          19
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/coding-agent/test/oauth-selector.test.ts",
+        "redacted": [
+          54
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/tui/src/components/editor.ts",
+        "redacted": [
+          2405
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/tui/src/components/markdown.ts",
+        "redacted": [
+          245
+        ],
+        "unverified": []
+      },
+      {
+        "path": "ice:packages/tui/src/utils.ts",
+        "redacted": [
+          902
+        ],
+        "unverified": []
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/events.rs",
+        "redacted": [
+          471
+        ],
+        "unverified": []
+      },
+      {
+        "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+        "redacted": [],
+        "unverified": [
+          627
+        ]
+      }
+    ],
+    "claims": 14,
+    "supplemental_ledger": 139
+  },
+  "mechanism_review": {
+    "all_151_have_required_fields": true,
+    "new_13_independently_reviewed_by_coordinator": true,
+    "terminal_67_previously_released": true,
+    "corrections_applied": [
+      "TUI-005 owns syntax parser and DynamicBorder; MISC-025 owns entity decoder.",
+      "TUI-055 only credits real native user-Bash streaming/cancellation, not an unsupported background registry.",
+      "TUI-058 uses SESSION-037; TUI-059 uses SET-003.",
+      "TUI-074 depends TOOLS-004; exact steering/follow-up failure branches and separate internal/host histories are described.",
+      "TUI-072–084 use full source paths and explicit single ranges; TUI-077 has exact nearest native anchors.",
+      "TUI-073 remains extension widgets; TUI-078 is /share.",
+      "TUI-083 uses SESSION-036, SET-011 and AI-026.",
+      "TUI-253/255 include coordinator-verified native cursor and completion defects without duplicating the defect catalog."
+    ]
+  },
+  "handoff": {
+    "owner_work_complete": true,
+    "mechanical_pending": 0,
+    "coordinator_acceptance_required": true,
+    "proposal_complete_flag": false,
+    "reason_for_complete_flag": "The coordinator owns final independent acceptance and shared publication.",
+    "remaining_coordinator_items": [
+      "Reconcile the preserved source-credit conflict for native sessions.rs627; the TUI manifest excludes it conservatively.",
+      "Perform global dependency/FPC/defect/canonical-coverage integration and publication.",
+      "Apply the coordinator's planned final prose normalization."
+    ],
+    "native_defect_catalog_owner": "/root"
+  }
+}

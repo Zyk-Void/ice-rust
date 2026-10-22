@@ -1,0 +1,187 @@
+{
+  "captured_at": "2026-10-20T07:52:37.525127+00:00",
+  "complete": true,
+  "ledger_rows": 873,
+  "mapped": 861,
+  "not_applicable": 12,
+  "pending": 0,
+  "areas": [
+    {
+      "area": "ai",
+      "complete": true,
+      "entries": 50,
+      "published": true
+    },
+    {
+      "area": "agent",
+      "complete": true,
+      "entries": 65,
+      "published": true
+    },
+    {
+      "area": "tools",
+      "complete": true,
+      "entries": 31,
+      "published": true
+    },
+    {
+      "area": "session",
+      "complete": true,
+      "entries": 38,
+      "published": true
+    },
+    {
+      "area": "settings",
+      "complete": true,
+      "entries": 33,
+      "published": true
+    },
+    {
+      "area": "extensions",
+      "complete": true,
+      "entries": 57,
+      "published": true
+    },
+    {
+      "area": "rpc-remote",
+      "complete": true,
+      "entries": 36,
+      "published": true
+    },
+    {
+      "area": "tui",
+      "complete": true,
+      "entries": 151,
+      "published": true
+    },
+    {
+      "area": "subagents",
+      "complete": true,
+      "entries": 44,
+      "published": true
+    },
+    {
+      "area": "safe-verify",
+      "complete": true,
+      "entries": 26,
+      "published": true
+    },
+    {
+      "area": "observability",
+      "complete": true,
+      "entries": 29,
+      "published": true
+    },
+    {
+      "area": "cognee",
+      "complete": true,
+      "entries": 68,
+      "published": true
+    },
+    {
+      "area": "blackhole",
+      "complete": true,
+      "entries": 41,
+      "published": true
+    },
+    {
+      "area": "providers-auth",
+      "complete": true,
+      "entries": 33,
+      "published": true
+    },
+    {
+      "area": "cli-packaging",
+      "complete": true,
+      "entries": 46,
+      "published": true
+    },
+    {
+      "area": "misc",
+      "complete": true,
+      "entries": 43,
+      "published": true
+    }
+  ],
+  "surface_counts": {
+    "cli": {
+      "total": 170,
+      "pending": 0
+    },
+    "environment": {
+      "total": 284,
+      "pending": 0
+    },
+    "extension-api": {
+      "total": 286,
+      "pending": 0
+    },
+    "hooks": {
+      "total": 182,
+      "pending": 0
+    },
+    "keybindings": {
+      "total": 186,
+      "pending": 0
+    },
+    "observability": {
+      "total": 90,
+      "pending": 0
+    },
+    "paths": {
+      "total": 254,
+      "pending": 0
+    },
+    "providers-auth": {
+      "total": 120,
+      "pending": 0
+    },
+    "rpc": {
+      "total": 570,
+      "pending": 0
+    },
+    "session-types": {
+      "total": 83,
+      "pending": 0
+    },
+    "settings": {
+      "total": 1092,
+      "pending": 0
+    },
+    "slash-commands": {
+      "total": 67,
+      "pending": 0
+    },
+    "tools": {
+      "total": 64,
+      "pending": 0
+    },
+    "tui": {
+      "total": 527,
+      "pending": 0
+    }
+  },
+  "entry_count": 791,
+  "first_pass_claims": 147,
+  "first_pass_matrix_claims": 160,
+  "unnamed_export_review": {
+    "records": 1654,
+    "runtime": 807,
+    "type": 847,
+    "unresolved": 0
+  },
+  "phase": "complete-active",
+  "original_validation": {
+    "passed": true,
+    "at": "2026-10-20T06:59:27.030881+00:00",
+    "report": "evidence/original-checkout-validation.json",
+    "sha256": "f28f9c7fcc3e1cb5d271de94c4527585fa38ef5bbca1a9fedf9d8530532bd660"
+  },
+  "complete_scope": "full-closeout",
+  "strict_boundary_complete": true,
+  "overall_closeout_complete": true,
+  "boundary_exception": "evidence/closeout-boundary-exception.json",
+  "boundary_verification": "evidence/closeout-boundary-verification.json",
+  "boundary_status_updated_at": "2026-10-20T07:53:42.329970+00:00",
+  "boundary_resolution": "evidence/closeout-boundary-resolution.json"
+}

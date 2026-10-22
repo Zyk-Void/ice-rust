@@ -129,10 +129,23 @@ fn session_file_name(created_at: i64, id: &str) -> String {
     format!("{safe}_{id}.jsonl")
 }
 
-/// Render `ms` as an ISO-8601 UTC timestamp `YYYY-MM-DDTHH:MM:SS.mmmZ` (the TS
-/// `new Date(createdAt).toISOString()` shape). Hand-rolled to avoid a chrono/jiff
-/// dependency; the format is fully determined by the ms value.
-fn iso_timestamp_from_ms(ms: i64) -> String {
+/// Render an in-range JavaScript Date millisecond timestamp as `toISOString()`.
+/// Values outside Date's ±8.64e15 ms range are rejected, rather than formatting
+/// a timestamp that JavaScript would consider invalid.
+pub(crate) fn js_iso_timestamp_from_ms(ms: i64) -> SessionResult<String> {
+    const MAX_DATE_MS: i64 = 8_640_000_000_000_000;
+    if !(-MAX_DATE_MS..=MAX_DATE_MS).contains(&ms) {
+        return Err(SessionError::invalid_entry(format!(
+            "Timestamp {ms} is outside the JavaScript Date range"
+        )));
+    }
+    Ok(iso_timestamp_from_ms(ms))
+}
+
+/// Render an integer millisecond timestamp as an ISO-8601 UTC timestamp.
+/// Hand-rolled to avoid a chrono/jiff dependency; years outside 0000–9999 use
+/// the signed six-digit expanded-year form required by JavaScript Date.
+pub(crate) fn iso_timestamp_from_ms(ms: i64) -> String {
     // Days since 1970-01-01 (floor; supports negative ms for pre-epoch, though
     // timestamps here are always non-negative).
     let total_seconds = ms.div_euclid(1000);
@@ -145,7 +158,14 @@ fn iso_timestamp_from_ms(ms: i64) -> String {
     let second = secs_of_day % 60;
 
     let (year, month, day) = civil_from_days(days_since_epoch);
-    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}Z")
+    let year = if (0..=9999).contains(&year) {
+        format!("{year:04}")
+    } else if year > 9999 {
+        format!("+{year:06}")
+    } else {
+        format!("-{:06}", year.abs())
+    };
+    format!("{year}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}Z")
 }
 
 /// Howard Hinnant's days-from-epoch → civil date algorithm. Returns
@@ -198,6 +218,14 @@ pub struct JsonlSessionRepo {
     /// Cached resolved root (TS `rootPromise`). `StdMutex` so resolution is
     /// sync-obtained; the resolved value is then reused on every call.
     root: StdMutex<Option<String>>,
+}
+
+/// Healthy sessions and per-file discovery failures, kept separate so callers
+/// that only need metadata retain their existing return type.
+#[derive(Debug, Default)]
+pub struct JsonlSessionDiscovery {
+    pub sessions: Vec<JsonlSessionMetadata>,
+    pub skipped: Vec<String>,
 }
 
 impl JsonlSessionRepo {
@@ -278,6 +306,15 @@ impl JsonlSessionRepo {
         &self,
         options: &JsonlSessionListOptions,
     ) -> SessionResult<Vec<JsonlSessionMetadata>> {
+        Ok(self.list_with_diagnostics(options).await?.sessions)
+    }
+
+    /// List healthy sessions and report every unreadable, empty or malformed header.
+    /// Root/directory failures remain errors rather than an empty successful list.
+    pub async fn list_with_diagnostics(
+        &self,
+        options: &JsonlSessionListOptions,
+    ) -> SessionResult<JsonlSessionDiscovery> {
         list_jsonl_session_metadata(self, options).await
     }
 
@@ -297,6 +334,8 @@ impl JsonlSessionRepo {
         &self,
         metadata: &JsonlSessionMetadata,
     ) -> SessionResult<()> {
+        let _ownership =
+            crate::session::jsonl::storage::claim_ownership(self.fs.as_ref(), &metadata.path)?;
         file_result(
             self.fs.remove(&metadata.path, false, true, None).await,
             &format!("Failed to delete session {}", metadata.path),
@@ -348,6 +387,96 @@ impl JsonlSessionRepo {
             source_storage
                 .fork(&path, header, fork, self.clock.clone(), self.ids.clone())
                 .await
+        })
+        .await
+    }
+
+    /// Fork an already-owned, settled storage without reopening its file.
+    /// The caller must prevent concurrent mutations while taking this snapshot.
+    pub async fn fork_from_storage(
+        &self,
+        source: &dyn crate::session::types::SessionStorage,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_from_storage_at(source, options, fork, None).await
+    }
+
+    /// [`Self::fork_from_storage`] into an already-resolved session directory.
+    pub async fn fork_from_storage_in_directory(
+        &self,
+        source: &dyn crate::session::types::SessionStorage,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_from_storage_at(source, options, fork, Some(directory))
+            .await
+    }
+
+    async fn fork_from_storage_at(
+        &self,
+        source: &dyn crate::session::types::SessionStorage,
+        options: &JsonlSessionCreateOptions,
+        fork: &ForkOptions,
+        directory: Option<&str>,
+    ) -> SessionResult<JsonlSessionStorage> {
+        use crate::session::types::{EntryOrder, EntryQuery, SessionMutation};
+        let entries = source
+            .find_entries(&EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            })
+            .await?;
+        let mut state = crate::session::state::SessionState::new();
+        for mut entry in entries {
+            let seq = state.next_sequence();
+            entry.base_mut().seq = seq;
+            let id = entry.id().to_string();
+            state.apply_mutation(SessionMutation::Entry {
+                seq,
+                timestamp: entry.base().timestamp,
+                lane: None,
+                entry,
+            })?;
+            if let Some(label) = source.get_label(&id).await? {
+                state.apply_mutation(SessionMutation::FactLabel {
+                    seq: state.next_sequence(),
+                    target_id: id,
+                    label: Some(label),
+                })?;
+            }
+        }
+        for pointer in source.get_lanes().await? {
+            state.apply_mutation(SessionMutation::Lane {
+                seq: state.next_sequence(),
+                lane: pointer.lane,
+                leaf_id: pointer.leaf_id,
+            })?;
+        }
+        state.apply_mutation(SessionMutation::FactName {
+            seq: state.next_sequence(),
+            name: source.get_name().await?,
+        })?;
+        let mutations = state.create_fork_mutations(fork)?;
+        let mut options = options.clone();
+        if options.parent_session_id.is_none() {
+            options.parent_session_id = Some(source.metadata().id);
+        }
+        let destination = self.resolve_create_destination(&options).await?;
+        self.claim_create_destination(&destination, async {
+            let (header, path) = self
+                .prepare_create(&destination, &options, directory)
+                .await?;
+            JsonlSessionStorage::publish_fork(
+                self.fs.clone(),
+                &path,
+                header,
+                mutations,
+                self.clock.clone(),
+                self.ids.clone(),
+            )
+            .await
         })
         .await
     }
@@ -531,8 +660,8 @@ impl JsonlSessionRepo {
 // ---- free-function helpers (mirror repo.ts free functions) ----
 
 /// The list of cwd-encoded session directories to scan. With `cwd`, just that
-/// cwd's directory (if it exists); without, every directory/symlink child of
-/// the root. Mirrors `jsonlSessionDirectories`.
+/// cwd's directory (if it exists); without, the root itself and every
+/// directory/symlink child. Native imports can live directly under the root.
 async fn jsonl_session_directories(
     repo: &JsonlSessionRepo,
     cwd: Option<&str>,
@@ -573,10 +702,13 @@ async fn jsonl_session_directories(
         fs.list_dir(&sessions_root, None).await,
         &format!("Failed to list sessions directory {sessions_root}"),
     )?;
-    Ok(entries
-        .iter()
-        .filter(|entry| matches!(entry.kind, FileKind::Directory | FileKind::Symlink))
-        .map(|entry| entry.path.to_string_lossy().into_owned())
+    Ok(std::iter::once(sessions_root)
+        .chain(
+            entries
+                .iter()
+                .filter(|entry| matches!(entry.kind, FileKind::Directory | FileKind::Symlink))
+                .map(|entry| entry.path.to_string_lossy().into_owned()),
+        )
         .collect())
 }
 
@@ -586,9 +718,10 @@ async fn jsonl_session_directories(
 async fn list_jsonl_session_metadata(
     repo: &JsonlSessionRepo,
     query: &JsonlSessionListOptions,
-) -> SessionResult<Vec<JsonlSessionMetadata>> {
+) -> SessionResult<JsonlSessionDiscovery> {
     let fs = &repo.fs;
     let mut metadata: Vec<JsonlSessionMetadata> = Vec::new();
+    let mut skipped = Vec::new();
     for directory in jsonl_session_directories(repo, query.cwd.as_deref()).await? {
         let entries = file_result(
             fs.list_dir(&directory, None).await,
@@ -599,18 +732,31 @@ async fn list_jsonl_session_metadata(
             .filter(|entry| entry.kind != FileKind::Directory && entry.name.ends_with(".jsonl"))
             .collect();
         for file in files {
-            let lines = file_result(
-                fs.read_text_lines(&file.path.to_string_lossy(), Some(1), None)
-                    .await,
-                &format!("Failed to read session header {}", file.path.display()),
-            )?;
+            let lines = match fs
+                .read_text_lines(&file.path.to_string_lossy(), Some(1), None)
+                .await
+            {
+                Ok(lines) => lines,
+                Err(error) => {
+                    tracing::warn!(path = %file.path.display(), %error, "Skipping unreadable session header");
+                    skipped.push(format!("{:?}: unreadable header ({error})", file.path));
+                    continue;
+                }
+            };
             let first_line = match lines.first() {
                 Some(line) => line,
-                None => continue,
+                None => {
+                    skipped.push(format!("{:?}: empty header", file.path));
+                    continue;
+                }
             };
             let header = match parse_header(first_line) {
                 Ok(h) => h,
-                Err(_) => continue,
+                Err(error) => {
+                    tracing::warn!(path = %file.path.display(), %error, "Skipping malformed session header");
+                    skipped.push(format!("{:?}: malformed header ({error})", file.path));
+                    continue;
+                }
             };
             metadata.push(metadata_from_header(
                 &header,
@@ -619,9 +765,23 @@ async fn list_jsonl_session_metadata(
             ));
         }
     }
-    // Newest-first by modified_at (TS `right.modifiedAt - left.modifiedAt`).
-    metadata.sort_by(|left, right| right.modified_at.cmp(&left.modified_at));
-    Ok(metadata)
+    metadata.sort_by(compare_session_metadata);
+    skipped.sort();
+    Ok(JsonlSessionDiscovery {
+        sessions: metadata,
+        skipped,
+    })
+}
+
+/// Newest file activity first, with a deterministic path tie-break for pickers.
+fn compare_session_metadata(
+    left: &JsonlSessionMetadata,
+    right: &JsonlSessionMetadata,
+) -> std::cmp::Ordering {
+    right
+        .modified_at
+        .cmp(&left.modified_at)
+        .then_with(|| left.path.cmp(&right.path))
 }
 
 /// Open a session file, confirming it exists and its header id matches the
@@ -875,6 +1035,24 @@ mod tests {
         );
     }
 
+    #[test]
+    fn iso_timestamp_matches_javascript_expanded_year_and_range_rules() {
+        assert_eq!(
+            js_iso_timestamp_from_ms(8_640_000_000_000_000).unwrap(),
+            "+275760-09-13T00:00:00.000Z"
+        );
+        assert_eq!(
+            js_iso_timestamp_from_ms(-8_640_000_000_000_000).unwrap(),
+            "-271821-04-20T00:00:00.000Z"
+        );
+        assert_eq!(
+            js_iso_timestamp_from_ms(253_402_300_800_000).unwrap(),
+            "+010000-01-01T00:00:00.000Z"
+        );
+        assert!(js_iso_timestamp_from_ms(8_640_000_000_000_001).is_err());
+        assert!(js_iso_timestamp_from_ms(-8_640_000_000_000_001).is_err());
+    }
+
     #[tokio::test]
     async fn create_open_list_delete_roundtrip() {
         let env = ice_tools::InMemoryExecutionEnv::with_cwd("/proj".into());
@@ -1073,6 +1251,82 @@ mod tests {
             .unwrap();
         let fork_meta = listed.iter().find(|m| m.id == "fork-1").unwrap();
         assert_eq!(fork_meta.parent_session_id.as_deref(), Some("src"));
+        let reopened = r.open_by_jsonl_metadata(fork_meta).await.unwrap();
+        assert_eq!(reopened.get_stats().await.unwrap(), Default::default());
+        let fork_log = reopened
+            .get_log(&crate::session::types::LogOptions::default())
+            .await
+            .unwrap();
+        assert!(fork_log.iter().any(|item| matches!(item, crate::session::types::LogItem::Lane { lane, .. } if lane == "main")));
+    }
+
+    #[tokio::test]
+    async fn discovery_respects_custom_roots_and_explicit_cwd_filters() {
+        let fs: Arc<dyn FileSystem> = Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd(
+            "/launch-cwd".into(),
+        ));
+        let make_repo = |root: &str| {
+            JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
+                fs: fs.clone(),
+                sessions_root: root.into(),
+                clock: Arc::new(FakeClock::new()),
+                ids: Arc::new(CounterIdGenerator::new()),
+            })
+        };
+        let custom = make_repo("/custom/session-store");
+        let other = make_repo("/other/session-store");
+        for (repository, cwd, id) in [
+            (&custom, "/project-a", "project-a"),
+            (&custom, "/project-b", "project-b"),
+            (&other, "/project-a", "other-root"),
+        ] {
+            repository
+                .create_typed(&JsonlSessionCreateOptions {
+                    id: Some(id.into()),
+                    parent_session_id: None,
+                    cwd: cwd.into(),
+                    metadata: None,
+                })
+                .await
+                .unwrap();
+        }
+        let mut all = custom.list_typed(&Default::default()).await.unwrap();
+        all.sort_by(|a, b| a.id.cmp(&b.id));
+        assert_eq!(
+            all.iter().map(|meta| meta.id.as_str()).collect::<Vec<_>>(),
+            ["project-a", "project-b"]
+        );
+        assert!(all
+            .iter()
+            .all(|meta| meta.path.starts_with("/custom/session-store/")));
+        for cwd in ["/project-a", "/project-b"] {
+            let listed = custom
+                .list_typed(&JsonlSessionListOptions {
+                    cwd: Some(cwd.into()),
+                })
+                .await
+                .unwrap();
+            assert_eq!(listed.len(), 1);
+            assert_eq!(listed[0].cwd, cwd);
+            assert_eq!(listed[0].id, cwd.trim_start_matches('/'));
+        }
+        assert!(custom
+            .list_typed(&JsonlSessionListOptions {
+                cwd: Some("/missing-project".into()),
+            })
+            .await
+            .unwrap()
+            .is_empty());
+        let missing = make_repo("/missing-root");
+        assert!(missing
+            .list_typed(&Default::default())
+            .await
+            .unwrap()
+            .is_empty());
+        assert!(
+            !fs.exists("/missing-root", None).await.unwrap(),
+            "discovery must not create an absent root"
+        );
     }
 
     #[tokio::test]
@@ -1125,6 +1379,32 @@ mod tests {
         assert_eq!(
             m.metadata.as_ref().unwrap().get("count"),
             Some(&JsonValue::Number(42.into()))
+        );
+    }
+
+    #[test]
+    fn equal_activity_metadata_uses_a_stable_path_tie_break() {
+        let metadata = |id: &str, path: &str, modified_at| JsonlSessionMetadata {
+            id: id.into(),
+            created_at: 0,
+            cwd: "/proj".into(),
+            path: path.into(),
+            modified_at,
+            source_format: crate::session::jsonl::JsonlSourceFormat::V4,
+            parent_session_id: None,
+            legacy_parent_session_path: None,
+            metadata: None,
+        };
+        let same_time_a = metadata("a", "/sessions/a.jsonl", 10);
+        let same_time_z = metadata("z", "/sessions/z.jsonl", 10);
+        let newer = metadata("newer", "/sessions/newer.jsonl", 11);
+        assert_eq!(
+            compare_session_metadata(&same_time_a, &same_time_z),
+            std::cmp::Ordering::Less
+        );
+        assert_eq!(
+            compare_session_metadata(&newer, &same_time_a),
+            std::cmp::Ordering::Less
         );
     }
 

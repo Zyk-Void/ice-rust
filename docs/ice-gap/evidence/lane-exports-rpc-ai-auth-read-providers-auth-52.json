@@ -1,0 +1,657 @@
+{
+  "generated_at": "2026-10-20T03:12:53.781Z",
+  "purpose": "Exact source excerpts emitted for human/model review; emission is not by itself a completed disposition",
+  "files": [
+    {
+      "path": "packages/ai/src/providers/groq.ts",
+      "sha256": "a8bbced4fbc37370892fec68fb7f03cf634d08d134d9f003fa63edb5a8b60873",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "groqProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/groq.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/huggingface.models.ts",
+      "sha256": "0da3c6e72a35d04571f1800989c3731df686a8ab1291065b6dd8855966f0e675",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "HUGGINGFACE_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/huggingface.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/huggingface.ts",
+      "sha256": "51c4af194c9989ab033c5b3303831ec9e2df999f51d9fa40ab6d28f632e8ff43",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "huggingfaceProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/huggingface.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/images/register-builtins.ts",
+      "sha256": "8c8bd4e614b8b733c0a4232f7cc974bf38c5a4bb6b9615c732e3b794ff1d908f",
+      "emitted_ranges": [
+        [
+          29,
+          51
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "generateImagesOpenRouter",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/images/register-builtins.ts:30",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        },
+        {
+          "symbol": "registerBuiltInImagesApiProviders",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/images/register-builtins.ts:43",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/kimi-coding.models.ts",
+      "sha256": "57ca50b17d1e96ba8f064b63adfe9773c2e494d7495c52336769ef6b86a7e2ff",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "KIMI_CODING_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/kimi-coding.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/kimi-coding.ts",
+      "sha256": "1aee67b75455ff73f1452f6e885016ddf7f01670f4bee6c55867f8f0738e4cc3",
+      "emitted_ranges": [
+        [
+          6,
+          24
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "kimiCodingProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/kimi-coding.ts:7",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/minimax-cn.models.ts",
+      "sha256": "25dd4d8e980898f274a3c787a59e6e7570d596330c7f833f080b780817cdea74",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "MINIMAX_CN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/minimax-cn.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/minimax-cn.ts",
+      "sha256": "ae3170234556ef355f7cffcfc666888992ae50caa8daf07352f22bac69cca0ba",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "minimaxCnProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/minimax-cn.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/minimax.models.ts",
+      "sha256": "e80186fef0f1b647990f029281604c435da5d8ceb659d3f6a79681cdb03c3b41",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "MINIMAX_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/minimax.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/minimax.ts",
+      "sha256": "d571a6a8b5a47daf40b034a2dae4ac902a252fbd44b073c4caee8eeb1d7035b5",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "minimaxProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/minimax.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/mistral.models.ts",
+      "sha256": "949f1e72e32a0028beb855db2642f13783c8697c4be236e9061c241f1d698a51",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "MISTRAL_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/mistral.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/mistral.ts",
+      "sha256": "dfcd087d7317d6a6cd1acf701547567435f5eaf0c1cc1d8eb89eed7e977c2fb3",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "mistralProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/mistral.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/moonshotai-cn.models.ts",
+      "sha256": "059db388929164d03595ead666c3bcf56e8e078be072dc2d4d3a784b9e207cc2",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "MOONSHOTAI_CN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/moonshotai-cn.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/moonshotai-cn.ts",
+      "sha256": "da8ec0ed30a2cf42972cead61a93b1fcb64380095f9d062ee4ed9e4807ebd5bc",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "moonshotaiCnProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/moonshotai-cn.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/moonshotai.models.ts",
+      "sha256": "ddafd640693869455756b31e87d09df13388531cf8e0421bd3618d8836ac5eb2",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "MOONSHOTAI_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/moonshotai.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/moonshotai.ts",
+      "sha256": "2e269cca0231ebdbd2a58848ab3d19b0a43697e132b48a679e3c1b0cd4897665",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "moonshotaiProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/moonshotai.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/nvidia.models.ts",
+      "sha256": "15b8e279632a231d1794aec8083f00c17ac94cd5e89717393dd48fc182c0e4b4",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "NVIDIA_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/nvidia.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/nvidia.ts",
+      "sha256": "73c981d27b364f83a32983d19f4ded346acf6af7eb4a653334622f891aedf860",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "nvidiaProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/nvidia.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openai-codex.models.ts",
+      "sha256": "11045582d310b854c4a55e510e3628b8a8652efab918f9f017541b9261db474f",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENAI_CODEX_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openai-codex.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openai-codex.ts",
+      "sha256": "cb50e5b9db20f8953034601e1f9e66ad95ff1f925a9608419f4623d6246606b4",
+      "emitted_ranges": [
+        [
+          6,
+          19
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openaiCodexProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openai-codex.ts:7",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openai.models.ts",
+      "sha256": "9424770fdbf0ca5f3307c6b20217686d8c448379fd8548ac1c362ad678ac7898",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENAI_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openai.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openai.ts",
+      "sha256": "1904f9511221f47bbe890dc007571add9ac16ab28cd48c4090b58f13950cbfd0",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openaiProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openai.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/opencode-go.models.ts",
+      "sha256": "db2994d632b02692e3cb1a9c7fde97e5b7e4f77719f7d530c9a2cb2628aee52d",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENCODE_GO_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/opencode-go.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/opencode-go.ts",
+      "sha256": "2aecd6f71dd975334612747a9a6bfe3becf0d3966ce190dffc19be4f38b38d93",
+      "emitted_ranges": [
+        [
+          8,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "opencodeGoProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/opencode-go.ts:9",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/opencode.models.ts",
+      "sha256": "ddbfa6ca1f40c0ed1bf96904d3e0ecdb9b8298a4fb8d12a084cd4e1669a6596c",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENCODE_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/opencode.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/opencode.ts",
+      "sha256": "5907b03b4f4f24cb8457f2a1fadae2683e2ba5101da84f2b100c32c50b355954",
+      "emitted_ranges": [
+        [
+          8,
+          25
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "opencodeProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/opencode.ts:9",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openrouter.models.ts",
+      "sha256": "101afc36afce8bdac7f893b8c2b1dffddc13caf7774c1a371f37e82e69a87b90",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "OPENROUTER_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openrouter.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/openrouter.ts",
+      "sha256": "1d40af55225367209d55d563b25bf79f0a2ed92f3a587c4d0426234ab86bb21f",
+      "emitted_ranges": [
+        [
+          6,
+          24
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "openrouterProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/openrouter.ts:7",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.models.ts",
+      "sha256": "cf75bfef4683dd80f98a33cc8894d5b0a37930c13907f29b08e33a745b7d48f0",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "QWEN_TOKEN_PLAN_CN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/qwen-token-plan-cn.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/qwen-token-plan-cn.ts",
+      "sha256": "1869aabbff4baaa12faef00071aab0a5b1b1d38d43f16ce735137fc0e13fa897",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "qwenTokenPlanCnProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/qwen-token-plan-cn.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/qwen-token-plan.models.ts",
+      "sha256": "5a45908ccd14785c3aca0307f12e4e462702b0d469ea06bd90ba20b848c918c7",
+      "emitted_ranges": [
+        [
+          6,
+          9
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "QWEN_TOKEN_PLAN_MODELS",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/qwen-token-plan.models.ts:7",
+          "covering_entries": [],
+          "action": "uncited: read and add or extend an entry"
+        }
+      ]
+    },
+    {
+      "path": "packages/ai/src/providers/qwen-token-plan.ts",
+      "sha256": "c26b85ab529779c4c2e61f6dd749592b515ec25b121b49dc81989d8a767d51f5",
+      "emitted_ranges": [
+        [
+          5,
+          16
+        ]
+      ],
+      "symbols": [
+        {
+          "symbol": "qwenTokenPlanProvider",
+          "kind": "runtime",
+          "ts": "ice:packages/ai/src/providers/qwen-token-plan.ts:6",
+          "covering_entries": [
+            "AUTH-011"
+          ],
+          "action": "name-in-entry"
+        }
+      ]
+    }
+  ]
+}

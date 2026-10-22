@@ -1,0 +1,351 @@
+{
+  "area": "providers-auth",
+  "entries_reviewed": [
+    "AUTH-001",
+    "AUTH-002",
+    "AUTH-003",
+    "AUTH-004",
+    "AUTH-005",
+    "AUTH-006",
+    "AUTH-007",
+    "AUTH-008",
+    "AUTH-009",
+    "AUTH-010",
+    "AUTH-011",
+    "AUTH-012",
+    "AUTH-013",
+    "AUTH-014",
+    "AUTH-015",
+    "AUTH-016",
+    "AUTH-017",
+    "AUTH-018",
+    "AUTH-019",
+    "AUTH-020",
+    "AUTH-021",
+    "AUTH-022",
+    "AUTH-023",
+    "AUTH-024",
+    "AUTH-025",
+    "AUTH-026",
+    "AUTH-027",
+    "AUTH-028",
+    "AUTH-029",
+    "AUTH-030",
+    "AUTH-031",
+    "AUTH-032",
+    "AUTH-033"
+  ],
+  "source_reads": [
+    {
+      "path": "ice:packages/ai/src/auth/resolve.ts",
+      "sha256": "08dfcdcbd74dbae5b011b105b9b335321fea816ce262758729a2b29a630bd1b9",
+      "total_lines": 206,
+      "ranges": [
+        [
+          1,
+          206
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "total_lines": 419,
+      "ranges": [
+        [
+          94,
+          230
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/remote-catalog-provider.ts",
+      "sha256": "8ff95ded8f9468c1977dfe1418b2f5b5c74e207b72714330ec46de57c49aa9b4",
+      "total_lines": 136,
+      "ranges": [
+        [
+          1,
+          136
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/credentials.rs",
+      "sha256": "679203dc4a4794ac60776030fd68a7b6be4417372960bc5ba577d4e3bf4e1f0a",
+      "total_lines": 221,
+      "ranges": [
+        [
+          57,
+          126
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/provider/binding.rs",
+      "sha256": "be714b7ebaf0f9671b6a1039623896997aa6a0fa0c5e955cdfe20cb001b7efdd",
+      "total_lines": 104,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "ranges": [
+        [
+          232,
+          337
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "ranges": [
+        [
+          981,
+          1047
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-config.ts",
+      "sha256": "4fcef5f2d37561790dceea1d11e8da40e1e51e3305521f4d39d984b821a300d2",
+      "total_lines": 288,
+      "ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/device-code.ts",
+      "sha256": "c4052f3dfb3d3978eb35d3547e428d3d880d5a2e6de00d1a73da88acebfc0587",
+      "total_lines": 99,
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/pkce.ts",
+      "sha256": "33835111577490103dbb7509b7687db1643691d7b425845428f3cbeb873fe9cf",
+      "total_lines": 35,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/model_registry.rs",
+      "sha256": "67615fe36312ba3dd529b949cc6a9966612e1ecfa2ff9e18e44bee09ccfac069",
+      "total_lines": 416,
+      "ranges": [
+        [
+          248,
+          302
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-ai/src/model.rs",
+      "sha256": "46df584e5f8694ce7c9874a2c90ad472605b4448e8af30157bb661b0a0612724",
+      "total_lines": 284,
+      "ranges": [
+        [
+          10,
+          157
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/config.rs",
+      "sha256": "63820405698ae294ef9587a4dcd2b4277494a15dacd391008226f26bf8a92344",
+      "total_lines": 1761,
+      "ranges": [
+        [
+          917,
+          934
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6324-branch-summary-ambient-auth.test.ts",
+      "sha256": "4eb0e0d8c5eb2715428cbb7d60aee01a81484e068d0fedeb1b8c2bf47ec8f486",
+      "total_lines": 63,
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": true,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/openrouter.ts",
+      "sha256": "b279132f7bf123fd2ef82aba44cd6d7b61c66b71eb68ae94233f2118eb2aae0c",
+      "total_lines": 312,
+      "ranges": [
+        [
+          1,
+          20
+        ],
+        [
+          22,
+          312
+        ]
+      ],
+      "excluded_redacted_lines": [
+        21
+      ],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/auth-storage.ts",
+      "sha256": "c37a37dad716e5e27190656eca0d473222cd58f736f20030edde4665bae2573b",
+      "total_lines": 419,
+      "ranges": [
+        [
+          1,
+          94
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator",
+      "notes": "Independent source-body review; bounded ranges are not full-file credit."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/model-resolver.ts",
+      "sha256": "59cd4371cbabc57a251712cbd2621f6811b3427badee552f2dbf1175d31e0dfb",
+      "total_lines": 775,
+      "ranges": [
+        [
+          19,
+          60
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator"
+    },
+    {
+      "path": "ice:packages/ai/src/auth/oauth/openai-codex.ts",
+      "sha256": "11590767f63e4841f9f84c69ddbc4c6fa63435592302872f5a83454c34acb6cc",
+      "total_lines": 544,
+      "ranges": [
+        [
+          396,
+          425
+        ]
+      ],
+      "excluded_redacted_lines": [],
+      "fully_read": false,
+      "owner": "coordinator"
+    }
+  ],
+  "tests_executed": false,
+  "application_executed": false,
+  "corrections": [
+    {
+      "entry": "AUTH-002",
+      "finding": "TS staging cleanup is rmSync(force:true) without its own catch and can mask an earlier write/rename error. Missing credential-file creation precedes locking; preserve native exclusive creation and sync guarantees."
+    },
+    {
+      "entry": "AUTH-004",
+      "finding": "No finite guard exists for minOAuthValidity; negative values clamp, NaN and Infinity retain JavaScript comparison behavior."
+    },
+    {
+      "entry": "AUTH-017",
+      "finding": "JWT payload decoding extracts account metadata and does not verify a JWT signature."
+    },
+    {
+      "entry": "AUTH-020",
+      "finding": "Provider OAuth refresh retry belongs to Kimi authentication; removed dependency on assistant request retry AI-001."
+    },
+    {
+      "entry": "AUTH-027",
+      "finding": "Native registry refresh reloads catalog metadata and retains registered model instances; it does not refresh live authentication/request binding."
+    },
+    {
+      "entry": "AUTH-033",
+      "finding": "supportsFinishReason and prompt cache behavior exist on TS public runtime types but not the compared config declaration. Structural optional-object union admission is a source-derived inference, not an executed test."
+    },
+    {
+      "entry": "AUTH-026",
+      "finding": "Exact source has 39 ordered provider/default-model rows, now preserved as a table."
+    }
+  ],
+  "readability": "Every entry begins with two concise behavioral sentences and retains detailed mechanisms/defaults/order/errors/persistence/trust boundaries.",
+  "limits": [
+    "No source/test/application execution.",
+    "Redacted expressions and external private package implementations remain unverified."
+  ]
+}

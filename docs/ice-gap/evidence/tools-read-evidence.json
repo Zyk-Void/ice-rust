@@ -1,0 +1,1290 @@
+{
+  "area": "tools",
+  "complete": false,
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-background.ts",
+      "sha256": "f29bde1771270276fcd494c1e5f89562f24895b5d48d5aabd2fa1c5770844e22",
+      "total_lines": 688,
+      "ranges": [
+        [
+          1,
+          687
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-shells.ts",
+      "sha256": "80b0246124fc74093c0cf20b5329ab6002a47778108f1aa15b4dc14dc0901e95",
+      "total_lines": 301,
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash-watch.ts",
+      "sha256": "273cc9518bb656ff8598ad0cc9dc084b21f07f69a15ced5c42163610c37ff074",
+      "total_lines": 493,
+      "ranges": [
+        [
+          1,
+          492
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/bash.ts",
+      "sha256": "9b59f5b97743d815b84fca1c0961d38824a36740af2e7de5d1276831c2dbf918",
+      "total_lines": 750,
+      "ranges": [
+        [
+          1,
+          749
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/bash.rs",
+      "sha256": "2a3d1cb5b0f38c77e3e8d04e472595fa7f3c1559d84c1f1e7c4f081f861a66ff",
+      "total_lines": 427,
+      "ranges": [
+        [
+          1,
+          426
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/shell_output.rs",
+      "sha256": "7a17fddce7d92864a1aeba3e1cf5f27f79c5facc8deb6f06a55dccac779ee665",
+      "total_lines": 479,
+      "ranges": [
+        [
+          1,
+          478
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/mod.rs",
+      "sha256": "a536b61f5b9fed18ef3984a8ee458e3b5f90e61c8233d627b1208946381a606c",
+      "total_lines": 28,
+      "ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/output-accumulator.ts",
+      "sha256": "b4110085b530d6094cc169b2621f1c77a4b5d0ea9970f83c0f8e963fe377601e",
+      "total_lines": 292,
+      "ranges": [
+        [
+          1,
+          291
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/truncate.ts",
+      "sha256": "104e61ea602c7f7894097b2771dad8c68de75c5a10ea6222e615c4ad144451c7",
+      "total_lines": 277,
+      "ranges": [
+        [
+          1,
+          276
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-watch.test.ts",
+      "sha256": "d9caac6a28b34495f29b3b1ea227760d15073bc7200b332665436dac4c61e579",
+      "total_lines": 196,
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-input.test.ts",
+      "sha256": "8a3c26988d045508747464c8cf22cb790afd2b2c7bc6ae3e1afab8a1e7e83a18",
+      "total_lines": 108,
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/execution-reliability-1-watch-alerts.test.ts",
+      "sha256": "753e67671a176f10b9fe8136f119f1efba3d1f38a6162ef5c363a9b7b1e665ba",
+      "total_lines": 70,
+      "ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "notes": "current dirty-test snapshot; historical content hash unavailable; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/output-accumulator-log-safety.test.ts",
+      "sha256": "4037aec81a11490a55f9bef9fad070e620b4e6f0221755ff0e10e7faba693f5b",
+      "total_lines": 70,
+      "ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/bash-background.test.ts",
+      "sha256": "5cc07ffc0da388c42d469b14c131edb3243a4092a5ef3d774c871ecd63ff3468",
+      "total_lines": 617,
+      "ranges": [
+        [
+          1,
+          617
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/bash-executor.ts",
+      "sha256": "977b512e30ff671c55e1148f055781dc786d75323e9821f3f7a9c3e327120003",
+      "total_lines": 157,
+      "ranges": [
+        [
+          1,
+          156
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/exec.ts",
+      "sha256": "1a55e7416847ea0c548775b28596bb817c8cd4aa97bc36b8da7403959fcd350f",
+      "total_lines": 108,
+      "ranges": [
+        [
+          1,
+          107
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/child-process.ts",
+      "sha256": "0f3d66038b2ad068838f1526573ede928fdec3465ab2d0d12db8ee7cdf13f77d",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/index.ts",
+      "sha256": "1c299edad4472e06d9232e694378c1555bfe3f3514247f1831e13821e4204684",
+      "total_lines": 197,
+      "ranges": [
+        [
+          1,
+          196
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/os_env.rs",
+      "sha256": "b7e3ea84901e73dfbd92428684f16a8c093a73dab86108d2af2acfc7739f87eb",
+      "total_lines": 1141,
+      "ranges": [
+        [
+          135,
+          210
+        ],
+        [
+          385,
+          420
+        ],
+        [
+          530,
+          1110
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/env.rs",
+      "sha256": "a96ddc906dc411742b883e5af920a455c8370237eea5cf1db691dde51e4ec731",
+      "total_lines": 325,
+      "ranges": [
+        [
+          1,
+          325
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash.rs",
+      "sha256": "670e8f0c42c4931efe27b1e83ea937ad9fee3e878d02bfdfd5c8ad50cd044359",
+      "total_lines": 242,
+      "ranges": [
+        [
+          1,
+          242
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/tools.test.ts",
+      "sha256": "108b717abd235d11898c875874dcbf8201c2342966088c8e15e59309cdbfe82d",
+      "total_lines": 1214,
+      "ranges": [
+        [
+          1,
+          1214
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash_throttle.rs",
+      "sha256": "22f39b51d51878b4b57d861bcd81283718f09173fb6b4a0dd1518a55309fc68c",
+      "total_lines": 241,
+      "ranges": [
+        [
+          1,
+          241
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/shell.ts",
+      "sha256": "7f0a90bf759282f0851e70a7eb38f418b9aa2467c6a3f625aee256669c7bb4fc",
+      "total_lines": 269,
+      "ranges": [
+        [
+          190,
+          269
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/path-utils.ts",
+      "sha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          118
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/file-mutation-queue.ts",
+      "sha256": "e05311094e23fdb0c7993f01eaa8574b4771f997013ea891a4facb1f868f8400",
+      "total_lines": 79,
+      "ranges": [
+        [
+          1,
+          78
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "sha256": "93376195502b3f626a6a2885923e842efcbb83bc7d6d86dbceabd90c79eb8605",
+      "total_lines": 48,
+      "ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/render-utils.ts",
+      "sha256": "fded002274529fc617ccac4623ec3d5a4b776a752ad534446eed8be67d29bafc",
+      "total_lines": 86,
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/output-guard.ts",
+      "sha256": "d1f0d31689404bcb72e6a524173b0092a232da48655e748688bbd3d1f7a2b364",
+      "total_lines": 148,
+      "ranges": [
+        [
+          1,
+          147
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/path_utils.rs",
+      "sha256": "8b4dd476a318556e21daf014646c1aa7bdbe8e6052002a070af1f77d46f93689",
+      "total_lines": 193,
+      "ranges": [
+        [
+          1,
+          193
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/file_mutation_queue.rs",
+      "sha256": "4b71f4eac970355a7fb85022a22bab00796b28ef15ec1210dd306508f0a7eeee",
+      "total_lines": 137,
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/read.ts",
+      "sha256": "4b3f61291a9f314c582caeaa735eb38f8a736dd68ac711425bfd0650febb1fa1",
+      "total_lines": 352,
+      "ranges": [
+        [
+          1,
+          351
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/read.rs",
+      "sha256": "432dc2251c55dcd62eb55f5b93e1b2b3e5b49a31cff4645b21cdfebf0f5be6c4",
+      "total_lines": 350,
+      "ranges": [
+        [
+          1,
+          350
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/write.ts",
+      "sha256": "898d58e0f08f7eda9e13ef6905cf6ac4188e8995f6d071495bd528a4265e7150",
+      "total_lines": 268,
+      "ranges": [
+        [
+          1,
+          267
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/write.rs",
+      "sha256": "f63d7fc222c962763109be9831c1c87cb91655bbe33424549205e61c5a2cbded",
+      "total_lines": 154,
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/write.ts",
+      "sha256": "3881a6947b6c632cced62c0a233af9ab435f422d8a77b176caafc5e6f41763d2",
+      "total_lines": 40,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/file-mutation-queue.ts",
+      "sha256": "a154095566afd94c21c7af27f1600292785ed23ebff38730a34b52d276a0ac73",
+      "total_lines": 57,
+      "ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/path-utils.ts",
+      "sha256": "7ccfffe8e3ea8a7562ca86ee438f133393b2ce400de5abb05d0514b1fc6fc969",
+      "total_lines": 31,
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/tool-context.ts",
+      "sha256": "6c224cc5c58e2b9bb8ed177eddca2a26870a3604995181198163a19aea2440d9",
+      "total_lines": 7,
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/index.ts",
+      "sha256": "7b11295ec3517b9677886a717ece40183cb70dc92720741a201a9012f8f6f9a4",
+      "total_lines": 24,
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "d8b979b494483cb51ae87ab0ae2aa1ddcd6a926e9b36510dbbea9898e89e8ebe",
+      "total_lines": 438,
+      "ranges": [
+        [
+          1,
+          437
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/edit.rs",
+      "sha256": "0aef77640e3397263318ce2f24f1a6aca358b07d037543e46a5874d2700bbaa9",
+      "total_lines": 294,
+      "ranges": [
+        [
+          1,
+          294
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/edit-diff.ts",
+      "sha256": "6dc30b7751c90630fb3990c2a6d20fdb6a85f0e58abcea4fdb243140092bc01c",
+      "total_lines": 595,
+      "ranges": [
+        [
+          1,
+          594
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/edit_diff.rs",
+      "sha256": "144c61cd225b2b82bbf1aa151d5b1daf8fb8be2be0285db209884c2282a7f436",
+      "total_lines": 847,
+      "ranges": [
+        [
+          1,
+          847
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/edit.ts",
+      "sha256": "fa2a6223c25075c359fcbc6e98de8618041d2b651258429198ffa1515a5267df",
+      "total_lines": 128,
+      "ranges": [
+        [
+          1,
+          127
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/edit-diff.ts",
+      "sha256": "70f486d5d5e54a76913d96597e792fc3e2c0938813b01595824a63b2300800db",
+      "total_lines": 501,
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-diff-exact-precedence.test.ts",
+      "sha256": "b8832fe8165f896fa6fb4fb3cba312ce1cadde4d33788cdceaade5eb718bbe49",
+      "total_lines": 52,
+      "ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-tool-legacy-input.test.ts",
+      "sha256": "20a077787a5d91efcfdc0704029a992d3c197950ec208b6e4907e585cfcf6dd1",
+      "total_lines": 117,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "9f194cc8fd443ffc7f895ef3fbb0e6e7573c37a7d748f930de147309f1138e0c",
+      "total_lines": 378,
+      "ranges": [
+        [
+          1,
+          377
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/find.rs",
+      "sha256": "79b2815a1f655b8255f67508e3b51e8b76f6472d73f4220c2a1480cbba492072",
+      "total_lines": 300,
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "1a2f553423e60818bc75c67079473f7cdd62978b205dfbd283027fe09171ff9e",
+      "total_lines": 386,
+      "ranges": [
+        [
+          1,
+          385
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/grep.rs",
+      "sha256": "361b6a5627240176da097c18a95b893ffdf970139a7e517ae6d97e5f0f252112",
+      "total_lines": 436,
+      "ranges": [
+        [
+          1,
+          436
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "8b5e24da0db8bd9ef985a09d4219eb55fb84553cfbd80a789981522931764d04",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/ls.rs",
+      "sha256": "26379cdead8ba291783c2c443c29eced1e5bbf0a3a6d772b34ed0b398a03f1df",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          226
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/tool_context.rs",
+      "sha256": "555a5bd94a1ce8191544ec1136c8d73969fe409cff9d4e6658972506c2fc806b",
+      "total_lines": 44,
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/bash.ts",
+      "sha256": "9dbd536990ba542a2beb9c42ccffb195ab841ea926cff48c838d53f6b4d24ee3",
+      "total_lines": 162,
+      "ranges": [
+        [
+          1,
+          161
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/utils/shell-output.ts",
+      "sha256": "692b06dde5bfa163fc835a5e1fe4580c731d1b1e7a7ea14d56a246f6a5032e13",
+      "total_lines": 196,
+      "ranges": [
+        [
+          1,
+          195
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/read.ts",
+      "sha256": "f6d4c6913ff7949f11ea03957635b6f8e61cb92d7bec403dec22798776e4d36f",
+      "total_lines": 145,
+      "ranges": [
+        [
+          1,
+          144
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/tools/image.ts",
+      "sha256": "d63af23f90abd2925b80d555ac5c5915ee1b7f512a2490b95a727c8bd0e8d97b",
+      "total_lines": 105,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/src/harness/utils/truncate.ts",
+      "sha256": "8a00ec12753e667056a8c2b5a4f31fd45ccc2bdca7df17a57138fe836c09f7fe",
+      "total_lines": 351,
+      "ranges": [
+        [
+          1,
+          350
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/truncate.rs",
+      "sha256": "2a12548be58e82815f0ffd9c68349918a1fa375fe5c29649dd22928b7ad07af5",
+      "total_lines": 459,
+      "ranges": [
+        [
+          1,
+          459
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/paths.ts",
+      "sha256": "c433bd9f98744aa9a373282fd50ab3657b6e2a366feecbfb177fe648746d1944",
+      "total_lines": 119,
+      "ranges": [
+        [
+          1,
+          119
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/mime.ts",
+      "sha256": "00893b8a5089c217405b5a9b2d316b3392a1845966f8d4aad8fb31c156e4d922",
+      "total_lines": 117,
+      "ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image.rs",
+      "sha256": "6571d2d4c16a0b71571b8c2b6ee0da62061f37f4e17e66b1f3c8f29169e65555",
+      "total_lines": 236,
+      "ranges": [
+        [
+          1,
+          236
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-process.ts",
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "total_lines": 120,
+      "ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/image_processing.rs",
+      "sha256": "4c2113df834a0c124435ae386fd4253c9b0ae91d8d23e3f7df82faa9bf7ce2b5",
+      "total_lines": 485,
+      "ranges": [
+        [
+          1,
+          485
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize.ts",
+      "sha256": "d93a007eb45a02b73b1a4777d193614dae5fbcadd9139c8b755ea35c1d649757",
+      "total_lines": 124,
+      "ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-convert.ts",
+      "sha256": "791f2a134995ecd2d337c5e881971bc257889615c1245ea54013203af1ef8e16",
+      "total_lines": 50,
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/session.rs",
+      "sha256": "71f7baa5c2f9b34d17dd64b1cd6d75498e8809a42b47eac1fa539b04e3d342c6",
+      "total_lines": 4016,
+      "ranges": [
+        [
+          1935,
+          2050
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui.rs",
+      "sha256": "b1e1cff2e2625997f27ea07fd015842f9a500715a0f4266557de099a008b553f",
+      "total_lines": 3398,
+      "ranges": [
+        [
+          555,
+          675
+        ],
+        [
+          1370,
+          1510
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-core.ts",
+      "sha256": "b3523329397d47473b76c40e8802283a79d3a3e3f317f4da0124ccba5152edd8",
+      "total_lines": 165,
+      "ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/image-resize-worker.ts",
+      "sha256": "c77213875e45d2aea46deb67b6cc03bcfb57cba84c8a17ccc2158aa3e79873c7",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/photon.ts",
+      "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
+      "total_lines": 140,
+      "ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/read_truncation.rs",
+      "sha256": "07fe42488c9b1b2d797e61dd422d9d12d95d1edd7e2eebb35c984a805e43218f",
+      "total_lines": 243,
+      "ranges": [
+        [
+          1,
+          243
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/find.rs",
+      "sha256": "0b111ac0a752c8534be747e2f1675a2358665f15adb36b1bfe38a6cf7e71aed6",
+      "total_lines": 183,
+      "ranges": [
+        [
+          1,
+          183
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/test/harness/tools.test.ts",
+      "sha256": "b82da936f5f6f2deb03e2fc57549bcaa469c2e0322f0b1e2db8088d9d0d38fe9",
+      "total_lines": 623,
+      "ranges": [
+        [
+          1,
+          623
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/file-mutation-queue.test.ts",
+      "sha256": "f20a02f0993bbcb710c8f23aa97f0de06279e9da18dc59694e861af3d323e39a",
+      "total_lines": 301,
+      "ranges": [
+        [
+          1,
+          301
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/path-utils.test.ts",
+      "sha256": "cd75fb19805e66d1b77dd38e944e6fb71af1ac9642373d8c8e88b8df2773c51c",
+      "total_lines": 175,
+      "ranges": [
+        [
+          1,
+          175
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/readdir-order.test.ts",
+      "sha256": "4070f7760d3100d0ce7024cdfc798469e41de40b115e6801b53d0cf275f0f401",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/agent/test/harness/truncate.test.ts",
+      "sha256": "4fe8d6155d468a7843c6831a83af1b79a50edd54f69160b14e893b2bb49f8aaa",
+      "total_lines": 179,
+      "ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/output-guard.test.ts",
+      "sha256": "48c6e26413635bf67573b7b874e4034ccae6c484f39f8901061b4424f40152b4",
+      "total_lines": 174,
+      "ranges": [
+        [
+          1,
+          174
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/edit-tool-no-full-redraw.test.ts",
+      "sha256": "83c9922955bf61cf210e6cab8ade65fb43e83f2e811ded2111dab9fa966080fe",
+      "total_lines": 237,
+      "ranges": [
+        [
+          1,
+          237
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-process.test.ts",
+      "sha256": "f224c8f9d567594d7013f0ea158d2c2863cfddce0e346cff7e0b0e16bf7583dd",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-processing.test.ts",
+      "sha256": "eb5d070b5855627e1c6d4a53f1908efee8bbc4d6b8f09da967e9f5709cb03dda",
+      "total_lines": 171,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/image-resize-callers.test.ts",
+      "sha256": "f77a92109158e558cc26430a80f82351bd1ef4884d494ab643c29652c00bc25c",
+      "total_lines": 54,
+      "ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/grep.rs",
+      "sha256": "16a2b06fe68530561417c61d3a02a978b38570a87edefb8f84c432c244c44b5e",
+      "total_lines": 226,
+      "ranges": [
+        [
+          1,
+          226
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/ls.rs",
+      "sha256": "183bee987784f12b2187d0f820282bceca8e366e635c5d5dbf0d8eee3d4a7ca9",
+      "total_lines": 152,
+      "ranges": [
+        [
+          1,
+          152
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/edit_fuzzy.rs",
+      "sha256": "ea7d92b1380bf5941020420d4fed9eaff3281d344de16653831a2dd6be0dd999",
+      "total_lines": 255,
+      "ranges": [
+        [
+          1,
+          255
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/edit_mutation_queue_sharing.rs",
+      "sha256": "202c80f30f3658974eff089751a88f2e2c031601c5647af36d41b3eac4da190f",
+      "total_lines": 111,
+      "ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/abort_bracketing.rs",
+      "sha256": "dfe16bc1bb15a0d262fbd3c4ec950ccd2ea2646166b95e27c8c0efbbcf09d61f",
+      "total_lines": 309,
+      "ranges": [
+        [
+          1,
+          309
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/tests/bash_stdout_and_stdin_hold.rs",
+      "sha256": "2b9711dcce18f903e47c4d6037fbec718a0cbc5a94ba10b27f919ae0ee393b89",
+      "total_lines": 132,
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3302-find-path-glob.test.ts",
+      "sha256": "804c038893b5b9f8b32a99622a69ebac5e07b620322e407a9efb1f0ea821627b",
+      "total_lines": 81,
+      "ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3303-find-nested-gitignore.test.ts",
+      "sha256": "3962d45f7d5adb3e92fd0b89d0a13dd9dec4501158e5f7668a6057b8a3e22851",
+      "total_lines": 84,
+      "ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/6104-find-root-relativization.test.ts",
+      "sha256": "608dfc6a11b92a84782551ae5fe7a16bb922c38be1eca863a2c77131f62b7652",
+      "total_lines": 92,
+      "ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5208-late-bash-output.test.ts",
+      "sha256": "9d6fc0d457e6d7470246d821deec9937d428e86fdad6858d05e7d5c956802f8c",
+      "total_lines": 30,
+      "ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5303-bash-output-truncation.test.ts",
+      "sha256": "d548355a05025c12dcdc31402689f4bb9a479b2c9480dfe279664af96b8aa89a",
+      "total_lines": 83,
+      "ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/5724-sigterm-signal-exit.test.ts",
+      "sha256": "a2976507f90769f90d0bc3e5a6de7b62387a7ed0403fc7d240ab93c9203a3707",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "clean tracked Git revision (not original manifest); source read only, no execution"
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/exif-orientation.ts",
+      "sha256": "9ca969cd6226c14ff09f3f620c18ec26f148df3e2e13ae316291744637f0f265",
+      "total_lines": 184,
+      "ranges": [
+        [
+          1,
+          184
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-cli/src/modes.rs",
+      "sha256": "5e11b049f11fa85a81ee6d45608a57c68f23a4d3c43a6d88918c4c59d1eff7be",
+      "total_lines": 1566,
+      "ranges": [
+        [
+          100,
+          146
+        ],
+        [
+          570,
+          658
+        ],
+        [
+          1109,
+          1302
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tui/src/tool_execution.rs",
+      "sha256": "8e3ea2bc77f1c0c60f8523caabf776f8e2f5a6d96b0b69e9939274c8de11b735",
+      "total_lines": 1682,
+      "ranges": [
+        [
+          1,
+          744
+        ],
+        [
+          780,
+          882
+        ],
+        [
+          1524,
+          1596
+        ],
+        [
+          1632,
+          1682
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:ICE_PORTING.md",
+      "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "total_lines": 678,
+      "ranges": [
+        [
+          281,
+          326
+        ],
+        [
+          624,
+          648
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/lib.rs",
+      "sha256": "802130ac6b403e65ab243c035bc00dc172ac523461312a3b9477c4dfa58f08fc",
+      "total_lines": 55,
+      "ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-agent/src/agent_tool.rs",
+      "sha256": "33dde7f637117dbf86cc0413861a8e7a51ce5d24619a7112eb00008f07a036ee",
+      "total_lines": 67,
+      "ranges": [
+        [
+          1,
+          67
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/tools/powershell.rs",
+      "sha256": "1555762ecea98f226690ddd152d010748a6c9f628667794dd29e1b31c5a275d7",
+      "total_lines": 138,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "notes": "coordinator source manifest; source read only, no execution"
+    }
+  ]
+}

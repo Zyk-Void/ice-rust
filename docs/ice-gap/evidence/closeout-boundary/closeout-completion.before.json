@@ -1,0 +1,21 @@
+{
+  "captured_at": "2026-10-20T07:26:49.167Z",
+  "complete": true,
+  "final_gate": "evidence/final-validation.json",
+  "final_gate_sha256": "e52e7c38de61fe1dbcb17c928f9f688e98df23e4131d751f2a3bc8f5ee659b78",
+  "final_gate_captured_at": "2026-10-20T07:26:15.630956+00:00",
+  "entries": 791,
+  "areas": 16,
+  "source_only": true,
+  "application_or_test_execution": false,
+  "pending_merges": [],
+  "resume_header_replaced": true,
+  "historical_checkpoints_retained": true,
+  "historical_checkpoints_sha256": "62a800055db4627b5a8cabc87b9ba7dfbf4b42ce2baf58fbb1678b2ac7a99ca1",
+  "evidence_integrity_incident": "evidence/lane-native-final-spacing-preview-incident.json",
+  "limits": [
+    "Source reference bounds and evidence consistency are checked; runtime effects and external services remain unverified.",
+    "Explicit connector redactions and the preserved sessions.rs627 provenance conflict are excluded from visible read coverage.",
+    "Terminal empty split lines are not counted as physical source behavior."
+  ]
+}

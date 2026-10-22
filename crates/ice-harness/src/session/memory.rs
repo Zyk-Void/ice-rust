@@ -180,8 +180,9 @@ impl InMemorySessionStorage {
         }
     }
 
-    /// Fork from a source storage — mirrors TS `fork`. Applies the source
-    /// state's [`SessionState::create_fork_mutations`] into a fresh backend.
+    /// Fork from a source storage — mirrors TS `fork`. Constructs canonical
+    /// in-memory fork state directly so branch lane pointers are not emitted as
+    /// synthetic log mutations.
     pub fn fork_from(
         &self,
         metadata: SessionMetadata,
@@ -189,17 +190,12 @@ impl InMemorySessionStorage {
         clock: Arc<dyn Clock>,
         ids: Arc<dyn IdGenerator>,
     ) -> SessionResult<Self> {
-        let forked = InMemorySessionStorage::new(metadata, clock, ids);
-        let mutations = self
+        let state = self
             .inner
-            .read_state(|state| state.create_fork_mutations(options))?;
-        forked.inner.with_state(|state| {
-            for mutation in mutations {
-                let _ = state.apply_mutation(mutation)?;
-            }
-            Ok(())
-        })?;
-        Ok(forked)
+            .read_state(|state| state.create_fork_state(options))?;
+        Ok(InMemorySessionStorage::from_state(
+            metadata, state, clock, ids,
+        ))
     }
 }
 
@@ -432,11 +428,17 @@ pub(crate) fn stamp_record(
     }
 }
 
-/// In-memory `SessionRepo`. Owns all sessions in a `HashMap` keyed by id and
+#[derive(Default)]
+struct SessionCollection {
+    by_id: HashMap<String, InMemorySessionStorage>,
+    creation_order: Vec<String>,
+}
+
+/// In-memory `SessionRepo`. Owns sessions by id plus their creation order and
 /// hands out `Clone`d [`InMemorySessionStorage`] handles (Arc bumps). Mirrors
 /// TS `InMemorySessionRepo`.
 pub struct InMemorySessionRepo {
-    sessions: Mutex<HashMap<String, InMemorySessionStorage>>,
+    sessions: Mutex<SessionCollection>,
     clock: Arc<dyn Clock>,
     ids: Arc<dyn IdGenerator>,
 }
@@ -444,7 +446,7 @@ pub struct InMemorySessionRepo {
 impl InMemorySessionRepo {
     pub fn new(clock: Arc<dyn Clock>, ids: Arc<dyn IdGenerator>) -> Self {
         Self {
-            sessions: Mutex::new(HashMap::new()),
+            sessions: Mutex::new(SessionCollection::default()),
             clock,
             ids,
         }
@@ -453,6 +455,7 @@ impl InMemorySessionRepo {
     fn require_storage(&self, id: &str) -> SessionResult<InMemorySessionStorage> {
         let sessions = self.sessions.lock().expect("sessions not poisoned");
         sessions
+            .by_id
             .get(id)
             .cloned()
             .ok_or_else(|| SessionError::not_found(format!("Session not found: {id}")))
@@ -466,7 +469,7 @@ impl SessionRepo for InMemorySessionRepo {
     async fn create(&self, options: &SessionCreateOptions) -> SessionResult<Self::Storage> {
         let id = options.id.clone().unwrap_or_else(|| self.ids.next());
         let mut sessions = self.sessions.lock().expect("sessions not poisoned");
-        if sessions.contains_key(&id) {
+        if sessions.by_id.contains_key(&id) {
             return Err(SessionError::already_exists(format!(
                 "Session already exists: {id}"
             )));
@@ -477,7 +480,8 @@ impl SessionRepo for InMemorySessionRepo {
             parent_session_id: options.parent_session_id.clone(),
         };
         let storage = InMemorySessionStorage::new(metadata, self.clock.clone(), self.ids.clone());
-        sessions.insert(id, storage.clone());
+        sessions.creation_order.push(id.clone());
+        sessions.by_id.insert(id, storage.clone());
         Ok(storage)
     }
 
@@ -487,12 +491,18 @@ impl SessionRepo for InMemorySessionRepo {
 
     async fn list(&self) -> SessionResult<Vec<SessionMetadata>> {
         let sessions = self.sessions.lock().expect("sessions not poisoned");
-        Ok(sessions.values().map(|s| s.metadata()).collect())
+        Ok(sessions
+            .creation_order
+            .iter()
+            .filter_map(|id| sessions.by_id.get(id))
+            .map(|storage| storage.metadata())
+            .collect())
     }
 
     async fn delete(&self, metadata: &SessionMetadata) -> SessionResult<()> {
         let mut sessions = self.sessions.lock().expect("sessions not poisoned");
-        sessions.remove(&metadata.id);
+        sessions.by_id.remove(&metadata.id);
+        sessions.creation_order.retain(|id| id != &metadata.id);
         Ok(())
     }
 
@@ -505,7 +515,7 @@ impl SessionRepo for InMemorySessionRepo {
         let source_storage = self.require_storage(&source.id)?;
         let id = options.id.clone().unwrap_or_else(|| self.ids.next());
         let mut sessions = self.sessions.lock().expect("sessions not poisoned");
-        if sessions.contains_key(&id) {
+        if sessions.by_id.contains_key(&id) {
             return Err(SessionError::already_exists(format!(
                 "Session already exists: {id}"
             )));
@@ -520,7 +530,8 @@ impl SessionRepo for InMemorySessionRepo {
         };
         let forked =
             source_storage.fork_from(metadata, fork, self.clock.clone(), self.ids.clone())?;
-        sessions.insert(id, forked.clone());
+        sessions.creation_order.push(id.clone());
+        sessions.by_id.insert(id, forked.clone());
         Ok(forked)
     }
 }
@@ -529,7 +540,8 @@ impl SessionRepo for InMemorySessionRepo {
 mod tests {
     use super::*;
     use crate::session::types::{
-        OperationIntent, OperationStartedRecord, ProvisionedKind, RecordBase,
+        OperationIntent, OperationStartedRecord, ProvisionedKind, RecordBase, UsageCause,
+        UsageRecord,
     };
 
     fn counter_ids() -> Arc<dyn IdGenerator> {
@@ -623,6 +635,290 @@ mod tests {
         });
         let err = storage.append_record(second).await.unwrap_err();
         assert!(err.to_string().contains("already has an open operation"));
+    }
+
+    #[tokio::test]
+    async fn in_memory_repo_preserves_creation_order_across_delete_and_recreate() {
+        let repo = InMemorySessionRepo::new(Arc::new(FakeClock::new()), counter_ids());
+        let mut metadata = Vec::new();
+        for id in [
+            "session-a",
+            "session-b",
+            "session-c",
+            "session-d",
+            "session-e",
+        ] {
+            let storage = repo
+                .create(&SessionCreateOptions {
+                    id: Some(id.to_string()),
+                    parent_session_id: None,
+                    metadata: None,
+                })
+                .await
+                .expect("create session");
+            metadata.push(storage.metadata());
+        }
+        let listed = repo.list().await.expect("list sessions");
+        assert_eq!(
+            listed.iter().map(|m| m.id.as_str()).collect::<Vec<_>>(),
+            [
+                "session-a",
+                "session-b",
+                "session-c",
+                "session-d",
+                "session-e"
+            ]
+        );
+
+        repo.delete(&metadata[1]).await.expect("delete session");
+        repo.create(&SessionCreateOptions {
+            id: Some("session-b".to_string()),
+            parent_session_id: None,
+            metadata: None,
+        })
+        .await
+        .expect("recreate deleted session");
+        let listed = repo.list().await.expect("list recreated sessions");
+        assert_eq!(
+            listed.iter().map(|m| m.id.as_str()).collect::<Vec<_>>(),
+            [
+                "session-a",
+                "session-c",
+                "session-d",
+                "session-e",
+                "session-b"
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn in_memory_fork_resets_all_stats_and_does_not_copy_records() {
+        let storage = fresh_storage();
+        for (id, text) in [("e1", "one"), ("e2", "two")] {
+            storage
+                .append_entry(
+                    ProvisionedEntry {
+                        id: id.to_string(),
+                        kind: ProvisionedKind::Message {
+                            message: user_msg(text),
+                            terminate: None,
+                        },
+                    },
+                    "main",
+                )
+                .await
+                .expect("append source message");
+        }
+        let record = LaneRecord::Usage(UsageRecord {
+            base: rec_base("source-record", 0, "main"),
+            usage: ice_ai::types::Usage {
+                input: 10,
+                output: 2,
+                cache_read: 3,
+                cache_write: 2,
+                cache_write_1h: None,
+                reasoning: None,
+                total_tokens: 15,
+                cost: ice_ai::types::UsageCost {
+                    input: 0.1,
+                    output: 0.2,
+                    cache_read: 0.1,
+                    cache_write: 0.1,
+                    total: 0.5,
+                },
+            },
+            cause: UsageCause::Assistant,
+            run_id: None,
+            entry_id: None,
+            attempt: None,
+            stop_reason: None,
+            tool_call_id: None,
+            details: None,
+        });
+        storage
+            .append_record(record.clone())
+            .await
+            .expect("usage record");
+        let source_stats = storage.get_stats().await.expect("source stats");
+        assert_eq!(source_stats.message_count, 2);
+        assert_eq!(source_stats.cached_tokens, 3);
+        assert_eq!(source_stats.uncached_tokens, 12);
+        assert_eq!(source_stats.total_tokens, 15);
+        assert_eq!(source_stats.cost_total, 0.5);
+
+        let forked = storage
+            .fork_from(
+                SessionMetadata {
+                    id: "s2".to_string(),
+                    created_at: 0,
+                    parent_session_id: Some("s1".to_string()),
+                },
+                &ForkOptions::default(),
+                Arc::new(FakeClock::new()),
+                counter_ids(),
+            )
+            .expect("fork source");
+        assert_eq!(
+            forked.get_stats().await.expect("fork stats"),
+            Default::default()
+        );
+        assert!(forked
+            .find_records(&RecordQuery::default())
+            .await
+            .expect("fork records")
+            .is_empty());
+        forked
+            .append_entry(
+                ProvisionedEntry {
+                    id: "child-message".to_string(),
+                    kind: ProvisionedKind::Message {
+                        message: user_msg("child"),
+                        terminate: None,
+                    },
+                },
+                "main",
+            )
+            .await
+            .expect("append new fork message");
+        let first_child_stats = forked.get_stats().await.expect("first child stats");
+        assert_eq!(first_child_stats.message_count, 1);
+        assert_eq!(first_child_stats.cached_tokens, 0);
+        assert_eq!(first_child_stats.uncached_tokens, 0);
+        assert_eq!(first_child_stats.total_tokens, 0);
+        assert_eq!(first_child_stats.cost_total, 0.0);
+
+        forked
+            .append_record(record)
+            .await
+            .expect("record ids from source are reusable in a fork");
+        let copied_or_new_record = forked
+            .find_records(&RecordQuery::default())
+            .await
+            .expect("read fork records");
+        assert_eq!(copied_or_new_record.len(), 1);
+        assert_eq!(copied_or_new_record[0].id(), "source-record");
+        let fork_stats = forked.get_stats().await.expect("updated fork stats");
+        assert_eq!(fork_stats.message_count, 1);
+        assert_eq!(fork_stats.cached_tokens, 3);
+        assert_eq!(fork_stats.uncached_tokens, 12);
+        assert_eq!(fork_stats.total_tokens, 15);
+        assert_eq!(fork_stats.cost_total, 0.5);
+    }
+
+    #[tokio::test]
+    async fn memory_fork_branch_log_omits_pointer_mutation_and_tree_order_is_stable() {
+        let storage = fresh_storage();
+        let e1 = storage
+            .append_entry(
+                ProvisionedEntry {
+                    id: "e1".to_string(),
+                    kind: ProvisionedKind::Message {
+                        message: user_msg("one"),
+                        terminate: None,
+                    },
+                },
+                "main",
+            )
+            .await
+            .expect("append e1");
+        let e2 = storage
+            .append_entry(
+                ProvisionedEntry {
+                    id: "e2".to_string(),
+                    kind: ProvisionedKind::Message {
+                        message: user_msg("two"),
+                        terminate: None,
+                    },
+                },
+                "main",
+            )
+            .await
+            .expect("append e2");
+        storage
+            .create_lane("zeta", Some("e1"))
+            .await
+            .expect("zeta lane");
+        storage
+            .create_lane("alpha", Some("e2"))
+            .await
+            .expect("alpha lane");
+        storage.set_name(Some("fork name")).await.expect("set name");
+        storage
+            .set_label("e2", Some("second"))
+            .await
+            .expect("label e2");
+        storage
+            .set_label("e1", Some("first"))
+            .await
+            .expect("label e1");
+
+        let metadata = |id: &str| SessionMetadata {
+            id: id.to_string(),
+            created_at: 0,
+            parent_session_id: Some("s1".to_string()),
+        };
+        let branch = storage
+            .fork_from(
+                metadata("branch"),
+                &ForkOptions::default(),
+                Arc::new(FakeClock::new()),
+                counter_ids(),
+            )
+            .expect("branch fork");
+        let branch_log = branch
+            .get_log(&LogOptions::default())
+            .await
+            .expect("branch log");
+        assert_eq!(branch_log.len(), 5);
+        assert!(
+            matches!(&branch_log[0], LogItem::Entry { seq: 1, entry } if entry.id() == e1.id())
+        );
+        assert!(
+            matches!(&branch_log[1], LogItem::Entry { seq: 2, entry } if entry.id() == e2.id())
+        );
+        assert!(
+            matches!(&branch_log[2], LogItem::FactName { seq: 3, name: Some(name) } if name == "fork name")
+        );
+        assert!(
+            matches!(&branch_log[3], LogItem::FactLabel { seq: 4, target_id, .. } if target_id == "e2")
+        );
+        assert!(
+            matches!(&branch_log[4], LogItem::FactLabel { seq: 5, target_id, .. } if target_id == "e1")
+        );
+        assert_eq!(
+            branch
+                .get_lanes()
+                .await
+                .expect("branch lanes")
+                .iter()
+                .map(|lane| lane.lane.as_str())
+                .collect::<Vec<_>>(),
+            ["main"]
+        );
+
+        let tree = storage
+            .fork_from(
+                metadata("tree"),
+                &ForkOptions::Tree,
+                Arc::new(FakeClock::new()),
+                counter_ids(),
+            )
+            .expect("tree fork");
+        let tree_log = tree
+            .get_log(&LogOptions::default())
+            .await
+            .expect("tree log");
+        assert_eq!(tree_log.len(), 8);
+        assert!(matches!(&tree_log[2], LogItem::Lane { seq: 3, lane, .. } if lane == "main"));
+        assert!(matches!(&tree_log[3], LogItem::Lane { seq: 4, lane, .. } if lane == "zeta"));
+        assert!(matches!(&tree_log[4], LogItem::Lane { seq: 5, lane, .. } if lane == "alpha"));
+        assert!(matches!(&tree_log[5], LogItem::FactName { seq: 6, .. }));
+        assert!(
+            matches!(&tree_log[6], LogItem::FactLabel { seq: 7, target_id, .. } if target_id == "e2")
+        );
+        assert!(
+            matches!(&tree_log[7], LogItem::FactLabel { seq: 8, target_id, .. } if target_id == "e1")
+        );
     }
 
     #[tokio::test]

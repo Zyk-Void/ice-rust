@@ -1,0 +1,514 @@
+{
+  "owner": "/root/final_area_handoffs",
+  "phase": "source-displayed-awaiting-semantic-disposition",
+  "records": [
+    {
+      "symbol": "validateClientConfig",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:43",
+      "covering_entries": [
+        "MISC-030"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/claude-sdk/adapter.ts",
+        "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+        "range": [
+          40,
+          57
+        ],
+        "text": "40 | \t\tthrow new Error(\"Invalid bridge usage.\");\n41 | \treturn value;\n42 | }\n43 | export function validateClientConfig(raw: unknown): BridgeClientConfig {\n44 | \tconst input = record(raw);\n45 | \tconst url = new URL(string(input.baseUrl));\n46 | \tif (\n47 | \t\tinput.version !== 1 ||\n48 | \t\turl.protocol !== \"http:\" ||\n49 | \t\turl.hostname !== \"127.0.0.1\" ||\n50 | \t\turl.pathname !== \"/\" ||\n51 | \t\turl.username ||\n52 | \t\turl.password ||\n53 | \t\turl.search ||\n54 | \t\turl.hash ||\n55 | \t\t!url.port ||\n56 | \t\t!isAbsolute(string(input.tokenFile)) ||\n57 | \t\t!Array.isArray(input.models) ||"
+      },
+      "entries": [
+        {
+          "id": "MISC-030",
+          "title": "Local Claude SDK client configuration and private bridge credentials",
+          "what": "Read a dedicated local-bridge configuration and credential without importing Claude OAuth state or allowing a remote endpoint to receive the bridge token.",
+          "source": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:13-79; ice:packages/coding-agent/src/claude-sdk/adapter.ts:167-181; ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs:25-28; rust:crates/ice-cli/src/provider/binding.rs:1-104; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "BridgeClientConfig = {version:1, baseUrl:string, tokenFile:string, models:string[]}. Production extension path is <getAgentDir()>/claude-sdk.json. Private-file metadata limit is 65536 bytes; token grammar is /^[a-f0-9]{64}$/. No new environment variable or default bridge port exists here. Both configuration and token are inputs only; this module writes neither file."
+        }
+      ]
+    },
+    {
+      "symbol": "readPrivate",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:66",
+      "covering_entries": [
+        "MISC-030"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/claude-sdk/adapter.ts",
+        "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+        "range": [
+          63,
+          80
+        ],
+        "text": "63 | \t}\n64 | \treturn { version: 1, baseUrl: url.origin, tokenFile: string(input.tokenFile), models: input.models as string[] };\n65 | }\n66 | export async function readPrivate(path: string): Promise<string> {\n67 | \tconst file = await fs.open(path, constants.O_RDONLY | constants.O_NOFOLLOW);\n68 | \ttry {\n69 | \t\tconst stat = await file.stat();\n70 | \t\tif (!stat.isFile() || stat.size > 65536 || (stat.mode & 0o077) !== 0 || stat.uid !== process.getuid?.())\n71 | \t\t\tthrow new Error(\"Unsafe local Claude SDK configuration permissions.\");\n72 | \t\treturn await file.readFile(\"utf8\");\n73 | \t} finally {\n74 | \t\tawait file.close();\n75 | \t}\n76 | }\n77 | export async function loadClientConfig(path: string): Promise<BridgeClientConfig> {\n78 | \treturn validateClientConfig(JSON.parse(await readPrivate(path)));\n79 | }\n80 | function serializedMessages(context: Context): unknown[] {"
+      },
+      "entries": [
+        {
+          "id": "MISC-030",
+          "title": "Local Claude SDK client configuration and private bridge credentials",
+          "what": "Read a dedicated local-bridge configuration and credential without importing Claude OAuth state or allowing a remote endpoint to receive the bridge token.",
+          "source": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:13-79; ice:packages/coding-agent/src/claude-sdk/adapter.ts:167-181; ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs:25-28; rust:crates/ice-cli/src/provider/binding.rs:1-104; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "BridgeClientConfig = {version:1, baseUrl:string, tokenFile:string, models:string[]}. Production extension path is <getAgentDir()>/claude-sdk.json. Private-file metadata limit is 65536 bytes; token grammar is /^[a-f0-9]{64}$/. No new environment variable or default bridge port exists here. Both configuration and token are inputs only; this module writes neither file."
+        }
+      ]
+    },
+    {
+      "symbol": "loadClientConfig",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:77",
+      "covering_entries": [
+        "MISC-030"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/claude-sdk/adapter.ts",
+        "sha256": "a731d0cda8c41b353c2c34bf3fbbd2a7a45610b17d8b416779f5aac2a1b059f2",
+        "range": [
+          74,
+          91
+        ],
+        "text": "74 | \t\tawait file.close();\n75 | \t}\n76 | }\n77 | export async function loadClientConfig(path: string): Promise<BridgeClientConfig> {\n78 | \treturn validateClientConfig(JSON.parse(await readPrivate(path)));\n79 | }\n80 | function serializedMessages(context: Context): unknown[] {\n81 | \treturn context.messages.map((message) => {\n82 | \t\tif (message.role === \"user\") return { role: message.role, content: message.content };\n83 | \t\tif (message.role === \"assistant\") return { role: message.role, content: message.content };\n84 | \t\treturn {\n85 | \t\t\trole: message.role,\n86 | \t\t\ttoolCallId: message.toolCallId,\n87 | \t\t\ttoolName: message.toolName,\n88 | \t\t\tcontent: message.content,\n89 | \t\t\tisError: message.isError,\n90 | \t\t};\n91 | \t});"
+      },
+      "entries": [
+        {
+          "id": "MISC-030",
+          "title": "Local Claude SDK client configuration and private bridge credentials",
+          "what": "Read a dedicated local-bridge configuration and credential without importing Claude OAuth state or allowing a remote endpoint to receive the bridge token.",
+          "source": "ice:packages/coding-agent/src/claude-sdk/adapter.ts:13-79; ice:packages/coding-agent/src/claude-sdk/adapter.ts:167-181; ice:packages/coding-agent/test/claude-sdk-adapter.test.mjs:25-28; rust:crates/ice-cli/src/provider/binding.rs:1-104; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "BridgeClientConfig = {version:1, baseUrl:string, tokenFile:string, models:string[]}. Production extension path is <getAgentDir()>/claude-sdk.json. Private-file metadata limit is 65536 bytes; token grammar is /^[a-f0-9]{64}$/. No new environment variable or default bridge port exists here. Both configuration and token are inputs only; this module writes neither file."
+        }
+      ]
+    },
+    {
+      "symbol": "claudeSdkExtension",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/claude-sdk/extension.ts:7",
+      "covering_entries": [
+        "MISC-031"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/claude-sdk/extension.ts",
+        "sha256": "5f5e6f7b06eeba5c57090c0b7698a628a35c53fc25d32c7386444c26e88b7283",
+        "range": [
+          4,
+          21
+        ],
+        "text": "4 | import { ClaudeSdkClient, loadClientConfig } from \"./adapter.ts\";\n5 | \n6 | /** Additive transport only. The native ICE loop remains the sole tool/permission authority. */\n7 | export default async function claudeSdkExtension(ice: ExtensionAPI): Promise<void> {\n8 | \tconst config = await loadClientConfig(join(getAgentDir(), \"claude-sdk.json\"));\n9 | \tconst client = new ClaudeSdkClient(config);\n10 | \tice.registerProvider(\"claude-sdk\", {\n11 | \t\tname: \"Claude Agent SDK (local; billing external)\",\n12 | \t\tapi: \"claude-sdk\",\n13 | \t\tbaseUrl: config.baseUrl,\n14 | \t\t// The adapter reads a private local bridge token; ICE must never import Claude OAuth credentials.\n15 | \t\tapiKey: \"credential-managed-by-local-claude-sdk-bridge\",\n16 | \t\tstreamSimple: (model, context, options) => client.stream(model, context, options),\n17 | \t\tmodels: config.models.map((id) => ({\n18 | \t\t\tid,\n19 | \t\t\tname: `${id} (SDK; billing external)`,\n20 | \t\t\treasoning: true,\n21 | \t\t\tinput: [\"text\", \"image\"],"
+      },
+      "entries": [
+        {
+          "id": "MISC-031",
+          "title": "Claude SDK extension registration, model catalog and status command",
+          "what": "Expose the local bridge as an optional claude-sdk provider with an explicit status command and externally managed billing labels, while leaving tool execution in the existing agent.",
+          "source": "ice:packages/coding-agent/src/claude-sdk/extension.ts:1-37; ice:packages/coding-agent/src/claude-sdk/adapter.ts:195-225; ice:packages/coding-agent/test/claude-sdk-live-cli.mjs:10-41; rust:crates/ice-extensions/src/registry.rs:622-669; rust:crates/ice-extensions/src/provider.rs:80-201; rust:crates/ice-cli/src/model_registry.rs:113-170.",
+          "interfaces": "Provider id and API string claude-sdk; command /claude-sdk-status; lifecycle event session_shutdown; GET /api/services/claude-sdk/status response {authentication:{state,ready}}. Registration marker apiKey is credential-managed-by-local-claude-sdk-bridge, not a real credential. Model metadata constants are stated above. Status has a 12000 ms abort signal and uses info notifications."
+        }
+      ]
+    },
+    {
+      "symbol": "ResourceCollision",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/diagnostics.ts:1",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/diagnostics.ts",
+        "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+        "range": [
+          1,
+          15
+        ],
+        "text": "1 | export interface ResourceCollision {\n2 | \tresourceType: \"extension\" | \"skill\" | \"prompt\" | \"theme\";\n3 | \tname: string; // skill name, command/tool/flag name, prompt name, theme name\n4 | \twinnerPath: string;\n5 | \tloserPath: string;\n6 | \twinnerSource?: string; // e.g., \"npm:foo\", \"git:...\", \"local\"\n7 | \tloserSource?: string;\n8 | }\n9 | \n10 | export interface ResourceDiagnostic {\n11 | \ttype: \"warning\" | \"error\" | \"collision\";\n12 | \tmessage: string;\n13 | \tpath?: string;\n14 | \tcollision?: ResourceCollision;\n15 | }"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "areExperimentalFeaturesEnabled",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/experimental.ts:3",
+      "covering_entries": [
+        "RPC-015"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/experimental.ts",
+        "sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+        "range": [
+          1,
+          6
+        ],
+        "text": "1 | import { getIceEnv } from \"./legacy-compat/env.ts\";\n2 | \n3 | export function areExperimentalFeaturesEnabled(): boolean {\n4 | \treturn getIceEnv(\"ICE_EXPERIMENTAL\") === \"1\";\n5 | }\n6 | "
+      },
+      "entries": [
+        {
+          "id": "RPC-015",
+          "title": "Experimental remote command parsing and native connect-mode boundary",
+          "what": "Preserve the new, explicitly experimental Unix-address command parser without confusing its injected actions with an already wired production server, or with Rust's TCP --connect interception.",
+          "source": "ice:packages/coding-agent/src/cli/experimental/command.ts:1-205; ice:packages/coding-agent/src/cli/experimental/command-options.ts:6-37; ice:packages/coding-agent/src/cli/experimental/auth.ts:1-20; ice:packages/coding-agent/src/cli/experimental/transport-address.ts:10-47; ice:packages/coding-agent/src/cli/experimental/commands/ice.ts:13-47; ice:packages/coding-agent/src/cli/experimental/commands/server.ts:13-44; ice:packages/coding-agent/src/cli/experimental/commands/client.ts:13-44; ice:packages/coding-agent/test/experimental-cli-command.test.ts:1-164; ice:packages/coding-agent/test/experimental-cli-resolution.test.ts:1-97.",
+          "interfaces": "NamedCommandInvocation; Command.parse/execute; {ok:true,command}|{ok:false,errors}; AuthInput token/file; TransportAddress {transport:'unix',path}; injected ExperimentalCliContext. CLI option values and parser diagnostic order are observable."
+        }
+      ]
+    },
+    {
+      "symbol": "createToolHtmlRenderer",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/export-html/tool-renderer.ts:58",
+      "covering_entries": [
+        "MISC-020"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/export-html/tool-renderer.ts",
+        "sha256": "0fd13dbe01cbd51b08e25e8f395a78ea5bfd28777405d15d7af1ede02abf42e6",
+        "range": [
+          55,
+          72
+        ],
+        "text": "55 | \treturn lines.slice(start, end);\n56 | }\n57 | \n58 | export function createToolHtmlRenderer(deps: ToolHtmlRendererDeps): ToolHtmlRenderer {\n59 | \tconst { getToolDefinition, theme, cwd, width = 100 } = deps;\n60 | \n61 | \tconst renderedCallComponents = new Map<string, Component>();\n62 | \tconst renderedResultComponents = new Map<string, Component>();\n63 | \tconst renderedStates = new Map<string, any>();\n64 | \tconst renderedArgs = new Map<string, unknown>();\n65 | \n66 | \tconst getState = (toolCallId: string): any => {\n67 | \t\tlet state = renderedStates.get(toolCallId);\n68 | \t\tif (!state) {\n69 | \t\t\tstate = {};\n70 | \t\t\trenderedStates.set(toolCallId, state);\n71 | \t\t}\n72 | \t\treturn state;"
+      },
+      "entries": [
+        {
+          "id": "MISC-020",
+          "title": "Custom tool stateful rendering and ANSI-to-HTML conversion",
+          "what": "Reuse a tool's terminal renderer to produce collapsed and expanded HTML while preserving its per-call render state, style spans and intentional whitespace.",
+          "source": "ice:packages/coding-agent/src/core/export-html/tool-renderer.ts:1-173; ice:packages/coding-agent/src/core/export-html/ansi-to-html.ts:1-259; ice:packages/coding-agent/src/core/export-html/index.ts:177-230; ice:packages/coding-agent/test/export-html-whitespace.test.ts:1-43; rust:crates/ice-cli/src/export.rs:141-176.",
+          "interfaces": "ToolHtmlRenderer.renderCall(id,name,args)→string|undefined; renderResult(id,name,content,details,isError)→{collapsed?,expanded?}|undefined. ToolHtmlRendererDeps {getToolDefinition,theme,cwd,width=100}. RenderedToolHtml {callHtml?,resultHtmlCollapsed?,resultHtmlExpanded?}. ansiToHtml and ansiLinesToHtml preserve the stated SGR/whitespace subset."
+        }
+      ]
+    },
+    {
+      "symbol": "SlashCommandSource",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/slash-commands.ts:4",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/slash-commands.ts",
+        "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+        "range": [
+          1,
+          18
+        ],
+        "text": "1 | import { APP_NAME } from \"../config.ts\";\n2 | import type { SourceInfo } from \"./source-info.ts\";\n3 | \n4 | export type SlashCommandSource = \"extension\" | \"prompt\" | \"skill\";\n5 | \n6 | export interface SlashCommandInfo {\n7 | \tname: string;\n8 | \tdescription?: string;\n9 | \tsource: SlashCommandSource;\n10 | \tsourceInfo: SourceInfo;\n11 | }\n12 | \n13 | export interface BuiltinSlashCommand {\n14 | \tname: string;\n15 | \tdescription: string;\n16 | \targumentHint?: string;\n17 | }\n18 | "
+      },
+      "entries": []
+    },
+    {
+      "symbol": "BuiltinSlashCommand",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/core/slash-commands.ts:13",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/slash-commands.ts",
+        "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+        "range": [
+          10,
+          27
+        ],
+        "text": "10 | \tsourceInfo: SourceInfo;\n11 | }\n12 | \n13 | export interface BuiltinSlashCommand {\n14 | \tname: string;\n15 | \tdescription: string;\n16 | \targumentHint?: string;\n17 | }\n18 | \n19 | export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [\n20 | \t{ name: \"fast\", description: \"Toggle priority service tier for capable models\", argumentHint: \"[on|off|status]\" },\n21 | \t{ name: \"settings\", description: \"Open settings menu\" },\n22 | \t{ name: \"customize\", description: \"Customize appearance and themes\" },\n23 | \t{ name: \"model\", description: \"Select model (opens selector UI)\", argumentHint: \"<provider/model>\" },\n24 | \t{ name: \"scoped-models\", description: \"Enable/disable models for Ctrl+P cycling\" },\n25 | \t{ name: \"export\", description: \"Export session (HTML default, or specify path: .html/.jsonl)\" },\n26 | \t{ name: \"import\", description: \"Import and resume a session from a JSONL file\" },\n27 | \t{ name: \"share\", description: \"Share session as a secret GitHub gist\" },"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "BUILTIN_SLASH_COMMANDS",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/core/slash-commands.ts:19",
+      "covering_entries": [],
+      "action": "uncited: read and add or extend an entry",
+      "source": {
+        "path": "packages/coding-agent/src/core/slash-commands.ts",
+        "sha256": "0a31254f35a67b5e138c59da7373546416b7f94c28fdb08f543a1a4d4f465453",
+        "range": [
+          16,
+          33
+        ],
+        "text": "16 | \targumentHint?: string;\n17 | }\n18 | \n19 | export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [\n20 | \t{ name: \"fast\", description: \"Toggle priority service tier for capable models\", argumentHint: \"[on|off|status]\" },\n21 | \t{ name: \"settings\", description: \"Open settings menu\" },\n22 | \t{ name: \"customize\", description: \"Customize appearance and themes\" },\n23 | \t{ name: \"model\", description: \"Select model (opens selector UI)\", argumentHint: \"<provider/model>\" },\n24 | \t{ name: \"scoped-models\", description: \"Enable/disable models for Ctrl+P cycling\" },\n25 | \t{ name: \"export\", description: \"Export session (HTML default, or specify path: .html/.jsonl)\" },\n26 | \t{ name: \"import\", description: \"Import and resume a session from a JSONL file\" },\n27 | \t{ name: \"share\", description: \"Share session as a secret GitHub gist\" },\n28 | \t{ name: \"copy\", description: \"Copy last agent message to clipboard\" },\n29 | \t{ name: \"name\", description: \"Set session display name\" },\n30 | \t{ name: \"session\", description: \"Show session info and stats\" },\n31 | \t{ name: \"context\", description: \"Show what is using the model's context window\" },\n32 | \t{ name: \"changelog\", description: \"Show changelog entries\" },\n33 | \t{ name: \"hotkeys\", description: \"Show all keyboard shortcuts\" },"
+      },
+      "entries": []
+    },
+    {
+      "symbol": "builtInExtensions",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/index.ts:4",
+      "covering_entries": [
+        "MISC-023"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/index.ts",
+        "sha256": "29c9dc5de4ec9c895223e8991ff02871f8eb67702435abed64a2b412430b4d7c",
+        "range": [
+          1,
+          5
+        ],
+        "text": "1 | import type { InlineExtension } from \"../core/extensions/types.ts\";\n2 | import llamaExtension from \"./llama/index.ts\";\n3 | \n4 | export const builtInExtensions: InlineExtension[] = [{ name: \"llama.cpp\", factory: llamaExtension, hidden: true }];\n5 | "
+      },
+      "entries": [
+        {
+          "id": "MISC-023",
+          "title": "Built-in llama provider login, environment resolution and catalog publication",
+          "what": "Expose loaded llama.cpp router models through the ordinary provider/model interfaces, with optional API-key login and cached catalog restoration. Configuring a compatible inference URL alone does not reproduce this provider's discovery and auth rules.",
+          "source": "ice:packages/coding-agent/src/extensions/index.ts:1-5; ice:packages/coding-agent/src/extensions/llama/provider.ts:1-151; ice:packages/coding-agent/src/extensions/llama/index.ts:42-62; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/provider/binding.rs:30-82; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "Provider/API llama.cpp/openai-completions; default router http://127.0.0.1:8080; environment LLAMA_BASE_URL,LLAMA_API_KEY; optional api_key credential with env.LLAMA_BASE_URL; getModels,refreshModels,stream,streamSimple; LlamaProviderController.setCatalog. Login is the generic /login llama.cpp flow, not a /llama login subcommand."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaModelStatus",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:1",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/client.ts",
+        "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+        "range": [
+          1,
+          15
+        ],
+        "text": "1 | export type LlamaModelStatus = \"unloaded\" | \"loading\" | \"loaded\" | \"downloading\" | \"sleeping\";\n2 | \n3 | export interface LlamaModelInfo {\n4 | \tid: string;\n5 | \taliases?: string[];\n6 | \tstatus: {\n7 | \t\tvalue: LlamaModelStatus;\n8 | \t\targs?: string[];\n9 | \t\tfailed?: boolean;\n10 | \t\texit_code?: number;\n11 | \t\tprogress?: Record<string, { done: number; total: number }>;\n12 | \t};\n13 | \tarchitecture?: {\n14 | \t\tinput_modalities?: string[];\n15 | \t\toutput_modalities?: string[];"
+      },
+      "entries": [
+        {
+          "id": "MISC-021",
+          "title": "Llama router requests, SSE progress and load/download completion",
+          "what": "Control an already running llama.cpp router and determine when model load, unload and download operations finish. OpenAI-compatible inference alone does not implement this management protocol.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/client.ts:1-333; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47; rust:crates/ice-cli/src/provider/binding.rs:30-82.",
+          "interfaces": "LlamaClient(serverUrl,apiKey?); list({reload?,signal?}), load/unload/download(model,signal?), unloadAndWait, loadAndWait(model,onProgress,signal?), downloadAndWait; watch(onEvent,signal?). Management endpoints GET /models[?reload=1], POST /models/load, POST /models/unload, POST /models, GET /models/sse. LlamaProgress {message,ratio?,detail?}."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaModelInfo",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:3",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/client.ts",
+        "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+        "range": [
+          1,
+          17
+        ],
+        "text": "1 | export type LlamaModelStatus = \"unloaded\" | \"loading\" | \"loaded\" | \"downloading\" | \"sleeping\";\n2 | \n3 | export interface LlamaModelInfo {\n4 | \tid: string;\n5 | \taliases?: string[];\n6 | \tstatus: {\n7 | \t\tvalue: LlamaModelStatus;\n8 | \t\targs?: string[];\n9 | \t\tfailed?: boolean;\n10 | \t\texit_code?: number;\n11 | \t\tprogress?: Record<string, { done: number; total: number }>;\n12 | \t};\n13 | \tarchitecture?: {\n14 | \t\tinput_modalities?: string[];\n15 | \t\toutput_modalities?: string[];\n16 | \t};\n17 | \tsource?: string;"
+      },
+      "entries": [
+        {
+          "id": "MISC-021",
+          "title": "Llama router requests, SSE progress and load/download completion",
+          "what": "Control an already running llama.cpp router and determine when model load, unload and download operations finish. OpenAI-compatible inference alone does not implement this management protocol.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/client.ts:1-333; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47; rust:crates/ice-cli/src/provider/binding.rs:30-82.",
+          "interfaces": "LlamaClient(serverUrl,apiKey?); list({reload?,signal?}), load/unload/download(model,signal?), unloadAndWait, loadAndWait(model,onProgress,signal?), downloadAndWait; watch(onEvent,signal?). Management endpoints GET /models[?reload=1], POST /models/load, POST /models/unload, POST /models, GET /models/sse. LlamaProgress {message,ratio?,detail?}."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaModelsResponse",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:26",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/client.ts",
+        "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+        "range": [
+          23,
+          40
+        ],
+        "text": "23 | \t};\n24 | }\n25 | \n26 | export interface LlamaModelsResponse {\n27 | \tdata: LlamaModelInfo[];\n28 | \tobject?: string;\n29 | }\n30 | \n31 | export interface LlamaModelEvent {\n32 | \tmodel: string;\n33 | \tevent: string;\n34 | \tdata?: unknown;\n35 | }\n36 | \n37 | export interface LlamaProgress {\n38 | \tmessage: string;\n39 | \tratio?: number;\n40 | \tdetail?: string;"
+      },
+      "entries": [
+        {
+          "id": "MISC-021",
+          "title": "Llama router requests, SSE progress and load/download completion",
+          "what": "Control an already running llama.cpp router and determine when model load, unload and download operations finish. OpenAI-compatible inference alone does not implement this management protocol.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/client.ts:1-333; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47; rust:crates/ice-cli/src/provider/binding.rs:30-82.",
+          "interfaces": "LlamaClient(serverUrl,apiKey?); list({reload?,signal?}), load/unload/download(model,signal?), unloadAndWait, loadAndWait(model,onProgress,signal?), downloadAndWait; watch(onEvent,signal?). Management endpoints GET /models[?reload=1], POST /models/load, POST /models/unload, POST /models, GET /models/sse. LlamaProgress {message,ratio?,detail?}."
+        }
+      ]
+    },
+    {
+      "symbol": "LlamaModelEvent",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:31",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/client.ts",
+        "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+        "range": [
+          28,
+          45
+        ],
+        "text": "28 | \tobject?: string;\n29 | }\n30 | \n31 | export interface LlamaModelEvent {\n32 | \tmodel: string;\n33 | \tevent: string;\n34 | \tdata?: unknown;\n35 | }\n36 | \n37 | export interface LlamaProgress {\n38 | \tmessage: string;\n39 | \tratio?: number;\n40 | \tdetail?: string;\n41 | }\n42 | \n43 | function errorMessage(payload: unknown, fallback: string): string {\n44 | \tif (typeof payload !== \"object\" || payload === null) return fallback;\n45 | \tconst error = (payload as { error?: unknown }).error;"
+      },
+      "entries": [
+        {
+          "id": "MISC-021",
+          "title": "Llama router requests, SSE progress and load/download completion",
+          "what": "Control an already running llama.cpp router and determine when model load, unload and download operations finish. OpenAI-compatible inference alone does not implement this management protocol.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/client.ts:1-333; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47; rust:crates/ice-cli/src/provider/binding.rs:30-82.",
+          "interfaces": "LlamaClient(serverUrl,apiKey?); list({reload?,signal?}), load/unload/download(model,signal?), unloadAndWait, loadAndWait(model,onProgress,signal?), downloadAndWait; watch(onEvent,signal?). Management endpoints GET /models[?reload=1], POST /models/load, POST /models/unload, POST /models, GET /models/sse. LlamaProgress {message,ratio?,detail?}."
+        }
+      ]
+    },
+    {
+      "symbol": "normalizeLlamaServerUrl",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/client.ts:141",
+      "covering_entries": [
+        "MISC-021"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/client.ts",
+        "sha256": "d555a020d9413c5bd36be097f93650b2ee7d0d1c1b0e0d3ec9bbc143a0e55752",
+        "range": [
+          138,
+          155
+        ],
+        "text": "138 | \treturn `${value >= 10 ? value.toFixed(1) : value.toFixed(2)} ${unit}`;\n139 | }\n140 | \n141 | export function normalizeLlamaServerUrl(value: string): string {\n142 | \tconst url = new URL(value.trim());\n143 | \tif (url.protocol !== \"http:\" && url.protocol !== \"https:\") {\n144 | \t\tthrow new Error(\"Server URL must use http or https\");\n145 | \t}\n146 | \turl.hash = \"\";\n147 | \turl.search = \"\";\n148 | \turl.pathname = url.pathname.replace(/\\/+$/u, \"\").replace(/\\/v1$/u, \"\") || \"/\";\n149 | \treturn url.toString().replace(/\\/$/u, \"\");\n150 | }\n151 | \n152 | export function llamaInferenceUrl(serverUrl: string): string {\n153 | \treturn `${normalizeLlamaServerUrl(serverUrl)}/v1`;\n154 | }\n155 | "
+      },
+      "entries": [
+        {
+          "id": "MISC-021",
+          "title": "Llama router requests, SSE progress and load/download completion",
+          "what": "Control an already running llama.cpp router and determine when model load, unload and download operations finish. OpenAI-compatible inference alone does not implement this management protocol.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/client.ts:1-333; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47; rust:crates/ice-cli/src/provider/binding.rs:30-82.",
+          "interfaces": "LlamaClient(serverUrl,apiKey?); list({reload?,signal?}), load/unload/download(model,signal?), unloadAndWait, loadAndWait(model,onProgress,signal?), downloadAndWait; watch(onEvent,signal?). Management endpoints GET /models[?reload=1], POST /models/load, POST /models/unload, POST /models, GET /models/sse. LlamaProgress {message,ratio?,detail?}."
+        }
+      ]
+    },
+    {
+      "symbol": "HuggingFaceModel",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:10",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+        "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+        "range": [
+          7,
+          24
+        ],
+        "text": "7 | \t/(?:^|[-_.])((?:UD-)?(?:IQ\\d(?:_[A-Z0-9]+)+|Q\\d(?:_[A-Z0-9]+)+|BF16|F16|F32|MXFP\\d(?:_[A-Z0-9]+)*))$/iu;\n8 | const SHARD_SUFFIX_PATTERN = /-\\d{5}-of-\\d{5}$/u;\n9 | \n10 | export interface HuggingFaceModel {\n11 | \tid: string;\n12 | \tdownloads: number;\n13 | }\n14 | \n15 | export interface HuggingFaceQuantization {\n16 | \tname: string;\n17 | \tsize?: number;\n18 | }\n19 | \n20 | export interface HuggingFaceModelDetails {\n21 | \tid: string;\n22 | \tgated: false | \"auto\" | \"manual\";\n23 | \tquantizations: HuggingFaceQuantization[];\n24 | }"
+      },
+      "entries": [
+        {
+          "id": "MISC-022",
+          "title": "Hugging Face token lookup, GGUF discovery and quantization grouping",
+          "what": "Search Hugging Face for GGUF models, identify their downloadable quantizations and report gated-access requirements before asking the llama.cpp server to download a model.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:1-159; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47.",
+          "interfaces": "Environment HF_TOKEN,HF_TOKEN_PATH,HF_HOME,XDG_CACHE_HOME; findHuggingFaceToken(env?)→Promise<string|undefined>. HuggingFaceClient(token?,baseUrl?); search(query,signal?)→{id,downloads}[]; details(id,signal?)→{id,gated:false|'auto'|'manual',quantizations:{name,size?}[]}. HTTP /api/models and /api/models/{id}?blobs=true."
+        }
+      ]
+    },
+    {
+      "symbol": "HuggingFaceQuantization",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:15",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+        "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+        "range": [
+          12,
+          29
+        ],
+        "text": "12 | \tdownloads: number;\n13 | }\n14 | \n15 | export interface HuggingFaceQuantization {\n16 | \tname: string;\n17 | \tsize?: number;\n18 | }\n19 | \n20 | export interface HuggingFaceModelDetails {\n21 | \tid: string;\n22 | \tgated: false | \"auto\" | \"manual\";\n23 | \tquantizations: HuggingFaceQuantization[];\n24 | }\n25 | \n26 | function payloadError(payload: unknown, fallback: string): string {\n27 | \tif (typeof payload !== \"object\" || payload === null) return fallback;\n28 | \tconst error = (payload as { error?: unknown }).error;\n29 | \treturn typeof error === \"string\" && error ? error : fallback;"
+      },
+      "entries": [
+        {
+          "id": "MISC-022",
+          "title": "Hugging Face token lookup, GGUF discovery and quantization grouping",
+          "what": "Search Hugging Face for GGUF models, identify their downloadable quantizations and report gated-access requirements before asking the llama.cpp server to download a model.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:1-159; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47.",
+          "interfaces": "Environment HF_TOKEN,HF_TOKEN_PATH,HF_HOME,XDG_CACHE_HOME; findHuggingFaceToken(env?)→Promise<string|undefined>. HuggingFaceClient(token?,baseUrl?); search(query,signal?)→{id,downloads}[]; details(id,signal?)→{id,gated:false|'auto'|'manual',quantizations:{name,size?}[]}. HTTP /api/models and /api/models/{id}?blobs=true."
+        }
+      ]
+    },
+    {
+      "symbol": "HuggingFaceModelDetails",
+      "kind": "type",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:20",
+      "covering_entries": [
+        "MISC-022"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/huggingface.ts",
+        "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+        "range": [
+          17,
+          34
+        ],
+        "text": "17 | \tsize?: number;\n18 | }\n19 | \n20 | export interface HuggingFaceModelDetails {\n21 | \tid: string;\n22 | \tgated: false | \"auto\" | \"manual\";\n23 | \tquantizations: HuggingFaceQuantization[];\n24 | }\n25 | \n26 | function payloadError(payload: unknown, fallback: string): string {\n27 | \tif (typeof payload !== \"object\" || payload === null) return fallback;\n28 | \tconst error = (payload as { error?: unknown }).error;\n29 | \treturn typeof error === \"string\" && error ? error : fallback;\n30 | }\n31 | \n32 | function parseRateLimitDelay(value: string | null): number | undefined {\n33 | \tconst match = value?.match(/(?:^|;)t=(\\d+)/u);\n34 | \treturn match ? Number(match[1]) : undefined;"
+      },
+      "entries": [
+        {
+          "id": "MISC-022",
+          "title": "Hugging Face token lookup, GGUF discovery and quantization grouping",
+          "what": "Search Hugging Face for GGUF models, identify their downloadable quantizations and report gated-access requirements before asking the llama.cpp server to download a model.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/huggingface.ts:1-159; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-ai/src/providers/mod.rs:1-47.",
+          "interfaces": "Environment HF_TOKEN,HF_TOKEN_PATH,HF_HOME,XDG_CACHE_HOME; findHuggingFaceToken(env?)→Promise<string|undefined>. HuggingFaceClient(token?,baseUrl?); search(query,signal?)→{id,downloads}[]; details(id,signal?)→{id,gated:false|'auto'|'manual',quantizations:{name,size?}[]}. HTTP /api/models and /api/models/{id}?blobs=true."
+        }
+      ]
+    },
+    {
+      "symbol": "llamaExtension",
+      "kind": "runtime",
+      "ts": "ice:packages/coding-agent/src/extensions/llama/index.ts:42",
+      "covering_entries": [
+        "MISC-023",
+        "MISC-024"
+      ],
+      "action": "name-in-entry",
+      "source": {
+        "path": "packages/coding-agent/src/extensions/llama/index.ts",
+        "sha256": "b212e60f4e7bd1ad44def2fa1ccee2b2e53a03dc1ef75c78052e8555f4ae9e4e",
+        "range": [
+          39,
+          56
+        ],
+        "text": "39 | \treturn new LlamaClient(serverUrl, result.auth.apiKey);\n40 | }\n41 | \n42 | export default function llamaExtension(ice: ExtensionAPI): void {\n43 | \tconst provider = createLlamaProvider();\n44 | \tice.registerProvider(provider.provider);\n45 | \n46 | \tconst syncCatalog = async (\n47 | \t\tctx: ExtensionCommandContext,\n48 | \t\tclient: LlamaClient,\n49 | \t\tcatalog?: LlamaModelInfo[],\n50 | \t): Promise<LlamaModelInfo[]> => {\n51 | \t\tconst signal = AbortSignal.timeout(15_000);\n52 | \t\tconst current = catalog ?? (await client.list({ signal }));\n53 | \t\tprovider.setCatalog(current, client.serverUrl);\n54 | \t\tconst result = await ctx.modelRegistry.refresh({\n55 | \t\t\tproviders: [LLAMA_PROVIDER_ID],\n56 | \t\t\tsignal,"
+      },
+      "entries": [
+        {
+          "id": "MISC-023",
+          "title": "Built-in llama provider login, environment resolution and catalog publication",
+          "what": "Expose loaded llama.cpp router models through the ordinary provider/model interfaces, with optional API-key login and cached catalog restoration. Configuring a compatible inference URL alone does not reproduce this provider's discovery and auth rules.",
+          "source": "ice:packages/coding-agent/src/extensions/index.ts:1-5; ice:packages/coding-agent/src/extensions/llama/provider.ts:1-151; ice:packages/coding-agent/src/extensions/llama/index.ts:42-62; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/provider/binding.rs:30-82; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-ai/src/types.rs:419-479.",
+          "interfaces": "Provider/API llama.cpp/openai-completions; default router http://127.0.0.1:8080; environment LLAMA_BASE_URL,LLAMA_API_KEY; optional api_key credential with env.LLAMA_BASE_URL; getModels,refreshModels,stream,streamSimple; LlamaProviderController.setCatalog. Login is the generic /login llama.cpp flow, not a /llama login subcommand."
+        },
+        {
+          "id": "MISC-024",
+          "title": "Interactive llama model manager, search and cancellation recovery",
+          "what": "Provide an interactive model manager that can inspect the router, choose load/unload behavior, search and download GGUF models, and recover previously loaded models when a replacement is cancelled.",
+          "source": "ice:packages/coding-agent/src/extensions/llama/index.ts:1-229; ice:packages/coding-agent/src/extensions/llama/ui.ts:1-543; ice:packages/coding-agent/docs/llama-cpp.md:1-100; ice:packages/coding-agent/test/llama-extension.test.ts:1-296; rust:crates/ice-cli/src/model_registry.rs:113-170; rust:crates/ice-extensions/src/registry.rs:622-669.",
+          "interfaces": "Command /llama (TUI only; args ignored); /login llama.cpp uses the generic auth flow. UI methods showModels/select/confirm/connectionError/searchModels/showStatus/progress/updateProgress. Action union model|download|close. Selection keys tui.select.up/down/confirm/cancel, search debounce500ms, minimum2 chars, visible10/12 rows, progress width40."
+        }
+      ]
+    }
+  ]
+}

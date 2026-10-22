@@ -44,6 +44,13 @@ pub enum AgentEvent {
         /// Diagnostic from the failed provider request.
         error: String,
     },
+    /// Emitted when a transient provider failure is NOT retried because
+    /// replaying the request could repeat a tool effect (the failed generation
+    /// held a tool call, or tools already ran in it).
+    RetryRefused {
+        /// Diagnostic from the failed provider request.
+        error: String,
+    },
     /// Emitted at the start of each turn (a turn = one assistant response + its
     /// tool calls/results).
     TurnStart,
@@ -102,6 +109,7 @@ impl AgentEvent {
             AgentEvent::AgentEnd { .. } => "agent_end",
             AgentEvent::RunSettled { .. } => "run_settled",
             AgentEvent::RetryScheduled { .. } => "retry_scheduled",
+            AgentEvent::RetryRefused { .. } => "retry_refused",
             AgentEvent::TurnStart => "turn_start",
             AgentEvent::TurnEnd { .. } => "turn_end",
             AgentEvent::MessageStart { .. } => "message_start",

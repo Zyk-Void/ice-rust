@@ -1,0 +1,2399 @@
+{
+  "schema_version": 1,
+  "owner": "/root/final_area_handoffs",
+  "status": "PASS",
+  "scope": "Only the10 previously credited Rust non-crates paths;8 changed files with all exact minimal changed segments reviewed,2 identical provider-runtime files excluded from new hunk reading.",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "inputs": [
+    {
+      "path": "docs/ice-gap/evidence/active-checkout-diff-hunks-complete.json",
+      "sha256": "6f14bf4d35fa692b536768257ea0e127c7081ba8b1d72be302363cd278c76006"
+    },
+    {
+      "path": "docs/ice-gap/evidence/active-checkout-source-map.json",
+      "sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d"
+    }
+  ],
+  "old_root": "/home/mewtwo/Zks/ice-rust",
+  "active_root": "/home/mewtwo/Zykairotis/ice-rust",
+  "summary": {
+    "scoped_paths": 10,
+    "changed_files": 8,
+    "segments": 67,
+    "zero_old_segments": 1,
+    "zero_active_segments": 0,
+    "identical_unread_files": 2,
+    "errors": 0
+  },
+  "reviews": [
+    {
+      "old_path": "Cargo.toml",
+      "active_path": "Cargo.toml",
+      "segment_index": 0,
+      "old_start": 1,
+      "old_count": 1,
+      "active_start": 1,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          1,
+          1
+        ]
+      ],
+      "active_ranges": [
+        [
+          1,
+          1
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "active_sha256": "19e4b2d9a0a2c32dd7463d6b78fb94b096b5c0fd3241af5ef40eef4f90f9b6c4",
+      "diff_sha256": "99325c63e76e25efb5e2d76446817fb07817850cf70ceba6ae3ee15e754fd286",
+      "old_segment_sha256": "cc54d673b63850fcb07ec0a5100505dd41622a7c41c0cbc0741473a24893f281",
+      "active_segment_sha256": "5fdcf779fab523f824a428cbda139cc48d3ff61c8f22ade338a129b080418958",
+      "old_text": "# ice — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.",
+      "active_text": "# icers — a Rust agent runtime + CLI. See README.md and docs/architecture/overview.md.",
+      "kind": "comment-only-runtime-label",
+      "finding": "The workspace banner/internal-crate comment changes ice to icers. Crate names, dependency paths, versions and manifest structure do not change in this segment.",
+      "runtime_equivalence": true,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "Cargo.toml",
+      "active_path": "Cargo.toml",
+      "segment_index": 1,
+      "old_start": 73,
+      "old_count": 1,
+      "active_start": 73,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          73,
+          73
+        ]
+      ],
+      "active_ranges": [
+        [
+          73,
+          73
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "active_sha256": "19e4b2d9a0a2c32dd7463d6b78fb94b096b5c0fd3241af5ef40eef4f90f9b6c4",
+      "diff_sha256": "99325c63e76e25efb5e2d76446817fb07817850cf70ceba6ae3ee15e754fd286",
+      "old_segment_sha256": "47e36aa0a077ace4364343214dc7f0dd4b314df262229dac8c094ed91d4cb603",
+      "active_segment_sha256": "7ec92de2cd02b99cdb4bf22997ffd90805ce353f9823efdcbb0387e73c95f195",
+      "old_text": "# ice internal crates (package names and directories both use the `ice-` prefix).",
+      "active_text": "# icers internal crates (package names and directories both use the `ice-` prefix).",
+      "kind": "comment-only-runtime-label",
+      "finding": "The workspace banner/internal-crate comment changes ice to icers. Crate names, dependency paths, versions and manifest structure do not change in this segment.",
+      "runtime_equivalence": true,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "ICE_PORTING.md",
+      "active_path": "ICE_PORTING.md",
+      "segment_index": 0,
+      "old_start": 657,
+      "old_count": 1,
+      "active_start": 657,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          657,
+          657
+        ]
+      ],
+      "active_ranges": [
+        [
+          657,
+          657
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "active_sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d",
+      "diff_sha256": "2ce34f3e1da041284dfade61a2384d34e8146776bf1c8c7f64316fc16f1084f2",
+      "old_segment_sha256": "25bbfc665dcedd5fbc8e62e807b8cebe09543da17dd3d86a7f74c7d182e8fab7",
+      "active_segment_sha256": "b4d725839c6266148c3bf0eb91854b77b625b1b9428edfcde4395525686e981f",
+      "old_text": "3. **Self-update** now points at `https://github.com/Zyk-Void/ice-rust` releases",
+      "active_text": "3. **Self-update** now points at `https://github.com/zyk-void/ice-rust` releases",
+      "kind": "documented-release-owner-case",
+      "finding": "The self-update repository URL spelling changes Zyk-Void to zyk-void. This is a textual endpoint spelling change; no release availability or network behavior was tested.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "ICE_PORTING.md",
+      "active_path": "ICE_PORTING.md",
+      "segment_index": 1,
+      "old_start": 659,
+      "old_count": 0,
+      "active_start": 660,
+      "active_count": 28,
+      "old_ranges": [],
+      "active_ranges": [
+        [
+          660,
+          687
+        ]
+      ],
+      "empty_old_segment": true,
+      "empty_active_segment": false,
+      "old_sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc",
+      "active_sha256": "43463b570bbcaf5d718c35c14e242f0d73afe3f72624cf4fc16edaf25a86627d",
+      "diff_sha256": "2ce34f3e1da041284dfade61a2384d34e8146776bf1c8c7f64316fc16f1084f2",
+      "old_segment_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "active_segment_sha256": "8d547e065b856c53435645ac15b6e3b9e047c619466d799eac52fa63d279c3f6",
+      "old_text": "",
+      "active_text": "4. **Runtime identity.** To keep it from touching TS ice's state, the Rust\n   build runs as `icers` with `~/.icers/agent`, project `.icers/`, and `ICERS_*`\n   env vars (see `FORK.md`). This report still writes \"ice-rust\" for the\n   codebase, and `ICE_*` when it names TS ice variables. Their Rust\n   equivalents are `ICERS_*`.\n\n---\n\n## 11a. Found while importing `~/.ice/agent` into `~/.icers/agent` (2026-10-19)\n\n1. **`ultra` thinking level.** ice has 7 levels: `minimal|low|medium|high|xhigh|max|ultra`\n   (`ice:ai/src/types.ts:80`). Rust's enum stops at `max`. Rust's `models.json`\n   parser rejects the whole file when a `thinkingLevelMap` has an `ultra` key\n   (`unknown variant 'ultra'`). The import dropped 3 such keys (all\n   `ultra → xhigh`). Port: add `Ultra` to the Rust thinking level, or at least\n   ignore unknown map keys instead of failing the entire catalog.\n2. **Built-in provider auth with no catalog.** `auth.json` holds keys for `zai`,\n   `opencode`, `opencode-go` and `modal`. TS ice serves the `zai` and\n   `opencode*` models from its built-in catalog (§9.2). Rust has no built-in\n   entries for them, so those keys are unused until the providers are\n   declared in `models.json` or §9.2 is ported.\n3. **Themes.** The custom theme `lavender-ice` (`~/.ice/agent/themes/*.json`)\n   was not imported. The Rust theme format and loader parity with the TS JSON\n   themes are unverified (§7.5).\n4. **Settings.** Only `defaultProvider`, `defaultModel`, `defaultThinkingLevel`,\n   `steeringMode` and `followUpMode` were imported. The rest are TS-only\n   (`packages`, `extensions`, `appearance`, the `ice.*` namespace, `fastMode`,\n   `favoriteModels`, `uiMode`, `statusLine`, `transport`, `async`; see §7.4).",
+      "kind": "first-pass-report-addition",
+      "finding": "Adds documented runtime identity and four import-era claims about thinking-level parsing, builtin provider catalogs, themes and settings. These are report claims, including private-state import observations, not independent evidence that the claims are correct. Coordinator first-pass reconciliation remains the governing disposition.",
+      "runtime_equivalence": null,
+      "limitations": [
+        "No private state inspected.",
+        "No source behavior established by the prose addition.",
+        "Old segment is empty at insertion boundary659; only active lines660–687 were added."
+      ],
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 0,
+      "old_start": 1,
+      "old_count": 1,
+      "active_start": 1,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          1,
+          1
+        ]
+      ],
+      "active_ranges": [
+        [
+          1,
+          1
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "a96410f6a21014314425289b4e8bbe6cb91aaa18b232034365ff4c199972ff17",
+      "active_segment_sha256": "2f732cc662df42da991cd51926fc32e43b7c643ec8654d89805577e110ebaf56",
+      "old_text": "# ice — a Rust-native coding-agent runtime",
+      "active_text": "# icers — a Rust-native coding-agent runtime",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 1,
+      "old_start": 12,
+      "old_count": 1,
+      "active_start": 12,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          12,
+          12
+        ]
+      ],
+      "active_ranges": [
+        [
+          12,
+          12
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "d71ee4ae8f0d2dfb6acb6bfcbeb260415e474738319909ec70da15ccabb9a0f3",
+      "active_segment_sha256": "796b18ad3a0955b89c2c9dabf7efa4078e5bbcf02b3c6b716360a5b3eb2c6bb0",
+      "old_text": "`ice` is a library-first coding-agent runtime written in Rust, plus a terminal",
+      "active_text": "`icers` is a library-first coding-agent runtime written in Rust, plus a terminal",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 2,
+      "old_start": 15,
+      "old_count": 1,
+      "active_start": 15,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          15,
+          15
+        ]
+      ],
+      "active_ranges": [
+        [
+          15,
+          15
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "afee753f6db99d5b954767d35deaf64b0ba1adfb308e79f42fa7f6cac895840d",
+      "active_segment_sha256": "52c2a1b07650b6223710a78e8710c7eb9d53266cf5b0cb199a092cf677c6096f",
+      "old_text": "the same code works as an embedded SDK or as a ready-to-run `ice` command.",
+      "active_text": "the same code works as an embedded SDK or as a ready-to-run `icers` command.",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 3,
+      "old_start": 17,
+      "old_count": 1,
+      "active_start": 17,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          17,
+          17
+        ]
+      ],
+      "active_ranges": [
+        [
+          17,
+          17
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "c57a32b1655427567186dfa5dceca3fd394ca3a2dfd7ca5e388ffbcd321a5b16",
+      "active_segment_sha256": "115cf0c7eaaed09d7920012ebfd28ba32197c967a138a55985684d08fea5b5e3",
+      "old_text": "ice began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)",
+      "active_text": "icers began as a Rust reimplementation of the [Pi TypeScript SDK](https://github.com/earendil-works/pi)",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 4,
+      "old_start": 24,
+      "old_count": 1,
+      "active_start": 24,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          24,
+          24
+        ]
+      ],
+      "active_ranges": [
+        [
+          24,
+          24
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "c10c7939d04f51819365e516a6cf5c7edde93f6511e566e8f90a35241f61fd09",
+      "active_segment_sha256": "bc4a870a468acdc2d182b3ef799ee66574e695c891a8c1ad45c97cdc3d34e039",
+      "old_text": "![ice interactive session](docs/images/ice-interactive.png)",
+      "active_text": "![icers interactive session](docs/images/ice-interactive.png)",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 5,
+      "old_start": 28,
+      "old_count": 1,
+      "active_start": 28,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          28,
+          28
+        ]
+      ],
+      "active_ranges": [
+        [
+          28,
+          28
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "2a673b9fe96355171dd29043b7c008adb3134757e897f319cbae1ec56089d2df",
+      "active_segment_sha256": "19078129564e6021bd697eab6451afe72c1fa74e8695e65c6f52965b9526cb27",
+      "old_text": "![ice SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/ice-sdk-demo.gif)",
+      "active_text": "![icers SDK demo — an agent loop and a real tool round-trip, offline with the faux provider](docs/images/ice-sdk-demo.gif)",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 6,
+      "old_start": 41,
+      "old_count": 1,
+      "active_start": 41,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          41,
+          41
+        ]
+      ],
+      "active_ranges": [
+        [
+          41,
+          41
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "55959041a75f44bbea284d4aaf25b9aa66c6e2d01ec85ea408a7c0d851acd0e7",
+      "active_segment_sha256": "3dcd3a09a8705d938984049f170921b9a85228b6393ad4bf9506e6c6e9d4d57d",
+      "old_text": "embedded agent, and ship the same code as a `cdylib` plugin that the global `ice`",
+      "active_text": "embedded agent, and ship the same code as a `cdylib` plugin that the global `icers`",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 7,
+      "old_start": 63,
+      "old_count": 3,
+      "active_start": 63,
+      "active_count": 3,
+      "old_ranges": [
+        [
+          63,
+          65
+        ]
+      ],
+      "active_ranges": [
+        [
+          63,
+          65
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "fbe63baf6895f00b6a4c56b492e21ad4f699752b024f3c10db592bbb874d76f4",
+      "active_segment_sha256": "1d0f31b86afd9c63ab351db286d22e82ac6e9012a6b3a061129cda402b234db5",
+      "old_text": "`$env:LOCALAPPDATA\\Programs\\ice`. Follow the printed instructions to add it to\nPATH, then run `ice --version`. Append `-DryRun` to preview, or use\n`-Version 0.3.22` and `-Dir 'C:\\Tools\\ice'` to select a version and directory.",
+      "active_text": "`$env:LOCALAPPDATA\\Programs\\icers`. Follow the printed instructions to add it to\nPATH, then run `icers --version`. Append `-DryRun` to preview, or use\n`-Version 0.3.22` and `-Dir 'C:\\Tools\\icers'` to select a version and directory.",
+      "kind": "installation-identity-documentation",
+      "finding": "The documented installation directory, command or package-manager formula name changes to icers. This review confirms the text change, not package availability or installer correctness.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 8,
+      "old_start": 71,
+      "old_count": 1,
+      "active_start": 71,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          71,
+          71
+        ]
+      ],
+      "active_ranges": [
+        [
+          71,
+          71
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "e16f776463a1f0d8b507d627a301752a2b858216af09333186b5dbbb4a75e118",
+      "active_segment_sha256": "f79c938731a26827b6d3839acebfb6a96726efefe20a94d80a64086970b9c262",
+      "old_text": "ice --version",
+      "active_text": "icers --version",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 9,
+      "old_start": 77,
+      "old_count": 1,
+      "active_start": 77,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          77,
+          77
+        ]
+      ],
+      "active_ranges": [
+        [
+          77,
+          77
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "dfcf9dacd63123c5d6fbd6d05f8f84d3c98f75504433e99cd77c5be5a32f5611",
+      "active_segment_sha256": "990bfc2646a31f125573e4c7e0fc6051181822858c1fdd21cb54850ff2009205",
+      "old_text": "brew tap bigfish1913/tap && brew install ice          # macOS (Apple silicon), Linux",
+      "active_text": "brew tap bigfish1913/tap && brew install icers          # macOS (Apple silicon), Linux",
+      "kind": "installation-identity-documentation",
+      "finding": "The documented installation directory, command or package-manager formula name changes to icers. This review confirms the text change, not package availability or installer correctness.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 10,
+      "old_start": 79,
+      "old_count": 1,
+      "active_start": 79,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          79,
+          79
+        ]
+      ],
+      "active_ranges": [
+        [
+          79,
+          79
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "5ae48d1c8292edb9b16cce7a08ca760813502e99d43e8b4ced8021a5f4bd0400",
+      "active_segment_sha256": "f4bfde55a39e118d64e66d54684b95d1e07bc1b49e94ac558fe5781f11c84cea",
+      "old_text": "scoop install ice                                     # Windows",
+      "active_text": "scoop install icers                                     # Windows",
+      "kind": "installation-identity-documentation",
+      "finding": "The documented installation directory, command or package-manager formula name changes to icers. This review confirms the text change, not package availability or installer correctness.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 11,
+      "old_start": 116,
+      "old_count": 4,
+      "active_start": 116,
+      "active_count": 4,
+      "old_ranges": [
+        [
+          116,
+          119
+        ]
+      ],
+      "active_ranges": [
+        [
+          116,
+          119
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "4401836ce1bf8737638e89e2ea0f29ea32afb41739c8acc0e719206cdd9f15f8",
+      "active_segment_sha256": "eda0cd69793e611ae4edef24bea2ba268fbd7bf0f4bb9007355fb4f879c5c978",
+      "old_text": "export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.ice/agent/models.json\nice                                   # interactive TUI\nice -p \"summarize the README\"         # one-shot\nice --mode json -p \"list the crates\"  # machine-readable event stream",
+      "active_text": "export ANTHROPIC_API_KEY=...          # or OPENAI_API_KEY, or ~/.icers/agent/models.json\nicers                                   # interactive TUI\nicers -p \"summarize the README\"         # one-shot\nicers --mode json -p \"list the crates\"  # machine-readable event stream",
+      "kind": "runtime-config-identity-documentation",
+      "finding": "Examples now use icers, ~/.icers or .icers and ICERS_CODING_AGENT_DIR/ICERS_OFFLINE as applicable. Existing crate/package identifiers and provider-standard environment names remain as shown. Runtime support is established separately by active source review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 12,
+      "old_start": 122,
+      "old_count": 1,
+      "active_start": 122,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          122,
+          122
+        ]
+      ],
+      "active_ranges": [
+        [
+          122,
+          122
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "be53666fa07293d0ac534efd875fa0b6ea09c913a1c7e9d353b2e0cf5c6a1702",
+      "active_segment_sha256": "c1237c348e19da497bb0e283a742dbd10666ed17bf9ab0e741551d5584a554eb",
+      "old_text": "Sessions persist as JSONL and survive a crash mid-run; `ice` resumes from the",
+      "active_text": "Sessions persist as JSONL and survive a crash mid-run; `icers` resumes from the",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 13,
+      "old_start": 124,
+      "old_count": 1,
+      "active_start": 124,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          124,
+          124
+        ]
+      ],
+      "active_ranges": [
+        [
+          124,
+          124
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "77bf573fb46a099f6d5c692bd186e64c00b7392296781cbba1ff3a87cd9cb632",
+      "active_segment_sha256": "19cf59330f53a4c89bc7656af0f1c2b5c5f45d031fb45d65ddb1375d14ce15c7",
+      "old_text": "OpenAI-compatible gateways are declared in `~/.ice/agent/models.json` and",
+      "active_text": "OpenAI-compatible gateways are declared in `~/.icers/agent/models.json` and",
+      "kind": "runtime-config-identity-documentation",
+      "finding": "Examples now use icers, ~/.icers or .icers and ICERS_CODING_AGENT_DIR/ICERS_OFFLINE as applicable. Existing crate/package identifiers and provider-standard environment names remain as shown. Runtime support is established separately by active source review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 14,
+      "old_start": 182,
+      "old_count": 1,
+      "active_start": 182,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          182,
+          182
+        ]
+      ],
+      "active_ranges": [
+        [
+          182,
+          182
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "910f7e71e2b13b68724947800460ebab65f918707b0b99d5d39a6600c9f9e67d",
+      "active_segment_sha256": "f6bc6626a21e8f72d554be1c2cefc2e64ed210dabcbdf128346ead5675fee465",
+      "old_text": "- `ice-cli` depends on all eight of the others, which is how the `ice` binary",
+      "active_text": "- `ice-cli` depends on all eight of the others, which is how the `icers` binary",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 15,
+      "old_start": 193,
+      "old_count": 1,
+      "active_start": 193,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          193,
+          193
+        ]
+      ],
+      "active_ranges": [
+        [
+          193,
+          193
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "1a9bd8e3841d4d058118d1686c3218fd3dffdc05a8d74001d9930a91ea7ef55a",
+      "active_segment_sha256": "4d16405187cf83e96d40c90e2e4e8987a38e18cdfa3215153cf6c05f767de1b2",
+      "old_text": "| [`ice-cli`](https://crates.io/crates/ice-cli) | The `ice` binary: TUI, one-shot and JSON modes, config, plugin loading |",
+      "active_text": "| [`ice-cli`](https://crates.io/crates/ice-cli) | The `icers` binary: TUI, one-shot and JSON modes, config, plugin loading |",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 16,
+      "old_start": 200,
+      "old_count": 1,
+      "active_start": 200,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          200,
+          200
+        ]
+      ],
+      "active_ranges": [
+        [
+          200,
+          200
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "9ee80721bdf9c7caf33c91665faeebcd2bee36507fa6e5f2332da85cb8f85677",
+      "active_segment_sha256": "cd5dadd59fb1ab8e5ae08dfec2df15b7091b991ed2357321b3777a4033e1daea",
+      "old_text": "## Why ice",
+      "active_text": "## Why icers",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 17,
+      "old_start": 202,
+      "old_count": 1,
+      "active_start": 202,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          202,
+          202
+        ]
+      ],
+      "active_ranges": [
+        [
+          202,
+          202
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "da9ddd8e0ab01013842e57e564b6314e9cc4b0cd92245fe56eeb4463a9506c8b",
+      "active_segment_sha256": "84e3f0e886a9e4d00615f85b77dee05871d3ad75a3529642a576cbbf379bdc34",
+      "old_text": "Most coding agents are CLIs. `ice` is a **runtime with a CLI attached**, which",
+      "active_text": "Most coding agents are CLIs. `icers` is a **runtime with a CLI attached**, which",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 18,
+      "old_start": 226,
+      "old_count": 1,
+      "active_start": 226,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          226,
+          226
+        ]
+      ],
+      "active_ranges": [
+        [
+          226,
+          226
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "9d7c7450a34f59b0cd861c0b54af6d0fe4ff41ef29b1a5179aac65af36951519",
+      "active_segment_sha256": "b684aa033a89fa783d26777eb9c4ac80273796a8f4c22c09263350328c13c0ee",
+      "old_text": "`ice` column is maintained here.",
+      "active_text": "`icers` column is maintained here.",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 19,
+      "old_start": 228,
+      "old_count": 1,
+      "active_start": 228,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          228,
+          228
+        ]
+      ],
+      "active_ranges": [
+        [
+          228,
+          228
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "39007a6497c1008999bf273a76025d34c132804ccce03eca503444f4ffda6924",
+      "active_segment_sha256": "21996169a7adc1758bb1e9930a89a641a18ec6632d89aed5fff8df5f1be5a68b",
+      "old_text": "| | ice | Claude Code | Codex CLI | opencode | aider |",
+      "active_text": "| | icers | Claude Code | Codex CLI | opencode | aider |",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 20,
+      "old_start": 238,
+      "old_count": 1,
+      "active_start": 238,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          238,
+          238
+        ]
+      ],
+      "active_ranges": [
+        [
+          238,
+          238
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "c81573889e4910116fdb7a8b4ff464bb382898af126728a5a6251a96482ab125",
+      "active_segment_sha256": "8e6ed2acf48b4de6819d13bdc761db307d284ad75cd7bd85099cdaf05251bb46",
+      "old_text": "`ice` is for people who want to own the loop.",
+      "active_text": "`icers` is for people who want to own the loop.",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 21,
+      "old_start": 250,
+      "old_count": 1,
+      "active_start": 250,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          250,
+          250
+        ]
+      ],
+      "active_ranges": [
+        [
+          250,
+          250
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "21bbe6505860e81484db52b6eda7df1980505ea4027f1c3c5af538680db61716",
+      "active_segment_sha256": "47dc70814ba0ea3221040c97d4648c1082ef2421dead2e9c6c891907ce6430e9",
+      "old_text": "| `ice --version` wall time | **~17 ms** median |",
+      "active_text": "| `icers --version` wall time | **~17 ms** median |",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 22,
+      "old_start": 256,
+      "old_count": 1,
+      "active_start": 256,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          256,
+          256
+        ]
+      ],
+      "active_ranges": [
+        [
+          256,
+          256
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "ef8ef502ab7a9057894b8706ad361fc2669567b6e72f02a1dbfc0c61713b05ff",
+      "active_segment_sha256": "2b0271a12a2107b21800ac9f1d76bb96b1de1978948b5a60209dfd372c02d547",
+      "old_text": "| Metric | ice (Rust) | pi (TypeScript) | Difference |",
+      "active_text": "| Metric | icers (Rust) | pi (TypeScript) | Difference |",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 23,
+      "old_start": 264,
+      "old_count": 1,
+      "active_start": 264,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          264,
+          264
+        ]
+      ],
+      "active_ranges": [
+        [
+          264,
+          264
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "3cd589ae455e76d1cceaa39ef47e075ab0529b468267b54483f4620481652de5",
+      "active_segment_sha256": "0bb890edc7d47c72f6aed4e37c6fa398aa6e445ff152341266bb1a9c797b4c45",
+      "old_text": "plus full initialisation, excluding teardown and any LLM work. ice's `--version`",
+      "active_text": "plus full initialisation, excluding teardown and any LLM work. icers's `--version`",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 24,
+      "old_start": 268,
+      "old_count": 2,
+      "active_start": 268,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          268,
+          269
+        ]
+      ],
+      "active_ranges": [
+        [
+          268,
+          269
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "1514e12f5e14914352bbc54fec242fce6b242afaac3e897e3075b9c621571e6d",
+      "active_segment_sha256": "81a7a4948428d1a3f30d5455fda2a51279764beb82bbc58adee4f49650856f98",
+      "old_text": "Isolation caveat: ice reads `ICE_CODING_AGENT_DIR` / `ICE_OFFLINE`, native Pi reads\n`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or ice",
+      "active_text": "Isolation caveat: icers reads `ICERS_CODING_AGENT_DIR` / `ICERS_OFFLINE`, native Pi reads\n`PI_CODING_AGENT_DIR` / `PI_OFFLINE`. Set the matching pair for each, or icers",
+      "kind": "runtime-config-identity-documentation",
+      "finding": "Examples now use icers, ~/.icers or .icers and ICERS_CODING_AGENT_DIR/ICERS_OFFLINE as applicable. Existing crate/package identifiers and provider-standard environment names remain as shown. Runtime support is established separately by active source review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 25,
+      "old_start": 283,
+      "old_count": 3,
+      "active_start": 283,
+      "active_count": 3,
+      "old_ranges": [
+        [
+          283,
+          285
+        ]
+      ],
+      "active_ranges": [
+        [
+          283,
+          285
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "79e8a5936b0b00488e9b9060d05466d1f891a1a46e4b6c72732ca8a93a9e7d24",
+      "active_segment_sha256": "9e1f44a26ac21c1eed4700f1d92619346d3b2f7b0d434762bc2966228d540ea9",
+      "old_text": "ice install ice-todo                    # prebuilt extension; no Rust toolchain needed\nice install my-ext --path ../my-ext     # local, for development\nice dev                                 # build + watch + live reload",
+      "active_text": "icers install ice-todo                    # prebuilt extension; no Rust toolchain needed\nicers install my-ext --path ../my-ext     # local, for development\nicers dev                                 # build + watch + live reload",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 26,
+      "old_start": 288,
+      "old_count": 2,
+      "active_start": 288,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          288,
+          289
+        ]
+      ],
+      "active_ranges": [
+        [
+          288,
+          289
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "330aae56040ac13a3f24f76f5d8ec55f808736988364eb40cb280f4c3de911b1",
+      "active_segment_sha256": "f2b7d67223ea0df457a5be62e8b3df50d84ee10a348010a33fb21d7f550d1a8f",
+      "old_text": "The host loads project `.ice/extensions`, then global\n`~/.ice/agent/extensions`, then any `--extensions-dir`.",
+      "active_text": "The host loads project `.icers/extensions`, then global\n`~/.icers/agent/extensions`, then any `--extensions-dir`.",
+      "kind": "runtime-config-identity-documentation",
+      "finding": "Examples now use icers, ~/.icers or .icers and ICERS_CODING_AGENT_DIR/ICERS_OFFLINE as applicable. Existing crate/package identifiers and provider-standard environment names remain as shown. Runtime support is established separately by active source review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 27,
+      "old_start": 300,
+      "old_count": 2,
+      "active_start": 300,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          300,
+          301
+        ]
+      ],
+      "active_ranges": [
+        [
+          300,
+          301
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "794de29f154d67e0400bd7c425e0ac41f0ffdac6af9c7ebfea92e05aa7d7225d",
+      "active_segment_sha256": "283f4e8b2eb476554823aa40fb3c3fe62f7737caf30aafb67f452aa1bc827d6e",
+      "old_text": "ice install ice-websearch                # websearch: titles, URLs and snippets\nice install ice-webfetch                 # webfetch: readable text from public pages",
+      "active_text": "icers install ice-websearch                # websearch: titles, URLs and snippets\nicers install ice-webfetch                 # webfetch: readable text from public pages",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 28,
+      "old_start": 304,
+      "old_count": 1,
+      "active_start": 304,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          304,
+          304
+        ]
+      ],
+      "active_ranges": [
+        [
+          304,
+          304
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "9d6982ea89bf0dac5ae572d1c4185f8bd9ec1154e7289a01cf5e7de27d9d2573",
+      "active_segment_sha256": "5575f76ddf560bd0faa663f07ca1263e26939ce8cd0057671bd9e5f0ff83cbcb",
+      "old_text": "Restart ice after installation to load the tools. These extensions do not",
+      "active_text": "Restart icers after installation to load the tools. These extensions do not",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 29,
+      "old_start": 313,
+      "old_count": 1,
+      "active_start": 313,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          313,
+          313
+        ]
+      ],
+      "active_ranges": [
+        [
+          313,
+          313
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "ec4941b80db21421baf5e8aa3a222f143f9ab58b1f572a092996b0f05af132d5",
+      "active_segment_sha256": "fa78c6f92185935716b00e6f029f377ae9aac2a3cab1a9b5bb526eb82c9ac5db",
+      "old_text": "ice install ice-subagents",
+      "active_text": "icers install ice-subagents",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 30,
+      "old_start": 355,
+      "old_count": 2,
+      "active_start": 355,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          355,
+          356
+        ]
+      ],
+      "active_ranges": [
+        [
+          355,
+          356
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "852369790f7c052e3d0b2671a95159e6f91088e56a176c9b37a0f2e2a50f99a0",
+      "active_segment_sha256": "0e805f93c2cfdb268a23964fed13d3588b5f0df067f24d2ae48764cecfee4e8f",
+      "old_text": "ice --server                        # headless agent over TCP, prints an auth token\nice --connect host:port --token T   # TUI client with zero local agent resources",
+      "active_text": "icers --server                        # headless agent over TCP, prints an auth token\nicers --connect host:port --token T   # TUI client with zero local agent resources",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 31,
+      "old_start": 373,
+      "old_count": 1,
+      "active_start": 373,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          373,
+          373
+        ]
+      ],
+      "active_ranges": [
+        [
+          373,
+          373
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "40fd5cd41924e0c6f6305ff7bca86d9f2a801ec445341b69313e6beea041f8a4",
+      "active_segment_sha256": "cbe92b9ae7ab2c5f22d242bdc2b55460385209c8d533ab3437ecf6ad868cedd6",
+      "old_text": "`ice` is a self-contained Rust coding-agent stack. No Node component is",
+      "active_text": "`icers` is a self-contained Rust coding-agent stack. No Node component is",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 32,
+      "old_start": 400,
+      "old_count": 1,
+      "active_start": 400,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          400,
+          400
+        ]
+      ],
+      "active_ranges": [
+        [
+          400,
+          400
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "7d6e27e2d8e9c1f293323a631ee25b0b36508f075fbc697c8ea8d4eeccf05056",
+      "active_segment_sha256": "fd5d97e84ef5edd4b5da840c6f9dbb0ee614cf57c1c77dd274eefd4842a0deb6",
+      "old_text": "If ice helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!",
+      "active_text": "If icers helps you, consider buying the author a coffee. Tips and donations support continued development and maintenance. Thank you!",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 33,
+      "old_start": 402,
+      "old_count": 1,
+      "active_start": 402,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          402,
+          402
+        ]
+      ],
+      "active_ranges": [
+        [
+          402,
+          402
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "efff6238e4100e9fc85451697628c64685d2879d4bf3e8d76e9b29f9c86ed521",
+      "active_segment_sha256": "d8873f0a45c7ad95a14bb243706043bd25d522ad7b94da5881c2eed55c2653ce",
+      "old_text": "如果 ice 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！",
+      "active_text": "如果 icers 帮到了你，欢迎请作者喝杯咖啡，赞赏或捐助支持持续开发与维护。感谢每一份支持！",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "README.md",
+      "active_path": "README.md",
+      "segment_index": 34,
+      "old_start": 433,
+      "old_count": 1,
+      "active_start": 433,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          433,
+          433
+        ]
+      ],
+      "active_ranges": [
+        [
+          433,
+          433
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "1d52984372a6d403504277181bbecb2ee33da28603f641aaff44c725c4f7e781",
+      "active_sha256": "5de98fc7b9673d7071632e4b8725e40fa6ea4c051af735b38e2a698cdc218e6b",
+      "diff_sha256": "be217521551dfb5cc169e5d3cfc337a73991a7cb7ce7c3f6c647e3eb67f5ffff",
+      "old_segment_sha256": "277047d36a59c27ffd3def0671baf0b4af4b0282ea9addf46aa25568b865b3c7",
+      "active_segment_sha256": "4e3a33045cd28af22fab73073b6689d6eb67a0f281421f4017d0bbeb54ff8004",
+      "old_text": "formed ice's starting point. ice reimplements that foundation in Rust and adds",
+      "active_text": "formed icers's starting point. icers reimplements that foundation in Rust and adds",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Replaces the native ice product/command label with icers in prose, examples, headings or tables. The underlying behavioral claims, measurements and external links are not newly verified by this diff review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/overview.md",
+      "active_path": "docs/architecture/overview.md",
+      "segment_index": 0,
+      "old_start": 3,
+      "old_count": 1,
+      "active_start": 3,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          3,
+          3
+        ]
+      ],
+      "active_ranges": [
+        [
+          3,
+          3
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "7a1b6695a44afaae736a8269d2da039b9e0a513a5861360a376b269bb05b938d",
+      "active_sha256": "45d055a6d49d4d005db8262be82e62ac40d12851e97737968dd93abdedb88d44",
+      "diff_sha256": "942b1245791efefb368eeaef82d3c653ddcfaf9de2eab92e87673fe48115516c",
+      "old_segment_sha256": "7428d95f1a2bc605dcc1f44f54f72e9a800ba26114cb213a72cfdd99f5cb44c1",
+      "active_segment_sha256": "7d36222a68a06eaccf99259e1b83bb1c2f1cff4f5a3b8977b78a4651a1622053",
+      "old_text": "ice 是 Rust 原生 Agent SDK 与终端应用。当前 workspace 包含九个产品 crate；CLI 组合底层能力，嵌入式应用可按需使用 SDK。",
+      "active_text": "icers 是 Rust 原生 Agent SDK 与终端应用。当前 workspace 包含九个产品 crate；CLI 组合底层能力，嵌入式应用可按需使用 SDK。",
+      "kind": "product-label-documentation",
+      "finding": "Only the native product label changes ice to icers in the architecture overview sentence.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 0,
+      "old_start": 30,
+      "old_count": 4,
+      "active_start": 30,
+      "active_count": 4,
+      "old_ranges": [
+        [
+          30,
+          33
+        ]
+      ],
+      "active_ranges": [
+        [
+          30,
+          33
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "5b7e2cb199ed30f6e28cbf9dac92325c98d036394b312442c3bb7a00db572a3b",
+      "active_segment_sha256": "873f07f85a65b7a6f4b829af4e45312389ce11d906a7c115ae63b5c1c5925564",
+      "old_text": "ice package link providers --path packages/ice-providers --debug\nice --list-models\nice auth login --provider deepseek\nice --provider deepseek --model deepseek-flash",
+      "active_text": "icers package link providers --path packages/ice-providers --debug\nicers --list-models\nicers auth login --provider deepseek\nicers --provider deepseek --model deepseek-flash",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 1,
+      "old_start": 35,
+      "old_count": 1,
+      "active_start": 35,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          35,
+          35
+        ]
+      ],
+      "active_ranges": [
+        [
+          35,
+          35
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "9e5733af1d0edecc81164ed71cbe8ca0556acd75f8179a15772d9bc4064cb29d",
+      "active_segment_sha256": "a47daed165cefb3a07147130ea395baa0b204019805d43fe56984ef290e67655",
+      "old_text": "ice --provider openrouter --model openrouter/auto",
+      "active_text": "icers --provider openrouter --model openrouter/auto",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 2,
+      "old_start": 37,
+      "old_count": 1,
+      "active_start": 37,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          37,
+          37
+        ]
+      ],
+      "active_ranges": [
+        [
+          37,
+          37
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "6811b15a1e5f88f0d1b3013d2da38400cb5aa1d099cadc204abf5a4b366f8f63",
+      "active_segment_sha256": "f9a6798331082ff115bb24bd7277800adf90d4092e210f614236174722d23d40",
+      "old_text": "ice --provider llama-cpp --model local --base-url http://localhost:8080/v1",
+      "active_text": "icers --provider llama-cpp --model local --base-url http://localhost:8080/v1",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 3,
+      "old_start": 44,
+      "old_count": 1,
+      "active_start": 44,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          44,
+          44
+        ]
+      ],
+      "active_ranges": [
+        [
+          44,
+          44
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "159eefd339d0fdcba2aafa5f082c5759ecedc862635c2f3be4ba185651a884d8",
+      "active_segment_sha256": "0a54d1aa04b78e9e2ffb0350ad312e7d299ad4401f57018146b74470ac76fe66",
+      "old_text": "若已分别安装旧包，先 `ice package unlink <旧安装名>`，再 link `providers`，避免旧实现",
+      "active_text": "若已分别安装旧包，先 `icers package unlink <旧安装名>`，再 link `providers`，避免旧实现",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 4,
+      "old_start": 46,
+      "old_count": 1,
+      "active_start": 46,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          46,
+          46
+        ]
+      ],
+      "active_ranges": [
+        [
+          46,
+          46
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "4dfde34f9013644487882e89fa80da6a8d001bb41809c5fc39c6ae9cf4acdf71",
+      "active_segment_sha256": "d326bb450893f0be700cbc08ee2d3d67c347725491a38d4770fa782dfa908c23",
+      "old_text": "之后升级只更新统一包，卸载使用 `ice package unlink providers`；会一起移除四份目录和实现。",
+      "active_text": "之后升级只更新统一包，卸载使用 `icers package unlink providers`；会一起移除四份目录和实现。",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 5,
+      "old_start": 118,
+      "old_count": 1,
+      "active_start": 118,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          118,
+          118
+        ]
+      ],
+      "active_ranges": [
+        [
+          118,
+          118
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "17e8b899899f8c3df0408fe248b791b5c4bce495510308be3c6b96a9a3e17766",
+      "active_segment_sha256": "d034caed9104d0b72526ab61e1dd8a2c7400d15a53576471e434561d04d09937",
+      "old_text": "`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `ice package unlink <name>`。",
+      "active_text": "`/provider remove <id>` 只移除 `models.json` 配置，不卸载 package；卸载使用 `icers package unlink <name>`。",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 6,
+      "old_start": 130,
+      "old_count": 3,
+      "active_start": 130,
+      "active_count": 3,
+      "old_ranges": [
+        [
+          130,
+          132
+        ]
+      ],
+      "active_ranges": [
+        [
+          130,
+          132
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "1bfaed447e1aa8063b539bc124c6670a61ee2cff459af1777853a615b425c33c",
+      "active_segment_sha256": "85b5116deace2469ad9d4602a7536ed2c0b59d32203831a6df37622c7518cfe9",
+      "old_text": "ice auth login --provider openrouter\nice auth check --provider openrouter --json\nice auth logout --provider openrouter",
+      "active_text": "icers auth login --provider openrouter\nicers auth check --provider openrouter --json\nicers auth logout --provider openrouter",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 7,
+      "old_start": 134,
+      "old_count": 1,
+      "active_start": 134,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          134,
+          134
+        ]
+      ],
+      "active_ranges": [
+        [
+          134,
+          134
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "1479c3d8ee3dc8901e5e3480b3155bceed374768b5e3632fb82f438018da7f1c",
+      "active_segment_sha256": "7277ba516a2e78eee87e361dfad441987a5e98ad1e19361d025ad8b2499b5edc",
+      "old_text": "ice auth check --provider openrouter --extension /path/to/provider.dll --json",
+      "active_text": "icers auth check --provider openrouter --extension /path/to/provider.dll --json",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 8,
+      "old_start": 161,
+      "old_count": 1,
+      "active_start": 161,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          161,
+          161
+        ]
+      ],
+      "active_ranges": [
+        [
+          161,
+          161
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "5cb84ac8fcbbe0841e9ed56f52e3aa9ecce3e52de7e639a13d06088734ea381b",
+      "active_segment_sha256": "7ccecc75f5d76c471b489e3ba61e236b6a8c1ea0bf87b685d41cd1f29f97f2a5",
+      "old_text": "在 `ice-rust` 中运行 CLI 集成测试前，将 `ICE_TEST_PROVIDER_LIBRARY` 指向构建出的",
+      "active_text": "在 `ice-rust` 中运行 CLI 集成测试前，将 `ICERS_TEST_PROVIDER_LIBRARY` 指向构建出的",
+      "kind": "test-environment-name-documentation",
+      "finding": "Changes ICE_TEST_PROVIDER_LIBRARY/ICE_TEST_PROVIDER_PACKAGE examples to ICERS_TEST_PROVIDER_LIBRARY/ICERS_TEST_PROVIDER_PACKAGE. Plugin crate, library filenames and provider identifiers are preserved. Test execution and companion-package availability are not claimed.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/architecture/provider-packages.md",
+      "active_path": "docs/architecture/provider-packages.md",
+      "segment_index": 9,
+      "old_start": 174,
+      "old_count": 2,
+      "active_start": 174,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          174,
+          175
+        ]
+      ],
+      "active_ranges": [
+        [
+          174,
+          175
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "f3ae649c822302082041e508b744b379559e304af534bddc65a500cb19eb4c97",
+      "active_sha256": "c779f29c255919a8db8318c2b0f5620774657debeb44274ddd1b389a4c948b17",
+      "diff_sha256": "0806d6f0c4a9dbd711255da25012b4e5e08177d183677aa1f879a2dff84c0e6e",
+      "old_segment_sha256": "1bc69c8795c74f9bb2f72d5da0470d7e2b8351724bcf6fcf5619047b4d119b51",
+      "active_segment_sha256": "3b77fc79a21cae76c3c83fcbdf5da076f6d26a4c73d98fe8952e2b552a84f70c",
+      "old_text": "$env:ICE_TEST_PROVIDER_LIBRARY = 'C:\\path\\to\\target\\debug\\ice_providers.dll'\n$env:ICE_TEST_PROVIDER_PACKAGE = 'C:\\path\\to\\ice-package\\packages\\ice-providers'",
+      "active_text": "$env:ICERS_TEST_PROVIDER_LIBRARY = 'C:\\path\\to\\target\\debug\\ice_providers.dll'\n$env:ICERS_TEST_PROVIDER_PACKAGE = 'C:\\path\\to\\ice-package\\packages\\ice-providers'",
+      "kind": "test-environment-name-documentation",
+      "finding": "Changes ICE_TEST_PROVIDER_LIBRARY/ICE_TEST_PROVIDER_PACKAGE examples to ICERS_TEST_PROVIDER_LIBRARY/ICERS_TEST_PROVIDER_PACKAGE. Plugin crate, library filenames and provider identifiers are preserved. Test execution and companion-package availability are not claimed.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md",
+      "segment_index": 0,
+      "old_start": 80,
+      "old_count": 1,
+      "active_start": 80,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          80,
+          80
+        ]
+      ],
+      "active_ranges": [
+        [
+          80,
+          80
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "active_sha256": "79bcc28a42a40218ee8b6e26440be540b6a9093be320f8d8c350eaa0e778831a",
+      "diff_sha256": "ef3f4baf573b2a8440c8f3e79bb0fe302eec74cc5a785a056a443353d9f8594d",
+      "old_segment_sha256": "0cc6c9b4dda88796fa02c890fc9e4a137d8e4f0f6bc282125d1a619bc5f1421d",
+      "active_segment_sha256": "a19ef12e52177c48234ad3d3cdee8ba9fb0eabccc07f5d15934f0493022a5c3d",
+      "old_text": "`/provider remove <id>` 删除配置；卸载 package 使用 `ice package unlink <name>`。",
+      "active_text": "`/provider remove <id>` 删除配置；卸载 package 使用 `icers package unlink <name>`。",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md",
+      "segment_index": 1,
+      "old_start": 158,
+      "old_count": 4,
+      "active_start": 158,
+      "active_count": 4,
+      "old_ranges": [
+        [
+          158,
+          161
+        ]
+      ],
+      "active_ranges": [
+        [
+          158,
+          161
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "active_sha256": "79bcc28a42a40218ee8b6e26440be540b6a9093be320f8d8c350eaa0e778831a",
+      "diff_sha256": "ef3f4baf573b2a8440c8f3e79bb0fe302eec74cc5a785a056a443353d9f8594d",
+      "old_segment_sha256": "936ace468d03d486df190297c377042e3650eca106102432d1a750c81406fe83",
+      "active_segment_sha256": "f83b30ab7f919d620f0efcbb9eb1fdafbee69ec42edcbe99655ef69b2c386a99",
+      "old_text": "ice auth login --provider vendor-example\nice auth check --provider vendor-example --json\nice auth refresh --provider vendor-example\nice auth logout --provider vendor-example",
+      "active_text": "icers auth login --provider vendor-example\nicers auth check --provider vendor-example --json\nicers auth refresh --provider vendor-example\nicers auth logout --provider vendor-example",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md",
+      "segment_index": 2,
+      "old_start": 163,
+      "old_count": 1,
+      "active_start": 163,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          163,
+          163
+        ]
+      ],
+      "active_ranges": [
+        [
+          163,
+          163
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "active_sha256": "79bcc28a42a40218ee8b6e26440be540b6a9093be320f8d8c350eaa0e778831a",
+      "diff_sha256": "ef3f4baf573b2a8440c8f3e79bb0fe302eec74cc5a785a056a443353d9f8594d",
+      "old_segment_sha256": "76f389c985eb39f3bccae4327c8d256fdaee59c49c5b7c76f476704592664c8e",
+      "active_segment_sha256": "ffdf21581dfb03562bb7b369d9c60dc8df2f97bfe921a0843237e2ba700a046d",
+      "old_text": "ice auth check --provider vendor-example --extension /path/to/provider.dll --json",
+      "active_text": "icers auth check --provider vendor-example --extension /path/to/provider.dll --json",
+      "kind": "runtime-command-name-documentation",
+      "finding": "Changes the native command example from ice to icers. Provider IDs, auth subcommands, model names, base URL and package-operation arguments remain unchanged.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/extensions/provider-integration.md",
+      "active_path": "docs/extensions/provider-integration.md",
+      "segment_index": 3,
+      "old_start": 247,
+      "old_count": 2,
+      "active_start": 247,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          247,
+          248
+        ]
+      ],
+      "active_ranges": [
+        [
+          247,
+          248
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "96752d1a11c7ea1e16a02cf8fbe6e927546d2b81ed23e33cc7ad20001bdb287f",
+      "active_sha256": "79bcc28a42a40218ee8b6e26440be540b6a9093be320f8d8c350eaa0e778831a",
+      "diff_sha256": "ef3f4baf573b2a8440c8f3e79bb0fe302eec74cc5a785a056a443353d9f8594d",
+      "old_segment_sha256": "daba3fdb102a8a3535479aaf085eeb90b9062a1aba9ab99352e74ca83d017aed",
+      "active_segment_sha256": "22a64675c671d2278e61bd5888175ffaa905e0fe47a7a9c6fb025df24a692db1",
+      "old_text": "本仓库 CLI 测试通过 `ICE_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，\n通过 `ICE_TEST_PROVIDER_PACKAGE` 指定 `packages/ice-providers` 源码目录，覆盖 link / unlink。",
+      "active_text": "本仓库 CLI 测试通过 `ICERS_TEST_PROVIDER_LIBRARY` 指定该包的 DLL / so / dylib，\n通过 `ICERS_TEST_PROVIDER_PACKAGE` 指定 `packages/ice-providers` 源码目录，覆盖 link / unlink。",
+      "kind": "test-environment-name-documentation",
+      "finding": "Changes ICE_TEST_PROVIDER_LIBRARY/ICE_TEST_PROVIDER_PACKAGE examples to ICERS_TEST_PROVIDER_LIBRARY/ICERS_TEST_PROVIDER_PACKAGE. Plugin crate, library filenames and provider identifiers are preserved. Test execution and companion-package availability are not claimed.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/extensions/subagents.md",
+      "active_path": "docs/extensions/subagents.md",
+      "segment_index": 0,
+      "old_start": 130,
+      "old_count": 1,
+      "active_start": 130,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          130,
+          130
+        ]
+      ],
+      "active_ranges": [
+        [
+          130,
+          130
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "61c1739467e30d4fc85fa2e24b1c4b1ce37a3154d6e70835c5f7b6fb047e6bd0",
+      "active_sha256": "37257c1d83ad558ba3fabe9dfdf3b319ab6930da1628f616dd43de6fd1d01657",
+      "diff_sha256": "50eee97f888956c494fbdaa862e66b809c09e3c393826bcc7717888d94a82d27",
+      "old_segment_sha256": "4d08476053254fd05ee3f5eb536c798a638641c8342603c0d3946a756ca26817",
+      "active_segment_sha256": "5ba0adaecb3301c5daca7996eed4dcb668d8ea7f4c7e3a3853bbf5e1fb987e30",
+      "old_text": "ICE_TEST_SUBAGENT_LIBRARY=/path/to/ice_subagents.dll cargo test -p ice-cli --test subagent_packages",
+      "active_text": "ICERS_TEST_SUBAGENT_LIBRARY=/path/to/ice_subagents.dll cargo test -p ice-cli --test subagent_packages",
+      "kind": "test-environment-name-documentation",
+      "finding": "Changes ICE_TEST_SUBAGENT_LIBRARY to ICERS_TEST_SUBAGENT_LIBRARY in the documented cargo test invocation. The library filename, crate and test target remain unchanged. No test was executed.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 0,
+      "old_start": 3,
+      "old_count": 1,
+      "active_start": 3,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          3,
+          3
+        ]
+      ],
+      "active_ranges": [
+        [
+          3,
+          3
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "18e9d77f7b5c4198027ff902881c42145ac1c95e2998373e4ede0963e4cc8180",
+      "active_segment_sha256": "ca82fa62f66040f63eb8e02b999534c94080af7448ab5e7a20fbfa334183d371",
+      "old_text": "> **一句话介绍**：安装即生效的 Langfuse 可观测性扩展，自动追踪 ice Agent 的全链路执行，从 prompt 到 response，从 tool call 到 token 消耗，一目了然。",
+      "active_text": "> **一句话介绍**：安装即生效的 Langfuse 可观测性扩展，自动追踪 icers Agent 的全链路执行，从 prompt 到 response，从 tool call 到 token 消耗，一目了然。",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 1,
+      "old_start": 30,
+      "old_count": 1,
+      "active_start": 30,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          30,
+          30
+        ]
+      ],
+      "active_ranges": [
+        [
+          30,
+          30
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "50918c3106c443788721ec431243d20a094916f0af8cd97203e3f74061a2211f",
+      "active_segment_sha256": "eaf2d429f90fdc8e346e3b4878b3e4b2298376602c1384b97d3165b8eb2c92c0",
+      "old_text": "│   │                    ice Agent Runtime                      │     │",
+      "active_text": "│   │                    icers Agent Runtime                      │     │",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 2,
+      "old_start": 252,
+      "old_count": 1,
+      "active_start": 252,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          252,
+          252
+        ]
+      ],
+      "active_ranges": [
+        [
+          252,
+          252
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "1c103240cbae89ab5c43af708863acac5324a424d79cae303a5e545befdaba4e",
+      "active_segment_sha256": "f5389b69320192e6a823d5f319442f278886ac3d4091245ee1bd7203a23f03a5",
+      "old_text": "// .ice/langfuse.json",
+      "active_text": "// .icers/langfuse.json",
+      "kind": "extension-config-identity-documentation",
+      "finding": "Updates native configuration examples to .icers, ~/.icers and ICERS_LANGFUSE_CONFIG, or the native extension directory. The companion extension behavior is not established by this documentation-only change.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 3,
+      "old_start": 263,
+      "old_count": 1,
+      "active_start": 263,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          263,
+          263
+        ]
+      ],
+      "active_ranges": [
+        [
+          263,
+          263
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "537f6dcc95349528708536a1ee18141c504d9bca48850fd372fe76f2ffe00eb9",
+      "active_segment_sha256": "2e3af2e9341099ae073e01b3d2ddb1b6cdeb00a3af8768138cf5bb495cac3248",
+      "old_text": "// ~/.ice/agent/langfuse.json",
+      "active_text": "// ~/.icers/agent/langfuse.json",
+      "kind": "extension-config-identity-documentation",
+      "finding": "Updates native configuration examples to .icers, ~/.icers and ICERS_LANGFUSE_CONFIG, or the native extension directory. The companion extension behavior is not established by this documentation-only change.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 4,
+      "old_start": 274,
+      "old_count": 1,
+      "active_start": 274,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          274,
+          274
+        ]
+      ],
+      "active_ranges": [
+        [
+          274,
+          274
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "bbc54608128daf74dc7cce9db708846914ae1d70b1ebd6a57cb071897fd72584",
+      "active_segment_sha256": "859cee42124a87b22f8e52695787457eab6ece6037e00264e8ccb130dfd7ed60",
+      "old_text": "export ICE_LANGFUSE_CONFIG=\"/absolute/path/to/langfuse.json\"",
+      "active_text": "export ICERS_LANGFUSE_CONFIG=\"/absolute/path/to/langfuse.json\"",
+      "kind": "extension-config-identity-documentation",
+      "finding": "Updates native configuration examples to .icers, ~/.icers and ICERS_LANGFUSE_CONFIG, or the native extension directory. The companion extension behavior is not established by this documentation-only change.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 5,
+      "old_start": 341,
+      "old_count": 1,
+      "active_start": 341,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          341,
+          341
+        ]
+      ],
+      "active_ranges": [
+        [
+          341,
+          341
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "89070143cdd8d42ba6bfae1c37a389afb392fdbcbd57b791b95f234c2b7f3a6b",
+      "active_segment_sha256": "a940f3c5232c57bb479da893aebf7628bc658e97402bda13dd5279175cbe4b58",
+      "old_text": "ice install ice-langfuse",
+      "active_text": "icers install ice-langfuse",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 6,
+      "old_start": 344,
+      "old_count": 1,
+      "active_start": 344,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          344,
+          344
+        ]
+      ],
+      "active_ranges": [
+        [
+          344,
+          344
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "88669809e5ad729e881dffa6664746a8638178720ae2a1e5dbb8e6a71a47d523",
+      "active_segment_sha256": "b1f598c5002296b340be5b0b0badf8702b773a3a9e17d4ad4eb95e4950fd7759",
+      "old_text": "这会自动下载并编译 `ice-langfuse` crate，生成 `ice_langfuse.dll`（Windows）或 `libice_langfuse.so`（Linux/macOS），放置到 `~/.ice/agent/extensions/`。",
+      "active_text": "这会自动下载并编译 `ice-langfuse` crate，生成 `ice_langfuse.dll`（Windows）或 `libice_langfuse.so`（Linux/macOS），放置到 `~/.icers/agent/extensions/`。",
+      "kind": "extension-config-identity-documentation",
+      "finding": "Updates native configuration examples to .icers, ~/.icers and ICERS_LANGFUSE_CONFIG, or the native extension directory. The companion extension behavior is not established by this documentation-only change.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 7,
+      "old_start": 358,
+      "old_count": 1,
+      "active_start": 358,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          358,
+          358
+        ]
+      ],
+      "active_ranges": [
+        [
+          358,
+          358
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "537f6dcc95349528708536a1ee18141c504d9bca48850fd372fe76f2ffe00eb9",
+      "active_segment_sha256": "2e3af2e9341099ae073e01b3d2ddb1b6cdeb00a3af8768138cf5bb495cac3248",
+      "old_text": "// ~/.ice/agent/langfuse.json",
+      "active_text": "// ~/.icers/agent/langfuse.json",
+      "kind": "extension-config-identity-documentation",
+      "finding": "Updates native configuration examples to .icers, ~/.icers and ICERS_LANGFUSE_CONFIG, or the native extension directory. The companion extension behavior is not established by this documentation-only change.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 8,
+      "old_start": 369,
+      "old_count": 1,
+      "active_start": 369,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          369,
+          369
+        ]
+      ],
+      "active_ranges": [
+        [
+          369,
+          369
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "df7112b7d2f5c3bcde0d2de9e6c1383232c9d82a8cb2b2b5715b137854d03b58",
+      "active_segment_sha256": "b64cfd0fec5346b61d35c764f1b96a5f65729fa9d1b7936768f37b1637c5e355",
+      "old_text": "ice -p \"帮我写一个 Rust HTTP server\"",
+      "active_text": "icers -p \"帮我写一个 Rust HTTP server\"",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 9,
+      "old_start": 522,
+      "old_count": 2,
+      "active_start": 522,
+      "active_count": 2,
+      "old_ranges": [
+        [
+          522,
+          523
+        ]
+      ],
+      "active_ranges": [
+        [
+          522,
+          523
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "93d520030455eb055305156394505a4d4d575cb660a81fc994854f14811a5809",
+      "active_segment_sha256": "c66bb0d1039826251f934cb2a5f226ee4f3e19e8eeabf8acad70baff5d1ad928",
+      "old_text": "| 🏠 ice 官网          | [rpi.laofu.online](https://rpi.laofu.online)                                                                        |\n| 💻 ice GitHub        | [Zyk-Void/ice-rust](https://github.com/Zyk-Void/ice-rust)                                                       |",
+      "active_text": "| 🏠 icers 官网          | [rpi.laofu.online](https://rpi.laofu.online)                                                                        |\n| 💻 icers GitHub        | [Zyk-Void/ice-rust](https://github.com/Zyk-Void/ice-rust)                                                       |",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 10,
+      "old_start": 540,
+      "old_count": 1,
+      "active_start": 540,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          540,
+          540
+        ]
+      ],
+      "active_ranges": [
+        [
+          540,
+          540
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "89070143cdd8d42ba6bfae1c37a389afb392fdbcbd57b791b95f234c2b7f3a6b",
+      "active_segment_sha256": "a940f3c5232c57bb479da893aebf7628bc658e97402bda13dd5279175cbe4b58",
+      "old_text": "ice install ice-langfuse",
+      "active_text": "icers install ice-langfuse",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    },
+    {
+      "old_path": "docs/promotion/langfuse.md",
+      "active_path": "docs/promotion/langfuse.md",
+      "segment_index": 11,
+      "old_start": 543,
+      "old_count": 1,
+      "active_start": 543,
+      "active_count": 1,
+      "old_ranges": [
+        [
+          543,
+          543
+        ]
+      ],
+      "active_ranges": [
+        [
+          543,
+          543
+        ]
+      ],
+      "empty_old_segment": false,
+      "empty_active_segment": false,
+      "old_sha256": "8c7e6ab6a8ff9d7c10443bce680543bbd9ee074a51cafa0ab9c2a9d2ee4651cc",
+      "active_sha256": "b4cf11df29684af02b2d16af422411f3d37a6597623baefd13b1416e5eca5fad",
+      "diff_sha256": "f17420c03477a08a57fd6498d089d440f6be5399d4668218b645ce83e97d95ed",
+      "old_segment_sha256": "1f69e805c45484bb0ead4f082503730cfc1fc686850eb4ae750c798421b35e93",
+      "active_segment_sha256": "7fd78d1b943b9baa319ce11172d98e8216cef370e0a545d670ffa6b44b11b015",
+      "old_text": "ice -p \"Hello, observable agent!\"",
+      "active_text": "icers -p \"Hello, observable agent!\"",
+      "kind": "runtime-command-or-product-label-documentation",
+      "finding": "Changes native product labels and command examples to icers. The ice-langfuse package/library identifier, LANGFUSE provider-standard variables and telemetry claims are not changed or newly validated by this review.",
+      "runtime_equivalence": null,
+      "reviewer": "/root/final_area_handoffs",
+      "confirmation": "All removed/added text was displayed and source-reviewed in the saved unified diff. Segment text and file hashes were then checked against current bytes. No whole-file reread or application execution claimed."
+    }
+  ],
+  "identical_files": [
+    {
+      "old_path": "packages/provider-runtime/README.md",
+      "active_path": "packages/provider-runtime/README.md",
+      "sha256": "56d8810c0e72f525cfe65c6de01438428cc5e994f26ac4a47a457fcc283e4a62",
+      "status": "identical-metadata-only",
+      "reason": "No changed hunk; earlier read coverage may be transferred by exact hash identity, no new whole-file read claimed."
+    },
+    {
+      "old_path": "packages/provider-runtime/src/lib.rs",
+      "active_path": "packages/provider-runtime/src/lib.rs",
+      "sha256": "818627d407a8524a9e71c82dcac140fa84fabb7aca4682a9909259b9787171c6",
+      "status": "identical-metadata-only",
+      "reason": "No changed hunk; earlier read coverage may be transferred by exact hash identity, no new whole-file read claimed."
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Documentation is read as authored claims, not executable proof.",
+    "ICE_PORTING import references were not checked against private ~/.ice or ~/.icers state.",
+    "No external URLs or package managers were contacted.",
+    "Unchanged intervals require independent exact-hash/line-map transfer; this artifact adds read credit only for changed old/active ranges."
+  ]
+}

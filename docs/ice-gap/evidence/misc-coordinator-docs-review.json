@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "source_only": true,
+  "scope": "Four remaining TUI documentation files plus shared JSON/experimental helpers",
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/docs/keybindings.md",
+      "ranges": [
+        [
+          1,
+          247
+        ]
+      ],
+      "total_lines": 247,
+      "sha256": "7f362d9561aa535d71f5a8f11e820eb8c288b5306b9ecc74cb44fb4494650613",
+      "baseline_sha256": "7f362d9561aa535d71f5a8f11e820eb8c288b5306b9ecc74cb44fb4494650613",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/terminal-setup.md",
+      "ranges": [
+        [
+          1,
+          143
+        ]
+      ],
+      "total_lines": 143,
+      "sha256": "edbe987da8e692a6a097c0d2ebde5b7f657c76309b0bbf5f8b205240d3399650",
+      "baseline_sha256": "edbe987da8e692a6a097c0d2ebde5b7f657c76309b0bbf5f8b205240d3399650",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/tmux.md",
+      "ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "total_lines": 64,
+      "sha256": "754cb29259688e7c90f4d16854e3aa1efe6c193c1a18eb3b7a543f5157bb9caf",
+      "baseline_sha256": "754cb29259688e7c90f4d16854e3aa1efe6c193c1a18eb3b7a543f5157bb9caf",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/docs/tui.md",
+      "ranges": [
+        [
+          1,
+          943
+        ]
+      ],
+      "total_lines": 943,
+      "sha256": "7b3b3a89a8688c4dc2ea845675cdc50928167eb4f3dd0d0a8367877a303ab90f",
+      "baseline_sha256": "7b3b3a89a8688c4dc2ea845675cdc50928167eb4f3dd0d0a8367877a303ab90f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/utils/json.ts",
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "total_lines": 16,
+      "sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_sha256": "a591fbb031352b93db5f59e104906449520f65a881a3ec254333777033fc9e8c",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/json-utils.test.ts",
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "total_lines": 18,
+      "sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_sha256": "dfd92b6ca81fa075850fd1b4bbeda5b2d12b728a09e26fc6edb1fc6c0707942f",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/experimental.ts",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "total_lines": 6,
+      "sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+      "baseline_sha256": "78188595ccedd441f49d741931b022cd614bb0df3f41f6e691b30e1be8315c2b",
+      "baseline_revision": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "baseline_match": true,
+      "fully_read": true,
+      "excluded_redacted_lines": [],
+      "owner": "/root",
+      "notes": "Complete numbered source/document/test body visibly read by coordinator. No application or test execution; no external links followed."
+    }
+  ],
+  "summary": {
+    "documentation_files": 4,
+    "documentation_visible_lines": 1397,
+    "shared_source_and_test_files": 3,
+    "shared_visible_lines": 40,
+    "baseline_mismatches": 0
+  },
+  "findings": [
+    {
+      "paths": [
+        "packages/coding-agent/docs/keybindings.md"
+      ],
+      "finding": "Documents namespaced action IDs, replace-not-append key overrides, empty-array disable, migration and reload, fullscreen/editor routing, subagent/shell panels, send-now/dequeue and model/tree controls. Final mappings must use source-backed TUI/CLI/SUB contracts; documentation does not establish each implementation by itself."
+    },
+    {
+      "paths": [
+        "packages/coding-agent/docs/terminal-setup.md",
+        "packages/coding-agent/docs/tmux.md"
+      ],
+      "finding": "Documents Kitty/modifyOtherKeys/CSI-u negotiation, local-only macOS modifier fallback, hardware cursor/IME controls and terminal-specific key configuration. Statements about installed third-party terminal versions and defaults remain documentation claims; no external verification or application execution was performed."
+    },
+    {
+      "paths": [
+        "packages/coding-agent/docs/tui.md"
+      ],
+      "finding": "Documents Component/Focusable, cursor marker/hardware cursor policy, custom UI/overlay focus/lifecycle, theme invalidation, widgets/footer/editor factories and component recipes. Examples illustrate existing TUI/EXT interfaces; they are not separate executed product features."
+    },
+    {
+      "paths": [
+        "packages/coding-agent/src/utils/json.ts",
+        "packages/coding-agent/test/json-utils.test.ts"
+      ],
+      "finding": "AUTH-007 owns ModelConfig's only imported consumer. The helper first performs strict JSON.parse, then two string-preserving regex passes for // line comments and trailing commas, then retries parsing. It does not strip block comments and propagates the second parse failure. Direct tests cover strict URL strings, both permissive constructs and invalid JSON."
+    },
+    {
+      "paths": [
+        "packages/coding-agent/src/core/experimental.ts"
+      ],
+      "finding": "Exact getIceEnv('ICE_EXPERIMENTAL') === '1' evaluated per call; no trimming, truthy coercion or cache in this TS helper. MISC/CLI-015 owns final caller mapping."
+    }
+  ],
+  "application_executed": false,
+  "tests_executed": false,
+  "network_requests": false
+}

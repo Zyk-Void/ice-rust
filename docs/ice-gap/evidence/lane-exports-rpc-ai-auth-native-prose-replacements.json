@@ -1,0 +1,906 @@
+{
+  "schema_version": 1,
+  "status": "reviewable-proposal-not-applied",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "date": "2026-10-20",
+  "scope": [
+    "ai",
+    "extensions",
+    "rpc-remote",
+    "providers-auth"
+  ],
+  "basis": {
+    "accepted_specs": [
+      {
+        "area": "ai",
+        "path": "docs/ice-gap/evidence/spec-ai.json",
+        "sha256": "e8feba5d8315a9a5f24a07b7d7280228b5e11c37e928e3a35369066cc2faa0f0",
+        "entries": 50
+      },
+      {
+        "area": "extensions",
+        "path": "docs/ice-gap/evidence/spec-extensions.json",
+        "sha256": "02756ef43c46dc22c8ca7c598f2fa68ee17faf14134494bb8e2af8f599a044d0",
+        "entries": 57
+      },
+      {
+        "area": "rpc-remote",
+        "path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+        "sha256": "ab85c7ba8d6537231690a46d3e9bc8e11277db0e7c05a6ab55508efdb5fb29e8",
+        "entries": 36
+      },
+      {
+        "area": "providers-auth",
+        "path": "docs/ice-gap/evidence/spec-providers-auth.json",
+        "sha256": "fa761cf0ca13fa0d5838048420013386b503f7f992b17f2967306374a8b410df",
+        "entries": 33
+      }
+    ],
+    "reviewed_hunk_artifact": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+    "reviewed_hunk_sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7",
+    "native_identities": {
+      "old": {
+        "root": "/home/mewtwo/Zks/ice-rust",
+        "branch": "main",
+        "head": "ff9270f26e263ea9ce54349786bf2d93c4517476",
+        "origin": "https://github.com/Zyk-Void/ice-rust.git",
+        "status_porcelain": "",
+        "status_includes_untracked": false
+      },
+      "active": {
+        "root": "/home/mewtwo/Zykairotis/ice-rust",
+        "branch": "main",
+        "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+        "origin": "https://github.com/Zyk-Void/ice-rust.git",
+        "status_porcelain": "",
+        "status_includes_untracked": false
+      }
+    },
+    "evidence_manifest_metadata": [
+      {
+        "path": "evidence/ai-combined-read-manifest.json",
+        "sha256": "b9e9d331bbe4676580a8e8f6619865c92804a9dcbbbffb1dff9fc2d6c14a22d4",
+        "role": "Existing source-review attribution; no rewrite proposed."
+      },
+      {
+        "path": "evidence/auth-normalized-read-manifest.json",
+        "sha256": "108f3666502c33ab7408e9006b1422a0b8f5d7c477e6ff83187ec1cbbd3d5daa",
+        "role": "Existing normalized source-review limits; no rewrite proposed."
+      }
+    ]
+  },
+  "method": "Scanned all current accepted entry string fields for old executable/environment/path/API-identity candidates, read all candidate contexts, then read full native paragraphs requiring a decision. Read the top-level introduction/appendix prose and checked all area entry fields for RUST-045 crosslinks. Match discovery did not authorize replacement: every preserved TypeScript or historical reference has an explicit disposition. Only the three source-confirmed native literals below change, through exact whole-field old/new values.",
+  "replacements": [
+    {
+      "replacement_id": "native-prose-1",
+      "area": "rpc-remote",
+      "spec_path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+      "spec_sha256": "ab85c7ba8d6537231690a46d3e9bc8e11277db0e7c05a6ab55508efdb5fb29e8",
+      "entry_id": "RPC-015",
+      "field": "rust",
+      "mode": "replace-exact-field-value",
+      "old_text": "Native app scans all argv for the first --connect value or --connect=value before local startup. Its helper does not stop at -- or reject a next value beginning '-'. Explicit --token wins verbatim; otherwise ICE_SERVER_TOKEN is trimmed and empty input ignored. It starts a TCP JSON-RPC proxy RemoteDriver, not a Unix binary client. One rust:crates/ice-cli/src/app.rs:96 expression was connector-redacted and remains unverified. Native RunMode::Rpc uses the built-in JSONL loop unless unknown_flags contains server or stdio was claimed, in which case extension I/O owns the run and the process waits for its lifecycle/interrupt. That conditional path cannot justify saying all native RPC is unimplemented (rust:crates/ice-cli/src/app.rs:43-65; rust:crates/ice-cli/src/app.rs:95; rust:crates/ice-cli/src/app.rs:97-98; rust:crates/ice-cli/src/app.rs:434-505; rust:crates/ice-cli/src/session_driver.rs:207-264).",
+      "new_text": "Native app scans all argv for the first --connect value or --connect=value before local startup. Its helper does not stop at -- or reject a next value beginning '-'. Explicit --token wins verbatim; otherwise ICERS_SERVER_TOKEN is trimmed and empty input ignored. It starts a TCP JSON-RPC proxy RemoteDriver, not a Unix binary client. One rust:crates/ice-cli/src/app.rs:96 expression was connector-redacted and remains unverified. Native RunMode::Rpc uses the built-in JSONL loop unless unknown_flags contains server or stdio was claimed, in which case extension I/O owns the run and the process waits for its lifecycle/interrupt. That conditional path cannot justify saying all native RPC is unimplemented (rust:crates/ice-cli/src/app.rs:43-65; rust:crates/ice-cli/src/app.rs:95; rust:crates/ice-cli/src/app.rs:97-98; rust:crates/ice-cli/src/app.rs:434-505; rust:crates/ice-cli/src/session_driver.rs:207-264).",
+      "edited_literal": {
+        "old_text": "ICE_SERVER_TOKEN",
+        "new_text": "ICERS_SERVER_TOKEN",
+        "expected_occurrences": 1
+      },
+      "reason": "The active native connection-token fallback reads the renamed ICERS_SERVER_TOKEN environment key.",
+      "old_source_anchor": {
+        "root": "/home/mewtwo/Zks/ice-rust",
+        "path": "crates/ice-cli/src/app.rs",
+        "start_line": 61,
+        "end_line": 61,
+        "sha256": "0666a5905fd7f97c2505bacdb83dc5826038f9422dff75c0e41d3661384ba698"
+      },
+      "active_source_anchor": {
+        "root": "/home/mewtwo/Zykairotis/ice-rust",
+        "path": "crates/ice-cli/src/app.rs",
+        "start_line": 61,
+        "end_line": 61,
+        "sha256": "56c23b1661616dbdfafd662e0b4afb0368afe93bda756ac79102c8e7c4413815"
+      },
+      "reviewed_hunks": [
+        {
+          "artifact": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+          "artifact_sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7",
+          "path": "crates/ice-cli/src/app.rs",
+          "hunk_number": 2,
+          "unified_header": "@@ -61 +61 @@ fn resolve_connect_token(argv: &[String]) -> Option<String> {",
+          "captured_diff_sha256": "efd407c7bef170f7e6459b683785b5bca86f0f8936836fdc16c440180ab90028",
+          "old_range": [
+            61,
+            61
+          ],
+          "active_range": [
+            61,
+            61
+          ]
+        }
+      ],
+      "preserved": "All surrounding TypeScript behavior, native limitations, source citations, original review attribution, and test-execution qualifications are retained."
+    },
+    {
+      "replacement_id": "native-prose-2",
+      "area": "rpc-remote",
+      "spec_path": "docs/ice-gap/evidence/spec-rpc-remote.json",
+      "spec_sha256": "ab85c7ba8d6537231690a46d3e9bc8e11277db0e7c05a6ab55508efdb5fb29e8",
+      "entry_id": "RPC-036",
+      "field": "mechanism",
+      "mode": "replace-exact-field-value",
+      "old_text": "Rust's TCP proxy and shared TUI projection are existing capabilities to preserve. They use a different outer protocol from the two TypeScript clients, and their current terminal-event check can mistake ordinary content for stream completion.\n\nThe TS comparison contains two different host APIs: a child-process JSONL client with capability handshake and typed command responses (RPC-032–035), and a newer framed-CBOR client/RemoteSession with server-session handles, leases and snapshots (RPC-010–014). Neither is evidence that native TCP JSON-RPC is absent; neither provides the same outer authenticate/start_session/subscribe/send/stop_session protocol. External ice-server package implementation and its deployments are outside the inspected checkout and remain unverified (ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:160-305; ice:packages/client/src/client.ts:1-433; ice:packages/coding-agent/src/client/remote-session.ts:1-421).\n\nNative RemoteClient connects TCP, owns one BufReader and write half, and allocates numeric IDs from one. Each request serializes JSON, appends LF, writes all and flushes. authenticate returns success locally for an empty token; otherwise it calls authenticate with the token and ignores a successful result's shape. Empty-token local success does not prove that the server permits unauthenticated sessions. call writes the request before checking whether it still owns a reader. It skips blank/invalid JSON, any method-bearing notification and mismatched IDs, returns matching error.message or serialized error, and otherwise returns result or null. It has no transport deadline, line-byte ceiling, TLS layer or JSON-RPC version check in this implementation. Calling call after event-pump takeover can therefore write a request before returning the streaming-mode error (rust:crates/ice-cli/src/remote/client.rs:24-121).\n\nRemoteDriver connects, authenticates, calls start_session with an empty object, requires sessionId:string, subscribes to that session, requires subscriptionId:u64, then transfers the reader to an event pump. It best-effort sends get_state for initial chrome state. The driver exposes its event receiver once and serializes writes through a mutex. Prompt/Abort/RefreshState/SetModel/SetThinkingLevel/SetActiveTools/UiDialogResponse map to the native child command union with a separate atomic child ID. send_command wraps the command in outer method=send and returns after writing; later child responses arrive through event notifications rather than being awaited by that send. shutdown writes stop_session best-effort. Authentication-like errors get a --token retrieval hint (rust:crates/ice-cli/src/session_driver.rs:215-311; rust:crates/ice-cli/src/session_driver.rs:434-442; rust:crates/ice-cli/src/remote/client.rs:169-190).\n\nThe pump ignores invalid/blank lines, non-event methods and subscriptions whose numeric ID differs; it forwards params.event or null into an unbounded channel. Reader EOF/error or a dropped receiver ends the pump. A second attempt to start a pump returns an already-closed receiver. After forwarding each accepted event, it currently searches the complete serialized outer line for the substring containing a quoted session_end token and breaks if found. For example, a valid matching event containing a text field whose complete value is session_end is forwarded and then closes the stream, even though its event type is not terminal. Driver pump closure subsequently emits DriverEvent::Ended, so this defect is reachable from ordinary remote content. This conclusion follows directly from source, not an executed reproduction. The condition should inspect the parsed event discriminator defined by the outer server protocol, preserving genuine terminal behavior (rust:crates/ice-cli/src/remote/client.rs:127-165; rust:crates/ice-cli/src/session_driver.rs:243-264).\n\nNative RemoteSession folds ready, decoded responses and decoded RemoteEvent values; unknown/invalid payloads are ignored. Error responses set last_error and append a notice; a successful result updates SessionState only when sessionId and activeTools are present and decoding succeeds. AgentStart/AgentEnd toggle streaming and clear retry/open-block state; retries retain attempt/delay and append a notice; turn events and UI dialogs do not enter its transcript. Role reading tries kind before role, so an existing non-string kind prevents fallback to role. Assistant start creates a new block; text/thinking deltas append to lazily opened blocks, and assistant end replaces an open block only with nonempty final text or appends a nonempty final block when none is open. Tool-call deltas are ignored by this fold; tool execution start appends a tool item, update stores partial text, and end stores final text/error/done on the matching tool. Tool-result text joins supported text content. Source unit tests cover streamed text, tool errors, thinking and state/error lines (rust:crates/ice-cli/src/remote/session.rs:136-162; rust:crates/ice-cli/src/remote/session.rs:191-493).\n\nProduction RemoteDriver publishes status after every pumped line, emits an error notice only when last_error changes, and separately maps RemoteEvent to the shared UI event abstraction. This projection reads complete message snapshots for assistant start/update/end and tool calls, so the fold's ignored tool-call deltas do not imply the production TUI cannot render tool calls. UI dialog requests and closes are explicitly forwarded to the modal slot outside the transcript; turn events have no UI event. Native smoke-test source covers TCP handshake/run folding, answering/cancelling approvals, filtering request responses and token authentication. A separate optional real-server test is gated by ICE_REMOTE_E2E_ADDR and does not establish that an external server was exercised here (rust:crates/ice-cli/src/session_driver.rs:243-264; rust:crates/ice-cli/src/session_driver.rs:314-431; rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509).",
+      "new_text": "Rust's TCP proxy and shared TUI projection are existing capabilities to preserve. They use a different outer protocol from the two TypeScript clients, and their current terminal-event check can mistake ordinary content for stream completion.\n\nThe TS comparison contains two different host APIs: a child-process JSONL client with capability handshake and typed command responses (RPC-032–035), and a newer framed-CBOR client/RemoteSession with server-session handles, leases and snapshots (RPC-010–014). Neither is evidence that native TCP JSON-RPC is absent; neither provides the same outer authenticate/start_session/subscribe/send/stop_session protocol. External ice-server package implementation and its deployments are outside the inspected checkout and remain unverified (ice:packages/coding-agent/src/modes/rpc/rpc-client.ts:160-305; ice:packages/client/src/client.ts:1-433; ice:packages/coding-agent/src/client/remote-session.ts:1-421).\n\nNative RemoteClient connects TCP, owns one BufReader and write half, and allocates numeric IDs from one. Each request serializes JSON, appends LF, writes all and flushes. authenticate returns success locally for an empty token; otherwise it calls authenticate with the token and ignores a successful result's shape. Empty-token local success does not prove that the server permits unauthenticated sessions. call writes the request before checking whether it still owns a reader. It skips blank/invalid JSON, any method-bearing notification and mismatched IDs, returns matching error.message or serialized error, and otherwise returns result or null. It has no transport deadline, line-byte ceiling, TLS layer or JSON-RPC version check in this implementation. Calling call after event-pump takeover can therefore write a request before returning the streaming-mode error (rust:crates/ice-cli/src/remote/client.rs:24-121).\n\nRemoteDriver connects, authenticates, calls start_session with an empty object, requires sessionId:string, subscribes to that session, requires subscriptionId:u64, then transfers the reader to an event pump. It best-effort sends get_state for initial chrome state. The driver exposes its event receiver once and serializes writes through a mutex. Prompt/Abort/RefreshState/SetModel/SetThinkingLevel/SetActiveTools/UiDialogResponse map to the native child command union with a separate atomic child ID. send_command wraps the command in outer method=send and returns after writing; later child responses arrive through event notifications rather than being awaited by that send. shutdown writes stop_session best-effort. Authentication-like errors get a --token retrieval hint (rust:crates/ice-cli/src/session_driver.rs:215-311; rust:crates/ice-cli/src/session_driver.rs:434-442; rust:crates/ice-cli/src/remote/client.rs:169-190).\n\nThe pump ignores invalid/blank lines, non-event methods and subscriptions whose numeric ID differs; it forwards params.event or null into an unbounded channel. Reader EOF/error or a dropped receiver ends the pump. A second attempt to start a pump returns an already-closed receiver. After forwarding each accepted event, it currently searches the complete serialized outer line for the substring containing a quoted session_end token and breaks if found. For example, a valid matching event containing a text field whose complete value is session_end is forwarded and then closes the stream, even though its event type is not terminal. Driver pump closure subsequently emits DriverEvent::Ended, so this defect is reachable from ordinary remote content. This conclusion follows directly from source, not an executed reproduction. The condition should inspect the parsed event discriminator defined by the outer server protocol, preserving genuine terminal behavior (rust:crates/ice-cli/src/remote/client.rs:127-165; rust:crates/ice-cli/src/session_driver.rs:243-264).\n\nNative RemoteSession folds ready, decoded responses and decoded RemoteEvent values; unknown/invalid payloads are ignored. Error responses set last_error and append a notice; a successful result updates SessionState only when sessionId and activeTools are present and decoding succeeds. AgentStart/AgentEnd toggle streaming and clear retry/open-block state; retries retain attempt/delay and append a notice; turn events and UI dialogs do not enter its transcript. Role reading tries kind before role, so an existing non-string kind prevents fallback to role. Assistant start creates a new block; text/thinking deltas append to lazily opened blocks, and assistant end replaces an open block only with nonempty final text or appends a nonempty final block when none is open. Tool-call deltas are ignored by this fold; tool execution start appends a tool item, update stores partial text, and end stores final text/error/done on the matching tool. Tool-result text joins supported text content. Source unit tests cover streamed text, tool errors, thinking and state/error lines (rust:crates/ice-cli/src/remote/session.rs:136-162; rust:crates/ice-cli/src/remote/session.rs:191-493).\n\nProduction RemoteDriver publishes status after every pumped line, emits an error notice only when last_error changes, and separately maps RemoteEvent to the shared UI event abstraction. This projection reads complete message snapshots for assistant start/update/end and tool calls, so the fold's ignored tool-call deltas do not imply the production TUI cannot render tool calls. UI dialog requests and closes are explicitly forwarded to the modal slot outside the transcript; turn events have no UI event. Native smoke-test source covers TCP handshake/run folding, answering/cancelling approvals, filtering request responses and token authentication. A separate optional real-server test is gated by ICERS_REMOTE_E2E_ADDR and does not establish that an external server was exercised here (rust:crates/ice-cli/src/session_driver.rs:243-264; rust:crates/ice-cli/src/session_driver.rs:314-431; rust:crates/ice-cli/tests/remote_client_smoke.rs:130-509).",
+      "edited_literal": {
+        "old_text": "ICE_REMOTE_E2E_ADDR",
+        "new_text": "ICERS_REMOTE_E2E_ADDR",
+        "expected_occurrences": 1
+      },
+      "reason": "The native optional real-server test gate reads ICERS_REMOTE_E2E_ADDR. Test intent remains source-only; no external server execution is asserted.",
+      "old_source_anchor": {
+        "root": "/home/mewtwo/Zks/ice-rust",
+        "path": "crates/ice-cli/tests/remote_client_smoke.rs",
+        "start_line": 440,
+        "end_line": 440,
+        "sha256": "a7a465560e13b2b8f11904f99f587cdce92c9b8e2d79fe96ca96c339202b56df"
+      },
+      "active_source_anchor": {
+        "root": "/home/mewtwo/Zykairotis/ice-rust",
+        "path": "crates/ice-cli/tests/remote_client_smoke.rs",
+        "start_line": 440,
+        "end_line": 440,
+        "sha256": "cb8113df1327a086358db46d9f7e5cf3857deb19c0f5134e2c55296b7cd8778d"
+      },
+      "reviewed_hunks": [
+        {
+          "artifact": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+          "artifact_sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7",
+          "path": "crates/ice-cli/tests/remote_client_smoke.rs",
+          "hunk_number": 3,
+          "unified_header": "@@ -440 +440 @@ async fn real_server_roundtrip_if_configured() {",
+          "captured_diff_sha256": "b374622fadf7a9ef930284f4076849b9c455653c79f77a0031d88c74367aac0f",
+          "old_range": [
+            440,
+            440
+          ],
+          "active_range": [
+            440,
+            440
+          ]
+        }
+      ],
+      "preserved": "All surrounding TypeScript behavior, native limitations, source citations, original review attribution, and test-execution qualifications are retained."
+    },
+    {
+      "replacement_id": "native-prose-3",
+      "area": "providers-auth",
+      "spec_path": "docs/ice-gap/evidence/spec-providers-auth.json",
+      "spec_sha256": "fa761cf0ca13fa0d5838048420013386b503f7f992b17f2967306374a8b410df",
+      "entry_id": "AUTH-023",
+      "field": "rust",
+      "mode": "replace-exact-field-value",
+      "old_text": "Native model resolution already binds provider/custom headers and base URLs into the selected runtime while omitting credential headers from public catalog views (rust:crates/ice-cli/src/provider.rs:190-273; rust:crates/ice-cli/src/provider.rs:289-330). The native package integration test expects an OpenRouter package request to contain `x-title: ice` (rust:crates/ice-cli/tests/provider_packages.rs:349-379), so attribution is not globally absent. That test's concrete package implementation is external to the authorized source tree and was not read. The inspected native core has no equivalent helper implementing the exact OpenRouter/NVIDIA/Cloudflare/OpenCode policy, session headers, telemetry gate and same-stage merge order; the package expectation for x-title alone does not establish parity with X-OpenRouter-Title/Categories.",
+      "new_text": "Native model resolution already binds provider/custom headers and base URLs into the selected runtime while omitting credential headers from public catalog views (rust:crates/ice-cli/src/provider.rs:190-273; rust:crates/ice-cli/src/provider.rs:289-330). The native package integration test expects an OpenRouter package request to contain `x-title: icers` (rust:crates/ice-cli/tests/provider_packages.rs:349-379), so attribution is not globally absent. That test's concrete package implementation is external to the authorized source tree and was not read. The inspected native core has no equivalent helper implementing the exact OpenRouter/NVIDIA/Cloudflare/OpenCode policy, session headers, telemetry gate and same-stage merge order; the package expectation for x-title alone does not establish parity with X-OpenRouter-Title/Categories.",
+      "edited_literal": {
+        "old_text": "`x-title: ice`",
+        "new_text": "`x-title: icers`",
+        "expected_occurrences": 1
+      },
+      "reason": "The active native integration-test source checks the x-title: icers prefix. This retains the explicit external-package and unexecuted-test limitations.",
+      "old_source_anchor": {
+        "root": "/home/mewtwo/Zks/ice-rust",
+        "path": "crates/ice-cli/tests/provider_packages.rs",
+        "start_line": 377,
+        "end_line": 377,
+        "sha256": "7d769c0f0bc70e3740852cf380243642b64650b93064af24c8209b36ed48e14d"
+      },
+      "active_source_anchor": {
+        "root": "/home/mewtwo/Zykairotis/ice-rust",
+        "path": "crates/ice-cli/tests/provider_packages.rs",
+        "start_line": 377,
+        "end_line": 377,
+        "sha256": "adefda1028b3c32d336e263ef1f9e3114254a9b25e925fce7c3f08c0d5100a78"
+      },
+      "reviewed_hunks": [
+        {
+          "artifact": "evidence/lane-exports-rpc-ai-auth-native-hunk-review.json",
+          "artifact_sha256": "ade03b6527eb6675d4274490d4103902318cd48e5aa3a56bb698fded987433d7",
+          "path": "crates/ice-cli/tests/provider_packages.rs",
+          "hunk_number": 9,
+          "unified_header": "@@ -377 +377 @@ async fn packaged_providers_stream_through_the_real_dll_and_cli() {",
+          "captured_diff_sha256": "07f251172749e3eeb37a669d373d3cd9100830556a724cf05371813ea6620862",
+          "old_range": [
+            377,
+            377
+          ],
+          "active_range": [
+            377,
+            377
+          ]
+        }
+      ],
+      "preserved": "All surrounding TypeScript behavior, native limitations, source citations, original review attribution, and test-execution qualifications are retained."
+    }
+  ],
+  "candidate_dispositions": [
+    {
+      "area": "ai",
+      "entry_id": "AI-018",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG",
+          "offset": 29
+        },
+        {
+          "text": ".ice",
+          "offset": 1621
+        },
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG_FILE",
+          "offset": 1709
+        },
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG_STDERR",
+          "offset": 1907
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-018",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG",
+          "offset": 53
+        },
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG_FILE",
+          "offset": 85
+        },
+        {
+          "text": "ICE_PROVIDER_CONTINUATION_DIAG_STDERR",
+          "offset": 122
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-024",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 1246
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-026",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 507
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-029",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 602
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-032",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 1152
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-032",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 245
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "ai",
+      "entry_id": "AI-050",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_CACHE_RETENTION",
+          "offset": 61
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-001",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 966
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-004",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 1982
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-005",
+      "field": "source",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 304
+        },
+        {
+          "text": "ice",
+          "offset": 406
+        },
+        {
+          "text": "ice",
+          "offset": 689
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-005",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 250
+        },
+        {
+          "text": "ice",
+          "offset": 599
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-005",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 217
+        },
+        {
+          "text": "ice",
+          "offset": 732
+        },
+        {
+          "text": "ice",
+          "offset": 1244
+        },
+        {
+          "text": "ice",
+          "offset": 1365
+        },
+        {
+          "text": "ice",
+          "offset": 1408
+        },
+        {
+          "text": "ice",
+          "offset": 1461
+        },
+        {
+          "text": "ice",
+          "offset": 1812
+        },
+        {
+          "text": "ice",
+          "offset": 2257
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-009",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 595
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-009",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 1278
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-010",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 119
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-018",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 2796
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-019",
+      "field": "interfaces",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 2371
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "extensions",
+      "entry_id": "EXT-034",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ICE_PROJECT_TRUST",
+          "offset": 869
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "The ICE_PROJECT_TRUST reference explicitly identifies an unsupported claim removed from an earlier draft. Renaming that historical rejected claim would rewrite provenance and imply a different unsupported key."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-015",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 1047
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-015",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ICE_SERVER_TOKEN",
+          "offset": 208
+        }
+      ],
+      "disposition": "replace-native-reference",
+      "replacement_id": "native-prose-1",
+      "reason": "The active native connection-token fallback reads the renamed ICERS_SERVER_TOKEN environment key."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-023",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OFFLINE",
+          "offset": 1439
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-029",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 2820
+        },
+        {
+          "text": "ice",
+          "offset": 2896
+        },
+        {
+          "text": "ice",
+          "offset": 2995
+        },
+        {
+          "text": "ice",
+          "offset": 3096
+        },
+        {
+          "text": "ice",
+          "offset": 3201
+        },
+        {
+          "text": "ice",
+          "offset": 3333
+        },
+        {
+          "text": "ice",
+          "offset": 3448
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-030",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 2309
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-031",
+      "field": "source",
+      "matched_literals": [
+        {
+          "text": "ICE_SETTINGS_COMMAND_NAME",
+          "offset": 861
+        },
+        {
+          "text": "ICE_SETTINGS_SCHEMA_ID",
+          "offset": 890
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-031",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 253
+        },
+        {
+          "text": "ice",
+          "offset": 2072
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "rpc-remote",
+      "entry_id": "RPC-036",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_REMOTE_E2E_ADDR",
+          "offset": 5745
+        }
+      ],
+      "disposition": "replace-native-reference",
+      "replacement_id": "native-prose-2",
+      "reason": "The native optional real-server test gate reads ICERS_REMOTE_E2E_ADDR. Test intent remains source-only; no external server execution is asserted."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-006",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OFFLINE",
+          "offset": 2305
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-007",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ICE_PORTING",
+          "offset": 843
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "ICE_PORTING.md is an archival document filename, not a runtime environment variable or executable; its source reference is retained."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-010",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OFFLINE",
+          "offset": 3120
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-011",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ICE_PORTING",
+          "offset": 1117
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "ICE_PORTING.md is an archival document filename; the statement already limits credential-history verification and must retain its original source identity."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-016",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OAUTH_CALLBACK_HOST",
+          "offset": 506
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-017",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OAUTH_CALLBACK_HOST",
+          "offset": 371
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-019",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OAUTH_CALLBACK_HOST",
+          "offset": 326
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-022",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OAUTH_CALLBACK_HOST",
+          "offset": 1066
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-023",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ice",
+          "offset": 349
+        }
+      ],
+      "disposition": "replace-native-reference",
+      "replacement_id": "native-prose-3",
+      "reason": "The active native integration-test source checks the x-title: icers prefix. This retains the explicit external-package and unexecuted-test limitations."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-032",
+      "field": "mechanism",
+      "matched_literals": [
+        {
+          "text": "ICE_OMNI_BASE_URL",
+          "offset": 265
+        },
+        {
+          "text": "ICE_LOCAL_BASE_URL",
+          "offset": 284
+        },
+        {
+          "text": "ICE_LOCAL_API_KEY",
+          "offset": 1430
+        },
+        {
+          "text": "ICE_LOCAL_API_KEY",
+          "offset": 1886
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "This field describes or quotes the inspected TypeScript contract, object/schema identity, source test name, or TypeScript environment/path value. Preserve its exact source spelling."
+    },
+    {
+      "area": "providers-auth",
+      "entry_id": "AUTH-032",
+      "field": "rust",
+      "matched_literals": [
+        {
+          "text": "ICE_LOCAL_API_KEY",
+          "offset": 596
+        }
+      ],
+      "disposition": "preserve",
+      "replacement_id": null,
+      "reason": "ICE_LOCAL_API_KEY here names the TypeScript bootstrap contract for which no matching native core implementation was found. It is not a native environment read and must retain the TypeScript spelling."
+    }
+  ],
+  "totals": {
+    "entries_scanned": 176,
+    "candidate_fields": 38,
+    "replacements": 3,
+    "preserved_candidate_fields": 35,
+    "by_area": {
+      "ai": {
+        "replacements": 0,
+        "candidate_fields": 8
+      },
+      "extensions": {
+        "replacements": 0,
+        "candidate_fields": 11
+      },
+      "rpc-remote": {
+        "replacements": 2,
+        "candidate_fields": 8
+      },
+      "providers-auth": {
+        "replacements": 1,
+        "candidate_fields": 11
+      }
+    }
+  },
+  "preservation_rules": [
+    "TypeScript ice executable/object/manifest/schema names, ICE_* keys, and .ice paths remain exact.",
+    "Rust ice-* crate identifiers and ice_plugin_register C ABI entrypoint remain exact.",
+    "Historical source filenames, denied earlier-draft claims, frozen read-manifest paths, and review attribution remain exact.",
+    "No status, dependency, line-range relocation, native parity credit, or claimed test result changes."
+  ],
+  "rust_045_crosslinks": {
+    "entry_field_hits": [],
+    "action": "No RUST-045 crosslink was found in these four accepted areas or their top-level prose. The coordinator owns the corrected CLI defect and release-manifest wording."
+  },
+  "out_of_scope_observations": [
+    {
+      "area": "ai",
+      "field": "introduction",
+      "observation": "The introduction says 49 reviewed gap entries while the accepted spec currently contains 50 entries including the coordinator-merged supplement. This is a count/gate reconciliation item, not a source-hunk identity replacement.",
+      "owner": "/root"
+    }
+  ],
+  "writes": "Only lane-prefixed proposal/helper artifacts. No shared spec/manifest/Markdown/CSV/RESUME or active-checkout file was written."
+}

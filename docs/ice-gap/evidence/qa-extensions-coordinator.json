@@ -1,0 +1,245 @@
+{
+  "reviewer": "/root",
+  "scope": "Independent source review of trust dispatch, custom message/entry renderer dispatch, payload cleanup and direct exec boundary; inherited AGENT dependency IDs checked against published entry meanings.",
+  "reviewed_entry_ids": [
+    "EXT-012",
+    "EXT-023",
+    "EXT-024",
+    "EXT-025",
+    "EXT-027",
+    "EXT-033",
+    "EXT-034",
+    "EXT-037",
+    "EXT-038",
+    "EXT-039",
+    "EXT-056"
+  ],
+  "source_only": true,
+  "tests_executed": false,
+  "findings": [
+    {
+      "id": "ROOT-EXT-QA-001",
+      "entries": [
+        "EXT-037",
+        "EXT-038",
+        "EXT-039"
+      ],
+      "finding": "registry.rs413-427 registers tools, not renderers. Corrected to renderer structure255-275, register_renderer705-718 and renderers_of1016-1026. Corrected invoke_extension_renderer function spelling and MessageRenderOptions surface anchor.",
+      "resolved": true
+    },
+    {
+      "id": "ROOT-EXT-QA-002",
+      "entries": [
+        "EXT-033"
+      ],
+      "finding": "Confirmed BeforeAgentStart generic allocation is omitted from cleanup when handlers exist, and inactive dispatch returns before freeing allocated payloads. These are conditional source-derived leaks, not runtime reproductions.",
+      "resolved": true
+    },
+    {
+      "id": "ROOT-EXT-QA-003",
+      "entries": [
+        "EXT-034"
+      ],
+      "finding": "Malformed TS return handling agrees with source. SET-003 resolves policy, SET-004 owns trust persistence; corrected ownership prose.",
+      "resolved": true
+    },
+    {
+      "id": "ROOT-EXT-QA-004",
+      "entries": [
+        "EXT-056"
+      ],
+      "finding": "Confirmed execCommand direct argv and native RuntimeActionId has no matching action; clarified that TOOLS-017 owns the shared helper rather than the command-string shell tool.",
+      "resolved": true
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/extensions/runner.ts",
+      "ranges": [
+        [
+          223,
+          253
+        ]
+      ],
+      "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/extensions/runner.ts",
+      "ranges": [
+        [
+          640,
+          662
+        ]
+      ],
+      "sha256": "6471434850206f41726e063c0d75de63b223d2ae895a1a4956a80d52e64334cd",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/custom-entry.ts",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "sha256": "7f1f225157be829e724341e672baf3b9e0dee3397adbc1d1095d0eade4943b44",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "sha256": "8389dff472d7791a4849126046fb219637461a94d6c6dd6a5b9e196503ad67f1",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/sessions.rs",
+      "ranges": [
+        [
+          470,
+          610
+        ]
+      ],
+      "sha256": "28c1357cfad2c84a284e445f0c5597c97ff2ce6220564b645cf94ade31128dda",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          413,
+          427
+        ]
+      ],
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/translate.rs",
+      "ranges": [
+        [
+          342,
+          380
+        ]
+      ],
+      "sha256": "e93fc58116a4bfc7c7b65b92815ff4536b6a6a1b74f67c3596e1d4dc51c82091",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/translate.rs",
+      "ranges": [
+        [
+          905,
+          968
+        ]
+      ],
+      "sha256": "e93fc58116a4bfc7c7b65b92815ff4536b6a6a1b74f67c3596e1d4dc51c82091",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/provider_hooks.rs",
+      "ranges": [
+        [
+          135,
+          167
+        ]
+      ],
+      "sha256": "f600895048f02f76fd81f6123f7ddba75005c0e67cfc0f5a588bad07cbcfed36",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "ranges": [
+        [
+          151,
+          239
+        ]
+      ],
+      "sha256": "8389dff472d7791a4849126046fb219637461a94d6c6dd6a5b9e196503ad67f1",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/src/core/exec.ts",
+      "ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "sha256": "1a55e7416847ea0c548775b28596bb817c8cd4aa97bc36b8da7403959fcd350f",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/translate.rs",
+      "ranges": [
+        [
+          407,
+          447
+        ]
+      ],
+      "sha256": "e93fc58116a4bfc7c7b65b92815ff4536b6a6a1b74f67c3596e1d4dc51c82091",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-plugin-sdk/src/lib.rs",
+      "ranges": [
+        [
+          1010,
+          1084
+        ]
+      ],
+      "sha256": "3a61438fbc4f495e820942da7f7662377027a95cf49b6bba81c5ecf01e5c5f31",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-plugin-sdk/src/lib.rs",
+      "ranges": [
+        [
+          1361,
+          1377
+        ]
+      ],
+      "sha256": "3a61438fbc4f495e820942da7f7662377027a95cf49b6bba81c5ecf01e5c5f31",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          255,
+          275
+        ]
+      ],
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          705,
+          718
+        ]
+      ],
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    },
+    {
+      "path": "rust:crates/ice-extensions/src/registry.rs",
+      "ranges": [
+        [
+          1016,
+          1026
+        ]
+      ],
+      "sha256": "c796fde0949aae7f0d6ce91309bf8ddbb3acc74de370342416b63f73e5ed6bb8",
+      "notes": "Coordinator directly inspected this range; no code/test execution."
+    }
+  ],
+  "remaining": "Cross-area consumer/dependency requests and final active-checkout revalidation remain part of global closure."
+}

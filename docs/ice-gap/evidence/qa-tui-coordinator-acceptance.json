@@ -1,0 +1,26 @@
+{
+  "status": "reviewed",
+  "reviewer": "/root",
+  "source_only": true,
+  "validation": {
+    "area": "tui",
+    "entries": 151,
+    "proposal_entries": 151,
+    "ledger_rows": 224,
+    "surfaces": 1151,
+    "unique_source_references": 2446,
+    "read_records": 440,
+    "problems": []
+  },
+  "source_review": [
+    "evidence/tui-source-review.json",
+    "evidence/tui-closeout-qa.json",
+    "evidence/tui-closeout-source-review.json",
+    "evidence/tui-closeout-coverage.json",
+    "evidence/coordinator-native-defect-review.json",
+    "evidence/coordinator-additional-tui-eval-review.json",
+    "evidence/coordinator-native-command-review.json",
+    "evidence/coordinator-queue-abort-review.json"
+  ],
+  "notes": "All 151 entry definitions and the thirteen final contracts were reconciled with owner evidence. Independently checked queue failure/history, shell scope, terminal helper defects and source/candidate gaps. Redactions and baseline-dirty test qualifications are retained; no runtime verification claimed."
+}

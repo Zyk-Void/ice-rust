@@ -120,6 +120,8 @@ pub struct FooterComponent {
     /// known. The percent is derived from this against `context_window`; `None`
     /// renders `?` (no post-compaction usage yet, or nothing reported).
     context_tokens: Mutex<Option<i64>>,
+    /// Distinguish an active-context estimate from a provider measurement.
+    context_estimated: Mutex<bool>,
     /// Model context window in tokens (0 ⇒ unknown).
     context_window: Mutex<i64>,
     /// Whether auto-compaction is enabled (renders the `(auto)` suffix).
@@ -147,6 +149,7 @@ impl FooterComponent {
             cache_hit_rate: Mutex::new(None),
             context_percent: Mutex::new(None),
             context_tokens: Mutex::new(None),
+            context_estimated: Mutex::new(false),
             context_window: Mutex::new(0),
             auto_compact: Mutex::new(true),
         }
@@ -261,7 +264,16 @@ impl FooterComponent {
         if let Ok(mut t) = self.context_tokens.lock() {
             *t = tokens;
         }
+        // A directly supplied count is a measurement, not an estimate.
+        *self.context_estimated.lock().unwrap() = false;
         self.recompute_context_percent();
+    }
+
+    /// Show an estimated active-context size; None is unknown, not zero.
+    pub fn set_context_estimate(&self, tokens: Option<i64>, window: i64) {
+        self.set_context_window(window);
+        self.set_context_tokens(tokens);
+        *self.context_estimated.lock().unwrap() = true;
     }
 
     /// Set the model's context window and recompute the `%` against the
@@ -278,7 +290,7 @@ impl FooterComponent {
         let window = *self.context_window.lock().unwrap();
         let tokens = *self.context_tokens.lock().unwrap();
         let percent = match (tokens, window) {
-            (Some(t), w) if t > 0 && w > 0 => Some(t as f64 / w as f64 * 100.0),
+            (Some(t), w) if t >= 0 && w > 0 => Some(t as f64 / w as f64 * 100.0),
             _ => None,
         };
         if let Ok(mut p) = self.context_percent.lock() {
@@ -360,10 +372,18 @@ impl FooterComponent {
 
         // Context usage: colorized by pressure like upstream.
         let auto_indicator = if auto { " (auto)" } else { "" };
+        let estimate = if *self.context_estimated.lock().unwrap() {
+            "~"
+        } else {
+            ""
+        };
         let context_display = match context_percent {
-            Some(p) => format!("{p:.1}%/{}{auto_indicator}", format_tokens(context_window)),
+            Some(p) => format!(
+                "{estimate}{p:.1}%/{}{auto_indicator}",
+                format_tokens(context_window)
+            ),
             None if context_window > 0 => {
-                format!("0.0%/{}{auto_indicator}", format_tokens(context_window))
+                format!("?/{}{auto_indicator}", format_tokens(context_window))
             }
             None => String::new(),
         };
@@ -521,6 +541,20 @@ mod tests {
     use super::*;
     use crate::ansi::strip_ansi;
 
+    #[test]
+    fn measured_context_tokens_clear_the_estimate_marker() {
+        let footer = FooterComponent::new();
+        footer.set_context_estimate(Some(25_000), 100_000);
+        let estimated = strip_ansi(&footer.render(120).join("\n"));
+        assert!(estimated.contains("~25.0%"), "{estimated}");
+        footer.set_context_tokens(Some(30_000));
+        let measured = strip_ansi(&footer.render(120).join("\n"));
+        assert!(
+            measured.contains("30.0%") && !measured.contains("~30.0%"),
+            "{measured}"
+        );
+    }
+
     /// The extension status (langfuse ✓ …) renders after the run status and is
     /// independent of it: clearing the run status must not clear it.
     #[test]
@@ -626,9 +660,9 @@ mod tests {
     fn context_badge_derives_percent_from_reported_tokens() {
         let footer = FooterComponent::new();
         footer.set_context_window(512_000);
-        // No response yet → shows 0.0% initially.
+        // No measurement yet is unknown, not a measured empty context.
         let stats = strip_ansi(&footer.render(120).join("\n"));
-        assert!(stats.contains("0.0%/512k"), "stats: {stats}");
+        assert!(stats.contains("?/512k"), "stats: {stats}");
 
         // A reported token count fills in the percent against the window.
         footer.set_context_tokens(Some(256_000));
@@ -640,10 +674,13 @@ mod tests {
         let stats = strip_ansi(&footer.render(120).join("\n"));
         assert!(stats.contains("200.0%/128k"), "stats: {stats}");
 
-        // `None` (e.g. right after a compaction) resets to 0.0%.
+        // A saved checkpoint invalidates the old measurement.
         footer.set_context_tokens(None);
         let stats = strip_ansi(&footer.render(120).join("\n"));
-        assert!(stats.contains("0.0%/128k"), "stats: {stats}");
+        assert!(stats.contains("?/128k"), "stats: {stats}");
+        footer.set_context_estimate(Some(0), 128_000);
+        let stats = strip_ansi(&footer.render(120).join("\n"));
+        assert!(stats.contains("~0.0%/128k"), "stats: {stats}");
     }
 
     #[test]

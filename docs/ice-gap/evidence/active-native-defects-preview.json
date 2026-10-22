@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-20T07:03:50.720Z",
+  "mode": "catalog-preview",
+  "source_only": true,
+  "application_or_test_execution": false,
+  "original_gate_sha256": "f28f9c7fcc3e1cb5d271de94c4527585fa38ef5bbca1a9fedf9d8530532bd660",
+  "tool_sha256": "83381f36647e312de0ff75c1e1dca9968b2c582a5001c0d3a73c63240b784d17",
+  "proposals": {
+    "coordinator-native-prose-replacements.json": "e3c8a805c6cf0c66c669f93285a15a3a107d22eb7365b0cae83c57921eb13476",
+    "lane-exports-rpc-ai-auth-native-prose-replacements.json": "3ae59f65990f99fa7d587a6ddfd02ab660c5116c153825fa6342a8d3ab84428e",
+    "lane-exports-sub-session-native-prose-replacements.json": "fe7182c6b8c1f7a26ac4b87250dafd104ff5c91d554578b801f334e9b5489423",
+    "lane-final-areas-active-identity-proposal.json": "3bad2fa6387b5a5677cd166530547d36f1214467f7fa22b13c1552c6f2846f27",
+    "lane-final-areas-first-pass-findings-proposal.json": "435fd3a102c2efa1a08b434a3cae35b9bc55b849b9714e7f49f86e59e8f8b40f",
+    "lane-exports-sub-session-cli-prose-review.json": "2da3ccfff955049c4c31620c4199571ee17305081e16cfb0ca83368ab9fca410",
+    "lane-exports-sub-session-native-surfaces-review.json": "2321e72183dcb4aee9ec80601a3fec5929200fe7627baef5f1efcf33dc0e8046"
+  },
+  "projection": null,
+  "files": [
+    {
+      "path": "evidence/rust-defects.json",
+      "before_sha256": "c4c998ba2ef5ab553ea62fc7afc11ac90da3323c85b47df3878bbe390f3f01f4",
+      "after_sha256": "0efdf9dff8b1878e5152266889da693e45af023b1cc9f9f73e1964f2f242927d"
+    },
+    {
+      "path": "evidence/rust-defect-provenance.json",
+      "before_sha256": "19d87cfd2d6d69779f67c92b54baac27b8648a22118a5d1087fe69c8523e170b",
+      "after_sha256": "ddbb6280901be0c6cc44ba2dc510820d6d7caf5d15d0c1168184c8b8fbd97dac"
+    }
+  ],
+  "changes": [
+    {
+      "artifact": "evidence/rust-defects.json",
+      "pointer": "/45",
+      "old_value": {
+        "id": "RUST-045",
+        "entry_ids": [
+          "CLI-045"
+        ],
+        "title": "Frozen checkout's mixed-case official repository rejects its own prebuilt releases",
+        "severity": "high",
+        "sources": [
+          "rust:crates/ice-cli/src/prebuilt_release.rs:11-50",
+          "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+          "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195"
+        ],
+        "behavior": "The frozen old checkout compares a lowercased canonical repository against a mixed-case official repository constant, rejecting the nominal official CLI manifest before staging.",
+        "technical_explanation": "canonical_repository lowercases owner/repository, while REPOSITORY contains Zyk-Void. The same mixed-case constant is passed to release-asset URL validation, so the expected identity must be corrected consistently at both boundaries.",
+        "assumptions": "Bounded to the frozen old Rust checkout and nominal official manifest. Active-checkout behavior must be revalidated during final relocation; no download or runtime test was executed. Do not attribute this defect to upstream without Git evidence.",
+        "provenance_targets": [
+          {
+            "file": "crates/ice-cli/src/prebuilt_release.rs",
+            "range": [
+              1,
+              11
+            ]
+          }
+        ],
+        "evidence_level": "source-read; not reproduced",
+        "parity_relation": "Overlaps the cited parity entry and records a concrete native correctness or reliability defect separately from an architectural difference.",
+        "provenance": "The local rebrand commit 8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb replaced the lowercase upstream repository https://github.com/bigfish1913/pi-rust with mixed-case https://github.com/Zyk-Void/ice-rust while retaining the lowercase canonical comparison. The exact local Git rename/diff is preserved in evidence/rust-prebuilt-rebrand-defect.json. This defect is not attributed to upstream. Active-checkout correction remains a final relocation check.",
+        "provenance_evidence": "evidence/rust-prebuilt-rebrand-defect.json",
+        "provenance_status": "introduced-by-local-rebrand-in-frozen-checkout",
+        "provenance_review": {
+          "commit": "8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb",
+          "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+          "method": "Read local rename-aware Git diff plus current canonical_repository and caller source. The changed constant is the behavioral difference, not merely a presumed mechanical rename."
+        }
+      },
+      "new_value": {
+        "id": "RUST-045",
+        "entry_ids": [
+          "CLI-045"
+        ],
+        "title": "Historical mixed-case official repository rejection, fixed in the active checkout",
+        "severity": "high",
+        "sources": [
+          "rust:crates/ice-cli/src/prebuilt_release.rs:11-50",
+          "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+          "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195",
+          "rust-active:crates/ice-cli/src/prebuilt_release.rs:11",
+          "rust-active:crates/ice-cli/src/changelog.rs:27"
+        ],
+        "behavior": "The active native source uses a canonical lowercase official repository and no longer has the mixed-case rejection recorded in the frozen checkout. The original source-level finding and its local Git attribution remain preserved.",
+        "technical_explanation": "REPOSITORY is https://github.com/zyk-void/ice-rust at prebuilt_release.rs:11, matching canonical_repository for manifest validation and the repository passed to release-asset URL validation. The changelog constant at changelog.rs:27 uses the same lowercase owner. This resolves the specific repository-case mismatch; remote asset existence and successful download/activation were not tested.",
+        "assumptions": "The correction is verified from the fixed active source and saved changed-hunk review. No network, application, download, platform activation or test execution was performed. The frozen finding remains historical evidence.",
+        "provenance_targets": [
+          {
+            "file": "crates/ice-cli/src/prebuilt_release.rs",
+            "range": [
+              1,
+              11
+            ]
+          }
+        ],
+        "evidence_level": "source-read; not reproduced",
+        "parity_relation": "Overlaps the cited parity entry and records a concrete native correctness or reliability defect separately from an architectural difference.",
+        "provenance": "The local rebrand commit 8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb replaced the lowercase upstream repository https://github.com/bigfish1913/pi-rust with mixed-case https://github.com/Zyk-Void/ice-rust while retaining the lowercase canonical comparison. The exact local Git rename/diff is preserved in evidence/rust-prebuilt-rebrand-defect.json. This defect is not attributed to upstream. The active-checkout constants were confirmed corrected during final relocation; the original provenance record is preserved below.",
+        "provenance_evidence": "evidence/rust-prebuilt-rebrand-defect.json",
+        "provenance_status": "fixed-in-active-checkout",
+        "provenance_review": {
+          "commit": "8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb",
+          "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+          "method": "Read local rename-aware Git diff plus current canonical_repository and caller source. The changed constant is the behavioral difference, not merely a presumed mechanical rename."
+        },
+        "frozen_checkout_finding": {
+          "id": "RUST-045",
+          "entry_ids": [
+            "CLI-045"
+          ],
+          "title": "Frozen checkout's mixed-case official repository rejects its own prebuilt releases",
+          "severity": "high",
+          "sources": [
+            "rust:crates/ice-cli/src/prebuilt_release.rs:11-50",
+            "rust:crates/ice-cli/src/prebuilt_release.rs:92",
+            "rust:crates/ice-cli/src/prebuilt_extensions.rs:158-195"
+          ],
+          "behavior": "The frozen old checkout compares a lowercased canonical repository against a mixed-case official repository constant, rejecting the nominal official CLI manifest before staging.",
+          "technical_explanation": "canonical_repository lowercases owner/repository, while REPOSITORY contains Zyk-Void. The same mixed-case constant is passed to release-asset URL validation, so the expected identity must be corrected consistently at both boundaries.",
+          "assumptions": "Bounded to the frozen old Rust checkout and nominal official manifest. Active-checkout behavior must be revalidated during final relocation; no download or runtime test was executed. Do not attribute this defect to upstream without Git evidence.",
+          "provenance_targets": [
+            {
+              "file": "crates/ice-cli/src/prebuilt_release.rs",
+              "range": [
+                1,
+                11
+              ]
+            }
+          ],
+          "evidence_level": "source-read; not reproduced",
+          "parity_relation": "Overlaps the cited parity entry and records a concrete native correctness or reliability defect separately from an architectural difference.",
+          "provenance": "The local rebrand commit 8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb replaced the lowercase upstream repository https://github.com/bigfish1913/pi-rust with mixed-case https://github.com/Zyk-Void/ice-rust while retaining the lowercase canonical comparison. The exact local Git rename/diff is preserved in evidence/rust-prebuilt-rebrand-defect.json. This defect is not attributed to upstream. Active-checkout correction remains a final relocation check.",
+          "provenance_evidence": "evidence/rust-prebuilt-rebrand-defect.json",
+          "provenance_status": "introduced-by-local-rebrand-in-frozen-checkout",
+          "provenance_review": {
+            "commit": "8af1c0578d0f4cbfa0c6d142a74ad668b85f95eb",
+            "upstream_commit": "0fb2d893206981527b14e86d68e3ddbdf2c8189a",
+            "method": "Read local rename-aware Git diff plus current canonical_repository and caller source. The changed constant is the behavioral difference, not merely a presumed mechanical rename."
+          }
+        },
+        "origin_provenance_status": "introduced-by-local-rebrand-in-frozen-checkout",
+        "active_status": "fixed",
+        "active_head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+        "active_resolution": {
+          "status": "fixed",
+          "source_only": true,
+          "head": "1891337558105fb8322c79617e5a03d98c1b2c3a",
+          "sources": [
+            {
+              "path": "crates/ice-cli/src/prebuilt_release.rs",
+              "line": 11,
+              "sha256": "79ad9c42983ecc01f1b635d7def8e05ee9a42e5cdbf83611d1ccda5f53c09316",
+              "text": "const REPOSITORY: &str = \"https://github.com/zyk-void/ice-rust\";"
+            },
+            {
+              "path": "crates/ice-cli/src/changelog.rs",
+              "line": 27,
+              "sha256": "8ab8bfa468d64174fd6f3173cb2ff61e415821431092bce3115d684432dac491",
+              "text": "    \"https://raw.githubusercontent.com/zyk-void/ice-rust/main/CHANGELOG.md\";"
+            }
+          ],
+          "review": "evidence/coordinator-native-hunk-review.json"
+        }
+      },
+      "proposal": "coordinator native source review",
+      "reason": "Preserve the historical defect and identify its fixed active state."
+    },
+    {
+      "artifact": "evidence/rust-defects.json",
+      "pointer": "/69",
+      "operation": "append",
+      "id": "RUST-069",
+      "proposal": "lane-exports-sub-session-native-prose-replacements.json",
+      "reason": "Reviewed conditional native compatibility finding with already-active citations."
+    },
+    {
+      "artifact": "evidence/rust-defect-provenance.json",
+      "operation": "append-active-addendum",
+      "id": "RUST-069",
+      "preserved_original_targets": true
+    }
+  ]
+}

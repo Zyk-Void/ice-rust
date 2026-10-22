@@ -118,20 +118,20 @@ fn nested_object_array() {
     assert_eq!(v, json!({"items":[{"n":1},{"n":2}]}));
 }
 
-// --- normalize_optional_nulls (via the public entry point) -------------------
+// --- optional-null coercion (via the public entry point) ----------------------
 
 #[test]
-fn optional_null_dropped_required_null_kept_or_coerced() {
-    // Optional string + null → dropped.
+fn optional_and_required_nulls_are_coerced_without_deletion() {
+    // Optional and required string properties both receive null.
     let t = tool(
         "t",
         json!({"type":"object","properties":{"opt":{"type":"string"},"req":{"type":"string"}},"required":["req"]}),
     );
     let tc = call("t", json!({"opt":null,"req":null}));
     let v = validate_tool_arguments(&t, &tc).unwrap();
-    // `opt` (optional, null-rejecting) is dropped; `req` is coerced to "" (the
-    // string/null coercion) since it's required and can't simply be removed.
-    assert!(v.get("opt").is_none());
+    // Both properties remain present and use the documented null-to-string
+    // coercion; optional nulls are not deleted before coercion.
+    assert_eq!(v["opt"], json!(""));
     assert_eq!(v["req"], json!(""));
 }
 
@@ -165,7 +165,68 @@ fn uncoercible_value_rejected() {
     );
     let tc = call("t", json!({"n":"not-a-number"}));
     let err = validate_tool_arguments(&t, &tc).unwrap_err();
-    assert!(matches!(err, AiError::Schema { .. }));
+    let AiError::Schema { message } = err else {
+        panic!("expected a schema error, got {err}");
+    };
+    assert!(message.contains("Validation failed for tool \"t\""));
+    assert!(message.contains("n:"), "property path missing: {message}");
+    assert!(
+        message.contains("not-a-number"),
+        "received arguments missing: {message}"
+    );
+    assert!(message.contains("Received arguments:"));
+}
+
+#[test]
+fn integer_coercion_preserves_exact_u64_values() {
+    let t = tool(
+        "t",
+        json!({"type":"object","properties":{"n":{"type":"integer"}},"required":["n"]}),
+    );
+    let tc = call("t", json!({"n":"9223372036854775808"}));
+
+    let coerced = validate_tool_arguments(&t, &tc).unwrap();
+    assert_eq!(coerced["n"], json!(9_223_372_036_854_775_808_u64));
+}
+
+#[test]
+fn integer_exponent_coercion_keeps_exact_values() {
+    let coerced = coerce_with_json_schema(json!("1e3"), &json!({"type":"integer"}));
+    assert_eq!(coerced, json!(1000));
+}
+
+#[test]
+fn integer_coercion_rejects_values_outside_u64_range() {
+    let t = tool(
+        "t",
+        json!({"type":"object","properties":{"n":{"type":"integer"}},"required":["n"]}),
+    );
+    let tc = call("t", json!({"n":"18446744073709551616"}));
+
+    assert!(validate_tool_arguments(&t, &tc).is_err());
+}
+
+#[test]
+fn integer_coercion_rejects_lossy_decimal_strings() {
+    let t = tool(
+        "t",
+        json!({"type":"object","properties":{"n":{"type":"integer"}},"required":["n"]}),
+    );
+    let tc = call("t", json!({"n":"1.0000000000000001"}));
+
+    assert!(validate_tool_arguments(&t, &tc).is_err());
+}
+
+#[test]
+fn large_number_coercion_does_not_saturate_to_i64() {
+    let t = tool(
+        "t",
+        json!({"type":"object","properties":{"n":{"type":"number"}},"required":["n"]}),
+    );
+    let tc = call("t", json!({"n":"1e100"}));
+
+    let coerced = validate_tool_arguments(&t, &tc).unwrap();
+    assert_eq!(coerced["n"], json!(1e100));
 }
 
 #[test]
@@ -184,6 +245,22 @@ fn validate_tool_call_missing_tool_errors() {
     let tc = call("absent", json!({}));
     let err = validate_tool_call(&tools, &tc).unwrap_err();
     assert!(matches!(err, AiError::Schema { .. }));
+}
+
+#[test]
+fn invalid_schema_fails_closed_with_tool_and_schema_diagnostics() {
+    let schema = json!({"type":"not-a-json-schema-type"});
+    let t = tool("broken_schema_tool", schema.clone());
+    let tc = call("broken_schema_tool", json!({"payload":"must not pass"}));
+
+    let err = validate_tool_arguments(&t, &tc).unwrap_err();
+    let AiError::Schema { message } = err else {
+        panic!("expected a schema error, got {err}");
+    };
+
+    assert!(message.contains("broken_schema_tool"));
+    assert!(message.contains("not-a-json-schema-type"));
+    assert!(message.contains("must not pass"));
 }
 
 #[test]

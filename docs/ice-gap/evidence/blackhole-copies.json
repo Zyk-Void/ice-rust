@@ -1,0 +1,266 @@
+[
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/LICENSE",
+    "copy": "user-extensions/ice-blackhole/LICENSE",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "b87cce4aa36862bf2904b6b31b1a92e2cb4065283eb57ba264eb5c1881edd685",
+    "copy_sha256": "b87cce4aa36862bf2904b6b31b1a92e2cb4065283eb57ba264eb5c1881edd685",
+    "copy_lines": 22
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/PROVENANCE.md",
+    "copy": "user-extensions/ice-blackhole/PROVENANCE.md",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "8e4d7e34a13099596fa844124396b692f42b7a13982d88ecce568b8214c23555",
+    "copy_sha256": "8e4d7e34a13099596fa844124396b692f42b7a13982d88ecce568b8214c23555",
+    "copy_lines": 24
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/index.ts",
+    "copy": "user-extensions/ice-blackhole/index.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "1b6de45889b64733c1571b5269e15b2a089c50e9c9af2af37f7946bb1791246b",
+    "copy_sha256": "1b6de45889b64733c1571b5269e15b2a089c50e9c9af2af37f7946bb1791246b",
+    "copy_lines": 160
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/package.json",
+    "copy": "user-extensions/ice-blackhole/package.json",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "b56839b4e49afe3da4a5909dfa48cf67ef7a85a514da45b9d104ca9a7002c932",
+    "copy_sha256": "b56839b4e49afe3da4a5909dfa48cf67ef7a85a514da45b9d104ca9a7002c932",
+    "copy_lines": 19
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/brief.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/brief.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "2476b8cde752e20ef721364c5697820b70baf6ac5183831f92b19b8f9c60b448",
+    "copy_sha256": "2476b8cde752e20ef721364c5697820b70baf6ac5183831f92b19b8f9c60b448",
+    "copy_lines": 531
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/build-sections.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/build-sections.ts",
+    "tracked": true,
+    "same_bytes": false,
+    "source_sha256": "6c47d38a81f0857dab8b20a38ba2099a5f23eee9db1451bf191eea1144b8e151",
+    "copy_sha256": "efe16cd28af340949f2c633bc0c0b1ddf41a382bb2f3d06ea86f130abe8093e4",
+    "copy_lines": 163,
+    "same_printed_syntax": false
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/checkpoint-recall.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/checkpoint-recall.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "d3f5e8d516cd6c636a8cbcace00cd058a58c917c2bcebdaf00324d6faf0be89b",
+    "copy_sha256": "d3f5e8d516cd6c636a8cbcace00cd058a58c917c2bcebdaf00324d6faf0be89b",
+    "copy_lines": 115
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/content.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/content.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "e1700a3023590cee1cbd828ec439e3c51f8eded52aed256f7a9457b4184691ac",
+    "copy_sha256": "e1700a3023590cee1cbd828ec439e3c51f8eded52aed256f7a9457b4184691ac",
+    "copy_lines": 135
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/filter-noise.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/filter-noise.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "a70b934cc384523d1d0b161c3ec58e4c2d98138962e8153b43fb912de9e8cfe0",
+    "copy_sha256": "a70b934cc384523d1d0b161c3ec58e4c2d98138962e8153b43fb912de9e8cfe0",
+    "copy_lines": 48
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/format.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/format.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "691a157b291a5315e43038787c5303e4e062519bc19d5aae0e745945cce92303",
+    "copy_sha256": "691a157b291a5315e43038787c5303e4e062519bc19d5aae0e745945cce92303",
+    "copy_lines": 75
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/live-state.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/live-state.ts",
+    "tracked": true,
+    "same_bytes": false,
+    "source_sha256": "c40429ce15457171a8bab03b60be4499e7e566778bf2e93db16ec1151eb6fc30",
+    "copy_sha256": "415b3468c600d552efda43954ca509043524361c5c10fe5066a963da4cf3a31d",
+    "copy_lines": 389,
+    "same_printed_syntax": true
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/normalize.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/normalize.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "fb55d47c8fc09af267e2dcb9073f24f6e0b23e3883a44d365df446169ef4b931",
+    "copy_sha256": "fb55d47c8fc09af267e2dcb9073f24f6e0b23e3883a44d365df446169ef4b931",
+    "copy_lines": 119
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/refine.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/refine.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "2b274d7f872d58f5d18b6208a23721c10bbfee497014c2b1dbde1a97bd954ca7",
+    "copy_sha256": "2b274d7f872d58f5d18b6208a23721c10bbfee497014c2b1dbde1a97bd954ca7",
+    "copy_lines": 82
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/sanitize.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/sanitize.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "84fa7dba5acc28b3892930bf291bb67cf57376e22e99e5f4998d2aa3d5fd70da",
+    "copy_sha256": "84fa7dba5acc28b3892930bf291bb67cf57376e22e99e5f4998d2aa3d5fd70da",
+    "copy_lines": 6
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/skill-collapse.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/skill-collapse.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "12af75b381cac86c3b34eaa9d288b546a6d342764295b6b04b289fcf9bac7817",
+    "copy_sha256": "12af75b381cac86c3b34eaa9d288b546a6d342764295b6b04b289fcf9bac7817",
+    "copy_lines": 36
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/subagents.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/subagents.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "0edd4b0c543df891318054ddfc06156fe063ba5e5f02248c97b474f02e8b6b93",
+    "copy_sha256": "0edd4b0c543df891318054ddfc06156fe063ba5e5f02248c97b474f02e8b6b93",
+    "copy_lines": 112
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/summarize.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/summarize.ts",
+    "tracked": true,
+    "same_bytes": false,
+    "source_sha256": "3c88e77c90267e4c29a9d48031de9c07672c58f0af1f467e8ebfe5565fac0ea0",
+    "copy_sha256": "0bf6d90bf1ad4a80b3910f97f2142d5621bd9d2fb7541fda7e90f89891a1bea5",
+    "copy_lines": 304,
+    "same_printed_syntax": false
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tail.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/tail.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "3d165c0cb25dafedc3bef1db7ab0e8803dc7e680f1091e752139a48aaa33d9f9",
+    "copy_sha256": "3d165c0cb25dafedc3bef1db7ab0e8803dc7e680f1091e752139a48aaa33d9f9",
+    "copy_lines": 88
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/tool-args.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/tool-args.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "d3fd7e5c9ab9fbf071e90e4d7086e576751fee764d0b8b166d8b182d1ffae302",
+    "copy_sha256": "d3fd7e5c9ab9fbf071e90e4d7086e576751fee764d0b8b166d8b182d1ffae302",
+    "copy_lines": 20
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/core/unified-config.ts",
+    "copy": "user-extensions/ice-blackhole/src/core/unified-config.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "1e06d933da98bd3ee9745669850f828d09efdc2578b2680d3ccfffa5634bdf2e",
+    "copy_sha256": "1e06d933da98bd3ee9745669850f828d09efdc2578b2680d3ccfffa5634bdf2e",
+    "copy_lines": 158
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/commits.ts",
+    "copy": "user-extensions/ice-blackhole/src/extract/commits.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "5662c5b361fc2e4a904ba0d79f35b1ba693b03014331ee9ab718a8888d4a401c",
+    "copy_sha256": "5662c5b361fc2e4a904ba0d79f35b1ba693b03014331ee9ab718a8888d4a401c",
+    "copy_lines": 113
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/files.ts",
+    "copy": "user-extensions/ice-blackhole/src/extract/files.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "13b5c01a2291ca44e2a375eeb79d2314ee09ac1211301825893b86fba06f027a",
+    "copy_sha256": "13b5c01a2291ca44e2a375eeb79d2314ee09ac1211301825893b86fba06f027a",
+    "copy_lines": 39
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/goals.ts",
+    "copy": "user-extensions/ice-blackhole/src/extract/goals.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "4e1761d05754377833483d35df75c3f0e61b1257bdc6fd8b569dfe5b36156243",
+    "copy_sha256": "4e1761d05754377833483d35df75c3f0e61b1257bdc6fd8b569dfe5b36156243",
+    "copy_lines": 102
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/extract/preferences.ts",
+    "copy": "user-extensions/ice-blackhole/src/extract/preferences.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "918eca723fb8e67bffee04cf81a113028aaf82eba9c66915f7fe9f5eb25fd049",
+    "copy_sha256": "918eca723fb8e67bffee04cf81a113028aaf82eba9c66915f7fe9f5eb25fd049",
+    "copy_lines": 53
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/before-compact.ts",
+    "copy": "user-extensions/ice-blackhole/src/hooks/before-compact.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "43c3c74f686d6a4bab159890cfbb0550fff6427e312a3fac175acd08b5e5f458",
+    "copy_sha256": "43c3c74f686d6a4bab159890cfbb0550fff6427e312a3fac175acd08b5e5f458",
+    "copy_lines": 112
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/hooks/trim-kept-tail.ts",
+    "copy": "user-extensions/ice-blackhole/src/hooks/trim-kept-tail.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "3f589fa5575891287f26bf2bdb40f28f58e5f7a98e5ea938b138367df4a3f696",
+    "copy_sha256": "3f589fa5575891287f26bf2bdb40f28f58e5f7a98e5ea938b138367df4a3f696",
+    "copy_lines": 84
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts",
+    "copy": "user-extensions/ice-blackhole/src/om/compaction-trigger.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "826a330d4f4c02f7acd2ba582dfb02b0ba2a803194c6838e68907510e77ab27f",
+    "copy_sha256": "826a330d4f4c02f7acd2ba582dfb02b0ba2a803194c6838e68907510e77ab27f",
+    "copy_lines": 69
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/sections.ts",
+    "copy": "user-extensions/ice-blackhole/src/sections.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "c0032a985786e49817a6e5a42f5060d4e07e44b78575a5bdac352568e9ad56a7",
+    "copy_sha256": "c0032a985786e49817a6e5a42f5060d4e07e44b78575a5bdac352568e9ad56a7",
+    "copy_lines": 19
+  },
+  {
+    "source": "packages/coding-agent/examples/extensions/ice-blackhole/src/types.ts",
+    "copy": "user-extensions/ice-blackhole/src/types.ts",
+    "tracked": true,
+    "same_bytes": true,
+    "source_sha256": "c7e63e1b2dc11317cc5ce480c57960d940a4351aaeeeb3e47f19d657da3a4524",
+    "copy_sha256": "c7e63e1b2dc11317cc5ce480c57960d940a4351aaeeeb3e47f19d657da3a4524",
+    "copy_lines": 37
+  }
+]

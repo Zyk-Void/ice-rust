@@ -1,0 +1,287 @@
+name,ice_path:line,rust_path:line_or_blank,status,entry_id
+ToolDefinitionEntry.definition,packages/coding-agent/src/core/agent-session.ts:334,crates/ice-harness/src/agent_harness.rs:2023,partial,SESSION-023
+ToolDefinitionEntry.sourceInfo,packages/coding-agent/src/core/agent-session.ts:335,crates/ice-harness/src/agent_harness.rs:2023,partial,SESSION-023
+ExtensionUIContext.select,packages/coding-agent/src/core/extensions/types.ts:156,crates/ice-cli/src/interactive_tui/extensions.rs:529,partial,EXT-040
+ExtensionUIContext.confirm,packages/coding-agent/src/core/extensions/types.ts:159,crates/ice-cli/src/interactive_tui/extensions.rs:529,partial,EXT-040
+ExtensionUIContext.input,packages/coding-agent/src/core/extensions/types.ts:162,crates/ice-cli/src/interactive_tui/extensions.rs:529,partial,EXT-040
+ExtensionUIContext.notify,packages/coding-agent/src/core/extensions/types.ts:165,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-041
+ExtensionUIContext.onTerminalInput,packages/coding-agent/src/core/extensions/types.ts:168,crates/ice-cli/src/interactive_tui.rs:390,partial,EXT-046
+ExtensionUIContext.setStatus,packages/coding-agent/src/core/extensions/types.ts:171,crates/ice-extensions/src/status.rs:1,partial,EXT-042
+ExtensionUIContext.setWorkingMessage,packages/coding-agent/src/core/extensions/types.ts:174,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-042
+ExtensionUIContext.setWorkingVisible,packages/coding-agent/src/core/extensions/types.ts:177,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-042
+ExtensionUIContext.setWorkingIndicator,packages/coding-agent/src/core/extensions/types.ts:187,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-042
+ExtensionUIContext.setHiddenThinkingLabel,packages/coding-agent/src/core/extensions/types.ts:190,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-042
+ExtensionUIContext.setWidget(string[]),packages/coding-agent/src/core/extensions/types.ts:193,crates/ice-extensions/src/status.rs:1,partial,EXT-043
+ExtensionUIContext.setWidget(componentFactory),packages/coding-agent/src/core/extensions/types.ts:194,crates/ice-extensions/src/panel.rs:1,partial,EXT-043
+ExtensionUIContext.setWidget component.dispose,packages/coding-agent/src/core/extensions/types.ts:196,crates/ice-extensions/src/actions.rs:527,partial,EXT-043
+ExtensionUIContext.setFooter,packages/coding-agent/src/core/extensions/types.ts:206,crates/ice-extensions/src/status.rs:1,partial,EXT-044
+ExtensionUIContext.setFooter component.dispose,packages/coding-agent/src/core/extensions/types.ts:208,crates/ice-extensions/src/actions.rs:527,partial,EXT-044
+ExtensionUIContext.setHeader,packages/coding-agent/src/core/extensions/types.ts:214,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-044
+ExtensionUIContext.setHeader component.dispose,packages/coding-agent/src/core/extensions/types.ts:215,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-044
+ExtensionUIContext.setTitle,packages/coding-agent/src/core/extensions/types.ts:220,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-044
+ExtensionUIContext.custom,packages/coding-agent/src/core/extensions/types.ts:223,crates/ice-extensions/src/panel.rs:1,partial,EXT-045
+ExtensionUIContext.custom component.dispose,packages/coding-agent/src/core/extensions/types.ts:229,crates/ice-extensions/src/panel.rs:1,partial,EXT-045
+ExtensionUIContext.custom options.overlay,packages/coding-agent/src/core/extensions/types.ts:231,crates/ice-extensions/src/panel.rs:1,partial,EXT-045
+ExtensionUIContext.custom options.overlayOptions,packages/coding-agent/src/core/extensions/types.ts:233,crates/ice-extensions/src/panel.rs:1,partial,EXT-045
+ExtensionUIContext.custom options.onHandle,packages/coding-agent/src/core/extensions/types.ts:235,crates/ice-extensions/src/panel.rs:1,partial,EXT-045
+ExtensionUIContext.pasteToEditor,packages/coding-agent/src/core/extensions/types.ts:240,crates/ice-extensions/src/editor_text.rs:1,missing,EXT-047
+ExtensionUIContext.setEditorText,packages/coding-agent/src/core/extensions/types.ts:243,crates/ice-extensions/src/editor_text.rs:1,partial,EXT-047
+ExtensionUIContext.getEditorText,packages/coding-agent/src/core/extensions/types.ts:246,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-047
+ExtensionUIContext.editor,packages/coding-agent/src/core/extensions/types.ts:249,crates/ice-cli/src/interactive_tui/extensions.rs:388,partial,EXT-040
+ExtensionUIContext.addAutocompleteProvider,packages/coding-agent/src/core/extensions/types.ts:252,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-048
+ExtensionUIContext.setEditorComponent,packages/coding-agent/src/core/extensions/types.ts:287,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-047
+ExtensionUIContext.getEditorComponent,packages/coding-agent/src/core/extensions/types.ts:290,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-047
+ExtensionUIContext.theme,packages/coding-agent/src/core/extensions/types.ts:293,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.getAllThemes,packages/coding-agent/src/core/extensions/types.ts:296,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.getAllThemes result.name,packages/coding-agent/src/core/extensions/types.ts:296,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.getAllThemes result.path,packages/coding-agent/src/core/extensions/types.ts:296,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.getTheme,packages/coding-agent/src/core/extensions/types.ts:299,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.setTheme,packages/coding-agent/src/core/extensions/types.ts:302,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.setTheme result.success,packages/coding-agent/src/core/extensions/types.ts:302,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.setTheme result.error,packages/coding-agent/src/core/extensions/types.ts:302,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-049
+ExtensionUIContext.getToolsExpanded,packages/coding-agent/src/core/extensions/types.ts:305,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-050
+ExtensionUIContext.setToolsExpanded,packages/coding-agent/src/core/extensions/types.ts:308,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-050
+ExtensionContext.ui,packages/coding-agent/src/core/extensions/types.ts:336,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.mode,packages/coding-agent/src/core/extensions/types.ts:338,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.hasUI,packages/coding-agent/src/core/extensions/types.ts:340,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.cwd,packages/coding-agent/src/core/extensions/types.ts:342,crates/ice-cli/src/extensions_actions.rs:388,present,EXT-019
+ExtensionContext.sessionManager,packages/coding-agent/src/core/extensions/types.ts:344,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.settingsManager,packages/coding-agent/src/core/extensions/types.ts:346,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.modelRegistry,packages/coding-agent/src/core/extensions/types.ts:348,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.model,packages/coding-agent/src/core/extensions/types.ts:350,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.scopedModels,packages/coding-agent/src/core/extensions/types.ts:355,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.thinkingLevel,packages/coding-agent/src/core/extensions/types.ts:357,crates/ice-cli/src/extensions_actions.rs:388,present,EXT-019
+ExtensionContext.isIdle,packages/coding-agent/src/core/extensions/types.ts:359,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.isCompacting,packages/coding-agent/src/core/extensions/types.ts:361,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.isProjectTrusted,packages/coding-agent/src/core/extensions/types.ts:363,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.signal,packages/coding-agent/src/core/extensions/types.ts:365,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.abort,packages/coding-agent/src/core/extensions/types.ts:367,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.stopAfterTurn,packages/coding-agent/src/core/extensions/types.ts:369,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.compactAfterTurn,packages/coding-agent/src/core/extensions/types.ts:374,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.hasPendingMessages,packages/coding-agent/src/core/extensions/types.ts:376,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.hasPendingSteering,packages/coding-agent/src/core/extensions/types.ts:382,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.shutdown,packages/coding-agent/src/core/extensions/types.ts:384,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.getContextUsage,packages/coding-agent/src/core/extensions/types.ts:386,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContext.compact,packages/coding-agent/src/core/extensions/types.ts:388,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContext.getSystemPrompt,packages/coding-agent/src/core/extensions/types.ts:390,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionCommandContext.getSystemPromptOptions,packages/coding-agent/src/core/extensions/types.ts:399,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.waitForIdle,packages/coding-agent/src/core/extensions/types.ts:402,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.newSession,packages/coding-agent/src/core/extensions/types.ts:405,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.newSession options.parentSession,packages/coding-agent/src/core/extensions/types.ts:406,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.newSession options.setup,packages/coding-agent/src/core/extensions/types.ts:407,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.newSession options.withSession,packages/coding-agent/src/core/extensions/types.ts:408,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.newSession result.cancelled,packages/coding-agent/src/core/extensions/types.ts:409,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.fork,packages/coding-agent/src/core/extensions/types.ts:412,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.fork options.position,packages/coding-agent/src/core/extensions/types.ts:414,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.fork options.withSession,packages/coding-agent/src/core/extensions/types.ts:414,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.fork result.cancelled,packages/coding-agent/src/core/extensions/types.ts:415,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.navigateTree,packages/coding-agent/src/core/extensions/types.ts:418,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.navigateTree options.summarize,packages/coding-agent/src/core/extensions/types.ts:420,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.navigateTree options.customInstructions,packages/coding-agent/src/core/extensions/types.ts:420,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.navigateTree options.replaceInstructions,packages/coding-agent/src/core/extensions/types.ts:420,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.navigateTree options.label,packages/coding-agent/src/core/extensions/types.ts:420,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.navigateTree result.cancelled,packages/coding-agent/src/core/extensions/types.ts:421,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.switchSession,packages/coding-agent/src/core/extensions/types.ts:424,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.switchSession options.withSession,packages/coding-agent/src/core/extensions/types.ts:426,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContext.switchSession result.cancelled,packages/coding-agent/src/core/extensions/types.ts:427,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContext.reload,packages/coding-agent/src/core/extensions/types.ts:430,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ToolDefinition.name,packages/coding-agent/src/core/extensions/types.ts:495,crates/ice-plugin-sdk/src/lib.rs:348,present,EXT-035
+ToolDefinition.label,packages/coding-agent/src/core/extensions/types.ts:497,crates/ice-plugin-sdk/src/lib.rs:348,partial,EXT-035
+ToolDefinition.description,packages/coding-agent/src/core/extensions/types.ts:499,crates/ice-plugin-sdk/src/lib.rs:348,present,EXT-035
+ToolDefinition.promptSnippet,packages/coding-agent/src/core/extensions/types.ts:501,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-035
+ToolDefinition.promptGuidelines,packages/coding-agent/src/core/extensions/types.ts:503,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-035
+ToolDefinition.parameters,packages/coding-agent/src/core/extensions/types.ts:505,crates/ice-plugin-sdk/src/lib.rs:348,partial,EXT-011
+ToolDefinition.constrainedSampling,packages/coding-agent/src/core/extensions/types.ts:507,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-035
+ToolDefinition.renderShell,packages/coding-agent/src/core/extensions/types.ts:509,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-036
+ToolDefinition.prepareArguments,packages/coding-agent/src/core/extensions/types.ts:512,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-035
+ToolDefinition.executionMode,packages/coding-agent/src/core/extensions/types.ts:521,crates/ice-plugin-sdk/src/lib.rs:348,partial,EXT-035
+ToolDefinition.access,packages/coding-agent/src/core/extensions/types.ts:531,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-035
+ToolDefinition.execute,packages/coding-agent/src/core/extensions/types.ts:534,crates/ice-plugin-sdk/src/lib.rs:348,partial,EXT-012
+ToolDefinition.renderCall,packages/coding-agent/src/core/extensions/types.ts:543,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-036
+ToolDefinition.renderResult,packages/coding-agent/src/core/extensions/types.ts:546,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-036
+"ExtensionAPI.on(""project_trust"")",packages/coding-agent/src/core/extensions/types.ts:1259,crates/ice-plugin-sdk/src/lib.rs:590,missing,EXT-034
+"ExtensionAPI.on(""resources_discover"")",packages/coding-agent/src/core/extensions/types.ts:1260,crates/ice-extensions/src/resources.rs:1,partial,EXT-031
+"ExtensionAPI.on(""session_start"")",packages/coding-agent/src/core/extensions/types.ts:1264,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_info_changed"")",packages/coding-agent/src/core/extensions/types.ts:1265,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""session_before_switch"")",packages/coding-agent/src/core/extensions/types.ts:1266,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_before_fork"")",packages/coding-agent/src/core/extensions/types.ts:1270,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_before_compact"")",packages/coding-agent/src/core/extensions/types.ts:1274,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_compact"")",packages/coding-agent/src/core/extensions/types.ts:1278,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""session_shutdown"")",packages/coding-agent/src/core/extensions/types.ts:1279,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_before_tree"")",packages/coding-agent/src/core/extensions/types.ts:1280,crates/ice-extensions/src/translate.rs:342,partial,EXT-022
+"ExtensionAPI.on(""session_tree"")",packages/coding-agent/src/core/extensions/types.ts:1284,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""context"")",packages/coding-agent/src/core/extensions/types.ts:1285,crates/ice-extensions/src/provider_hooks.rs:98,partial,EXT-027
+"ExtensionAPI.on(""before_provider_request"")",packages/coding-agent/src/core/extensions/types.ts:1286,crates/ice-extensions/src/provider_hooks.rs:132,partial,EXT-028
+"ExtensionAPI.on(""before_provider_headers"")",packages/coding-agent/src/core/extensions/types.ts:1290,crates/ice-extensions/src/provider_hooks.rs:187,partial,EXT-029
+"ExtensionAPI.on(""after_provider_response"")",packages/coding-agent/src/core/extensions/types.ts:1291,crates/ice-extensions/src/provider_hooks.rs:198,partial,EXT-022
+"ExtensionAPI.on(""before_agent_start"")",packages/coding-agent/src/core/extensions/types.ts:1292,crates/ice-extensions/src/prompt_transform.rs:1,partial,EXT-030
+"ExtensionAPI.on(""agent_start"")",packages/coding-agent/src/core/extensions/types.ts:1296,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""agent_end"")",packages/coding-agent/src/core/extensions/types.ts:1297,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""agent_settled"")",packages/coding-agent/src/core/extensions/types.ts:1298,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""turn_start"")",packages/coding-agent/src/core/extensions/types.ts:1299,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""turn_end"")",packages/coding-agent/src/core/extensions/types.ts:1300,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""message_start"")",packages/coding-agent/src/core/extensions/types.ts:1301,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""message_update"")",packages/coding-agent/src/core/extensions/types.ts:1302,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""message_end"")",packages/coding-agent/src/core/extensions/types.ts:1303,crates/ice-extensions/src/translate.rs:59,partial,EXT-023
+"ExtensionAPI.on(""tool_execution_start"")",packages/coding-agent/src/core/extensions/types.ts:1304,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""tool_execution_update"")",packages/coding-agent/src/core/extensions/types.ts:1305,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""tool_execution_end"")",packages/coding-agent/src/core/extensions/types.ts:1306,crates/ice-extensions/src/translate.rs:1,partial,EXT-022
+"ExtensionAPI.on(""model_select"")",packages/coding-agent/src/core/extensions/types.ts:1307,crates/ice-cli/src/extensions_actions.rs:534,partial,EXT-055
+"ExtensionAPI.on(""thinking_level_select"")",packages/coding-agent/src/core/extensions/types.ts:1308,crates/ice-cli/src/extensions_actions.rs:546,partial,EXT-055
+"ExtensionAPI.on(""tool_call"")",packages/coding-agent/src/core/extensions/types.ts:1309,crates/ice-extensions/src/translate.rs:606,partial,EXT-024
+"ExtensionAPI.on(""tool_result"")",packages/coding-agent/src/core/extensions/types.ts:1310,crates/ice-extensions/src/translate.rs:1,partial,EXT-025
+"ExtensionAPI.on(""user_bash"")",packages/coding-agent/src/core/extensions/types.ts:1311,crates/ice-extensions/src/translate.rs:342,partial,EXT-026
+"ExtensionAPI.on(""input"")",packages/coding-agent/src/core/extensions/types.ts:1312,crates/ice-extensions/src/translate.rs:342,partial,EXT-032
+ExtensionAPI.registerTool,packages/coding-agent/src/core/extensions/types.ts:1319,crates/ice-extensions/src/lib.rs:343,partial,EXT-011
+ExtensionAPI.registerCommand,packages/coding-agent/src/core/extensions/types.ts:1328,crates/ice-cli/src/interactive_tui/extensions.rs:34,partial,EXT-013
+ExtensionAPI.registerSettings,packages/coding-agent/src/core/extensions/types.ts:1331,crates/ice-plugin-sdk/src/lib.rs:1200,missing,EXT-016
+ExtensionAPI.registerShortcut,packages/coding-agent/src/core/extensions/types.ts:1334,crates/ice-cli/src/interactive_tui.rs:390,partial,EXT-014
+ExtensionAPI.registerShortcut options.description,packages/coding-agent/src/core/extensions/types.ts:1337,crates/ice-extensions/src/registry.rs:1,partial,EXT-014
+ExtensionAPI.registerShortcut options.handler,packages/coding-agent/src/core/extensions/types.ts:1338,crates/ice-cli/src/interactive_tui.rs:390,partial,EXT-014
+ExtensionAPI.registerFlag,packages/coding-agent/src/core/extensions/types.ts:1343,crates/ice-extensions/src/lib.rs:343,partial,EXT-015
+ExtensionAPI.registerFlag options.description,packages/coding-agent/src/core/extensions/types.ts:1346,crates/ice-extensions/src/lib.rs:343,partial,EXT-015
+ExtensionAPI.registerFlag options.type,packages/coding-agent/src/core/extensions/types.ts:1347,crates/ice-extensions/src/lib.rs:343,partial,EXT-015
+ExtensionAPI.registerFlag options.default,packages/coding-agent/src/core/extensions/types.ts:1348,crates/ice-extensions/src/lib.rs:343,partial,EXT-015
+ExtensionAPI.getFlag,packages/coding-agent/src/core/extensions/types.ts:1353,crates/ice-cli/src/extensions_actions.rs:423,partial,EXT-015
+ExtensionAPI.registerMessageRenderer,packages/coding-agent/src/core/extensions/types.ts:1360,crates/ice-cli/src/interactive_tui/sessions.rs:470,partial,EXT-037
+ExtensionAPI.registerMarkdownTransformer,packages/coding-agent/src/core/extensions/types.ts:1363,crates/ice-cli/src/interactive_tui.rs:110,partial,EXT-039
+ExtensionAPI.registerEntryRenderer,packages/coding-agent/src/core/extensions/types.ts:1366,crates/ice-cli/src/interactive_tui/sessions.rs:470,partial,EXT-038
+ExtensionAPI.sendMessage,packages/coding-agent/src/core/extensions/types.ts:1373,crates/ice-cli/src/extensions_actions.rs:190,partial,EXT-051
+ExtensionAPI.sendMessage options.triggerTurn,packages/coding-agent/src/core/extensions/types.ts:1375,crates/ice-cli/src/extensions_actions.rs:190,partial,EXT-051
+ExtensionAPI.sendMessage options.deliverAs,packages/coding-agent/src/core/extensions/types.ts:1375,crates/ice-cli/src/extensions_actions.rs:190,partial,EXT-051
+ExtensionAPI.sendUserMessage,packages/coding-agent/src/core/extensions/types.ts:1382,crates/ice-cli/src/extensions_actions.rs:441,partial,EXT-052
+ExtensionAPI.sendUserMessage options.deliverAs,packages/coding-agent/src/core/extensions/types.ts:1384,crates/ice-cli/src/extensions_actions.rs:441,missing,EXT-052
+ExtensionAPI.appendEntry,packages/coding-agent/src/core/extensions/types.ts:1388,crates/ice-cli/src/extensions_actions.rs:454,partial,EXT-053
+ExtensionAPI.appendEntry options.durable,packages/coding-agent/src/core/extensions/types.ts:1388,crates/ice-cli/src/extensions_actions.rs:454,missing,EXT-053
+ExtensionAPI.setSessionName,packages/coding-agent/src/core/extensions/types.ts:1395,crates/ice-cli/src/extensions_actions.rs:506,partial,EXT-053
+ExtensionAPI.getSessionName,packages/coding-agent/src/core/extensions/types.ts:1398,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-053
+ExtensionAPI.setLabel,packages/coding-agent/src/core/extensions/types.ts:1401,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-053
+ExtensionAPI.exec,packages/coding-agent/src/core/extensions/types.ts:1404,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-056
+ExtensionAPI.getActiveTools,packages/coding-agent/src/core/extensions/types.ts:1407,crates/ice-cli/src/extensions_actions.rs:516,partial,EXT-054
+ExtensionAPI.getAllTools,packages/coding-agent/src/core/extensions/types.ts:1410,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-054
+ExtensionAPI.setActiveTools,packages/coding-agent/src/core/extensions/types.ts:1413,crates/ice-cli/src/extensions_actions.rs:181,partial,EXT-054
+ExtensionAPI.getCommands,packages/coding-agent/src/core/extensions/types.ts:1416,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-054
+ExtensionAPI.setModel,packages/coding-agent/src/core/extensions/types.ts:1423,crates/ice-cli/src/extensions_actions.rs:138,partial,EXT-055
+ExtensionAPI.getThinkingLevel,packages/coding-agent/src/core/extensions/types.ts:1426,crates/ice-cli/src/extensions_actions.rs:546,partial,EXT-055
+ExtensionAPI.setThinkingLevel,packages/coding-agent/src/core/extensions/types.ts:1429,crates/ice-cli/src/extensions_actions.rs:555,partial,EXT-055
+ExtensionAPI.registerProvider(Provider),packages/coding-agent/src/core/extensions/types.ts:1487,crates/ice-extensions/src/lib.rs:569,partial,EXT-018
+"ExtensionAPI.registerProvider(name, ProviderConfig)",packages/coding-agent/src/core/extensions/types.ts:1488,crates/ice-extensions/src/lib.rs:569,partial,EXT-018
+ExtensionAPI.unregisterProvider,packages/coding-agent/src/core/extensions/types.ts:1503,crates/ice-extensions/src/lib.rs:569,missing,EXT-018
+ExtensionAPI.events,packages/coding-agent/src/core/extensions/types.ts:1506,crates/ice-extensions/src/lib.rs:769,partial,EXT-017
+ExtensionRuntimeState.flagValues,packages/coding-agent/src/core/extensions/types.ts:1674,crates/ice-cli/src/extensions_actions.rs:423,partial,EXT-015
+ExtensionRuntimeState.pendingProviderRegistrations,packages/coding-agent/src/core/extensions/types.ts:1676,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingProviderRegistrations[].name,packages/coding-agent/src/core/extensions/types.ts:1676,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingProviderRegistrations[].config,packages/coding-agent/src/core/extensions/types.ts:1676,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingProviderRegistrations[].extensionPath,packages/coding-agent/src/core/extensions/types.ts:1676,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingNativeProviderRegistrations,packages/coding-agent/src/core/extensions/types.ts:1678,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingNativeProviderRegistrations[].provider,packages/coding-agent/src/core/extensions/types.ts:1678,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.pendingNativeProviderRegistrations[].extensionPath,packages/coding-agent/src/core/extensions/types.ts:1678,crates/ice-extensions/src/lib.rs:569,different-by-design,EXT-018
+ExtensionRuntimeState.assertActive,packages/coding-agent/src/core/extensions/types.ts:1680,crates/ice-extensions/src/actions.rs:527,partial,EXT-010
+ExtensionRuntimeState.invalidate,packages/coding-agent/src/core/extensions/types.ts:1682,crates/ice-extensions/src/actions.rs:527,partial,EXT-010
+ExtensionRuntimeState.registerProvider,packages/coding-agent/src/core/extensions/types.ts:1689,crates/ice-extensions/src/lib.rs:569,partial,EXT-018
+ExtensionRuntimeState.registerNativeProvider,packages/coding-agent/src/core/extensions/types.ts:1690,crates/ice-extensions/src/lib.rs:569,partial,EXT-018
+ExtensionRuntimeState.unregisterProvider,packages/coding-agent/src/core/extensions/types.ts:1691,crates/ice-extensions/src/lib.rs:569,missing,EXT-018
+ExtensionContextActions.getModel,packages/coding-agent/src/core/extensions/types.ts:1720,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContextActions.getScopedModels,packages/coding-agent/src/core/extensions/types.ts:1721,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.getSettingsManager,packages/coding-agent/src/core/extensions/types.ts:1722,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.isIdle,packages/coding-agent/src/core/extensions/types.ts:1724,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.isCompacting,packages/coding-agent/src/core/extensions/types.ts:1725,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.isProjectTrusted,packages/coding-agent/src/core/extensions/types.ts:1726,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.getSignal,packages/coding-agent/src/core/extensions/types.ts:1727,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContextActions.abort,packages/coding-agent/src/core/extensions/types.ts:1728,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.stopAfterTurn,packages/coding-agent/src/core/extensions/types.ts:1729,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.compactAfterTurn,packages/coding-agent/src/core/extensions/types.ts:1730,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.hasPendingMessages,packages/coding-agent/src/core/extensions/types.ts:1731,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.hasPendingSteering,packages/coding-agent/src/core/extensions/types.ts:1733,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.shutdown,packages/coding-agent/src/core/extensions/types.ts:1734,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContextActions.getContextUsage,packages/coding-agent/src/core/extensions/types.ts:1735,crates/ice-cli/src/extensions_actions.rs:388,missing,EXT-019
+ExtensionContextActions.compact,packages/coding-agent/src/core/extensions/types.ts:1736,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContextActions.getSystemPrompt,packages/coding-agent/src/core/extensions/types.ts:1737,crates/ice-cli/src/extensions_actions.rs:388,partial,EXT-019
+ExtensionContextActions.getSystemPromptOptions,packages/coding-agent/src/core/extensions/types.ts:1738,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-020
+ExtensionCommandContextActions.waitForIdle,packages/coding-agent/src/core/extensions/types.ts:1746,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.newSession,packages/coding-agent/src/core/extensions/types.ts:1747,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.newSession options.parentSession,packages/coding-agent/src/core/extensions/types.ts:1748,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.newSession options.setup,packages/coding-agent/src/core/extensions/types.ts:1749,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.newSession options.withSession,packages/coding-agent/src/core/extensions/types.ts:1750,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.newSession result.cancelled,packages/coding-agent/src/core/extensions/types.ts:1751,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.fork,packages/coding-agent/src/core/extensions/types.ts:1752,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.fork options.position,packages/coding-agent/src/core/extensions/types.ts:1754,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.fork options.withSession,packages/coding-agent/src/core/extensions/types.ts:1754,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.fork result.cancelled,packages/coding-agent/src/core/extensions/types.ts:1755,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.navigateTree,packages/coding-agent/src/core/extensions/types.ts:1756,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.navigateTree options.summarize,packages/coding-agent/src/core/extensions/types.ts:1758,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.navigateTree options.customInstructions,packages/coding-agent/src/core/extensions/types.ts:1758,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.navigateTree options.replaceInstructions,packages/coding-agent/src/core/extensions/types.ts:1758,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.navigateTree options.label,packages/coding-agent/src/core/extensions/types.ts:1758,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.navigateTree result.cancelled,packages/coding-agent/src/core/extensions/types.ts:1759,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.switchSession,packages/coding-agent/src/core/extensions/types.ts:1760,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.switchSession options.withSession,packages/coding-agent/src/core/extensions/types.ts:1762,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionCommandContextActions.switchSession result.cancelled,packages/coding-agent/src/core/extensions/types.ts:1763,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+ExtensionCommandContextActions.reload,packages/coding-agent/src/core/extensions/types.ts:1764,crates/ice-cli/src/extensions_actions.rs:600,partial,EXT-020
+InlineExtension.name,packages/coding-agent/src/core/extensions/types.ts:1589,crates/ice-extensions/src/loader.rs:1,different-by-design,EXT-057
+InlineExtension.hidden,packages/coding-agent/src/core/extensions/types.ts:1598,crates/ice-extensions/src/loader.rs:1,different-by-design,EXT-057
+InlineExtension.priority,packages/coding-agent/src/core/extensions/types.ts:1600,crates/ice-extensions/src/loader.rs:1,different-by-design,EXT-057
+ToolRenderContext,packages/coding-agent/src/core/extensions/types.ts:463,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-036
+ToolRenderResultOptions,packages/coding-agent/src/core/extensions/types.ts:455,crates/ice-plugin-sdk/src/lib.rs:348,missing,EXT-036
+MessageRenderOptions,packages/coding-agent/src/core/extensions/types.ts:1190,crates/ice-cli/src/interactive_tui/sessions.rs:532,partial,EXT-037
+EntryRenderOptions,packages/coding-agent/src/core/extensions/types.ts:1204,crates/ice-cli/src/interactive_tui/sessions.rs:470,partial,EXT-038
+MarkdownTransformContext,packages/coding-agent/src/core/extensions/types.ts:1196,crates/ice-cli/src/interactive_tui.rs:110,partial,EXT-039
+ExtensionUIDialogOptions.signal,packages/coding-agent/src/core/extensions/types.ts:97,crates/ice-extensions/src/actions.rs:1,partial,EXT-040
+ExtensionUIDialogOptions.timeout,packages/coding-agent/src/core/extensions/types.ts:97,crates/ice-extensions/src/actions.rs:1,missing,EXT-040
+ExtensionUIDialogOptions.content,packages/coding-agent/src/core/extensions/types.ts:97,crates/ice-extensions/src/actions.rs:1,partial,EXT-040
+ExtensionNotifyOptions.id,packages/coding-agent/src/core/extensions/types.ts:107,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-041
+ExtensionNotifyOptions.sticky,packages/coding-agent/src/core/extensions/types.ts:107,crates/ice-plugin-sdk/src/lib.rs:1010,missing,EXT-041
+ExtensionWidgetOptions.placement,packages/coding-agent/src/core/extensions/types.ts:119,crates/ice-extensions/src/status.rs:1,partial,EXT-043
+ExtensionWidgetOptions.rpcText,packages/coding-agent/src/core/extensions/types.ts:119,crates/ice-extensions/src/status.rs:1,partial,EXT-043
+ExtensionChromeOptions.rpcText,packages/coding-agent/src/core/extensions/types.ts:126,crates/ice-extensions/src/status.rs:1,partial,EXT-044
+WorkingIndicatorOptions,packages/coding-agent/src/core/extensions/types.ts:139,crates/ice-plugin-sdk/src/lib.rs:1042,missing,EXT-042
+ReplacedSessionContext,packages/coding-agent/src/core/extensions/types.ts:435,crates/ice-cli/src/extensions_actions.rs:600,missing,EXT-020
+ExtensionAPI.exec ExecOptions/ExecResult,packages/coding-agent/src/core/exec.ts:11,crates/ice-plugin-sdk/src/process.rs:1,missing,EXT-056
+createIceSubagents,packages/coding-agent/src/subagents/v2/sdk.ts:63,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentsSdkOptions.mode/agents/hookHandlers/mcpAdapter/agentDir,packages/coding-agent/src/subagents/v2/sdk.ts:25,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentsSdk.attach,packages/coding-agent/src/subagents/v2/sdk.ts:47,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentsSdk.overview,packages/coding-agent/src/subagents/v2/sdk.ts:49,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentsSdk.respondToApproval,packages/coding-agent/src/subagents/v2/sdk.ts:54,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+Symbol.for(ice.subagents.controller.v1),packages/coding-agent/src/subagents/v2/controller.ts:84,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+registerIceSubagentController/getIceSubagentController,packages/coding-agent/src/subagents/v2/controller.ts:89,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentController.start,packages/coding-agent/src/subagents/v2/controller.ts:105,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+IceSubagentController.stop/openPatches/preview,packages/coding-agent/src/subagents/v2/controller.ts:139,crates/ice-cli/src/child_agents.rs:207,partial,SUB-034
+iceSubagentsV2,packages/coding-agent/src/subagents/v2/extension.ts:207,crates/ice-cli/src/child_agents.rs:207,missing,SUB-035
+registerIceDelegableTool,packages/coding-agent/src/subagents/tools/adapters.ts:182,crates/ice-cli/src/child_agents.rs:207,partial,SUB-014
+getIceDelegableTools/resolveIceDelegableTools,packages/coding-agent/src/subagents/tools/adapters.ts:212,crates/ice-cli/src/child_agents.rs:207,partial,SUB-014
+createIceDelegableToolDefinitions,packages/coding-agent/src/subagents/tools/adapters.ts:321,crates/ice-cli/src/child_agents.rs:207,partial,SUB-014
+registerIceSubagentMcpAdapter,packages/coding-agent/src/subagents/types.ts:221,crates/ice-cli/src/child_agents.rs:207,partial,SUB-014
+subagentMcpToolName,packages/coding-agent/src/subagents/types.ts:231,crates/ice-cli/src/child_agents.rs:207,partial,SUB-014
+registerIceSubagentHook/getIceSubagentHookHandlers,packages/coding-agent/src/subagents/settings.ts:389,crates/ice-cli/src/child_agents.rs:207,missing,SUB-010
+IceSubagentHookDispatcher,packages/coding-agent/src/subagents/settings.ts:566,crates/ice-cli/src/child_agents.rs:207,missing,SUB-011
+createIceCommandHookHandler,packages/coding-agent/src/subagents/hooks/command-hooks.ts:81,crates/ice-cli/src/child_agents.rs:207,missing,SUB-012
+buildChildRuntimeContract/parseChildRuntimeContract,packages/coding-agent/src/subagents/contract/serialize.ts:50,crates/ice-cli/src/child_agents.rs:207,missing,SUB-013
+createV2ChildSession,packages/coding-agent/src/subagents/v2/session-factory.ts:119,crates/ice-cli/src/child_agents.rs:207,partial,SUB-015
+SubagentV2Runtime,packages/coding-agent/src/subagents/v2/runtime.ts:143,crates/ice-cli/src/child_agents.rs:207,partial,SUB-018
+SubagentOutputArtifactStore,packages/coding-agent/src/subagents/results/output-artifacts.ts:287,crates/ice-cli/src/child_agents.rs:207,missing,SUB-028
+IceAgentViewBridge.getSubagentOverview,packages/coding-agent/src/ice-agent-view-bridge.ts:634,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+IceAgentViewBridge.respondToSubagentApproval,packages/coding-agent/src/ice-agent-view-bridge.ts:642,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+IceAgentViewBridge.controlSubagent,packages/coding-agent/src/ice-agent-view-bridge.ts:647,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+IceAgentViewBridge.subscribe,packages/coding-agent/src/ice-agent-view-bridge.ts:874,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+SubagentLiveSessionRegistry,packages/coding-agent/src/subagents/runtime/live-session.ts:228,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+createSubagentLiveSessionControl,packages/coding-agent/src/subagents/runtime/live-session.ts:301,crates/ice-cli/src/child_agents.rs:207,missing,SUB-036
+buildSubagentTaskContract/deriveSubagentQualityMode,packages/coding-agent/src/subagents/results/task-contract.ts:278,crates/ice-cli/src/child_agents.rs:207,missing,SUB-039
+recommendSubagentReviewerGate,packages/coding-agent/src/subagents/results/task-contract.ts:440,crates/ice-cli/src/child_agents.rs:207,missing,SUB-039
+selectInstructionChain/buildSubagentContextManifest,packages/coding-agent/src/subagents/runtime/context-bootstrap.ts:1,crates/ice-cli/src/child_agents.rs:207,missing,SUB-040
+resolveIceSubagentCandidates/resolveIceSubagentRoute,packages/coding-agent/src/subagents/runtime/routing.ts:100,crates/ice-cli/src/child_agents.rs:207,missing,SUB-041
+resolveSubagentSamplingOptions/resolveSubagentThinkingLevel,packages/coding-agent/src/subagents/runtime/live-session.ts:471,crates/ice-cli/src/child_agents.rs:207,missing,SUB-041
+writeSubagentReportArtifact,packages/coding-agent/src/subagents/runtime/prompt.ts:358,crates/ice-cli/src/child_agents.rs:207,missing,SUB-042
+normalizeSubagentPreflightRequirements/evaluateSubagentPreflight,packages/coding-agent/src/subagents/runtime/preflight.ts:71,crates/ice-cli/src/child_agents.rs:207,missing,SUB-043
+buildSubagentToolActivityDigest/formatSubagentToolError,packages/coding-agent/src/subagents/runtime/helpers.ts:80,crates/ice-cli/src/child_agents.rs:207,partial,SUB-044
+IceGoalsHostController.version,packages/coding-agent/src/ice-goals-host.ts:31,,missing,SAFE-022
+IceGoalsHostController.snapshot,packages/coding-agent/src/ice-goals-host.ts:32,,missing,SAFE-023
+IceGoalsHostController.verify,packages/coding-agent/src/ice-goals-host.ts:33,,missing,SAFE-024
+registerIceGoalsHost,packages/coding-agent/src/ice-goals-host.ts:41,,missing,SAFE-022
+getIceGoalsHost,packages/coding-agent/src/ice-goals-host.ts:54,,missing,SAFE-022
+getConfiguredIceVerifierArgv,packages/coding-agent/src/ice-safe-verify.ts:141,,missing,SAFE-019
+IceSafeVerifyOptions.onModeChange,packages/coding-agent/src/ice-safe-verify.ts:800,,missing,SAFE-025
+IceSafeVerifyOptions.onCapabilityChange,packages/coding-agent/src/ice-safe-verify.ts:801,,missing,SAFE-025
+registerSettings namespace cognee,packages/coding-agent/src/ice-cognee.ts:1961,,missing,COG-057
+Cognee observation subscription,packages/coding-agent/src/ice-cognee-observer.ts:70,,missing,COG-060
+registerSettings namespace blackhole,packages/coding-agent/examples/extensions/ice-blackhole/index.ts:75,,missing,BLACK-005
+Blackhole compactAfterTurn(mode),packages/coding-agent/examples/extensions/ice-blackhole/src/om/compaction-trigger.ts:43,crates/ice-harness/src/agent_harness.rs:3867,partial,BLACK-041

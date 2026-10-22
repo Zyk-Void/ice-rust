@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "owner": "/root",
+  "captured_at": "2026-10-20T01:56:01.689Z",
+  "evidence_level": "Source-read, independently checked; not reproduced.",
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/src/core/export-html/template.js",
+      "sha256": "9e9fafe8fab42401a7d5134b014c956e68ac6838f78a8eddf8fd6908a107a196",
+      "total_lines": 1865,
+      "ranges": [
+        [
+          936,
+          965
+        ]
+      ],
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/export.rs",
+      "sha256": "ce6766e34b6024977925a9748178cf1b76b82458ea20552541d1a01dcbfa20b5",
+      "total_lines": 367,
+      "ranges": [
+        [
+          130,
+          176
+        ]
+      ],
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ]
+    },
+    {
+      "path": "rust:crates/ice-cli/src/interactive_tui/settings.rs",
+      "sha256": "ae668bc8370f34177cf6f434d0eb1a36e8f230e752d62c691594deac9169a4b3",
+      "total_lines": 1944,
+      "ranges": [
+        [
+          1518,
+          1620
+        ],
+        [
+          1680,
+          1710
+        ]
+      ],
+      "fully_read": false,
+      "owners": [
+        "/root"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "entry_ids": [
+        "MISC-019"
+      ],
+      "conclusion": "Confirmed TypeScript export interpolation of unvalidated/unescaped read offset, and native escaped transcript insertion. Preserve native escaping in a port.",
+      "references": [
+        "ice:packages/coding-agent/src/core/export-html/template.js:947-958",
+        "rust:crates/ice-cli/src/export.rs:164-175"
+      ]
+    },
+    {
+      "entry_ids": [
+        "AUTH-028",
+        "TUI-047"
+      ],
+      "conclusion": "Confirmed native form advertises optional empty model name, cancels all empty submissions before step handling, while persistence supports an absent name.",
+      "references": [
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:1536-1539",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:1556-1561",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:1607-1614",
+        "rust:crates/ice-cli/src/interactive_tui/settings.rs:1699-1703"
+      ]
+    }
+  ],
+  "tests_executed": false,
+  "source_modified": false
+}

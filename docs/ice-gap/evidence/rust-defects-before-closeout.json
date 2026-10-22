@@ -1,0 +1,75 @@
+[
+  {
+    "id": "RUST-001",
+    "entry_ids": [
+      "AGENT-049"
+    ],
+    "title": "Shell base environment survives inherit_env=false",
+    "severity": "high when used as an isolation boundary; otherwise medium",
+    "evidence_level": "source-read; not reproduced",
+    "sources": [
+      "rust:crates/ice-tools/src/env.rs:96-110",
+      "rust:crates/ice-tools/src/os_env.rs:840-867"
+    ],
+    "behavior": "ShellExecOptions documents false as using only per-call env, but OsEnv clears process env, conditionally copies process env, then unconditionally applies self.shell_env before per-call env. Base variables therefore survive false unless explicitly overwritten.",
+    "technical_explanation": "The inherit_env branch ends at line 857; the shell_env loop at 858–862 is outside it. This can carry credentials or execution configuration across a caller-requested clean environment.",
+    "parity_relation": "Overlaps AGENT-049 and violates Rust's own documented ShellExecOptions contract.",
+    "assumptions": "Requires nonempty shell_env. No claim that every current caller treats inherit_env=false as a security boundary.",
+    "provenance": "Problematic logic is present at upstream 0fb2d893206981527b14e86d68e3ddbdf2c8189a, crates/rpi-tools/src/os_env.rs:850-867. One non-upstream blame line in the surrounding slice is only the mechanical rpi→ice comment; behavior predates rebrand.",
+    "provenance_evidence": "evidence/rust-defect-provenance.json"
+  },
+  {
+    "id": "RUST-002",
+    "entry_ids": [
+      "AGENT-050"
+    ],
+    "title": "Unpolled stdout/stderr can block child completion",
+    "severity": "high",
+    "evidence_level": "source-read; not reproduced",
+    "sources": [
+      "rust:crates/ice-tools/src/os_env.rs:903-982",
+      "rust:crates/ice-tools/src/os_env.rs:991-1057"
+    ],
+    "behavior": "stdout_task and stderr_task are local async futures, not spawned tasks. The code pins them but awaits only status_fut until the child is reaped, then starts join! on the pipe readers under a grace timeout.",
+    "technical_explanation": "Pinning does not poll a future. A child that fills either OS pipe blocks on write while the parent waits for exit; without a deadline/cancellation that can wait indefinitely. With a timeout it can be killed even though it would complete if output were drained. Streaming callbacks also do not run during the pending normal child wait.",
+    "parity_relation": "Overlaps AGENT-050 shell execution/streaming parity and is an independent correctness defect in process I/O.",
+    "assumptions": "Requires enough output to fill a pipe while the process is running. OS pipe capacity is platform-dependent; no fixed threshold is claimed. Timeout/cancellation depends on supplied options.",
+    "provenance": "Unpolled ordering is present in upstream v0.6.1, crates/rpi-tools/src/os_env.rs:1035-1057; blame db4eacd64e8c24939345fb6bd4efc2ef4328ee13 is an ancestor of 0fb2d89.",
+    "provenance_evidence": "evidence/rust-defect-provenance.json"
+  },
+  {
+    "id": "RUST-003",
+    "entry_ids": [
+      "AGENT-057"
+    ],
+    "title": "Prompt-template scanners corrupt non-ASCII UTF-8",
+    "severity": "high",
+    "evidence_level": "source-read; not reproduced",
+    "sources": [
+      "rust:crates/ice-harness/src/prompt_templates.rs:377-419",
+      "rust:crates/ice-harness/src/prompt_templates.rs:424-479"
+    ],
+    "behavior": "Placeholder scanners iterate raw UTF-8 bytes and push each ordinary byte as a Unicode char. Multibyte text is re-encoded as separate characters, altering instructions even when no placeholder occurs.",
+    "technical_explanation": "replace_dollar_n line 415 uses out.push(bytes[i] as char) and advances one byte. The later slice-placeholder scanner has the same pattern, so text may be corrupted again. This is not valid UTF-8 scalar iteration or copying an untouched byte span.",
+    "parity_relation": "Overlaps AGENT-057 literal-text preservation and changes user instructions independently of optional compatibility metasequences.",
+    "assumptions": "Requires non-ASCII text passing through a scanner, including affected inserted values before a later scanner. No runtime demonstration was executed.",
+    "provenance": "Same byte cast exists at upstream v0.6.1 crates/rpi-harness/src/prompt_templates.rs:393-419; blame df8cba823d887338c197fb5f9fb830961032797c is an upstream ancestor.",
+    "provenance_evidence": "evidence/rust-defect-provenance.json"
+  },
+  {
+    "id": "OBS-RUST-001",
+    "entry_ids": [],
+    "title": "Concurrent final SpanGuard drops can lose completion callback",
+    "severity": "medium (observability)",
+    "evidence_level": "source-read; independently reviewed; not reproduced",
+    "sources": [
+      "rust:crates/ice-telemetry/src/context.rs:38-103"
+    ],
+    "behavior": "Two guard-clone drops can both observe strong_count==2 and choose the early return before either releases its local Arc; both releases then destroy shared state without invoking on_end.",
+    "technical_explanation": "The reference-count observation and release are separate operations. SpanEnd has no Drop finalizer; its FnOnce callback is only invoked by successful try_unwrap. The finish Mutex does not serialize the refcount check/release.",
+    "parity_relation": "Separate Rust defect in a capability to preserve, not evidence of a TypeScript-style observation dashboard.",
+    "assumptions": "Requires concurrent cloned-guard drops on separate threads without outside serialization. Sequential last-drop use ordinarily works.",
+    "provenance": "Present in upstream v0.6.1 crates/rpi-telemetry/src/context.rs:83-103; blame 91d89082dd6d09d3cdbbb0d55ceb6ab88e1a9523 is an ancestor. Independent reviewer /root/audit_session confirmed the source interleaving.",
+    "provenance_evidence": "evidence/rust-defect-provenance.json; evidence/defect-observability-span-guard.json"
+  }
+]

@@ -1,0 +1,222 @@
+{
+  "area": "settings",
+  "reviewer": "/root",
+  "method": "Full source/test-body reading plus local Git-byte identity checks; no application/test execution.",
+  "core_tests": [
+    {
+      "path": "ice:packages/coding-agent/test/trust-manager.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "78a6593719d12bc5c0eae6ed33ec15ac6658c3d016b5751ac6c252059a56cc7b",
+      "head_sha256": "78a6593719d12bc5c0eae6ed33ec15ac6658c3d016b5751ac6c252059a56cc7b",
+      "matches_head": true,
+      "current_lines": 68
+    },
+    {
+      "path": "ice:packages/coding-agent/test/resolve-config-value.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "56b05b65ee53c9e29b4841653efc1d683b9d917aef304f6ac231573ac92bbf58",
+      "head_sha256": "56b05b65ee53c9e29b4841653efc1d683b9d917aef304f6ac231573ac92bbf58",
+      "matches_head": true,
+      "current_lines": 122
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-resource-precedence.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+      "head_sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+      "matches_head": true,
+      "current_lines": 129
+    },
+    {
+      "path": "ice:packages/coding-agent/test/prompt-templates.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "cfed2333712407588f1df5f131bf763f2a366af2802d3ae27ccbeed79e0787fb",
+      "head_sha256": "cfed2333712407588f1df5f131bf763f2a366af2802d3ae27ccbeed79e0787fb",
+      "matches_head": true,
+      "current_lines": 625
+    },
+    {
+      "path": "ice:packages/coding-agent/test/settings-manager.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "8e82b758c7b2336003dd97056dcc51432f9f900f2e02711eb07e36316b29aa4f",
+      "head_sha256": "8e82b758c7b2336003dd97056dcc51432f9f900f2e02711eb07e36316b29aa4f",
+      "matches_head": true,
+      "current_lines": 603
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3616-settings-inmemory-reload.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "0ef92699ba0887ea3c9231ca057e83437bdb6902181934dd0edd96cd417ff8df",
+      "head_sha256": "0ef92699ba0887ea3c9231ca057e83437bdb6902181934dd0edd96cd417ff8df",
+      "matches_head": true,
+      "current_lines": 87
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7572-provider-retry-settings-merge.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a",
+      "head_sha256": "7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a",
+      "matches_head": true,
+      "current_lines": 36
+    },
+    {
+      "path": "ice:packages/coding-agent/test/resource-loader.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "c5cdccd6e4dd496be930fa051902b7ea54f590ebb5ab43ed854cf215e5ec3f46",
+      "head_sha256": "c5cdccd6e4dd496be930fa051902b7ea54f590ebb5ab43ed854cf215e5ec3f46",
+      "matches_head": true,
+      "current_lines": 1170
+    },
+    {
+      "path": "ice:packages/coding-agent/test/settings-manager-bug.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "70db9d654772c9be4840fe947f96c728545009767c337eccd50f7bb269eedb12",
+      "head_sha256": "70db9d654772c9be4840fe947f96c728545009767c337eccd50f7bb269eedb12",
+      "matches_head": true,
+      "current_lines": 167
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/2753-reload-stale-resource-settings.test.ts",
+      "head": "3ab05193147f5abb8eb8ee6c0178f6dbce8918b0",
+      "current_sha256": "103b6661a588bebcb32f871f90d25f3e907cdd674185c950fe290acc5d9d3bad",
+      "head_sha256": "103b6661a588bebcb32f871f90d25f3e907cdd674185c950fe290acc5d9d3bad",
+      "matches_head": true,
+      "current_lines": 106
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/coding-agent/test/trust-manager.test.ts",
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "sha256": "78a6593719d12bc5c0eae6ed33ec15ac6658c3d016b5751ac6c252059a56cc7b",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 68
+    },
+    {
+      "path": "ice:packages/coding-agent/test/resolve-config-value.test.ts",
+      "ranges": [
+        [
+          1,
+          122
+        ]
+      ],
+      "sha256": "56b05b65ee53c9e29b4841653efc1d683b9d917aef304f6ac231573ac92bbf58",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 122
+    },
+    {
+      "path": "ice:packages/coding-agent/test/ice-resource-precedence.test.ts",
+      "ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "sha256": "e7ac8d2bcf97cbb30beceaa57f6fedc3f0a63a8973dfe2560f7c4e9006b6e2d6",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 129
+    },
+    {
+      "path": "ice:packages/coding-agent/test/prompt-templates.test.ts",
+      "ranges": [
+        [
+          1,
+          625
+        ]
+      ],
+      "sha256": "cfed2333712407588f1df5f131bf763f2a366af2802d3ae27ccbeed79e0787fb",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 625
+    },
+    {
+      "path": "ice:packages/coding-agent/test/settings-manager.test.ts",
+      "ranges": [
+        [
+          1,
+          603
+        ]
+      ],
+      "sha256": "8e82b758c7b2336003dd97056dcc51432f9f900f2e02711eb07e36316b29aa4f",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 603
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/3616-settings-inmemory-reload.test.ts",
+      "ranges": [
+        [
+          1,
+          87
+        ]
+      ],
+      "sha256": "0ef92699ba0887ea3c9231ca057e83437bdb6902181934dd0edd96cd417ff8df",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 87
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/7572-provider-retry-settings-merge.test.ts",
+      "ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "sha256": "7b50e25746f36f0118df8f7931a772166da8656618768bd6ff094f873c02936a",
+      "notes": "Direct complete display of stated range; any display-truncated segment was re-emitted and read.",
+      "total_lines": 36
+    },
+    {
+      "path": "ice:packages/coding-agent/test/resource-loader.test.ts",
+      "ranges": [
+        [
+          1,
+          1170
+        ]
+      ],
+      "sha256": "c5cdccd6e4dd496be930fa051902b7ea54f590ebb5ab43ed854cf215e5ec3f46",
+      "notes": "Entire test source read across earlier 348–579/1008–1170 and final 1–347/580–1007 closure; SHA verified. Covers default project-first collisions, pre-trust reuse, resource exclusions, extension file URLs/source metadata, noSkills explicit additions, duplicate flags/tools, and CLI precedence; no tests executed.",
+      "total_lines": 1170
+    },
+    {
+      "path": "ice:packages/coding-agent/test/settings-manager-bug.test.ts",
+      "ranges": [
+        [
+          1,
+          167
+        ]
+      ],
+      "sha256": "70db9d654772c9be4840fe947f96c728545009767c337eccd50f7bb269eedb12",
+      "total_lines": 167,
+      "notes": "Entire test body read by coordinator, clean tracked bytes match frozen3ab0519 Git object; source assertions only, no execution."
+    },
+    {
+      "path": "ice:packages/coding-agent/test/suite/regressions/2753-reload-stale-resource-settings.test.ts",
+      "ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "sha256": "103b6661a588bebcb32f871f90d25f3e907cdd674185c950fe290acc5d9d3bad",
+      "total_lines": 106,
+      "notes": "Entire test body read by coordinator, clean tracked bytes match frozen3ab0519 Git object; source assertions only, no execution."
+    }
+  ],
+  "consumer_test_ownership": {
+    "packages/coding-agent/test/settings-selector.test.ts": "tui",
+    "packages/coding-agent/test/ui-style-settings.test.ts": "tui",
+    "packages/coding-agent/test/rpc-settings.test.ts": "rpc-remote",
+    "packages/coding-agent/test/ice-provider-settings.test.ts": "providers-auth"
+  },
+  "unread_core_test_ranges": [],
+  "corrections": [
+    "Closed all previously unread resource-loader.test.ts segments.",
+    "Added complete external-edit preservation and stale resource reload regression suites.",
+    "Removed obsolete unread-test backlog from the draft while preserving separately owned UI/RPC/auth test obligations."
+  ],
+  "entry_count": 33
+}

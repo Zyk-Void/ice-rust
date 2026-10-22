@@ -1,0 +1,63 @@
+{
+  "status": "confirmed-renamed-identical",
+  "reviewer": "/root/exports_rpc_ai_auth",
+  "review_date": "2026-10-20",
+  "source_map": {
+    "artifact": "evidence/active-checkout-source-map.json",
+    "sha256": "a502dcc69b835d63539279923aa12d771aa15df4d544b513092f8041f74aa45d"
+  },
+  "source_map_row": {
+    "old_path": "crates/ice-cli/src/bin/ice.rs",
+    "active_path": "crates/ice-cli/src/bin/icers.rs",
+    "category": "source_or_configuration",
+    "status": "renamed_identical",
+    "old": {
+      "path": "crates/ice-cli/src/bin/ice.rs",
+      "present": true,
+      "kind": "text",
+      "content_basis": "tracked working-tree bytes",
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "bytes": 1001,
+      "total_lines": 22
+    },
+    "active": {
+      "path": "crates/ice-cli/src/bin/icers.rs",
+      "present": true,
+      "kind": "text",
+      "content_basis": "tracked working-tree bytes",
+      "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+      "bytes": 1001,
+      "total_lines": 22
+    },
+    "frozen_source_sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+    "frozen_source_matches": true
+  },
+  "old_source_review": {
+    "root": "/home/mewtwo/Zks/ice-rust",
+    "path": "crates/ice-cli/src/bin/ice.rs",
+    "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+    "read_range": [
+      1,
+      22
+    ],
+    "total_lines": 22,
+    "full_file_read": true
+  },
+  "active_source_review": {
+    "root": "/home/mewtwo/Zykairotis/ice-rust",
+    "path": "crates/ice-cli/src/bin/icers.rs",
+    "sha256": "0edb0f556b231d6a9c2c77df539c029851ab48a05be2084e4ee6cd797dd3fdbf",
+    "read_range": [
+      1,
+      22
+    ],
+    "total_lines": 22,
+    "full_file_read": true
+  },
+  "classification": "identity-only",
+  "confirmation": "Both complete 22-line entrypoint bodies were read directly through Connectme and matched exactly, including the full-file SHA-256 and the source-map renamed_identical row. The wrapper creates a multi_thread Tokio runtime, awaits ice_cli::app::run(), and converts the returned code to ExitCode through u8. Only the filename changes; Cargo's separate reviewed binary-target hunk supplies the icers executable name.",
+  "retained_source_notes": "The identical doc comments still mention pi and ice_cli::main::run; the actual call in both bodies is ice_cli::app::run. This is existing documentation, not an execution or parity claim.",
+  "redactions": [],
+  "active_writes": false,
+  "builds_or_tests_executed": false
+}

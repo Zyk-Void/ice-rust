@@ -9,7 +9,7 @@
 use ice_agent::message::AgentMessage;
 use ice_ai::types::{Api, StopReason, Usage, UsageCost, UserContent, UserMessage};
 use ice_harness::compaction::{
-    find_cut_point, find_turn_start_index, find_valid_cut_points, CutPointResult,
+    estimate_tokens, find_cut_point, find_turn_start_index, find_valid_cut_points, CutPointResult,
 };
 use ice_harness::session::types::{Entry, EntryBase, MessageEntry};
 
@@ -72,6 +72,26 @@ fn assistant_msg(text: &str, seq: u64, parent: Option<&str>, stop: StopReason, u
     })
 }
 
+fn tool_call_msg(seq: u64, parent: Option<&str>) -> Entry {
+    let mut message = ice_ai::types::AssistantMessage::empty(
+        Api::AnthropicMessages,
+        "anthropic",
+        "claude-sonnet-4-5",
+        seq as i64,
+    );
+    message.content = vec![ice_ai::types::Content::tool_call(
+        "call-1",
+        "read",
+        serde_json::json!({"path": "x".repeat(400)}),
+    )];
+    message.stop_reason = StopReason::ToolUse;
+    Entry::Message(MessageEntry {
+        base: base(seq, parent, "message"),
+        message: AgentMessage::Assistant(Box::new(message)),
+        terminate: None,
+    })
+}
+
 fn tool_result_msg(seq: u64, parent: Option<&str>) -> Entry {
     Entry::Message(MessageEntry {
         base: base(seq, parent, "message"),
@@ -113,6 +133,46 @@ fn empty_range_returns_start() {
             turn_start_index: None,
             is_split_turn: false
         }
+    );
+}
+
+#[test]
+fn retained_cut_point_keeps_tool_call_with_its_result() {
+    let entries = vec![
+        user_msg("old request", 1, None),
+        tool_call_msg(2, Some("entry-1")),
+        tool_result_msg(3, Some("entry-2")),
+        user_msg("latest request", 4, Some("entry-3")),
+    ];
+    let recent_usage = estimate_tokens(&entries[2].as_message().expect("tool result").clone())
+        + estimate_tokens(&entries[3].as_message().expect("latest user").clone());
+
+    // The latest user and tool result fit below the budget, but including the
+    // large tool-call arguments crosses it; retaining must start at the call.
+    let cut = find_cut_point(&entries, 0, entries.len(), recent_usage + 1);
+    assert_eq!(cut.first_kept_entry_index, 1);
+
+    let retained = &entries[cut.first_kept_entry_index..];
+    let call_id = match &retained[0] {
+        Entry::Message(entry) => match &entry.message {
+            AgentMessage::Assistant(message) => match &message.content[0] {
+                ice_ai::types::Content::ToolCall(call) => call.id.as_str(),
+                other => panic!("expected tool call, got {other:?}"),
+            },
+            other => panic!("expected assistant call, got {other:?}"),
+        },
+        other => panic!("expected message entry, got {other:?}"),
+    };
+    let result_id = match &retained[1] {
+        Entry::Message(entry) => match &entry.message {
+            AgentMessage::ToolResult(result) => result.tool_call_id.as_str(),
+            other => panic!("expected tool result, got {other:?}"),
+        },
+        other => panic!("expected message entry, got {other:?}"),
+    };
+    assert_eq!(
+        call_id, result_id,
+        "retained tool result must match its call"
     );
 }
 

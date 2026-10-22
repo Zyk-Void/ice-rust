@@ -1,0 +1,151 @@
+[
+  {
+    "candidate_id": "C000004",
+    "category": "environment",
+    "name": "ProgramFiles",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 202,
+    "end_line": 202,
+    "area": "agent",
+    "kind": "direct-env-read",
+    "detail": "",
+    "rust_name_candidates": [
+      "crates/ice-tools/src/os_env.rs:296",
+      "crates/ice-tools/src/tools/powershell.rs:85"
+    ]
+  },
+  {
+    "candidate_id": "C000005",
+    "category": "environment",
+    "name": "ProgramFiles(x86)",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 204,
+    "end_line": 204,
+    "area": "agent",
+    "kind": "indexed-env-read",
+    "detail": "",
+    "rust_name_candidates": [
+      "crates/ice-tools/src/os_env.rs:297"
+    ]
+  },
+  {
+    "candidate_id": "C000006",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 504,
+    "end_line": 504,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "readFile",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000007",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 546,
+    "end_line": 546,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "readFile",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000008",
+    "category": "paths",
+    "name": "resolve(resolved, \"..\")",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 561,
+    "end_line": 561,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "mkdir",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000009",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 564,
+    "end_line": 564,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "writeFile",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000010",
+    "category": "paths",
+    "name": "resolve(resolved, \"..\")",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 574,
+    "end_line": 574,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "mkdir",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000011",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 575,
+    "end_line": 575,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "appendFile",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000012",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 596,
+    "end_line": 596,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "readdir",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000013",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 634,
+    "end_line": 634,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "mkdir",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000014",
+    "category": "paths",
+    "name": "resolved",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 644,
+    "end_line": 644,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "rm",
+    "rust_name_candidates": []
+  },
+  {
+    "candidate_id": "C000015",
+    "category": "paths",
+    "name": "filePath",
+    "path": "packages/agent/src/harness/env/nodejs.ts",
+    "line": 664,
+    "end_line": 664,
+    "area": "agent",
+    "kind": "filesystem-target-expression",
+    "detail": "writeFile",
+    "rust_name_candidates": []
+  }
+]

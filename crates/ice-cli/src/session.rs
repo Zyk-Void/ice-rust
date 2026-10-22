@@ -32,7 +32,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 
 use ice_ai::Provider;
 use ice_harness::agent_harness::AgentHarness;
@@ -69,6 +69,20 @@ use ice_extensions::{
 
 /// The coding tools registered by the CLI by default.
 pub const BUILTIN_TOOL_NAMES: &[&str] = &["read", "bash", "edit", "write", "docs"];
+
+/// Await extension observers before exposing the same lifecycle event publicly.
+/// Streaming tool updates still use the emitter's non-blocking `try_emit` path.
+/// Extension ABI v1 observers cannot replace the message payload; this ordering
+/// does not pretend to implement an extension transformation channel.
+fn compose_agent_emitter(
+    public: Arc<dyn ice_agent::AgentEmitter>,
+    extension: Option<Arc<dyn ice_agent::AgentEmitter>>,
+) -> Arc<dyn ice_agent::AgentEmitter> {
+    match extension {
+        Some(extension) => Arc::new(TeeEmitter::new(vec![extension, public])),
+        None => public,
+    }
+}
 
 /// The default coding system prompt. A condensed port of the TS
 /// `packages/coding-agent/src/core/system-prompt.ts` base prompt.
@@ -158,15 +172,7 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
     // `--session-dir` wins; then the saved `sessionDir` (upstream's key, same
     // format as the flag); then the built-in default. Keep this directory on
     // restore selections too, not only on fresh sessions.
-    let dir = args
-        .session_dir
-        .clone()
-        .or_else(|| {
-            crate::settings::load_settings()
-                .ok()
-                .and_then(|settings| settings.session_dir)
-        })
-        .unwrap_or_else(|| default_session_dir(cwd));
+    let dir = configured_session_dir(args).unwrap_or_else(|| default_session_dir(cwd));
     if args.continue_session || args.resume {
         return SessionSelection::Latest { dir };
     }
@@ -183,6 +189,35 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
         dir,
         name: args.name.clone(),
     }
+}
+
+/// `--session-dir`, else the saved `sessionDir` setting (upstream's key).
+fn configured_session_dir(args: &Args) -> Option<PathBuf> {
+    args.session_dir.clone().or_else(|| {
+        crate::settings::load_settings()
+            .ok()
+            .and_then(|settings| settings.session_dir)
+    })
+}
+
+static SESSION_DIR: std::sync::Mutex<Option<PathBuf>> = std::sync::Mutex::new(None);
+
+/// Record the user-configured session directory for the whole process so every
+/// listing/open path (`-r` picker, `/session`, hot-switch, fork) agrees with
+/// the startup selection. Called once from the app entry point.
+pub fn configure_session_dir(args: &Args) {
+    if let Ok(mut dir) = SESSION_DIR.lock() {
+        *dir = configured_session_dir(args);
+    }
+}
+
+/// The session directory in effect: the configured one, else the default.
+pub fn session_dir(cwd: &Path) -> PathBuf {
+    SESSION_DIR
+        .lock()
+        .ok()
+        .and_then(|dir| dir.clone())
+        .unwrap_or_else(|| default_session_dir(cwd))
 }
 
 /// The default session directory is `<cwd>/.icers/sessions`.
@@ -699,7 +734,7 @@ pub async fn build_prepared(
     let emitter: Arc<dyn ice_agent::AgentEmitter> = match extension_session.snapshot_arc() {
         Some(snapshot) => {
             let ext = ExtensionEmitter::new(snapshot, extension_session.keepalive());
-            Arc::new(TeeEmitter::new(vec![broadcast_emitter, Arc::new(ext)]))
+            compose_agent_emitter(broadcast_emitter, Some(Arc::new(ext)))
         }
         None => broadcast_emitter,
     };
@@ -803,6 +838,11 @@ pub async fn build_prepared(
 
     let harness = match AgentHarness::create(options).await {
         Ok(h) => {
+            // CLI sessions opt into the coding product policy; embedded generic
+            // harnesses keep their reserve-based behavior unless explicitly set.
+            h.set_coding_compaction_policy(Some(saved_settings.coding_agent_compaction_policy()))
+                .await
+                .map_err(|error| BuildError::HarnessCreate(error.to_string()))?;
             if let Some(reserve_tokens) = saved_settings.branch_summary_reserve_tokens() {
                 h.set_branch_summary_reserve_tokens(reserve_tokens)
                     .await
@@ -1547,7 +1587,7 @@ where
     let emitter: Arc<dyn ice_agent::AgentEmitter> = match extension_session.snapshot_arc() {
         Some(snapshot) => {
             let ext = ExtensionEmitter::new(snapshot, extension_session.keepalive());
-            Arc::new(TeeEmitter::new(vec![ctx.broadcast.clone(), Arc::new(ext)]))
+            compose_agent_emitter(ctx.broadcast.clone(), Some(Arc::new(ext)))
         }
         None => ctx.broadcast.clone(),
     };
@@ -1591,6 +1631,7 @@ where
         )
         .await;
 
+    let mut model_refresh_error: Option<String> = None;
     if let Some(resolved) = &refreshed {
         *ctx.providers
             .write()
@@ -1604,7 +1645,9 @@ where
             .unwrap_or_else(|error| error.into_inner()) = catalog;
         // Refresh the public descriptor. Credentials remain in the newly bound
         // provider instances installed above and never enter the lane model.
-        let _ = harness.lane("main").set_model(resolved.model.clone()).await;
+        if let Err(error) = harness.lane("main").set_model(resolved.model.clone()).await {
+            model_refresh_error = Some(error.to_string());
+        }
     }
 
     // Re-merge extension tools (a reloaded plugin may have added/removed a
@@ -1623,6 +1666,12 @@ where
     active = filter_active_tool_names(active, &effective_args);
     let _ = harness.set_tools(tools, Some(active)).await;
 
+    if let Some(error) = model_refresh_error {
+        warnings = true;
+        details.push(format!(
+            "Could not apply the refreshed model after reload; keeping the previous model: {error}"
+        ));
+    }
     let summary = format!(
         "Reloaded {} plugin(s), {} skill(s), {} prompt(s).",
         extension_session.loaded_paths().len(),
@@ -2107,7 +2156,7 @@ async fn restore_session(selection: &SessionSelection, cwd: &str) -> Result<Sess
             let Some(meta) = first_resumable_session(&metas) else {
                 return Err(BuildError::SessionNotFound {
                     requested: "the most recent session".to_string(),
-                    dir: default_session_dir(Path::new(cwd)).display().to_string(),
+                    dir: session_dir(Path::new(cwd)).display().to_string(),
                 });
             };
             open_session(meta, cwd).await
@@ -2117,7 +2166,7 @@ async fn restore_session(selection: &SessionSelection, cwd: &str) -> Result<Sess
             .map_err(|e| match e {
                 OpenError::NotFound { requested } => BuildError::SessionNotFound {
                     requested,
-                    dir: default_session_dir(Path::new(cwd)).display().to_string(),
+                    dir: session_dir(Path::new(cwd)).display().to_string(),
                 },
                 OpenError::Other(msg) => BuildError::SessionOpen(msg),
             }),
@@ -2147,7 +2196,7 @@ async fn fork_session_at_launch(source: &str, cwd: &str) -> Result<Session, Buil
     use ice_harness::session::types::{ForkOptions, SessionStorage};
     use ice_tools::FileSystem;
 
-    let dir = default_session_dir(Path::new(cwd));
+    let dir = session_dir(Path::new(cwd));
     std::fs::create_dir_all(&dir)
         .map_err(|e| BuildError::SessionDir(format!("{}: {e}", dir.display())))?;
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
@@ -2182,7 +2231,6 @@ async fn fork_session_at_launch(source: &str, cwd: &str) -> Result<Session, Buil
         )
         .await
         .map_err(|e| BuildError::SessionDir(format!("fork {}: {e}", source_meta.path)))?;
-    claim_session_lock(&fork_storage.jsonl_metadata().path).map_err(BuildError::SessionOpen)?;
     let storage_arc: Arc<dyn SessionStorage> = Arc::new(fork_storage);
     Ok(Session::new(storage_arc, None))
 }
@@ -2215,7 +2263,7 @@ impl std::fmt::Display for OpenError {
 pub async fn list_session_metadata(
     cwd: &str,
 ) -> Result<Vec<ice_harness::session::jsonl::JsonlSessionMetadata>, BuildError> {
-    let dir = default_session_dir(Path::new(cwd));
+    let dir = session_dir(Path::new(cwd));
     list_session_metadata_in_dir(cwd, &dir).await
 }
 
@@ -2223,6 +2271,19 @@ async fn list_session_metadata_in_dir(
     cwd: &str,
     dir: &Path,
 ) -> Result<Vec<ice_harness::session::jsonl::JsonlSessionMetadata>, BuildError> {
+    Ok(discover_session_metadata_in_dir(cwd, dir).await?.sessions)
+}
+
+pub(crate) async fn discover_session_metadata(
+    cwd: &str,
+) -> Result<ice_harness::session::jsonl::repo::JsonlSessionDiscovery, BuildError> {
+    discover_session_metadata_in_dir(cwd, &session_dir(Path::new(cwd))).await
+}
+
+async fn discover_session_metadata_in_dir(
+    cwd: &str,
+    dir: &Path,
+) -> Result<ice_harness::session::jsonl::repo::JsonlSessionDiscovery, BuildError> {
     use ice_harness::session::jsonl::{
         JsonlSessionListOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
     };
@@ -2236,7 +2297,7 @@ async fn list_session_metadata_in_dir(
         clock: Arc::new(SystemClock),
         ids: Arc::new(DefaultIdGenerator::new()),
     });
-    repo.list_typed(&JsonlSessionListOptions::default())
+    repo.list_with_diagnostics(&JsonlSessionListOptions::default())
         .await
         .map_err(|e| BuildError::SessionDir(format!("list sessions: {e}")))
 }
@@ -2451,9 +2512,39 @@ pub fn short_session_id(id: &str) -> &str {
 /// `.jsonl` files directly under `dir` and one level of subdirectories are
 /// accepted.
 pub fn list_session_files_sync(dir: &Path) -> Vec<PathBuf> {
+    discover_session_files_sync(dir).0
+}
+
+/// Header validation for the blocking in-TUI picker, with the same diagnostics
+/// policy as repository discovery. Reads one line, never the whole transcript.
+pub(crate) fn discover_session_files_sync(dir: &Path) -> (Vec<PathBuf>, Vec<String>) {
+    use std::io::BufRead;
+
+    let mut skipped = Vec::new();
     let mut files: Vec<(PathBuf, std::time::SystemTime)> = Vec::new();
     let mut visit = |path: PathBuf| {
         if path.extension().and_then(|e| e.to_str()) != Some("jsonl") {
+            return;
+        }
+        let header = std::fs::File::open(&path)
+            .and_then(|file| {
+                std::io::BufReader::new(file)
+                    .lines()
+                    .next()
+                    .unwrap_or_else(|| {
+                        Err(std::io::Error::new(
+                            std::io::ErrorKind::UnexpectedEof,
+                            "empty header",
+                        ))
+                    })
+            })
+            .map_err(|error| format!("unreadable header ({error})"))
+            .and_then(|line| {
+                ice_harness::session::jsonl::parse_header(&line)
+                    .map_err(|error| format!("malformed header ({error})"))
+            });
+        if let Err(error) = header {
+            skipped.push(format!("{path:?}: {error}"));
             return;
         }
         let modified = std::fs::metadata(&path)
@@ -2475,8 +2566,58 @@ pub fn list_session_files_sync(dir: &Path) -> Vec<PathBuf> {
             }
         }
     }
-    files.sort_by(|a, b| b.1.cmp(&a.1));
-    files.into_iter().map(|(path, _)| path).collect()
+    // Newest first; the path breaks mtime ties so the order is deterministic.
+    files.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| b.0.cmp(&a.0)));
+    skipped.sort();
+    (files.into_iter().map(|(path, _)| path).collect(), skipped)
+}
+
+pub(crate) fn session_discovery_warning(skipped: &[String]) -> Option<String> {
+    if skipped.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "Skipped {} session file(s) with unreadable or malformed headers:\n{}",
+            skipped.len(),
+            skipped.join("\n")
+        ))
+    }
+}
+
+#[cfg(test)]
+#[tokio::test]
+async fn discovery_keeps_good_sessions_and_reports_malformed_headers() {
+    use ice_harness::session::jsonl::{encode_header, JsonlV4Header};
+
+    let root = tempfile::tempdir().unwrap();
+    let directory = root.path().join("--project--");
+    std::fs::create_dir(&directory).unwrap();
+    let good = directory.join("good.jsonl");
+    let bad = directory.join("malformed.jsonl");
+    let header = JsonlV4Header::new("good".into(), 0, "/project".into(), None, None, None);
+    std::fs::write(&good, encode_header(&header)).unwrap();
+    std::fs::write(&bad, "not a session header\n").unwrap();
+
+    assert_eq!(list_session_files_sync(root.path()), vec![good.clone()]);
+    let (files, skipped) = discover_session_files_sync(root.path());
+    assert_eq!(files, vec![good]);
+    let warning = session_discovery_warning(&skipped).unwrap();
+    assert!(warning.contains("Skipped 1 session file(s)"), "{warning}");
+    assert!(warning.contains("malformed.jsonl"), "{warning}");
+    let discovery = discover_session_metadata_in_dir("/project", root.path())
+        .await
+        .unwrap();
+    assert_eq!(discovery.sessions.len(), 1);
+    let warning = session_discovery_warning(&discovery.skipped).unwrap();
+    assert!(warning.contains("Skipped 1 session file(s)"), "{warning}");
+    assert!(warning.contains("malformed.jsonl"), "{warning}");
+    assert_eq!(
+        list_session_metadata_in_dir("/project", root.path())
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
 }
 
 /// Pick the session `--continue`/`-c` should open: the newest session that has
@@ -2534,7 +2675,7 @@ pub async fn open_session_by_id(id: &str, cwd: &str) -> Result<Session, OpenErro
             .await
             .map_err(|error| OpenError::Other(error.to_string()));
     }
-    let dir = default_session_dir(Path::new(cwd));
+    let dir = session_dir(Path::new(cwd));
     open_session_by_id_in_dir(id, cwd, &dir).await
 }
 
@@ -2606,15 +2747,10 @@ pub(crate) async fn set_active_session(
     tool_context: Option<&ice_extensions::ToolCallContext>,
 ) -> Result<(), String> {
     let metadata = session.get_metadata().await.ok();
-    let previous = harness.session().storage().persistence_path();
-    let incoming = session.storage().persistence_path();
     harness
         .set_session(session)
         .await
         .map_err(|e| e.to_string())?;
-    if let Some(previous) = previous.filter(|previous| Some(previous) != incoming.as_ref()) {
-        release_session_lock(&previous);
-    }
     if let Some(metadata) = metadata {
         std::env::set_var(ice_plugin_sdk::SESSION_ID_ENV, &metadata.id);
         if let Some(context) = tool_context {
@@ -2622,6 +2758,35 @@ pub(crate) async fn set_active_session(
         }
     }
     Ok(())
+}
+
+/// Start a fresh durable conversation after the previous operation settles.
+///
+/// The old backing remains active if creation or activation fails. The harness
+/// keeps its model/tool configuration; only conversation state and queues change.
+/// Both the TUI and extension new-session action use this transition.
+pub(crate) async fn start_new_session(
+    harness: &AgentHarness,
+    cwd: &Path,
+    tool_context: Option<&ice_extensions::ToolCallContext>,
+) -> Result<String, String> {
+    let lane = harness.lane("main");
+    match lane.abort().await {
+        Ok(_) | Err(ice_harness::result::HarnessError::NoActiveRun { .. }) => {}
+        Err(error) => return Err(error.to_string()),
+    }
+    lane.wait_for_idle()
+        .await
+        .map_err(|error| error.to_string())?;
+    let directory = session_dir(cwd);
+    let session = create_jsonl_session(&directory, &cwd.to_string_lossy()).await?;
+    let id = session
+        .get_metadata()
+        .await
+        .map_err(|error| error.to_string())?
+        .id;
+    set_active_session(harness, session, tool_context).await?;
+    Ok(id)
 }
 
 /// Fork the harness's current session into a new JSONL session (new id, parent
@@ -2649,9 +2814,7 @@ pub(crate) async fn fork_session_storage_with_options(
     cwd: &str,
     options: &ice_harness::session::types::ForkOptions,
 ) -> Result<Session, String> {
-    use ice_harness::session::jsonl::{
-        JsonlSessionRepo, JsonlSessionRepoOptions, JsonlSessionStorage,
-    };
+    use ice_harness::session::jsonl::{JsonlSessionRepo, JsonlSessionRepoOptions};
     use ice_tools::FileSystem;
 
     if harness
@@ -2674,18 +2837,8 @@ pub(crate) async fn fork_session_storage_with_options(
         .ok_or("current session file has no directory")?;
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
     let fs: Arc<dyn FileSystem> = env.clone();
-    let source = JsonlSessionStorage::load(
-        fs.clone(),
-        &source_path,
-        Arc::new(SystemClock),
-        Arc::new(DefaultIdGenerator::new()),
-    )
-    .await
-    .map_err(|error| error.to_string())?
-    .jsonl_metadata();
-    if source.id != active.storage().metadata().id {
-        return Err("current session file no longer matches the active session".into());
-    }
+    let source = active.storage();
+    let source_id = source.metadata().id;
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
         fs,
         sessions_root: dir.to_string_lossy().into_owned(),
@@ -2693,12 +2846,12 @@ pub(crate) async fn fork_session_storage_with_options(
         ids: Arc::new(DefaultIdGenerator::new()),
     });
     let fork_storage = repo
-        .fork_in_directory(
-            &source,
+        .fork_from_storage_in_directory(
+            source.as_ref(),
             &dir.to_string_lossy(),
             &ice_harness::session::jsonl::JsonlSessionCreateOptions {
                 id: None,
-                parent_session_id: Some(source.id.clone()),
+                parent_session_id: Some(source_id),
                 cwd: cwd.to_string(),
                 metadata: None,
             },
@@ -2706,60 +2859,7 @@ pub(crate) async fn fork_session_storage_with_options(
         )
         .await
         .map_err(|e| e.to_string())?;
-    claim_session_lock(&fork_storage.jsonl_metadata().path)?;
     Ok(Session::new(Arc::new(fork_storage), None))
-}
-
-/// Session logs this process has claimed, with their held lock handles.
-/// Dropping a `File` releases the OS lock, so each guard is parked here until
-/// the session is switched away from ([`release_session_lock`]).
-static SESSION_LOCKS: OnceLock<Mutex<std::collections::HashMap<PathBuf, std::fs::File>>> =
-    OnceLock::new();
-
-fn session_lock_path(session_path: &str) -> PathBuf {
-    PathBuf::from(format!("{session_path}.lock"))
-}
-
-/// Claim the exclusive lock for a session log.
-///
-/// Two icers processes appending to one JSONL diverge their `sequence` counters
-/// (duplicate / gapped seqs) and corrupt it. The lock is an OS advisory lock on
-/// `<path>.lock`: the second process gets a clear "already open" error instead
-/// of corrupting the log, and the OS releases it automatically when the holder
-/// exits (no stale-lock cleanup). Re-claiming a path this process already holds
-/// is a no-op, so the TUI's session hot-switch can re-open freely.
-fn claim_session_lock(session_path: &str) -> Result<(), String> {
-    let lock_path = session_lock_path(session_path);
-    let mut held = SESSION_LOCKS
-        .get_or_init(|| Mutex::new(Default::default()))
-        .lock()
-        .unwrap();
-    if held.contains_key(&lock_path) {
-        return Ok(());
-    }
-    let file = std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(&lock_path)
-        .map_err(|e| format!("open session lock {}: {e}", lock_path.display()))?;
-    if fs2::FileExt::try_lock_exclusive(&file).is_err() {
-        return Err(format!(
-            "session {session_path} is already open in another icers process"
-        ));
-    }
-    held.insert(lock_path, file);
-    Ok(())
-}
-
-/// Drop this process's claim on a session log it has switched away from, so
-/// the picker and other icers processes can change it. The sidecar file stays
-/// (see `session_actions::perform`).
-pub(crate) fn release_session_lock(session_path: &str) {
-    if let Some(held) = SESSION_LOCKS.get() {
-        held.lock()
-            .unwrap()
-            .remove(&session_lock_path(session_path));
-    }
 }
 
 /// Wrap an opened [`JsonlSessionStorage`] in the `Session` facade (shared by
@@ -2772,7 +2872,7 @@ async fn open_session(
     use ice_harness::session::types::SessionStorage;
     use ice_tools::FileSystem;
 
-    let dir = default_session_dir(Path::new(cwd));
+    let dir = session_dir(Path::new(cwd));
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
     let fs: Arc<dyn FileSystem> = env.clone();
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
@@ -2781,7 +2881,6 @@ async fn open_session(
         clock: Arc::new(SystemClock),
         ids: Arc::new(DefaultIdGenerator::new()),
     });
-    claim_session_lock(&meta.path).map_err(BuildError::SessionOpen)?;
     let storage = repo
         .open_by_jsonl_metadata(meta)
         .await
@@ -2887,8 +2986,6 @@ async fn create_jsonl_session_at(
         repo.create_typed(&opts).await
     }
     .map_err(|e| format!("create session: {e}"))?;
-    claim_session_lock(&storage.jsonl_metadata().path)
-        .map_err(|e| format!("create session: {e}"))?;
     // `JsonlSessionStorage` implements `SessionStorage`; wrap in the facade.
     let storage_arc: Arc<dyn ice_harness::session::types::SessionStorage> = Arc::new(storage);
     Ok(Session::new(storage_arc, None))
@@ -2925,24 +3022,6 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn releasing_a_session_lock_lets_others_lock_the_file() {
-        let dir = tempfile::tempdir().unwrap();
-        let log = dir.path().join("a.jsonl").to_string_lossy().into_owned();
-        claim_session_lock(&log).unwrap();
-        let probe = || {
-            let file = std::fs::OpenOptions::new()
-                .create(true)
-                .write(true)
-                .open(format!("{log}.lock"))
-                .unwrap();
-            fs2::FileExt::try_lock_exclusive(&file).map(|_| file)
-        };
-        assert!(probe().is_err(), "claimed lock must exclude others");
-        release_session_lock(&log);
-        assert!(probe().is_ok(), "a released lock must be free");
-    }
-
     use super::*;
 
     #[test]
@@ -3074,6 +3153,37 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn extension_lifecycle_observers_finish_before_publication() {
+        struct OrderedEmitter {
+            name: &'static str,
+            order: Arc<Mutex<Vec<&'static str>>>,
+        }
+        impl ice_agent::AgentEmitter for OrderedEmitter {
+            fn emit(&self, _: ice_agent::AgentEvent) -> futures::future::BoxFuture<'static, ()> {
+                let name = self.name;
+                let order = Arc::clone(&self.order);
+                Box::pin(async move {
+                    tokio::task::yield_now().await;
+                    order.lock().unwrap().push(name);
+                })
+            }
+        }
+        let order = Arc::new(Mutex::new(Vec::new()));
+        let public = Arc::new(OrderedEmitter {
+            name: "public",
+            order: Arc::clone(&order),
+        });
+        let extension = Arc::new(OrderedEmitter {
+            name: "extension",
+            order: Arc::clone(&order),
+        });
+        compose_agent_emitter(public, Some(extension))
+            .emit(ice_agent::AgentEvent::AgentStart)
+            .await;
+        assert_eq!(*order.lock().unwrap(), ["extension", "public"]);
+    }
+
+    #[tokio::test]
     async fn unauthenticated_packages_are_not_reintroduced_as_legacy_adapters() {
         extern "C" fn request(
             _: ice_plugin_sdk::StbStringRef,
@@ -3118,6 +3228,239 @@ mod tests {
         );
     }
     use crate::args::Args;
+
+    #[test]
+    fn coding_compaction_settings_reach_live_harness() {
+        const CHILD: &str = "ICERS_CODING_COMPACTION_SETTINGS_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::coding_compaction_settings_reach_live_harness",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let agent = crate::config::agent_dir().unwrap();
+                let cwd = agent.join("project");
+                std::fs::create_dir_all(&cwd).unwrap();
+                std::fs::write(
+                    agent.join("settings.json"),
+                    serde_json::json!({
+                        "compaction": {
+                            "enabled": true, "thresholdPercent": 71, "reserveTokens": 123,
+                            "keepRecentTokens": 456, "midRunCompaction": "pause"
+                        }
+                    })
+                    .to_string(),
+                )
+                .unwrap();
+                let resolved = crate::provider::resolve(
+                    Some("anthropic"),
+                    Some(crate::provider::DEFAULT_MODEL_ID),
+                    None,
+                    Some("test-key"),
+                    None,
+                )
+                .unwrap();
+                let args = Args {
+                    no_session: true,
+                    no_extensions: true,
+                    no_skills: true,
+                    no_prompt_templates: true,
+                    trust_override: Some(true),
+                    ..Default::default()
+                };
+                let (harness, _, _) = build(&resolved, &args, &cwd, true).await.unwrap();
+                let policy = harness
+                    .get_coding_compaction_policy()
+                    .await
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(policy.threshold_percent, 71.0);
+                assert_eq!(policy.reserve_tokens, Some(123));
+                assert_eq!(policy.keep_recent_tokens, 456);
+                assert_eq!(
+                    policy.mid_run_compaction,
+                    ice_harness::compaction::settings::MidRunCompactionMode::Pause
+                );
+                let context = harness.context_snapshot().await.unwrap();
+                assert_eq!(context.compaction.reserve_tokens, 123);
+                assert_eq!(context.compaction.keep_recent_tokens, 456);
+                assert_eq!(
+                    context.compact_at_tokens,
+                    Some((context.model.context_window as f64 * 0.71).floor() as i64)
+                );
+            });
+    }
+
+    #[test]
+    fn resume_keeps_selected_model_when_historical_provider_is_unavailable() {
+        const CHILD: &str = "ICERS_RESUME_MODEL_PRECEDENCE_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let directory = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::resume_keeps_selected_model_when_historical_provider_is_unavailable",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, directory.path())
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                use ice_harness::agent_harness::AgentLane;
+                use ice_harness::session::types::{Entry, ProvisionedEntry, ProvisionedKind};
+
+                let agent = crate::config::agent_dir().unwrap();
+                let cwd = agent.join("project");
+                let sessions = cwd.join("custom-sessions");
+                std::fs::create_dir_all(&sessions).unwrap();
+                let settings_path = agent.join("settings.json");
+                let settings = br#"{"defaultProvider":"unavailable-default","defaultModel":"expensive-default","defaultThinkingLevel":"high","compaction":{"enabled":false}}"#;
+                std::fs::write(&settings_path, settings).unwrap();
+
+                // Resolve without making a request, then install only the faux
+                // runtime. No historical/default provider can be contacted.
+                let mut resolved = crate::provider::resolve(
+                    Some("anthropic"),
+                    Some(crate::provider::DEFAULT_MODEL_ID),
+                    None,
+                    Some("test-key"),
+                    None,
+                ).unwrap();
+                let faux = ice_ai::providers::faux::FauxProvider::new(
+                    ice_ai::providers::faux::FauxScript::new(),
+                );
+                resolved.model = faux.default_model().clone();
+                resolved.thinking_level = ice_ai::types::ThinkingLevel::Off;
+                resolved.provider = faux.clone();
+                resolved.providers = vec![faux.clone()];
+
+                for explicit_id in [false, true] {
+                    let saved = create_jsonl_session(&sessions, &cwd.to_string_lossy()).await.unwrap();
+                    let id = saved.get_metadata().await.unwrap().id;
+                    saved.append_message(ice_agent::AgentMessage::User(
+                        ice_ai::types::UserMessage::new("SAVED_HISTORY", 1),
+                    )).await.unwrap();
+                    for (entry_id, kind) in [
+                        ("historical-model", ProvisionedKind::ModelChange {
+                            provider: "unavailable-historical-provider".into(),
+                            model_id: "expensive-historical-model".into(),
+                        }),
+                        ("historical-thinking", ProvisionedKind::ThinkingLevel {
+                            thinking_level: "high".into(),
+                        }),
+                    ] {
+                        saved.append_entry(ProvisionedEntry { id: entry_id.into(), kind }, "main")
+                            .await.unwrap();
+                    }
+                    let metadata = list_session_metadata_in_dir(&cwd.to_string_lossy(), &sessions)
+                        .await.unwrap().into_iter().find(|meta| meta.id == id).unwrap();
+                    drop(saved);
+                    let original = std::fs::read(&metadata.path).unwrap();
+                    let args = Args {
+                        continue_session: !explicit_id,
+                        session: explicit_id.then_some(id.clone()),
+                        session_dir: Some(sessions.clone()),
+                        no_tools: true,
+                        no_extensions: true,
+                        no_skills: true,
+                        no_prompt_templates: true,
+                        no_context_files: true,
+                        system_prompt: Some("offline resume regression".into()),
+                        ..Default::default()
+                    };
+                    let (harness, events, reload) = build(&resolved, &args, &cwd, false).await.unwrap();
+                    assert_eq!(harness.session().get_metadata().await.unwrap().id, id);
+                    assert_eq!(AgentLane::get_model(&harness).await.unwrap(), resolved.model);
+                    assert_eq!(AgentLane::get_thinking_level(&harness).await.unwrap(), resolved.thinking_level);
+                    let snapshot = harness.context_snapshot().await.unwrap();
+                    assert_eq!(snapshot.context.model, Some((
+                        "unavailable-historical-provider".into(), "expensive-historical-model".into(),
+                    )));
+                    assert_eq!(snapshot.context.thinking_level, "high");
+                    assert_eq!(std::fs::read(&metadata.path).unwrap(), original);
+                    let calls_before = faux.state().call_count.load(std::sync::atomic::Ordering::SeqCst);
+                    faux.script().set_responses(vec![ice_ai::providers::faux::FauxStep::text("startup resumed answer")]);
+                    let result = harness.prompt_text("CONTINUE_AT_STARTUP", Vec::new()).await.unwrap();
+                    assert!(matches!(result.outcome, ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }));
+                    assert_eq!(faux.state().call_count.load(std::sync::atomic::Ordering::SeqCst), calls_before + 1);
+                    // Restore an unavailable last historical choice before the
+                    // hot-switch check; a new assistant must not mask it.
+                    harness.session().append_entry(ProvisionedEntry {
+                        id: "historical-model-before-switch".into(),
+                        kind: ProvisionedKind::ModelChange {
+                            provider: "unavailable-historical-provider".into(),
+                            model_id: "expensive-historical-model".into(),
+                        },
+                    }, "main").await.unwrap();
+
+                    // TUI activation follows the same live-choice policy.
+                    // Release this harness's writer before reopening the file.
+                    drop(snapshot);
+                    drop(reload);
+                    drop(events);
+                    drop(harness);
+                    let live = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                        model: resolved.model.clone(),
+                        thinking_level: resolved.thinking_level,
+                        models: vec![faux.clone()],
+                        ..Default::default()
+                    }).await.unwrap();
+                    let restored = open_session(&metadata, &cwd.to_string_lossy()).await.unwrap();
+                    set_active_session(&live, restored, None).await.unwrap();
+                    assert_eq!(AgentLane::get_model(&live).await.unwrap(), resolved.model);
+                    assert_eq!(AgentLane::get_thinking_level(&live).await.unwrap(), resolved.thinking_level);
+                    assert_eq!(live.context_snapshot().await.unwrap().context.model, Some((
+                        "unavailable-historical-provider".into(), "expensive-historical-model".into(),
+                    )));
+                    let calls_before = faux.state().call_count.load(std::sync::atomic::Ordering::SeqCst);
+                    faux.script().set_responses(vec![ice_ai::providers::faux::FauxStep::text("resumed answer")]);
+                    let result = live.prompt_text("CONTINUE_SAVED_WORK", Vec::new()).await.unwrap();
+                    assert!(matches!(result.outcome, ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }));
+                    assert_eq!(faux.state().call_count.load(std::sync::atomic::Ordering::SeqCst), calls_before + 1);
+                    let entries = live.session().find_entries(&Default::default()).await.unwrap();
+                    assert!(entries.iter().any(|entry| matches!(entry, Entry::ModelChange(change)
+                        if change.provider == "unavailable-historical-provider")));
+                    assert!(entries.iter().any(|entry| matches!(entry, Entry::Message(message)
+                        if matches!(&message.message, ice_agent::AgentMessage::Assistant(assistant)
+                            if assistant.provider == resolved.model.provider && assistant.model == resolved.model.id))));
+                    assert!(std::fs::read(&metadata.path).unwrap().starts_with(&original));
+                    assert_eq!(std::fs::read(&settings_path).unwrap(), settings);
+                }
+            });
+    }
 
     #[test]
     fn loaded_context_paths_track_precedence_and_reload() {
@@ -3416,6 +3759,34 @@ mod tests {
         std::fs::remove_file(&path).ok();
     }
 
+    #[test]
+    fn summary_truncates_unicode_preview_by_characters() {
+        let path = scratch("unicode-preview");
+        let prompt = "界😀".repeat(60);
+        let message = serde_json::json!({
+            "kind": "entry",
+            "type": "message",
+            "id": "unicode",
+            "message": {"role": "user", "content": prompt},
+        });
+        let body = format!(
+            "{{\"kind\":\"header\",\"version\":4,\"id\":\"abc\",\"createdAt\":1,\"cwd\":\"x\"}}\n{}\n",
+            serde_json::to_string(&message).unwrap()
+        );
+        std::fs::write(&path, body).unwrap();
+        let summary = summarize_session_file(&path);
+        let preview = summary.preview.expect("Unicode prompt preview");
+        assert_eq!(preview.chars().count(), SUMMARY_PREVIEW_CHARS);
+        assert_eq!(
+            preview,
+            prompt
+                .chars()
+                .take(SUMMARY_PREVIEW_CHARS)
+                .collect::<String>()
+        );
+        std::fs::remove_file(&path).ok();
+    }
+
     fn meta_for(path: &Path, id: &str) -> ice_harness::session::jsonl::JsonlSessionMetadata {
         ice_harness::session::jsonl::JsonlSessionMetadata {
             id: id.to_string(),
@@ -3467,9 +3838,40 @@ mod tests {
         let nested = root.join("--proj--");
         std::fs::create_dir_all(&nested).unwrap();
         let file = nested.join("2026-01-01_a.jsonl");
-        std::fs::write(&file, "{}\n").unwrap();
+        std::fs::write(
+            &file,
+            r#"{"kind":"header","version":4,"id":"a","createdAt":0,"cwd":"/proj"}"#,
+        )
+        .unwrap();
         let found = list_session_files_sync(&root);
         assert!(found.iter().any(|p| p == &file));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn list_session_files_sync_breaks_mtime_ties_by_path_descending() {
+        let root = std::env::temp_dir().join(format!("ice-tie-{}-dir", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let when = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_700_000_000);
+        let paths: Vec<_> = ["a", "b", "c"]
+            .iter()
+            .map(|name| {
+                let path = root.join(format!("{name}.jsonl"));
+                std::fs::write(
+                    &path,
+                    format!(r#"{{"kind":"header","version":4,"id":"{name}","createdAt":0,"cwd":"/proj"}}"#),
+                )
+                .unwrap();
+                let file = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
+                file.set_modified(when).unwrap();
+                path
+            })
+            .collect();
+        let found = list_session_files_sync(&root);
+        assert_eq!(
+            found,
+            vec![paths[2].clone(), paths[1].clone(), paths[0].clone()]
+        );
         std::fs::remove_dir_all(&root).ok();
     }
 
@@ -4162,6 +4564,89 @@ mod tests {
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
         std::fs::create_dir_all(cwd.join(".icers/sessions")).unwrap();
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
+    }
+
+    #[test]
+    fn new_session_replaces_conversation_without_modifying_old_history() {
+        const CHILD: &str = "ICERS_SESSION_RESET_TEST_CWD";
+        let Some(cwd) = std::env::var_os(CHILD) else {
+            let directory = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "session::tests::new_session_replaces_conversation_without_modifying_old_history", "--nocapture"])
+                .env(CHILD, directory.path())
+                .env(crate::config::CONFIG_DIR_ENV, directory.path().join("config"))
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        };
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let harness = AgentHarness::create(Default::default()).await.unwrap();
+                let old = Session::new(harness.session().storage(), None);
+                let old_id = old.get_metadata().await.unwrap().id;
+                old.append_message(ice_agent::AgentMessage::User(
+                    ice_ai::types::UserMessage::new("old history", 1),
+                ))
+                .await
+                .unwrap();
+                harness
+                    .lane("main")
+                    .follow_up(ice_agent::AgentMessage::User(
+                        ice_ai::types::UserMessage::new("old queued message", 2),
+                    ))
+                    .await
+                    .unwrap();
+                let context = ice_extensions::ToolCallContext::new(
+                    PathBuf::from(&cwd).to_string_lossy().into_owned(),
+                );
+                let id = start_new_session(&harness, Path::new(&cwd), Some(&context))
+                    .await
+                    .unwrap();
+                assert_ne!(id, old_id);
+                assert_eq!(harness.session().get_metadata().await.unwrap().id, id);
+                assert!(harness
+                    .session()
+                    .find_entries(&Default::default())
+                    .await
+                    .unwrap()
+                    .is_empty());
+                assert_eq!(
+                    old.find_entries(&Default::default()).await.unwrap().len(),
+                    1
+                );
+                harness
+                    .session()
+                    .append_message(ice_agent::AgentMessage::User(
+                        ice_ai::types::UserMessage::new("new history", 3),
+                    ))
+                    .await
+                    .unwrap();
+                assert_eq!(
+                    harness.session().get_stats().await.unwrap().message_count,
+                    1
+                );
+                assert_eq!(old.get_stats().await.unwrap().message_count, 1);
+                assert_ne!(
+                    harness.session().get_leaf_id().await.unwrap(),
+                    old.get_leaf_id().await.unwrap()
+                );
+                assert!(
+                    list_session_metadata(&PathBuf::from(&cwd).to_string_lossy())
+                        .await
+                        .unwrap()
+                        .iter()
+                        .any(|metadata| metadata.id == id)
+                );
+            });
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

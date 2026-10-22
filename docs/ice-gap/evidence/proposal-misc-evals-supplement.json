@@ -1,0 +1,1863 @@
+{
+  "area": "misc",
+  "fragment": "evals",
+  "owner": "audit_tools",
+  "complete": false,
+  "draft_complete": true,
+  "independent_qa": {
+    "status": "pending",
+    "owner": "coordinator",
+    "note": "Worker schema, read-range, candidate identity and internal dependency checks passed; coordinator review/publication remains pending."
+  },
+  "entries": [
+    {
+      "id": "MISC-040",
+      "title": "Evaluation runner, explicit model defaults and separate test configuration",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [],
+      "size_min": 120,
+      "size_max": 210
+    },
+    {
+      "id": "MISC-041",
+      "title": "Isolated eval-session construction, prompt transformation and sequential reload steps",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-040",
+        "AI-002",
+        "SESSION-028",
+        "SESSION-035"
+      ],
+      "size_min": 170,
+      "size_max": 280
+    },
+    {
+      "id": "MISC-042",
+      "title": "Eval cancellation, snapshot-before-disposal and cleanup error aggregation",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-041"
+      ],
+      "size_min": 90,
+      "size_max": 160
+    },
+    {
+      "id": "MISC-043",
+      "title": "Strict prompt completion, normalized transcripts and evaluation usage",
+      "status": "partial",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-041",
+        "MISC-042",
+        "SESSION-027"
+      ],
+      "size_min": 140,
+      "size_max": 240
+    },
+    {
+      "id": "MISC-044",
+      "title": "Task-bound session/source artifacts and scoped attachment persistence",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-042"
+      ],
+      "size_min": 120,
+      "size_max": 210
+    },
+    {
+      "id": "MISC-045",
+      "title": "Comparative harness tables, canonical input pairing and failure metadata",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [],
+      "size_min": 180,
+      "size_max": 300
+    },
+    {
+      "id": "MISC-046",
+      "title": "Per-test run index, observation extraction and interrupted-run reporting",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-043",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047"
+      ],
+      "size_min": 170,
+      "size_max": 280
+    },
+    {
+      "id": "MISC-047",
+      "title": "Paired correctness lift, telemetry availability and diagnostic terminal summaries",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-045"
+      ],
+      "size_min": 260,
+      "size_max": 430
+    },
+    {
+      "id": "MISC-048",
+      "title": "Built-in smoke and extension-authoring evaluation scenarios",
+      "status": "missing",
+      "priority": "P2",
+      "dependencies": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-042",
+        "MISC-043",
+        "MISC-044",
+        "MISC-045",
+        "MISC-046",
+        "EXT-002",
+        "EXT-004",
+        "EXT-005",
+        "EXT-012",
+        "SESSION-035",
+        "SET-001"
+      ],
+      "size_min": 150,
+      "size_max": 250
+    }
+  ],
+  "ledger": [
+    {
+      "path": "packages/evals/src/extensions.eval.ts",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/ice-harness.ts",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-042",
+        "MISC-043"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/smoke.eval.ts",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/artifacts.ts",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/harness-table.ts",
+      "entry_ids": [
+        "MISC-045"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/reporter.ts",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/setup.ts",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    },
+    {
+      "path": "packages/evals/src/vitest-evals/summary.ts",
+      "entry_ids": [
+        "MISC-047"
+      ],
+      "status": "mapped",
+      "notes": "Full original file body and final line read; all exported helpers and runtime branches assigned. Source SHA matched frozen coordinator manifest; no execution."
+    }
+  ],
+  "surfaces": [
+    {
+      "category": "paths",
+      "name": ".ice",
+      "ice_ref": "packages/evals/src/extensions.eval.ts:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [
+        "C002103"
+      ],
+      "notes": "Original C002103. Eval fixture expects .ice/extensions/hello.ts inside its temporary project. Native extension paths/ABI alone do not implement this model-authoring evaluation."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_PROVIDER",
+      "ice_ref": "packages/evals/src/smoke.eval.ts:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [
+        "C002109"
+      ],
+      "notes": "Original C002109 is the smoke assertion's expected provider value, distinct from runner/default selection in MISC-040."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_MODEL",
+      "ice_ref": "packages/evals/src/smoke.eval.ts:14",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [
+        "C002110"
+      ],
+      "notes": "Original C002110 is the smoke assertion's expected model value; this is not a normal CLI model-default claim."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_EVAL_ARTIFACT_DIR",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:15",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [
+        "C002113"
+      ],
+      "notes": "Original C002113. Reporter trims this value, skips persistence when empty, and uses it as supplied; runner resolution is separately authored under MISC-040."
+    },
+    {
+      "category": "cli",
+      "name": "npm run eval",
+      "ice_ref": "packages/evals/package.json:8",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Private eval workspace runner; root script forwards remaining arguments here."
+    },
+    {
+      "category": "cli",
+      "name": "eval --provider",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Separate and equals forms; any CLI model selector requires both CLI values after trimming."
+    },
+    {
+      "category": "cli",
+      "name": "eval --model",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Separate and equals forms; missing CLI half is not completed from environment defaults."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_PROVIDER",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:57",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Trimmed environment provider is used only when no CLI selector was supplied; installed/removed with ICE_MODEL in child environment."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_MODEL",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:58",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Trimmed environment model is used only with the provider pair; selected harnesses may override both."
+    },
+    {
+      "category": "environment",
+      "name": "ICE_EVAL_ARTIFACT_DIR",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:9",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Truthy override resolves relative to package root, unlike the reporter's direct trimmed use."
+    },
+    {
+      "category": "paths",
+      "name": ".eval/<timestamp>_<UUID>",
+      "ice_ref": "packages/evals/scripts/run-evals.mjs:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Default private eval artifact root. Timestamp colons are replaced; requested mkdir mode0700."
+    },
+    {
+      "category": "paths",
+      "name": "src/**/*.eval.ts",
+      "ice_ref": "packages/evals/vitest.config.ts:10",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Opt-in model-backed file selection; fileParallelism=false, test120000ms/hook30000ms and two reporters."
+    },
+    {
+      "category": "paths",
+      "name": "test/**/*.test.ts",
+      "ice_ref": "packages/evals/vitest.test.config.ts:8",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Separate deterministic helper-test selection; no eval setup/reporter installed here by this file."
+    },
+    {
+      "category": "hooks",
+      "name": "resolveModelSelection",
+      "ice_ref": "packages/evals/src/ice-harness.ts:46",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-040",
+      "candidate_ids": [],
+      "notes": "Explicit nullish selection before environment fallback; trimming and complete-pair requirement."
+    },
+    {
+      "category": "hooks",
+      "name": "createIceCodingAgentHarness",
+      "ice_ref": "packages/evals/src/ice-harness.ts:246",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Factory overloads choose string output or JsonValue output callback; name defaults to ice-coding-agent."
+    },
+    {
+      "category": "hooks",
+      "name": "IceCodingAgentInput prompt/reload sequence",
+      "ice_ref": "packages/evals/src/ice-harness.ts:28",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "String prompt or typed ordered prompt/reload steps; at least one prompt required."
+    },
+    {
+      "category": "hooks",
+      "name": "transformSystemPrompt",
+      "ice_ref": "packages/evals/src/ice-harness.ts:39",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Synchronous complete-prompt transform, nonempty trim validation, then resource reload."
+    },
+    {
+      "category": "hooks",
+      "name": "output({response,session})",
+      "ice_ref": "packages/evals/src/ice-harness.ts:43",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Awaited custom projection while the live session and temporary files still exist."
+    },
+    {
+      "category": "hooks",
+      "name": "noTools (eval harness option)",
+      "ice_ref": "packages/evals/src/ice-harness.ts:38",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Forwards CreateAgentSessionOptions noTools; no independent eval tool-policy schema."
+    },
+    {
+      "category": "paths",
+      "name": "ice-eval-*/workspace",
+      "ice_ref": "packages/evals/src/ice-harness.ts:123",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Fresh OS-temp project cwd for each run."
+    },
+    {
+      "category": "paths",
+      "name": "ice-eval-*/agent",
+      "ice_ref": "packages/evals/src/ice-harness.ts:124",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Fresh agent resource directory with in-memory settings; normal ModelRuntime authentication remains separate."
+    },
+    {
+      "category": "paths",
+      "name": "ice-eval-*/sessions",
+      "ice_ref": "packages/evals/src/ice-harness.ts:141",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "Native session file is created under the same scoped temporary root."
+    },
+    {
+      "category": "hooks",
+      "name": "runId eval artifact",
+      "ice_ref": "packages/evals/src/ice-harness.ts:142",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-041",
+      "candidate_ids": [],
+      "notes": "SessionManager session ID identifies attachments and index records; it is not a comparison input key."
+    },
+    {
+      "category": "hooks",
+      "name": "HarnessContext AbortSignal",
+      "ice_ref": "packages/evals/src/ice-harness.ts:163",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-042",
+      "candidate_ids": [],
+      "notes": "Once-only listener memoizes session.abort(); finally removes listener and awaits it; phase boundaries are explicit."
+    },
+    {
+      "category": "hooks",
+      "name": "snapshot/dispose/remove cleanup",
+      "ice_ref": "packages/evals/src/ice-harness.ts:212",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-042",
+      "candidate_ids": [],
+      "notes": "Collect snapshot, disposal and rm errors, preserving the primary run error in AggregateError."
+    },
+    {
+      "category": "hooks",
+      "name": "normalized eval events and usage",
+      "ice_ref": "packages/evals/src/ice-harness.ts:188",
+      "rust_ref": "",
+      "status": "partial",
+      "entry_id": "MISC-043",
+      "candidate_ids": [],
+      "notes": "Text/tool projection and selected-model usage/pricing gate; native full session is separately attached."
+    },
+    {
+      "category": "hooks",
+      "name": "strict Stop response contract",
+      "ice_ref": "packages/evals/src/ice-harness.ts:99",
+      "rust_ref": "crates/ice-harness/src/agent_harness.rs:3455",
+      "status": "partial",
+      "entry_id": "MISC-043",
+      "candidate_ids": [],
+      "notes": "Only exact stop plus nonempty exposed text succeeds; native Completed alone is broader."
+    },
+    {
+      "category": "hooks",
+      "name": "iceSessionJsonl",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:13",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Snapshot artifact key consumed by explicit-task afterEach registration; unmodified UTF-8 native JSONL."
+    },
+    {
+      "category": "hooks",
+      "name": "@zykairotis/ice-evals:session",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:33",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Typed task artifact with runId and session.jsonl attachment; not a native session schema alias."
+    },
+    {
+      "category": "hooks",
+      "name": "@zykairotis/ice-evals:source",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:39",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Typed task artifact with runId and caller-supplied UTF-8 source attachment."
+    },
+    {
+      "category": "hooks",
+      "name": "recordEvalSessionArtifact",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:51",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Undefined snapshot skips; present snapshot requires string runId/session before recordArtifact(task,...)."
+    },
+    {
+      "category": "hooks",
+      "name": "recordEvalSourceArtifact",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:75",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Explicit task/run/attachment registration; no extra runtime validation in wrapper."
+    },
+    {
+      "category": "hooks",
+      "name": "persistEvalArtifactReferences",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:87",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Strict type/run selection, basename check, hashed directories and ordered relative references."
+    },
+    {
+      "category": "hooks",
+      "name": "eval afterEach task-artifact hook",
+      "ice_ref": "packages/evals/src/vitest-evals/setup.ts:5",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Reads task.meta.harness?.run and registers its snapshot before reporters."
+    },
+    {
+      "category": "paths",
+      "name": "sessions/<SHA-256(runId)>/session.jsonl",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:104",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Session attachment storage, requested directory0700/file0600; duplicate names overwrite."
+    },
+    {
+      "category": "paths",
+      "name": "sources/<SHA-256(runId)>/<basename>",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:100",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-044",
+      "candidate_ids": [],
+      "notes": "Source attachment storage; host basename semantics and relative returned path."
+    },
+    {
+      "category": "hooks",
+      "name": "evalHarnessTable",
+      "ice_ref": "packages/evals/src/vitest-evals/harness-table.ts:157",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-045",
+      "candidate_ids": [],
+      "notes": "One baseline, candidate or candidates, positive safe repetitions; declaration order within repetitions."
+    },
+    {
+      "category": "hooks",
+      "name": "deriveEvalGroupKey",
+      "ice_ref": "packages/evals/src/vitest-evals/harness-table.ts:110",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-045",
+      "candidate_ids": [],
+      "notes": "JSON pair of trimmed explicit ID or canonical-input SHA-256 and repetition."
+    },
+    {
+      "category": "hooks",
+      "name": "vitestEvalsHarnessIteration",
+      "ice_ref": "packages/evals/src/vitest-evals/harness-table.ts:10",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-045",
+      "candidate_ids": [],
+      "notes": "Version1 artifact records evalSet/groupKey/harness/baseline/candidates/repetition on success or attached partial failure."
+    },
+    {
+      "category": "hooks",
+      "name": "parseEvalHarnessIterationArtifact",
+      "ice_ref": "packages/evals/src/vitest-evals/harness-table.ts:46",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-045",
+      "candidate_ids": [],
+      "notes": "Type/shape parser is looser than builder validation; numeric repetition need not be finite or positive here."
+    },
+    {
+      "category": "hooks",
+      "name": "EvalHarnessReporter.onInit",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:92",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [],
+      "notes": "Stores logger for end-of-run output."
+    },
+    {
+      "category": "hooks",
+      "name": "EvalHarnessReporter.onTestCaseResult",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:96",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [],
+      "notes": "Awaited attachment persistence and local JSONL index append when configured."
+    },
+    {
+      "category": "hooks",
+      "name": "EvalHarnessReporter.onTestRunEnd",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:100",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [],
+      "notes": "Interrupted run suppresses comparisons; otherwise collects and formats observed runs."
+    },
+    {
+      "category": "hooks",
+      "name": "test.meta().eval.avgScore",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:62",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [],
+      "notes": "Finite average judge score is correctness input; run errors outrank it, while test status is fallback only."
+    },
+    {
+      "category": "paths",
+      "name": "runs.jsonl",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:46",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-046",
+      "candidate_ids": [],
+      "notes": "Append-only per-test run index contains test identity/status, usage, errors/timings and attachment references, not direct judge-score/output serialization."
+    },
+    {
+      "category": "hooks",
+      "name": "HarnessObservation",
+      "ice_ref": "packages/evals/src/vitest-evals/summary.ts:19",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-047",
+      "candidate_ids": [],
+      "notes": "Scored/unscored/skipped/pending/errored observation union with independent optional telemetry."
+    },
+    {
+      "category": "hooks",
+      "name": "HarnessComparisonReport schemaVersion1",
+      "ice_ref": "packages/evals/src/vitest-evals/summary.ts:65",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-047",
+      "candidate_ids": [],
+      "notes": "Per-eval-set candidate comparisons and once-per-group/harness diagnostics."
+    },
+    {
+      "category": "hooks",
+      "name": "summarizeHarnessComparisons",
+      "ice_ref": "packages/evals/src/vitest-evals/summary.ts:300",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-047",
+      "candidate_ids": [],
+      "notes": "Baseline pairing, exact-one eligibility, score>=1 pass rates and finite paired telemetry."
+    },
+    {
+      "category": "hooks",
+      "name": "formatHarnessComparisonReport",
+      "ice_ref": "packages/evals/src/vitest-evals/summary.ts:374",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-047",
+      "candidate_ids": [],
+      "notes": "Percentage-point correctness, signed efficiency deltas, pair coverage and incomplete observations."
+    },
+    {
+      "category": "paths",
+      "name": ".ice/extensions/hello.ts",
+      "ice_ref": "packages/evals/src/extensions.eval.ts:24",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [],
+      "notes": "Fixed source path inspected by the model-authoring judge and attached as hello.ts."
+    },
+    {
+      "category": "hooks",
+      "name": "ExtensionAuthoringJudge",
+      "ice_ref": "packages/evals/src/extensions.eval.ts:53",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [],
+      "notes": "Binary score checks canonical imports, loader/tool registration, exact successful hello call and response."
+    },
+    {
+      "category": "hooks",
+      "name": "system-prompt-without-docs / default-system-prompt",
+      "ice_ref": "packages/evals/src/extensions.eval.ts:100",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [],
+      "notes": "One-repetition baseline/candidate treatment; exact Guidelines/current-cwd marker slicing and hard setup assertions."
+    },
+    {
+      "category": "hooks",
+      "name": "Ice Coding Agent smoke",
+      "ice_ref": "packages/evals/src/smoke.eval.ts:7",
+      "rust_ref": "",
+      "status": "missing",
+      "entry_id": "MISC-048",
+      "candidate_ids": [],
+      "notes": "No-tools Paris response/errors/model identity/token assertions; no comparison iteration metadata."
+    }
+  ],
+  "read_evidence": [
+    {
+      "path": "ice:packages/evals/README.md",
+      "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+      "total_lines": 154,
+      "ranges": [
+        [
+          1,
+          154
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "1a9fbd8fe2d56989a59f479078bf20790719d115ba09dc18b611272733227f84",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/package.json",
+      "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "f584f7302bf6c88381eecb0bbad90640e1a2eb9d665408734529dbd91c1635d2",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/tsconfig.json",
+      "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+      "total_lines": 11,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ac98eee76a2e2cacfed7c2c1a29c8f71ca6366a99550d956e069c369024f75b9",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/vitest.config.ts",
+      "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+      "total_lines": 21,
+      "ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "38326b83aeca61494656ba070143212692dd3928a1984d09405e1c9073689ef7",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/vitest.test.config.ts",
+      "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+      "total_lines": 15,
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0e300c3b13bc129ade813a71a14e1659239cdb89e43c9769acb813b6e1b1d605",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/scripts/run-evals.mjs",
+      "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+      "total_lines": 98,
+      "ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9462a791fab37c012942ebb555c68e39712cc349efa9bafb3a61a6b81b688df4",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/ice-harness.ts",
+      "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+      "total_lines": 260,
+      "ranges": [
+        [
+          1,
+          260
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4da80971ffb4619d376c528e3f94d6a9a23ea05439f04acb9a344c0ba4f036ee",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/extensions.eval.ts",
+      "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+      "total_lines": 141,
+      "ranges": [
+        [
+          1,
+          141
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "725d482da1158605151c0b5a39108124bc73ee3ad6417416f26ae808cd01cab4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/smoke.eval.ts",
+      "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+      "total_lines": 18,
+      "ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2e402434042c54614c4a988c5151dc1950a085680b1ff5c5facb8389f4609c2b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/artifacts.ts",
+      "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+      "total_lines": 113,
+      "ranges": [
+        [
+          1,
+          113
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "9a39d8c269f162a205b22a2b05d4f8b289ec5233c8237db14461fb6624920165",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/harness-table.ts",
+      "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+      "total_lines": 194,
+      "ranges": [
+        [
+          1,
+          194
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "93b2727a4e5f7b52c76592ec3b00629fa6a3da3f12dc3a0d8f10861d47e4e8b4",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/summary.ts",
+      "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+      "total_lines": 439,
+      "ranges": [
+        [
+          1,
+          439
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "454bc2c3523e290877f5eacd7435bf84f6b68a39961062d6aa4d78937e303148",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/reporter.ts",
+      "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+      "total_lines": 114,
+      "ranges": [
+        [
+          1,
+          114
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "dc72bd3877070414cd96bfb512a58b5bc8cdafe0f398aa9abacff98f9e887b95",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/src/vitest-evals/setup.ts",
+      "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+      "total_lines": 9,
+      "ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "66ec10773804df6057152d511c019674ececce4c469f9887224a8c2fe0d108f1",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/ice-harness.test.ts",
+      "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+      "total_lines": 35,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "853c1938b65b86a9e5cad603ea572bce782cb4958b3848aa72e3b068271a5cd1",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/artifacts.test.ts",
+      "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+      "total_lines": 104,
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "bae1a8260196b6172882d03873fffe1733c68cf8720dda855ef3df2f9005ef01",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/harness-table.test.ts",
+      "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+      "total_lines": 95,
+      "ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "db83515d89049259b01fe5f3bb22fd4e82b755514a6fb33be3554ccf73d39ba8",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:packages/evals/test/vitest-evals/summary.test.ts",
+      "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+      "total_lines": 233,
+      "ranges": [
+        [
+          1,
+          233
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "4e0cc0c06ad807b20a00a6690612396294f35bb1fb6fac0a3310e12b0e62d26e",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:vitest.base.ts",
+      "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+      "total_lines": 29,
+      "ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "fe6ce2bf5d11224b2000f8910333c4a9a5a89e2e31f73714c6fa2ec62d68f582",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:package.json",
+      "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+      "total_lines": 91,
+      "ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "8cc5f831c251e3afeb86f259ce5a15306cc42f1e02bfa4080ebac4c0196a2adb",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "ice:tsconfig.json",
+      "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+      "total_lines": 39,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "71423e5f0a7f08a9853e8ae436ea3de440ce7201db78afa980c04fde8c9c228f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/Cargo.toml",
+      "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+      "total_lines": 43,
+      "ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96f1c7b1c1398bd81209d2234dc06a24cd26410864ef0e1a742d33981aa8ec8b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/lib.rs",
+      "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+      "total_lines": 33,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "0c2c48783926e6e59125c179ab2534db557dec9749b98f591d9eb838d0ba15e8",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/tests/harness_run_e2e.rs",
+      "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+      "total_lines": 4086,
+      "ranges": [
+        [
+          1,
+          469
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "96850289d7e944843fc47b5b0a3a00a614020219d031feac7f0462934be1cf1b",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "rust:crates/ice-tools/src/in_memory.rs",
+      "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+      "total_lines": 898,
+      "ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "009e07a471d4a288b5de750fcc82c27b19def508c79b63e7d9224c7037deeddf",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "ice:tsconfig.base.json",
+      "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+      "total_lines": 26,
+      "ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "2db314b2e40a37a94e7b1da0af3883b7dd0ef2a8abc4b22138ae1ceb7cc2375f",
+        "matched": true,
+        "basis": "clean tracked frozen Git revision; not original manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:Cargo.toml",
+      "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+      "total_lines": 89,
+      "ranges": [
+        [
+          1,
+          89
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "e6590c598672d1d73f83e87d0f3fcd2bae4a1c0ec8f33477ef6af0849d99908a",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/agent_harness.rs",
+      "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+      "total_lines": 5844,
+      "ranges": [
+        [
+          1,
+          135
+        ],
+        [
+          650,
+          820
+        ],
+        [
+          1578,
+          1592
+        ],
+        [
+          2011,
+          2053
+        ],
+        [
+          3400,
+          3510
+        ],
+        [
+          4510,
+          4550
+        ],
+        [
+          4625,
+          4715
+        ],
+        [
+          4870,
+          4930
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "cc929b6e350b281fb77afba4bc5d4ec8d04943c14cba4fe282d2bd6f9d6f0dfe",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": false,
+      "coverage": "bounded"
+    },
+    {
+      "path": "ice:packages/ai/src/utils/text.ts",
+      "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+      "total_lines": 13,
+      "ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "notes": "Direct source-read by existing read-only helper; no execution",
+      "baseline": {
+        "sha256": "442d027929fa6db4aa19638d64b55838ccada6c07f350610c53a521cd620ddf3",
+        "matched": true,
+        "basis": "coordinator source manifest"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    },
+    {
+      "path": "rust:crates/ice-harness/src/session/jsonl/mod.rs",
+      "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+      "total_lines": 27,
+      "ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "notes": "Direct source-read; no execution",
+      "baseline": {
+        "sha256": "ca1e3f4f5650228c8ae8cdfbad1667654536af4fb38185737166d21d0f45307a",
+        "matched": true,
+        "basis": "matches frozen coordinator manifest hash recorded by SESSION full source review"
+      },
+      "fully_read": true,
+      "coverage": "full"
+    }
+  ],
+  "candidate_exclusions": [
+    {
+      "candidate_id": "C002104",
+      "category": "paths",
+      "name": "extensionPath",
+      "ice_ref": "packages/evals/src/extensions.eval.ts:25",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-048; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002105",
+      "category": "paths",
+      "name": "cwd",
+      "ice_ref": "packages/evals/src/ice-harness.ts:130",
+      "entry_ids": [
+        "MISC-041"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-041; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002106",
+      "category": "paths",
+      "name": "agentDir",
+      "ice_ref": "packages/evals/src/ice-harness.ts:130",
+      "entry_ids": [
+        "MISC-041"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-041; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002107",
+      "category": "paths",
+      "name": "sessionPath",
+      "ice_ref": "packages/evals/src/ice-harness.ts:217",
+      "entry_ids": [
+        "MISC-042"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-042; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002108",
+      "category": "paths",
+      "name": "root",
+      "ice_ref": "packages/evals/src/ice-harness.ts:229",
+      "entry_ids": [
+        "MISC-042"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-042; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002111",
+      "category": "paths",
+      "name": "directory",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:105",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-044; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002112",
+      "category": "paths",
+      "name": "path",
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:107",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-044; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002114",
+      "category": "paths",
+      "name": "artifactDirectory",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:45",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-046; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    },
+    {
+      "candidate_id": "C002115",
+      "category": "paths",
+      "name": "join(artifactDirectory, \"runs.jsonl\")",
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:46",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "reason": "Mechanical filesystem-target-expression identifies an implementation variable/expression, not an additional stable public path. Its full function behavior is covered by MISC-046; the concrete temporary/session/source/index paths are separately authored. Original identity and source are preserved; this is not a source-read exclusion."
+    }
+  ],
+  "candidate_mapping": [
+    {
+      "candidate_id": "C002103",
+      "name": ".ice",
+      "category": "paths",
+      "path": "packages/evals/src/extensions.eval.ts",
+      "line": 24,
+      "end_line": 24,
+      "disposition": "surface",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "ice_ref": "packages/evals/src/extensions.eval.ts:24"
+    },
+    {
+      "candidate_id": "C002104",
+      "name": "extensionPath",
+      "category": "paths",
+      "path": "packages/evals/src/extensions.eval.ts",
+      "line": 25,
+      "end_line": 25,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "ice_ref": "packages/evals/src/extensions.eval.ts:25"
+    },
+    {
+      "candidate_id": "C002105",
+      "name": "cwd",
+      "category": "paths",
+      "path": "packages/evals/src/ice-harness.ts",
+      "line": 130,
+      "end_line": 130,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-041"
+      ],
+      "ice_ref": "packages/evals/src/ice-harness.ts:130"
+    },
+    {
+      "candidate_id": "C002106",
+      "name": "agentDir",
+      "category": "paths",
+      "path": "packages/evals/src/ice-harness.ts",
+      "line": 130,
+      "end_line": 130,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-041"
+      ],
+      "ice_ref": "packages/evals/src/ice-harness.ts:130"
+    },
+    {
+      "candidate_id": "C002107",
+      "name": "sessionPath",
+      "category": "paths",
+      "path": "packages/evals/src/ice-harness.ts",
+      "line": 217,
+      "end_line": 217,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-042"
+      ],
+      "ice_ref": "packages/evals/src/ice-harness.ts:217"
+    },
+    {
+      "candidate_id": "C002108",
+      "name": "root",
+      "category": "paths",
+      "path": "packages/evals/src/ice-harness.ts",
+      "line": 229,
+      "end_line": 229,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-042"
+      ],
+      "ice_ref": "packages/evals/src/ice-harness.ts:229"
+    },
+    {
+      "candidate_id": "C002109",
+      "name": "ICE_PROVIDER",
+      "category": "environment",
+      "path": "packages/evals/src/smoke.eval.ts",
+      "line": 13,
+      "end_line": 13,
+      "disposition": "surface",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "ice_ref": "packages/evals/src/smoke.eval.ts:13"
+    },
+    {
+      "candidate_id": "C002110",
+      "name": "ICE_MODEL",
+      "category": "environment",
+      "path": "packages/evals/src/smoke.eval.ts",
+      "line": 14,
+      "end_line": 14,
+      "disposition": "surface",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "ice_ref": "packages/evals/src/smoke.eval.ts:14"
+    },
+    {
+      "candidate_id": "C002111",
+      "name": "directory",
+      "category": "paths",
+      "path": "packages/evals/src/vitest-evals/artifacts.ts",
+      "line": 105,
+      "end_line": 105,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:105"
+    },
+    {
+      "candidate_id": "C002112",
+      "name": "path",
+      "category": "paths",
+      "path": "packages/evals/src/vitest-evals/artifacts.ts",
+      "line": 107,
+      "end_line": 107,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "ice_ref": "packages/evals/src/vitest-evals/artifacts.ts:107"
+    },
+    {
+      "candidate_id": "C002113",
+      "name": "ICE_EVAL_ARTIFACT_DIR",
+      "category": "environment",
+      "path": "packages/evals/src/vitest-evals/reporter.ts",
+      "line": 15,
+      "end_line": 15,
+      "disposition": "surface",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:15"
+    },
+    {
+      "candidate_id": "C002114",
+      "name": "artifactDirectory",
+      "category": "paths",
+      "path": "packages/evals/src/vitest-evals/reporter.ts",
+      "line": 45,
+      "end_line": 45,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:45"
+    },
+    {
+      "candidate_id": "C002115",
+      "name": "join(artifactDirectory, \"runs.jsonl\")",
+      "category": "paths",
+      "path": "packages/evals/src/vitest-evals/reporter.ts",
+      "line": 46,
+      "end_line": 50,
+      "disposition": "mechanical-expression",
+      "entry_ids": [
+        "MISC-046"
+      ],
+      "ice_ref": "packages/evals/src/vitest-evals/reporter.ts:46"
+    }
+  ],
+  "claims": [
+    {
+      "qa_claim_id": "FPC-154",
+      "first_pass_source": {
+        "path": "ICE_PORTING.md",
+        "sha256": "d66e4d33ef0023d228110786f03aeb73c97e72df454b1e481f375b3ac264d7fc"
+      },
+      "first_pass_lines": [
+        641,
+        641
+      ],
+      "claim": "Evals uses vitest-evals with real AgentSessions in temporary directories and is missing natively.",
+      "verdict": "qualified",
+      "finding": "Confirmed the full model-backed adapter, isolation/reload, snapshot/artifact, comparison-table, reporter and paired-summary behavior. Native AgentHarness, JSONL persistence, abort and deterministic Faux/in-memory tool tests already exist; the missing layer is the eval workflow and comparison/reporting adapter. No real-model outcome was executed.",
+      "evidence": [
+        "ice:packages/evals/src/ice-harness.ts:109-243",
+        "ice:packages/evals/src/vitest-evals/harness-table.ts:1-194",
+        "ice:packages/evals/src/vitest-evals/reporter.ts:1-114",
+        "ice:packages/evals/src/vitest-evals/summary.ts:1-439",
+        "rust:crates/ice-harness/tests/harness_run_e2e.rs:51-454",
+        "rust:crates/ice-harness/src/agent_harness.rs:682-810"
+      ],
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-042",
+        "MISC-043",
+        "MISC-044",
+        "MISC-045",
+        "MISC-046",
+        "MISC-047",
+        "MISC-048"
+      ]
+    }
+  ],
+  "dependency_requests": [],
+  "rust_only": [],
+  "open_questions": [
+    {
+      "key": "real-model-eval-outcomes",
+      "entry_ids": [
+        "MISC-048"
+      ],
+      "question": "Actual model-backed smoke and extension-authoring outcomes were not measured.",
+      "disposition": "Source-only audit scope; no model/auth/network/test execution."
+    },
+    {
+      "key": "external-vitest-evals-internals",
+      "entry_ids": [
+        "MISC-043",
+        "MISC-045",
+        "MISC-046"
+      ],
+      "question": "External vitest-evals0.15.0 normalization, run recognition, partial-error attachment and judge execution internals were not read.",
+      "disposition": "Checked-in adapter invocation/types/options are fully audited; external implementation behavior is not invented."
+    }
+  ],
+  "supplemental_ledger": [
+    {
+      "path": "packages/evals/README.md",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/package.json",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/tsconfig.json",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/vitest.config.ts",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/vitest.test.config.ts",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/scripts/run-evals.mjs",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/test/ice-harness.test.ts",
+      "entry_ids": [
+        "MISC-040"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/test/vitest-evals/artifacts.test.ts",
+      "entry_ids": [
+        "MISC-044"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/test/vitest-evals/harness-table.test.ts",
+      "entry_ids": [
+        "MISC-045"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/evals/test/vitest-evals/summary.test.ts",
+      "entry_ids": [
+        "MISC-047"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "vitest.base.ts",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "package.json",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "tsconfig.json",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "tsconfig.base.json",
+      "entry_ids": [
+        "MISC-040",
+        "MISC-041",
+        "MISC-044",
+        "MISC-045",
+        "MISC-047",
+        "MISC-048"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    },
+    {
+      "path": "packages/ai/src/utils/text.ts",
+      "entry_ids": [
+        "MISC-043"
+      ],
+      "notes": "Full supporting source/docs/config or direct test body read; supplemental files outside frozen source manifest matched the frozen Git revision."
+    }
+  ],
+  "verification": {
+    "method": "source-only",
+    "application_tests_executed": false,
+    "model_runs_executed": false,
+    "assigned_ledger_files": 8,
+    "candidate_count": 13,
+    "mapped_candidate_count": 4,
+    "excluded_mechanical_expression_count": 9,
+    "authored_surface_count": 49,
+    "total_surface_count": 53,
+    "source_review": "misc-evals-source-review.json",
+    "worker_schema_reference_qa": "misc-evals-qa.json",
+    "limits": "All8 owned implementations/4 direct TS suites are fully read. Native shared source and complete relevant test bodies are explicitly bounded; unrelated native crash/recovery tests are not claimed. No source, shared coverage, private-state or network mutation.",
+    "worker_qa_status": "passed-worker-checks-awaiting-coordinator",
+    "source_reference_occurrences": 101
+  },
+  "coverage_delta": {
+    "first_pass_claim_id": "FPC-154",
+    "entry_ids": [
+      "MISC-040",
+      "MISC-041",
+      "MISC-042",
+      "MISC-043",
+      "MISC-044",
+      "MISC-045",
+      "MISC-046",
+      "MISC-047",
+      "MISC-048"
+    ],
+    "environment_checks": [
+      {
+        "name": "ICE_MODEL",
+        "entry_ids": [
+          "MISC-040",
+          "MISC-048"
+        ],
+        "finding": "Real eval default input in resolveModelSelection and run-evals runner; smoke also asserts it. Normal CLI model-default behavior is a distinct claim."
+      },
+      {
+        "name": "ICE_PROVIDER",
+        "entry_ids": [
+          "MISC-040",
+          "MISC-048"
+        ],
+        "finding": "Paired eval default provider, with explicit harness model precedence and runner pair validation."
+      }
+    ]
+  }
+}

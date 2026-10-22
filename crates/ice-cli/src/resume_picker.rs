@@ -15,13 +15,19 @@ use ice_tui::{
 /// Returns `Ok(None)` when the user cancels with Esc or Ctrl+C.
 pub async fn select(cwd: &Path) -> Result<Option<String>, String> {
     let cwd_text = cwd.to_string_lossy().into_owned();
-    let metadata = crate::session::list_session_metadata(&cwd_text)
+    let discovery = crate::session::discover_session_metadata(&cwd_text)
         .await
         .map_err(|e| e.to_string())?;
+    let warning = crate::session::session_discovery_warning(&discovery.skipped);
+    let metadata = discovery.sessions;
     if metadata.is_empty() {
         return Err(format!(
-            "no sessions found in {}",
-            crate::session::default_session_dir(cwd).display()
+            "no sessions found in {}{}",
+            crate::session::session_dir(cwd).display(),
+            warning
+                .as_ref()
+                .map(|text| format!("\n{text}"))
+                .unwrap_or_default()
         ));
     }
 
@@ -71,8 +77,12 @@ pub async fn select(cwd: &Path) -> Result<Option<String>, String> {
     }
     if items.is_empty() {
         return Err(format!(
-            "no resumable sessions with messages in {}",
-            crate::session::default_session_dir(cwd).display()
+            "no resumable sessions with messages in {}{}",
+            crate::session::session_dir(cwd).display(),
+            warning
+                .as_ref()
+                .map(|text| format!("\n{text}"))
+                .unwrap_or_default()
         ));
     }
 
@@ -89,6 +99,9 @@ pub async fn select(cwd: &Path) -> Result<Option<String>, String> {
     let search = Arc::new(Text::new("  Filter: ", 0, 0));
     let root = Arc::new(Container::new());
     root.add_child(Arc::new(Text::new("Resume session", 1, 1)));
+    if let Some(warning) = warning {
+        root.add_child(Arc::new(Text::new(warning, 1, 0)));
+    }
     root.add_child(Arc::new(Text::new(
         "  Type to filter, Enter to resume, Esc to cancel",
         0,

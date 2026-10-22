@@ -2,6 +2,36 @@
 
 use super::*;
 
+pub(super) async fn apply_thinking_selection(
+    lane: &Arc<dyn AgentLane>,
+    state: &Arc<TuiState>,
+    chat: &Arc<Container>,
+    level: ice_ai::types::ThinkingLevel,
+    save_default: bool,
+) {
+    if let Err(error) = lane.set_thinking_level(level).await {
+        add_error_message(chat, &format!("Could not change thinking level: {error}"));
+        return;
+    }
+    let name = thinking_level_name(level);
+    state.footer.set_thinking_level(Some(name));
+    let saved = if save_default {
+        let result = crate::settings::load_settings()
+            .map_err(|error| error.to_string())
+            .and_then(|mut settings| {
+                settings.default_thinking_level = Some(name.to_string());
+                crate::settings::save_settings(&settings)
+            });
+        match result {
+            Ok(_) => " Default saved.".to_string(),
+            Err(error) => format!(" Changed for this session, but could not save default: {error}"),
+        }
+    } else {
+        String::new()
+    };
+    add_note_message(chat, &format!("Thinking set to {name}.{saved}"));
+}
+
 // ===========================================================================
 // Selectors — editor-container swap (TS showSelector pattern)
 // ===========================================================================
@@ -1068,15 +1098,13 @@ pub(super) fn open_thinking_selector(
             return;
         };
         let lane = lane_sel.clone();
-        let footer_sel = state_sel.footer.clone();
+        let state = state_sel.clone();
+        let chat = chat_sel.clone();
+        let tui = tui_sel.clone();
         tokio::spawn(async move {
-            let _ = lane.set_thinking_level(level).await;
+            apply_thinking_selection(&lane, &state, &chat, level, false).await;
+            tui.request_render(false);
         });
-        // Reflect the chosen level in the footer's model suffix (pi parity:
-        // `model • thinking off` / `model • medium`). The shown text for the
-        // Off level is "off", matching the TS `thinkingLevel === "off"` branch.
-        footer_sel.set_thinking_level(Some(thinking_level_name(level)));
-        add_note_message(&chat_sel, &format!("Thinking set to {}.", item.label));
         close_selector(&state_sel, &ec_sel, &editor_sel, &tui_sel);
     }));
     let state_cancel = state.clone();

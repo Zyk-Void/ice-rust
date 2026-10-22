@@ -21,22 +21,19 @@
 //! `tokio::Mutex<()>` on each storage handle (intra-handle; the repo additionally
 //! guards cross-handle create races).
 //!
-//! ### Duplicate-seq recovery (divergent writers)
+//! ### Conservative replay of repeated sequences
 //!
-//! Two writers appending to one JSONL diverge their `sequence` counters, which
-//! used to make the whole session unopenable. `load` now heals the two shapes:
+//! A repeated sequence is accepted only if the decoded mutation is identical to
+//! the previously applied mutation at that sequence. Distinct work is an
+//! unresolved conflict, not a duplicate to delete. Replay does not rewrite exact
+//! repeats or reparent entries. Forward gaps remain supported for existing logs,
+//! but each mutation must still satisfy lane/parent validation. A conflict leaves
+//! the original file untouched, including when followed by a torn tail.
 //!
-//! - **A stale seq** (`seq <= sequence`): a duplicate/late append. The line is
-//!   dropped (its content already applied) instead of failing the load.
-//! - **A forward gap** (`seq > sequence + 1`): the other writer's counter was
-//!   ahead. The counter is resynced up to the gap, leaving raw seqs untouched so
-//!   future appends stay consistent with the file.
-//!
-//! An entry that no longer chains to the lane leaf (its parent was the other
-//! writer's leaf) is re-parented onto the current leaf. When any duplicate was
-//! dropped the file is atomically republished without it. The host additionally
-//! takes an OS advisory lock per session (see `pi-cli`'s `claim_session_lock`)
-//! so a second process is refused rather than allowed to write concurrently.
+//! OS-backed files hold an advisory sidecar lock for the storage lifetime,
+//! including load, repair and append. The sidecar is never unlinked: crashes
+//! release the OS lock without a stale-file takeover race. Virtual/remote
+//! filesystems must supply their own writer policy.
 //!
 //! ## Adaptation
 //!
@@ -47,6 +44,7 @@
 //! `append_entry` receives a [`ProvisionedEntry`] and stamps via the state +
 //! a [`Clock`], then encodes the resulting full `Entry`.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -87,11 +85,61 @@ pub struct JsonlSessionStorage {
     /// Not `&self` across await points, so each mutating op holds it for its
     /// full duration.
     tail: Mutex<()>,
+    // Held until the final shared storage handle drops. Locking a stable sidecar
+    // rather than the JSONL inode keeps ownership across atomic repair renames.
+    _ownership: Option<OwnershipGuard>,
+}
+
+pub(super) struct OwnershipGuard(std::fs::File);
+
+impl Drop for OwnershipGuard {
+    fn drop(&mut self) {
+        // Explicit unlock avoids a concurrently spawned child's pre-exec copy
+        // briefly extending the lock after this owner drops (POSIX flock).
+        let _ = fs2::FileExt::unlock(&self.0);
+    }
+}
+
+pub(super) fn claim_ownership(
+    fs: &dyn FileSystem,
+    path: &str,
+) -> SessionResult<Option<OwnershipGuard>> {
+    let Some(path) = fs.native_path(path) else {
+        return Ok(None);
+    };
+    // Resolve aliases to the same sidecar. For a new file canonicalize its
+    // existing parent instead; the repository creates directories beforehand.
+    let path = if path.exists() {
+        path.canonicalize()
+    } else {
+        path.parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
+            .canonicalize()
+            .map(|parent| parent.join(path.file_name().unwrap_or_default()))
+    }
+    .map_err(|e| SessionError::storage(format!("Resolve session ownership: {e}")))?;
+    let mut lock_path = path.as_os_str().to_os_string();
+    lock_path.push(".lock");
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(false)
+        .open(&lock_path)
+        .map_err(|e| SessionError::storage(format!("Open session lock {}: {e}", path.display())))?;
+    fs2::FileExt::try_lock_exclusive(&file).map_err(|e| {
+        SessionError::storage(format!(
+            "Session {} is already open or cannot be locked: {e}",
+            path.display()
+        ))
+    })?;
+    Ok(Some(OwnershipGuard(file)))
 }
 
 impl JsonlSessionStorage {
-    /// Build a storage over an already-initialized file (header written).
-    /// Mirrors TS `new JsonlSessionStorage(fs, metadata)`.
+    /// Build empty state over an already-initialized virtual file.
+    /// OS-backed callers must use `create` or `load` to acquire ownership and
+    /// replay history; this low-level constructor cannot safely do either.
+    /// Native writes through this constructor are rejected.
     pub fn new(
         fs: Arc<dyn FileSystem>,
         metadata: JsonlSessionMetadata,
@@ -105,6 +153,7 @@ impl JsonlSessionStorage {
             clock,
             ids,
             tail: Mutex::new(()),
+            _ownership: None,
         }
     }
 
@@ -117,6 +166,12 @@ impl JsonlSessionStorage {
         clock: Arc<dyn Clock>,
         ids: Arc<dyn IdGenerator>,
     ) -> SessionResult<Self> {
+        let ownership = claim_ownership(fs.as_ref(), path)?;
+        if file_result(fs.exists(path, None).await, "Check new session destination")? {
+            return Err(SessionError::already_exists(format!(
+                "Session already exists: {path}"
+            )));
+        }
         file_result(
             fs.write_file(path, FileContent::Text(encode_header(&header)), None)
                 .await,
@@ -127,7 +182,9 @@ impl JsonlSessionStorage {
             &format!("Failed to read session metadata {path}"),
         )?;
         let metadata = metadata_from_header(&header, path, info.mtime_ms);
-        Ok(Self::new(fs, metadata, clock, ids))
+        let mut storage = Self::new(fs, metadata, clock, ids);
+        storage._ownership = ownership;
+        Ok(storage)
     }
 
     /// Load + replay an existing session file, repairing a torn tail if the
@@ -137,6 +194,17 @@ impl JsonlSessionStorage {
         path: &str,
         clock: Arc<dyn Clock>,
         ids: Arc<dyn IdGenerator>,
+    ) -> SessionResult<Self> {
+        let ownership = claim_ownership(fs.as_ref(), path)?;
+        Self::load_owned(fs, path, clock, ids, ownership).await
+    }
+
+    async fn load_owned(
+        fs: Arc<dyn FileSystem>,
+        path: &str,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        ownership: Option<OwnershipGuard>,
     ) -> SessionResult<Self> {
         let content = file_result(
             fs.read_text_file(path, None).await,
@@ -156,27 +224,30 @@ impl JsonlSessionStorage {
             &format!("Failed to read session metadata {path}"),
         )?;
         let metadata = metadata_from_header(&header, path, info.mtime_ms);
-        let storage = Self::new(fs.clone(), metadata, clock, ids);
+        let mut storage = Self::new(fs.clone(), metadata, clock, ids);
+        storage._ownership = ownership;
 
-        // Lines kept through the duplicate-seq recovery, so a healed file can
-        // be republished without the dropped duplicates (see after the loop).
-        let mut kept_lines: Vec<&str> = Vec::new();
-        let mut dropped_duplicates = false;
+        // Compare decoded content, not raw whitespace or a sequence alone.
+        // Keep repeats on disk: replay is not permission to rewrite history.
+        let mut applied = HashMap::new();
         for (idx, line) in physical_lines.iter().enumerate().skip(1) {
             let line_no = (idx + 1) as u32;
             match parse_mutation(line) {
                 Ok(mutation) => {
                     let mut state = storage.state.lock().await;
-                    // Self-heal a duplicated/late append. Two writers on one
-                    // JSONL (e.g. a session resumed while still open in another
-                    // process) diverge their `sequence` counters, so a mutation
-                    // lands with an already-consumed seq. Its content is a
-                    // duplicate of what already applied, so drop it rather than
-                    // refuse the whole session.
-                    if mutation.seq() <= state.sequence() {
-                        dropped_duplicates = true;
-                        drop(state);
-                        continue;
+                    let seq = mutation.seq();
+                    let content = encode_mutation(&mutation);
+                    if seq <= state.sequence() {
+                        if applied.get(&seq) == Some(&content) {
+                            continue;
+                        }
+                        return Err(invalid_file(
+                            path,
+                            line_no,
+                            &format!(
+                                "Conflicting mutation at sequence {seq}; original history preserved"
+                            ),
+                        ));
                     }
                     // A divergent writer's counter can leave a forward gap (its
                     // seqs were consumed elsewhere). Accept the gap by moving
@@ -185,7 +256,6 @@ impl JsonlSessionStorage {
                     if mutation.seq() > state.next_sequence() {
                         state.resync_sequence(mutation.seq() - 1);
                     }
-                    let mutation = chain_onto_lane_leaf(mutation, &state);
                     if let Err(e) = state.apply_mutation(mutation) {
                         if e.code == SessionErrorCode::InvalidEntry {
                             drop(state);
@@ -194,7 +264,7 @@ impl JsonlSessionStorage {
                         drop(state);
                         return Err(e);
                     }
-                    kept_lines.push(*line);
+                    applied.insert(seq, content);
                 }
                 Err(err) => {
                     // Assistant frames are transient streaming progress, not
@@ -233,35 +303,6 @@ impl JsonlSessionStorage {
                 }
             }
         }
-        // Persist the duplicate-seq recovery: atomically republish the file
-        // without the dropped duplicates so the log no longer carries them.
-        // Seq values are untouched (no renumbering), so subsequent appends
-        // stay consistent with the file.
-        if dropped_duplicates {
-            let mut repaired = String::with_capacity(content.len());
-            repaired.push_str(physical_lines[0]);
-            repaired.push('\n');
-            for line in &kept_lines {
-                repaired.push_str(line);
-                repaired.push('\n');
-            }
-            let fs = storage.fs.clone();
-            let path_owned = path.to_string();
-            publish_file_atomically(&fs, &path_owned, |fs, temp_path| {
-                let repaired = repaired.clone();
-                let path_owned = path_owned.clone();
-                Box::pin(async move {
-                    file_result(
-                        fs.write_file(temp_path, FileContent::Text(repaired), None)
-                            .await,
-                        &format!("Failed to stage session repair {path_owned}"),
-                    )?;
-                    Ok(())
-                })
-            })
-            .await?;
-            return Ok(storage);
-        }
         // Repair an unterminated tail (no trailing "\n") so future appends are
         // on their own line.
         if !content.ends_with('\n') {
@@ -291,7 +332,24 @@ impl JsonlSessionStorage {
             let state = self.state.lock().await;
             state.create_fork_mutations(options)?
         };
-        publish_file_atomically(&self.fs, path, |fs, temp_path| {
+        Self::publish_fork(self.fs.clone(), path, header, mutations, clock, ids).await
+    }
+
+    pub(crate) async fn publish_fork(
+        fs: Arc<dyn FileSystem>,
+        path: &str,
+        header: JsonlV4Header,
+        mutations: Vec<SessionMutation>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+    ) -> SessionResult<Self> {
+        let ownership = claim_ownership(fs.as_ref(), path)?;
+        if file_result(fs.exists(path, None).await, "Check fork destination")? {
+            return Err(SessionError::already_exists(format!(
+                "Session already exists: {path}"
+            )));
+        }
+        publish_file_atomically(&fs, path, |fs, temp_path| {
             let header = header.clone();
             let mutations = mutations.clone();
             let clock = clock.clone();
@@ -313,7 +371,7 @@ impl JsonlSessionStorage {
             })
         })
         .await?;
-        JsonlSessionStorage::load(self.fs.clone(), path, clock, ids).await
+        Self::load_owned(fs, path, clock, ids, ownership).await
     }
 
     /// Wait for all in-flight appends to settle. Mirrors TS `drain`.
@@ -339,6 +397,11 @@ impl JsonlSessionStorage {
     /// Append a mutation line to the file (no in-memory apply). Mirrors TS
     /// `appendMutation`.
     async fn append_mutation_line(&self, mutation: &SessionMutation) -> SessionResult<()> {
+        if self._ownership.is_none() && self.fs.native_path(&self.metadata.path).is_some() {
+            return Err(SessionError::storage(
+                "Native writes require JsonlSessionStorage::create or load to acquire ownership",
+            ));
+        }
         let line = encode_mutation(mutation);
         file_result(
             self.fs
@@ -346,39 +409,6 @@ impl JsonlSessionStorage {
                 .await,
             &format!("Failed to append session {}", self.metadata.path),
         )
-    }
-}
-
-/// Normalize an entry's parent onto the lane's current leaf before applying.
-///
-/// A valid log always satisfies `entry.parent_id == lane.leaf` (the validator
-/// enforces it), so this is a no-op for well-formed sessions. When two writers
-/// diverge, an entry can land with a parent the local state never reached;
-/// re-chaining onto the leaf recovers the session instead of refusing to open
-/// it. Non-entry mutations and entries without a named lane pass through.
-fn chain_onto_lane_leaf(mutation: SessionMutation, state: &SessionState) -> SessionMutation {
-    if let SessionMutation::Entry {
-        seq,
-        timestamp,
-        lane,
-        mut entry,
-    } = mutation
-    {
-        if let Some(lane_name) = lane.clone() {
-            if let Ok(leaf) = state.require_lane(&lane_name) {
-                if entry.parent_id().map(str::to_string) != leaf {
-                    entry.base_mut().parent_id = leaf;
-                }
-            }
-        }
-        SessionMutation::Entry {
-            seq,
-            timestamp,
-            lane,
-            entry,
-        }
-    } else {
-        mutation
     }
 }
 
