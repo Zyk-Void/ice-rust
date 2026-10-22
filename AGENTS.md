@@ -49,6 +49,22 @@ fork.
    stays open until the package-name decision is made.
 7. **Do not open PRs or issues against upstream** (`bigfish1913/pi-rust`)
    unless the user explicitly asks. See §7.4.
+8. **Never review Markdown files with OpenCodeReview (OCR).** Exclude all
+   Markdown files (including `.md` and `.markdown`, case-insensitively) from
+   the selected review files before invoking OCR, in both workspace and
+   commit-range reviews. Do not send Markdown diffs to OCR or rely on
+   discarding Markdown findings afterward.
+9. **Use a code-first allowlist for OCR reviews.** Select Rust source and
+   tests under `crates/`, `packages/`, and `examples/`; executable scripts
+   (`.sh`, `.py`, `.js`, `.mjs`, `.ts`) outside excluded directories;
+   `Cargo.toml`, `Cargo.lock`, Rust toolchain and build configuration; and
+   `.github/workflows/` configuration. Include test fixtures only when needed
+   to understand a selected code change. Exclude `docs/ice-gap/` entirely
+   (including audit JSON, CSV, snapshots, and historical helper scripts),
+   other documentation, generated artifacts, and copied documentation.
+   Apply this scope before invoking OCR, not just when filtering findings.
+   Report code/config statistics separately from documentation and evidence.
+   This is a review filter only: preserve whole commits when integrating.
 
 ## 3. Branch model
 
