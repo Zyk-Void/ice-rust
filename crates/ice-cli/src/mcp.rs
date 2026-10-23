@@ -8,10 +8,11 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use async_trait::async_trait;
+use futures::future::BoxFuture;
 use ice_agent::agent_tool::AgentTool;
 use ice_agent::types::{AgentToolResult, TextContentOrImage, ToolResultPartial};
 use ice_agent::AgentError;
@@ -22,12 +23,14 @@ use ice_harness::types::{HarnessLifecycleHooks, HarnessTool};
 use ice_plugin_sdk::process::ProcessTree;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tokio::sync::{oneshot, watch};
+use tokio::sync::{mpsc, oneshot, watch, Semaphore};
 use tokio_util::sync::CancellationToken;
 
 const START_TIMEOUT: Duration = Duration::from_secs(10);
 const CALL_TIMEOUT: Duration = Duration::from_secs(60);
 const MAX_LINE: u64 = 16 * 1024 * 1024;
+/// Bounds dialogs or model calls a single server can have waiting on this client.
+const MAX_INBOUND: usize = 8;
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(untagged)]
@@ -133,6 +136,62 @@ pub fn load_config(
 
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
+/// JSON-RPC error returned to the server for one of its requests.
+pub(crate) struct RpcError {
+    pub code: i64,
+    pub message: String,
+}
+type RequestHandler = Arc<
+    dyn Fn(Value, CancellationToken) -> BoxFuture<'static, Result<Value, RpcError>> + Send + Sync,
+>;
+
+/// Server-to-client handling. A capability is advertised only for a registered method.
+#[derive(Clone, Default)]
+pub(crate) struct Handlers {
+    requests: BTreeMap<&'static str, (Value, RequestHandler)>,
+    /// Receives the catalog (`tools`, `prompts`, `resources`) named by a list_changed notification.
+    list_changed: Option<Arc<dyn Fn(&str) + Send + Sync>>,
+}
+impl Handlers {
+    /// `method` is e.g. `sampling/createMessage`; its prefix names the advertised capability.
+    #[cfg_attr(not(test), allow(dead_code))] // Registered by the sampling and elicitation ports.
+    pub fn request(
+        mut self,
+        method: &'static str,
+        capability: Value,
+        handler: RequestHandler,
+    ) -> Self {
+        self.requests.insert(method, (capability, handler));
+        self
+    }
+    fn capabilities(&self) -> Value {
+        let mut capabilities = serde_json::Map::new();
+        for (method, (capability, _)) in &self.requests {
+            let name = method.split('/').next().unwrap_or(method);
+            capabilities.insert(name.into(), capability.clone());
+        }
+        Value::Object(capabilities)
+    }
+}
+
+enum Inbound {
+    Request {
+        id: Value,
+        method: String,
+        params: Value,
+    },
+    Notification {
+        method: String,
+        params: Value,
+    },
+}
+
+/// What the server declared in its `initialize` result.
+struct ServerInit {
+    capabilities: Value,
+    instructions: Option<String>,
+}
+
 struct Process {
     child: Child,
     tree: ProcessTree,
@@ -149,13 +208,22 @@ struct Client {
     pending: Pending,
     next_id: AtomicU64,
     closed: Arc<AtomicBool>,
+    capabilities: Value,
+    init: OnceLock<ServerInit>,
     _process: Process,
 }
 impl Client {
-    fn spawn(name: &str, config: &ServerConfig, cwd: &Path) -> Result<Arc<Self>, String> {
+    fn spawn(
+        name: &str,
+        config: &ServerConfig,
+        cwd: &Path,
+        handlers: Handlers,
+    ) -> Result<Arc<Self>, String> {
         if config.command.is_empty() {
             return Err("missing MCP command".into());
         }
+        let runtime = tokio::runtime::Handle::try_current()
+            .map_err(|_| "MCP client requires a Tokio runtime")?;
         let mut command = Command::new(&config.command);
         command
             .args(&config.args)
@@ -202,6 +270,9 @@ impl Client {
                 }
             }
         });
+        let capabilities = handlers.capabilities();
+        let (inbound, inbound_rx) = mpsc::unbounded_channel();
+        runtime.spawn(dispatch(inbound_rx, outgoing.clone(), handlers));
         let reader_pending = pending.clone();
         let reader_outgoing = outgoing.clone();
         std::thread::spawn(move || {
@@ -222,15 +293,26 @@ impl Client {
                     break;
                 }
                 if let Some(method) = value.get("method") {
-                    if let Some(id) = value.get("id") {
-                        let response = if method == "ping" {
-                            json!({"jsonrpc":"2.0","id":id,"result":{}})
-                        } else {
-                            json!({"jsonrpc":"2.0","id":id,"error":{"code":-32601,"message":"Method not found"}})
-                        };
-                        if reader_outgoing.send(response).is_err() {
-                            break;
-                        }
+                    let method = method.as_str().unwrap_or_default().to_owned();
+                    let params = value.get("params").cloned().unwrap_or(Value::Null);
+                    let sent = match value.get("id") {
+                        // Answered here so a busy dispatcher can never delay liveness checks.
+                        Some(id) if method == "ping" => reader_outgoing
+                            .send(json!({"jsonrpc":"2.0","id":id,"result":{}}))
+                            .is_ok(),
+                        Some(id) => inbound
+                            .send(Inbound::Request {
+                                id: id.clone(),
+                                method,
+                                params,
+                            })
+                            .is_ok(),
+                        None => inbound
+                            .send(Inbound::Notification { method, params })
+                            .is_ok(),
+                    };
+                    if !sent {
+                        break;
                     }
                     continue;
                 }
@@ -272,8 +354,21 @@ impl Client {
             pending,
             next_id: AtomicU64::new(1),
             closed,
+            capabilities,
+            init: OnceLock::new(),
             _process: process,
         }))
+    }
+
+    fn instructions(&self) -> Option<&str> {
+        self.init.get()?.instructions.as_deref()
+    }
+
+    /// Spec: list_changed is only meaningful for a catalog the server declared.
+    fn declares(&self, catalog: &str) -> bool {
+        self.init
+            .get()
+            .is_some_and(|init| init.capabilities.get(catalog).is_some_and(Value::is_object))
     }
 
     fn notify(&self, method: &str, params: Value) {
@@ -327,15 +422,14 @@ impl Client {
         server: &str,
         config: &ServerConfig,
     ) -> Result<Vec<McpTool>, String> {
-        let signal = CancellationToken::new();
         let initialized = self
             .request(
                 "initialize",
                 json!({
-                    "protocolVersion":"2025-06-18", "capabilities":{},
+                    "protocolVersion":"2025-06-18", "capabilities":self.capabilities,
                     "clientInfo":{"name":"icers","version":crate::VERSION}
                 }),
-                signal.clone(),
+                CancellationToken::new(),
                 START_TIMEOUT,
             )
             .await?;
@@ -346,7 +440,26 @@ impl Client {
         {
             return Err("MCP initialize missing protocolVersion".into());
         }
+        let _ = self.init.set(ServerInit {
+            capabilities: initialized
+                .get("capabilities")
+                .cloned()
+                .unwrap_or_else(|| json!({})),
+            instructions: initialized
+                .get("instructions")
+                .and_then(Value::as_str)
+                .map(str::to_owned),
+        });
         self.notify("notifications/initialized", json!({}));
+        self.list_tools(server, config).await
+    }
+
+    async fn list_tools(
+        self: &Arc<Self>,
+        server: &str,
+        config: &ServerConfig,
+    ) -> Result<Vec<McpTool>, String> {
+        let signal = CancellationToken::new();
         let mut cursor = None;
         let mut cursors = HashSet::new();
         let mut names = HashSet::new();
@@ -413,6 +526,105 @@ impl Client {
             }
         }
         Ok(tools)
+    }
+}
+/// Runs each server request in its own task so a slow dialog never blocks other traffic.
+async fn dispatch(
+    mut inbound: mpsc::UnboundedReceiver<Inbound>,
+    outgoing: std::sync::mpsc::Sender<Value>,
+    handlers: Handlers,
+) {
+    let in_flight: Arc<Mutex<HashMap<String, CancellationToken>>> = Default::default();
+    let limit = Arc::new(Semaphore::new(MAX_INBOUND));
+    // Reader exit (server gone) ends the loop and cancels every handler still running.
+    let root = CancellationToken::new();
+    let _cancel_all = root.clone().drop_guard();
+    let reply = |outgoing: &std::sync::mpsc::Sender<Value>, id: Value, result| {
+        let _ = outgoing.send(match result {
+            Ok(result) => json!({"jsonrpc":"2.0","id":id,"result":result}),
+            Err(RpcError { code, message }) => {
+                json!({"jsonrpc":"2.0","id":id,"error":{"code":code,"message":message}})
+            }
+        });
+    };
+    while let Some(message) = inbound.recv().await {
+        match message {
+            Inbound::Notification { method, params } => match method.as_str() {
+                "notifications/cancelled" => {
+                    let key = params.get("requestId").map(Value::to_string);
+                    if let Some(token) =
+                        key.and_then(|key| in_flight.lock().unwrap().get(&key).cloned())
+                    {
+                        token.cancel();
+                    }
+                }
+                "notifications/tools/list_changed"
+                | "notifications/prompts/list_changed"
+                | "notifications/resources/list_changed" => {
+                    if let Some(callback) = &handlers.list_changed {
+                        callback(method.split('/').nth(1).unwrap_or_default());
+                    }
+                }
+                _ => tracing::debug!(%method, "ignored MCP notification"),
+            },
+            Inbound::Request { id, method, params } => {
+                let Some((_, handler)) = handlers.requests.get(method.as_str()) else {
+                    reply(
+                        &outgoing,
+                        id,
+                        Err(RpcError {
+                            code: -32601,
+                            message: "Method not found".into(),
+                        }),
+                    );
+                    continue;
+                };
+                let Ok(permit) = limit.clone().try_acquire_owned() else {
+                    reply(
+                        &outgoing,
+                        id,
+                        Err(RpcError {
+                            code: -32603,
+                            message: "Too many concurrent requests".into(),
+                        }),
+                    );
+                    continue;
+                };
+                let key = id.to_string();
+                let token = root.child_token();
+                {
+                    let mut in_flight = in_flight.lock().unwrap();
+                    if in_flight.contains_key(&key) {
+                        reply(
+                            &outgoing,
+                            id,
+                            Err(RpcError {
+                                code: -32600,
+                                message: "Duplicate request id".into(),
+                            }),
+                        );
+                        continue;
+                    }
+                    in_flight.insert(key.clone(), token.clone());
+                }
+                let future = handler(params, token.clone());
+                let outgoing = outgoing.clone();
+                let in_flight = in_flight.clone();
+                tokio::spawn(async move {
+                    let _permit = permit;
+                    // A cancelled request gets no response, per the MCP cancellation rules.
+                    let result = tokio::select! {
+                        biased;
+                        _ = token.cancelled() => None,
+                        result = future => Some(result),
+                    };
+                    in_flight.lock().unwrap().remove(&key);
+                    if let Some(result) = result {
+                        reply(&outgoing, id, result);
+                    }
+                });
+            }
+        }
     }
 }
 fn fail_pending(pending: &Pending, reason: &str) {
@@ -602,7 +814,7 @@ async fn discover_server(
     config: &ServerConfig,
     cwd: &Path,
 ) -> Result<Vec<McpTool>, String> {
-    let client = Client::spawn(name, config, cwd)?;
+    let client = Client::spawn(name, config, cwd, Handlers::default())?;
     tokio::time::timeout(START_TIMEOUT, client.discover(name, config))
         .await
         .map_err(|_| "MCP startup timed out".to_string())?

@@ -11,7 +11,7 @@ fn fixture(dir: &Path) -> ServerConfig {
 async fn call_answers_server_ping_and_unknown_requests() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());
-    let client = Client::spawn("fake", &config, dir.path()).unwrap();
+    let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
     client.discover("fake", &config).await.unwrap();
     let result = tokio::time::timeout(
         Duration::from_secs(5),
@@ -28,11 +28,193 @@ async fn call_answers_server_ping_and_unknown_requests() {
     assert_eq!(result["content"][0]["text"], "server requests answered");
 }
 
+async fn call_text(client: &Client, arguments: Value) -> String {
+    let result = client
+        .request(
+            "tools/call",
+            json!({"name":"echo","arguments":arguments}),
+            CancellationToken::new(),
+            Duration::from_secs(5),
+        )
+        .await
+        .unwrap();
+    result["content"][0]["text"].as_str().unwrap().to_owned()
+}
+
+/// Client replies the fixture has received, polled until `done` accepts them.
+async fn wait_responses(client: &Client, done: impl Fn(&[Value]) -> bool) -> Vec<Value> {
+    for _ in 0..200 {
+        let responses: Vec<Value> =
+            serde_json::from_str(&call_text(client, json!({"mode":"responses"})).await).unwrap();
+        if done(&responses) {
+            return responses;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    panic!("client never answered the server requests");
+}
+
+/// `test/slow` answers only after `release` is cancelled.
+fn slow_handlers(release: CancellationToken) -> Handlers {
+    Handlers::default().request(
+        "test/slow",
+        json!({}),
+        Arc::new(move |params, _| {
+            let release = release.clone();
+            Box::pin(async move {
+                release.cancelled().await;
+                Ok(json!({ "echo": params }))
+            })
+        }),
+    )
+}
+
+#[tokio::test]
+async fn pending_server_request_does_not_block_ping_tool_calls_or_cancellation() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let release = CancellationToken::new();
+    let client =
+        Client::spawn("fake", &config, dir.path(), slow_handlers(release.clone())).unwrap();
+    client.discover("fake", &config).await.unwrap();
+    let delayed = json!({"mode":"delayed_request","id":"slow"});
+    assert_eq!(call_text(&client, delayed).await, "ping answered");
+    let cancelled = json!({"mode":"cancelled_request","id":"gone"});
+    assert_eq!(call_text(&client, cancelled).await, "ping answered");
+    assert_eq!(call_text(&client, json!({"mode":"responses"})).await, "[]");
+    release.cancel();
+    let responses = wait_responses(&client, |r| !r.is_empty()).await;
+    // The cancelled request must never be answered.
+    assert_eq!(
+        responses,
+        vec![json!({"jsonrpc":"2.0","id":"slow","result":{"echo":null}})]
+    );
+}
+
+#[tokio::test]
+async fn inbound_requests_past_the_cap_are_refused() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let release = CancellationToken::new();
+    let client =
+        Client::spawn("fake", &config, dir.path(), slow_handlers(release.clone())).unwrap();
+    client.discover("fake", &config).await.unwrap();
+    let flood = json!({"mode":"flood","count":MAX_INBOUND + 1});
+    let refused: Value = serde_json::from_str(&call_text(&client, flood).await).unwrap();
+    assert_eq!(refused["id"], MAX_INBOUND);
+    assert_eq!(refused["error"]["code"], -32603);
+    release.cancel();
+    let responses = wait_responses(&client, |r| r.len() == MAX_INBOUND).await;
+    assert!(responses.iter().all(|r| r["result"].is_object()));
+}
+
+#[tokio::test]
+async fn capabilities_are_advertised_only_for_registered_handlers() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let sampling = Handlers::default().request(
+        "sampling/createMessage",
+        json!({}),
+        Arc::new(|_, _| Box::pin(async { Ok(json!({})) })),
+    );
+    for (handlers, expected) in [
+        (Handlers::default(), json!({})),
+        (sampling, json!({"sampling":{}})),
+    ] {
+        let client = Client::spawn("fake", &config, dir.path(), handlers).unwrap();
+        client.discover("fake", &config).await.unwrap();
+        let sent = call_text(&client, json!({"mode":"client_capabilities"})).await;
+        assert_eq!(serde_json::from_str::<Value>(&sent).unwrap(), expected);
+        assert_eq!(client.instructions(), Some("Call echo first."));
+        assert!(client.declares("tools") && !client.declares("prompts"));
+    }
+}
+
+#[tokio::test]
+async fn tools_list_changed_relists_without_restarting_the_server() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_harness::types::AgentHarnessOptions;
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    std::fs::write(
+        dir.path().join("mcp.json"),
+        serde_json::to_vec(
+            &json!({"mcpServers":{"fake":{"command":config.command,"env":config.env}}}),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let provider = FauxProvider::new(FauxScript::new());
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let manager = McpManager::new(
+        &harness,
+        &crate::args::Args::default(),
+        dir.path(),
+        dir.path().into(),
+        false,
+        Arc::new(Mutex::new(HashSet::new())),
+    );
+    manager.reconnect(None).await.unwrap();
+    assert_eq!(
+        manager.instructions("fake").as_deref(),
+        Some("Call echo first.")
+    );
+    let call = |mode: &'static str| {
+        let echo = manager
+            .registered_tools()
+            .into_iter()
+            .find(|t| t.tool.schema().name == "fake_echo")
+            .unwrap();
+        async move {
+            let result = echo
+                .tool
+                .execute(
+                    "1",
+                    json!({ "mode": mode }),
+                    CancellationToken::new(),
+                    Arc::new(|_| {}),
+                )
+                .await
+                .unwrap();
+            result.content[0].clone()
+        }
+    };
+    let pid = call("pid").await;
+    call("add_tool").await;
+    for _ in 0..200 {
+        if manager.tools("fake").iter().any(|(n, _)| n == "fake_added") {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let names: Vec<String> = harness
+        .get_tools()
+        .await
+        .unwrap()
+        .iter()
+        .map(|t| t.tool.schema().name.clone())
+        .collect();
+    for tool in ["fake_echo", "fake_other", "fake_added"] {
+        assert_eq!(names.iter().filter(|n| *n == tool).count(), 1, "{names:?}");
+    }
+    assert_eq!(
+        call("pid").await,
+        pid,
+        "refresh must reuse the server process"
+    );
+}
+
 #[tokio::test]
 async fn handshake_pagination_call_content_error_timeout_crash_and_cancel() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());
-    let client = Client::spawn("fake", &config, dir.path()).unwrap();
+    let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
     let tools = client.discover("fake", &config).await.unwrap();
     assert_eq!(tools.len(), 2);
     assert_eq!(tools[0].schema.name, "fake_echo");

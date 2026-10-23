@@ -47,6 +47,8 @@ struct Inner {
     approvals: Arc<Mutex<HashSet<String>>>,
     tools: Mutex<Vec<HarnessTool>>,
     servers: Mutex<BTreeMap<String, ServerState>>,
+    /// Servers with a tool refresh queued; coalesces list_changed bursts to one re-list.
+    refreshing: Mutex<HashSet<String>>,
     operation: tokio::sync::Mutex<()>,
 }
 #[derive(Clone)]
@@ -69,6 +71,7 @@ impl McpManager {
             approvals,
             tools: Mutex::new(Vec::new()),
             servers: Mutex::new(BTreeMap::new()),
+            refreshing: Mutex::new(HashSet::new()),
             operation: tokio::sync::Mutex::new(()),
         }))
     }
@@ -113,6 +116,18 @@ impl McpManager {
                 (name, approval)
             })
             .collect()
+    }
+    /// Instructions from the server's `initialize` result, while it is connected.
+    pub fn instructions(&self, server: &str) -> Option<String> {
+        let servers = self.0.servers.lock().unwrap();
+        Some(
+            servers
+                .get(server)?
+                .client
+                .as_ref()?
+                .instructions()?
+                .to_owned(),
+        )
     }
     pub fn config_path(&self, project: bool) -> Result<PathBuf, String> {
         if project && !self.0.trusted {
@@ -186,28 +201,7 @@ impl McpManager {
                 client._process.tree.kill();
                 fail_pending(&client.pending, "MCP server disconnected");
             }
-            let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
-            let mut active = harness
-                .lane("main")
-                .get_active_tools()
-                .await
-                .map_err(|e| e.to_string())?;
-            tools.retain(|t| !names.contains(&t.tool.schema().name));
-            active.retain(|n| !names.contains(n));
-            self.0
-                .tools
-                .lock()
-                .unwrap()
-                .retain(|t| !names.contains(&t.tool.schema().name));
-            self.0
-                .approvals
-                .lock()
-                .unwrap()
-                .retain(|n| !names.contains(n));
-            harness
-                .set_tools(tools, Some(active))
-                .await
-                .map_err(|e| e.to_string())?;
+            self.unregister(&harness, &names).await?;
             let Some((config, source)) = configured.remove(&name) else {
                 continue;
             };
@@ -240,9 +234,10 @@ impl McpManager {
                 continue;
             }
             let cwd = self.0.cwd.clone();
+            let handlers = self.handlers(&name);
             discoveries.spawn(async move {
                 let result = async {
-                    let client = Client::spawn(&name, &config, &cwd)?;
+                    let client = Client::spawn(&name, &config, &cwd, handlers)?;
                     let tools =
                         tokio::time::timeout(START_TIMEOUT, client.discover(&name, &config))
                             .await
@@ -261,45 +256,7 @@ impl McpManager {
                     .config
                     .direct_tools
                     .clone();
-                let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
-                let mut active = harness
-                    .lane("main")
-                    .get_active_tools()
-                    .await
-                    .map_err(|e| e.to_string())?;
-                let mut names = Vec::new();
-                let mut catalog = Vec::new();
-                for tool in discovered {
-                    let direct = direct_tools.allows(&tool.remote_name);
-                    catalog.push(ToolInfo {
-                        name: tool.remote_name.clone(),
-                        description: tool.schema.description.clone(),
-                        tokens: tool.tokens,
-                        direct,
-                    });
-                    let name = tool.schema.name.clone();
-                    // Without a proxy tool, a tool that is not direct is not registered.
-                    if !direct {
-                        continue;
-                    }
-                    if !crate::session::tool_name_allowed(&name, &self.0.args)
-                        || tools.iter().any(|t| t.tool.schema().name == name)
-                    {
-                        continue;
-                    }
-                    if tool.approval {
-                        self.0.approvals.lock().unwrap().insert(name.clone());
-                    }
-                    names.push(name.clone());
-                    active.push(name);
-                    let tool = HarnessTool::new(Arc::new(tool));
-                    self.0.tools.lock().unwrap().push(tool.clone());
-                    tools.push(tool);
-                }
-                harness
-                    .set_tools(tools, Some(active))
-                    .await
-                    .map_err(|e| e.to_string())?;
+                let (names, catalog) = self.register(&harness, &direct_tools, discovered).await?;
                 watch_shutdown(harness.downgrade(), Arc::downgrade(&client));
                 Ok::<_, String>((client, names, catalog))
             }
@@ -316,6 +273,132 @@ impl McpManager {
             }
         }
         Ok(())
+    }
+    /// The server keeps its process; only its tool catalog is re-listed and swapped.
+    async fn refresh_tools(&self, server: &str) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        // Cleared before listing so a change announced mid-list queues one more pass.
+        self.0.refreshing.lock().unwrap().remove(server);
+        let (client, config, old) = match self.0.servers.lock().unwrap().get(server) {
+            Some(ServerState {
+                client: Some(client),
+                config,
+                status: ServerStatus::Connected { tools },
+                ..
+            }) if client.declares("tools") => (client.clone(), config.clone(), tools.clone()),
+            _ => return Ok(()),
+        };
+        let discovered = tokio::time::timeout(START_TIMEOUT, client.list_tools(server, &config))
+            .await
+            .map_err(|_| "MCP tools/list timed out".to_string())??;
+        let harness = self.0.harness.upgrade().ok_or("Session ended")?;
+        self.unregister(&harness, &old).await?;
+        let (tools, catalog) = self
+            .register(&harness, &config.direct_tools, discovered)
+            .await?;
+        if let Some(state) = self.0.servers.lock().unwrap().get_mut(server) {
+            state.status = ServerStatus::Connected { tools };
+            state.catalog = Some(catalog);
+        }
+        Ok(())
+    }
+    fn handlers(&self, server: &str) -> Handlers {
+        let manager = Arc::downgrade(&self.0);
+        let server = server.to_owned();
+        Handlers {
+            list_changed: Some(Arc::new(move |catalog| {
+                // Prompts and resources have no catalog yet; they are not discovered.
+                if catalog != "tools" {
+                    return;
+                }
+                let Some(inner) = manager.upgrade() else {
+                    return;
+                };
+                if !inner.refreshing.lock().unwrap().insert(server.clone()) {
+                    return;
+                }
+                let server = server.clone();
+                tokio::spawn(async move {
+                    if let Err(error) = McpManager(inner).refresh_tools(&server).await {
+                        tracing::warn!(%server, %error, "MCP tool refresh failed");
+                    }
+                });
+            })),
+            ..Default::default()
+        }
+    }
+    async fn unregister(&self, harness: &AgentHarness, names: &[String]) -> Result<(), String> {
+        let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
+        let mut active = harness
+            .lane("main")
+            .get_active_tools()
+            .await
+            .map_err(|e| e.to_string())?;
+        tools.retain(|t| !names.contains(&t.tool.schema().name));
+        active.retain(|n| !names.contains(n));
+        self.0
+            .tools
+            .lock()
+            .unwrap()
+            .retain(|t| !names.contains(&t.tool.schema().name));
+        self.0
+            .approvals
+            .lock()
+            .unwrap()
+            .retain(|n| !names.contains(n));
+        harness
+            .set_tools(tools, Some(active))
+            .await
+            .map_err(|e| e.to_string())
+    }
+    /// Returns the names actually registered and the full catalog. Tools that are not
+    /// direct, disallowed, or colliding are skipped but still listed in the catalog.
+    async fn register(
+        &self,
+        harness: &AgentHarness,
+        direct_tools: &DirectTools,
+        discovered: Vec<McpTool>,
+    ) -> Result<(Vec<String>, Vec<ToolInfo>), String> {
+        let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
+        let mut active = harness
+            .lane("main")
+            .get_active_tools()
+            .await
+            .map_err(|e| e.to_string())?;
+        let mut names = Vec::new();
+        let mut catalog = Vec::new();
+        for tool in discovered {
+            let direct = direct_tools.allows(&tool.remote_name);
+            catalog.push(ToolInfo {
+                name: tool.remote_name.clone(),
+                description: tool.schema.description.clone(),
+                tokens: tool.tokens,
+                direct,
+            });
+            let name = tool.schema.name.clone();
+            // Without a proxy tool, a tool that is not direct is not registered.
+            if !direct {
+                continue;
+            }
+            if !crate::session::tool_name_allowed(&name, &self.0.args)
+                || tools.iter().any(|t| t.tool.schema().name == name)
+            {
+                continue;
+            }
+            if tool.approval {
+                self.0.approvals.lock().unwrap().insert(name.clone());
+            }
+            names.push(name.clone());
+            active.push(name);
+            let tool = HarnessTool::new(Arc::new(tool));
+            self.0.tools.lock().unwrap().push(tool.clone());
+            tools.push(tool);
+        }
+        harness
+            .set_tools(tools, Some(active))
+            .await
+            .map_err(|e| e.to_string())?;
+        Ok((names, catalog))
     }
     pub async fn set_disabled(&self, name: &str, disabled: bool) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
