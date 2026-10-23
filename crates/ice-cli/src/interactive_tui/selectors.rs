@@ -122,8 +122,33 @@ pub(super) fn open_selector_with_view<V: Component + 'static>(
     tui.request_render(false);
 }
 
+/// Show a capturing modal overlay over the chat and route keys to
+/// `view_router`. The editor stays in its slot, unfocused.
+pub(super) fn open_overlay_selector<V: Component + 'static>(
+    state: &Arc<TuiState>,
+    editor: &Arc<Editor>,
+    tui: &Arc<TuiAltScreen>,
+    view_router: SelectorView,
+    view: Arc<V>,
+    options: ice_tui::OverlayOptions,
+    kind: SelectorKind,
+) {
+    dispatch_ui_prompt_event(state);
+    editor.set_focused(false);
+    state.autocomplete_container.clear();
+    let handle = tui.show_overlay(view.clone(), Some(options));
+    if let Some(old) = state.active_overlay.lock().unwrap().replace(handle) {
+        old.hide();
+    }
+    *state.active_selector.lock().unwrap() = Some((view_router, kind));
+    let focused: Arc<dyn Component> = view;
+    tui.set_focus(Some(focused));
+    tui.request_render(false);
+}
+
 /// Restore the editor into the `editor_container` and clear the active
-/// selector. Called by selector `on_cancel` and the Esc handler.
+/// selector (hiding its overlay, if any). Called by selector `on_cancel` and
+/// the Esc handler.
 pub(super) fn close_selector(
     state: &Arc<TuiState>,
     editor_container: &Arc<Container>,
@@ -133,6 +158,9 @@ pub(super) fn close_selector(
     // Dispatch ui_prompt_end event
     dispatch_ui_prompt_event_end(state);
 
+    if let Some(overlay) = state.active_overlay.lock().unwrap().take() {
+        overlay.hide();
+    }
     editor_container.clear();
     editor_container.add_child(editor.clone());
     state.autocomplete_container.clear();

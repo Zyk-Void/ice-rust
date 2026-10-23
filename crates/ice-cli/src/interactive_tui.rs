@@ -58,6 +58,7 @@ mod rendering;
 use rendering::*;
 mod session_header;
 use session_header::*;
+mod mcp_panel;
 mod panels;
 mod pet;
 mod side_questions;
@@ -907,7 +908,9 @@ enum TuiMessage {
     ExportNativeSession,
     /// Show live usage/context stats (from `/usage` and `/context`).
     ShowUsage,
-    Mcp(String, bool),
+    Mcp(String),
+    /// Persist staged `/mcp` panel edits and restart the changed servers.
+    McpSave(Vec<crate::mcp::PanelChange>),
     UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
@@ -1475,6 +1478,7 @@ pub async fn interactive_tui(
         last_assistant_text: std::sync::Mutex::new(String::new()),
         new_message_count,
         active_selector: std::sync::Mutex::new(None),
+        active_overlay: std::sync::Mutex::new(None),
         provider_form: std::sync::Mutex::new(None),
         active_provider_input: std::sync::Mutex::new(None),
         provider_auth_flow_id: std::sync::atomic::AtomicU64::new(0),
@@ -3490,10 +3494,30 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
-            Some(TuiMessage::Mcp(args, reopen)) => {
+            Some(TuiMessage::McpSave(changes)) => {
+                add_note_message(&chat_container, "Updating MCP servers…");
+                tui.request_render(false);
+                let manager = &ctx.reload_context.mcp_tools;
+                match manager.save_panel(&changes).await {
+                    Ok(()) => add_note_message(
+                        &chat_container,
+                        &format!(
+                            "Saved MCP changes for {}.",
+                            changes
+                                .iter()
+                                .map(|c| c.server.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    ),
+                    Err(error) => add_error_message(&chat_container, &error),
+                }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::Mcp(args)) => {
                 let manager = &ctx.reload_context.mcp_tools;
                 if args.trim().is_empty() || args.trim() == "status" {
-                    commands::mcp::panel(&ctx, None);
+                    commands::mcp::panel(&ctx);
                 } else {
                     let words: Vec<_> = args.split_whitespace().collect();
                     // Discovery can take the full startup budget; show progress like /reload.
@@ -3520,9 +3544,6 @@ pub async fn interactive_tui(
                     match result {
                         Ok(note) => add_note_message(&chat_container, &note),
                         Err(error) => add_error_message(&chat_container, &error),
-                    }
-                    if reopen {
-                        commands::mcp::panel(&ctx, words.last().copied());
                     }
                 }
                 tui.request_render(false);

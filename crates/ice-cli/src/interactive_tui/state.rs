@@ -261,6 +261,9 @@ pub(super) struct TuiState {
     /// a selector is open; the key loop routes to it first and restores the
     /// editor on done/cancel.
     pub(super) active_selector: std::sync::Mutex<Option<(SelectorView, SelectorKind)>>,
+    /// Overlay drawn for the active selector instead of swapping the editor
+    /// slot (`/mcp`); `close_selector` hides it.
+    pub(super) active_overlay: std::sync::Mutex<Option<Arc<dyn ice_tui::TuiOverlayHandle>>>,
     /// In-progress interactive "Add provider" form (`/provider` → Add new
     /// provider). `Some` while the form is collecting fields; each step shows
     /// its own single-line input (see [`Self::active_provider_input`]) instead

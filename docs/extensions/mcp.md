@@ -93,9 +93,23 @@ configured server executables, so inspect configuration before trusting it.
 
 ## Interactive management
 
-- `/mcp` or `/mcp status`: open the server panel with status, tool count and
-  configuration source. Enter shows tools, Ctrl+R reconnects the selected server,
-  Ctrl+D toggles disabled, `e` edits its configuration file, and Esc closes.
+- `/mcp` or `/mcp status`: open the MCP Servers panel, a centered overlay over
+  the chat. Each server row shows `●` (all tools direct), `◐` (some) or `○`
+  (none), the `direct/total` tool count, an estimated token cost of the direct
+  tool schemas, and its status (`disabled`, `connecting`, `failed`, or
+  `(not cached)` before the first successful connection). The selected failed
+  server shows its error underneath.
+  - Typing filters servers and tools by name; `?` searches tool descriptions
+    instead. Esc clears the search, then closes.
+  - Enter expands or collapses a server (or toggles the selected tool). Space
+    toggles a tool, or every tool of the selected server. Ctrl+D toggles the
+    server's disabled flag.
+  - Toggles are staged until Ctrl+S, which writes `directTools` and `disabled`
+    to the file defining each changed server and restarts those servers.
+    Esc with unsaved changes asks to Discard or Keep & Close (`y`/`n`,
+    Left/Right/Tab, Enter).
+  - Ctrl+R reconnects the selected server and keeps the panel open. Ctrl+Y
+    copies a failed server's error.
 - `/mcp tools`: list tools grouped by server, marking approval-required tools.
 - `/mcp reconnect [server]`: reconnect one server or reload all configuration.
   Removed servers lose their tools; newly configured servers are started.
