@@ -78,7 +78,8 @@ cannot run approval-required tools. Existing plugin vetoes still apply.
 ## Inspection
 
 Run `icers --list-mcp` to initialize configured servers and print their ready,
-failed, or disabled status and namespaced tools. It needs no model credentials.
+failed, or disabled status and namespaced tools. It exits non-zero if any server
+fails discovery; disabled servers are not failures. It needs no model credentials.
 Inspection obeys project trust and does not execute any tools. It starts real
 configured server executables, so inspect configuration before trusting it.
 There is no `/mcp` TUI command in this stage. While normal session discovery is

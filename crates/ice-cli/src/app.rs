@@ -200,9 +200,9 @@ async fn run_inner() -> i32 {
     // authenticated yet.
     if parsed.list_mcp {
         return match crate::mcp::list(&parsed, &cwd).await {
-            Ok(output) => {
+            Ok((output, failed)) => {
                 print!("{output}");
-                0
+                i32::from(failed)
             }
             Err(error) => {
                 eprintln!("MCP: {error}");

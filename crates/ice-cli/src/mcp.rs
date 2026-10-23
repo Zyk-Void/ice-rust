@@ -725,7 +725,7 @@ async fn approve(
 }
 
 /// Inspection does not resolve a model or require credentials.
-pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<String, String> {
+pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool), String> {
     let dir = crate::config::agent_dir().map_err(|e| e.to_string())?;
     let servers = load_config(&dir, cwd, crate::session::resolve_project_trust(args, cwd))?;
     let mut tasks = Vec::new();
@@ -733,34 +733,40 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<String, String
         let cwd = cwd.to_path_buf();
         tasks.push(tokio::spawn(async move {
             if config.disabled {
-                return format!("{name}: disabled\n");
+                return (format!("{name}: disabled\n"), false);
             }
             match discover_server(&name, &config, &cwd).await {
-                Ok(tools) => format!(
-                    "{name}: ready\n{}",
-                    tools
-                        .iter()
-                        .map(|t| format!(
-                            "  {}{}\n",
-                            t.schema.name,
-                            if t.approval {
-                                " (approval required)"
-                            } else {
-                                ""
-                            }
-                        ))
-                        .collect::<String>()
+                Ok(tools) => (
+                    format!(
+                        "{name}: ready\n{}",
+                        tools
+                            .iter()
+                            .map(|t| format!(
+                                "  {}{}\n",
+                                t.schema.name,
+                                if t.approval {
+                                    " (approval required)"
+                                } else {
+                                    ""
+                                }
+                            ))
+                            .collect::<String>()
+                    ),
+                    false,
                 ),
-                Err(error) => format!("{name}: failed ({error})\n"),
+                Err(error) => (format!("{name}: failed ({error})\n"), true),
             }
         }));
     }
     let mut output = String::new();
+    let mut failed = false;
     for task in tasks {
-        output.push_str(&task.await.map_err(|e| e.to_string())?);
+        let (report, server_failed) = task.await.map_err(|e| e.to_string())?;
+        output.push_str(&report);
+        failed |= server_failed;
     }
     if output.is_empty() {
         output.push_str("No MCP servers configured.\n");
     }
-    Ok(output)
+    Ok((output, failed))
 }

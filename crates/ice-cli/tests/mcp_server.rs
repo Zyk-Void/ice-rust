@@ -34,19 +34,47 @@ fn list_mcp_cli_trust_disabled_and_failure() {
             .env("ICERS_OFFLINE", "1")
             .output()
             .unwrap();
-        assert!(
-            output.status.success(),
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-        String::from_utf8(output.stdout).unwrap()
+        output
     };
-    let untrusted = run("--no-approve");
+    let output = run("--no-approve");
+    assert!(
+        !output.status.success(),
+        "failed discovery must fail inspection"
+    );
+    let untrusted = String::from_utf8(output.stdout).unwrap();
     assert!(untrusted.contains("fake: ready"), "{untrusted}");
     assert!(untrusted.contains("fake_echo (approval required)"));
     assert!(untrusted.contains("fake_other"));
     assert!(untrusted.contains("disabled: disabled"));
     assert!(untrusted.contains("failed: failed"));
-    let trusted = run("--approve");
+    let output = run("--approve");
+    assert!(!output.status.success());
+    let trusted = String::from_utf8(output.stdout).unwrap();
     assert!(trusted.contains("fake: disabled"), "{trusted}");
+
+    std::fs::write(
+        agent.join("mcp.json"),
+        json!({"mcpServers":{
+            "fake":{"command":fake,"env":{"ICERS_MCP_TEST_CHILD":"1"}},
+            "disabled":{"disabled":true}
+        }})
+        .to_string(),
+    )
+    .unwrap();
+    for trust in ["--no-approve", "--approve"] {
+        let output = run(trust);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let report = String::from_utf8(output.stdout).unwrap();
+        assert!(report.contains("disabled: disabled"), "{report}");
+        let expected = if trust == "--approve" {
+            "disabled"
+        } else {
+            "ready"
+        };
+        assert!(report.contains(&format!("fake: {expected}")), "{report}");
+    }
 }
