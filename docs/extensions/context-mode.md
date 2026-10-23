@@ -157,12 +157,8 @@ failure (a shell EXIT trap is recommended).
 
 1. Run `icers --list-mcp`: expect `context-mode` ready and `context-mode_ctx_*`.
 2. Run `icers -p 'Call context-mode_ctx_stats and report its response.'`.
-   MCP discovery is asynchronous and a run may retain its initial tool snapshot.
-   A bash sleep inside that run is not sufficient on every path. For a repeatable
-   one-shot smoke test, temporarily add a `UserPromptSubmit` command hook running
-   `sleep 3` (timeout 10) to the **temporary** settings, so discovery can finish
-   before the first request. Remove that test-only hook afterward. This is a
-   startup workaround, not a requirement for normal interactive use.
+   The first prompt waits for MCP discovery before taking its tool snapshot;
+   no sleep hook or startup workaround is needed.
 3. Run `icers -p 'Call bash with command curl -s https://example.com exactly;
    if blocked, report the hook reason without retrying another tool.'`.
    Expect a denial containing `context-mode: curl/wget redirected` and actual

@@ -44,10 +44,10 @@ The input JSON Schema is passed to the existing agent validation layer.
 `--tools`, `--exclude-tools`, and `--no-tools` apply to MCP tools too.
 
 Servers initialize concurrently in the background, with a ten-second total
-startup budget per server. They do not delay the TUI launch. Successfully
-listed tools are published dynamically and become visible in subsequent turn
-snapshots; a prompt sent before discovery finishes may not see them. Failed
-servers do not prevent the session from running. Restart the session to retry
+startup budget per server. They do not delay the TUI launch. Prompt admission
+waits for discovery and tool publication, bounded by that budget plus a
+one-second scheduling margin, so the first prompt sees discovered tools.
+Failed servers do not prevent the session from running. Restart the session to retry
 failed servers or reread MCP configuration. Extension `/reload` retains already
 registered MCP tools; it does not restart MCP servers.
 

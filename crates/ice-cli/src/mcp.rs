@@ -16,11 +16,11 @@ use ice_agent::AgentError;
 use ice_ai::types::{ImageContent, Tool};
 use ice_extensions::UiDialogMailbox;
 use ice_harness::agent_harness::AgentHarness;
-use ice_harness::types::HarnessTool;
+use ice_harness::types::{HarnessLifecycleHooks, HarnessTool};
 use ice_plugin_sdk::process::ProcessTree;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tokio::sync::oneshot;
+use tokio::sync::{oneshot, watch};
 use tokio_util::sync::CancellationToken;
 
 const START_TIMEOUT: Duration = Duration::from_secs(10);
@@ -467,8 +467,54 @@ fn map_result(result: Value) -> Result<AgentToolResult, AgentError> {
     })
 }
 
+/// Gate prompt admission, not TUI startup, until discovery has published tools.
+pub struct McpReadyGate {
+    pub inner: Option<Arc<dyn HarnessLifecycleHooks>>,
+    pub ready: watch::Receiver<bool>,
+}
+
+impl McpReadyGate {
+    async fn wait_ready(&self, budget: Duration) {
+        let mut ready = self.ready.clone();
+        let _ = tokio::time::timeout(budget, async {
+            while !*ready.borrow_and_update() {
+                if ready.changed().await.is_err() {
+                    break;
+                }
+            }
+        })
+        .await;
+    }
+}
+
+#[async_trait]
+impl HarnessLifecycleHooks for McpReadyGate {
+    async fn input(
+        &self,
+        message: ice_agent::AgentMessage,
+    ) -> ice_harness::result::HarnessResult<ice_agent::AgentMessage> {
+        self.wait_ready(START_TIMEOUT + Duration::from_secs(1))
+            .await;
+        match &self.inner {
+            Some(inner) => inner.input(message).await,
+            None => Ok(message),
+        }
+    }
+
+    async fn pre_compact(&self, trigger: &str) {
+        if let Some(inner) = &self.inner {
+            inner.pre_compact(trigger).await;
+        }
+    }
+
+    async fn stop(&self) {
+        if let Some(inner) = &self.inner {
+            inner.stop().await;
+        }
+    }
+}
+
 /// Startup is asynchronous; each server gets a total ten-second discovery budget.
-/// Tools become available in subsequent turn snapshots, without delaying the TUI.
 pub fn start(
     harness: &AgentHarness,
     args: &crate::args::Args,
@@ -476,7 +522,8 @@ pub fn start(
     trusted: bool,
     approvals: Arc<Mutex<HashSet<String>>>,
     registry: Arc<Mutex<Vec<HarnessTool>>>,
-) {
+) -> watch::Receiver<bool> {
+    let (ready_tx, ready) = watch::channel(false);
     let servers = match crate::config::agent_dir()
         .map_err(|e| e.to_string())
         .and_then(|dir| load_config(&dir, cwd, trusted))
@@ -484,9 +531,27 @@ pub fn start(
         Ok(servers) => servers,
         Err(error) => {
             tracing::warn!(%error, "MCP configuration failed");
-            return;
+            let _ = ready_tx.send(true);
+            return ready;
         }
     };
+    publish_servers(harness, args, cwd, approvals, registry, servers, ready_tx);
+    ready
+}
+
+fn publish_servers(
+    harness: &AgentHarness,
+    args: &crate::args::Args,
+    cwd: &Path,
+    approvals: Arc<Mutex<HashSet<String>>>,
+    registry: Arc<Mutex<Vec<HarnessTool>>>,
+    servers: BTreeMap<String, ServerConfig>,
+    ready_tx: watch::Sender<bool>,
+) {
+    if servers.values().all(|config| config.disabled) {
+        let _ = ready_tx.send(true);
+        return;
+    }
     // A single publisher serializes registry updates across servers.
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
     for (name, config) in servers {
@@ -519,6 +584,9 @@ pub fn start(
             let Ok(mut active) = harness.lane("main").get_active_tools().await else {
                 break;
             };
+            if let Some(tool) = discovered.first() {
+                watch_shutdown(harness.downgrade(), Arc::downgrade(&tool.client));
+            }
             for tool in discovered {
                 let name = tool.schema.name.clone();
                 if !crate::session::tool_name_allowed(&name, &args) {
@@ -533,13 +601,13 @@ pub fn start(
                     approvals.lock().unwrap().insert(name.clone());
                 }
                 active.push(name);
-                watch_shutdown(harness.downgrade(), Arc::downgrade(&tool.client));
                 let tool = HarnessTool::new(Arc::new(tool));
                 registry.lock().unwrap().push(tool.clone());
                 tools.push(tool);
             }
             let _ = harness.set_tools(tools, Some(active)).await;
         }
+        let _ = ready_tx.send(true);
     });
 }
 fn watch_shutdown(

@@ -21,6 +21,9 @@ fn main() {
         }
         let result = match method {
             "initialize" => {
+                if let Ok(delay) = std::env::var("MCP_TEST_DELAY_MS") {
+                    std::thread::sleep(std::time::Duration::from_millis(delay.parse().unwrap()));
+                }
                 assert_eq!(value["params"]["clientInfo"]["name"], "icers");
                 json!({"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"fake","version":"1"}})
             }

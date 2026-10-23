@@ -105,6 +105,62 @@ async fn handshake_pagination_call_content_error_timeout_crash_and_cancel() {
     );
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn first_prompt_includes_delayed_mcp_tools() {
+    use ice_ai::providers::faux::{faux_assistant_message, FauxProvider, FauxScript, FauxStep};
+    use ice_ai::types::StopReason;
+    use ice_harness::types::AgentHarnessOptions;
+
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = fixture(dir.path());
+    config.env.insert("MCP_TEST_DELAY_MS".into(), "500".into());
+    let script = FauxScript::new();
+    script.set_responses(vec![FauxStep::factory(|ctx| {
+        assert!(ctx.tools.iter().any(|tool| tool.name == "fake_echo"));
+        faux_assistant_message("ready", StopReason::Stop)
+    })]);
+    let provider = FauxProvider::new(script);
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let (tx, ready) = watch::channel(false);
+    publish_servers(
+        &harness,
+        &crate::args::Args::default(),
+        dir.path(),
+        Arc::new(Mutex::new(HashSet::new())),
+        Arc::new(Mutex::new(Vec::new())),
+        BTreeMap::from([("fake".into(), config)]),
+        tx,
+    );
+    harness.set_lifecycle_hooks(Arc::new(McpReadyGate { inner: None, ready }));
+    harness
+        .lane("main")
+        .prompt_text("go", vec![])
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn readiness_gate_bounds_hanging_discovery_and_accepts_closed_sender() {
+    let (tx, ready) = watch::channel(false);
+    let gate = McpReadyGate { inner: None, ready };
+    tokio::time::timeout(
+        Duration::from_secs(1),
+        gate.wait_ready(Duration::from_millis(20)),
+    )
+    .await
+    .unwrap();
+    drop(tx);
+    tokio::time::timeout(Duration::from_millis(100), gate.wait_ready(START_TIMEOUT))
+        .await
+        .unwrap();
+}
+
 #[test]
 fn project_trust_and_server_override() {
     let dir = tempfile::tempdir().unwrap();

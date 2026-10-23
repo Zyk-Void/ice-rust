@@ -899,7 +899,6 @@ pub async fn build_prepared(
         Err(e) => return Err(BuildError::HarnessCreate(e.to_string())),
     };
 
-    harness.set_lifecycle_hooks(command_hooks);
     if !startup_context.is_empty() {
         let prompt = harness
             .get_system_prompt()
@@ -956,7 +955,7 @@ pub async fn build_prepared(
     }
 
     let mcp_tools = Arc::new(Mutex::new(Vec::new()));
-    crate::mcp::start(
+    let ready = crate::mcp::start(
         &harness,
         args,
         cwd,
@@ -964,6 +963,10 @@ pub async fn build_prepared(
         mcp_approvals,
         mcp_tools.clone(),
     );
+    harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
+        inner: Some(command_hooks),
+        ready,
+    }));
 
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
