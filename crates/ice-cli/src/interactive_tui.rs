@@ -3493,9 +3493,14 @@ pub async fn interactive_tui(
             Some(TuiMessage::Mcp(args, reopen)) => {
                 let manager = &ctx.reload_context.mcp_tools;
                 if args.trim().is_empty() || args.trim() == "status" {
-                    commands::mcp::panel(&ctx);
+                    commands::mcp::panel(&ctx, None);
                 } else {
                     let words: Vec<_> = args.split_whitespace().collect();
+                    // Discovery can take the full startup budget; show progress like /reload.
+                    if !matches!(words.as_slice(), ["tools"]) {
+                        add_note_message(&chat_container, "Updating MCP servers…");
+                        tui.request_render(false);
+                    }
                     let result = if words.as_slice() == ["edit"]
                         || words.as_slice() == ["edit", "project"]
                     {
@@ -3517,7 +3522,7 @@ pub async fn interactive_tui(
                         Err(error) => add_error_message(&chat_container, &error),
                     }
                     if reopen {
-                        commands::mcp::panel(&ctx);
+                        commands::mcp::panel(&ctx, words.last().copied());
                     }
                 }
                 tui.request_render(false);

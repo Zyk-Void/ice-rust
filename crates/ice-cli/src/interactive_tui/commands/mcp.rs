@@ -71,10 +71,22 @@ pub(in crate::interactive_tui) async fn apply(
     }
     Ok(tools_report(manager, None))
 }
-pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
+/// `selected` keeps the cursor on the server an action just targeted when reopening.
+pub(in crate::interactive_tui) fn panel(ctx: &CommandContext, selected: Option<&str>) {
     let manager = ctx.reload_context.mcp_tools.clone();
-    let items = manager
-        .snapshot()
+    let snapshot = manager.snapshot();
+    if snapshot.is_empty() {
+        add_note_message(
+            &ctx.chat,
+            &format!("No MCP servers configured. Use /mcp add or /mcp edit.\n{USAGE}"),
+        );
+        ctx.tui.request_render(false);
+        return;
+    }
+    let index = selected
+        .and_then(|name| snapshot.iter().position(|s| s.name == name))
+        .unwrap_or(0);
+    let items = snapshot
         .into_iter()
         .map(|s| {
             SelectItem::new(&s.name, &format!("{} — {}", s.name, status(&s.status)))
@@ -82,6 +94,7 @@ pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
         })
         .collect();
     let list = Arc::new(SelectList::new(items, 10));
+    list.set_selected_index(index);
     let context = ctx.clone();
     let selected_manager = manager.clone();
     list.on_select(Arc::new(move |item| {
