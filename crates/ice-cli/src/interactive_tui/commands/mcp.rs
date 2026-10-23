@@ -50,7 +50,9 @@ pub(in crate::interactive_tui) async fn apply(
     manager: &McpManager,
     args: &str,
 ) -> Result<String, String> {
-    let words: Vec<_> = args.split_whitespace().collect();
+    let parsed =
+        shlex::split(args).ok_or("Invalid MCP command arguments: unmatched quote or escape")?;
+    let words: Vec<_> = parsed.iter().map(String::as_str).collect();
     match words.as_slice() {
         ["tools"] => return Ok(tools_report(manager, None)),
         ["reconnect"] => manager.reconnect(None).await?,
@@ -212,6 +214,38 @@ mod tests {
                 .unwrap()
                 .contains("demo: failed:")
         );
+        apply(
+            &manager,
+            r#"add quoted 'icers missing fixture' --label "two words" '' escaped\ value "C:\Program Files\mcp""#,
+        )
+        .await
+        .unwrap();
+        let config_path = dir.path().join("mcp.json");
+        let config = std::fs::read_to_string(&config_path).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&config).unwrap();
+        assert_eq!(
+            value["mcpServers"]["quoted"]["command"],
+            "icers missing fixture"
+        );
+        assert_eq!(
+            value["mcpServers"]["quoted"]["args"],
+            serde_json::json!([
+                "--label",
+                "two words",
+                "",
+                "escaped value",
+                r"C:\Program Files\mcp"
+            ])
+        );
+        for input in [
+            r#"add broken command "unterminated"#,
+            "remove 'demo",
+            "add broken command \\",
+        ] {
+            assert!(apply(&manager, input).await.is_err());
+            assert_eq!(std::fs::read_to_string(&config_path).unwrap(), config);
+        }
+        apply(&manager, "remove quoted").await.unwrap();
         let provider = autocomplete::McpAutocomplete {
             manager: Some(manager.clone()),
         };
