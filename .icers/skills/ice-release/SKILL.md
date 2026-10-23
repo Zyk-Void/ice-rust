@@ -1,31 +1,29 @@
 ---
 name: ice-release
-description: 发布 icers Rust workspace 的版本，包含预检、版本递增、Git tag、GitHub Release、crates.io、安装渠道、官网部署，以及发布后合并 main 和创建下一个版本分支。用于用户请求发布新版本、打 tag、发布 crates 或整理 release 流程时。
+description: Publish a release of the icers Rust workspace, including preflight checks, version bumps, Git tags, GitHub Releases, crates.io, installation channels, website deployment, and post-release merging of main and creation of the next version branch. Use when the user requests a new release, tagging, crate publishing, or release-process work.
 ---
 
-# icers 发布流程
+# icers Release Process
 
-## 目标
+## Goal
 
-日常发布使用 Release PR：普通 PR（包括 fork PR）不修改版本号；合并 main 并通过 CI 后，
-release-plz 自动准备统一版本和 CHANGELOG。维护者合并 Release PR 后，CI 自动发布九个
-crate、五个平台二进制、Homebrew/Scoop，并向 Microsoft winget 提交 PR。
-实现入口为 `.github/workflows/release.yml`，配置及凭据见 `docs/maintaining/releasing.md`。
-不要把普通 PR 的合并当作直接发布许可，也不要在 fork/PR 事件中使用发布密钥。
+Routine releases use a Release PR: ordinary PRs (including fork PRs) do not change version numbers. After `main` is merged and CI passes, release-plz automatically prepares a unified version and CHANGELOG. When a maintainer merges the Release PR, CI automatically publishes nine crates, binaries for five platforms, Homebrew/Scoop updates, and a PR to Microsoft winget.
 
-以下 Task 命令保留为手动发布与失败恢复工具；不要与正在进行的自动发布重复执行。
+The implementation entry point is `.github/workflows/release.yml`; configuration and credentials are documented in `docs/maintaining/releasing.md`. Do not treat merging an ordinary PR as authorization to publish, and do not use release secrets in fork or PR events.
 
-本项目的标准发布入口是根目录的 `Taskfile.yml`：
+The Task commands below are retained for manual releases and failure recovery. Do not run them in parallel with an automatic release that is already in progress.
+
+The standard release entry point for this project is the root `Taskfile.yml`:
 
 ```bash
 task publish
 ```
 
-它会按依赖顺序完成版本更新、测试/校验、提交、tag、推送、GitHub Release 资产、安装渠道、crates.io 和官网部署。
+It performs version updates, tests and validation, commits, tagging, pushing, GitHub Release asset handling, installation-channel updates, crates.io publishing, and website deployment in dependency order.
 
-## 发布前检查
+## Pre-release checks
 
-1. 确认当前分支、远端和工作区：
+1. Check the current branch, remotes, and working tree:
 
    ```bash
    git status --short --branch
@@ -33,144 +31,144 @@ task publish
    git log -5 --oneline --decorate
    ```
 
-2. 不要擅自丢弃未提交修改。若用户要求“全部提交并发布”，先检查 diff，再运行测试，最后统一提交。
-3. 确认版本和 tag：
+2. Do not discard uncommitted changes without authorization. If the user asks to "commit everything and publish," inspect the diff first, run tests, and then make a single combined commit.
+3. Check the version and tags:
 
    ```bash
    grep '^version' Cargo.toml | head -1
    git tag --sort=-version:refname | head
    ```
 
-4. 预览发布计划，不产生修改：
+4. Preview the release plan without making changes:
 
    ```bash
    task publish -- --dry-run
    ```
 
-## 常用发布命令
+## Common release commands
 
-自动递增 patch 版本：
+Automatically bump the patch version:
 
 ```bash
 task publish
 ```
 
-指定版本：
+Specify a version:
 
 ```bash
 task publish RELEASE_VERSION=0.3.16
 ```
 
-递增 minor/major：
+Bump the minor or major version:
 
 ```bash
 task publish RELEASE_BUMP=minor
 task publish RELEASE_BUMP=major
 ```
 
-跳过交互确认（只有用户明确授权时使用）：
+Skip interactive confirmation (only when the user has explicitly authorized it):
 
 ```bash
 task publish RELEASE_VERSION=0.3.16 -- --yes
 ```
 
-`--` 后的参数会转发给 `scripts/release.sh`。可用阶段参数：
+Arguments after `--` are forwarded to `scripts/release.sh`. Available phase arguments:
 
-- `--dry-run`：只打印计划
-- `--yes`：跳过 crates/site 确认
-- `--only a,b`：只执行指定阶段
-- `--from phase`：从指定阶段恢复
-- `--skip a,b`：跳过阶段
-- `--date YYYY-MM-DD`：指定 changelog/release 日期
+- `--dry-run`: print the plan only
+- `--yes`: skip crates/site confirmation prompts
+- `--only a,b`: run only the specified phases
+- `--from phase`: resume from the specified phase
+- `--skip a,b`: skip the specified phases
+- `--date YYYY-MM-DD`: set the changelog/release date
 
-## 标准阶段
+## Standard phases
 
-发布脚本通常按以下顺序执行：
+The release script normally runs these phases in order:
 
-1. `preflight`：要求工作区干净、版本/tag 未占用
-2. `bump`：更新 workspace 版本和内部依赖
-3. `changelog`：切分 Unreleased changelog
-4. `docs`：同步 embedded docs
-5. `validate`：校验所有 crate 版本
-6. `commit`：提交 release commit
-7. `tag`：创建 `vX.Y.Z`
-8. `push`：推送分支和 tag
-9. `wait`：等待 GitHub Release 二进制资产及 checksum
-10. `channels`：刷新 Homebrew/Scoop/winget/site manifest
-11. `commit-channels`：提交渠道更新
-12. `taps`：推送 Homebrew/Scoop 渠道
-13. `winget`：创建 winget PR
-14. `crates`：按依赖顺序发布 crates.io
-15. `site`：部署官网
+1. `preflight`: require a clean working tree and an unused version/tag
+2. `bump`: update workspace versions and internal dependencies
+3. `changelog`: split the Unreleased changelog section
+4. `docs`: synchronize embedded docs
+5. `validate`: validate versions across all crates
+6. `commit`: create the release commit
+7. `tag`: create `vX.Y.Z`
+8. `push`: push the branch and tag
+9. `wait`: wait for GitHub Release binary assets and checksums
+10. `channels`: refresh Homebrew/Scoop/winget/site manifests
+11. `commit-channels`: commit installation-channel updates
+12. `taps`: push Homebrew/Scoop channel updates
+13. `winget`: create a winget PR
+14. `crates`: publish crates in dependency order to crates.io
+15. `site`: deploy the website
 
-## 发布失败恢复
+## Recovering from a failed release
 
-不要重复 bump 版本；使用当前已经准备好的版本从失败阶段继续。并非所有阶段都能直接重跑：`tag` 已存在时不可重建，winget 的文件 PUT 重跑需要现有文件的 SHA。
+Do not bump the version again; resume from the failed phase using the version that is already prepared. Not every phase can be rerun directly: if a `tag` already exists, do not recreate it. Retrying winget file PUTs requires the existing file's SHA.
 
 ```bash
 task publish RELEASE_BUMP=none -- --from push --yes
 ```
 
-或：
+Or:
 
 ```bash
 task publish RELEASE_VERSION=0.3.16 -- --from channels --yes
 task publish RELEASE_VERSION=0.3.16 -- --only crates,site --yes
 ```
 
-## 本次发布经验（0.3.16）
+## Lessons from release 0.3.16
 
-- 长时间发布建议输出到 `.deploy/release-X.Y.Z-resume.log`，完成后检查退出码和各阶段日志；不要把命令超时当成测试通过。
-- `winget-submit.sh` 可能因 fork 尚未包含 upstream master 的提交而创建分支失败，并被误报为“branch may already exist”。先用 `gh api repos/<owner>/winget-pkgs/git/refs/heads/ice-X.Y.Z` 确认分支真的存在；更新 fork 后使用有效的 commit SHA 创建分支。必要时从 fork 的 master 创建，但必须检查 PR diff 仅包含预期 manifests。
-- 已存在的 winget manifest 再次 PUT 时需要 SHA；已存在的 PR 不要重复创建。winget 成功后可从 `crates` 阶段继续。
-- `commit-channels` 之后脚本没有再次推送主仓库分支。发布结束必须执行 `git push origin HEAD`，确保安装渠道提交也在远端。
-- 发布 skill 中的版本号是示例；每次按当前 workspace、tag 和用户要求重新确认版本，不要机械复用。
+- For a long-running release, write output to `.deploy/release-X.Y.Z-resume.log`. After it completes, check the exit code and logs for every phase; do not treat a command timeout as a successful test.
+- `winget-submit.sh` may fail to create a branch because the fork does not contain a commit from upstream master, and may misleadingly report that the branch "may already exist." First check whether the branch actually exists with `gh api repos/<owner>/winget-pkgs/git/refs/heads/ice-X.Y.Z`. After updating the fork, create the branch using a valid commit SHA. If necessary, create it from the fork's master, but verify that the PR diff contains only the expected manifests.
+- Updating an existing winget manifest with PUT requires its SHA; do not create a duplicate PR if one already exists. After winget succeeds, resume from the `crates` phase if needed.
+- The script does not push the main repository branch again after `commit-channels`. At the end of the release, run `git push origin HEAD` to ensure the installation-channel commit is also on the remote.
+- Version numbers in this skill are examples. Confirm the current workspace version, tags, and user request each time; do not reuse an example mechanically.
 
-## 发布后合并与创建下一分支
+## Post-release merge and next branch
 
-假设发布分支是 `feature-0.3.16`，发布成功后：
+Assuming the release branch is `feature-0.3.16`, after the release succeeds:
 
 ```bash
-# 更新本地远端引用
+# Update local remote-tracking references
 git fetch origin
 
-# 切换 main 并快进到远端最新状态
+# Switch to main and fast-forward to the latest remote state
 git switch main
 git pull --ff-only origin main
 
-# 合并发布分支
+# Merge the release branch
 git merge --no-ff feature-0.3.16 -m "merge release 0.3.16"
 git push origin main
 
-# 从 main 创建下一个版本分支
+# Create and push the next version branch from main
 git switch -c feature-0.3.17
 git push -u origin feature-0.3.17
 ```
 
-如果仓库约定使用 fast-forward 合并，先确认后再省略 `--no-ff`。若 main 有新的远端提交，先停止并处理冲突，不要强推。
+If the repository convention is to use fast-forward merges, confirm that first, then omit `--no-ff`. If `main` has new remote commits, stop and resolve the situation before proceeding; do not force-push.
 
-## 权限和凭据
+## Permissions and credentials
 
-发布需要：
+A release requires:
 
-- GitHub `gh auth status` 可写仓库权限
-- git push 权限
-- crates.io 的 `cargo login` token
-- 官网部署所需 SSH 权限
-- Homebrew/Scoop/winget 渠道操作权限
+- `gh auth status` to show write access to the repository
+- Git push permission
+- A `cargo login` token for crates.io
+- SSH access required for website deployment
+- Permission to operate the Homebrew/Scoop/winget channels
 
-检查：
+Check:
 
 ```bash
 gh auth status
 cargo login --help
 ```
 
-不要把 token、API key 或 SSH 私钥写入仓库。
+Never write tokens, API keys, or SSH private keys into the repository.
 
-## 交付检查
+## Post-release verification
 
-发布结束后确认：
+After the release, verify:
 
 ```bash
 git status --short --branch
@@ -181,4 +179,4 @@ cargo install ice-cli --version 0.3.16
 icers --version
 ```
 
-如果 winget 只是提交 PR，不要声称它已经进入 winget 主仓库；需要等待微软仓库审核合并。
+If winget has only had a PR submitted, do not claim that the release is already available in the winget repository; wait for Microsoft repository review and merge.

@@ -162,9 +162,58 @@ fn largest_entries_are_stable_and_labels_are_safe() {
         .iter()
         .map(|item| item.0.as_str())
         .collect();
-    assert_eq!(labels, ["big", "first", "second", "third", "fourth"]);
+    assert_eq!(
+        labels,
+        ["big", "first", "second", "third", "fourth", "small"]
+    );
     assert_eq!(safe_label("bash\n\u{1b}[31m"), "bash31m");
     assert_eq!(safe_label(&"x".repeat(100)).len(), 64);
+}
+
+#[test]
+fn report_lists_every_consumer_and_preserves_long_names() {
+    let mut snapshot = Snapshot {
+        window: 100_000,
+        ..Default::default()
+    };
+    for index in 0..40 {
+        snapshot.add(3, format!("mcp__server__tool_{index:02}"), index + 1);
+    }
+    let long = format!("{}final-tool-name", "long-server-name-".repeat(8));
+    snapshot.add(3, &long, 100);
+    snapshot.prompt(Some("base"), &[skill()]);
+    let text = strip_ansi(&snapshot.render(110).join("\n"));
+    for index in 0..40 {
+        assert!(
+            text.contains(&format!("mcp__server__tool_{index:02}")),
+            "missing tool {index}"
+        );
+    }
+    assert!(text.contains("final-tool-name"));
+    assert!(text.contains("sample listing"));
+    assert!(!text.contains("bodybody"));
+    assert!(text.contains("Tokens"));
+}
+
+#[test]
+fn context_report_is_compact_without_hiding_contributors() {
+    let mut snapshot = Snapshot {
+        model: "provider/model".into(),
+        window: 10000,
+        ..Default::default()
+    };
+    for (category, name) in CATEGORIES.iter().enumerate() {
+        snapshot.add(category, format!("contributor-{name}"), 10);
+    }
+    for width in [80, 100, 160] {
+        let lines = snapshot.render(width);
+        assert!(lines.len() <= 48, "width={width}, lines={}", lines.len());
+        let text = strip_ansi(&lines.join("\n"));
+        for name in CATEGORIES {
+            assert!(text.contains(&format!("contributor-{name}")));
+        }
+        assert!(!text.contains("────"));
+    }
 }
 
 #[test]
@@ -187,31 +236,33 @@ fn responsive_grid_and_all_lines_fit_width_zero_through_160() {
         if width == 0 {
             assert!(lines.iter().all(String::is_empty));
         }
-        if width >= 39 {
-            let grid: Vec<_> = lines
+        if width >= 43 {
+            let plain: Vec<_> = lines.iter().map(|line| strip_ansi(line)).collect();
+            let grid: Vec<_> = plain
                 .iter()
                 .filter(|line| {
-                    let head = line.chars().take(39).collect::<String>();
-                    head.len() == 39
+                    let content_width = width.saturating_sub(4).min(100);
+                    let grid_width = if content_width >= 64 {
+                        content_width - 48
+                    } else {
+                        content_width
+                    };
+                    let columns = ((grid_width + 1) / 2).clamp(1, 20);
+                    let grid_chars = columns * 2 - 1;
+                    let head = line.chars().skip(2).take(grid_chars).collect::<String>();
+                    head.chars().count() == grid_chars
                         && head
                             .chars()
-                            .all(|ch| SYMBOLS.contains(&ch) || ch == '.' || ch == ' ')
+                            .all(|ch| SYMBOLS.contains(&ch) || ch == '·' || ch == ' ')
                 })
                 .collect();
-            assert_eq!(grid.len(), 10);
-            assert!(grid
-                .iter()
-                .all(|line| line.chars().take(39).filter(|ch| *ch != ' ').count() == 20));
-            if width >= 92 {
-                assert!(grid[0].contains("System prompt"));
-            } else {
-                assert!(!grid[0].contains("System prompt"));
-            }
+            assert_eq!(grid.len(), 10, "width={width}");
+            assert_eq!(grid[0].contains("System prompt"), width >= 68);
         }
     }
     let text = snapshot.render(160).join("\n");
     for label in [
-        "Largest entries",
+        "Context consumers",
         "Free space",
         "Category estimates",
         "Not an exact wire payload",
@@ -319,7 +370,7 @@ async fn context_command_appends_responsive_panel_without_usage_event_or_session
     );
     assert_eq!(chat.child_count(), 1);
     let text = chat.render(160).join("\n");
-    assert!(text.contains("Largest entries"));
+    assert!(text.contains("Context consumers"));
     assert!(!text.contains("private contents"));
     for width in 0..=160 {
         assert!(chat
@@ -391,7 +442,8 @@ fn loaded_prompt_attribution_and_skill_listing_preserve_estimates() {
     assert!(snapshot.categories[1] > 0);
     assert!(snapshot.categories[2] > 0);
     let text = snapshot.render(160).join("\n");
-    assert!(!text.contains("missing.md"));
+    assert!(text.contains("missing.md"));
+    assert!(text.contains("sample listing"));
     assert!(!text.contains("description"));
     assert!(!text.contains("bodybody"));
 }
@@ -465,7 +517,7 @@ async fn public_collection_tracks_active_fork_tools_skills_and_loaded_prompt_wit
     assert!(snapshot
         .items
         .iter()
-        .any(|item| item.0 == "loaded project instructions #1"));
+        .any(|item| item.0 == instruction_path.to_string_lossy()));
     assert_eq!(session.harness().get_tip_id().await.unwrap(), tip);
     assert_eq!(
         session

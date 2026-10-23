@@ -449,7 +449,6 @@ async fn prompt_settlement_flushes_bash_results_before_idle() {
 #[tokio::test]
 async fn delayed_agent_end_cannot_write_into_a_replacement_session() {
     let harness = AgentHarness::create(Default::default()).await.unwrap();
-    let lane = harness.lane("main");
     let state = test_tui_state();
     state
         .pending_bash_messages
@@ -488,7 +487,7 @@ async fn delayed_agent_end_cannot_write_into_a_replacement_session() {
         &tui,
         &state,
         &state.chat_container,
-        &lane,
+        &harness,
     )
     .await;
     assert!(replacement
@@ -763,7 +762,6 @@ fn compact_outcome_feedback_does_not_report_non_success_as_completed() {
 #[tokio::test]
 async fn agent_end_does_not_mark_the_ui_idle_before_run_settlement() {
     let harness = AgentHarness::create(Default::default()).await.unwrap();
-    let lane = harness.lane("main");
     let state = test_tui_state();
     let chat = state.chat_container.clone();
     let tui = Arc::new(TuiAltScreen::new(
@@ -780,7 +778,7 @@ async fn agent_end_does_not_mark_the_ui_idle_before_run_settlement() {
         &tui,
         &state,
         &chat,
-        &lane,
+        &harness,
     )
     .await;
 

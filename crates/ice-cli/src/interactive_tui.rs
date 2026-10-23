@@ -1791,9 +1791,17 @@ pub async fn interactive_tui(
         let tui_drain = tui.clone();
         let state_drain = state.clone();
         let chat_drain = chat_container.clone();
-        let lane_drain = harness.lane("main");
+        let harness_drain = harness.clone();
         Some(tokio::spawn(async move {
-            drain_agent_events(rx, tui_drain, state_drain, chat_drain, lane_drain, requests).await;
+            drain_agent_events(
+                rx,
+                tui_drain,
+                state_drain,
+                chat_drain,
+                harness_drain,
+                requests,
+            )
+            .await;
         }))
     } else {
         None

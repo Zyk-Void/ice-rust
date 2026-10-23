@@ -427,7 +427,7 @@ pub(super) async fn drain_agent_events(
     tui: Arc<TuiAltScreen>,
     state: Arc<TuiState>,
     chat: Arc<Container>,
-    lane: Arc<dyn AgentLane>,
+    harness: AgentHarness,
     mut requests: mpsc::UnboundedReceiver<AgentEventDrainRequest>,
 ) {
     loop {
@@ -439,7 +439,7 @@ pub(super) async fn drain_agent_events(
                 // allowing the durable session backing to change.
                 loop {
                     match rx.try_recv() {
-                        Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                        Ok(event) => handle_agent_event(event, &tui, &state, &chat, &harness).await,
                         Err(broadcast::error::TryRecvError::Lagged(_)) => continue,
                         Err(broadcast::error::TryRecvError::Empty
                             | broadcast::error::TryRecvError::Closed) => break,
@@ -449,7 +449,7 @@ pub(super) async fn drain_agent_events(
                 let _ = acknowledge.send(());
             }
             event = rx.recv() => match event {
-                Ok(event) => handle_agent_event(event, &tui, &state, &chat, &lane).await,
+                Ok(event) => handle_agent_event(event, &tui, &state, &chat, &harness).await,
                 Err(broadcast::error::RecvError::Lagged(_)) => continue,
                 Err(broadcast::error::RecvError::Closed) => break,
             }
@@ -464,8 +464,22 @@ pub(super) async fn handle_agent_event(
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
     chat: &Arc<Container>,
-    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
 ) {
+    // Settled messages are committed before broadcast. Refresh before their
+    // render (and tool-boundary renders), not only once the whole run finishes.
+    // Streaming deltas deliberately avoid re-reading the entire session.
+    if matches!(
+        &event,
+        AgentEvent::AgentStart
+            | AgentEvent::MessageEnd { .. }
+            | AgentEvent::ToolExecutionStart { .. }
+            | AgentEvent::ToolExecutionEnd { .. }
+            | AgentEvent::AgentEnd { .. }
+            | AgentEvent::RunSettled { .. }
+    ) {
+        record_context_usage(&state.footer, harness).await;
+    }
     match event {
         AgentEvent::RunSettled { run_id } => {
             if let Some((outcome, elapsed)) = state.event_drain.take_run_summary(&run_id) {
@@ -487,7 +501,7 @@ pub(super) async fn handle_agent_event(
             // transition to Idle. A delayed event may only update presentation.
             // The run drained the queue; refresh so consumed entries drop out
             // of the pending-messages display.
-            refresh_pending_messages(state, lane).await;
+            refresh_pending_messages(state, &harness.lane("main")).await;
             tui.request_render(false);
         }
 
@@ -586,7 +600,7 @@ pub(super) async fn handle_agent_event(
                 state.transcript_view().add_user(&user_message_text(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
-                refresh_pending_messages(state, lane).await;
+                refresh_pending_messages(state, &harness.lane("main")).await;
                 tui.request_render(false);
             }
             // Tool results break adjacent assistant continuations, but their
