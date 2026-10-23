@@ -21,8 +21,8 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Prerequisites
 
-- Rust **1.78 or newer** (MSRV is enforced; `rust-toolchain` is not pinned, so
-  please test with stable and, for MSRV-sensitive changes, with 1.78).
+- Rust **1.88 or newer** (MSRV is enforced; `rust-toolchain` is not pinned, so
+  please test with stable and, for MSRV-sensitive changes, with 1.88).
 - A C toolchain for `rusqlite` (`bundled`) and, on Windows, the MSVC linker.
 - Optional: [`task`](https://taskfile.dev/) for the release/deploy targets in
   `Taskfile.yml`. Ordinary builds do not need it.

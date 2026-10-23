@@ -162,8 +162,9 @@ python3 scripts/test_prebuilt_release.py
 Optional, not enforced by CI: `cargo clippy --workspace --all-targets --locked`.
 
 Practical notes:
-- **MSRV is 1.78.** Do not use newer language or std features. Test
-  MSRV-sensitive changes with `cargo +1.78 check`.
+- **MSRV is 1.88**, the highest `rust-version` among locked dependencies
+  (`image`, `time`, `icu_*`). Do not use newer language or std features. Test
+  MSRV-sensitive and dependency changes with `cargo +1.88 check`.
 - **Disk.** Build on the NVMe checkout (`~/Zykairotis/ice-rust`). On the SATA
   drive, `--all-targets` builds saturate IO. For fast loops, use
   `cargo check` and `cargo test -p <crate>`. `target/` grows past 10 GB.
