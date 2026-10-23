@@ -1,4 +1,5 @@
 use super::*;
+use crate::interactive_tui::mcp_panel::{self, McpPanel, McpPanelView, PanelAction};
 use crate::mcp::{McpManager, ServerStatus};
 
 const USAGE: &str = "/mcp [status|tools|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
@@ -11,7 +12,7 @@ impl SlashCommand for McpCommand {
         "Manage stdio MCP servers"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
-        let _ = ctx.tx.send(TuiMessage::Mcp(args.into(), false));
+        let _ = ctx.tx.send(TuiMessage::Mcp(args.into()));
     }
 }
 pub(in crate::interactive_tui) fn tools_report(
@@ -73,8 +74,8 @@ pub(in crate::interactive_tui) async fn apply(
     }
     Ok(tools_report(manager, None))
 }
-/// `selected` keeps the cursor on the server an action just targeted when reopening.
-pub(in crate::interactive_tui) fn panel(ctx: &CommandContext, selected: Option<&str>) {
+/// Open the server panel as a centered modal overlay over the chat.
+pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
     let manager = ctx.reload_context.mcp_tools.clone();
     let snapshot = manager.snapshot();
     if snapshot.is_empty() {
@@ -85,90 +86,66 @@ pub(in crate::interactive_tui) fn panel(ctx: &CommandContext, selected: Option<&
         ctx.tui.request_render(false);
         return;
     }
-    let index = selected
-        .and_then(|name| snapshot.iter().position(|s| s.name == name))
-        .unwrap_or(0);
-    let items = snapshot
-        .into_iter()
-        .map(|s| {
-            SelectItem::new(&s.name, &format!("{} — {}", s.name, status(&s.status)))
-                .with_description(&s.source.display().to_string())
-        })
-        .collect();
-    let list = Arc::new(SelectList::new(items, 10));
-    list.set_selected_index(index);
+    let view = Arc::new(McpPanelView(Mutex::new(McpPanel::new(&snapshot))));
+    let runtime = tokio::runtime::Handle::current();
     let context = ctx.clone();
-    let selected_manager = manager.clone();
-    list.on_select(Arc::new(move |item| {
-        add_note_message(
-            &context.chat,
-            &tools_report(&selected_manager, Some(&item.value)),
-        );
+    let panel = view.clone();
+    let router = SelectorView::Custom(Arc::new(move |key| {
+        let action = panel.0.lock().unwrap().handle_key(key);
+        let close = || {
+            close_selector(
+                &context.state,
+                &context.editor_container,
+                &context.editor,
+                &context.tui,
+            )
+        };
+        match action {
+            PanelAction::None => {}
+            PanelAction::Close => close(),
+            PanelAction::Save(changes) => {
+                close();
+                if !changes.is_empty() {
+                    let _ = context.tx.send(TuiMessage::McpSave(changes));
+                }
+            }
+            // Reconnect off the key thread; the panel stays open and refreshes.
+            PanelAction::Reconnect(name) => {
+                let (manager, panel, tui) = (manager.clone(), panel.clone(), context.tui.clone());
+                runtime.spawn(async move {
+                    let result = manager.reconnect(Some(&name)).await;
+                    let mut panel = panel.0.lock().unwrap();
+                    panel.refresh(&manager.snapshot());
+                    if let Err(error) = result {
+                        panel.set_notice(format!("Reconnect failed: {error}"));
+                    }
+                    drop(panel);
+                    tui.request_render(false);
+                });
+            }
+            PanelAction::CopyError(error) => {
+                let notice = if run::copy_to_clipboard(&error) {
+                    "Copied error to clipboard"
+                } else {
+                    "Could not copy error to clipboard"
+                };
+                panel.0.lock().unwrap().set_notice(notice.into());
+            }
+        }
+        // The key loop does not repaint after routing Esc to a selector.
         context.tui.request_render(false);
     }));
-    let context = ctx.clone();
-    list.on_cancel(Arc::new(move || {
-        close_selector(
-            &context.state,
-            &context.editor_container,
-            &context.editor,
-            &context.tui,
-        )
-    }));
-    let view = Arc::new(Container::new());
-    view.add_child(list.clone());
-    view.add_child(Arc::new(Text::new(
-        "enter tools · ctrl+r reconnect · ctrl+d enable/disable · e edit · esc close",
-        0,
-        0,
-    )));
-    let context = ctx.clone();
-    let key_list = list.clone();
-    let router = SelectorView::Custom(Arc::new(move |key| {
-        let action = match (key.code, key.modifiers.contains(KeyModifiers::CONTROL)) {
-            (KeyCode::Char('r'), true) => key_list
-                .get_selected_item()
-                .map(|i| format!("reconnect {}", i.value)),
-            (KeyCode::Char('d'), true) => key_list.get_selected_item().map(|i| {
-                let disabled = manager
-                    .snapshot()
-                    .iter()
-                    .any(|s| s.name == i.value && s.disabled);
-                format!(
-                    "{} {}",
-                    if disabled { "enable" } else { "disable" },
-                    i.value
-                )
-            }),
-            (KeyCode::Char('e'), false) => Some(
-                if key_list
-                    .get_selected_item()
-                    .and_then(|i| manager.snapshot().into_iter().find(|s| s.name == i.value))
-                    .map_or(false, |s| {
-                        s.source == context.reload_context.cwd.join(".icers/mcp.json")
-                    })
-                {
-                    "edit project"
-                } else {
-                    "edit"
-                }
-                .into(),
-            ),
-            _ => None,
-        };
-        if let Some(action) = action {
-            let _ = context.tx.send(TuiMessage::Mcp(action, true));
-        } else if let Some(key) = ice_tui::get_keybindings().selection_key(&key) {
-            key_list.handle_key(key);
-        }
-    }));
-    open_selector_with_view(
+    open_overlay_selector(
         &ctx.state,
-        &ctx.editor_container,
         &ctx.editor,
         &ctx.tui,
         router,
         view,
+        ice_tui::OverlayOptions {
+            anchor: ice_tui::OverlayAnchor::Center,
+            width: Some(ice_tui::tui::SizeValue::Absolute(mcp_panel::WIDTH)),
+            ..Default::default()
+        },
         SelectorKind::Tools,
     );
 }
