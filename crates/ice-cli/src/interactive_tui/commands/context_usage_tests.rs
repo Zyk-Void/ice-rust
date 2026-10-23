@@ -250,6 +250,7 @@ async fn context_command_appends_responsive_panel_without_usage_event_or_session
     let chat = Arc::new(Container::new());
     let catalog = Arc::new(std::sync::RwLock::new(vec![]));
     let reload_context = Arc::new(crate::session::ReloadContext {
+        mcp_tools: Arc::new(Mutex::new(Vec::new())),
         extension_session: state.extension_session.clone(),
         tool_context: ice_extensions::ToolCallContext::new(dir.path().display().to_string()),
         action_bridge: Arc::new(Mutex::new(None)),

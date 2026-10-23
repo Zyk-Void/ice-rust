@@ -198,6 +198,18 @@ async fn run_inner() -> i32 {
     // restoration, and harness construction. It is a catalog inspection
     // command, so it must work for a newly installed user who has not
     // authenticated yet.
+    if parsed.list_mcp {
+        return match crate::mcp::list(&parsed, &cwd).await {
+            Ok(output) => {
+                print!("{output}");
+                0
+            }
+            Err(error) => {
+                eprintln!("MCP: {error}");
+                1
+            }
+        };
+    }
     if let Some(search) = parsed.list_models.as_deref() {
         return list_models(search, &parsed, &cwd).await;
     }
