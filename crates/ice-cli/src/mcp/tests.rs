@@ -8,6 +8,27 @@ fn fixture(dir: &Path) -> ServerConfig {
 }
 
 #[tokio::test]
+async fn call_answers_server_ping_and_unknown_requests() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let client = Client::spawn("fake", &config, dir.path()).unwrap();
+    client.discover("fake", &config).await.unwrap();
+    let result = tokio::time::timeout(
+        Duration::from_secs(5),
+        client.request(
+            "tools/call",
+            json!({"name":"echo","arguments":{"mode":"server_requests"}}),
+            CancellationToken::new(),
+            Duration::from_secs(2),
+        ),
+    )
+    .await
+    .expect("server requests must not block the tool call")
+    .unwrap();
+    assert_eq!(result["content"][0]["text"], "server requests answered");
+}
+
+#[tokio::test]
 async fn handshake_pagination_call_content_error_timeout_crash_and_cancel() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());

@@ -6,7 +6,8 @@ fn main() {
         return;
     }
     let mut initialized = false;
-    for line in std::io::stdin().lock().lines() {
+    let mut lines = std::io::stdin().lock().lines();
+    while let Some(line) = lines.next() {
         let value: Value = serde_json::from_str(&line.unwrap()).unwrap();
         let method = value["method"].as_str().unwrap();
         if method == "notifications/initialized" {
@@ -38,6 +39,26 @@ fn main() {
             "tools/call" => match value["params"]["arguments"]["mode"].as_str() {
                 Some("crash") => std::process::exit(0),
                 Some("hang") => continue,
+                Some("server_requests") => {
+                    for (method, id, reply) in [
+                        ("ping", json!("server-ping"), json!({"result":{}})),
+                        (
+                            "unknown/method",
+                            json!(42),
+                            json!({"error":{"code":-32601,"message":"Method not found"}}),
+                        ),
+                    ] {
+                        println!("{}", json!({"jsonrpc":"2.0","method":method,"id":id}));
+                        std::io::stdout().flush().unwrap();
+                        let response: Value =
+                            serde_json::from_str(&lines.next().unwrap().unwrap()).unwrap();
+                        let mut expected = reply;
+                        expected["jsonrpc"] = json!("2.0");
+                        expected["id"] = id;
+                        assert_eq!(response, expected);
+                    }
+                    json!({"content":[{"type":"text","text":"server requests answered"}]})
+                }
                 Some("error") => {
                     json!({"isError":true,"content":[{"type":"text","text":"failure"}]})
                 }

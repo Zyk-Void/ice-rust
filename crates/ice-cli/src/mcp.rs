@@ -171,6 +171,7 @@ impl Client {
             }
         });
         let reader_pending = pending.clone();
+        let reader_outgoing = outgoing.clone();
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
             loop {
@@ -188,8 +189,17 @@ impl Client {
                 if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
                     break;
                 }
-                // Server-initiated requests are not supported. Notifications need no response.
-                if value.get("method").is_some() {
+                if let Some(method) = value.get("method") {
+                    if let Some(id) = value.get("id") {
+                        let response = if method == "ping" {
+                            json!({"jsonrpc":"2.0","id":id,"result":{}})
+                        } else {
+                            json!({"jsonrpc":"2.0","id":id,"error":{"code":-32601,"message":"Method not found"}})
+                        };
+                        if reader_outgoing.send(response).is_err() {
+                            break;
+                        }
+                    }
                     continue;
                 }
                 if let Some(id) = value.get("id").and_then(Value::as_u64) {
