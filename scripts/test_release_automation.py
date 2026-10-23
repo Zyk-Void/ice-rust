@@ -145,7 +145,7 @@ version = "0.9.0"
 [workspace.metadata.release]
 series = "0.8"
 [workspace.dependencies]
-rpi-tui = { path = "crates/rpi-tui", version = "0.9.0" }
+ice-tui = { path = "crates/ice-tui", version = "0.9.0" }
 serde = "1"
 ''', encoding="utf-8")
             changelog = root / "CHANGELOG.md"
@@ -157,7 +157,7 @@ serde = "1"
             self.assertEqual(automation.normalize_release(root, ["v0.8.0"]), "0.8.1")
             result = tomllib.loads(manifest.read_text(encoding="utf-8"))
             self.assertEqual(result["workspace"]["package"]["version"], "0.8.1")
-            self.assertEqual(result["workspace"]["dependencies"]["rpi-tui"]["version"], "0.8.1")
+            self.assertEqual(result["workspace"]["dependencies"]["ice-tui"]["version"], "0.8.1")
             self.assertEqual(result["workspace"]["dependencies"]["serde"], "1")
             notes = changelog.read_text(encoding="utf-8")
             self.assertIn("## [0.8.1](https://example.test/v0.8.0...v0.8.1)", notes)

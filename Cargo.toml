@@ -73,17 +73,17 @@ globset = "=0.4.15"
 dirs = "5"
 rpassword = "7"
 
-# rpi internal crates (package names and directories both use the `rpi-` prefix).
-rpi-telemetry = { path = "crates/rpi-telemetry", version = "0.8.1" }
-rpi-ai = { path = "crates/rpi-ai", version = "0.8.1" }
-rpi-agent = { path = "crates/rpi-agent", version = "0.8.1" }
-rpi-tools = { path = "crates/rpi-tools", version = "0.8.1" }
-rpi-harness = { path = "crates/rpi-harness", version = "0.8.1" }
+# icers internal crates (package names and directories both use the `ice-` prefix).
+ice-telemetry = { path = "crates/ice-telemetry", version = "0.8.1" }
+ice-ai = { path = "crates/ice-ai", version = "0.8.1" }
+ice-agent = { path = "crates/ice-agent", version = "0.8.1" }
+ice-tools = { path = "crates/ice-tools", version = "0.8.1" }
+ice-harness = { path = "crates/ice-harness", version = "0.8.1" }
 
-rpi-tui = { path = "crates/rpi-tui", version = "0.8.1" }
+ice-tui = { path = "crates/ice-tui", version = "0.8.1" }
 
-rpi-plugin-sdk = { path = "crates/rpi-plugin-sdk", version = "0.8.1" }
-rpi-extensions = { path = "crates/rpi-extensions", version = "0.8.1" }
+ice-plugin-sdk = { path = "crates/ice-plugin-sdk", version = "0.8.1" }
+ice-extensions = { path = "crates/ice-extensions", version = "0.8.1" }
 
 [profile.release]
 lto = "thin"

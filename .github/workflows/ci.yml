@@ -125,9 +125,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Negotiate old and new ABI tables
-        run: cargo test -p rpi-plugin-sdk --features provider --locked
+        run: cargo test -p ice-plugin-sdk --features provider --locked
       - name: Check plugin tool ownership
-        run: cargo test -p rpi-extensions --lib --features rpi-ai/providers --locked
+        run: cargo test -p ice-extensions --lib --features ice-ai/providers --locked
 
   release:
     name: Release automation

@@ -54,7 +54,7 @@ use crate::loader::PluginKeepalive;
 #[derive(Clone, Copy)]
 pub struct PluginToolHandle {
     pub(crate) execute_fn: ToolExecuteFn,
-    pub(crate) set_waker_fn: Option<rpi_plugin_sdk::ToolSetWakerFn>,
+    pub(crate) set_waker_fn: Option<ice_plugin_sdk::ToolSetWakerFn>,
     pub(crate) poll_fn: ToolPollFn,
     pub(crate) cancel_fn: ToolCancelFn,
     pub(crate) destroy_fn: ToolDestroyFn,

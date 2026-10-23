@@ -26,14 +26,14 @@ rustc --edition=2021 release-helper.rs -o .git/ice-release-helper
 .git/ice-release-helper validate "$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")" --allow-dirty
 git config user.name 'github-actions[bot]'
 git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-git add Cargo.toml Cargo.lock CHANGELOG.md README.md docs/rpi-tool/README.md crates/rpi-cli/embedded-docs
+git add Cargo.toml Cargo.lock CHANGELOG.md README.md docs/ice-tool/README.md crates/ice-cli/embedded-docs
 if ! git diff --cached --quiet; then
   git commit -m 'chore(release): sync bundled release documentation'
   gh auth setup-git
   git push origin "HEAD:refs/heads/$branch"
 fi
 if [[ "$proposed_version" != "$version" ]]; then
-  body_file=$(git rev-parse --git-path rpi-release-body.md)
+  body_file=$(git rev-parse --git-path ice-release-body.md)
   gh pr view "$number" --json body --jq .body > "$body_file"
   python3 - "$body_file" "$proposed_version" "$version" <<'PY'
 from pathlib import Path

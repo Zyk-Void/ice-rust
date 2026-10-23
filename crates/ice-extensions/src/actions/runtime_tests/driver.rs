@@ -24,11 +24,11 @@ pub(super) extern "C" fn consume_execute(
     std::ptr::dangling_mut()
 }
 pub(super) extern "C" fn noop(_: StepHandle) {}
-extern "C" fn noop_set_waker(_: StepHandle, _: Option<rpi_plugin_sdk::ToolWakeCb>, _: *mut c_void) {
+extern "C" fn noop_set_waker(_: StepHandle, _: Option<ice_plugin_sdk::ToolWakeCb>, _: *mut c_void) {
 }
 extern "C" fn slow_set_waker(
     _: StepHandle,
-    cb: Option<rpi_plugin_sdk::ToolWakeCb>,
+    cb: Option<ice_plugin_sdk::ToolWakeCb>,
     _: *mut c_void,
 ) {
     gate(if cb.is_some() { 3 } else { 4 });
@@ -74,7 +74,7 @@ async fn child_alias_plugin_cannot_use_its_registration_to_delegate() {
             .await
             .unwrap();
         assert!(
-            matches!(&parent.content[0], rpi_agent::TextContentOrImage::Text(text) if text.text == "0")
+            matches!(&parent.content[0], ice_agent::TextContentOrImage::Text(text) if text.text == "0")
         );
         assert_eq!(host.calls.load(Ordering::SeqCst), 1);
         let scope = Arc::new(ToolExecutionScope::default());
@@ -88,7 +88,7 @@ async fn child_alias_plugin_cannot_use_its_registration_to_delegate() {
             .await
             .unwrap();
         assert!(
-            matches!(&child.content[0], rpi_agent::TextContentOrImage::Text(text) if text.text == "1")
+            matches!(&child.content[0], ice_agent::TextContentOrImage::Text(text) if text.text == "1")
         );
         assert_eq!(host.calls.load(Ordering::SeqCst), 1);
     }

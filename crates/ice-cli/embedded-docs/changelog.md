@@ -27,7 +27,7 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 - Merge remote-tracking branch 'origin/main' into codex/fix-pr74-cursor
 - Merge branch 'main' into ui
-- add RPI_CODING_AGENT_SESSION_DIR env config
+- add ICERS_CODING_AGENT_SESSION_DIR env config
 - share transcript rows and slice the viewport in fullscreen
 - measure idle tool workers and check Windows ownership
 - *(harness)* serialize run budget environment tests

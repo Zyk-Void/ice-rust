@@ -227,13 +227,13 @@ impl Component for PetDocument {
         }
         lines
     }
-    fn render_document(&self, width: usize) -> rpi_tui::component::RenderedDocument {
+    fn render_document(&self, width: usize) -> ice_tui::component::RenderedDocument {
         if !active(&self.mailbox) {
             // Normal chat must retain shared historical blocks all the way to
             // ScrollView; flattening this wrapper defeats incremental reuse.
             self.transcript.render_document(width)
         } else {
-            rpi_tui::component::RenderedDocument::from_lines(self.render(width))
+            ice_tui::component::RenderedDocument::from_lines(self.render(width))
         }
     }
 
@@ -257,8 +257,8 @@ mod tests {
         fn render(&self, _: usize) -> Vec<String> {
             panic!("pet wrapper must not flatten the transcript");
         }
-        fn render_document(&self, _: usize) -> rpi_tui::component::RenderedDocument {
-            rpi_tui::component::RenderedDocument::from_lines(vec!["shared chat".into()])
+        fn render_document(&self, _: usize) -> ice_tui::component::RenderedDocument {
+            ice_tui::component::RenderedDocument::from_lines(vec!["shared chat".into()])
         }
         fn invalidate(&self) {}
         fn as_any(&self) -> &dyn std::any::Any {
@@ -268,7 +268,7 @@ mod tests {
 
     #[test]
     fn default_and_work_layouts_preserve_shared_transcript_rendering() {
-        let mailbox = rpi_extensions::ExtensionStatusMailbox::new();
+        let mailbox = ice_extensions::ExtensionStatusMailbox::new();
         let doc = PetDocument::new(Arc::new(SharedOnlyTranscript), mailbox.clone());
         assert_eq!(doc.render_document(80).lines(0, 1), ["shared chat"]);
         let mut state: serde_json::Value = serde_json::from_str(&snapshot("think")).unwrap();

@@ -341,8 +341,8 @@ machine. See [`docs/remote/user-guide.md`](docs/remote/user-guide.md).
 
 | | |
 | --- | --- |
-| Current release | **[0.8.1](https://github.com/bigfish1913/pi-rust/releases)** (nine crates, published together) |
-| Stability | `rpi-ai`, `rpi-agent`, `rpi-tools`, `rpi-harness`, `rpi-plugin-sdk` are the intended stable surface |
+| Current release | **[0.8.1](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
+| Stability | `ice-ai`, `ice-agent`, `ice-tools`, `ice-harness`, `ice-plugin-sdk` are the intended stable surface |
 | MSRV | 1.78 |
 | Platforms | Linux, macOS, Windows (CI runs the suite on Linux) |
 | Binary release targets | Linux (x86_64/aarch64), macOS (Intel/Apple silicon), Windows (x86_64) |

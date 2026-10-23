@@ -189,13 +189,13 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
     }
 }
 
-/// The default session directory is `<cwd>/.rpi/sessions`, unless
-/// `RPI_CODING_AGENT_SESSION_DIR` is set (in which case its value is used).
+/// The default session directory is `<cwd>/.icers/sessions`, unless
+/// `ICERS_CODING_AGENT_SESSION_DIR` is set (in which case its value is used).
 pub fn default_session_dir(cwd: &Path) -> PathBuf {
-    std::env::var("RPI_CODING_AGENT_SESSION_DIR")
+    std::env::var("ICERS_CODING_AGENT_SESSION_DIR")
         .ok()
         .map(PathBuf::from)
-        .unwrap_or_else(|| cwd.join(".rpi").join("sessions"))
+        .unwrap_or_else(|| cwd.join(".icers").join("sessions"))
 }
 
 /// Extensions are loaded exactly once before model resolution. Their action
@@ -2504,8 +2504,8 @@ pub fn list_session_files_sync(dir: &Path) -> Vec<PathBuf> {
 /// the newest overall when every session is empty, and `None` only when the
 /// list is empty.
 fn first_resumable_session(
-    metas: &[rpi_harness::session::jsonl::JsonlSessionMetadata],
-) -> Option<&rpi_harness::session::jsonl::JsonlSessionMetadata> {
+    metas: &[ice_harness::session::jsonl::JsonlSessionMetadata],
+) -> Option<&ice_harness::session::jsonl::JsonlSessionMetadata> {
     metas
         .iter()
         .find(|meta| !summarize_session_file(Path::new(&meta.path)).empty)
@@ -3936,9 +3936,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let cwd = tmp.path();
         let custom = tmp.path().join("custom_sessions");
-        std::env::set_var("RPI_CODING_AGENT_SESSION_DIR", custom.to_str().unwrap());
+        std::env::set_var("ICERS_CODING_AGENT_SESSION_DIR", custom.to_str().unwrap());
         assert_eq!(default_session_dir(cwd), custom);
-        std::env::remove_var("RPI_CODING_AGENT_SESSION_DIR");
+        std::env::remove_var("ICERS_CODING_AGENT_SESSION_DIR");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

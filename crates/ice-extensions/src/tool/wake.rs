@@ -66,7 +66,7 @@ struct DriverState {
     callback: PartialCallbackContext,
     registration: WakeRegistration,
     invocation: Option<Arc<crate::ActionBridge>>,
-    _background: Option<rpi_agent::tool_execution_scope::BackgroundToolGuard>,
+    _background: Option<ice_agent::tool_execution_scope::BackgroundToolGuard>,
     _keepalive: Arc<PluginKeepalive>,
 }
 
@@ -201,7 +201,7 @@ impl PluginToolAdapter {
             .and_then(crate::ActionBridge::resolve_handle)
             .map(|bridge| {
                 bridge.for_invocation(
-                    rpi_agent::tool_execution_scope::is_child_execution(),
+                    ice_agent::tool_execution_scope::is_child_execution(),
                     signal.clone(),
                 )
             });
@@ -211,7 +211,7 @@ impl PluginToolAdapter {
         }
         if let (Some(invocation), Some(object)) = (&invocation, params.as_object_mut()) {
             let context = object
-                .entry(rpi_plugin_sdk::HOST_CONTEXT_KEY)
+                .entry(ice_plugin_sdk::HOST_CONTEXT_KEY)
                 .or_insert_with(|| serde_json::json!({}));
             if !context.is_object() {
                 *context = serde_json::json!({});
@@ -232,7 +232,7 @@ impl PluginToolAdapter {
             },
             registration: WakeRegistration::new(),
             invocation,
-            _background: rpi_agent::tool_execution_scope::track_background_tool(),
+            _background: ice_agent::tool_execution_scope::track_background_tool(),
             _keepalive: self.keepalive.clone(),
         }));
         tokio::spawn(async move {
@@ -317,7 +317,7 @@ impl PluginToolAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rpi_plugin_sdk::{StepResult, ToolPartialCb, ToolWakeCb};
+    use ice_plugin_sdk::{StepResult, ToolPartialCb, ToolWakeCb};
     use std::time::Duration;
 
     #[derive(Default)]
@@ -335,8 +335,8 @@ mod tests {
         wake_during_poll: AtomicBool,
     }
     static STATES: OnceLock<Mutex<HashMap<String, Arc<State>>>> = OnceLock::new();
-    static HANDLES: rpi_plugin_sdk::handles::ToolHandles<Arc<State>> =
-        rpi_plugin_sdk::handles::ToolHandles::new();
+    static HANDLES: ice_plugin_sdk::handles::ToolHandles<Arc<State>> =
+        ice_plugin_sdk::handles::ToolHandles::new();
     fn state(handle: StepHandle) -> Arc<State> {
         HANDLES.get(handle).unwrap().lock().clone()
     }
@@ -427,7 +427,7 @@ mod tests {
                 Tool {
                     name: "wake".into(),
                     description: "test".into(),
-                    parameters: rpi_ai::types::Schema::new(serde_json::json!({})),
+                    parameters: ice_ai::types::Schema::new(serde_json::json!({})),
                     constrained_sampling: None,
                 },
                 PluginToolHandle {

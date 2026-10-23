@@ -371,7 +371,7 @@ extern "C" fn trampoline_register_tool_with_wake(
     cancel_fn: ToolCancelFn,
     destroy_fn: ToolDestroyFn,
     plugin_free_string: FreeStringFn,
-    set_waker_fn: rpi_plugin_sdk::ToolSetWakerFn,
+    set_waker_fn: ice_plugin_sdk::ToolSetWakerFn,
 ) -> i32 {
     register_tool(
         schema,
@@ -391,7 +391,7 @@ fn register_tool(
     cancel_fn: ToolCancelFn,
     destroy_fn: ToolDestroyFn,
     plugin_free_string: FreeStringFn,
-    set_waker_fn: Option<rpi_plugin_sdk::ToolSetWakerFn>,
+    set_waker_fn: Option<ice_plugin_sdk::ToolSetWakerFn>,
 ) -> i32 {
     if !current_api_present() {
         return -1;

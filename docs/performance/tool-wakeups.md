@@ -10,7 +10,7 @@ The release benchmark compares the unchanged legacy path with the wake path in
 the same candidate. It does not compare two historical builds. Run it alone:
 
 ```bash
-cargo test --release -p rpi-extensions --features rpi-ai/providers --lib pending_population_benchmark -- --ignored --nocapture --test-threads=1
+cargo test --release -p ice-extensions --features ice-ai/providers --lib pending_population_benchmark -- --ignored --nocapture --test-threads=1
 ```
 
 The original measured code is retained on the fork's

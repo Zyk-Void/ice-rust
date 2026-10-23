@@ -48,7 +48,7 @@ use ice_tools::{
     InMemoryExecutionEnv, MutationQueueRegistry,
 };
 
-// `RPI_MAX_TURNS_PER_RUN` is process-global, so tests that change it must not
+// `ICERS_MAX_TURNS_PER_RUN` is process-global, so tests that change it must not
 // overlap. The guard stays held across the async harness run, not just the
 // set/remove call, because the harness reads the variable while starting a run.
 static RUN_BUDGET_ENV_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -982,7 +982,7 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
     // The guard is off by default (upstream parity), so this test opts in for
     // its duration. `std::env` is process-global; the lock above also prevents
     // the no-ceiling test below from changing it while the harness is running.
-    let previous = std::env::var(rpi_harness::run_budget::MAX_TURNS_ENV).ok();
+    let previous = std::env::var(ice_harness::run_budget::MAX_TURNS_ENV).ok();
     std::env::set_var(
         ice_harness::run_budget::MAX_TURNS_ENV,
         ice_harness::run_budget::DEFAULT_MAX_TURNS_PER_RUN.to_string(),
@@ -1090,8 +1090,8 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
 async fn no_turn_ceiling_by_default_matches_native_pi() {
     let _env_lock = RUN_BUDGET_ENV_LOCK.lock().await;
 
-    let previous = std::env::var(rpi_harness::run_budget::MAX_TURNS_ENV).ok();
-    std::env::remove_var(rpi_harness::run_budget::MAX_TURNS_ENV);
+    let previous = std::env::var(ice_harness::run_budget::MAX_TURNS_ENV).ok();
+    std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV);
 
     // 199 tool-call turns, then a final plain answer so the loop's own exit
     // condition ("the model stopped asking for tools") is what ends the run.
