@@ -2,6 +2,8 @@
 mod manager;
 mod output_guard;
 #[cfg(test)]
+mod resource_tests;
+#[cfg(test)]
 mod tests;
 pub use manager::{ensure_config, McpManager, PanelChange, ServerStatus, ServerView, ToolInfo};
 use output_guard::OutputGuard;
@@ -96,6 +98,11 @@ pub struct ServerConfig {
     pub approve_tools: Approval,
     #[serde(default)]
     pub direct_tools: DirectTools,
+    #[serde(default = "expose_resources_default")]
+    pub expose_resources: bool,
+}
+fn expose_resources_default() -> bool {
+    true
 }
 #[derive(Default, Deserialize)]
 struct Config {
@@ -479,7 +486,90 @@ impl Client {
                 .map(str::to_owned),
         });
         self.notify("notifications/initialized", json!({}));
-        self.list_tools(server, config, guard).await
+        let mut tools = if self.declares("tools") {
+            self.list_tools(server, config, guard).await?
+        } else {
+            Vec::new()
+        };
+        tools.extend(self.list_resources(server, config, guard).await?);
+        Ok(tools)
+    }
+
+    async fn list_resources(
+        self: &Arc<Self>,
+        server: &str,
+        config: &ServerConfig,
+        guard: &OutputGuard,
+    ) -> Result<Vec<McpTool>, String> {
+        if !config.expose_resources || !self.declares("resources") {
+            return Ok(Vec::new());
+        }
+        let mut cursor = None;
+        let mut cursors = HashSet::new();
+        let mut tools = Vec::new();
+        for _ in 0..100 {
+            let params = cursor
+                .as_ref()
+                .map(|c| json!({"cursor":c}))
+                .unwrap_or_else(|| json!({}));
+            let page = self
+                .request(
+                    "resources/list",
+                    params,
+                    CancellationToken::new(),
+                    START_TIMEOUT,
+                )
+                .await?;
+            for item in page
+                .get("resources")
+                .and_then(Value::as_array)
+                .ok_or("MCP resources/list missing resources")?
+            {
+                let name = item
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .ok_or("MCP resource missing name")?;
+                let uri = item
+                    .get("uri")
+                    .and_then(Value::as_str)
+                    .ok_or("MCP resource missing URI")?;
+                let name = format!("read_{}", resource_tool_name(name));
+                let description = item
+                    .get("description")
+                    .and_then(Value::as_str)
+                    .unwrap_or("Read MCP resource");
+                tools.push(McpTool {
+                    schema: Tool {
+                        name: format!("{server}_{name}"),
+                        description: description.chars().filter(|c| !c.is_control()).collect(),
+                        parameters: serde_json::from_value(
+                            json!({"type":"object","properties":{},"additionalProperties":false}),
+                        )
+                        .unwrap(),
+                        constrained_sampling: None,
+                    },
+                    remote_name: name.clone(),
+                    // Resource tools are not listed in the `/mcp` catalog.
+                    tokens: 0,
+                    resource_uri: Some(uri.to_owned()),
+                    client: self.clone(),
+                    approval: config.approve_tools.requires(&name),
+                    guard: guard.clone(),
+                });
+            }
+            cursor = page
+                .get("nextCursor")
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            match &cursor {
+                Some(cursor) if !cursors.insert(cursor.clone()) => {
+                    return Err("MCP repeated resource pagination cursor".into())
+                }
+                None => return Ok(tools),
+                _ => {}
+            }
+        }
+        Err("MCP resources/list exceeded 100 pages".into())
     }
 
     async fn list_tools(
@@ -538,6 +628,7 @@ impl Client {
                     },
                     remote_name: name.into(),
                     tokens,
+                    resource_uri: None,
                     client: self.clone(),
                     approval: config.approve_tools.requires(name),
                     guard: guard.clone(),
@@ -679,10 +770,32 @@ impl Drop for RequestGuard<'_> {
     }
 }
 
+fn resource_tool_name(name: &str) -> String {
+    let mut sanitized = String::new();
+    for part in name
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|s| !s.is_empty())
+    {
+        if !sanitized.is_empty() {
+            sanitized.push('_');
+        }
+        sanitized.push_str(&part.to_ascii_lowercase());
+    }
+    if sanitized.is_empty() || sanitized.starts_with(|c: char| c.is_ascii_digit()) {
+        if !sanitized.is_empty() {
+            sanitized.insert(0, '_');
+        }
+        sanitized.insert_str(0, "resource");
+    }
+    sanitized
+}
+
+#[derive(Clone)]
 struct McpTool {
     schema: Tool,
     remote_name: String,
     tokens: usize,
+    resource_uri: Option<String>,
     client: Arc<Client>,
     approval: bool,
     guard: OutputGuard,
@@ -702,16 +815,33 @@ impl AgentTool for McpTool {
         signal: CancellationToken,
         _: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
     ) -> Result<AgentToolResult, AgentError> {
-        let result = self
-            .client
-            .request(
+        let (method, params) = match &self.resource_uri {
+            Some(uri) => ("resources/read", json!({"uri":uri})),
+            None => (
                 "tools/call",
                 json!({"name":self.remote_name,"arguments":params}),
-                signal,
-                CALL_TIMEOUT,
-            )
+            ),
+        };
+        let mut result = self
+            .client
+            .request(method, params, signal, CALL_TIMEOUT)
             .await
             .map_err(AgentError::Tool)?;
+        if self.resource_uri.is_some() {
+            let contents = result
+                .get_mut("contents")
+                .and_then(Value::as_array_mut)
+                .ok_or_else(|| AgentError::Tool("MCP resources/read missing contents".into()))?;
+            let content: Vec<Value> = std::mem::take(contents).into_iter().map(|resource| {
+                if resource["blob"].is_string() && resource["mimeType"].as_str().is_some_and(|mime| mime.starts_with("image/")) {
+                    json!({"type":"image","data":resource["blob"],"mimeType":resource["mimeType"]})
+                } else {
+                    json!({"type":"resource","resource":resource})
+                }
+            }).collect();
+            result.as_object_mut().unwrap().remove("contents");
+            result["content"] = json!(content);
+        }
         map_result(result, &self.guard)
     }
 }

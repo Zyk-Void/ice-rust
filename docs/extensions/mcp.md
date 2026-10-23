@@ -21,6 +21,7 @@ A project entry replaces the complete global entry with the same server name.
       "env": {"EXAMPLE_SETTING": "value"},
       "cwd": ".",
       "disabled": false,
+      "exposeResources": true,
       "approveTools": ["write_record"],
       "directTools": ["lookup", "write_record"]
     }
@@ -41,7 +42,8 @@ pi-mcp-adapter's key and shape: `true` registers every tool, `false` registers
 none, and a list registers those **remote** tool names. Omission registers
 every tool. icers has no `mcp` proxy tool yet, so a tool that is not direct is
 not callable at all; the server still runs and its tools stay listed in the
-`/mcp` panel.
+`/mcp` panel. Resource tools are controlled by `exposeResources` instead and
+are not listed in the panel.
 
 ## Naming and execution
 
@@ -75,6 +77,32 @@ requests other than `ping` are answered with `Method not found`.
 Text and embedded text resources become text content. Images retain their
 base64 data and MIME type. Other content is returned as JSON text. MCP
 `isError: true` responses are tool errors.
+
+## Resources as tools
+
+Servers advertising `capabilities.resources` expose one no-argument tool per
+listed resource by default. Set `"exposeResources": false` on a server to
+skip resource discovery and registration. Discovery follows pagination, rejects
+repeated cursors, and stops with an error if more than 100 pages are needed.
+
+Names follow `{server}_read_{sanitized name}`: non-ASCII-alphanumeric runs
+become underscores, leading/trailing underscores are removed, and letters
+become lowercase. Empty names become `resource`; names starting with a digit
+get a `resource_` prefix. For example, resource `Project Notes` on server
+`example` becomes `example_read_project_notes`.
+
+Calling the tool sends `resources/read` with the resource's fixed URI. Text
+uses the output guard below, binary blobs are materialized with its limits,
+and image blobs become image blocks. Resource tools use the same `--tools`
+filter and approval path as normal tools. For an approval list, use the
+unprefixed generated name, e.g. `"approveTools": ["read_project_notes"]`.
+Real tools take priority over resource name collisions; skipped collisions
+are logged. Resources with the same sanitized name are first-wins.
+
+`notifications/resources/list_changed` refreshes only the resource catalog on
+the existing server process, adding and removing tools and approval entries.
+Tool catalog refreshes preserve resources and real-tool priority. Resource
+subscriptions, update notifications, and resource templates are not supported.
 
 ## Output guard
 
@@ -176,8 +204,10 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, resource discovery, prompt discovery, sampling, or
-server-initiated client capabilities are implemented. Embedded resources in
-tool results are supported only as content, not as a resource API. Individual protocol frames
+No HTTP, SSE, OAuth, prompt discovery, sampling, elicitation, or resource
+subscriptions are implemented. The asynchronous dispatcher answers server
+requests without blocking tool replies; unsupported methods return
+`-32601 Method not found`. Tool and resource list-change notifications refresh
+the targeted catalog without restarting the server. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

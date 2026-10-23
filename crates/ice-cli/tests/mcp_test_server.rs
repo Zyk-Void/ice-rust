@@ -8,6 +8,10 @@ fn main() {
     let mut initialized = false;
     let mut client_capabilities = Value::Null;
     let mut added_tool = false;
+    let resources_enabled = std::env::var_os("ICERS_MCP_TEST_RESOURCES").is_some();
+    let mut changed_resources = false;
+    let mut resource_lists = 0;
+    let mut tool_lists = 0;
     // Client replies to server-initiated requests, reported by the `responses` mode.
     let mut responses = Vec::new();
     let send = |value: Value| {
@@ -38,14 +42,73 @@ fn main() {
                 }
                 assert_eq!(value["params"]["clientInfo"]["name"], "icers");
                 client_capabilities = value["params"]["capabilities"].clone();
-                json!({"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"fake","version":"1"},"instructions":"Call echo first."})
+                let mut result = json!({"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"fake","version":"1"},"instructions":"Call echo first."});
+                if resources_enabled {
+                    result["capabilities"]["resources"] = json!({"listChanged":true});
+                }
+                if std::env::var_os("ICERS_MCP_TEST_RESOURCES_ONLY").is_some() {
+                    result["capabilities"]
+                        .as_object_mut()
+                        .unwrap()
+                        .remove("tools");
+                }
+                result
+            }
+            "resources/list" => {
+                assert!(
+                    initialized && resources_enabled,
+                    "resources must not be probed without capability"
+                );
+                resource_lists += 1;
+                if let Some(path) = std::env::var_os("ICERS_MCP_TEST_RESOURCE_PROBE") {
+                    std::fs::write(path, resource_lists.to_string()).unwrap();
+                }
+                match std::env::var("ICERS_MCP_TEST_RESOURCE_CURSOR").as_deref() {
+                    Ok("repeat") => json!({"resources":[],"nextCursor":"same"}),
+                    Ok("endless") => {
+                        json!({"resources":[],"nextCursor":resource_lists.to_string()})
+                    }
+                    _ if value["params"]["cursor"] == "second" => {
+                        let mut resources = vec![json!({"name":"9 image!","uri":"test:///image"})];
+                        if std::env::var_os("ICERS_MCP_TEST_COLLISION").is_some() {
+                            resources.push(json!({"name":"Echo","uri":"test:///collision"}));
+                        }
+                        json!({"resources":resources})
+                    }
+                    _ => {
+                        json!({"resources":[{"name":if changed_resources { "New Notes" } else { "Project Notes" },"description":"Read\u{001b} notes","uri":"test:///notes"}],"nextCursor":"second"})
+                    }
+                }
+            }
+            "resources/read" => {
+                assert!(resources_enabled);
+                assert_eq!(value["params"].as_object().unwrap().len(), 1);
+                match value["params"]["uri"].as_str().unwrap() {
+                    "test:///image" => {
+                        json!({"contents":[{"uri":"test:///image","mimeType":"image/png","blob":"YWJj"}]})
+                    }
+                    "test:///collision" => {
+                        json!({"contents":[{"uri":"test:///collision","text":"resource echo"}]})
+                    }
+                    "test:///notes" => json!({"contents":[
+                        {"uri":"test:///notes","text":"resource line\n".repeat(3000)},
+                        {"uri":"test:///blob","mimeType":"application/octet-stream","blob":"aGVsbG8="}
+                    ]}),
+                    _ => panic!("unexpected resource URI"),
+                }
             }
             "tools/list" => {
                 assert!(initialized);
+                assert!(std::env::var_os("ICERS_MCP_TEST_RESOURCES_ONLY").is_none());
+                tool_lists += 1;
                 if value["params"]["cursor"] == "second" {
                     let mut tools = vec![json!({"name":"other","inputSchema":{"type":"object"}})];
                     if added_tool {
                         tools.push(json!({"name":"added","inputSchema":{"type":"object"}}));
+                    }
+                    if std::env::var("ICERS_MCP_TEST_COLLISION").as_deref() == Ok("1") || added_tool
+                    {
+                        tools.push(json!({"name":"read_echo","inputSchema":{"type":"object"}}));
                     }
                     json!({ "tools": tools })
                 } else {
@@ -105,6 +168,14 @@ fn main() {
                 }
                 Some("client_capabilities") => {
                     json!({"content":[{"type":"text","text":client_capabilities.to_string()}]})
+                }
+                Some("catalog_counts") => {
+                    json!({"content":[{"type":"text","text":json!({"tools":tool_lists,"resources":resource_lists}).to_string()}]})
+                }
+                Some("change_resources") => {
+                    changed_resources = !changed_resources;
+                    send(json!({"jsonrpc":"2.0","method":"notifications/resources/list_changed"}));
+                    json!({"content":[{"type":"text","text":"changed"}]})
                 }
                 Some("pid") => {
                     json!({"content":[{"type":"text","text":std::process::id().to_string()}]})
