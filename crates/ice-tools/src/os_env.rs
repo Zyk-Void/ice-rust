@@ -1105,13 +1105,27 @@ impl Shell for OsExecutionEnv {
             // once it is reaped the command is over, and the call has to end even
             // if something else still holds the stdout/stderr pipes open.
             //
-            // This is the "`npm run` 卡住" shape. A script that starts a watcher,
-            // a dev-server or a background daemon leaves a grandchild running with
-            // the inherited pipes, so reading to EOF waits for a process the
-            // command no longer owns. No timeout rescues that: the timeout wraps
-            // `child.wait()` and the child already exited successfully.
+            // This is the "`npm run` gets stuck" shape. A script that starts a
+            // watcher, a dev-server or a background daemon leaves a grandchild
+            // running with the inherited pipes, so reading to EOF waits for a
+            // process the command no longer owns. No timeout rescues that: the
+            // timeout wraps `child.wait()` and the child already exited
+            // successfully.
+            //
+            // The readers must keep running while we wait, though: a command
+            // that writes more than the OS pipe buffer (~64 KiB) blocks on its
+            // write until someone reads, so awaiting `child.wait()` alone
+            // deadlocks it until the timeout.
             tokio::pin!(status_fut, stdout_task, stderr_task);
-            let status_res = (&mut status_fut).await;
+            let mut stdout_done = false;
+            let mut stderr_done = false;
+            let status_res = loop {
+                tokio::select! {
+                    status = &mut status_fut => break status,
+                    _ = &mut stdout_task, if !stdout_done => stdout_done = true,
+                    _ = &mut stderr_task, if !stderr_done => stderr_done = true,
+                }
+            };
             // Drain what is already in the pipe — a completed write is already in
             // the pipe buffer, so this is not a race — then stop, without waiting
             // for an EOF that may never come. A command whose own process is gone
@@ -1119,7 +1133,18 @@ impl Shell for OsExecutionEnv {
             let _ = tokio::time::timeout(
                 std::time::Duration::from_millis(EXIT_STDIO_GRACE_MS),
                 async {
-                    let _ = tokio::join!(&mut stdout_task, &mut stderr_task);
+                    // A finished task must not be polled again.
+                    let out = async {
+                        if !stdout_done {
+                            (&mut stdout_task).await;
+                        }
+                    };
+                    let err = async {
+                        if !stderr_done {
+                            (&mut stderr_task).await;
+                        }
+                    };
+                    tokio::join!(out, err);
                 },
             )
             .await;
