@@ -1,39 +1,52 @@
-# 项目文档
+# Project documentation
 
-按功能查阅当前使用说明与实现说明。版本变更统一记录在 [CHANGELOG](../CHANGELOG.md)，后续计划见 [ROADMAP](../ROADMAP.md)。
+Browse current usage and implementation documentation by feature. Version changes
+are recorded in the [CHANGELOG](../CHANGELOG.md); future plans are in the
+[ROADMAP](../ROADMAP.md).
 
-| 功能 | 文档 |
+| Feature | Documentation |
 | --- | --- |
-| 安装、命令、配置与日常使用 | [用户指南](guides/user-guide.md) |
-| SDK 分层与 crate 职责 | [架构概览](architecture/overview.md) |
-| Provider 边界、独立 package 与迁移 | [Provider packages](architecture/provider-packages.md) |
-| Provider 接入、认证、流式与验收规范 | [Provider 接入规范](extensions/provider-integration.md) |
-| 创建 Agent、复用工具与嵌入 SDK | [项目结构](agent/project-structure.md) |
-| 消息、流式响应与工具执行 | [Agent Loop 链路](agent/loop-walkthrough.md) |
-| 长会话与上下文压缩 | [上下文压缩](agent/context-compaction.md) |
-| Rust 动态库扩展与 ABI | [扩展开发](extensions/authoring.md) |
-| 启动、会话与关闭事件 | [扩展生命周期](extensions/lifecycle.md) |
-| 子 agent 配置继承、权限与生命周期 | [宿主管理的子 agent](extensions/subagents.md) |
-| 无头服务端与远程 TUI | [远程模式](remote/user-guide.md) |
-| Agent 与扩展调试 | [Rust 调试指南](debugging/rust-debugging.md) |
-| 重复思考、取消与崩溃恢复排查 | [问题复盘](debugging/llm-repetition-forensics.md)（历史证据与修复过程） |
-| 启动、内存与安装体积测量 | [性能基准](performance/benchmark-vs-pi.md)（含测量日期与边界） |
-| 发版与跨平台分发 | [发布流程](maintaining/releasing.md) |
-| 对外介绍与文章草稿 | [推广素材](promotion/README.md) |
-| CLI `docs` 工具的模型可读输入 | [内置文档源](ice-tool/README.md) |
+| Installation, commands, configuration, and everyday use | [User guide](guides/user-guide.md) |
+| SDK layers and crate responsibilities | [Architecture overview](architecture/overview.md) |
+| Provider boundaries, standalone packages, and migration | [Provider packages](architecture/provider-packages.md) |
+| Provider integration, authentication, streaming, and acceptance criteria | [Provider integration](extensions/provider-integration.md) |
+| Creating agents, reusing tools, and embedding the SDK | [Project structure](agent/project-structure.md) |
+| Messages, streaming responses, and tool execution | [Agent loop walkthrough](agent/loop-walkthrough.md) |
+| Long sessions and context compaction | [Context compaction](agent/context-compaction.md) |
+| Rust dynamic-library extensions and ABI | [Extension authoring](extensions/authoring.md) |
+| Startup, session, and shutdown events | [Extension lifecycle](extensions/lifecycle.md) |
+| Subagent configuration inheritance, permissions, and lifecycle | [Host-managed subagents](extensions/subagents.md) |
+| Stdio MCP servers and tool discovery | [MCP tools](extensions/mcp.md) |
+| Settings-driven lifecycle and tool commands | [Command hooks](extensions/hooks.md) |
+| Context-efficient MCP tools and hook routing | [context-mode recipe](extensions/context-mode.md) |
+| Headless server and remote TUI | [Remote mode](remote/user-guide.md) |
+| Agent and extension debugging | [Rust debugging guide](debugging/rust-debugging.md) |
+| Repeated reasoning, cancellation, and crash recovery | [Incident analysis](debugging/llm-repetition-forensics.md) (historical evidence and fixes) |
+| Startup, memory, and installation-size measurements | [Performance benchmarks](performance/benchmark-vs-pi.md) (including measurement dates and scope) |
+| Releases and cross-platform distribution | [Release process](maintaining/releasing.md) |
+| Introductions and article drafts | [Promotion material](promotion/README.md) |
+| Model-readable input for the CLI `docs` tool | [Embedded documentation sources](ice-tool/README.md) |
 
-## 来源与致谢
+## Origins and acknowledgements
 
-icers 起步于对 Mario Zechner 的 [Pi TypeScript SDK](https://github.com/earendil-works/pi)
-的 Rust 重新实现，并在此基础上发展自己的运行时和原生扩展 ABI。项目来源、版权和
-许可说明见根目录 [README](../README.md#acknowledgements)、[NOTICE](../NOTICE)
-和 [LICENSE](../LICENSE)。Rust 原生实现不意味着未借鉴上游设计，也不意味着可以直接
-加载 Pi 的 TypeScript/npm 扩展。
+icers began as a Rust reimplementation of Mario Zechner's
+[Pi TypeScript SDK](https://github.com/earendil-works/pi), and has developed its
+own runtime and native extension ABI. See the root
+[README](../README.md#acknowledgements), [NOTICE](../NOTICE), and
+[LICENSE](../LICENSE) for origins, copyright, and licensing. A native Rust
+implementation does not mean that upstream designs were not consulted, or that
+Pi TypeScript/npm extensions can be loaded directly.
 
-## 维护约定
+## Maintenance conventions
 
-- 使用与实现文档放入对应功能目录，修改行为时同步更新说明。
-- `ice-tool/` 是独立的模型可读文档源；通过 `scripts/sync-embedded-docs.sh` 同步到 CLI 的 `embedded-docs/`，不要仅修改生成快照。
-- 发布记录维护在根目录 `CHANGELOG.md`，不再新增重复的单版本发布说明。
-- 已失效的里程碑问题记录、差距表与旧版本宣传稿已移除；Git 历史仍可查询。
-- 调试复盘与基准结果保留日期和适用范围，不作为当前功能缺失清单。
+- Keep usage and implementation documentation in the appropriate feature directory;
+  update it when behavior changes.
+- `ice-tool/` is the separate model-readable documentation source. Synchronize it
+  into the CLI's `embedded-docs/` with `scripts/sync-embedded-docs.sh`; do not edit
+  only the generated snapshot.
+- Maintain release records in the root `CHANGELOG.md`, rather than adding duplicate
+  per-version release documents.
+- Obsolete milestone issue records, gap tables, and old promotional drafts have
+  been removed; they remain available in Git history.
+- Keep dates and applicability boundaries for incident analyses and benchmarks;
+  they are not lists of current missing features.

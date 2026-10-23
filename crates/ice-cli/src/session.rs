@@ -782,6 +782,31 @@ pub async fn build_prepared(
             )
         });
 
+    let mcp_approvals = Arc::new(Mutex::new(std::collections::HashSet::new()));
+    let command_hooks = crate::hooks::Hooks::load(
+        cwd,
+        session
+            .get_metadata()
+            .await
+            .map(|metadata| metadata.id)
+            .unwrap_or_default(),
+        &saved_settings.hooks,
+        project_trusted,
+    );
+    let startup_context = command_hooks.start().await;
+    let hooks_enabled = !command_hooks.is_empty();
+    let before_tool_call = if hooks_enabled {
+        Some(command_hooks.before(before_tool_call))
+    } else {
+        before_tool_call
+    };
+    let before_tool_call = Some(crate::mcp::approval_hook(
+        before_tool_call,
+        mcp_approvals.clone(),
+        ui_dialog_mailbox.clone(),
+    ));
+    let after_tool_call = hooks_enabled.then(|| command_hooks.after(None));
+
     let options = AgentHarnessOptions {
         model: resolved.model.clone(),
         thinking_level: resolved.thinking_level,
@@ -837,13 +862,10 @@ pub async fn build_prepared(
         to_provider_messages: None,
         entry_projectors: Default::default(),
         agent_emitter: Some(emitter),
-        // B3b loop hooks. `before_tool_call` dispatches the pi `on("tool_call")`
-        // extension event and honors a veto (a permission gate can block a tool
-        // before it runs). `after_tool_call`/`transform_context` remain `None`
-        // (their host-side adapters are not wired yet).
+        // Command hooks compose with plugin approval, never replacing its veto.
         before_tool_call,
-        after_tool_call: None,
-        transform_context: None,
+        after_tool_call,
+        transform_context: hooks_enabled.then(|| command_hooks.transform()),
         entry_transforms: Vec::new(),
         // Extension provider hooks (B4): plugins subscribing to the
         // BeforeProviderRequest / BeforeProviderHeaders / AfterProviderResponse
@@ -876,6 +898,18 @@ pub async fn build_prepared(
         }
         Err(e) => return Err(BuildError::HarnessCreate(e.to_string())),
     };
+
+    if !startup_context.is_empty() {
+        let prompt = harness
+            .get_system_prompt()
+            .await
+            .map_err(|error| BuildError::HarnessCreate(error.to_string()))?
+            .unwrap_or_default();
+        harness
+            .set_system_prompt(Some(format!("{prompt}\n{}", startup_context.join("\n"))))
+            .await
+            .map_err(|error| BuildError::HarnessCreate(error.to_string()))?;
+    }
 
     // ---- Durable operation recovery (runtime layer) ----
     // A previous process can die between `operation_started` and
@@ -920,6 +954,20 @@ pub async fn build_prepared(
         }
     }
 
+    let mcp_tools = Arc::new(Mutex::new(Vec::new()));
+    let ready = crate::mcp::start(
+        &harness,
+        args,
+        cwd,
+        project_trusted,
+        mcp_approvals,
+        mcp_tools.clone(),
+    );
+    harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
+        inner: Some(command_hooks),
+        ready,
+    }));
+
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
     // live session + bridge so `/reload` can swap them; the harness itself is
@@ -927,6 +975,7 @@ pub async fn build_prepared(
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
     let reload_context = ReloadContext {
+        mcp_tools,
         extension_session: extension_session_cell,
         action_bridge: Arc::new(Mutex::new(Some(Arc::clone(&action_bridge)))),
         tool_context,
@@ -1049,6 +1098,8 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 /// reload callback without borrowing the harness).
 #[derive(Clone)]
 pub struct ReloadContext {
+    /// Session-local MCP tools retained across extension reloads.
+    pub mcp_tools: Arc<Mutex<Vec<HarnessTool>>>,
     /// The live extension-session cell (swapped on reload).
     pub extension_session: ExtensionSessionCell,
     /// The session's plugin-tool context (`cwd` + session id), reused — not
@@ -1701,6 +1752,19 @@ where
         &extension_session,
         &effective_args,
         &ctx.tool_context,
+    );
+    tools.extend(
+        ctx.mcp_tools
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|mcp| {
+                !tools
+                    .iter()
+                    .any(|tool| tool.tool.schema().name == mcp.tool.schema().name)
+            })
+            .cloned()
+            .collect::<Vec<_>>(),
     );
     let mut active = active_tool_names(&tools, &effective_args);
     active = filter_active_tool_names(active, &effective_args);
