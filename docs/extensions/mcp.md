@@ -76,6 +76,44 @@ Text and embedded text resources become text content. Images retain their
 base64 data and MIME type. Other content is returned as JSON text. MCP
 `isError: true` responses are tool errors.
 
+## Output guard
+
+Large tool results are bounded before they reach the model context and the
+session file:
+
+- Text output is capped at 50 KiB or 2,000 lines, the same limits as the
+  built-in `bash` tool. Larger output becomes a head preview plus a notice
+  naming a temp file that holds the full text, so the agent can inspect it
+  with `read` or `grep`.
+- Image blocks pass through unchanged.
+- Embedded binary resources (`blob`) up to 10 MiB are decoded to temp files and
+  replaced with a file reference. A session may materialize at most 100 MiB and
+  10,000 files; beyond that, the reference says the content was omitted.
+- The raw result kept as tool-result details is capped at 16 KiB; a larger
+  result is replaced by a summary (block counts, sizes, top-level keys) and
+  the raw JSON is saved to a temp file.
+
+Temp files are created with mode `600` in a private (`700`) directory under
+the system temp directory, and that directory is removed when the session
+ends. A forced quit (second Ctrl+C during a run) can leave it behind. Spilled
+output may contain sensitive data.
+
+Tune or disable the guard with a top-level `settings` object in `mcp.json`.
+A trusted project file overrides the global value:
+
+```json
+{
+  "settings": {
+    "outputGuard": { "maxBytes": 51200, "maxLines": 2000, "detailsMaxBytes": 16384 }
+  }
+}
+```
+
+`"outputGuard": false`, or the environment variable
+`ICERS_MCP_OUTPUT_GUARD=0`, disables text and details guarding
+(`ICERS_MCP_OUTPUT_GUARD=1` forces it on). Binary resource materialization and
+its limits stay active either way. Settings changes apply on `/mcp reconnect`.
+
 ## Approval
 
 `approveTools: true` requires approval for every tool on that server;

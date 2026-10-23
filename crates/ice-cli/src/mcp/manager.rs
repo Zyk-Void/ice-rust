@@ -50,6 +50,8 @@ struct Inner {
     /// Servers with a tool refresh queued; coalesces list_changed bursts to one re-list.
     refreshing: Mutex<HashSet<String>>,
     operation: tokio::sync::Mutex<()>,
+    /// Output spill files for the whole session; survives reconnects.
+    spill: Arc<output_guard::SpillStore>,
 }
 #[derive(Clone)]
 pub struct McpManager(Arc<Inner>);
@@ -73,6 +75,7 @@ impl McpManager {
             servers: Mutex::new(BTreeMap::new()),
             refreshing: Mutex::new(HashSet::new()),
             operation: tokio::sync::Mutex::new(()),
+            spill: Default::default(),
         }))
     }
     pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
@@ -178,6 +181,11 @@ impl McpManager {
     /// Restart `only` (or every known server) concurrently from current configuration.
     async fn reconnect_servers(&self, only: Option<HashSet<String>>) -> Result<(), String> {
         let mut configured = self.configured()?;
+        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
+        let guard = OutputGuard {
+            store: self.0.spill.clone(),
+            limits: output_guard::resolve(settings.get("outputGuard")),
+        };
         let mut targets: HashSet<String> = configured
             .keys()
             .cloned()
@@ -235,13 +243,16 @@ impl McpManager {
             }
             let cwd = self.0.cwd.clone();
             let handlers = self.handlers(&name);
+            let guard = guard.clone();
             discoveries.spawn(async move {
                 let result = async {
                     let client = Client::spawn(&name, &config, &cwd, handlers)?;
-                    let tools =
-                        tokio::time::timeout(START_TIMEOUT, client.discover(&name, &config))
-                            .await
-                            .map_err(|_| "MCP discovery timed out".to_string())??;
+                    let tools = tokio::time::timeout(
+                        START_TIMEOUT,
+                        client.discover(&name, &config, &guard),
+                    )
+                    .await
+                    .map_err(|_| "MCP discovery timed out".to_string())??;
                     Ok::<_, String>((client, tools))
                 }
                 .await;
@@ -257,7 +268,11 @@ impl McpManager {
                     .direct_tools
                     .clone();
                 let (names, catalog) = self.register(&harness, &direct_tools, discovered).await?;
-                watch_shutdown(harness.downgrade(), Arc::downgrade(&client));
+                watch_shutdown(
+                    harness.downgrade(),
+                    Arc::downgrade(&client),
+                    self.0.spill.clone(),
+                );
                 Ok::<_, String>((client, names, catalog))
             }
             .await;
@@ -288,9 +303,15 @@ impl McpManager {
             }) if client.declares("tools") => (client.clone(), config.clone(), tools.clone()),
             _ => return Ok(()),
         };
-        let discovered = tokio::time::timeout(START_TIMEOUT, client.list_tools(server, &config))
-            .await
-            .map_err(|_| "MCP tools/list timed out".to_string())??;
+        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
+        let guard = OutputGuard {
+            store: self.0.spill.clone(),
+            limits: output_guard::resolve(settings.get("outputGuard")),
+        };
+        let discovered =
+            tokio::time::timeout(START_TIMEOUT, client.list_tools(server, &config, &guard))
+                .await
+                .map_err(|_| "MCP tools/list timed out".to_string())??;
         let harness = self.0.harness.upgrade().ok_or("Session ended")?;
         self.unregister(&harness, &old).await?;
         let (tools, catalog) = self
