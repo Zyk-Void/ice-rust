@@ -247,6 +247,9 @@ pub struct Settings {
     /// `httpIdleTimeout`. icers surface: `httpIdleTimeout`.
     #[serde(default, alias = "httpIdleTimeoutMs")]
     pub http_idle_timeout: Option<serde_json::Value>,
+    /// Settings-driven command hooks; project definitions require trust.
+    #[serde(default)]
+    pub hooks: crate::hooks::HookSettings,
 }
 
 /// upstream's `terminal` settings block (`TerminalSettings`). Only the fields

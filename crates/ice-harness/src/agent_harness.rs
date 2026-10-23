@@ -678,6 +678,7 @@ struct HarnessInner {
     before_tool_call: Option<BeforeToolCall>,
     after_tool_call: Option<AfterToolCall>,
     transform_context: Option<TransformContext>,
+    lifecycle_hooks: Option<Arc<dyn crate::types::HarnessLifecycleHooks>>,
     /// B4: per-call provider hooks fired inside the `StreamFn` closure.
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     closed: bool,
@@ -853,6 +854,7 @@ impl AgentHarness {
             before_tool_call: options.before_tool_call,
             after_tool_call: options.after_tool_call,
             transform_context: options.transform_context,
+            lifecycle_hooks: None,
             provider_hooks: options.provider_hooks,
             closed: false,
             active_run: None,
@@ -1300,7 +1302,9 @@ impl AgentHarness {
         message: AgentMessage,
         options: SendMessageOptions,
     ) -> HarnessResult<SendMessageResult> {
-        let message = normalize_user_images(message).await?;
+        let message = self
+            .admit_input(normalize_user_images(message).await?)
+            .await?;
         let gate = self.message_writes.lock().await;
         let active = {
             let inner = self.inner.lock().unwrap();
@@ -1545,6 +1549,10 @@ impl AgentHarness {
                     .map_err(session_to_harness_err)?;
                 if let Some(outcome) = end {
                     drop(gate);
+                    let hooks = self.inner.lock().unwrap().lifecycle_hooks.clone();
+                    if let Some(hooks) = hooks {
+                        hooks.stop().await;
+                    }
                     // External listeners run with no locks held, while the
                     // operation's lease still prevents overlapping admission.
                     self.bus.emit(&HarnessEvent::RunEnd(RunEndEvent {
@@ -2564,6 +2572,7 @@ impl AgentHarness {
         message: AgentMessage,
         kind: QueueKind,
     ) -> HarnessResult<QueueResult> {
+        let message = self.admit_input(message).await?;
         let _gate = self.message_writes.lock().await;
         self.enqueue_message_locked(message, kind).await
     }
@@ -3390,6 +3399,7 @@ impl AgentHarness {
             before_tool_call: inner.before_tool_call.clone(),
             after_tool_call: inner.after_tool_call.clone(),
             transform_context: inner.transform_context.clone(),
+            lifecycle_hooks: inner.lifecycle_hooks.clone(),
             provider_hooks: inner.provider_hooks.clone(),
             steering_queue: Arc::clone(&inner.steering_queue),
             follow_up_queue: Arc::clone(&inner.follow_up_queue),
@@ -3587,6 +3597,9 @@ impl AgentHarness {
         signal: CancellationToken,
         custom_instructions: Option<String>,
     ) -> Result<crate::compaction::CompactResult, crate::compaction::CompactionError> {
+        if let Some(hooks) = &snap.lifecycle_hooks {
+            hooks.pre_compact("auto").await;
+        }
         let provider = Self::resolve_provider(&snap.models, &snap.model).map_err(|error| {
             crate::compaction::CompactionError::summarization_failed(error.to_string())
         })?;
@@ -4007,11 +4020,27 @@ impl AgentHarness {
         }
     }
 
+    /// Install product admission/lifecycle callbacks before exposing the harness.
+    pub fn set_lifecycle_hooks(&self, hooks: Arc<dyn crate::types::HarnessLifecycleHooks>) {
+        self.inner.lock().unwrap().lifecycle_hooks = Some(hooks);
+    }
+
+    async fn admit_input(&self, message: AgentMessage) -> HarnessResult<AgentMessage> {
+        let hooks = self.inner.lock().unwrap().lifecycle_hooks.clone();
+        match hooks {
+            Some(hooks) => hooks.input(message).await,
+            None => Ok(message),
+        }
+    }
+
     /// The core run loop shared by all prompt overloads + skill + template.
     async fn run_core(&self, prompts: Vec<AgentMessage>) -> HarnessResult<RunResult> {
         let mut normalized = Vec::with_capacity(prompts.len());
         for prompt in prompts {
-            normalized.push(normalize_user_images(prompt).await?);
+            normalized.push(
+                self.admit_input(normalize_user_images(prompt).await?)
+                    .await?,
+            );
         }
         self.run_core_with_entry(normalized, false).await
     }
@@ -4329,6 +4358,9 @@ impl AgentHarness {
                             let _progress = crate::events::CompactionProgressGuard::new(
                                 &self.bus, &self.lane, false,
                             );
+                            if let Some(hooks) = &snap.lifecycle_hooks {
+                                hooks.pre_compact("auto").await;
+                            }
                             compact(&prep, &llm_opts).await
                         } {
                             Ok(result) => {
@@ -4599,6 +4631,9 @@ impl AgentHarness {
                                         retry: None,
                                         custom_instructions: None,
                                     };
+                                    if let Some(hooks) = &coding_snapshot.lifecycle_hooks {
+                                        hooks.pre_compact("auto").await;
+                                    }
                                     compact(&preparation, &options).await
                                 }
                             };
@@ -5329,7 +5364,10 @@ impl AgentHarness {
         self.write_operation_started(&run_id, source_leaf.clone(), intent)
             .await?;
 
-        let snap = self.snapshot_config()?;
+        let mut snap = self.snapshot_config()?;
+        if let Some(hooks) = snap.lifecycle_hooks.take() {
+            hooks.pre_compact("manual").await;
+        }
         let path = self.branch_path_oldest_first().await?;
 
         let outcome = if path.is_empty() {
@@ -5423,6 +5461,9 @@ impl AgentHarness {
                             )
                             .await
                         } else {
+                            if let Some(hooks) = &snap.lifecycle_hooks {
+                                hooks.pre_compact("auto").await;
+                            }
                             compact(&prep, &llm_opts).await
                         }
                     };
@@ -5559,6 +5600,7 @@ struct ConfigSnapshot {
     before_tool_call: Option<BeforeToolCall>,
     after_tool_call: Option<AfterToolCall>,
     transform_context: Option<TransformContext>,
+    lifecycle_hooks: Option<Arc<dyn crate::types::HarnessLifecycleHooks>>,
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     steering_queue: SharedMessageQueue,
     follow_up_queue: SharedMessageQueue,

@@ -782,6 +782,25 @@ pub async fn build_prepared(
             )
         });
 
+    let command_hooks = crate::hooks::Hooks::load(
+        cwd,
+        session
+            .get_metadata()
+            .await
+            .map(|metadata| metadata.id)
+            .unwrap_or_default(),
+        &saved_settings.hooks,
+        project_trusted,
+    );
+    let startup_context = command_hooks.start().await;
+    let hooks_enabled = !command_hooks.is_empty();
+    let before_tool_call = if hooks_enabled {
+        Some(command_hooks.before(before_tool_call))
+    } else {
+        before_tool_call
+    };
+    let after_tool_call = hooks_enabled.then(|| command_hooks.after(None));
+
     let options = AgentHarnessOptions {
         model: resolved.model.clone(),
         thinking_level: resolved.thinking_level,
@@ -837,13 +856,10 @@ pub async fn build_prepared(
         to_provider_messages: None,
         entry_projectors: Default::default(),
         agent_emitter: Some(emitter),
-        // B3b loop hooks. `before_tool_call` dispatches the pi `on("tool_call")`
-        // extension event and honors a veto (a permission gate can block a tool
-        // before it runs). `after_tool_call`/`transform_context` remain `None`
-        // (their host-side adapters are not wired yet).
+        // Command hooks compose with plugin approval, never replacing its veto.
         before_tool_call,
-        after_tool_call: None,
-        transform_context: None,
+        after_tool_call,
+        transform_context: hooks_enabled.then(|| command_hooks.transform()),
         entry_transforms: Vec::new(),
         // Extension provider hooks (B4): plugins subscribing to the
         // BeforeProviderRequest / BeforeProviderHeaders / AfterProviderResponse
@@ -876,6 +892,19 @@ pub async fn build_prepared(
         }
         Err(e) => return Err(BuildError::HarnessCreate(e.to_string())),
     };
+
+    harness.set_lifecycle_hooks(command_hooks);
+    if !startup_context.is_empty() {
+        let prompt = harness
+            .get_system_prompt()
+            .await
+            .map_err(|error| BuildError::HarnessCreate(error.to_string()))?
+            .unwrap_or_default();
+        harness
+            .set_system_prompt(Some(format!("{prompt}\n{}", startup_context.join("\n"))))
+            .await
+            .map_err(|error| BuildError::HarnessCreate(error.to_string()))?;
+    }
 
     // ---- Durable operation recovery (runtime layer) ----
     // A previous process can die between `operation_started` and

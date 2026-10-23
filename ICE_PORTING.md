@@ -180,6 +180,11 @@ no hub.
     `maxTokens` budget.
 
 ### 1.9 Hooks, events, settings, controller, CLI, UI
+- **Rust command-hook progress:** settings-driven `PreToolUse`, `PostToolUse`,
+  `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are
+  implemented with trusted-project gating and bounded process execution. See
+  `docs/extensions/hooks.md`. Subagent launch/resume decisions, hook journals,
+  and the broader `ice.hooks` namespace remain unported.
 - **Hooks/events:** `hooks/command-hooks.ts`, `v2/events.ts`, `extension-support.ts`.
   Lifecycle and decision hooks run through `ice.hooks`. Decision hooks can deny
   a launch, a tool call or a resume. Redacted hook records are persisted.

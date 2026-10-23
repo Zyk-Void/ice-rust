@@ -51,6 +51,7 @@ pub mod extension_api;
 pub mod extensions_actions;
 pub mod extras;
 pub mod fs_watch;
+pub mod hooks;
 pub mod install;
 pub mod interactive_tui;
 pub mod key_trace;
