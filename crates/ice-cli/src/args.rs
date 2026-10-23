@@ -148,6 +148,8 @@ pub struct Args {
     /// `--list-models [search]`: list the merged model catalog and exit.
     /// `Some("")` represents the bare flag; `None` means absent.
     pub list_models: Option<String>,
+    /// Inspect configured stdio MCP servers and exit.
+    pub list_mcp: bool,
     /// `--offline`: disable best-effort startup network checks.
     pub offline: bool,
     /// `--export <session-file>`: export a JSONL session to HTML (or copy it
@@ -473,6 +475,7 @@ pub fn parse_args(args: &[String]) -> Args {
                     result.exclude_tools = Some(split_csv(&v));
                 }
             }
+            "--list-mcp" => result.list_mcp = true,
             "--list-models" => {
                 // Optionally consumes a search term, matching the native
                 // parser's bare-flag versus string distinction.
@@ -631,6 +634,7 @@ pub fn print_help() {
   --token <token>                Auth token for `--connect` (printed by `--server`; may also
                                  be provided via the ICERS_SERVER_TOKEN env var)
   --tui-mode <mode>              TUI buffer: regular or fullscreen (macOS default: regular)
+  --list-mcp                     List configured MCP servers and tools
   --list-models [search]         List available models (with optional fuzzy search)
   --offline                      Disable startup network operations (same as ICERS_OFFLINE=1)
   --export <file>                Export a JSONL session to HTML and exit

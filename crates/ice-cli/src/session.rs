@@ -782,6 +782,13 @@ pub async fn build_prepared(
             )
         });
 
+    let mcp_approvals = Arc::new(Mutex::new(std::collections::HashSet::new()));
+    let before_tool_call = Some(crate::mcp::approval_hook(
+        before_tool_call,
+        mcp_approvals.clone(),
+        ui_dialog_mailbox.clone(),
+    ));
+
     let options = AgentHarnessOptions {
         model: resolved.model.clone(),
         thinking_level: resolved.thinking_level,
@@ -920,6 +927,16 @@ pub async fn build_prepared(
         }
     }
 
+    let mcp_tools = Arc::new(Mutex::new(Vec::new()));
+    crate::mcp::start(
+        &harness,
+        args,
+        cwd,
+        project_trusted,
+        mcp_approvals,
+        mcp_tools.clone(),
+    );
+
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
     // live session + bridge so `/reload` can swap them; the harness itself is
@@ -927,6 +944,7 @@ pub async fn build_prepared(
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
     let reload_context = ReloadContext {
+        mcp_tools,
         extension_session: extension_session_cell,
         action_bridge: Arc::new(Mutex::new(Some(Arc::clone(&action_bridge)))),
         tool_context,
@@ -1049,6 +1067,8 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 /// reload callback without borrowing the harness).
 #[derive(Clone)]
 pub struct ReloadContext {
+    /// Session-local MCP tools retained across extension reloads.
+    pub mcp_tools: Arc<Mutex<Vec<HarnessTool>>>,
     /// The live extension-session cell (swapped on reload).
     pub extension_session: ExtensionSessionCell,
     /// The session's plugin-tool context (`cwd` + session id), reused — not
@@ -1701,6 +1721,19 @@ where
         &extension_session,
         &effective_args,
         &ctx.tool_context,
+    );
+    tools.extend(
+        ctx.mcp_tools
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|mcp| {
+                !tools
+                    .iter()
+                    .any(|tool| tool.tool.schema().name == mcp.tool.schema().name)
+            })
+            .cloned()
+            .collect::<Vec<_>>(),
     );
     let mut active = active_tool_names(&tools, &effective_args);
     active = filter_active_tool_names(active, &effective_args);
