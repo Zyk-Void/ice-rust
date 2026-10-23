@@ -186,8 +186,11 @@ no hub.
   provides a status/tools panel, live reconnect, enable/disable, global add/remove,
   external configuration editing and argument completion. See
   `docs/extensions/mcp.md` and the `docs/extensions/context-mode.md` recipe.
-  HTTP/SSE transports, OAuth, resource/prompt discovery, sampling, and
-  server-initiated client capabilities remain unported. Subagent MCP pass-through
+  Resource discovery/read tools (default-on `exposeResources`), targeted tool
+  and resource catalog refresh, asynchronous server-request dispatch, and bounded
+  output/blob materialization are implemented in the Tier 4 stack (PRs: TBD).
+  HTTP/SSE transports, OAuth, prompt discovery, resource subscriptions, sampling,
+  and elicitation remain unported. Subagent MCP pass-through
   in §1.8 is separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are

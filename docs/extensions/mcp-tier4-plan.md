@@ -1,8 +1,10 @@
 # MCP Tier 4 port plan
 
-Status: Phase 0 implemented on `feat/cli-mcp-server-requests` (not yet merged);
-later phases not started. Plan written on `docs/mcp-tier4-plan`, worktree
-`.worktrees/mcp-tier4`, based on `main` at `ae1e46b`.
+Status: Phases 0–2 implemented in the unmerged stack
+`feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
+`feat/cli-mcp-resources`. Phase 1 was cherry-picked from `ae868f2` onto Phase 0
+as `e13d431`; the original output-guard branch is unchanged. Later phases are
+not started. Plan originally based on `main` at `ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
 prompts, server-initiated requests (elicitation, sampling, instructions),
@@ -30,9 +32,9 @@ not our in-process client).
 Line numbers are from the versions above and `main@ae1e46b`; re-check them
 before editing.
 
-## Where the Rust client stands
+## Baseline before Phase 0 (`main@ae1e46b`)
 
-What exists today in `crates/ice-cli/src/mcp.rs`:
+What existed in `crates/ice-cli/src/mcp.rs` before this stack:
 
 - `Client::spawn` (`mcp.rs:125`) runs a std-thread reader. Server requests are
   answered inline: `ping` gets `{}`, everything else gets `-32601 Method not
@@ -60,7 +62,7 @@ phases stay small.
 |---|---|---|---|---|---|
 | 0 | — | Bidirectional client foundation | — | ~200 | Do first |
 | 1 | 22 | Output guard (+ rendering check) | — | ~250 | Do |
-| 2 | 18 | Resources as tools | 0 | ~300 | Do |
+| 2 | 18 | Resources as tools | 0, 1 | ~300 | Implemented |
 | 3 | 19 | Prompts as slash commands | 0 | ~300 | Do |
 | 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Do |
 | 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Do, with confirmation always on by default |
@@ -108,8 +110,8 @@ PMA `server-manager.ts:1028-1036` (advertised client capabilities),
    as `McpManager::refresh_tools`, which reuses the `register` / `unregister`
    helpers split out of `reconnect_locked`; no process restart). Prompts and
    resources notifications are ignored until Phases 2-3 add those catalogs.
-   `notifications/resources/updated` goes to the
-   resource subscription table (Phase 2).
+   `notifications/resources/updated` remains ignored; subscriptions are deferred
+   until Tier 2, not part of Phase 2.
 5. Bounds stay as they are: `MAX_LINE` framing, `START_TIMEOUT`,
    `CALL_TIMEOUT`. Add a cap on concurrent inbound server requests per
    client (e.g. 8; reply `-32603` when exceeded) so a hostile server cannot
@@ -182,7 +184,15 @@ env; spill files removed on drop; spill file mode `600` (unix).
 
 ---
 
-## Phase 2: resources as tools (#18)
+## Phase 2: resources as tools (#18) — done
+
+Implemented on `feat/cli-mcp-resources`, stacked on Phases 0 and 1. Resource
+and real-tool definitions are cached separately by kind so notifications only
+re-list their target catalog; registration always orders real tools first.
+This also handles real tools added after an initially colliding resource.
+`directTools` does not exist on this branch and is not introduced here.
+Discovery also skips `tools/list` when `capabilities.tools` is absent, so a
+resource-only server can connect without implementing the tools API.
 
 **Spec:** MCP spec "Server features / Resources"; PMA
 `resource-tools.ts:3` (`resourceNameToToolName`),
@@ -217,7 +227,9 @@ guards), `:433`, `:649`, `:695` (subscribe/unsubscribe),
 **Tests:** fixture server gains `resources/list` (two pages) and
 `resources/read` (text + blob); assert tool names, guard applied, server
 without the capability is not probed, `exposeResources:false` registers
-nothing.
+nothing. Additional coverage pins real-tool collision priority, resource additions
+and removals, approval cleanup, targeted refresh without process restart,
+`--tools` filtering, repeated cursors, the 100-page cap, and PMA sanitization.
 
 ---
 
@@ -424,10 +436,9 @@ project imports ignored; `url` entries reported; copy-on-edit.
 - **D1. Order.** Proposed: 0 → 1 → 2 → 3 → 4 → 5 → 6a, then 6b after Tier 1.
   Phase 1 does not depend on Phase 0 and could go first if you want the
   safety fix soonest.
-- **D2. Resource tool explosion.** One tool per resource matches PMA but can
-  add many tools for servers with many resources. Alternative: one
-  `{server}_read_resource {uri}` tool per server (RMA style). Recommendation:
-  PMA style, plus the Tier 1 panel toggle to hide them.
+- **D2. Decided:** one tool per resource, PMA style, named
+  `{server}_read_{sanitized name}`, gated by per-server `exposeResources`
+  (default `true`). A future Tier 1 panel may expose this setting.
 - **D3. Sampling defaults.** PMA enables sampling by default with a
   confirmation step. Recommendation: same, confirmation always on unless
   `samplingAutoApprove` is set.

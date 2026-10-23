@@ -37,6 +37,7 @@ struct ServerState {
     status: ServerStatus,
     client: Option<Arc<Client>>,
     catalog: Option<Vec<ToolInfo>>,
+    discovered: Vec<McpTool>,
 }
 struct Inner {
     harness: ice_harness::agent_harness::WeakAgentHarness,
@@ -47,8 +48,8 @@ struct Inner {
     approvals: Arc<Mutex<HashSet<String>>>,
     tools: Mutex<Vec<HarnessTool>>,
     servers: Mutex<BTreeMap<String, ServerState>>,
-    /// Servers with a tool refresh queued; coalesces list_changed bursts to one re-list.
-    refreshing: Mutex<HashSet<String>>,
+    /// Catalogs with a refresh queued; coalesces list_changed bursts to one re-list.
+    refreshing: Mutex<HashSet<(String, String)>>,
     operation: tokio::sync::Mutex<()>,
     /// Output spill files for the whole session; survives reconnects.
     spill: Arc<output_guard::SpillStore>,
@@ -236,6 +237,7 @@ impl McpManager {
                     },
                     client: None,
                     catalog,
+                    discovered: Vec::new(),
                 },
             );
             if disabled {
@@ -267,19 +269,22 @@ impl McpManager {
                     .config
                     .direct_tools
                     .clone();
-                let (names, catalog) = self.register(&harness, &direct_tools, discovered).await?;
+                let (names, catalog) = self
+                    .register(&harness, &direct_tools, discovered.clone())
+                    .await?;
                 watch_shutdown(
                     harness.downgrade(),
                     Arc::downgrade(&client),
                     self.0.spill.clone(),
                 );
-                Ok::<_, String>((client, names, catalog))
+                Ok::<_, String>((client, names, catalog, discovered))
             }
             .await;
             let mut servers = self.0.servers.lock().unwrap();
             let state = servers.get_mut(&name).unwrap();
             match result {
-                Ok((client, tools, catalog)) => {
+                Ok((client, tools, catalog, discovered)) => {
+                    state.discovered = discovered;
                     state.client = Some(client);
                     state.status = ServerStatus::Connected { tools };
                     state.catalog = Some(catalog);
@@ -289,18 +294,29 @@ impl McpManager {
         }
         Ok(())
     }
-    /// The server keeps its process; only its tool catalog is re-listed and swapped.
-    async fn refresh_tools(&self, server: &str) -> Result<(), String> {
+    /// Re-list only the changed catalog, then register real tools before resources.
+    async fn refresh_catalog(&self, server: &str, catalog: &str) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
         // Cleared before listing so a change announced mid-list queues one more pass.
-        self.0.refreshing.lock().unwrap().remove(server);
-        let (client, config, old) = match self.0.servers.lock().unwrap().get(server) {
+        self.0
+            .refreshing
+            .lock()
+            .unwrap()
+            .remove(&(server.into(), catalog.into()));
+        let (client, config, old, mut discovered) = match self.0.servers.lock().unwrap().get(server)
+        {
             Some(ServerState {
                 client: Some(client),
                 config,
                 status: ServerStatus::Connected { tools },
+                discovered,
                 ..
-            }) if client.declares("tools") => (client.clone(), config.clone(), tools.clone()),
+            }) if client.declares(catalog) => (
+                client.clone(),
+                config.clone(),
+                tools.clone(),
+                discovered.clone(),
+            ),
             _ => return Ok(()),
         };
         let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
@@ -308,18 +324,28 @@ impl McpManager {
             store: self.0.spill.clone(),
             limits: output_guard::resolve(settings.get("outputGuard")),
         };
-        let discovered =
-            tokio::time::timeout(START_TIMEOUT, client.list_tools(server, &config, &guard))
-                .await
-                .map_err(|_| "MCP tools/list timed out".to_string())??;
+        let resources = catalog == "resources";
+        let updated = tokio::time::timeout(START_TIMEOUT, async {
+            if resources {
+                client.list_resources(server, &config, &guard).await
+            } else {
+                client.list_tools(server, &config, &guard).await
+            }
+        })
+        .await
+        .map_err(|_| format!("MCP {catalog}/list timed out"))??;
+        discovered.retain(|tool| tool.resource_uri.is_some() != resources);
+        discovered.extend(updated);
+        discovered.sort_by_key(|tool| tool.resource_uri.is_some());
         let harness = self.0.harness.upgrade().ok_or("Session ended")?;
         self.unregister(&harness, &old).await?;
-        let (tools, catalog) = self
-            .register(&harness, &config.direct_tools, discovered)
+        let (tools, listed) = self
+            .register(&harness, &config.direct_tools, discovered.clone())
             .await?;
         if let Some(state) = self.0.servers.lock().unwrap().get_mut(server) {
+            state.discovered = discovered;
             state.status = ServerStatus::Connected { tools };
-            state.catalog = Some(catalog);
+            state.catalog = Some(listed);
         }
         Ok(())
     }
@@ -328,20 +354,26 @@ impl McpManager {
         let server = server.to_owned();
         Handlers {
             list_changed: Some(Arc::new(move |catalog| {
-                // Prompts and resources have no catalog yet; they are not discovered.
-                if catalog != "tools" {
+                // Prompts have no catalog yet.
+                if catalog != "tools" && catalog != "resources" {
                     return;
                 }
                 let Some(inner) = manager.upgrade() else {
                     return;
                 };
-                if !inner.refreshing.lock().unwrap().insert(server.clone()) {
+                if !inner
+                    .refreshing
+                    .lock()
+                    .unwrap()
+                    .insert((server.clone(), catalog.into()))
+                {
                     return;
                 }
                 let server = server.clone();
+                let catalog = catalog.to_owned();
                 tokio::spawn(async move {
-                    if let Err(error) = McpManager(inner).refresh_tools(&server).await {
-                        tracing::warn!(%server, %error, "MCP tool refresh failed");
+                    if let Err(error) = McpManager(inner).refresh_catalog(&server, &catalog).await {
+                        tracing::warn!(%server, %catalog, %error, "MCP catalog refresh failed");
                     }
                 });
             })),
@@ -389,21 +421,27 @@ impl McpManager {
         let mut names = Vec::new();
         let mut catalog = Vec::new();
         for tool in discovered {
-            let direct = direct_tools.allows(&tool.remote_name);
-            catalog.push(ToolInfo {
-                name: tool.remote_name.clone(),
-                description: tool.schema.description.clone(),
-                tokens: tool.tokens,
-                direct,
-            });
+            // Resource tools are gated by `exposeResources`, not `directTools`.
+            let resource = tool.resource_uri.is_some();
+            let direct = resource || direct_tools.allows(&tool.remote_name);
+            if !resource {
+                catalog.push(ToolInfo {
+                    name: tool.remote_name.clone(),
+                    description: tool.schema.description.clone(),
+                    tokens: tool.tokens,
+                    direct,
+                });
+            }
             let name = tool.schema.name.clone();
             // Without a proxy tool, a tool that is not direct is not registered.
             if !direct {
                 continue;
             }
-            if !crate::session::tool_name_allowed(&name, &self.0.args)
-                || tools.iter().any(|t| t.tool.schema().name == name)
-            {
+            if !crate::session::tool_name_allowed(&name, &self.0.args) {
+                continue;
+            }
+            if tools.iter().any(|t| t.tool.schema().name == name) {
+                tracing::warn!(%name, resource = tool.resource_uri.is_some(), "Skipping colliding MCP tool");
                 continue;
             }
             if tool.approval {
