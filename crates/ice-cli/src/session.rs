@@ -783,11 +783,6 @@ pub async fn build_prepared(
         });
 
     let mcp_approvals = Arc::new(Mutex::new(std::collections::HashSet::new()));
-    let before_tool_call = Some(crate::mcp::approval_hook(
-        before_tool_call,
-        mcp_approvals.clone(),
-        ui_dialog_mailbox.clone(),
-    ));
     let command_hooks = crate::hooks::Hooks::load(
         cwd,
         session
@@ -805,6 +800,11 @@ pub async fn build_prepared(
     } else {
         before_tool_call
     };
+    let before_tool_call = Some(crate::mcp::approval_hook(
+        before_tool_call,
+        mcp_approvals.clone(),
+        ui_dialog_mailbox.clone(),
+    ));
     let after_tool_call = hooks_enabled.then(|| command_hooks.after(None));
 
     let options = AgentHarnessOptions {

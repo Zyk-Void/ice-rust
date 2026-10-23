@@ -638,6 +638,50 @@ mod tests {
         assert_eq!(result.reason.as_deref(), Some("plugin veto"));
     }
 
+    #[tokio::test]
+    async fn command_hook_denial_precedes_mcp_approval() {
+        let dir = tempfile::tempdir().unwrap();
+        let hooks = configured(dir.path(), "PreToolUse", "echo '{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"blocked by hook\"}}'");
+        let ui = ice_extensions::UiDialogMailbox::new();
+        let before = crate::mcp::approval_hook(
+            Some(hooks.before(None)),
+            Arc::new(Mutex::new(std::collections::HashSet::from([
+                "fake_echo".into()
+            ]))),
+            ui.clone(),
+        );
+        let assistant =
+            ice_ai::providers::faux::faux_assistant_message("", ice_ai::types::StopReason::ToolUse);
+        let call = ice_ai::types::ToolCall {
+            kind: ice_ai::types::ToolCallType,
+            id: "denied".into(),
+            name: "fake_echo".into(),
+            arguments: json!({}),
+            thought_signature: None,
+            namespace: None,
+        };
+        let context = ice_agent::types::AgentContext::default();
+        let result = tokio::time::timeout(
+            Duration::from_secs(2),
+            before(
+                ice_agent::types::BeforeToolCallContext {
+                    assistant_message: &assistant,
+                    tool_call: &call,
+                    args: &call.arguments,
+                    context: &context,
+                },
+                CancellationToken::new(),
+            ),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        assert!(result.block);
+        assert!(result.reason.unwrap().contains("blocked by hook"));
+        assert_eq!(ui.pending_len(), 0);
+        assert!(ui.take_pending().is_none());
+    }
+
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn prompt_admission_context_and_rejection() {
         let dir = tempfile::tempdir().unwrap();

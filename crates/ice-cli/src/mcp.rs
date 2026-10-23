@@ -646,7 +646,7 @@ async fn discover_server(
         .map_err(|_| "MCP startup timed out".to_string())?
 }
 
-/// Compose with the plugin hook: a plugin veto always wins, then MCP approval.
+/// Run inner plugin/command hooks first; only surviving calls need MCP approval.
 pub fn approval_hook(
     previous: Option<ice_agent::BeforeToolCall>,
     approvals: Arc<Mutex<HashSet<String>>>,
