@@ -189,9 +189,13 @@ pub fn select_session(args: &Args, cwd: &Path) -> SessionSelection {
     }
 }
 
-/// The default session directory is `<cwd>/.icers/sessions`.
+/// The default session directory is `<cwd>/.rpi/sessions`, unless
+/// `RPI_CODING_AGENT_SESSION_DIR` is set (in which case its value is used).
 pub fn default_session_dir(cwd: &Path) -> PathBuf {
-    cwd.join(".icers").join("sessions")
+    std::env::var("RPI_CODING_AGENT_SESSION_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| cwd.join(".rpi").join("sessions"))
 }
 
 /// Extensions are loaded exactly once before model resolution. Their action
@@ -1433,7 +1437,7 @@ where
             &effective_args.skill,
             &discovered.skill_paths,
             js_paths,
-            &package_paths,
+            package_paths,
         );
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
         skills = result.skills;
@@ -1451,7 +1455,7 @@ where
             &effective_args.prompt_template,
             &discovered.prompt_paths,
             js_paths,
-            &package_paths,
+            package_paths,
         );
         let result = load_prompt_templates_with_precedence(&env_dyn, &dirs).await;
         prompt_templates = result.prompt_templates;
@@ -2499,9 +2503,9 @@ pub fn list_session_files_sync(dir: &Path) -> Vec<PathBuf> {
 /// content (a header-only session resumes to an empty transcript). Falls back to
 /// the newest overall when every session is empty, and `None` only when the
 /// list is empty.
-fn first_resumable_session<'a>(
-    metas: &'a [ice_harness::session::jsonl::JsonlSessionMetadata],
-) -> Option<&'a ice_harness::session::jsonl::JsonlSessionMetadata> {
+fn first_resumable_session(
+    metas: &[rpi_harness::session::jsonl::JsonlSessionMetadata],
+) -> Option<&rpi_harness::session::jsonl::JsonlSessionMetadata> {
     metas
         .iter()
         .find(|meta| !summarize_session_file(Path::new(&meta.path)).empty)
@@ -3925,6 +3929,16 @@ mod tests {
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
         std::fs::create_dir_all(cwd.join(".icers/sessions")).unwrap();
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
+    }
+
+    #[test]
+    fn default_session_dir_uses_env_var() {
+        let tmp = tempfile::tempdir().unwrap();
+        let cwd = tmp.path();
+        let custom = tmp.path().join("custom_sessions");
+        std::env::set_var("RPI_CODING_AGENT_SESSION_DIR", custom.to_str().unwrap());
+        assert_eq!(default_session_dir(cwd), custom);
+        std::env::remove_var("RPI_CODING_AGENT_SESSION_DIR");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
