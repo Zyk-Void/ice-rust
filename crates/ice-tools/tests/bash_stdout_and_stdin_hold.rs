@@ -60,6 +60,46 @@ async fn a_grandchild_holding_stdout_does_not_hold_the_call_open() {
     );
 }
 
+/// A command that prints more than the OS pipe buffer (~64 KiB) blocks on its
+/// write until someone reads. If the readers only start after `child.wait()`,
+/// the child never exits and the call hangs until the timeout.
+#[tokio::test]
+async fn output_larger_than_the_pipe_buffer_does_not_deadlock() {
+    let tmp = scratch("big-output");
+    let env = OsExecutionEnv::with_cwd(tmp.clone());
+    let started = Instant::now();
+    let result = tokio::time::timeout(
+        Duration::from_secs(20),
+        env.exec(
+            "head -c 1048576 /dev/zero | tr '\\0' 'x'; echo >&2 done",
+            ShellExecOptions {
+                timeout: Some(10.0),
+                ..Default::default()
+            },
+        ),
+    )
+    .await;
+    let elapsed = started.elapsed();
+    let _ = std::fs::remove_dir_all(&tmp);
+
+    let output = match result {
+        Ok(Ok(output)) => output,
+        Ok(Err(error)) if error.code == ExecutionErrorCode::ShellUnavailable => return,
+        Ok(Err(error)) => panic!("exec failed (pipe deadlock until timeout?): {error:?}"),
+        Err(_) => panic!("exec never returned: the child blocked on a full stdout pipe"),
+    };
+    assert_eq!(
+        output.stdout.len(),
+        1_048_576,
+        "all stdout must be captured"
+    );
+    assert!(output.stderr.contains("done"), "{:?}", output.stderr);
+    assert!(
+        elapsed < Duration::from_secs(5),
+        "took {elapsed:?}: stdout was not drained while the child ran"
+    );
+}
+
 /// `cat` with no arguments reads stdin and exits at EOF. If stdin is left as an
 /// open pipe nothing will ever close, it blocks instead.
 #[tokio::test]
