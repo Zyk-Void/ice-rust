@@ -1,13 +1,9 @@
 use super::*;
+#[path = "../../tests/support/mcp_fixture.rs"]
+mod mcp_fixture;
 
 fn fixture(dir: &Path) -> ServerConfig {
-    let exe = std::env::current_exe().unwrap();
-    let binary = exe
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join(format!("mcp-test-server{}", std::env::consts::EXE_SUFFIX));
+    let binary = mcp_fixture::server_executable();
     serde_json::from_value(json!({"command":binary,"env":{"ICERS_MCP_TEST_CHILD":"1","ICERS_MCP_TEST_CANCEL":dir.join("cancel")},"approveTools":true})).unwrap()
 }
 

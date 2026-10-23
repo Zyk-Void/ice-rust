@@ -1,5 +1,7 @@
 //! Offline MCP CLI integration tests.
 use serde_json::json;
+#[path = "support/mcp_fixture.rs"]
+mod mcp_fixture;
 
 #[test]
 fn list_mcp_cli_trust_disabled_and_failure() {
@@ -8,7 +10,7 @@ fn list_mcp_cli_trust_disabled_and_failure() {
     let project = dir.path().join("project");
     std::fs::create_dir_all(&agent).unwrap();
     std::fs::create_dir_all(project.join(".icers")).unwrap();
-    let fake = env!("CARGO_BIN_EXE_mcp-test-server");
+    let fake = mcp_fixture::server_executable();
     std::fs::write(
         agent.join("mcp.json"),
         json!({"mcpServers":{
