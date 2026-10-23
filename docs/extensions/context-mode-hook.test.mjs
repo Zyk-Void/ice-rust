@@ -23,7 +23,10 @@ for (const toolName of ["bash", "context-mode_ctx_execute"]) {
           tool_name: toolName, tool_input: toolInput,
         }),
         encoding: "utf8",
+        timeout: 30_000,
       });
+      assert.equal(result.error, undefined, `Hook failed or exceeded 30 seconds: ${result.error}`);
+      assert.equal(result.signal, null, `Hook terminated by signal: ${result.signal}`);
       assert.equal(result.status, 0, result.stderr);
       const output = JSON.parse(result.stdout).hookSpecificOutput;
       if (toolName === "bash") {
