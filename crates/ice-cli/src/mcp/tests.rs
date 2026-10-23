@@ -144,16 +144,17 @@ async fn first_prompt_includes_delayed_mcp_tools() {
     })
     .await
     .unwrap();
-    let (tx, ready) = watch::channel(false);
-    publish_servers(
+    std::fs::write(dir.path().join("mcp.json"), serde_json::to_vec(&json!({"mcpServers":{"fake":{"command":config.command,"env":config.env,"approveTools":true}}})).unwrap()).unwrap();
+    let args = crate::args::Args::default();
+    let manager = McpManager::new(
         &harness,
-        &crate::args::Args::default(),
+        &args,
         dir.path(),
+        dir.path().into(),
+        false,
         Arc::new(Mutex::new(HashSet::new())),
-        Arc::new(Mutex::new(Vec::new())),
-        BTreeMap::from([("fake".into(), config)]),
-        tx,
     );
+    let ready = start(manager);
     harness.set_lifecycle_hooks(Arc::new(McpReadyGate { inner: None, ready }));
     harness
         .lane("main")
@@ -238,4 +239,100 @@ async fn approvals_are_interactive_per_call_and_fail_closed() {
     signal.cancel();
     assert!(approve(&ui, "cancel", "fake_echo", &signal).await.is_err());
     assert_eq!(ui.pending_len(), 0);
+}
+
+#[tokio::test]
+async fn manager_lifecycle_preserves_config_and_replaces_tools() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_harness::types::AgentHarnessOptions;
+    let dir = tempfile::tempdir().unwrap();
+    let agent = dir.path().join("agent");
+    std::fs::create_dir_all(&agent).unwrap();
+    std::fs::create_dir_all(dir.path().join(".icers")).unwrap();
+    let config = fixture(dir.path());
+    let entry =
+        json!({"command":config.command,"env":config.env,"approveTools":true,"extra":"keep"});
+    let global = agent.join("mcp.json");
+    let project = dir.path().join(".icers/mcp.json");
+    std::fs::write(&global, serde_json::to_vec(&json!({"other":42,"mcpServers":{"fake":entry,"bad":{"command":"icers-nonexistent-mcp-fixture"},"off":{"disabled":true}}})).unwrap()).unwrap();
+    std::fs::write(
+        &project,
+        serde_json::to_vec(&json!({"projectKey":7,"mcpServers":{"fake":entry}})).unwrap(),
+    )
+    .unwrap();
+    let provider = FauxProvider::new(FauxScript::new());
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let approvals = Arc::new(Mutex::new(HashSet::new()));
+    let manager = McpManager::new(
+        &harness,
+        &crate::args::Args::default(),
+        dir.path(),
+        agent,
+        true,
+        approvals.clone(),
+    );
+    manager.reconnect(None).await.unwrap();
+    let snapshot = manager.snapshot();
+    assert!(matches!(
+        snapshot.iter().find(|s| s.name == "fake").unwrap().status,
+        ServerStatus::Connected { .. }
+    ));
+    assert!(matches!(
+        snapshot.iter().find(|s| s.name == "bad").unwrap().status,
+        ServerStatus::Failed(_)
+    ));
+    assert!(matches!(
+        snapshot.iter().find(|s| s.name == "off").unwrap().status,
+        ServerStatus::Disabled
+    ));
+    assert!(approvals.lock().unwrap().contains("fake_echo"));
+    manager.reconnect(Some("fake")).await.unwrap();
+    assert_eq!(
+        harness
+            .get_tools()
+            .await
+            .unwrap()
+            .iter()
+            .filter(|t| t.tool.schema().name == "fake_echo")
+            .count(),
+        1
+    );
+    manager.set_disabled("fake", true).await.unwrap();
+    assert!(manager.tools("fake").is_empty());
+    assert!(!approvals.lock().unwrap().contains("fake_echo"));
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&project).unwrap()).unwrap();
+    assert_eq!(saved["mcpServers"]["fake"]["disabled"], true);
+    assert_eq!(saved["mcpServers"]["fake"]["extra"], "keep");
+    assert_eq!(saved["projectKey"], 7);
+    assert!(!std::fs::read_to_string(&global)
+        .unwrap()
+        .contains("\"disabled\": true"));
+    manager.set_disabled("fake", false).await.unwrap();
+    assert!(approvals.lock().unwrap().contains("fake_echo"));
+    manager
+        .add("new", "icers-missing-mcp-fixture", &["arg".into()])
+        .await
+        .unwrap();
+    assert!(manager.add("bad/name", "cmd", &[]).await.is_err());
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&global).unwrap()).unwrap();
+    assert_eq!(saved["mcpServers"]["new"]["args"], json!(["arg"]));
+    assert_eq!(saved["other"], 42);
+    manager.remove("new").await.unwrap();
+    std::fs::write(&project, "{\"mcpServers\":{}}").unwrap();
+    manager.remove("fake").await.unwrap();
+    assert!(!manager.snapshot().iter().any(|s| s.name == "fake"));
+    assert!(!harness
+        .get_tools()
+        .await
+        .unwrap()
+        .iter()
+        .any(|t| t.tool.schema().name == "fake_echo"));
+    assert!(!approvals.lock().unwrap().contains("fake_echo"));
+    assert!(manager.registered_tools().is_empty());
 }

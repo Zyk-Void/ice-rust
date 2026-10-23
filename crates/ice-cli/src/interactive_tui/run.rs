@@ -124,6 +124,37 @@ pub(super) fn edit_in_external_editor(
     let path = directory.path().join("prompt.md");
     std::fs::write(&path, content.as_bytes())
         .map_err(|error| format!("Could not write editor file: {error}"))?;
+    if !edit_file(command, &path)? {
+        return Ok(None);
+    }
+    let text = std::fs::read_to_string(&path)
+        .map_err(|error| format!("Could not read editor file: {error}"))?;
+    let text = match text.strip_suffix('\n') {
+        Some(rest) => rest.strip_suffix('\r').unwrap_or(rest).to_string(),
+        None => text,
+    };
+    Ok(Some(text))
+}
+
+pub(super) fn edit_mcp_config(
+    tui: &Arc<TuiAltScreen>,
+    path: &std::path::Path,
+) -> Result<(), String> {
+    crate::mcp::ensure_config(path)?;
+    tui.suspend();
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Show);
+    let result = edit_file(&external_editor_command(), path);
+    tui.resume();
+    if !result? {
+        return Err("MCP edit cancelled".into());
+    }
+    let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let _: serde_json::Value =
+        serde_json::from_str(&text).map_err(|e| format!("Invalid MCP JSON: {e}"))?;
+    Ok(())
+}
+
+fn edit_file(command: &str, path: &std::path::Path) -> Result<bool, String> {
     let (program, args) = if std::path::Path::new(command).is_file() {
         (command, Vec::new())
     } else {
@@ -146,17 +177,7 @@ pub(super) fn edit_in_external_editor(
         .arg(&path)
         .status()
         .map_err(|error| format!("Could not launch external editor `{command}`: {error}"))?;
-    if !status.success() {
-        // A nonzero editor exit is cancellation: keep the original draft.
-        return Ok(None);
-    }
-    let text = std::fs::read_to_string(&path)
-        .map_err(|error| format!("Could not read editor file: {error}"))?;
-    let text = match text.strip_suffix('\n') {
-        Some(rest) => rest.strip_suffix('\r').unwrap_or(rest).to_string(),
-        None => text,
-    };
-    Ok(Some(text))
+    Ok(status.success())
 }
 
 /// Editor caret at the end of `text`: the last line and its byte length.

@@ -182,12 +182,13 @@ no hub.
 ### 1.9 Hooks, events, settings, controller, CLI, UI
 - **Ported — session-local stdio MCP client** (PR: TBD — PR not yet opened):
   global and trusted-project `mcp.json`, background discovery, namespaced tools,
-  per-tool approval, bounded calls/cancellation, and `--list-mcp`. See
+  per-tool approval, bounded calls/cancellation, and `--list-mcp`. `/mcp` now
+  provides a status/tools panel, live reconnect, enable/disable, global add/remove,
+  external configuration editing and argument completion. See
   `docs/extensions/mcp.md` and the `docs/extensions/context-mode.md` recipe.
-  HTTP/SSE transports, OAuth, resource/prompt discovery, sampling,
-  server-initiated client capabilities, hot reconnect/config reload, and a
-  `/mcp` TUI command remain unported. Subagent MCP pass-through in §1.8 is
-  separate and remains unported.
+  HTTP/SSE transports, OAuth, resource/prompt discovery, sampling, and
+  server-initiated client capabilities remain unported. Subagent MCP pass-through
+  in §1.8 is separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are
   implemented with trusted-project gating and bounded process execution. See

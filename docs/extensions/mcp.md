@@ -47,8 +47,8 @@ Servers initialize concurrently in the background, with a ten-second total
 startup budget per server. They do not delay the TUI launch. Prompt admission
 waits for discovery and tool publication, bounded by that budget plus a
 one-second scheduling margin, so the first prompt sees discovered tools.
-Failed servers do not prevent the session from running. Restart the session to retry
-failed servers or reread MCP configuration. Extension `/reload` retains already
+Failed servers do not prevent the session from running. Use `/mcp reconnect`
+to retry failed servers or reread MCP configuration. Extension `/reload` retains
 registered MCP tools; it does not restart MCP servers.
 
 Tool calls time out after sixty seconds. Aborting a call sends
@@ -82,8 +82,27 @@ failed, or disabled status and namespaced tools. It exits non-zero if any server
 fails discovery; disabled servers are not failures. It needs no model credentials.
 Inspection obeys project trust and does not execute any tools. It starts real
 configured server executables, so inspect configuration before trusting it.
-There is no `/mcp` TUI command in this stage. While normal session discovery is
-in progress, servers are starting and tools are not yet present in the registry.
+
+## Interactive management
+
+- `/mcp` or `/mcp status`: open the server panel with status, tool count and
+  configuration source. Enter shows tools, Ctrl+R reconnects the selected server,
+  Ctrl+D toggles disabled, `e` edits its configuration file, and Esc closes.
+- `/mcp tools`: list tools grouped by server, marking approval-required tools.
+- `/mcp reconnect [server]`: reconnect one server or reload all configuration.
+  Removed servers lose their tools; newly configured servers are started.
+- `/mcp enable <server>` and `/mcp disable <server>`: persist the flag in the
+  file defining the effective entry and apply it immediately.
+- `/mcp add <name> <command> [args...]` and `/mcp remove <name>`: edit global
+  configuration and apply live. Arguments are whitespace-separated, not shell
+  expressions. A trusted project entry still overrides a global entry.
+- `/mcp edit [project]`: open global or trusted-project configuration with
+  `ICERS_EXTERNAL_EDITOR`, `VISUAL`, or `EDITOR` (falling back to nano/notepad).
+  Missing files get an empty template. Invalid JSON is reported and not applied.
+
+Edits preserve unknown JSON keys. Newly created configuration files use mode
+0600 on Unix. No `/reload` or session restart is needed. While discovery is in
+progress, servers show as connecting and tools are not yet registered.
 
 ## Integration recipes
 
@@ -94,7 +113,6 @@ routing hook, system instructions, and skills.
 
 No HTTP, SSE, OAuth, resource discovery, prompt discovery, sampling, or
 server-initiated client capabilities are implemented. Embedded resources in
-tool results are supported only as content, not as a resource API. Configuration
-changes and server restarts require a new session. Individual protocol frames
+tool results are supported only as content, not as a resource API. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

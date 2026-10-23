@@ -1,4 +1,64 @@
 //! Offline MCP CLI integration tests.
+
+#[tokio::test]
+async fn manager_reconnect_reloads_approval_policy_without_duplicates() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_cli::mcp::{McpManager, ServerStatus};
+    use ice_harness::{agent_harness::AgentHarness, types::AgentHarnessOptions};
+    use std::sync::{Arc, Mutex};
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("mcp.json");
+    let write = |approval: bool| {
+        std::fs::write(
+            &path,
+            json!({"mcpServers":{"fake":{
+                "command":mcp_fixture::server_executable(),
+                "env":{"ICERS_MCP_TEST_CHILD":"1"}, "approveTools":approval
+            }}})
+            .to_string(),
+        )
+        .unwrap();
+    };
+    write(true);
+    let provider = FauxProvider::new(FauxScript::new());
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let approvals = Arc::new(Mutex::new(Default::default()));
+    let manager = McpManager::new(
+        &harness,
+        &ice_cli::args::Args::default(),
+        dir.path(),
+        dir.path().into(),
+        false,
+        approvals.clone(),
+    );
+    manager.reconnect(None).await.unwrap();
+    assert!(matches!(
+        manager.snapshot()[0].status,
+        ServerStatus::Connected { .. }
+    ));
+    assert!(approvals.lock().unwrap().contains("fake_echo"));
+    write(false);
+    manager.reconnect(None).await.unwrap();
+    assert!(approvals.lock().unwrap().is_empty());
+    assert_eq!(manager.tools("fake").len(), 2);
+    assert_eq!(harness.get_tools().await.unwrap().len(), 2);
+    std::fs::write(&path, "{\"mcpServers\":{}}").unwrap();
+    manager.reconnect(None).await.unwrap();
+    assert!(manager.snapshot().is_empty());
+    assert!(harness.get_tools().await.unwrap().is_empty());
+    assert!(harness
+        .lane("main")
+        .get_active_tools()
+        .await
+        .unwrap()
+        .is_empty());
+}
 use serde_json::json;
 #[path = "support/mcp_fixture.rs"]
 mod mcp_fixture;
