@@ -81,7 +81,7 @@ fn tools_from(view: &ServerView, staged: Option<&[Tool]>) -> Option<Vec<Tool>> {
         catalog
             .iter()
             .map(|t| Tool {
-                name: clean(&t.name),
+                name: t.name.clone(),
                 description: clean(&t.description),
                 tokens: t.tokens,
                 direct: staged
@@ -99,7 +99,7 @@ impl McpPanel {
             servers: views
                 .iter()
                 .map(|view| Server {
-                    name: clean(&view.name),
+                    name: view.name.clone(),
                     expanded: false,
                     disabled: view.disabled,
                     was_disabled: view.disabled,
@@ -184,7 +184,7 @@ impl McpPanel {
                 .filter(|(_, t)| match (&self.desc_query, query.is_empty()) {
                     (_, true) => server.expanded,
                     (Some(_), false) => matches(&t.description),
-                    (None, false) => matches(&t.name) || matches(&server.name),
+                    (None, false) => matches(&clean(&t.name)) || matches(&clean(&server.name)),
                 })
                 .map(|(ti, _)| (si, Some(ti)))
                 .collect();
@@ -483,10 +483,11 @@ impl McpPanel {
         } else {
             colors.dim.fg(if server.expanded { arrow } else { "·" })
         };
+        let name = clean(&server.name);
         let name = if selected {
-            ice_tui::bold(&colors.accent.fg(&server.name))
+            ice_tui::bold(&colors.accent.fg(&name))
         } else {
-            server.name.clone()
+            name
         };
         let status = if server.disabled {
             format!("  {}", colors.dim.fg("disabled"))
@@ -534,12 +535,13 @@ fn tool_row(tool: &Tool, selected: bool, inner: usize) -> String {
     } else {
         " ".into()
     };
+    let name = clean(&tool.name);
+    let room = inner.saturating_sub(7 + visible_width(&name) + 8);
     let name = if selected {
-        ice_tui::bold(&colors.accent.fg(&tool.name))
+        ice_tui::bold(&colors.accent.fg(&name))
     } else {
-        tool.name.clone()
+        name
     };
-    let room = inner.saturating_sub(7 + visible_width(&tool.name) + 8);
     let description = if room > 5 && !tool.description.is_empty() {
         colors.dim.fg(&format!(
             "— {}",
@@ -703,6 +705,58 @@ mod tests {
             panel.handle_key(ctrl('s')),
             PanelAction::Save(panel.changes())
         );
+    }
+
+    #[test]
+    fn tool_identifiers_survive_save_and_refresh_but_render_cleanly() {
+        let raw = "read\t\x1b]0;tool\x07  file";
+        let views = [view(
+            "alpha",
+            connected(),
+            Some(&[(raw, "Read a file", false), ("other", "", true)]),
+        )];
+        let mut panel = McpPanel::new(&views);
+        panel.handle_key(key(KeyCode::Enter));
+        panel.handle_key(key(KeyCode::Down));
+        panel.handle_key(key(KeyCode::Char(' ')));
+        panel.handle_key(key(KeyCode::Down));
+        panel.handle_key(key(KeyCode::Char(' ')));
+        let changes = vec![PanelChange {
+            server: "alpha".into(),
+            disabled: None,
+            direct_tools: Some(DirectTools::Tools(vec![raw.into()])),
+        }];
+        assert_eq!(panel.changes(), changes);
+        panel.refresh(&views);
+        assert_eq!(panel.changes(), changes);
+        assert_eq!(panel.handle_key(ctrl('s')), PanelAction::Save(changes));
+        let rendered = panel.render(WIDTH).join("\n");
+        assert!(!rendered.contains("\x1b]") && !rendered.contains('\x07'));
+        assert!(strip_ansi(&rendered).contains(&clean(raw)));
+    }
+
+    #[test]
+    fn server_identifiers_survive_actions_and_refresh_but_render_cleanly() {
+        let raw = "  alpha\t\x1b]0;server\x07  ";
+        let mut panel = McpPanel::new(&[view(raw, connected(), None)]);
+        assert_eq!(
+            panel.handle_key(ctrl('r')),
+            PanelAction::Reconnect(raw.into())
+        );
+        panel.refresh(&[view(raw, connected(), Some(&[("read", "", true)]))]);
+        assert!(panel.servers[0].tools.is_some());
+        panel.handle_key(ctrl('d'));
+        assert_eq!(
+            panel.changes(),
+            vec![PanelChange {
+                server: raw.into(),
+                disabled: Some(true),
+                direct_tools: None,
+            }]
+        );
+        let rendered = panel.render(WIDTH).join("\n");
+        assert!(!rendered.contains("\x1b]") && !rendered.contains('\x07'));
+        assert!(strip_ansi(&rendered).contains(&clean(raw)));
     }
 
     #[test]
