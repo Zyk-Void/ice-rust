@@ -67,6 +67,11 @@ ending the coding session. Server stderr goes to debug tracing, not the TUI.
 Session teardown kills the server process group (Unix) or job (Windows),
 including descendant processes.
 
+A server that declares the `tools` capability can send
+`notifications/tools/list_changed`; `icers` then re-lists that server's tools
+and replaces them in the session without restarting the process. Server
+requests other than `ping` are answered with `Method not found`.
+
 Text and embedded text resources become text content. Images retain their
 base64 data and MIME type. Other content is returned as JSON text. MCP
 `isError: true` responses are tool errors.
