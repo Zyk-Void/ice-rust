@@ -2190,6 +2190,24 @@ mod tests {
         assert!(expanded.contains("line 20") && !expanded.contains("+17 lines"));
     }
 
+    /// MCP tools (`<server>_<tool>`) take the unknown-tool path: one title row
+    /// with a width-bounded input preview, a three-row head, and the hint.
+    #[test]
+    fn compact_mcp_tool_bounds_input_preview_and_result() {
+        let query = "q".repeat(5000);
+        let tool = ToolExecutionComponent::new(
+            "github_search",
+            &format!(r#"{{"query":"{query}","limit":5}}"#),
+        );
+        tool.set_result(&numbered(500), false);
+        let collapsed = compact_plain(&tool, 300);
+        let rows: Vec<&str> = collapsed.lines().filter(|l| !l.is_empty()).collect();
+        assert!(rows[0].starts_with("✓ github_search \"qqq"), "{collapsed}");
+        assert_eq!(rows.len(), 5, "{collapsed}");
+        assert!(rows[4].contains("… +497 lines (Ctrl+O to expand)"));
+        assert!(rows.iter().all(|row| row.chars().count() <= 100));
+    }
+
     #[test]
     fn compact_failure_shows_five_error_rows_and_empty_output_is_labelled() {
         let failed = ToolExecutionComponent::new("bash", r#"{"command":"make"}"#);

@@ -117,6 +117,15 @@ fn main() {
                 Some("error") => {
                     json!({"isError":true,"content":[{"type":"text","text":"failure"}]})
                 }
+                // Larger than the default output guard (2,000 lines) and details limit.
+                Some("big") => {
+                    let text = (0..3000).map(|i| format!("row {i}\n")).collect::<String>();
+                    json!({"content":[
+                        {"type":"text","text":text},
+                        {"type":"image","data":"YWJj","mimeType":"image/png"},
+                        {"type":"resource","resource":{"uri":"file:///b.bin","blob":"aGVsbG8="}}
+                    ]})
+                }
                 _ => {
                     json!({"content":[{"type":"text","text":"hello"},{"type":"image","data":"YWJj","mimeType":"image/png"},{"type":"resource","resource":{"text":"embedded"}},{"type":"audio","data":"abc"}]})
                 }

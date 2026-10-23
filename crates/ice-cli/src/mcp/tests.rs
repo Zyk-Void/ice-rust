@@ -12,7 +12,10 @@ async fn call_answers_server_ping_and_unknown_requests() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());
     let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
-    client.discover("fake", &config).await.unwrap();
+    client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
     let result = tokio::time::timeout(
         Duration::from_secs(5),
         client.request(
@@ -76,7 +79,10 @@ async fn pending_server_request_does_not_block_ping_tool_calls_or_cancellation()
     let release = CancellationToken::new();
     let client =
         Client::spawn("fake", &config, dir.path(), slow_handlers(release.clone())).unwrap();
-    client.discover("fake", &config).await.unwrap();
+    client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
     let delayed = json!({"mode":"delayed_request","id":"slow"});
     assert_eq!(call_text(&client, delayed).await, "ping answered");
     let cancelled = json!({"mode":"cancelled_request","id":"gone"});
@@ -98,7 +104,10 @@ async fn inbound_requests_past_the_cap_are_refused() {
     let release = CancellationToken::new();
     let client =
         Client::spawn("fake", &config, dir.path(), slow_handlers(release.clone())).unwrap();
-    client.discover("fake", &config).await.unwrap();
+    client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
     let flood = json!({"mode":"flood","count":MAX_INBOUND + 1});
     let refused: Value = serde_json::from_str(&call_text(&client, flood).await).unwrap();
     assert_eq!(refused["id"], MAX_INBOUND);
@@ -122,7 +131,10 @@ async fn capabilities_are_advertised_only_for_registered_handlers() {
         (sampling, json!({"sampling":{}})),
     ] {
         let client = Client::spawn("fake", &config, dir.path(), handlers).unwrap();
-        client.discover("fake", &config).await.unwrap();
+        client
+            .discover("fake", &config, &OutputGuard::default())
+            .await
+            .unwrap();
         let sent = call_text(&client, json!({"mode":"client_capabilities"})).await;
         assert_eq!(serde_json::from_str::<Value>(&sent).unwrap(), expected);
         assert_eq!(client.instructions(), Some("Call echo first."));
@@ -215,7 +227,10 @@ async fn handshake_pagination_call_content_error_timeout_crash_and_cancel() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());
     let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
-    let tools = client.discover("fake", &config).await.unwrap();
+    let tools = client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
     assert_eq!(tools.len(), 2);
     assert_eq!(tools[0].schema.name, "fake_echo");
     assert!(tools[0].approval);
@@ -632,4 +647,86 @@ async fn panel_save_writes_direct_tools_and_registers_only_selected() {
         }])
         .await
         .is_err());
+}
+
+#[tokio::test]
+async fn output_guard_follows_mcp_json_settings() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_harness::types::AgentHarnessOptions;
+    let texts = |content: &[TextContentOrImage]| -> Vec<String> {
+        content
+            .iter()
+            .filter_map(|block| match block {
+                TextContentOrImage::Text(text) => Some(text.text.clone()),
+                TextContentOrImage::Image(_) => None,
+            })
+            .collect()
+    };
+    for (settings, guarded) in [(json!({}), true), (json!({"outputGuard":false}), false)] {
+        let dir = tempfile::tempdir().unwrap();
+        let config = fixture(dir.path());
+        std::fs::write(
+            dir.path().join("mcp.json"),
+            serde_json::to_vec(&json!({"settings":settings,"mcpServers":{"fake":{"command":config.command,"env":config.env}}}))
+                .unwrap(),
+        )
+        .unwrap();
+        let provider = FauxProvider::new(FauxScript::new());
+        let harness = AgentHarness::create(AgentHarnessOptions {
+            model: provider.default_model().clone(),
+            models: vec![provider],
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+        let manager = McpManager::new(
+            &harness,
+            &crate::args::Args::default(),
+            dir.path(),
+            dir.path().into(),
+            false,
+            Arc::new(Mutex::new(HashSet::new())),
+        );
+        manager.reconnect(None).await.unwrap();
+        let echo = manager
+            .registered_tools()
+            .into_iter()
+            .find(|t| t.tool.schema().name == "fake_echo")
+            .unwrap();
+        let result = echo
+            .tool
+            .execute(
+                "1",
+                json!({"mode":"big"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap();
+        let images = result
+            .content
+            .iter()
+            .filter(|b| matches!(b, TextContentOrImage::Image(i) if i.data == "YWJj"))
+            .count();
+        assert_eq!(images, 1, "images pass through either way");
+        let texts = texts(&result.content);
+        // The blob is materialized even with the guard off, and never kept as base64.
+        assert!(!result.details.to_string().contains("aGVsbG8="));
+        if guarded {
+            assert_eq!(texts.len(), 1);
+            // 3,000 rows, the join separator, and the 3-line blob reference.
+            assert!(texts[0].contains("[MCP text output truncated: original 3004 lines"));
+            let start = texts[0].find("Full text saved to: ").unwrap() + 20;
+            let end = texts[0][start..].find(" — ").unwrap();
+            let spilled = std::fs::read_to_string(&texts[0][start..start + end]).unwrap();
+            assert!(spilled.ends_with("MIME type: application/octet-stream"));
+            assert!(texts[0].len() <= ice_tools::DEFAULT_MAX_BYTES);
+            assert_eq!(result.details["omitted"], true);
+        } else {
+            assert_eq!(texts.len(), 2);
+            assert_eq!(texts[0].lines().count(), 3000);
+            assert!(texts[1].contains("Binary content saved to "));
+            assert_eq!(result.details["content"][0]["text"], texts[0]);
+        }
+    }
 }

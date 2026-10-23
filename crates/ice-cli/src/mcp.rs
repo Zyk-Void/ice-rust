@@ -1,8 +1,10 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
 mod manager;
+mod output_guard;
 #[cfg(test)]
 mod tests;
 pub use manager::{ensure_config, McpManager, PanelChange, ServerStatus, ServerView, ToolInfo};
+use output_guard::OutputGuard;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -99,6 +101,42 @@ pub struct ServerConfig {
 struct Config {
     #[serde(default, rename = "mcpServers")]
     servers: BTreeMap<String, ServerConfig>,
+    /// Read leniently: a malformed value falls back to defaults, never rejects the file.
+    #[serde(default)]
+    settings: Value,
+}
+
+/// Global configuration first, then the project file only when trusted.
+fn read_configs(agent_dir: &Path, cwd: &Path, trusted: bool) -> Result<Vec<Config>, String> {
+    let mut paths = vec![agent_dir.join("mcp.json")];
+    if trusted {
+        paths.push(cwd.join(".icers/mcp.json"));
+    }
+    let mut configs = Vec::new();
+    for path in paths {
+        let text = match std::fs::read_to_string(&path) {
+            Ok(text) => text,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(e) => return Err(format!("{}: {e}", path.display())),
+        };
+        configs.push(serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?);
+    }
+    Ok(configs)
+}
+
+/// Top-level `settings`, merged per key; a trusted project file wins.
+fn load_settings(
+    agent_dir: &Path,
+    cwd: &Path,
+    trusted: bool,
+) -> Result<serde_json::Map<String, Value>, String> {
+    let mut settings = serde_json::Map::new();
+    for config in read_configs(agent_dir, cwd, trusted)? {
+        if let Value::Object(values) = config.settings {
+            settings.extend(values);
+        }
+    }
+    Ok(settings)
 }
 
 /// Merge whole server entries, never consulting project configuration unless trusted.
@@ -108,18 +146,7 @@ pub fn load_config(
     trusted: bool,
 ) -> Result<BTreeMap<String, ServerConfig>, String> {
     let mut servers = BTreeMap::new();
-    let mut paths = vec![agent_dir.join("mcp.json")];
-    if trusted {
-        paths.push(cwd.join(".icers/mcp.json"));
-    }
-    for path in paths {
-        let text = match std::fs::read_to_string(&path) {
-            Ok(text) => text,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
-            Err(e) => return Err(format!("{}: {e}", path.display())),
-        };
-        let config: Config =
-            serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+    for config in read_configs(agent_dir, cwd, trusted)? {
         for (name, server) in config.servers {
             if name.is_empty()
                 || !name
@@ -421,6 +448,7 @@ impl Client {
         self: &Arc<Self>,
         server: &str,
         config: &ServerConfig,
+        guard: &OutputGuard,
     ) -> Result<Vec<McpTool>, String> {
         let initialized = self
             .request(
@@ -451,13 +479,14 @@ impl Client {
                 .map(str::to_owned),
         });
         self.notify("notifications/initialized", json!({}));
-        self.list_tools(server, config).await
+        self.list_tools(server, config, guard).await
     }
 
     async fn list_tools(
         self: &Arc<Self>,
         server: &str,
         config: &ServerConfig,
+        guard: &OutputGuard,
     ) -> Result<Vec<McpTool>, String> {
         let signal = CancellationToken::new();
         let mut cursor = None;
@@ -511,6 +540,7 @@ impl Client {
                     tokens,
                     client: self.clone(),
                     approval: config.approve_tools.requires(name),
+                    guard: guard.clone(),
                 });
             }
             cursor = page
@@ -655,6 +685,7 @@ struct McpTool {
     tokens: usize,
     client: Arc<Client>,
     approval: bool,
+    guard: OutputGuard,
 }
 #[async_trait]
 impl AgentTool for McpTool {
@@ -681,20 +712,23 @@ impl AgentTool for McpTool {
             )
             .await
             .map_err(AgentError::Tool)?;
-        map_result(result)
+        map_result(result, &self.guard)
     }
 }
-fn map_result(result: Value) -> Result<AgentToolResult, AgentError> {
+fn map_result(mut result: Value, guard: &OutputGuard) -> Result<AgentToolResult, AgentError> {
     if result.get("isError").and_then(Value::as_bool) == Some(true) {
-        return Err(AgentError::Tool(format!("MCP tool error: {result}")));
+        return Err(AgentError::Tool(
+            guard.bound_text(format!("MCP tool error: {result}")),
+        ));
     }
     let mut content = Vec::new();
     for item in result
-        .get("content")
-        .and_then(Value::as_array)
+        .get_mut("content")
+        .and_then(Value::as_array_mut)
         .ok_or_else(|| AgentError::Tool("MCP result missing content".into()))?
     {
-        let block = match item.get("type").and_then(Value::as_str) {
+        let kind = item.get("type").and_then(Value::as_str).map(str::to_owned);
+        let block = match kind.as_deref() {
             Some("text") => {
                 TextContentOrImage::text(item.get("text").and_then(Value::as_str).unwrap_or(""))
             }
@@ -711,6 +745,9 @@ fn map_result(result: Value) -> Result<AgentToolResult, AgentError> {
                     .ok_or_else(|| AgentError::Tool("MCP image missing mimeType".into()))?
                     .into(),
             }),
+            Some("resource") if item["resource"]["blob"].is_string() => {
+                TextContentOrImage::text(guard.materialize_blob(&mut item["resource"]))
+            }
             Some("resource") if item["resource"]["text"].is_string() => {
                 TextContentOrImage::text(item["resource"]["text"].as_str().unwrap())
             }
@@ -719,8 +756,8 @@ fn map_result(result: Value) -> Result<AgentToolResult, AgentError> {
         content.push(block);
     }
     Ok(AgentToolResult {
-        content,
-        details: result,
+        content: guard.bound_content(content),
+        details: guard.bound_details(result),
         ..Default::default()
     })
 }
@@ -787,6 +824,7 @@ pub fn start(manager: McpManager) -> watch::Receiver<bool> {
 fn watch_shutdown(
     harness: ice_harness::agent_harness::WeakAgentHarness,
     client: std::sync::Weak<Client>,
+    spill: Arc<output_guard::SpillStore>,
 ) {
     tokio::spawn(async move {
         loop {
@@ -801,6 +839,7 @@ fn watch_shutdown(
                     client._process.tree.kill();
                     fail_pending(&client.pending, "MCP session ended");
                 }
+                spill.cleanup();
                 break;
             }
             if client.strong_count() == 0 {
@@ -815,7 +854,9 @@ async fn discover_server(
     cwd: &Path,
 ) -> Result<Vec<McpTool>, String> {
     let client = Client::spawn(name, config, cwd, Handlers::default())?;
-    tokio::time::timeout(START_TIMEOUT, client.discover(name, config))
+    // Inspection never executes tools, so nothing is ever spilled.
+    let guard = OutputGuard::default();
+    tokio::time::timeout(START_TIMEOUT, client.discover(name, config, &guard))
         .await
         .map_err(|_| "MCP startup timed out".to_string())?
 }
