@@ -7,18 +7,36 @@ pub enum ServerStatus {
     Connected { tools: Vec<String> },
     Failed(String),
 }
+/// One discovered tool. `name` is the remote name used by `directTools`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ToolInfo {
+    pub name: String,
+    pub description: String,
+    pub tokens: usize,
+    pub direct: bool,
+}
 #[derive(Clone, Debug)]
 pub struct ServerView {
     pub name: String,
     pub source: PathBuf,
     pub status: ServerStatus,
     pub disabled: bool,
+    /// Last discovered catalog; `None` until the server has connected once.
+    pub catalog: Option<Vec<ToolInfo>>,
+}
+/// A staged `/mcp` panel edit for one server; `None` fields stay unchanged.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PanelChange {
+    pub server: String,
+    pub disabled: Option<bool>,
+    pub direct_tools: Option<DirectTools>,
 }
 struct ServerState {
     config: ServerConfig,
     source: PathBuf,
     status: ServerStatus,
     client: Option<Arc<Client>>,
+    catalog: Option<Vec<ToolInfo>>,
 }
 struct Inner {
     harness: ice_harness::agent_harness::WeakAgentHarness,
@@ -71,6 +89,7 @@ impl McpManager {
                 source: s.source.clone(),
                 status: s.status.clone(),
                 disabled: s.config.disabled,
+                catalog: s.catalog.clone(),
             })
             .collect()
     }
@@ -131,18 +150,24 @@ impl McpManager {
         self.reconnect_locked(name).await
     }
     async fn reconnect_locked(&self, name: Option<&str>) -> Result<(), String> {
-        let mut configured = self.configured()?;
         if let Some(name) = name {
-            if !configured.contains_key(name) && !self.0.servers.lock().unwrap().contains_key(name)
+            if !self.configured()?.contains_key(name)
+                && !self.0.servers.lock().unwrap().contains_key(name)
             {
                 return Err(format!("Unknown MCP server: {name}"));
             }
         }
+        self.reconnect_servers(name.map(|n| HashSet::from([n.to_owned()])))
+            .await
+    }
+    /// Restart `only` (or every known server) concurrently from current configuration.
+    async fn reconnect_servers(&self, only: Option<HashSet<String>>) -> Result<(), String> {
+        let mut configured = self.configured()?;
         let mut targets: HashSet<String> = configured
             .keys()
             .cloned()
             .chain(self.0.servers.lock().unwrap().keys().cloned())
-            .filter(|n| name.map_or(true, |name| n == name))
+            .filter(|n| only.as_ref().map_or(true, |only| only.contains(n)))
             .collect();
         let harness = self.0.harness.upgrade().ok_or("Session ended")?;
         let mut discoveries = tokio::task::JoinSet::new();
@@ -155,6 +180,7 @@ impl McpManager {
                 }) => tools.clone(),
                 _ => Vec::new(),
             };
+            let old_catalog = old.as_ref().and_then(|s| s.catalog.clone());
             if let Some(client) = old.and_then(|s| s.client) {
                 client.closed.store(true, Ordering::SeqCst);
                 client._process.tree.kill();
@@ -186,6 +212,16 @@ impl McpManager {
                 continue;
             };
             let disabled = config.disabled;
+            // Keep the catalog visible while the server is disabled or failing.
+            let catalog = old_catalog.map(|catalog| {
+                catalog
+                    .into_iter()
+                    .map(|tool| ToolInfo {
+                        direct: config.direct_tools.allows(&tool.name),
+                        ..tool
+                    })
+                    .collect()
+            });
             self.0.servers.lock().unwrap().insert(
                 name.clone(),
                 ServerState {
@@ -197,6 +233,7 @@ impl McpManager {
                         ServerStatus::Connecting
                     },
                     client: None,
+                    catalog,
                 },
             );
             if disabled {
@@ -220,6 +257,10 @@ impl McpManager {
             let (name, discovered) = result.map_err(|e| e.to_string())?;
             let result = async {
                 let (client, discovered) = discovered?;
+                let direct_tools = self.0.servers.lock().unwrap()[&name]
+                    .config
+                    .direct_tools
+                    .clone();
                 let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
                 let mut active = harness
                     .lane("main")
@@ -227,8 +268,20 @@ impl McpManager {
                     .await
                     .map_err(|e| e.to_string())?;
                 let mut names = Vec::new();
+                let mut catalog = Vec::new();
                 for tool in discovered {
+                    let direct = direct_tools.allows(&tool.remote_name);
+                    catalog.push(ToolInfo {
+                        name: tool.remote_name.clone(),
+                        description: tool.schema.description.clone(),
+                        tokens: tool.tokens,
+                        direct,
+                    });
                     let name = tool.schema.name.clone();
+                    // Without a proxy tool, a tool that is not direct is not registered.
+                    if !direct {
+                        continue;
+                    }
                     if !crate::session::tool_name_allowed(&name, &self.0.args)
                         || tools.iter().any(|t| t.tool.schema().name == name)
                     {
@@ -248,15 +301,16 @@ impl McpManager {
                     .await
                     .map_err(|e| e.to_string())?;
                 watch_shutdown(harness.downgrade(), Arc::downgrade(&client));
-                Ok::<_, String>((client, names))
+                Ok::<_, String>((client, names, catalog))
             }
             .await;
             let mut servers = self.0.servers.lock().unwrap();
             let state = servers.get_mut(&name).unwrap();
             match result {
-                Ok((client, tools)) => {
+                Ok((client, tools, catalog)) => {
                     state.client = Some(client);
                     state.status = ServerStatus::Connected { tools };
+                    state.catalog = Some(catalog);
                 }
                 Err(error) => state.status = ServerStatus::Failed(error),
             }
@@ -279,6 +333,47 @@ impl McpManager {
             Ok(())
         })?;
         self.reconnect_locked(Some(name)).await
+    }
+    /// Persist staged panel edits to each server's source file, then restart
+    /// the changed servers. Servers whose file was written are restarted even
+    /// when a later file fails, so live state matches disk.
+    pub async fn save_panel(&self, changes: &[PanelChange]) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        let configured = self.configured()?;
+        let mut by_file = BTreeMap::<PathBuf, Vec<&PanelChange>>::new();
+        for change in changes {
+            let (_, path) = configured
+                .get(&change.server)
+                .ok_or_else(|| format!("Unknown MCP server: {}", change.server))?;
+            by_file.entry(path.clone()).or_default().push(change);
+        }
+        let mut written = HashSet::new();
+        let mut result = Ok(());
+        for (path, changes) in by_file {
+            result = edit_config(&path, |servers| {
+                for change in &changes {
+                    let entry = servers
+                        .get_mut(&change.server)
+                        .and_then(Value::as_object_mut)
+                        .ok_or("Invalid server entry")?;
+                    if let Some(disabled) = change.disabled {
+                        entry.insert("disabled".into(), json!(disabled));
+                    }
+                    if let Some(direct) = &change.direct_tools {
+                        entry.insert("directTools".into(), direct.to_json());
+                    }
+                }
+                Ok(())
+            });
+            if result.is_err() {
+                break;
+            }
+            written.extend(changes.iter().map(|c| c.server.clone()));
+        }
+        if !written.is_empty() {
+            self.reconnect_servers(Some(written)).await?;
+        }
+        result
     }
     pub async fn add(&self, name: &str, command: &str, args: &[String]) -> Result<(), String> {
         validate_name(name)?;

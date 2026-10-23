@@ -21,7 +21,8 @@ A project entry replaces the complete global entry with the same server name.
       "env": {"EXAMPLE_SETTING": "value"},
       "cwd": ".",
       "disabled": false,
-      "approveTools": ["write_record"]
+      "approveTools": ["write_record"],
+      "directTools": ["lookup", "write_record"]
     }
   }
 }
@@ -34,6 +35,13 @@ with configured `env` entries overlaid. No credentials or session context are
 injected by the MCP client. Servers execute with your operating-system
 permissions; install only servers you trust. Avoid putting secrets in project
 configuration. A disabled entry need not specify a command and is never spawned.
+
+`directTools` selects which discovered tools are registered, using
+pi-mcp-adapter's key and shape: `true` registers every tool, `false` registers
+none, and a list registers those **remote** tool names. Omission registers
+every tool. icers has no `mcp` proxy tool yet, so a tool that is not direct is
+not callable at all; the server still runs and its tools stay listed in the
+`/mcp` panel.
 
 ## Naming and execution
 

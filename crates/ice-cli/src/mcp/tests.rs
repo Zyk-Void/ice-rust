@@ -336,3 +336,118 @@ async fn manager_lifecycle_preserves_config_and_replaces_tools() {
     assert!(!approvals.lock().unwrap().contains("fake_echo"));
     assert!(manager.registered_tools().is_empty());
 }
+
+#[tokio::test]
+async fn panel_save_writes_direct_tools_and_registers_only_selected() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_harness::types::AgentHarnessOptions;
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let path = dir.path().join("mcp.json");
+    std::fs::write(
+        &path,
+        serde_json::to_vec(
+            &json!({"mcpServers":{"fake":{"command":config.command,"env":config.env,"extra":1}}}),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let provider = FauxProvider::new(FauxScript::new());
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let manager = McpManager::new(
+        &harness,
+        &crate::args::Args::default(),
+        dir.path(),
+        dir.path().into(),
+        false,
+        Arc::new(Mutex::new(HashSet::new())),
+    );
+    let registered = || async {
+        let mut names: Vec<_> = harness
+            .get_tools()
+            .await
+            .unwrap()
+            .iter()
+            .map(|t| t.tool.schema().name.clone())
+            .filter(|n| n.starts_with("fake_"))
+            .collect();
+        names.sort();
+        names
+    };
+    let catalog = || {
+        let view = manager.snapshot().remove(0);
+        let mut tools: Vec<_> = view
+            .catalog
+            .unwrap()
+            .into_iter()
+            .map(|t| (t.name, t.direct))
+            .collect();
+        tools.sort();
+        (view.status, tools)
+    };
+    manager.reconnect(None).await.unwrap();
+    assert_eq!(registered().await, ["fake_echo", "fake_other"]);
+    let echo = manager.snapshot()[0].catalog.clone().unwrap();
+    let echo = echo.iter().find(|t| t.name == "echo").unwrap();
+    assert_eq!(echo.description, "Echo");
+    assert!(echo.tokens > 10);
+
+    let save = |disabled, direct_tools| PanelChange {
+        server: "fake".into(),
+        disabled,
+        direct_tools,
+    };
+    manager
+        .save_panel(&[save(None, Some(DirectTools::Tools(vec!["echo".into()])))])
+        .await
+        .unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(saved["mcpServers"]["fake"]["directTools"], json!(["echo"]));
+    assert_eq!(saved["mcpServers"]["fake"]["extra"], 1);
+    assert_eq!(registered().await, ["fake_echo"]);
+    assert_eq!(manager.registered_tools().len(), 1);
+    assert_eq!(
+        catalog().1,
+        [("echo".into(), true), ("other".into(), false)]
+    );
+
+    manager
+        .save_panel(&[save(None, Some(DirectTools::All(false)))])
+        .await
+        .unwrap();
+    assert!(registered().await.is_empty());
+    assert_eq!(catalog().1.len(), 2);
+
+    // Disabling keeps the catalog; flags follow the saved directTools.
+    manager
+        .save_panel(&[save(Some(true), Some(DirectTools::All(true)))])
+        .await
+        .unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(saved["mcpServers"]["fake"]["directTools"], true);
+    assert_eq!(saved["mcpServers"]["fake"]["disabled"], true);
+    let (status, tools) = catalog();
+    assert!(matches!(status, ServerStatus::Disabled));
+    assert_eq!(tools, [("echo".into(), true), ("other".into(), true)]);
+    assert!(registered().await.is_empty());
+
+    manager
+        .save_panel(&[save(Some(false), None)])
+        .await
+        .unwrap();
+    assert_eq!(registered().await, ["fake_echo", "fake_other"]);
+    assert!(manager
+        .save_panel(&[PanelChange {
+            server: "missing".into(),
+            disabled: Some(true),
+            direct_tools: None,
+        }])
+        .await
+        .is_err());
+}

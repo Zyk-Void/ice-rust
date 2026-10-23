@@ -2,7 +2,7 @@
 mod manager;
 #[cfg(test)]
 mod tests;
-pub use manager::{ensure_config, McpManager, ServerStatus, ServerView};
+pub use manager::{ensure_config, McpManager, PanelChange, ServerStatus, ServerView, ToolInfo};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -47,6 +47,34 @@ impl Approval {
     }
 }
 
+/// Which discovered tools register with the agent. Same `directTools` key and
+/// shape as pi-mcp-adapter; absent means every tool, since there is no proxy tool.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum DirectTools {
+    All(bool),
+    Tools(Vec<String>),
+}
+impl Default for DirectTools {
+    fn default() -> Self {
+        Self::All(true)
+    }
+}
+impl DirectTools {
+    pub fn allows(&self, name: &str) -> bool {
+        match self {
+            Self::All(value) => *value,
+            Self::Tools(names) => names.iter().any(|n| n == name),
+        }
+    }
+    fn to_json(&self) -> Value {
+        match self {
+            Self::All(value) => json!(value),
+            Self::Tools(names) => json!(names),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ServerConfig {
@@ -61,6 +89,8 @@ pub struct ServerConfig {
     pub disabled: bool,
     #[serde(default)]
     pub approve_tools: Approval,
+    #[serde(default)]
+    pub direct_tools: DirectTools,
 }
 #[derive(Default, Deserialize)]
 struct Config {
@@ -350,19 +380,22 @@ impl Client {
                     .get("inputSchema")
                     .cloned()
                     .ok_or("MCP tool missing inputSchema")?;
+                let description = item.get("description").and_then(Value::as_str);
+                // Same rough estimate as pi-mcp-adapter's panel.
+                let tokens =
+                    (name.len() + description.map_or(0, str::len) + schema.to_string().len())
+                        .div_ceil(4)
+                        + 10;
                 tools.push(McpTool {
                     schema: Tool {
                         name: format!("{server}_{name}"),
-                        description: item
-                            .get("description")
-                            .and_then(Value::as_str)
-                            .unwrap_or("MCP tool")
-                            .into(),
+                        description: description.unwrap_or("MCP tool").into(),
                         parameters: serde_json::from_value(schema)
                             .map_err(|e| format!("invalid MCP inputSchema: {e}"))?,
                         constrained_sampling: None,
                     },
                     remote_name: name.into(),
+                    tokens,
                     client: self.clone(),
                     approval: config.approve_tools.requires(name),
                 });
@@ -407,6 +440,7 @@ impl Drop for RequestGuard<'_> {
 struct McpTool {
     schema: Tool,
     remote_name: String,
+    tokens: usize,
     client: Arc<Client>,
     approval: bool,
 }
