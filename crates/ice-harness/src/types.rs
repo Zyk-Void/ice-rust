@@ -464,6 +464,24 @@ pub struct AgentHarnessOptions {
     pub provider_hooks: Option<Arc<dyn ProviderHooks>>,
 }
 
+/// Host callbacks run asynchronously without holding harness locks. Errors from
+/// input admission reject the message before persistence; other callbacks are
+/// advisory. Hosts must bound their execution and handle their own failures.
+#[async_trait::async_trait]
+pub trait HarnessLifecycleHooks: Send + Sync {
+    /// Validate an incoming user message and optionally append model context.
+    async fn input(
+        &self,
+        message: ice_agent::AgentMessage,
+    ) -> crate::result::HarnessResult<ice_agent::AgentMessage> {
+        Ok(message)
+    }
+    /// Observe compaction before the summarizer runs.
+    async fn pre_compact(&self, _trigger: &str) {}
+    /// Observe a completed, aborted, or failed operation.
+    async fn stop(&self) {}
+}
+
 impl Default for AgentHarnessOptions {
     fn default() -> Self {
         Self {
