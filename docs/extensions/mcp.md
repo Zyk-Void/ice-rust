@@ -84,6 +84,11 @@ configured server executables, so inspect configuration before trusting it.
 There is no `/mcp` TUI command in this stage. While normal session discovery is
 in progress, servers are starting and tools are not yet present in the registry.
 
+## Integration recipes
+
+See the [context-mode recipe](context-mode.md) for a stdio server, compatible
+routing hook, system instructions, and skills.
+
 ## Limits
 
 No HTTP, SSE, OAuth, resource discovery, prompt discovery, sampling, or

@@ -180,7 +180,15 @@ no hub.
     `maxTokens` budget.
 
 ### 1.9 Hooks, events, settings, controller, CLI, UI
-- **Rust command-hook progress:** settings-driven `PreToolUse`, `PostToolUse`,
+- **Ported — session-local stdio MCP client** (PR: TBD — PR not yet opened):
+  global and trusted-project `mcp.json`, background discovery, namespaced tools,
+  per-tool approval, bounded calls/cancellation, and `--list-mcp`. See
+  `docs/extensions/mcp.md` and the `docs/extensions/context-mode.md` recipe.
+  HTTP/SSE transports, OAuth, resource/prompt discovery, sampling,
+  server-initiated client capabilities, hot reconnect/config reload, and a
+  `/mcp` TUI command remain unported. Subagent MCP pass-through in §1.8 is
+  separate and remains unported.
+- **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are
   implemented with trusted-project gating and bounded process execution. See
   `docs/extensions/hooks.md`. Subagent launch/resume decisions, hook journals,

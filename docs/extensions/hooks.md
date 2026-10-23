@@ -91,6 +91,11 @@ to the session system prompt. Pre-compaction and Stop context is queued as a
 user-context message at the next model-request boundary; Stop does not trigger
 that request itself. Advisory queued context is in memory only.
 
+## Integration recipes
+
+The [context-mode recipe](context-mode.md) combines MCP tools with a compatible
+PreToolUse wrapper without changing built-in tool names.
+
 ## Execution, environment, and limits
 
 Commands execute in `cwd` via `sh -c` on Unix or `cmd /C` on Windows. Execution
