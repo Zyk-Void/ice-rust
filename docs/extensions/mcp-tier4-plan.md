@@ -1,6 +1,7 @@
 # MCP Tier 4 port plan
 
-Status: plan only, nothing implemented. Branch `docs/mcp-tier4-plan`, worktree
+Status: Phase 0 implemented on `feat/cli-mcp-server-requests` (not yet merged);
+later phases not started. Plan written on `docs/mcp-tier4-plan`, worktree
 `.worktrees/mcp-tier4`, based on `main` at `ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
@@ -103,16 +104,20 @@ PMA `server-manager.ts:1028-1036` (advertised client capabilities),
    `subscribe`) and `result.instructions` on the `Client`.
 4. Notifications: route `notifications/tools/list_changed`,
    `.../prompts/list_changed`, `.../resources/list_changed` to a manager
-   callback that schedules `reconnect_locked`-style refresh of only that
-   catalog (`manager.rs:133`). `notifications/resources/updated` goes to the
+   callback that re-lists only that catalog on the live client (implemented
+   as `McpManager::refresh_tools`, which reuses the `register` / `unregister`
+   helpers split out of `reconnect_locked`; no process restart). Prompts and
+   resources notifications are ignored until Phases 2-3 add those catalogs.
+   `notifications/resources/updated` goes to the
    resource subscription table (Phase 2).
 5. Bounds stay as they are: `MAX_LINE` framing, `START_TIMEOUT`,
    `CALL_TIMEOUT`. Add a cap on concurrent inbound server requests per
    client (e.g. 8; reply `-32603` when exceeded) so a hostile server cannot
    pile up dialogs.
 
-**Tests (`crates/ice-cli/src/mcp/tests.rs` + fixture
-`crates/ice-cli/tests/support/mcp_fixture.rs`):**
+**Tests (`crates/ice-cli/src/mcp/tests.rs` + fixture server
+`crates/ice-cli/tests/mcp_test_server.rs`; `tests/support/mcp_fixture.rs`
+only locates its binary):**
 - Existing `call_answers_server_ping_and_unknown_requests` must keep passing.
 - New: a server request answered after a delayed handler does not block a
   concurrent `tools/call` or `ping`.
@@ -204,7 +209,7 @@ guards), `:433`, `:649`, `:695` (subscribe/unsubscribe),
   (`session::tool_name_allowed`, `crates/ice-cli/src/session.rs:2205`).
 - Name collisions with a real tool: the real tool wins, the resource tool is
   skipped and logged. This matches the existing duplicate check in
-  `reconnect_locked` (`manager.rs:133`).
+  `McpManager::register` (`crates/ice-cli/src/mcp/manager.rs`).
 - `resources/list_changed` (Phase 0) re-lists and re-registers.
 - Subscriptions (`resources/subscribe`) are **out of scope** here: without a
   proxy tool there is no model-facing way to subscribe. Revisit with Tier 2.
@@ -396,7 +401,7 @@ project imports ignored; `url` entries reported; copy-on-edit.
 ## Cross-cutting rules for every phase
 
 - **Tests offline only.** Extend the existing fixture server
-  (`crates/ice-cli/tests/support/mcp_fixture.rs`) with resources, prompts,
+  (`crates/ice-cli/tests/mcp_test_server.rs`) with resources, prompts,
   and server-initiated requests. Use the faux provider for sampling. Set
   `ICERS_CODING_AGENT_DIR` to a temp dir and never touch `~/.icers`
   (AGENTS.md §5).
