@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use std::any::Any;
 
-use super::component::Component;
+use super::component::{Component, RenderedDocument};
 
 /// Background closure applied to each rendered row (see
 /// [`crate::utils::apply_background_to_line`]).
@@ -28,10 +28,9 @@ pub struct Text {
 
 #[derive(Clone)]
 struct TextCache {
-    content: String,
     width: usize,
     theme_revision: u64,
-    lines: Vec<String>,
+    lines: Arc<Vec<String>>,
 }
 
 impl Default for Text {
@@ -98,19 +97,17 @@ impl Text {
     }
 }
 
-impl Component for Text {
-    fn render(&self, width: usize) -> Vec<String> {
-        let content = self.content.lock().map(|c| c.clone()).unwrap_or_default();
+impl Text {
+    fn shared_lines(&self, width: usize) -> Arc<Vec<String>> {
+        // Hold content through cache lookup/publication so a setter cannot
+        // publish new content while an old render is still being cached.
+        let content = self.content.lock().unwrap_or_else(|e| e.into_inner());
+        let mut cache = self.cache.lock().unwrap_or_else(|e| e.into_inner());
         let theme_revision = crate::theme::theme_revision();
 
-        if let Ok(cache) = self.cache.lock() {
-            if let Some(cached) = cache.as_ref() {
-                if cached.width == width
-                    && cached.content == content
-                    && cached.theme_revision == theme_revision
-                {
-                    return cached.lines.clone();
-                }
+        if let Some(cached) = cache.as_ref() {
+            if cached.width == width && cached.theme_revision == theme_revision {
+                return Arc::clone(&cached.lines);
             }
         }
 
@@ -131,20 +128,30 @@ impl Component for Text {
             lines
         };
 
-        if let Ok(mut cache) = self.cache.lock() {
-            *cache = Some(TextCache {
-                content,
-                width,
-                theme_revision,
-                lines: lines.clone(),
-            });
-        }
+        let lines = Arc::new(lines);
+        *cache = Some(TextCache {
+            width,
+            theme_revision,
+            lines: Arc::clone(&lines),
+        });
         lines
+    }
+}
+
+impl Component for Text {
+    fn render(&self, width: usize) -> Vec<String> {
+        self.shared_lines(width).as_ref().clone()
+    }
+
+    fn render_document(&self, width: usize) -> RenderedDocument {
+        RenderedDocument::from_shared(self.shared_lines(width))
     }
 
     fn invalidate(&self) {
-        if let Ok(mut cache) = self.cache.lock() {
-            *cache = None;
+        if let Ok(_content) = self.content.lock() {
+            if let Ok(mut cache) = self.cache.lock() {
+                *cache = None;
+            }
         }
     }
 
@@ -157,6 +164,26 @@ impl Component for Text {
 mod tests {
     use super::*;
     use crate::component::Component;
+
+    #[test]
+    fn shared_rows_reuse_and_regenerate_on_mutation_and_width() {
+        let text = Text::new("abcdefgh", 0, 0);
+        let first = text.shared_lines(80);
+        let _document = text.render_document(80);
+        assert!(Arc::ptr_eq(&first, &text.shared_lines(80)));
+        assert_eq!(first.as_ref(), &text.render(80));
+        let narrow = text.shared_lines(4);
+        assert!(!Arc::ptr_eq(&first, &narrow));
+        assert_eq!(narrow.as_ref(), &vec!["abcd", "efgh"]);
+        text.set_text("new text");
+        let changed = text.shared_lines(80);
+        assert!(!Arc::ptr_eq(&first, &changed));
+        assert_eq!(crate::strip_ansi(changed[0].trim_end()), "new text");
+        text.invalidate();
+        let refreshed = text.shared_lines(80);
+        assert!(!Arc::ptr_eq(&changed, &refreshed));
+        assert_eq!(changed.as_ref(), refreshed.as_ref());
+    }
 
     /// Regression: rendering a line wider than the layout column used to
     /// byte-slice `padded[..width]` and panic mid-character on multi-byte

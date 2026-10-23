@@ -371,7 +371,7 @@ machine. See [`docs/remote/user-guide.md`](docs/remote/user-guide.md).
 
 | | |
 | --- | --- |
-| Current release | **[0.8.0](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
+| Current release | **[0.8.1](https://github.com/Zyk-Void/ice-rust/releases)** (nine crates, published together) |
 | Stability | `ice-ai`, `ice-agent`, `ice-tools`, `ice-harness`, `ice-plugin-sdk` are the intended stable surface |
 | MSRV | 1.78 |
 | Platforms | Linux, macOS, Windows (CI runs the suite on Linux) |

@@ -3,7 +3,7 @@
 use std::any::Any;
 use std::sync::{Arc, Mutex};
 
-use super::component::Component;
+use super::component::{Component, RenderedDocument};
 
 /// Container - a component that contains other components.
 ///
@@ -69,6 +69,17 @@ impl Component for Container {
             .iter()
             .flat_map(|child| child.render(width))
             .collect()
+    }
+
+    fn render_document(&self, width: usize) -> RenderedDocument {
+        // Snapshot handles, then release the structural lock before rendering.
+        // Streaming/input can mutate the container while a frame is prepared.
+        let children = self.get_children();
+        let mut document = RenderedDocument::default();
+        for child in children {
+            document.append(child.render_document(width));
+        }
+        document
     }
 
     fn invalidate(&self) {

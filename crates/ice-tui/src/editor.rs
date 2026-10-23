@@ -47,7 +47,7 @@ pub struct EditorOptions {
 }
 
 /// Editor state.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct EditorState {
     /// Lines of text.
     lines: Vec<String>,
@@ -79,6 +79,30 @@ impl Default for EditorState {
             focused: false,
             history: Vec::new(),
             history_index: 0,
+        }
+    }
+}
+
+/// Owned paint inputs only: submitted history must never be copied for a frame.
+#[derive(Debug, PartialEq, Eq)]
+struct EditorRenderSnapshot {
+    lines: Vec<String>,
+    cursor_row: usize,
+    cursor_col: usize,
+    selection_anchor: Option<(usize, usize)>,
+    scroll_offset: usize,
+    focused: bool,
+}
+
+impl From<&EditorState> for EditorRenderSnapshot {
+    fn from(state: &EditorState) -> Self {
+        Self {
+            lines: state.lines.clone(),
+            cursor_row: state.cursor_row,
+            cursor_col: state.cursor_col,
+            selection_anchor: state.selection_anchor,
+            scroll_offset: state.scroll_offset,
+            focused: state.focused,
         }
     }
 }
@@ -752,6 +776,14 @@ impl Editor {
         true
     }
 
+    /// Copy only paint inputs and release the state mutex before rendering.
+    fn render_snapshot(&self) -> EditorRenderSnapshot {
+        self.state
+            .lock()
+            .map(|state| EditorRenderSnapshot::from(&*state))
+            .unwrap_or_else(|_| EditorRenderSnapshot::from(&EditorState::default()))
+    }
+
     /// Snapshot the current text + caret state (for undo/redo), including the
     /// folded-paste store so undo can bring a dropped paste back.
     fn snapshot_state(&self) -> EditorSnapshot {
@@ -906,7 +938,11 @@ impl Editor {
 
     /// The selection span on `row`, as `(start_col, end_col)` byte offsets,
     /// for render-time highlighting. `None` when the row is outside the span.
-    fn selection_span_on_row(&self, state: &EditorState, row: usize) -> Option<(usize, usize)> {
+    fn selection_span_on_row(
+        &self,
+        state: &EditorRenderSnapshot,
+        row: usize,
+    ) -> Option<(usize, usize)> {
         let (ar, ac) = state.selection_anchor?;
         let (br, bc) = (state.cursor_row, state.cursor_col);
         let (sr, sc, er, ec) = if (ar, ac) <= (br, bc) {
@@ -1743,11 +1779,13 @@ impl Editor {
 
 impl Component for Editor {
     fn render(&self, width: usize) -> Vec<String> {
-        let state = self.state.lock().map(|s| s.clone()).unwrap_or_default();
+        let state = self.render_snapshot();
         let mut content_lines = Vec::new();
         // Visual row holding the caret, for the scrolling viewport.
         let mut cursor_line: Option<usize> = None;
 
+        // Keep the cursor marker while working: layout uses it to keep the
+        // draft caret visible, and the terminal uses it for IME positioning.
         let pad = " ".repeat(self.options.padding_x);
         // An explicit `border_color` (bash mode) wins over the theme default.
         let border_color = self
@@ -1912,7 +1950,7 @@ impl Component for Editor {
             let plain = format!(" {} {} {} ", spinner_char, working.message, elapsed_str);
             let indicator_width = crate::ansi::visible_width(&plain);
 
-            if width >= indicator_width + 1 {
+            if width > indicator_width {
                 let colored = format!(
                     " {} {} {} ",
                     colors.accent.fg(&spinner_char.to_string()),
@@ -2208,6 +2246,88 @@ mod tests {
         let before = editor.working().expect("working").frame;
         let _ = editor.render(60);
         assert_eq!(editor.working().expect("working").frame, before + 1);
+    }
+
+    #[test]
+    fn working_caret_preserves_draft_text_and_input_position() {
+        for (draft, column) in [("abcdef", 2), ("中文草稿", "中文".len())] {
+            for width in [12, 40] {
+                let editor = Editor::simple();
+                editor.set_focused(true);
+                editor.set_text(draft);
+                editor.set_cursor(0, column);
+                let idle = editor.render(width);
+                let position = crate::extract_cursor_position(&idle, idle.len());
+                assert!(position.is_some());
+                let content = crate::strip_ansi(&idle[1].replace(CURSOR_MARKER, ""));
+                assert_eq!(content.trim_end(), draft);
+
+                editor.set_working(Some(WorkingState {
+                    frame: 0,
+                    started_at: std::time::Instant::now(),
+                    message: "Working".to_string(),
+                }));
+                for _ in 0..2 {
+                    let working = editor.render(width);
+                    assert_eq!(
+                        crate::extract_cursor_position(&working, working.len()),
+                        position,
+                        "working frames must retain the layout and IME cursor position"
+                    );
+                    assert_eq!(
+                        crate::strip_ansi(&working[1].replace(CURSOR_MARKER, "")),
+                        content,
+                        "drawing the working caret must not shift the draft"
+                    );
+                }
+                editor.set_working(None);
+                let idle_again = editor.render(width);
+                assert_eq!(
+                    crate::extract_cursor_position(&idle_again, idle_again.len()),
+                    position
+                );
+                assert_eq!(editor.get_text(), draft);
+                assert_eq!(editor.cursor_position(), (0, column));
+
+                editor.set_focused(false);
+                assert!(crate::extract_cursor_position(&editor.render(width), 20).is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn working_caret_keeps_the_last_draft_line_in_a_constrained_viewport() {
+        let editor = Arc::new(Editor::simple());
+        editor.set_focused(true);
+        editor.set_text("line0\nline1\nline2\nline3\nline4\nline5\nline6\nline7");
+        editor.set_cursor(7, "line7".len());
+        let idle = crate::render_layout_frame(editor.clone(), 20, 4);
+        assert!(idle.root.line_offset > 0);
+        assert!(idle.lines.iter().any(|line| line.contains("line7")));
+        let position = crate::extract_cursor_position(&idle.lines, idle.height);
+        assert!(position.is_some());
+
+        editor.set_working(Some(WorkingState {
+            frame: 0,
+            started_at: std::time::Instant::now(),
+            message: "Working".to_string(),
+        }));
+        for _ in 0..2 {
+            let working = crate::render_layout_frame(editor.clone(), 20, 4);
+            assert_eq!(working.root.line_offset, idle.root.line_offset);
+            assert!(working.lines.iter().any(|line| line.contains("line7")));
+            assert_eq!(
+                crate::extract_cursor_position(&working.lines, working.height),
+                position
+            );
+        }
+        editor.set_working(None);
+        let idle_again = crate::render_layout_frame(editor.clone(), 20, 4);
+        assert_eq!(idle_again.root.line_offset, idle.root.line_offset);
+        assert_eq!(
+            crate::extract_cursor_position(&idle_again.lines, idle_again.height),
+            position
+        );
     }
 
     #[test]

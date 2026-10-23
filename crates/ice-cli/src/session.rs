@@ -225,7 +225,10 @@ pub fn session_dir(cwd: &Path) -> PathBuf {
 
 /// The default session directory is `<cwd>/.icers/sessions`.
 pub fn default_session_dir(cwd: &Path) -> PathBuf {
-    cwd.join(".icers").join("sessions")
+    std::env::var("ICERS_CODING_AGENT_SESSION_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| cwd.join(".icers").join("sessions"))
 }
 
 /// Extensions are loaded exactly once before model resolution. Their action
@@ -1500,7 +1503,7 @@ where
             &effective_args.skill,
             &discovered.skill_paths,
             js_paths,
-            &package_paths,
+            package_paths,
         );
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
         skills = result.skills;
@@ -1518,7 +1521,7 @@ where
             &effective_args.prompt_template,
             &discovered.prompt_paths,
             js_paths,
-            &package_paths,
+            package_paths,
         );
         let result = load_prompt_templates_with_precedence(&env_dyn, &dirs).await;
         prompt_templates = result.prompt_templates;
@@ -2676,9 +2679,9 @@ async fn discovery_keeps_good_sessions_and_reports_malformed_headers() {
 /// content (a header-only session resumes to an empty transcript). Falls back to
 /// the newest overall when every session is empty, and `None` only when the
 /// list is empty.
-fn first_resumable_session<'a>(
-    metas: &'a [ice_harness::session::jsonl::JsonlSessionMetadata],
-) -> Option<&'a ice_harness::session::jsonl::JsonlSessionMetadata> {
+fn first_resumable_session(
+    metas: &[ice_harness::session::jsonl::JsonlSessionMetadata],
+) -> Option<&ice_harness::session::jsonl::JsonlSessionMetadata> {
     metas
         .iter()
         .find(|meta| !summarize_session_file(Path::new(&meta.path)).empty)
@@ -4616,6 +4619,36 @@ mod tests {
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
         std::fs::create_dir_all(cwd.join(".icers/sessions")).unwrap();
         assert_eq!(default_session_dir(cwd), cwd.join(".icers/sessions"));
+    }
+
+    #[test]
+    fn default_session_dir_uses_env_var() {
+        const CHILD: &str = "ICERS_SESSION_DIR_ENV_TEST_CWD";
+        let Some(cwd) = std::env::var_os(CHILD) else {
+            let directory = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::default_session_dir_uses_env_var",
+                    "--nocapture",
+                ])
+                .env(CHILD, directory.path())
+                .env(
+                    "ICERS_CODING_AGENT_SESSION_DIR",
+                    directory.path().join("custom_sessions"),
+                )
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        };
+        let custom = PathBuf::from(std::env::var_os("ICERS_CODING_AGENT_SESSION_DIR").unwrap());
+        assert_eq!(default_session_dir(Path::new(&cwd)), custom);
     }
 
     #[test]
