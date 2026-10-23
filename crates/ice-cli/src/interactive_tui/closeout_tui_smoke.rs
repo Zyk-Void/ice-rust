@@ -330,7 +330,14 @@ async fn run_child(root: &Path, phase: &str) {
         editor_text.clone(),
     );
     let reload = crate::session::ReloadContext {
-        mcp_tools: Arc::new(Mutex::new(Vec::new())),
+        mcp_tools: crate::mcp::McpManager::new(
+            &harness,
+            &args,
+            &cwd,
+            cwd.join("agent"),
+            false,
+            Arc::new(Mutex::new(Default::default())),
+        ),
         extension_session: Arc::new(Mutex::new(ice_extensions::ExtensionSession::none())),
         tool_context: context,
         action_bridge: Arc::new(Mutex::new(Some(bridge))),

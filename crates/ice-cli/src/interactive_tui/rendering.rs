@@ -138,6 +138,7 @@ pub(super) fn add_help_message(container: &Arc<Container>) {
         ),
         ("/thinking, /think", "Set reasoning depth (selector)"),
         ("/tools", "Toggle built-in tools on/off"),
+        ("/mcp", "Manage stdio MCP servers"),
         ("/images", "Toggle inline image rendering"),
         ("/session, /resume", "List saved sessions"),
         ("/context", "Show context usage by category"),

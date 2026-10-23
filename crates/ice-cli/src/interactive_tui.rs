@@ -907,6 +907,7 @@ enum TuiMessage {
     ExportNativeSession,
     /// Show live usage/context stats (from `/usage` and `/context`).
     ShowUsage,
+    Mcp(String, bool),
     UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
@@ -1431,7 +1432,7 @@ pub async fn interactive_tui(
     );
     let registry = Arc::new(command_registry);
     let autocomplete = AutocompleteManager::new();
-    autocomplete.set_provider(build_autocomplete_provider(
+    autocomplete.set_provider(autocomplete::build_autocomplete_with_mcp(
         &registry,
         &resources_arc.lock().unwrap(),
         &cwd,
@@ -1441,6 +1442,7 @@ pub async fn interactive_tui(
                 let _ = tx_ready.send(TuiMessage::AutocompleteReady);
             }
         })),
+        Some(reload_context.mcp_tools.clone()),
     ));
     let autocomplete_container = Arc::new(Container::new());
 
@@ -3488,6 +3490,43 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
+            Some(TuiMessage::Mcp(args, reopen)) => {
+                let manager = &ctx.reload_context.mcp_tools;
+                if args.trim().is_empty() || args.trim() == "status" {
+                    commands::mcp::panel(&ctx, None);
+                } else {
+                    let words: Vec<_> = args.split_whitespace().collect();
+                    // Discovery can take the full startup budget; show progress like /reload.
+                    if !matches!(words.as_slice(), ["tools"]) {
+                        add_note_message(&chat_container, "Updating MCP servers…");
+                        tui.request_render(false);
+                    }
+                    let result = if words.as_slice() == ["edit"]
+                        || words.as_slice() == ["edit", "project"]
+                    {
+                        match manager.config_path(words.len() == 2) {
+                            Ok(path) => match run::edit_mcp_config(&tui, &path) {
+                                Ok(()) => manager
+                                    .reconnect(None)
+                                    .await
+                                    .map(|()| commands::mcp::tools_report(manager, None)),
+                                Err(error) => Err(error),
+                            },
+                            Err(error) => Err(error),
+                        }
+                    } else {
+                        commands::mcp::apply(manager, &args).await
+                    };
+                    match result {
+                        Ok(note) => add_note_message(&chat_container, &note),
+                        Err(error) => add_error_message(&chat_container, &error),
+                    }
+                    if reopen {
+                        commands::mcp::panel(&ctx, words.last().copied());
+                    }
+                }
+                tui.request_render(false);
+            }
             Some(TuiMessage::ShowUsage) => {
                 let stats = agent_session.usage_stats().await.ok();
                 let snapshot = agent_session.snapshot().await.ok();
@@ -3939,17 +3978,20 @@ pub async fn interactive_tui(
                             reload_ctx.extension_session.clone(),
                         );
                         registry.replace(fresh_registry);
-                        state.autocomplete.set_provider(build_autocomplete_provider(
-                            &registry,
-                            &resources,
-                            &cwd,
-                            Some(Arc::new({
-                                let tx_ready = tx.clone();
-                                move || {
-                                    let _ = tx_ready.send(TuiMessage::AutocompleteReady);
-                                }
-                            })),
-                        ));
+                        state
+                            .autocomplete
+                            .set_provider(autocomplete::build_autocomplete_with_mcp(
+                                &registry,
+                                &resources,
+                                &cwd,
+                                Some(Arc::new({
+                                    let tx_ready = tx.clone();
+                                    move || {
+                                        let _ = tx_ready.send(TuiMessage::AutocompleteReady);
+                                    }
+                                })),
+                                Some(reload_ctx.mcp_tools.clone()),
+                            ));
                         // The startup banner reads this snapshot on render.
                         *ctx.resources.lock().unwrap() = resources;
                     }

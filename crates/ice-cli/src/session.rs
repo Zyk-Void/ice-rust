@@ -954,15 +954,15 @@ pub async fn build_prepared(
         }
     }
 
-    let mcp_tools = Arc::new(Mutex::new(Vec::new()));
-    let ready = crate::mcp::start(
+    let mcp_tools = crate::mcp::McpManager::new(
         &harness,
         args,
         cwd,
+        crate::config::agent_dir().map_err(|e| BuildError::SessionDir(e.to_string()))?,
         project_trusted,
-        mcp_approvals,
-        mcp_tools.clone(),
+        mcp_approvals.clone(),
     );
+    let ready = crate::mcp::start(mcp_tools.clone());
     harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
         inner: Some(command_hooks),
         ready,
@@ -1099,7 +1099,7 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 #[derive(Clone)]
 pub struct ReloadContext {
     /// Session-local MCP tools retained across extension reloads.
-    pub mcp_tools: Arc<Mutex<Vec<HarnessTool>>>,
+    pub mcp_tools: crate::mcp::McpManager,
     /// The live extension-session cell (swapped on reload).
     pub extension_session: ExtensionSessionCell,
     /// The session's plugin-tool context (`cwd` + session id), reused — not
@@ -1291,6 +1291,8 @@ async fn reload_extension_resources_inner<F>(
 where
     F: FnOnce() + Send,
 {
+    // Serialize publication with MCP reconnect/startup so neither loses tools.
+    let _mcp_registry = ctx.mcp_tools.lock_registry().await;
     // Resolve the arguments once for this reload. `icers dev` may append its
     // freshly staged extension directory; every subsequent loader and policy
     // decision must observe that same effective set rather than falling back
@@ -1755,8 +1757,7 @@ where
     );
     tools.extend(
         ctx.mcp_tools
-            .lock()
-            .unwrap()
+            .registered_tools()
             .iter()
             .filter(|mcp| {
                 !tools

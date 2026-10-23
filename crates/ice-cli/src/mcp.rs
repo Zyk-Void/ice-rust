@@ -1,6 +1,8 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
+mod manager;
 #[cfg(test)]
 mod tests;
+pub use manager::{ensure_config, McpManager, ServerStatus, ServerView};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -525,101 +527,17 @@ impl HarnessLifecycleHooks for McpReadyGate {
 }
 
 /// Startup is asynchronous; each server gets a total ten-second discovery budget.
-pub fn start(
-    harness: &AgentHarness,
-    args: &crate::args::Args,
-    cwd: &Path,
-    trusted: bool,
-    approvals: Arc<Mutex<HashSet<String>>>,
-    registry: Arc<Mutex<Vec<HarnessTool>>>,
-) -> watch::Receiver<bool> {
+pub fn start(manager: McpManager) -> watch::Receiver<bool> {
     let (ready_tx, ready) = watch::channel(false);
-    let servers = match crate::config::agent_dir()
-        .map_err(|e| e.to_string())
-        .and_then(|dir| load_config(&dir, cwd, trusted))
-    {
-        Ok(servers) => servers,
-        Err(error) => {
-            tracing::warn!(%error, "MCP configuration failed");
-            let _ = ready_tx.send(true);
-            return ready;
-        }
-    };
-    publish_servers(harness, args, cwd, approvals, registry, servers, ready_tx);
-    ready
-}
-
-fn publish_servers(
-    harness: &AgentHarness,
-    args: &crate::args::Args,
-    cwd: &Path,
-    approvals: Arc<Mutex<HashSet<String>>>,
-    registry: Arc<Mutex<Vec<HarnessTool>>>,
-    servers: BTreeMap<String, ServerConfig>,
-    ready_tx: watch::Sender<bool>,
-) {
-    if servers.values().all(|config| config.disabled) {
-        let _ = ready_tx.send(true);
-        return;
-    }
-    // A single publisher serializes registry updates across servers.
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-    for (name, config) in servers {
-        if config.disabled {
-            continue;
-        }
-        let tx = tx.clone();
-        let cwd = cwd.to_path_buf();
-        tokio::spawn(async move {
-            let result = discover_server(&name, &config, &cwd).await;
-            match result {
-                Ok(tools) => {
-                    let _ = tx.send(tools);
-                }
-                Err(error) => tracing::warn!(server = %name, %error, "MCP startup failed"),
-            }
-        });
-    }
-    drop(tx);
-    let weak = harness.downgrade();
-    let args = args.clone();
     tokio::spawn(async move {
-        while let Some(discovered) = rx.recv().await {
-            let Some(harness) = weak.upgrade() else {
-                break;
-            };
-            let Ok(mut tools) = harness.get_tools().await else {
-                break;
-            };
-            let Ok(mut active) = harness.lane("main").get_active_tools().await else {
-                break;
-            };
-            if let Some(tool) = discovered.first() {
-                watch_shutdown(harness.downgrade(), Arc::downgrade(&tool.client));
-            }
-            for tool in discovered {
-                let name = tool.schema.name.clone();
-                if !crate::session::tool_name_allowed(&name, &args) {
-                    continue;
-                }
-                // Never shadow a built-in/plugin or an ambiguous server_tool name.
-                if tools.iter().any(|t| t.tool.schema().name == name) {
-                    tracing::warn!(%name, "MCP tool name collision");
-                    continue;
-                }
-                if tool.approval {
-                    approvals.lock().unwrap().insert(name.clone());
-                }
-                active.push(name);
-                let tool = HarnessTool::new(Arc::new(tool));
-                registry.lock().unwrap().push(tool.clone());
-                tools.push(tool);
-            }
-            let _ = harness.set_tools(tools, Some(active)).await;
+        if let Err(error) = manager.reconnect(None).await {
+            tracing::warn!(%error, "MCP configuration failed");
         }
         let _ = ready_tx.send(true);
     });
+    ready
 }
+
 fn watch_shutdown(
     harness: ice_harness::agent_harness::WeakAgentHarness,
     client: std::sync::Weak<Client>,

@@ -2,6 +2,59 @@
 
 use super::*;
 
+pub(super) struct McpAutocomplete {
+    pub manager: Option<crate::mcp::McpManager>,
+}
+impl ice_tui::AutocompleteProvider for McpAutocomplete {
+    fn name(&self) -> &str {
+        "mcp"
+    }
+    fn get_suggestions(
+        &self,
+        input: &str,
+        cursor: usize,
+    ) -> Option<ice_tui::AutocompleteSuggestions> {
+        let before = input.get(..cursor)?.strip_prefix("/mcp ")?;
+        let (prefix, fragment) = before
+            .rsplit_once(' ')
+            .map_or(("", before), |(a, b)| (a, b));
+        let candidates: Vec<String> = if prefix.is_empty() {
+            [
+                "status",
+                "tools",
+                "reconnect",
+                "enable",
+                "disable",
+                "add",
+                "remove",
+                "edit",
+            ]
+            .iter()
+            .map(|s| (*s).into())
+            .collect()
+        } else if matches!(prefix, "reconnect" | "enable" | "disable" | "remove") {
+            self.manager
+                .as_ref()?
+                .snapshot()
+                .into_iter()
+                .map(|s| s.name)
+                .collect()
+        } else {
+            return None;
+        };
+        Some(ice_tui::AutocompleteSuggestions {
+            items: candidates
+                .into_iter()
+                .filter(|s| s.starts_with(fragment))
+                .map(|s| ice_tui::AutocompleteItem::new(&s))
+                .collect(),
+            start: cursor - fragment.len(),
+            end: cursor,
+            is_path: false,
+        })
+    }
+}
+
 // ===========================================================================
 // Autocomplete
 // ===========================================================================
@@ -10,11 +63,22 @@ use super::*;
 /// templates in `resources` as `/name` entries (built-ins first, so they win
 /// a fuzzy tie), then file paths rooted at `cwd`. Built at startup and again
 /// after a successful `/reload`, so templates added since then are offered.
+#[cfg(test)]
 pub(super) fn build_autocomplete_provider(
     registry: &CommandRegistry,
     resources: &ice_harness::types::AgentHarnessResources,
     cwd: &std::path::Path,
     on_ready: Option<Arc<dyn Fn() + Send + Sync>>,
+) -> Arc<dyn ice_tui::AutocompleteProvider> {
+    build_autocomplete_with_mcp(registry, resources, cwd, on_ready, None)
+}
+
+pub(super) fn build_autocomplete_with_mcp(
+    registry: &CommandRegistry,
+    resources: &ice_harness::types::AgentHarnessResources,
+    cwd: &std::path::Path,
+    on_ready: Option<Arc<dyn Fn() + Send + Sync>>,
+    manager: Option<crate::mcp::McpManager>,
 ) -> Arc<dyn ice_tui::AutocompleteProvider> {
     let mut commands = registry.visible_entries();
     // A built-in or extension command wins over a template of the same name.
@@ -36,6 +100,7 @@ pub(super) fn build_autocomplete_provider(
             .filter(|entry| !taken.contains(&entry.name)),
     );
     let mut combined = CombinedAutocompleteProvider::new();
+    combined.add_provider(Arc::new(McpAutocomplete { manager }));
     combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
     // Reinstall recursive completion on reload as well as startup. Its callback
     // wakes the same TUI queue after a background search finishes.

@@ -1,0 +1,366 @@
+use super::*;
+
+#[derive(Clone, Debug)]
+pub enum ServerStatus {
+    Disabled,
+    Connecting,
+    Connected { tools: Vec<String> },
+    Failed(String),
+}
+#[derive(Clone, Debug)]
+pub struct ServerView {
+    pub name: String,
+    pub source: PathBuf,
+    pub status: ServerStatus,
+    pub disabled: bool,
+}
+struct ServerState {
+    config: ServerConfig,
+    source: PathBuf,
+    status: ServerStatus,
+    client: Option<Arc<Client>>,
+}
+struct Inner {
+    harness: ice_harness::agent_harness::WeakAgentHarness,
+    args: crate::args::Args,
+    cwd: PathBuf,
+    agent_dir: PathBuf,
+    trusted: bool,
+    approvals: Arc<Mutex<HashSet<String>>>,
+    tools: Mutex<Vec<HarnessTool>>,
+    servers: Mutex<BTreeMap<String, ServerState>>,
+    operation: tokio::sync::Mutex<()>,
+}
+#[derive(Clone)]
+pub struct McpManager(Arc<Inner>);
+impl McpManager {
+    pub fn new(
+        harness: &AgentHarness,
+        args: &crate::args::Args,
+        cwd: &Path,
+        agent_dir: PathBuf,
+        trusted: bool,
+        approvals: Arc<Mutex<HashSet<String>>>,
+    ) -> Self {
+        Self(Arc::new(Inner {
+            harness: harness.downgrade(),
+            args: args.clone(),
+            cwd: cwd.into(),
+            agent_dir,
+            trusted,
+            approvals,
+            tools: Mutex::new(Vec::new()),
+            servers: Mutex::new(BTreeMap::new()),
+            operation: tokio::sync::Mutex::new(()),
+        }))
+    }
+    pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.0.operation.lock().await
+    }
+    pub fn registered_tools(&self) -> Vec<HarnessTool> {
+        self.0.tools.lock().unwrap().clone()
+    }
+    pub fn snapshot(&self) -> Vec<ServerView> {
+        self.0
+            .servers
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(name, s)| ServerView {
+                name: name.clone(),
+                source: s.source.clone(),
+                status: s.status.clone(),
+                disabled: s.config.disabled,
+            })
+            .collect()
+    }
+    pub fn tools(&self, server: &str) -> Vec<(String, bool)> {
+        let names = match self
+            .0
+            .servers
+            .lock()
+            .unwrap()
+            .get(server)
+            .map(|s| s.status.clone())
+        {
+            Some(ServerStatus::Connected { tools }) => tools,
+            _ => Vec::new(),
+        };
+        let approvals = self.0.approvals.lock().unwrap();
+        names
+            .into_iter()
+            .map(|name| {
+                let approval = approvals.contains(&name);
+                (name, approval)
+            })
+            .collect()
+    }
+    pub fn config_path(&self, project: bool) -> Result<PathBuf, String> {
+        if project && !self.0.trusted {
+            return Err("Project MCP configuration requires project trust".into());
+        }
+        Ok(if project {
+            self.0.cwd.join(".icers/mcp.json")
+        } else {
+            self.0.agent_dir.join("mcp.json")
+        })
+    }
+    fn configured(&self) -> Result<BTreeMap<String, (ServerConfig, PathBuf)>, String> {
+        let servers = load_config(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
+        let project = self.0.cwd.join(".icers/mcp.json");
+        let overrides: Config = if self.0.trusted && project.exists() {
+            serde_json::from_str(&std::fs::read_to_string(&project).map_err(|e| e.to_string())?)
+                .map_err(|e| e.to_string())?
+        } else {
+            Config::default()
+        };
+        Ok(servers
+            .into_iter()
+            .map(|(name, config)| {
+                let source = if overrides.servers.contains_key(&name) {
+                    project.clone()
+                } else {
+                    self.0.agent_dir.join("mcp.json")
+                };
+                (name, (config, source))
+            })
+            .collect())
+    }
+    pub async fn reconnect(&self, name: Option<&str>) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        self.reconnect_locked(name).await
+    }
+    async fn reconnect_locked(&self, name: Option<&str>) -> Result<(), String> {
+        let mut configured = self.configured()?;
+        if let Some(name) = name {
+            if !configured.contains_key(name) && !self.0.servers.lock().unwrap().contains_key(name)
+            {
+                return Err(format!("Unknown MCP server: {name}"));
+            }
+        }
+        let mut targets: HashSet<String> = configured
+            .keys()
+            .cloned()
+            .chain(self.0.servers.lock().unwrap().keys().cloned())
+            .filter(|n| name.map_or(true, |name| n == name))
+            .collect();
+        let harness = self.0.harness.upgrade().ok_or("Session ended")?;
+        let mut discoveries = tokio::task::JoinSet::new();
+        for name in targets.drain() {
+            let old = self.0.servers.lock().unwrap().remove(&name);
+            let names = match &old {
+                Some(ServerState {
+                    status: ServerStatus::Connected { tools },
+                    ..
+                }) => tools.clone(),
+                _ => Vec::new(),
+            };
+            if let Some(client) = old.and_then(|s| s.client) {
+                client.closed.store(true, Ordering::SeqCst);
+                client._process.tree.kill();
+                fail_pending(&client.pending, "MCP server disconnected");
+            }
+            let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
+            let mut active = harness
+                .lane("main")
+                .get_active_tools()
+                .await
+                .map_err(|e| e.to_string())?;
+            tools.retain(|t| !names.contains(&t.tool.schema().name));
+            active.retain(|n| !names.contains(n));
+            self.0
+                .tools
+                .lock()
+                .unwrap()
+                .retain(|t| !names.contains(&t.tool.schema().name));
+            self.0
+                .approvals
+                .lock()
+                .unwrap()
+                .retain(|n| !names.contains(n));
+            harness
+                .set_tools(tools, Some(active))
+                .await
+                .map_err(|e| e.to_string())?;
+            let Some((config, source)) = configured.remove(&name) else {
+                continue;
+            };
+            let disabled = config.disabled;
+            self.0.servers.lock().unwrap().insert(
+                name.clone(),
+                ServerState {
+                    config: config.clone(),
+                    source,
+                    status: if disabled {
+                        ServerStatus::Disabled
+                    } else {
+                        ServerStatus::Connecting
+                    },
+                    client: None,
+                },
+            );
+            if disabled {
+                continue;
+            }
+            let cwd = self.0.cwd.clone();
+            discoveries.spawn(async move {
+                let result = async {
+                    let client = Client::spawn(&name, &config, &cwd)?;
+                    let tools =
+                        tokio::time::timeout(START_TIMEOUT, client.discover(&name, &config))
+                            .await
+                            .map_err(|_| "MCP discovery timed out".to_string())??;
+                    Ok::<_, String>((client, tools))
+                }
+                .await;
+                (name, result)
+            });
+        }
+        while let Some(result) = discoveries.join_next().await {
+            let (name, discovered) = result.map_err(|e| e.to_string())?;
+            let result = async {
+                let (client, discovered) = discovered?;
+                let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
+                let mut active = harness
+                    .lane("main")
+                    .get_active_tools()
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let mut names = Vec::new();
+                for tool in discovered {
+                    let name = tool.schema.name.clone();
+                    if !crate::session::tool_name_allowed(&name, &self.0.args)
+                        || tools.iter().any(|t| t.tool.schema().name == name)
+                    {
+                        continue;
+                    }
+                    if tool.approval {
+                        self.0.approvals.lock().unwrap().insert(name.clone());
+                    }
+                    names.push(name.clone());
+                    active.push(name);
+                    let tool = HarnessTool::new(Arc::new(tool));
+                    self.0.tools.lock().unwrap().push(tool.clone());
+                    tools.push(tool);
+                }
+                harness
+                    .set_tools(tools, Some(active))
+                    .await
+                    .map_err(|e| e.to_string())?;
+                watch_shutdown(harness.downgrade(), Arc::downgrade(&client));
+                Ok::<_, String>((client, names))
+            }
+            .await;
+            let mut servers = self.0.servers.lock().unwrap();
+            let state = servers.get_mut(&name).unwrap();
+            match result {
+                Ok((client, tools)) => {
+                    state.client = Some(client);
+                    state.status = ServerStatus::Connected { tools };
+                }
+                Err(error) => state.status = ServerStatus::Failed(error),
+            }
+        }
+        Ok(())
+    }
+    pub async fn set_disabled(&self, name: &str, disabled: bool) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        let path = self
+            .configured()?
+            .remove(name)
+            .ok_or_else(|| format!("Unknown MCP server: {name}"))?
+            .1;
+        edit_config(&path, |servers| {
+            servers
+                .get_mut(name)
+                .and_then(Value::as_object_mut)
+                .ok_or("Invalid server entry")?
+                .insert("disabled".into(), json!(disabled));
+            Ok(())
+        })?;
+        self.reconnect_locked(Some(name)).await
+    }
+    pub async fn add(&self, name: &str, command: &str, args: &[String]) -> Result<(), String> {
+        validate_name(name)?;
+        if command.is_empty() {
+            return Err("Missing MCP command".into());
+        }
+        let _guard = self.0.operation.lock().await;
+        edit_config(&self.config_path(false)?, |servers| {
+            if servers.contains_key(name) {
+                return Err(format!("MCP server already exists: {name}"));
+            }
+            servers.insert(name.into(), json!({"command":command,"args":args}));
+            Ok(())
+        })?;
+        self.reconnect_locked(Some(name)).await
+    }
+    pub async fn remove(&self, name: &str) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        edit_config(&self.config_path(false)?, |servers| {
+            servers
+                .remove(name)
+                .ok_or_else(|| format!("No global MCP server: {name}"))?;
+            Ok(())
+        })?;
+        self.reconnect_locked(Some(name)).await
+    }
+}
+fn validate_name(name: &str) -> Result<(), String> {
+    if name.is_empty()
+        || !name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        Err(format!("invalid MCP server name: {name:?}"))
+    } else {
+        Ok(())
+    }
+}
+pub fn ensure_config(path: &Path) -> Result<(), String> {
+    if !path.exists() {
+        edit_config(path, |_| Ok(()))?;
+    }
+    Ok(())
+}
+fn edit_config(
+    path: &Path,
+    edit: impl FnOnce(&mut serde_json::Map<String, Value>) -> Result<(), String>,
+) -> Result<(), String> {
+    let mut value: Value = match std::fs::read_to_string(path) {
+        Ok(text) => serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => json!({"mcpServers":{}}),
+        Err(e) => return Err(e.to_string()),
+    };
+    let object = value
+        .as_object_mut()
+        .ok_or("MCP config must be an object")?;
+    let servers = object
+        .entry("mcpServers")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or("mcpServers must be an object")?;
+    edit(servers)?;
+    // Validate before writing, preserving unrecognized keys in the original value.
+    let _: Config = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    // Replace atomically: a failed write must not truncate the live configuration.
+    let mut file = tempfile::NamedTempFile::new_in(path.parent().unwrap_or(Path::new(".")))
+        .map_err(|e| e.to_string())?;
+    if let Ok(metadata) = std::fs::metadata(path) {
+        file.as_file()
+            .set_permissions(metadata.permissions())
+            .map_err(|e| e.to_string())?;
+    }
+    writeln!(
+        file,
+        "{}",
+        serde_json::to_string_pretty(&value).map_err(|e| e.to_string())?
+    )
+    .map_err(|e| e.to_string())?;
+    file.as_file().sync_all().map_err(|e| e.to_string())?;
+    file.persist(path).map_err(|e| e.to_string())?;
+    Ok(())
+}
