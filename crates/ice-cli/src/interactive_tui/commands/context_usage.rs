@@ -26,7 +26,7 @@ struct Snapshot {
     provider: Option<u64>,
     tail: u64,
     categories: [u64; 9],
-    items: Vec<(String, u64)>,
+    items: Vec<(String, u64, usize)>,
 }
 
 fn byte_tokens(bytes: usize) -> u64 {
@@ -37,7 +37,7 @@ impl Snapshot {
     fn add(&mut self, category: usize, label: impl Into<String>, tokens: u64) {
         self.categories[category] = self.categories[category].saturating_add(tokens);
         if tokens > 0 {
-            self.items.push((label.into(), tokens));
+            self.items.push((label.into(), tokens, category));
         }
     }
 
@@ -46,8 +46,8 @@ impl Snapshot {
         let base = base.unwrap_or("").trim();
         let mut rest = base;
         let mut project_bytes = 0;
-        // Attribute the loaded block, not files currently present on disk. Do
-        // not expose paths or instruction contents in the largest-entry labels.
+        // Attribute the loaded block, not files currently present on disk.
+        // Show loaded paths, never instruction contents.
         while let Some(start) = rest.find("<project_context>") {
             let after = &rest[start..];
             let Some(end) = after.find("</project_context>") else {
@@ -67,11 +67,14 @@ impl Snapshot {
                 let length = close + "</project_instructions>".len();
                 number += 1;
                 attributed += length;
-                self.add(
-                    1,
-                    format!("loaded project instructions #{number}"),
-                    byte_tokens(length),
-                );
+                let label = part
+                    .split_once('>')
+                    .and_then(|(header, _)| header.split_once("path=\""))
+                    .and_then(|(_, path)| path.split_once('"'))
+                    .map(|(path, _)| display_label(path))
+                    .filter(|path| !path.is_empty())
+                    .unwrap_or_else(|| format!("loaded project instructions #{number}"));
+                self.add(1, label, byte_tokens(length));
                 instructions = &part[length..];
             }
             self.add(
@@ -86,12 +89,37 @@ impl Snapshot {
             "system prompt",
             byte_tokens(base.len().saturating_sub(project_bytes)),
         );
-        // Includes the actual listing and composition separator, never bodies.
+        // Attribute the exact loaded listing, not skill bodies or current files.
+        let listing = ice_harness::skills::format_skills_for_system_prompt(skills);
+        let mut attributed = 0;
+        for (skill, block) in skills
+            .iter()
+            .filter(|skill| !skill.disable_model_invocation.unwrap_or(false))
+            .zip(listing.split("  <skill>\n").skip(1))
+        {
+            if let Some(end) = block.find("  </skill>") {
+                let size = "  <skill>\n".len() + end + "  </skill>\n".len();
+                attributed += size;
+                self.add(
+                    2,
+                    format!("{} listing", display_label(&skill.name)),
+                    byte_tokens(size),
+                );
+            }
+        }
+        // Preserve aggregate rounding; per-item token estimates may round up.
+        let listing_tokens = byte_tokens(composed.len().saturating_sub(base.len()));
         self.add(
             2,
-            "available skills listing",
-            byte_tokens(composed.len().saturating_sub(base.len())),
+            "skills listing framing",
+            byte_tokens(
+                composed
+                    .len()
+                    .saturating_sub(base.len())
+                    .saturating_sub(attributed),
+            ),
         );
+        self.categories[2] = listing_tokens;
     }
 
     fn tools(
@@ -106,7 +134,7 @@ impl Snapshot {
                 let encoded = serde_json::to_string(&schema).map_err(|e| e.to_string())?;
                 self.add(
                     3,
-                    format!("{} schema", safe_label(&schema.name)),
+                    format!("{} schema", display_label(&schema.name)),
                     byte_tokens(encoded.len()),
                 );
             }
@@ -177,10 +205,9 @@ impl Snapshot {
             .saturating_add(self.tail);
     }
 
-    fn largest(&self) -> Vec<&(String, u64)> {
+    fn largest(&self) -> Vec<&(String, u64, usize)> {
         let mut largest: Vec<_> = self.items.iter().collect();
         largest.sort_by(|a, b| b.1.cmp(&a.1)); // stable original-position tie break
-        largest.truncate(5);
         largest
     }
 }
@@ -193,84 +220,197 @@ impl Component for Snapshot {
     }
 
     fn render(&self, width: usize) -> Vec<String> {
-        let counts = allocate(&self.categories, self.used, self.window, 200);
-        let mut cells = Vec::new();
-        for (index, count) in counts.iter().enumerate() {
-            cells.extend(std::iter::repeat(SYMBOLS[index]).take(*count));
-        }
-        cells.resize(200, '.');
-        let grid: Vec<String> = cells
-            .chunks(20)
-            .map(|row| {
-                row.iter()
-                    .map(char::to_string)
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            })
-            .collect();
-        let mut legend: Vec<String> = CATEGORIES
-            .iter()
-            .enumerate()
-            .map(|(i, name)| format!("{} {name}: ~{}", SYMBOLS[i], self.categories[i]))
-            .collect();
-        legend.push(format!(
-            ". Free space: {}",
-            self.window.saturating_sub(self.used)
-        ));
-        let capacity = if self.window == 0 {
-            "unknown".to_string()
-        } else {
-            self.window.to_string()
-        };
-        let mut lines = vec![
-            format!("Context  {}", safe_label(&self.model)),
-            format!("~{} / {capacity} tokens used (estimated)", self.used),
-        ];
-        match self.provider {
-            Some(input) => lines.push(format!(
-                "Provider input/cache: {input}; estimated output + tail: {}",
-                self.tail
-            )),
-            None => lines.push(
-                "No valid provider input usage; prompt, tools and messages estimated.".into(),
-            ),
-        }
-        lines.push("Category estimates (~4 bytes/token); grid shares scaled to used total:".into());
-        if width >= 92 {
-            for (row, label) in grid.iter().zip(&legend) {
-                lines.push(format!("{row}    {label}"));
-            }
-        } else {
-            lines.extend(grid);
-            lines.extend(legend);
-        }
-        lines.push("Largest entries (estimates):".into());
-        lines.extend(
-            self.largest()
-                .into_iter()
-                .map(|(label, size)| format!("  ~{size}  {label}")),
-        );
-        lines.push(
-            "Public projection: active branch + standard compaction; no private request".into(),
-        );
-        lines.push(
-            "transforms, custom projectors or prompt overrides. Not an exact wire payload.".into(),
-        );
-        lines.push(
-            "Provider input may reflect earlier prompt/tools; /usage retains billing totals."
-                .into(),
-        );
-        lines
-            .into_iter()
-            .map(|line| {
-                if width == 0 {
-                    String::new()
-                } else {
-                    ice_tui::truncate_to_width(&line, width, "")
-                }
-            })
-            .collect()
+        render_report(self, width)
     }
+}
+
+fn render_report(snapshot: &Snapshot, width: usize) -> Vec<String> {
+    use ice_tui::theme::{theme, Color};
+    let colors = theme().colors;
+    let content_width = width.saturating_sub(4).min(100);
+    if content_width == 0 {
+        return vec![String::new()];
+    }
+    // Three stable hues plus letter markers: identity never depends on color.
+    // Long-tail categories share the neutral mark instead of cycling hues.
+    let palette = if colors.surface == Color::Ansi256(254) {
+        [
+            Color::Rgb(42, 120, 214),
+            Color::Rgb(235, 104, 52),
+            Color::Rgb(27, 175, 122),
+        ]
+    } else if colors.accent == Color::Ansi256(15) {
+        [colors.text; 3]
+    } else {
+        [
+            Color::Rgb(57, 135, 229),
+            Color::Rgb(217, 89, 38),
+            Color::Rgb(25, 158, 112),
+        ]
+    };
+    let category_color = |category: usize| match category {
+        0..=2 => palette[0],
+        3 => palette[1],
+        4 => palette[2],
+        _ => colors.muted,
+    };
+    let mark = |category: usize| category_color(category).fg(&SYMBOLS[category].to_string());
+    let percent = |tokens: u64| {
+        if snapshot.window == 0 {
+            "—".into()
+        } else {
+            format!("{:.1}%", tokens as f64 / snapshot.window as f64 * 100.0)
+        }
+    };
+    let mut lines = vec![
+        colors
+            .accent
+            .fg(&format!("Context Usage · {}", safe_label(&snapshot.model))),
+        colors.text.fg(&format!(
+            "~{} / {} tokens  ({})",
+            token_count(snapshot.used),
+            if snapshot.window == 0 {
+                "unknown".into()
+            } else {
+                token_count(snapshot.window)
+            },
+            percent(snapshot.used)
+        )),
+        colors
+            .muted
+            .fg("Estimated active context · not cumulative billing"),
+    ];
+    // Keep the grid beside the legend on ordinary terminal widths too.
+    let side_by_side = content_width >= 64;
+    let grid_width = if side_by_side {
+        content_width.saturating_sub(48)
+    } else {
+        content_width
+    };
+    let columns = ((grid_width + 1) / 2).clamp(1, 20);
+    let budget = columns * 10;
+    let counts = allocate(&snapshot.categories, snapshot.used, snapshot.window, budget);
+    let mut cells = Vec::with_capacity(budget);
+    for (category, count) in counts.iter().enumerate() {
+        cells.extend(std::iter::repeat(mark(category)).take(*count));
+    }
+    cells.resize(budget, colors.muted.fg("·"));
+    let grid: Vec<_> = cells.chunks(columns).map(|row| row.join(" ")).collect();
+    let mut legend: Vec<_> = CATEGORIES
+        .iter()
+        .enumerate()
+        .map(|(i, name)| {
+            format!(
+                "{} {:<21} {:>9}  {:>6}",
+                mark(i),
+                name,
+                format!("~{}", token_count(snapshot.categories[i])),
+                percent(snapshot.categories[i])
+            )
+        })
+        .collect();
+    legend.push(format!(
+        "{} {:<21} {:>9}  {:>6}",
+        colors.muted.fg("·"),
+        "Free space",
+        token_count(snapshot.window.saturating_sub(snapshot.used)),
+        percent(snapshot.window.saturating_sub(snapshot.used))
+    ));
+    if side_by_side {
+        for (row, label) in grid.iter().zip(&legend) {
+            lines.push(format!("{row}  {}", colors.text.fg(label)));
+        }
+    } else {
+        lines.extend(grid);
+        lines.push(String::new());
+        lines.extend(legend.into_iter().map(|label| colors.text.fg(&label)));
+    }
+    lines.push(String::new());
+    lines.push(colors.accent.fg(&format!(
+        "Context consumers · {} entries",
+        snapshot.items.len()
+    )));
+    lines.push(
+        colors
+            .muted
+            .fg("Category estimates · every loaded contributor · Tokens per item"),
+    );
+    let sorted = snapshot.largest();
+    for (category, name) in CATEGORIES.iter().enumerate() {
+        let items: Vec<_> = sorted
+            .iter()
+            .copied()
+            .filter(|item| item.2 == category)
+            .collect();
+        if items.is_empty() {
+            continue;
+        }
+        lines.push(colors.text.fg(&format!(
+            "{} {name}  ·  ~{} tokens",
+            mark(category),
+            token_count(snapshot.categories[category])
+        )));
+        let name_width = content_width.saturating_sub(16).max(1);
+        for (label, tokens, _) in items {
+            let wrapped = ice_tui::wrap_text_with_ansi(label, name_width);
+            for (index, part) in wrapped.iter().enumerate() {
+                let padding = name_width.saturating_sub(ice_tui::visible_width(part));
+                lines.push(colors.text.fg(&format!(
+                    "  {part}{} {:>10}",
+                    " ".repeat(padding),
+                    if index == 0 {
+                        format!("~{}", token_count(*tokens))
+                    } else {
+                        String::new()
+                    }
+                )));
+            }
+        }
+    }
+    lines.push(String::new());
+    lines.push(colors.muted.fg("Composition estimates use ~4 bytes/token. Grid shares are scaled to the used total; category estimates may differ from provider usage."));
+    if let Some(input) = snapshot.provider {
+        lines.push(colors.muted.fg(&format!(
+            "Provider input/cache: {}; estimated output + tail: {}.",
+            token_count(input),
+            token_count(snapshot.tail)
+        )));
+    } else {
+        lines.push(
+            colors
+                .muted
+                .fg("No valid provider input usage; prompt, tools and messages estimated."),
+        );
+    }
+    lines.push(colors.muted.fg("Public projection: active branch + standard compaction. Not an exact wire payload; private request transforms, custom projectors and prompt overrides are unavailable."));
+    lines.push(colors.muted.fg("Provider input may reflect earlier prompt/tools; /usage retains billing totals. Skill bodies and custom agents count only when loaded into the prompt or messages."));
+    let mut output = vec![String::new()];
+    for line in lines {
+        for wrapped in ice_tui::wrap_text_with_ansi(&line, content_width) {
+            output.push(format!("  {wrapped}"));
+        }
+    }
+    output.push(String::new());
+    output
+}
+
+fn token_count(tokens: u64) -> String {
+    let digits = tokens.to_string();
+    let mut formatted = String::new();
+    for (i, ch) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            formatted.push(',');
+        }
+        formatted.push(ch);
+    }
+    formatted
+}
+
+fn display_label(label: &str) -> String {
+    label
+        .chars()
+        .filter(|ch| !ch.is_control() && *ch != '\u{1b}')
+        .collect()
 }
 
 fn safe_label(label: &str) -> String {

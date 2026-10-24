@@ -67,7 +67,7 @@ fn buffered_old_run_events_do_not_repopulate_a_new_session() {
                     tui,
                     state.clone(),
                     state.chat_container.clone(),
-                    lane.clone(),
+                    harness.clone(),
                     requests,
                 ));
                 assert!(change.await);
@@ -123,6 +123,70 @@ pub(super) fn test_terminal() -> Arc<TuiAltScreen> {
 
 fn display(state: &Arc<TuiState>) -> String {
     strip_ansi(&state.chat_container.render(120).join("\n"))
+}
+
+#[test]
+fn context_footer_updates_during_message_and_tool_events() {
+    isolated_async(async {
+        let (emitter, events) = ice_agent::events::BroadcastEmitter::new(16);
+        let mut model = ice_ai::Model::new("m", "m", ice_ai::Api::Faux, "faux", "");
+        model.context_window = 100_000;
+        let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+            model,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+        let state = test_tui_state();
+        state.set_status(RunStatus::Working);
+        let requests = state.event_drain.install();
+        let drain = tokio::spawn(drain_agent_events(
+            events,
+            test_terminal(),
+            state.clone(),
+            state.chat_container.clone(),
+            AgentHarness::clone(&harness),
+            requests,
+        ));
+        let mut assistant = AssistantMessage::empty(ice_ai::Api::Faux, "faux", "m", 0);
+        assistant.usage.input = 25_000;
+        let assistant = AgentMessage::Assistant(Box::new(assistant));
+        let tool = AgentMessage::ToolResult(Box::new(ice_ai::ToolResultMessage {
+            role: ice_ai::types::ToolResultRole,
+            tool_call_id: "call".into(),
+            tool_name: "read".into(),
+            content: vec![ice_ai::Content::text("x".repeat(20_000))],
+            details: None,
+            usage: None,
+            added_tool_names: Vec::new(),
+            is_error: false,
+            timestamp: 0,
+        }));
+        for (message, expected) in [(assistant, "~25.0%/100k"), (tool, "~30.0%/100k")] {
+            harness
+                .session()
+                .append_message(message.clone())
+                .await
+                .unwrap();
+            ice_agent::events::AgentEmitter::emit(&emitter, AgentEvent::MessageEnd { message })
+                .await;
+            tokio::time::timeout(std::time::Duration::from_secs(2), async {
+                loop {
+                    let footer = strip_ansi(&state.footer.render(120).join("\n"));
+                    if footer.contains(expected) {
+                        break;
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+                }
+            })
+            .await
+            .expect("context footer stayed stale during an active run");
+            assert!(matches!(*state.status.lock().unwrap(), RunStatus::Working));
+        }
+        state.event_drain.flush().await.unwrap();
+        drain.abort();
+        harness.close().await.unwrap();
+    });
 }
 
 #[test]
@@ -293,7 +357,7 @@ fn session_drain_shared_switch_import_fork_paths_consume_real_old_events() {
                 test_terminal(),
                 state.clone(),
                 state.chat_container.clone(),
-                lane.clone(),
+                harness.clone(),
                 requests,
             ));
             change.await;
@@ -430,7 +494,7 @@ fn session_drain_deferred_bash_is_persisted_to_old_session_before_new() {
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            lane.clone(),
+            AgentHarness::clone(&harness),
             requests,
         ));
         let cwd = tempfile::tempdir().unwrap();
@@ -521,7 +585,7 @@ fn run_summary_authoritative_outcomes_and_result_before_broadcast_drain() {
                 test_terminal(),
                 state.clone(),
                 state.chat_container.clone(),
-                lane,
+                harness.clone(),
                 requests,
             ));
             state.event_drain.flush().await.unwrap();
@@ -628,7 +692,7 @@ fn run_summary_direct_extension_abort_retaining_tooluse_is_not_success() {
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            lane,
+            AgentHarness::clone(&harness),
             requests,
         ));
         state.event_drain.flush().await.unwrap();
@@ -693,7 +757,7 @@ fn run_summary_failed_run_cannot_reuse_retained_success_message() {
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            harness.lane("main"),
+            AgentHarness::clone(&harness),
             requests,
         ));
         state.event_drain.flush().await.unwrap();
@@ -833,13 +897,12 @@ fn run_summary_waits_for_context_accepted_by_run_end_listener() {
                 })
             });
         });
-        let lane = harness.lane("main");
         let drain = tokio::spawn(drain_agent_events(
             events,
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            lane,
+            AgentHarness::clone(&harness),
             requests,
         ));
         let prompt = {
@@ -1031,7 +1094,7 @@ fn session_drain_new_aborts_extension_run_before_agent_start_is_delivered() {
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            lane.clone(),
+            AgentHarness::clone(&harness),
             requests,
         ));
         assert!(change.await);
@@ -1083,7 +1146,7 @@ fn run_summary_settled_a_precedes_streaming_extension_b_without_waiting_for_b() 
             test_terminal(),
             state.clone(),
             state.chat_container.clone(),
-            lane.clone(),
+            AgentHarness::clone(&harness),
             requests,
         ));
         tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -1141,7 +1204,6 @@ fn run_summary_metadata_is_bounded_and_settled_markers_are_consumed_once() {
             }));
         }
         let tui = test_terminal();
-        let lane = harness.lane("main");
         handle_agent_event(
             AgentEvent::RunSettled {
                 run_id: "run-0".into(),
@@ -1149,7 +1211,7 @@ fn run_summary_metadata_is_bounded_and_settled_markers_are_consumed_once() {
             &tui,
             &state,
             &state.chat_container,
-            &lane,
+            &harness,
         )
         .await;
         assert!(!display(&state).contains("✻ "));
@@ -1161,7 +1223,7 @@ fn run_summary_metadata_is_bounded_and_settled_markers_are_consumed_once() {
                 &tui,
                 &state,
                 &state.chat_container,
-                &lane,
+                &harness,
             )
             .await;
         }
