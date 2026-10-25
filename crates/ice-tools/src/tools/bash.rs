@@ -129,6 +129,38 @@ pub struct BashToolOptions {
 }
 
 /// Supplies host-known session variables for each bash call.
+impl BashToolOptions {
+    /// Build the execution for `command` in `cwd`: the command prefix,
+    /// session variables (unless turned off) and then the prepare hook. The
+    /// model tool and the user `!command` helper share this, so both run
+    /// with the same configuration.
+    pub async fn prepare_execution(
+        &self,
+        command: String,
+        cwd: PathBuf,
+    ) -> Result<BashExecution, String> {
+        let mut execution = BashExecution {
+            command: match &self.command_prefix {
+                Some(p) => format!("{p}\n{command}"),
+                None => command,
+            },
+            cwd,
+            // Session variables come first, so the prepare hook (TS
+            // `spawnHook`) can still rewrite or remove them.
+            env: if self.expose_session_environment.unwrap_or(true) {
+                session_environment(self.session_environment.as_ref())
+            } else {
+                HashMap::new()
+            },
+            inherit_env: true,
+        };
+        if let Some(prepare) = &self.prepare {
+            prepare(&mut execution).await?;
+        }
+        Ok(execution)
+    }
+}
+
 pub type SessionEnvProvider = Arc<dyn Fn() -> HashMap<String, String> + Send + Sync>;
 
 /// Session variables bash sets per call. The host strips inherited copies
@@ -253,24 +285,11 @@ impl AgentTool for BashTool {
             }
         }
         let original_command = input.command.clone();
-        let mut execution = BashExecution {
-            command: match &self.options.command_prefix {
-                Some(p) => format!("{p}\n{}", input.command),
-                None => input.command,
-            },
-            cwd: self.env.cwd().to_path_buf(),
-            // Session variables come first, so the prepare hook (TS
-            // `spawnHook`) can still rewrite or remove them.
-            env: if self.options.expose_session_environment.unwrap_or(true) {
-                session_environment(self.options.session_environment.as_ref())
-            } else {
-                HashMap::new()
-            },
-            inherit_env: true,
-        };
-        if let Some(prepare) = &self.options.prepare {
-            prepare(&mut execution).await.map_err(AgentError::Tool)?;
-        }
+        let execution = self
+            .options
+            .prepare_execution(input.command, self.env.cwd().to_path_buf())
+            .await
+            .map_err(AgentError::Tool)?;
         let timeout = apply_timeout_limits(
             requested,
             self.options.default_timeout,

@@ -616,52 +616,38 @@ fn start_user_bash(ctx: &CommandContext, command: &str, exclude_from_context: bo
         Arc::new(ice_tools::OsExecutionEnv::with_cwd(ctx.cwd.clone()));
     let tui = ctx.tui.clone();
     let tx = ctx.tx.clone();
-    let cwd = ctx.cwd.clone();
     let command_owned = command.to_string();
     let storage = ctx.session.harness().session().storage();
+    // Same configuration as the model's bash tool (command prefix, session
+    // variables), so `!cmd` and the tool run commands the same way.
+    let bash = crate::session::bash_options(None);
 
     tokio::spawn(async move {
         let comp_chunk = comp.clone();
         let tui_chunk = tui.clone();
-        let on_chunk: Box<
-            dyn FnMut(&str, &dyn Fn() -> ice_tools::shell_output::ShellCaptureProgress) + Send,
-        > = Box::new(move |_chunk, get_progress| {
-            // The capture layer reports the complete tail captured so far, not
-            // a delta; `append_output` replaces its snapshot accordingly.
-            comp_chunk.append_output(&get_progress().output);
-            tui_chunk.request_render(false);
-        });
-        let options = ice_tools::shell_output::ShellCaptureOptions {
-            cwd: Some(cwd),
+        let options = ice_tools::user_bash::UserBashOptions {
             cancel: Some(&cancel),
-            on_chunk: Some(on_chunk),
-            return_execution_errors: true,
+            // The component replaces its text with the complete tail.
+            on_snapshot: Some(Box::new(move |tail| {
+                comp_chunk.append_output(tail);
+                tui_chunk.request_render(false);
+            })),
             ..Default::default()
         };
         let result =
-            ice_tools::shell_output::execute_shell_with_capture(&env, &command_owned, options)
-                .await;
-
-        // `Ok` carries the real exit code/cancellation; `Err` is a transport
-        // level failure (spawn failure, invalid env) which we surface inline.
-        let (exit_code, cancelled, output, truncated, full_output_path) = match result {
-            Ok(capture) => (
-                capture.exit_code,
-                capture.cancelled,
-                capture.output.clone(),
-                capture.truncated,
-                capture
-                    .full_output_path
-                    .as_ref()
-                    .map(|path| path.to_string_lossy().into_owned()),
-            ),
-            Err(error) => (
-                None,
-                false,
-                format!("Bash command failed: {error}"),
-                false,
-                None,
-            ),
+            ice_tools::user_bash::execute_user_bash(&env, &command_owned, &bash, options).await;
+        let full_output_path = result
+            .full_output_path
+            .as_ref()
+            .map(|path| path.to_string_lossy().into_owned());
+        let (exit_code, cancelled, truncated) =
+            (result.exit_code, result.cancelled, result.truncated);
+        // A failure to run (spawn, invalid env, prepare hook) is shown inline,
+        // after any output already captured.
+        let output = match &result.error {
+            Some(error) if result.output.is_empty() => format!("Bash command failed: {error}"),
+            Some(error) => format!("{}\nBash command failed: {error}", result.output),
+            None => result.output,
         };
         comp.append_output(&output);
         comp.set_complete(
