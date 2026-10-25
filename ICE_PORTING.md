@@ -366,8 +366,7 @@ it has no `run_in_background` or `stdin` parameters.
 **ice:** `CA/ice-cognee.ts` (2529 lines), `ice-cognee-client.ts` (1013),
 `ice-cognee-env.ts`, `ice-cognee-observer.ts`, `CA/ice-cognee-skills/`
 (cognee-search/remember/sync), `docs/ice-cognee.md`. **ice-rust:** ported as a
-built-in in `crates/ice-cli/src/cognee/` (COG-001..068, branch
-`claude/gracious-johnson-j49m0h`, PR pending). It runs through the in-process
+built-in in `crates/ice-cli/src/cognee/` (COG-001..068, [PR #66](https://github.com/Zyk-Void/ice-rust/pull/66)). It runs through the in-process
 harness extension seam (`crates/ice-harness/src/extension.rs`) and an agent-event
 observer, not the C plugin ABI. Tests use an injected transport (no network).
 
@@ -450,8 +449,7 @@ remain unverified. No PR has been opened for this worktree yet.
 ### 6.1 Blackhole compaction extension
 - **ice:** `ice:coding-agent/examples/extensions/ice-blackhole/` (index + `src/{core,extract,hooks,om}`).
   It derives from `sting8k/ice-vcc`. **ice-rust:** ported as a built-in in
-  `crates/ice-cli/src/blackhole/` (BLACK-001..041, branch
-  `claude/gracious-johnson-j49m0h`, PR pending). Like the optional ice package it
+  `crates/ice-cli/src/blackhole/` (BLACK-001..041, [PR #66](https://github.com/Zyk-Void/ice-rust/pull/66)). Like the optional ice package it
   is off until `<agentDir>/ice-blackhole/ice-blackhole-config.json` exists or an
   `ICERS_BLACKHOLE_*` variable is set. It hooks compaction through the harness
   extension seam (`before_compact`, `after_compact`, `boundary`,
