@@ -388,6 +388,30 @@ pub(super) fn sanitize_error_message(text: &str) -> String {
     }
 }
 
+/// Render a built-in extension notice by severity. The text can carry
+/// recalled memory or server output, so it is sanitized like an error.
+pub(super) fn add_notice_message(
+    container: &Arc<Container>,
+    level: crate::builtin_extensions::NoticeLevel,
+    text: &str,
+) {
+    use crate::builtin_extensions::NoticeLevel;
+    let text = sanitize_error_message(text);
+    match level {
+        NoticeLevel::Info => add_note_message(container, &text),
+        NoticeLevel::Error => add_error_message(container, &text),
+        NoticeLevel::Warning => {
+            let c = current_theme().colors;
+            container.add_child(Arc::new(Text::new(
+                format!("  {} {}", c.warning.fg("!"), c.warning.fg(&text)),
+                1,
+                0,
+            )));
+            container.add_child(Arc::new(Spacer::new(1)));
+        }
+    }
+}
+
 /// Add a neutral note (e.g. unsupported-command message) to the chat container.
 pub(super) fn add_note_message(container: &Arc<Container>, text: &str) {
     let c = current_theme().colors;

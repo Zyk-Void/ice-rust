@@ -893,8 +893,8 @@ enum TuiMessage {
     NewSession,
     /// A background `@` file search finished; refresh the completion menu.
     AutocompleteReady,
-    /// Compact the conversation (from `/compact`).
-    Compact,
+    /// Compact the conversation (from `/compact [instructions]`).
+    Compact(Option<String>),
     /// Copy the last assistant reply to the clipboard (from `/copy`).
     Copy,
     /// Hot-switch to another saved session (from the `/session` selector):
@@ -1851,6 +1851,12 @@ pub async fn interactive_tui(
     let side_context = reload_context.clone();
     let side_parent = harness.clone();
     let side_keys = keybindings.clone();
+    // Built-in extension notices (Cognee connected/offline, Blackhole
+    // warnings) arrive from background work; the tick moves them into the
+    // transcript.
+    let notices_tick = reload_context.builtins.notices.clone();
+    notices_tick.attach();
+    let chat_tick = chat_container.clone();
     let tick_handle = tokio::spawn(async move {
         // 80ms per frame — upstream's `DEFAULT_INTERVAL_MS`, i.e. a full
         // 10-frame cycle every 800ms. The tick only *requests a repaint*; the
@@ -1873,6 +1879,13 @@ pub async fn interactive_tui(
             // previous geometry for the rest of the session.
             tui_tick.ensure_size();
             tui_tick.refresh_progress();
+            let notices = notices_tick.drain();
+            if !notices.is_empty() {
+                for (level, text) in notices {
+                    add_notice_message(&chat_tick, level, &text);
+                }
+                tui_tick.request_render(false);
+            }
             let side_changed = side_tick.lock().unwrap().sync(
                 &tui_tick,
                 &side_context,
@@ -3392,8 +3405,8 @@ pub async fn interactive_tui(
                 refresh_autocomplete(&state, &editor);
                 tui.request_render(false);
             }
-            Some(TuiMessage::Compact) => {
-                run_compact(&harness, &tui, &state).await;
+            Some(TuiMessage::Compact(instructions)) => {
+                run_compact(&harness, &tui, &state, instructions.as_deref()).await;
             }
             Some(TuiMessage::Copy) => {
                 copy_last_assistant(&state, &chat_container);
@@ -4082,6 +4095,7 @@ pub async fn interactive_tui(
     // restoring cooked mode so no late event read races terminal cleanup.
     let _ = key_handle.await;
     tick_handle.abort();
+    reload_context.builtins.notices.detach();
     if let Some(handle) = drain_handle {
         handle.abort();
     }

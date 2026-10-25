@@ -9,7 +9,9 @@
 
 pub mod brief;
 pub mod checkpoint_recall;
+pub mod command;
 pub mod config;
+pub mod engine;
 pub mod js;
 pub mod live_state;
 pub mod normalize;

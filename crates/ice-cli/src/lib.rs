@@ -34,6 +34,7 @@ pub mod auth;
 pub mod auth_guidance;
 pub mod blackhole;
 pub mod brand;
+pub mod builtin_extensions;
 pub mod changelog;
 mod child_agents;
 mod codex_auth;

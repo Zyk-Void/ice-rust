@@ -968,6 +968,13 @@ pub async fn build_prepared(
         ready,
     }));
 
+    // ---- Built-in extensions (Cognee memory, Blackhole compaction) ----
+    let builtins = match crate::config::agent_dir() {
+        Ok(dir) => crate::builtin_extensions::BuiltinExtensions::for_agent_dir(dir),
+        Err(_) => crate::builtin_extensions::BuiltinExtensions::disabled(),
+    };
+    harness.set_extensions(builtins.harness_extensions());
+
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
     // live session + bridge so `/reload` can swap them; the harness itself is
@@ -992,6 +999,7 @@ pub async fn build_prepared(
         ext_status: ext_status_mailbox,
         editor_text: editor_text_mailbox,
         dev_extension: None,
+        builtins,
     };
 
     Ok((harness, event_rx, reload_context))
@@ -1167,6 +1175,8 @@ pub struct ReloadContext {
     /// swapping plugin sessions; its watcher signals `mailbox` after a
     /// successful background build.
     pub dev_extension: Option<Arc<crate::dev_extension::DevExtension>>,
+    /// Built-in Cognee/Blackhole extensions installed into the harness.
+    pub builtins: crate::builtin_extensions::BuiltinExtensions,
 }
 
 /// Dispatch a no-payload lifecycle event (e.g. `SessionStart`, `SessionShutdown`,

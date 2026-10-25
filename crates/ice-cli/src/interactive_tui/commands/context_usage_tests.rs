@@ -325,6 +325,7 @@ async fn context_command_appends_responsive_panel_without_usage_event_or_session
         mailbox: Default::default(),
         ui_dialog: Default::default(),
         dev_extension: None,
+        builtins: crate::builtin_extensions::BuiltinExtensions::disabled(),
     });
     let (tx, mut rx) = mpsc::unbounded_channel();
     let ctx = CommandContext {

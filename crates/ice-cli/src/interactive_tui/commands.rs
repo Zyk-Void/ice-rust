@@ -368,8 +368,19 @@ impl SlashCommand for CompactCommand {
     fn description(&self) -> &'static str {
         "Compact the conversation"
     }
-    fn execute(&self, ctx: &CommandContext, _args: &str) {
-        let _ = ctx.tx.send(TuiMessage::Compact);
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let instructions = match args.trim() {
+            // Blackhole's manual mode only compacts on its own marker.
+            "" => ctx
+                .reload_context
+                .builtins
+                .blackhole
+                .as_ref()
+                .and_then(|engine| engine.manual_compaction_instruction())
+                .map(str::to_string),
+            text => Some(text.to_string()),
+        };
+        let _ = ctx.tx.send(TuiMessage::Compact(instructions));
     }
 }
 
@@ -758,7 +769,36 @@ impl SlashCommand for SettingsCommand {
                 .unwrap_or_else(|error| error.into_inner()),
             &current_id,
             &ctx.chat,
+            &ctx.reload_context.builtins,
         );
+    }
+}
+
+/// `/blackhole` — inspect or change Blackhole compaction.
+pub(super) struct BlackholeCommand;
+impl SlashCommand for BlackholeCommand {
+    fn name(&self) -> &'static str {
+        "/blackhole"
+    }
+    fn description(&self) -> &'static str {
+        "Configure optional Blackhole compaction"
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let Some(dir) = ctx.reload_context.builtins.agent_dir.as_ref() else {
+            add_note_message(
+                &ctx.chat,
+                "Blackhole is unavailable without an agent directory.",
+            );
+            ctx.tui.request_render(false);
+            return;
+        };
+        let (level, text) = crate::blackhole::command::run_command(
+            dir,
+            &crate::blackhole::config::process_env,
+            args,
+        );
+        add_notice_message(&ctx.chat, level, &text);
+        ctx.tui.request_render(false);
     }
 }
 
@@ -884,6 +924,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(SessionCommand));
     r.register(Arc::new(ThemeCommand));
     r.register(Arc::new(CompactCommand));
+    r.register(Arc::new(BlackholeCommand));
     r.register(Arc::new(CopyCommand));
     r.register(Arc::new(HotkeysCommand));
     r.register(Arc::new(ContextCommand));

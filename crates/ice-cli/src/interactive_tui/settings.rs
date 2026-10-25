@@ -44,9 +44,11 @@ pub(super) fn open_settings_selector(
     catalog: &[ice_ai::Model],
     lane_model_id: &str,
     chat: &Arc<Container>,
+    builtins: &crate::builtin_extensions::BuiltinExtensions,
 ) {
     let settings = crate::settings::load_settings().unwrap_or_default();
-    let items = settings_menu_items(&settings, state, lane_model_id);
+    let mut items = settings_menu_items(&settings, state, lane_model_id);
+    items.extend(builtin_setting_items(builtins));
     let list = Arc::new(SettingsList::new(items));
 
     // ---- submenu rows ----
@@ -101,7 +103,16 @@ pub(super) fn open_settings_selector(
     let state_change = state.clone();
     let chat_change = chat.clone();
     let tui_change = tui.clone();
+    let builtins_change = builtins.clone();
     list.on_change(Arc::new(move |key, value| {
+        if let Some(result) = builtins_change.apply_setting(key, value) {
+            match result {
+                Ok(note) => add_note_message(&chat_change, &note),
+                Err(error) => add_error_message(&chat_change, &error),
+            }
+            tui_change.request_render(false);
+            return;
+        }
         let mut settings = crate::settings::load_settings().unwrap_or_default();
         let applied = apply_setting_change(&state_change, key, value, &mut settings);
         let saved = crate::settings::save_settings(&settings);
@@ -273,6 +284,23 @@ pub(super) fn settings_menu_items(
             .with_description("Idle gap allowed while awaiting HTTP data (applies on restart)")
             .with_values(&["30s", "1m", "5m", "disabled"]),
     ]
+}
+
+/// Namespaced rows from the built-in extensions (`blackhole.*`, `cognee.*`),
+/// read fresh each time the menu opens.
+pub(super) fn builtin_setting_items(
+    builtins: &crate::builtin_extensions::BuiltinExtensions,
+) -> Vec<SettingItem> {
+    builtins
+        .settings_rows()
+        .into_iter()
+        .map(|row| {
+            let values: Vec<&str> = row.values.iter().map(String::as_str).collect();
+            SettingItem::new(&row.key, &row.label, &row.current)
+                .with_description(&row.description)
+                .with_values(&values)
+        })
+        .collect()
 }
 
 /// `"true"` / `"false"` for a settings row value.

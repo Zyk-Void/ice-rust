@@ -354,6 +354,7 @@ async fn run_child(root: &Path, phase: &str) {
         mailbox,
         ui_dialog,
         dev_extension: None,
+        builtins: crate::builtin_extensions::BuiltinExtensions::disabled(),
     };
     assert_eq!(
         interactive_tui(
