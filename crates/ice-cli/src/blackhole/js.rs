@@ -207,12 +207,18 @@ pub fn parse_iso_ms(text: &str) -> Option<i64> {
         let digits = format!("{:0<3}", m.as_str());
         digits[..3].parse::<i64>().unwrap_or(0)
     });
+    if hour == 24 && (minute != 0 || second != 0 || millis != 0) {
+        return None;
+    }
     let offset_minutes = match captures.get(8).map(|m| m.as_str()) {
         None | Some("Z") => 0,
         Some(zone) => {
             let sign = if zone.starts_with('-') { -1 } else { 1 };
             let hours: i64 = zone[1..3].parse().ok()?;
             let minutes: i64 = zone[4..6].parse().ok()?;
+            if hours > 23 || minutes > 59 {
+                return None;
+            }
             sign * (hours * 60 + minutes)
         }
     };
@@ -263,6 +269,16 @@ mod tests {
         assert_eq!(parse_iso_ms("2025-10-25T14:00:00.123+02:00"), Some(ms));
         assert_eq!(parse_iso_ms("2025-10-25"), Some(1_761_350_400_000));
         assert_eq!(parse_iso_ms("not a date"), None);
+        // Date.parse normalizes calendar overflow up to the accepted day 31.
+        assert_eq!(parse_iso_ms("2024-02-31"), parse_iso_ms("2024-03-02"));
+        assert_eq!(
+            parse_iso_ms("2024-04-30T24:00:00Z"),
+            parse_iso_ms("2024-05-01T00:00:00Z")
+        );
+        assert_eq!(parse_iso_ms("2024-04-30T24:01:00Z"), None);
+        assert_eq!(parse_iso_ms("2024-04-30T00:00:00+23:60"), None);
+        assert_eq!(parse_iso_ms("2024-04-30T00:00:00+24:00"), None);
+        assert_eq!(parse_iso_ms("2024-04-30T00:00:00+99:99"), None);
     }
 
     #[test]

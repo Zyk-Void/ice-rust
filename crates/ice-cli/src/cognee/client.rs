@@ -149,7 +149,12 @@ pub struct ReqwestTransport {
 impl ReqwestTransport {
     pub fn new() -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                // The API key is sent in a custom header. Reqwest's default
+                // redirect policy can forward that header to another origin.
+                .redirect(reqwest::redirect::Policy::none())
+                .build()
+                .expect("build Cognee HTTP client"),
         }
     }
 }
@@ -1058,6 +1063,57 @@ pub(crate) mod tests {
         let bytes = "a€".as_bytes();
         assert_eq!(decode_truncated(&bytes[..3]), "a");
         assert_eq!(decode_truncated(&[0x61, 0xff, 0x62]), "a\u{FFFD}b");
+    }
+
+    #[tokio::test]
+    async fn reqwest_transport_does_not_follow_cross_origin_redirects_with_api_key() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::net::TcpListener;
+
+        let redirect_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let redirect_address = redirect_listener.local_addr().unwrap();
+        let sink_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let sink_address = sink_listener.local_addr().unwrap();
+
+        let redirect_server = tokio::spawn(async move {
+            let (mut socket, _) = redirect_listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            let _ = socket.read(&mut request).await.unwrap();
+            socket
+                .write_all(
+                    format!(
+                        "HTTP/1.1 302 Found\r\nLocation: http://{sink_address}/sink\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    )
+                    .as_bytes(),
+                )
+                .await
+                .unwrap();
+        });
+        let mut sink_server = tokio::spawn(async move {
+            let (mut socket, _) = sink_listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            let size = socket.read(&mut request).await.unwrap();
+            String::from_utf8_lossy(&request[..size]).into_owned()
+        });
+
+        let response = ReqwestTransport::new()
+            .send(HttpRequest {
+                method: Method::Get,
+                url: format!("http://{redirect_address}/start"),
+                headers: vec![("x-api-key".into(), "secret-value".into())],
+                body: Body::Empty,
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(response.status, 302);
+        redirect_server.await.unwrap();
+        let sink_result = tokio::time::timeout(Duration::from_millis(200), &mut sink_server).await;
+        sink_server.abort();
+        assert!(
+            sink_result.is_err(),
+            "the cross-origin redirect target must not receive the API key request"
+        );
     }
 
     #[tokio::test]

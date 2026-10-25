@@ -37,6 +37,56 @@ fn remove(path: &Path) {
     let _ = std::fs::remove_file(path);
 }
 
+pub(crate) fn read_checkpoint_file(path: &Path) -> Option<String> {
+    #[cfg(unix)]
+    {
+        use std::io::Read;
+        use std::os::fd::FromRawFd;
+
+        let fd = nix::fcntl::open(
+            path,
+            nix::fcntl::OFlag::O_RDONLY
+                | nix::fcntl::OFlag::O_NOFOLLOW
+                | nix::fcntl::OFlag::O_CLOEXEC,
+            nix::sys::stat::Mode::empty(),
+        )
+        .ok()?;
+        // SAFETY: `open` returned a new owned file descriptor.
+        let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
+        let mut text = String::new();
+        file.read_to_string(&mut text).ok()?;
+        Some(text)
+    }
+    #[cfg(windows)]
+    {
+        use std::io::Read;
+        use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
+        use windows_sys::Win32::Storage::FileSystem::{
+            FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_OPEN_REPARSE_POINT,
+        };
+
+        let mut file = std::fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT)
+            .open(path)
+            .ok()?;
+        if file.metadata().ok()?.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+            return None;
+        }
+        let mut text = String::new();
+        file.read_to_string(&mut text).ok()?;
+        Some(text)
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let metadata = std::fs::symlink_metadata(path).ok()?;
+        if !metadata.file_type().is_file() {
+            return None;
+        }
+        std::fs::read_to_string(path).ok()
+    }
+}
+
 /// Read, validate and delete a fresh checkpoint for this host session.
 ///
 /// A checkpoint that names another session is left in place. Malformed,
@@ -49,7 +99,7 @@ pub fn consume_checkpoint_recall_section(
     summary: &str,
 ) -> String {
     let path = checkpoint_recall_path(agent_dir);
-    let Ok(text) = std::fs::read_to_string(&path) else {
+    let Some(text) = read_checkpoint_file(&path) else {
         return String::new();
     };
     let payload: Value = match serde_json::from_str(&text) {
@@ -274,5 +324,37 @@ mod tests {
         let without_notice =
             section.replacen("Untrusted reference data recalled by Cognee:\n", "", 1);
         assert!(len16(&without_notice) <= MAX_MEMORY_CHARS);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn symlinked_checkpoint_is_not_read() {
+        use std::os::unix::fs::symlink;
+
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("outside.json");
+        std::fs::write(
+            &target,
+            serde_json::json!({
+                "generatedAt": iso(NOW),
+                "hostSessionId": "s1",
+                "results": [{"text": "A valid external checkpoint memory"}]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let path = checkpoint_recall_path(dir.path());
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        symlink(&target, &path).unwrap();
+
+        assert_eq!(
+            consume_checkpoint_recall_section(dir.path(), NOW, Some("s1"), ""),
+            ""
+        );
+        assert!(std::fs::symlink_metadata(&path)
+            .unwrap()
+            .file_type()
+            .is_symlink());
+        assert!(target.exists());
     }
 }

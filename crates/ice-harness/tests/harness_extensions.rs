@@ -17,7 +17,7 @@ use ice_harness::extension::{
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
 use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery, SessionMetadata};
 use ice_harness::session::{DefaultIdGenerator, Session};
-use ice_harness::types::{AgentHarnessOptions, HarnessTool};
+use ice_harness::types::{AgentHarnessOptions, CompactionSettings, HarnessTool};
 use ice_tools::{ExecutionToolContext, InMemoryExecutionEnv};
 
 struct RecordingProvider {
@@ -146,6 +146,13 @@ async fn append_history(session: &Session) {
 }
 
 async fn harness(steps: Vec<FauxStep>) -> (AgentHarness, Arc<RecordingProvider>, Arc<Probe>) {
+    harness_with_compaction_settings(steps, CompactionSettings::default()).await
+}
+
+async fn harness_with_compaction_settings(
+    steps: Vec<FauxStep>,
+    compaction: CompactionSettings,
+) -> (AgentHarness, Arc<RecordingProvider>, Arc<Probe>) {
     let session = session();
     append_history(&session).await;
     let script = FauxScript::new();
@@ -162,6 +169,7 @@ async fn harness(steps: Vec<FauxStep>) -> (AgentHarness, Arc<RecordingProvider>,
         model,
         session,
         models: vec![provider.clone() as Arc<dyn Provider>],
+        compaction,
         allow_existing_session: true,
         system_prompt: Some("BASE".into()),
         ..AgentHarnessOptions::default()
@@ -255,6 +263,37 @@ async fn cancelled_manual_compaction_is_declined() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cancelled_threshold_checkpoint_stops_before_the_provider_request() {
+    let (harness, provider, probe) = harness(vec![FauxStep::text("must not run")]).await;
+    harness
+        .set_coding_compaction_policy(Some(CodingAgentCompactionPolicy {
+            threshold_percent: 1.0,
+            keep_recent_tokens: 50,
+            ..CodingAgentCompactionPolicy::default()
+        }))
+        .await
+        .unwrap();
+    *probe.decision.lock().unwrap() = Some(BeforeCompactDecision::Cancel);
+
+    let result = harness
+        .prompt_text("threshold trigger", Vec::new())
+        .await
+        .unwrap();
+
+    assert!(
+        matches!(
+            result.outcome,
+            ice_harness::agent_harness::HarnessRunOutcome::Failed { ref error, .. }
+                if error.code == "compaction_failed"
+        ),
+        "unexpected run outcome: {:?}",
+        result.outcome
+    );
+    assert!(provider.system_prompts.lock().unwrap().is_empty());
+    assert!(compaction_entries(&harness).await.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn before_run_adds_transient_prompt_text_and_transform_sees_compaction_time() {
     let (harness, provider, probe) = harness(vec![FauxStep::text("done")]).await;
     *probe.decision.lock().unwrap() = Some(BeforeCompactDecision::Replace(CompactionOverride {
@@ -323,4 +362,91 @@ async fn boundary_request_compacts_mid_run_and_pauses() {
                 && *from_extension
                 && summary == "MIDRUN CHECKPOINT"
         ));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cancelled_extension_midrun_checkpoint_stops_before_the_next_request() {
+    let steps = vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "missing.txt"})),
+        FauxStep::text("must not run after cancelled checkpoint"),
+    ];
+    let (harness, provider, probe) = harness(steps).await;
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    let tool_context = ExecutionToolContext::new(env, Some(mut_env));
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &tool_context,
+                None,
+            ))],
+            Some(vec!["read".to_string()]),
+        )
+        .await
+        .unwrap();
+    *probe.boundary.lock().unwrap() = Some(BoundaryDecision::Compact { pause: false });
+    *probe.decision.lock().unwrap() = Some(BeforeCompactDecision::Cancel);
+
+    let result = harness.prompt_text("go", Vec::new()).await.unwrap();
+
+    assert!(
+        matches!(
+            result.outcome,
+            ice_harness::agent_harness::HarnessRunOutcome::Failed { ref error, .. }
+                if error.code == "compaction_failed"
+        ),
+        "unexpected run outcome: {:?}",
+        result.outcome
+    );
+    assert_eq!(provider.system_prompts.lock().unwrap().len(), 1);
+    assert!(compaction_entries(&harness).await.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn extension_boundary_can_compact_when_generic_compaction_is_disabled() {
+    let steps = vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "missing.txt"})),
+        FauxStep::text("must not run after extension pause"),
+    ];
+    let (harness, provider, probe) = harness_with_compaction_settings(
+        steps,
+        CompactionSettings {
+            enabled: false,
+            ..CompactionSettings::default()
+        },
+    )
+    .await;
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    let tool_context = ExecutionToolContext::new(env, Some(mut_env));
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &tool_context,
+                None,
+            ))],
+            Some(vec!["read".to_string()]),
+        )
+        .await
+        .unwrap();
+    *probe.boundary.lock().unwrap() = Some(BoundaryDecision::Compact { pause: true });
+    *probe.decision.lock().unwrap() = Some(BeforeCompactDecision::Replace(CompactionOverride {
+        summary: "EXTENSION CHECKPOINT".into(),
+        retained_tail: Some(Vec::new()),
+        details: None,
+    }));
+
+    let result = harness.prompt_text("go", Vec::new()).await.unwrap();
+
+    assert!(matches!(
+        result.outcome,
+        ice_harness::agent_harness::HarnessRunOutcome::Failed { ref error, .. }
+            if error.code == "compaction_paused"
+    ));
+    assert_eq!(provider.system_prompts.lock().unwrap().len(), 1);
+    let entries = compaction_entries(&harness).await;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].summary, "EXTENSION CHECKPOINT");
 }

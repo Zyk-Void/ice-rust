@@ -75,6 +75,27 @@ pub fn sha256_hex(text: &str) -> String {
         .collect()
 }
 
+fn pending_record_path(directory: &Path, operation_id: &str) -> std::io::Result<PathBuf> {
+    let Some((created_at, hash)) = operation_id.split_once('-') else {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Invalid pending remember operation ID",
+        ));
+    };
+    if created_at.is_empty()
+        || !created_at.bytes().all(|byte| byte.is_ascii_digit())
+        || created_at.parse::<u64>().is_err()
+        || hash.len() != 16
+        || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Invalid pending remember operation ID",
+        ));
+    }
+    Ok(directory.join(format!("{operation_id}.json")))
+}
+
 /// `createPendingRemember`. The operation id is `<createdAt>-<hash16>`;
 /// dataset and node set are not part of it.
 pub fn create_pending_remember(
@@ -120,10 +141,11 @@ pub fn enqueue_pending_remember(
     record: &PendingRemember,
     limit: usize,
 ) -> std::io::Result<bool> {
+    let path = pending_record_path(directory, &record.operation_id)?;
     create_private_dir(directory)?;
     let files = json_files(directory)?;
     let filename = format!("{}.json", record.operation_id);
-    if directory.join(&filename).exists() {
+    if path.exists() {
         return Ok(true);
     }
     if files.len() >= limit {
@@ -143,7 +165,7 @@ pub fn read_pending_remember(directory: &Path) -> Vec<PendingRemember> {
     files
         .into_iter()
         .filter_map(|file| {
-            let text = std::fs::read_to_string(directory.join(file)).ok()?;
+            let text = std::fs::read_to_string(directory.join(&file)).ok()?;
             let value: Value = serde_json::from_str(&text).ok()?;
             // Shallow type checks only; extra keys are allowed.
             let object = value.as_object()?;
@@ -157,7 +179,10 @@ pub fn read_pending_remember(directory: &Path) -> Vec<PendingRemember> {
             {
                 return None;
             }
-            serde_json::from_value(value).ok()
+            let record: PendingRemember = serde_json::from_value(value).ok()?;
+            let expected_file = format!("{}.json", record.operation_id);
+            (pending_record_path(directory, &record.operation_id).is_ok() && file == expected_file)
+                .then_some(record)
         })
         .collect()
 }
@@ -168,6 +193,7 @@ pub fn update_pending_remember_state(
     operation_id: &str,
     state: PendingState,
 ) -> std::io::Result<()> {
+    let path = pending_record_path(directory, operation_id)?;
     let Some(mut record) = read_pending_remember(directory)
         .into_iter()
         .find(|record| record.operation_id == operation_id)
@@ -175,15 +201,13 @@ pub fn update_pending_remember_state(
         return Ok(());
     };
     record.state = state;
-    write_private_file_atomic(
-        &directory.join(format!("{operation_id}.json")),
-        &record_line(&record),
-    )
+    write_private_file_atomic(&path, &record_line(&record))
 }
 
 /// Delete one record; a missing file is not an error.
 pub fn remove_pending_remember(directory: &Path, operation_id: &str) -> std::io::Result<()> {
-    match std::fs::remove_file(directory.join(format!("{operation_id}.json"))) {
+    let path = pending_record_path(directory, operation_id)?;
+    match std::fs::remove_file(path) {
         Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error),
         _ => Ok(()),
     }
@@ -349,6 +373,36 @@ mod tests {
         assert_eq!(read_pending_remember(pending).len(), 4);
         assert!(pending.join("0-bad.json").exists());
         assert!(read_pending_remember(&pending.join("missing")).is_empty());
+    }
+
+    #[test]
+    fn pending_record_ids_cannot_escape_the_queue_directory() {
+        let root = tempfile::tempdir().unwrap();
+        let pending = root.path().join("pending");
+        std::fs::create_dir_all(&pending).unwrap();
+        let victim = root.path().join("victim.json");
+        std::fs::write(&victim, "keep").unwrap();
+        std::fs::write(
+            pending.join("record.json"),
+            json!({
+                "operationId": "../victim",
+                "contentHash": "hash",
+                "dataset": "ice",
+                "nodeSet": "user_context",
+                "createdAt": 1,
+                "state": "pending",
+                "text": "fact"
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        assert!(read_pending_remember(&pending).is_empty());
+        assert!(
+            update_pending_remember_state(&pending, "../victim", PendingState::Uncertain).is_err()
+        );
+        assert!(remove_pending_remember(&pending, "../victim").is_err());
+        assert_eq!(std::fs::read_to_string(victim).unwrap(), "keep");
     }
 
     #[test]

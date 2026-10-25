@@ -70,6 +70,16 @@ fn basename(path: &Path) -> Option<String> {
         .map(|name| name.to_string_lossy().into_owned())
 }
 
+fn is_plain_session_id(session_id: &str) -> bool {
+    !session_id.is_empty()
+        && !session_id.contains('/')
+        && !session_id.contains('\\')
+        && !session_id.contains('\0')
+        && Path::new(session_id)
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy() == session_id)
+}
+
 /// `readDreamRecord`.
 pub fn read_dream_record(path: &Path) -> Option<DreamRecord> {
     let parsed: Value = serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()?;
@@ -121,8 +131,9 @@ pub fn read_dream_record(path: &Path) -> Option<DreamRecord> {
     })
 }
 
-fn scoped_dream_path(directory: &Path, session_id: &str, dataset: &str) -> PathBuf {
-    directory.join(format!("{session_id}.{}.json", sha256_hex(dataset)))
+fn scoped_dream_path(directory: &Path, session_id: &str, dataset: &str) -> Option<PathBuf> {
+    is_plain_session_id(session_id)
+        .then(|| directory.join(format!("{session_id}.{}.json", sha256_hex(dataset))))
 }
 
 /// `dreamLedgerPath`: `None` for a file name that is not a plain basename
@@ -132,6 +143,9 @@ pub fn dream_ledger_path(
     session_id: &str,
     ledger_file: Option<&str>,
 ) -> Option<PathBuf> {
+    if !is_plain_session_id(session_id) {
+        return None;
+    }
     let file = ledger_file
         .map(str::to_string)
         .unwrap_or_else(|| format!("{session_id}.json"));
@@ -172,13 +186,14 @@ pub fn read_dream_record_for_dataset(
     session_id: &str,
     dataset: &str,
 ) -> Option<DreamRecord> {
-    if let Some(scoped) = read_dream_record(&scoped_dream_path(directory, session_id, dataset)) {
+    let scoped_path = scoped_dream_path(directory, session_id, dataset)?;
+    if let Some(scoped) = read_dream_record(&scoped_path) {
         if scoped.dataset == dataset {
             return Some(scoped);
         }
     }
-    read_dream_record(&directory.join(format!("{session_id}.json")))
-        .filter(|legacy| legacy.dataset == dataset)
+    let legacy_path = dream_ledger_path(directory, session_id, None)?;
+    read_dream_record(&legacy_path).filter(|legacy| legacy.dataset == dataset)
 }
 
 /// A held `<path>.lock` directory; removed on drop.
@@ -244,7 +259,9 @@ pub fn mark_dream_captured(
     let Some(legacy_path) = dream_ledger_path(directory, session_id, None) else {
         return Ok(());
     };
-    let scoped_path = scoped_dream_path(directory, session_id, dataset);
+    let Some(scoped_path) = scoped_dream_path(directory, session_id, dataset) else {
+        return Ok(());
+    };
     let mut path = if scoped_path.exists() {
         scoped_path.clone()
     } else {
@@ -540,6 +557,24 @@ mod tests {
         );
         assert!(!dir.path().join("s.json.lock").exists());
         mark_dream_captured(dir.path(), "../bad", "a", 1.0).unwrap();
+    }
+
+    #[test]
+    fn dataset_lookup_rejects_session_ids_that_escape_the_ledger_directory() {
+        let root = tempfile::tempdir().unwrap();
+        let ledger_dir = root.path().join("dream");
+        std::fs::create_dir_all(&ledger_dir).unwrap();
+        let outside = root
+            .path()
+            .join(format!("outside.{}.json", sha256_hex("dataset")));
+        std::fs::write(
+            &outside,
+            r#"{"sessionId":"../outside","dataset":"dataset","capturedAt":1}"#,
+        )
+        .unwrap();
+
+        assert!(read_dream_record_for_dataset(&ledger_dir, "../outside", "dataset").is_none());
+        assert!(outside.exists());
     }
 
     #[test]

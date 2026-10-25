@@ -33,14 +33,18 @@ pub struct CompileInput {
     pub user_requests: Option<Vec<String>>,
 }
 
-/// The first `[header]` occurrence anywhere, up to the next known header at a
-/// line start or the brief separator.
+/// The first `[header]` at a line start in the structured section, up to the
+/// next known header or the brief separator.
 fn section_of(text: &str, header: &str) -> String {
     let tag = format!("[{header}]");
-    let Some(start) = text.find(&tag) else {
+    let structured_end = text.find(SEPARATOR).unwrap_or(text.len());
+    let structured = &text[..structured_end];
+    let Some(start) = structured.match_indices(&tag).find_map(|(index, _)| {
+        (index == 0 || structured.as_bytes().get(index - 1) == Some(&b'\n')).then_some(index)
+    }) else {
         return String::new();
     };
-    let after = &text[start..];
+    let after = &structured[start..];
     let mut candidates: Vec<usize> = HEADER_NAMES
         .iter()
         .filter(|name| **name != header)
@@ -344,6 +348,14 @@ mod tests {
             section_items("[X]\n- one\n  two\n- three"),
             vec!["one two", "three"]
         );
+    }
+
+    #[test]
+    fn section_of_ignores_header_text_inside_list_items_and_the_brief() {
+        let text = "[User Requests]\n- request [Findings]\n- [Findings]\n- body\n\n---\n\n[Findings]\n- from the brief";
+        assert_eq!(section_of(text, "Findings"), "");
+        let text = "[Findings]\n- valid\n\n---\n\n[Findings]\n- from the brief";
+        assert_eq!(section_of(text, "Findings"), "[Findings]\n- valid");
     }
 
     #[test]

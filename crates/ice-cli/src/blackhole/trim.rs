@@ -14,10 +14,14 @@ const TAIL_CHARS: usize = 1500;
 
 /// Timestamp of the newest compaction entry on the branch.
 pub fn latest_compaction_time(entries: &[Entry]) -> Option<i64> {
-    entries.iter().rev().find_map(|entry| match entry {
-        Entry::Compaction(compaction) => Some(compaction.base.timestamp),
-        _ => None,
-    })
+    entries
+        .iter()
+        .filter_map(|entry| match entry {
+            Entry::Compaction(compaction) => Some((compaction.base.seq, compaction.base.timestamp)),
+            _ => None,
+        })
+        .max_by_key(|(seq, _)| *seq)
+        .map(|(_, timestamp)| timestamp)
 }
 
 fn trim_text(text: &str, budget: usize, marker: &str) -> String {
@@ -102,6 +106,7 @@ pub fn trim_kept_tool_results(
 mod tests {
     use super::*;
     use ice_ai::types::{TextContent, TextContentType, ToolResultMessage};
+    use ice_harness::session::types::{CompactionEntry, EntryBase};
     use serde_json::json;
 
     fn result(texts: &[String], timestamp: i64) -> AgentMessage {
@@ -166,5 +171,25 @@ mod tests {
     #[test]
     fn latest_compaction_time_reads_the_newest_entry() {
         assert_eq!(latest_compaction_time(&[]), None);
+        let compaction = |seq, timestamp| {
+            Entry::Compaction(CompactionEntry {
+                base: EntryBase {
+                    entry_type: "compaction".into(),
+                    id: format!("c{seq}"),
+                    seq,
+                    parent_id: None,
+                    timestamp,
+                },
+                summary: String::new(),
+                retained_tail: Vec::new(),
+                tokens_before: 0,
+                details: None,
+                usage: None,
+            })
+        };
+        assert_eq!(
+            latest_compaction_time(&[compaction(2, 200), compaction(3, 50), compaction(1, 100),]),
+            Some(50)
+        );
     }
 }

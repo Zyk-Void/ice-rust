@@ -208,12 +208,13 @@ pub fn format_active_goal_section(entries: &[Entry]) -> String {
             .unwrap_or_default();
         TERMINAL_GOAL_STATUSES.contains(&status.as_str())
     };
-    let focused_index = goals
-        .iter()
-        .position(|goal| match (&focused_id, field(goal, "id")) {
-            (Some(id), Value::String(goal_id)) => goal_id == id,
-            _ => false,
-        });
+    let focused_index =
+        goals
+            .iter()
+            .position(|goal| match (&focused_id, str_trim(field(goal, "id"))) {
+                (Some(id), Some(goal_id)) => goal_id == *id,
+                _ => false,
+            });
     let focused_index = focused_index.filter(|index| !is_terminal(goals[*index]));
     let mut chosen: Vec<(usize, bool)> = Vec::new();
     if let Some(index) = focused_index {
@@ -927,7 +928,7 @@ pub(crate) mod tests {
                     "focusedGoalId": " g2 ",
                     "goals": [
                         {"id":"g1","objective":"Old","status":"completed"},
-                        {"id":"g2","objective":"Ship  it","status":"active","approved":true,
+                        {"id":" g2 ","objective":"Ship  it","status":"active","approved":true,
                          "runsUsed":1,"maxRuns":3,"scopeFiles":["a.rs",2,"b.rs"],
                          "taskList":{"tasks":[{"title":"one","status":"complete"},{"title":"two","status":"blocked"},{"title":"three"}]},
                          "receipt":{"status":"passed"}},

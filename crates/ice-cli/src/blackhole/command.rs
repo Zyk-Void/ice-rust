@@ -189,33 +189,46 @@ pub fn apply_setting(
             mid_run_compaction: MidRunCompaction::parse(value),
             ..ConfigPatch::default()
         },
-        // `Number.parseInt("85%")`: leading digits only.
-        "threshold" => ConfigPatch {
-            compact_after_percent: Some(
-                value
-                    .trim()
-                    .chars()
-                    .take_while(char::is_ascii_digit)
-                    .collect::<String>()
-                    .parse::<f64>()
-                    .unwrap_or(f64::NAN),
-            ),
-            ..ConfigPatch::default()
-        },
+        "threshold" => {
+            let text = value.trim();
+            let number = text.strip_suffix('%').unwrap_or(text);
+            let Some(threshold) = number
+                .parse::<f64>()
+                .ok()
+                .filter(|value| value.is_finite() && (1.0..=99.0).contains(value))
+            else {
+                return Some(Err(
+                    "Blackhole threshold must be a number from 1 to 99".into()
+                ));
+            };
+            ConfigPatch {
+                compact_after_percent: Some(threshold),
+                ..ConfigPatch::default()
+            }
+        }
         "tail-behavior" => ConfigPatch {
             tail_behavior: TailBehavior::parse(value),
             ..ConfigPatch::default()
         },
         "trim-kept-tool-results" => ConfigPatch {
-            trim_kept_tool_results: Some(value == "true"),
+            trim_kept_tool_results: Some(match parse_setting_boolean(id, value) {
+                Ok(value) => value,
+                Err(error) => return Some(Err(error)),
+            }),
             ..ConfigPatch::default()
         },
         "refine" => ConfigPatch {
-            refine: Some(value == "true"),
+            refine: Some(match parse_setting_boolean(id, value) {
+                Ok(value) => value,
+                Err(error) => return Some(Err(error)),
+            }),
             ..ConfigPatch::default()
         },
         "memory" => ConfigPatch {
-            memory: Some(value == "true"),
+            memory: Some(match parse_setting_boolean(id, value) {
+                Ok(value) => value,
+                Err(error) => return Some(Err(error)),
+            }),
             ..ConfigPatch::default()
         },
         _ => return Some(Err(format!("Unknown Blackhole setting {id}"))),
@@ -225,6 +238,14 @@ pub fn apply_setting(
             .map(|_| format!("Blackhole {id}: {value}"))
             .map_err(|error| format!("Could not save Blackhole config: {error}")),
     )
+}
+
+fn parse_setting_boolean(id: &str, value: &str) -> Result<bool, String> {
+    match value {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        _ => Err(format!("Invalid value for Blackhole setting {id}")),
+    }
 }
 
 #[cfg(test)]
@@ -292,13 +313,44 @@ mod tests {
                 .is_ok()
         );
         assert!(
+            apply_setting(dir.path(), &no_env, "blackhole.threshold", "12.5%")
+                .unwrap()
+                .is_ok()
+        );
+        assert!(
+            apply_setting(dir.path(), &no_env, "blackhole.threshold", "")
+                .unwrap()
+                .is_err()
+        );
+        assert!(
+            apply_setting(dir.path(), &no_env, "blackhole.threshold", "not a percent")
+                .unwrap()
+                .is_err()
+        );
+        assert!(
             apply_setting(dir.path(), &no_env, "blackhole.refine", "true")
                 .unwrap()
                 .is_ok()
         );
+        let before_invalid_updates = load_config_with(dir.path(), &no_env, &mut |_| {});
+        for key in [
+            "blackhole.trim-kept-tool-results",
+            "blackhole.refine",
+            "blackhole.memory",
+        ] {
+            assert!(apply_setting(dir.path(), &no_env, key, "tru")
+                .unwrap()
+                .is_err());
+        }
         let config = load_config_with(dir.path(), &no_env, &mut |_| {});
-        assert_eq!(config.compact_after_percent, 40.0);
+        assert_eq!(config.compact_after_percent, 12.5);
         assert!(config.refine);
+        assert_eq!(
+            config.trim_kept_tool_results,
+            before_invalid_updates.trim_kept_tool_results
+        );
+        assert_eq!(config.refine, before_invalid_updates.refine);
+        assert_eq!(config.memory, before_invalid_updates.memory);
         assert!(apply_setting(dir.path(), &no_env, "theme", "dark").is_none());
     }
 }

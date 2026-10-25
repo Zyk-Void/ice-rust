@@ -3279,6 +3279,28 @@ impl AgentHarness {
             .map_err(session_to_harness_err)
     }
 
+    /// The newest durable compaction on this lane, without loading its full
+    /// branch history. Context transforms run before every provider request.
+    async fn latest_compaction_at(&self) -> HarnessResult<Option<i64>> {
+        let query = EntryQuery {
+            entry_type: Some("compaction"),
+            order: Some(EntryOrder::NewestFirst),
+            limit: Some(1),
+            ..Default::default()
+        };
+        self.session
+            .view(&self.lane)
+            .find_entry_on_branch(&query, &BranchBounds::default())
+            .await
+            .map(|entry| {
+                entry.and_then(|entry| match entry {
+                    Entry::Compaction(compaction) => Some(compaction.base.timestamp),
+                    _ => None,
+                })
+            })
+            .map_err(session_to_harness_err)
+    }
+
     /// Build an async, product-summary-only completion callback. Unlike the
     /// agent-loop bridge this does not use `block_in_place`, so it is safe on
     /// current-thread runtimes. Coding-summary validation still owns the stable
@@ -4102,17 +4124,7 @@ impl AgentHarness {
                     Some(base) => base(messages, signal).await,
                     None => messages,
                 };
-                let latest_compaction_at =
-                    harness
-                        .branch_path_oldest_first()
-                        .await
-                        .ok()
-                        .and_then(|path| {
-                            path.iter().rev().find_map(|entry| match entry {
-                                Entry::Compaction(compaction) => Some(compaction.base.timestamp),
-                                _ => None,
-                            })
-                        });
+                let latest_compaction_at = harness.latest_compaction_at().await.ok().flatten();
                 for extension in &extensions {
                     if let Some(next) = extension.transform_context(&messages, latest_compaction_at)
                     {
@@ -4367,7 +4379,6 @@ impl AgentHarness {
                             .await
                         };
                         match compacted {
-                            Err(error) if error.is_cancelled() => {}
                             Ok(_) if signal.is_cancelled() => {
                                 return self
                                     .finish_product_compaction_failure(
@@ -4716,9 +4727,10 @@ impl AgentHarness {
                 let compaction_signal = signal.clone();
                 let compaction_run_id = run_id.clone();
                 let compaction_error = Arc::clone(&midrun_compaction_error);
-                if settings.enabled
-                    && model.context_window > 0
-                    && (provider.is_some() || coding_policy.is_some())
+                if !snap.extensions.is_empty()
+                    || (settings.enabled
+                        && model.context_window > 0
+                        && (provider.is_some() || coding_policy.is_some()))
                 {
                     let cut_for_hook = Arc::clone(&post_compaction_cut);
                     let pause_for_hook = Arc::clone(&pause_after_product_compaction);
@@ -4762,13 +4774,17 @@ impl AgentHarness {
                                     let tools: Vec<_> = context.tools.iter().map(|tool| tool.schema().clone()).collect();
                                     let input = crate::compaction::tokens::estimate_request_tokens(&context.messages, &context.system_prompt, &tools);
                                     let ceiling = AgentHarness::coding_input_ceiling(&coding_snapshot, &context.messages, &context.system_prompt, &tools, percent);
-                                    policy.enabled && input > ceiling
+                                    policy.enabled && model.context_window > 0 && input > ceiling
                                 },
-                                None => should_compact(
-                                    tokens,
-                                    model.context_window as i64,
-                                    &settings,
-                                ),
+                                None => {
+                                    settings.enabled
+                                        && model.context_window > 0
+                                        && should_compact(
+                                            tokens,
+                                            model.context_window as i64,
+                                            &settings,
+                                        )
+                                }
                             };
                             if !should_compact_now {
                                 return None;
@@ -4833,21 +4849,6 @@ impl AgentHarness {
                                     )
                                     .await
                                 } else {
-                                    let Some(provider) = provider else {
-                                        return None;
-                                    };
-                                    let options = CompactionLlmOptions {
-                                        provider,
-                                        model: model.clone(),
-                                        api_key: None,
-                                        signal: compaction_signal.clone(),
-                                        thinking_level: None,
-                                        retry: None,
-                                        custom_instructions: None,
-                                    };
-                                    if let Some(hooks) = &coding_snapshot.lifecycle_hooks {
-                                        hooks.pre_compact("auto").await;
-                                    }
                                     match AgentHarness::consult_compaction_extensions(
                                         &coding_snapshot,
                                         &preparation,
@@ -4861,13 +4862,42 @@ impl AgentHarness {
                                     .await
                                     {
                                         Some(result) => result,
-                                        None => compact(&preparation, &options).await,
+                                        None => {
+                                            let Some(provider) = provider else {
+                                                AgentHarness::record_product_midrun_compaction_error(
+                                                    &compaction_error,
+                                                    crate::compaction::CompactionError::summarization_failed(
+                                                        "No provider is registered for context compaction",
+                                                    ),
+                                                );
+                                                return None;
+                                            };
+                                            if let Some(hooks) = &coding_snapshot.lifecycle_hooks {
+                                                hooks.pre_compact("auto").await;
+                                            }
+                                            let options = CompactionLlmOptions {
+                                                provider,
+                                                model: model.clone(),
+                                                api_key: None,
+                                                signal: compaction_signal.clone(),
+                                                thinking_level: None,
+                                                retry: None,
+                                                custom_instructions: None,
+                                            };
+                                            compact(&preparation, &options).await
+                                        }
                                     }
                                 }
                             };
                             let result = match compacted {
                                 Ok(result) => result,
-                                Err(error) if error.is_cancelled() => return None,
+                                Err(error) if error.is_cancelled() => {
+                                    AgentHarness::record_product_midrun_compaction_error(
+                                        &compaction_error,
+                                        error,
+                                    );
+                                    return None;
+                                }
                                 Err(error) if coding_policy_enabled => {
                                     AgentHarness::record_product_midrun_compaction_error(
                                         &compaction_error,

@@ -6,7 +6,6 @@
 
 use std::collections::VecDeque;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// Severity of a user notice (`ui.notify` levels).
@@ -18,10 +17,15 @@ pub enum NoticeLevel {
 }
 
 /// Queue of notices from background extension work to the TUI.
+#[derive(Default)]
+struct NoticeMailboxState {
+    attached: bool,
+    pending: VecDeque<(NoticeLevel, String)>,
+}
+
 #[derive(Clone, Default)]
 pub struct NoticeMailbox {
-    attached: Arc<AtomicBool>,
-    pending: Arc<Mutex<VecDeque<(NoticeLevel, String)>>>,
+    state: Arc<Mutex<NoticeMailboxState>>,
 }
 
 impl NoticeMailbox {
@@ -31,36 +35,40 @@ impl NoticeMailbox {
 
     /// Mark an interactive consumer as available.
     pub fn attach(&self) {
-        self.attached.store(true, Ordering::SeqCst);
+        if let Ok(mut state) = self.state.lock() {
+            state.attached = true;
+        }
     }
 
     pub fn detach(&self) {
-        self.attached.store(false, Ordering::SeqCst);
-        if let Ok(mut pending) = self.pending.lock() {
-            pending.clear();
+        if let Ok(mut state) = self.state.lock() {
+            state.attached = false;
+            state.pending.clear();
         }
     }
 
     /// `ctx.hasUI`.
     pub fn has_ui(&self) -> bool {
-        self.attached.load(Ordering::SeqCst)
+        self.state
+            .lock()
+            .map(|state| state.attached)
+            .unwrap_or(false)
     }
 
     /// Queue a notice; dropped when no UI is attached.
     pub fn notify(&self, level: NoticeLevel, text: impl Into<String>) {
-        if !self.has_ui() {
-            return;
-        }
-        if let Ok(mut pending) = self.pending.lock() {
-            pending.push_back((level, text.into()));
+        if let Ok(mut state) = self.state.lock() {
+            if state.attached {
+                state.pending.push_back((level, text.into()));
+            }
         }
     }
 
     /// Take every queued notice in order.
     pub fn drain(&self) -> Vec<(NoticeLevel, String)> {
-        self.pending
+        self.state
             .lock()
-            .map(|mut pending| pending.drain(..).collect())
+            .map(|mut state| state.pending.drain(..).collect())
             .unwrap_or_default()
     }
 }
@@ -258,5 +266,12 @@ mod tests {
         mailbox.notify(NoticeLevel::Info, "x");
         mailbox.detach();
         assert!(mailbox.drain().is_empty());
+        mailbox.attach();
+        assert!(mailbox.drain().is_empty());
+        mailbox.notify(NoticeLevel::Info, "new");
+        assert_eq!(
+            mailbox.drain(),
+            vec![(NoticeLevel::Info, "new".to_string())]
+        );
     }
 }

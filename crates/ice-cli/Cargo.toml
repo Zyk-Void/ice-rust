@@ -73,12 +73,13 @@ windows-sys = { version = "0.59", features = [
     "Win32_System_SystemInformation",
     "Win32_System_Threading",
     "Win32_System_DataExchange",
+    "Win32_Storage_FileSystem",
     "Win32_UI_Shell",
 ] }
 
 [target.'cfg(unix)'.dependencies]
 # `nix::sys::signal::raise` for the Ctrl+Z suspend (`app.suspend`).
-nix = { version = "0.29", features = ["signal"] }
+nix = { version = "0.29", features = ["signal", "fs"] }
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]

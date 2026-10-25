@@ -493,6 +493,12 @@ impl BrowseClient {
         top_k: Option<u32>,
         signal: Option<&CancellationToken>,
     ) -> Result<Vec<SearchResult>, CogneeError> {
+        if !BROWSE_SEARCH_TYPES.contains(&search_type) {
+            return Err(CogneeError::new(
+                CogneeErrorKind::InvalidRequest,
+                "Unsupported Cognee browse search type",
+            ));
+        }
         let http = HttpRequest {
             method: Method::Post,
             url: build_url(&self.base_url, "/api/v1/search")?,
@@ -763,6 +769,18 @@ mod tests {
             serde_json::from_str::<Value>(body).unwrap(),
             json!({"searchType":"CHUNKS","datasets":["ice"],"query":"q","topK":10,"onlyContext":true})
         );
+    }
+
+    #[tokio::test]
+    async fn search_rejects_types_outside_the_context_only_allowlist() {
+        let transport = Arc::new(FakeTransport::default());
+        let client = browse(transport.clone());
+        let error = client
+            .search("q", "GRAPH_COMPLETION_COT", "ice", None, None)
+            .await
+            .unwrap_err();
+        assert_eq!(error.kind, CogneeErrorKind::InvalidRequest);
+        assert!(transport.sent().is_empty());
     }
 
     #[test]

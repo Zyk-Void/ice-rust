@@ -212,8 +212,15 @@ fn parse_url(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, Strin
         return Err(format!("{name} must be a nonempty URL"));
     }
     match reqwest::Url::parse(text.trim()) {
-        Ok(url) if url.scheme() == "http" || url.scheme() == "https" => {}
-        _ => return Err(format!("{name} must be an HTTP or HTTPS URL")),
+        Ok(url)
+            if (url.scheme() == "http" || url.scheme() == "https")
+                && url.username().is_empty()
+                && url.password().is_none() => {}
+        _ => {
+            return Err(format!(
+                "{name} must be an HTTP or HTTPS URL without embedded credentials"
+            ));
+        }
     }
     let trimmed = text.trim();
     Ok(Some(
@@ -749,6 +756,20 @@ mod tests {
         // The TypeScript ICE_* names are never read.
         let config = resolve_config(None, &env(&[("ICE_COGNEE_ENABLED", "0")])).unwrap();
         assert!(config.enabled);
+    }
+
+    #[test]
+    fn base_url_rejects_embedded_credentials() {
+        assert!(resolve_config(
+            None,
+            &env(&[(ENV_BASE_URL, "http://user:password@127.0.0.1:8211")])
+        )
+        .is_err());
+        assert!(resolve_config(
+            None,
+            &env(&[(ENV_BASE_URL, "https://:password@example.test")])
+        )
+        .is_err());
     }
 
     #[test]

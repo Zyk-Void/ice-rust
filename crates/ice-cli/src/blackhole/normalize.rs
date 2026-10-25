@@ -146,13 +146,41 @@ pub fn first_line(text: &str, max: usize) -> String {
 
 /// First case-insensitive occurrence of `term` with `radius` units of context.
 pub fn snippet(text: &str, term: &str, radius: usize) -> Option<String> {
-    let lower_text = text.to_lowercase();
+    let mut lower_text = String::new();
+    let mut spans = Vec::new();
+    let mut original_units = 0;
+    for ch in text.chars() {
+        let lower_start = lower_text.len();
+        lower_text.extend(ch.to_lowercase());
+        let lower_end = lower_text.len();
+        let original_end = original_units + ch.len_utf16();
+        spans.push((lower_start, lower_end, original_units, original_end));
+        original_units = original_end;
+    }
     let lower_term = term.to_lowercase();
     let byte = lower_text.find(&lower_term)?;
-    let index = len16(&lower_text[..byte]);
     let total = len16(text);
+    let match_end = byte + lower_term.len();
+    let index = if lower_term.is_empty() {
+        0
+    } else {
+        spans
+            .iter()
+            .find(|(start, end, _, _)| *start <= byte && byte < *end)
+            .map(|(_, _, original_start, _)| *original_start)
+            .unwrap_or(total)
+    };
+    let match_end = if lower_term.is_empty() {
+        index
+    } else {
+        spans
+            .iter()
+            .find(|(start, end, _, _)| *start < match_end && match_end <= *end)
+            .map(|(_, _, _, original_end)| *original_end)
+            .unwrap_or(total)
+    };
     let start = index.saturating_sub(radius);
-    let end = (index + len16(term) + radius).min(total);
+    let end = (match_end + radius).min(total);
     let prefix = if start > 0 { "..." } else { "" };
     let suffix = if end < total { "..." } else { "" };
     Some(format!("{prefix}{}{suffix}", slice16(text, start, end)))
@@ -632,6 +660,14 @@ mod tests {
             format!("...{}needle{}...", "x".repeat(10), "y".repeat(10))
         );
         assert_eq!(snippet("abc", "z", 5), None);
+    }
+
+    #[test]
+    fn snippet_maps_expanding_lowercase_matches_to_original_offsets() {
+        assert_eq!(
+            snippet("İ target", "TARGET", 0).as_deref(),
+            Some("...target")
+        );
     }
 
     #[test]

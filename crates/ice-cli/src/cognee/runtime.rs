@@ -1733,25 +1733,21 @@ impl CogneeRuntime {
         }
     }
 
-    /// `/cognee improve [now]`: bypasses the automatic gates.
+    /// `/cognee improve [now]`: bypasses automatic scheduling while enabled.
     pub async fn manual_improve(&self) {
         self.ensure_loaded();
-        let (client, session_id, dataset) = {
-            let state = self.state();
-            (
-                state.client.clone(),
-                state.session_id.clone(),
-                state.active_dataset(),
-            )
-        };
-        let (Some(client), Some(session_id)) = (client, session_id) else {
-            self.notify(NoticeLevel::Warning, "Cognee improve: no session/client");
-            return;
-        };
-        if self.offline {
+        let Some(client) = self.live_client() else {
             self.notify(NoticeLevel::Warning, self.disabled_message());
             return;
-        }
+        };
+        let (session_id, dataset) = {
+            let state = self.state();
+            (state.session_id.clone(), state.active_dataset())
+        };
+        let Some(session_id) = session_id else {
+            self.notify(NoticeLevel::Warning, "Cognee improve: no session");
+            return;
+        };
         self.state().last_improve_at = 0;
         match client
             .improve(Some(&dataset), &[session_id], CallOptions::default())
@@ -2118,7 +2114,7 @@ impl CogneeRuntime {
 
     fn clear_checkpoint_recall_for_session(&self, host_session_id: &str) {
         let path = self.checkpoint_recall_path();
-        let Ok(text) = std::fs::read_to_string(&path) else {
+        let Some(text) = crate::blackhole::checkpoint_recall::read_checkpoint_file(&path) else {
             return;
         };
         if let Ok(existing) = serde_json::from_str::<Value>(&text) {
@@ -2779,6 +2775,39 @@ mod tests {
         );
         rt.wait_for_background().await;
         assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_improve_requires_cognee_enabled_but_not_auto_improve() {
+        let disabled_dir = tempfile::tempdir().unwrap();
+        let disabled_transport = Arc::new(FakeTransport::default());
+        let disabled = runtime(
+            disabled_dir.path(),
+            &disabled_transport,
+            Some(json!({"enabled": false})),
+            false,
+        );
+        disabled.ensure_session_id("host1");
+        disabled.manual_improve().await;
+        assert!(disabled_transport.sent().is_empty());
+
+        let enabled_dir = tempfile::tempdir().unwrap();
+        let enabled_transport = Arc::new(FakeTransport::default());
+        enabled_transport.push(FakeResponse::json(200, json!({})));
+        let enabled = runtime(
+            enabled_dir.path(),
+            &enabled_transport,
+            Some(json!({"enabled": true, "autoImprove": false})),
+            false,
+        );
+        enabled.ensure_session_id("host1");
+        assert!(enabled.is_enabled());
+        assert!(!enabled.config().auto_improve);
+        enabled.manual_improve().await;
+        let requests = enabled_transport.sent();
+        assert_eq!(requests.len(), 1);
+        assert!(requests[0].url.ends_with("/api/v1/improve"));
+        assert_eq!(json_body(&requests[0])["sessionIds"], json!(["ice_host1"]));
     }
 
     #[tokio::test]
