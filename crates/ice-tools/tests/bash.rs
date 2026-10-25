@@ -265,6 +265,7 @@ async fn supports_command_prefix() {
         Some(BashToolOptions {
             command_prefix: Some("value=hello".into()),
             default_timeout: None,
+            max_timeout: None,
             prepare: None,
         }),
     );
@@ -276,4 +277,100 @@ async fn supports_command_prefix() {
         .await
         .expect("ok");
     assert_eq!(text_output(&r), "hello");
+}
+
+fn slow(stdout: &str, delay_ms: u64) -> ShellScript {
+    ShellScript {
+        delay_ms: Some(delay_ms),
+        ..ShellScript::success(stdout)
+    }
+}
+
+#[tokio::test]
+async fn zero_timeout_means_no_timeout() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("quick", ShellScript::success("done"))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(
+        tool,
+        serde_json::json!({ "command": "quick", "timeout": 0 }),
+    )
+    .await
+    .expect("timeout 0 is accepted");
+    assert_eq!(text_output(&r), "done");
+}
+
+#[tokio::test]
+async fn timeout_error_uses_seconds() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("sleepy", slow("partial", 5_000)).await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let err = run_bash(
+        tool,
+        serde_json::json!({ "command": "sleepy", "timeout": 0.05 }),
+    )
+    .await
+    .expect_err("times out");
+    let msg = err_text(&err);
+    assert!(
+        msg.ends_with("Command timed out after 0.05 seconds"),
+        "{msg}"
+    );
+}
+
+#[tokio::test]
+async fn max_timeout_caps_a_longer_model_timeout() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("sleepy", slow("", 5_000)).await;
+    let tool = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            max_timeout: Some(0.05),
+            ..Default::default()
+        }),
+    );
+    let err = run_bash(
+        tool,
+        serde_json::json!({ "command": "sleepy", "timeout": 3600 }),
+    )
+    .await
+    .expect_err("the host ceiling wins");
+    assert!(
+        err_text(&err).contains("Command timed out after 0.05 seconds"),
+        "{}",
+        err_text(&err)
+    );
+}
+
+#[tokio::test]
+async fn background_and_stdin_requests_are_rejected_without_a_registry() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("server", ShellScript::success("")).await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let err = run_bash(
+        tool.clone(),
+        serde_json::json!({ "command": "server", "stdin": true }),
+    )
+    .await
+    .expect_err("stdin needs background");
+    assert_eq!(
+        err_text(&err),
+        "stdin: true requires run_in_background: true."
+    );
+    let err = run_bash(
+        tool,
+        serde_json::json!({
+            "command": "server",
+            "run_in_background": true,
+            "description": "start server"
+        }),
+    )
+    .await
+    .expect_err("no registry");
+    assert!(
+        err_text(&err).starts_with("Background shells are not available here"),
+        "{}",
+        err_text(&err)
+    );
 }

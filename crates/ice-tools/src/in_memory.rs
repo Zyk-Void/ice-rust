@@ -698,27 +698,25 @@ impl Shell for InMemoryExecutionEnv {
         // Optional delay — honor cancellation during it.
         if let Some(ms) = script.delay_ms {
             let dur = std::time::Duration::from_millis(ms);
-            if let Some(token) = options.cancel {
-                tokio::select! {
-                    _ = tokio::time::sleep(dur) => {}
-                    _ = token.cancelled() => {
-                        return Err(ExecutionError::aborted());
+            let cancel = options.cancel.cloned().unwrap_or_default();
+            let timeout = options.timeout;
+            let deadline = async move {
+                match timeout {
+                    Some(secs) => {
+                        tokio::time::sleep(std::time::Duration::from_secs_f64(secs)).await
                     }
+                    None => std::future::pending::<()>().await,
                 }
-            } else if let Some(secs) = options.timeout {
-                let to = std::time::Duration::from_secs_f64(secs);
-                let sleep = tokio::time::sleep(dur.min(to));
-                tokio::pin!(sleep);
-                let deadline = tokio::time::sleep(to);
-                tokio::pin!(deadline);
-                tokio::select! {
-                    _ = &mut sleep => {}
-                    _ = &mut deadline => {
-                        return Err(ExecutionError::timeout(secs as u64));
-                    }
+            };
+            tokio::select! {
+                biased;
+                _ = cancel.cancelled() => {
+                    return Err(ExecutionError::aborted());
                 }
-            } else {
-                tokio::time::sleep(dur).await;
+                _ = deadline => {
+                    return Err(ExecutionError::timeout(timeout.unwrap_or(0.0) as u64));
+                }
+                _ = tokio::time::sleep(dur) => {}
             }
         } else if let Some(secs) = options.timeout {
             // No delay but a timeout — simulate instant completion; the timeout

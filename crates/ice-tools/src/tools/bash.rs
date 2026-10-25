@@ -40,10 +40,24 @@ const BASH_UPDATE_THROTTLE_MS: u64 = 2_000;
 pub struct BashInput {
     /// Bash command to execute.
     pub command: String,
-    /// Timeout in seconds (optional, no default timeout).
+    /// Timeout in seconds. Omit it or pass 0 for no timeout.
     #[serde(default)]
     pub timeout: Option<f64>,
+    /// Short description of what the command does (5-10 words), shown to the user.
+    #[serde(default)]
+    pub description: Option<String>,
+    /// Start the command as a background shell and return its id immediately.
+    /// Read its output with bash_output and stop it with bash_kill.
+    #[serde(default)]
+    pub run_in_background: Option<bool>,
+    /// Keep the background shell's stdin open so bash_input can write to it.
+    /// Requires run_in_background: true.
+    #[serde(default)]
+    pub stdin: Option<bool>,
 }
+
+/// Largest accepted timeout: the 32-bit signed millisecond timer limit.
+const MAX_TIMEOUT_MS: f64 = 2_147_483_647.0;
 
 /// Structured details for the bash tool. Mirrors TS `BashToolDetails`.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -74,10 +88,15 @@ pub struct BashToolOptions {
     /// Prepended to the command (separated by `\n`) before execution.
     pub command_prefix: Option<String>,
     /// Fallback timeout in seconds applied when the model doesn't pass one.
-    /// pi has no default, but a model that forgets `timeout` can hang the run
-    /// forever (reported as "卡住") — icers injects this at the harness build
-    /// site. A model-supplied timeout still wins.
+    /// ice has no default, but a model that forgets `timeout` can hang the run
+    /// forever, so icers injects this at the harness build site. A
+    /// model-supplied timeout still wins; use `max_timeout` for a limit the
+    /// model cannot raise.
     pub default_timeout: Option<f64>,
+    /// Hard ceiling in seconds. Mirrors TS `maxTimeoutMs`: it replaces an
+    /// omitted or longer requested timeout and leaves a shorter one unchanged,
+    /// so a child agent cannot defeat its host's execution deadline.
+    pub max_timeout: Option<f64>,
     /// Optional async hook that can adjust command, cwd, and environment.
     pub prepare: Option<BashPrepare>,
 }
@@ -142,7 +161,18 @@ impl AgentTool for BashTool {
     ) -> Result<AgentToolResult, AgentError> {
         let input: BashInput = serde_json::from_value(params)
             .map_err(|e| AgentError::Validation(format!("bash input invalid: {e}")))?;
-        validate_timeout(input.timeout)?;
+        let requested = resolve_timeout(input.timeout)?;
+        if input.stdin == Some(true) && input.run_in_background != Some(true) {
+            return Err(AgentError::Tool(
+                "stdin: true requires run_in_background: true.".into(),
+            ));
+        }
+        if input.run_in_background == Some(true) {
+            return Err(AgentError::Tool(
+                "Background shells are not available here; run the command without run_in_background."
+                    .into(),
+            ));
+        }
         let mut execution = BashExecution {
             command: match &self.options.command_prefix {
                 Some(p) => format!("{p}\n{}", input.command),
@@ -156,7 +186,11 @@ impl AgentTool for BashTool {
             prepare(&mut execution).await.map_err(AgentError::Tool)?;
         }
         let command = execution.command;
-        let timeout = input.timeout.or(self.options.default_timeout);
+        let timeout = apply_timeout_limits(
+            requested,
+            self.options.default_timeout,
+            self.options.max_timeout,
+        );
 
         // Initial empty update (mirrors TS `onUpdate?.({ content: [], details: undefined })`).
         emit_update(&on_update, String::new(), None, None);
@@ -273,13 +307,11 @@ impl AgentTool for BashTool {
             if ee.code == ExecutionErrorCode::Timeout {
                 // `timeout` is `Option<f64>` in seconds; `{timeout:?}` used to render
                 // `Some(2.0)`, so the message read "timed out after Some(2.0) seconds".
-                let limit = match timeout {
-                    Some(secs) => format!("after {secs}s"),
-                    None => "".to_string(),
+                let status = match timeout {
+                    Some(secs) => format!("Command timed out after {secs} seconds"),
+                    None => "Command timed out".to_string(),
                 };
-                return Err(AgentError::Tool(append_status(format!(
-                    "Command timed out {limit}"
-                ))));
+                return Err(AgentError::Tool(append_status(status)));
             }
             return Err(AgentError::Tool(ee.to_string()));
         }
@@ -402,23 +434,88 @@ fn build_bash_output(capture: &ShellCaptureResult) -> (String, BashToolDetails) 
     (output_text, details)
 }
 
-/// Validate a timeout (seconds). Mirrors `validateTimeout`.
-fn validate_timeout(timeout: Option<f64>) -> Result<(), AgentError> {
+/// Validate the model's timeout (seconds). Mirrors `resolveTimeoutMs`: an
+/// omitted or zero timeout means "no requested timeout".
+pub(crate) fn resolve_timeout(timeout: Option<f64>) -> Result<Option<f64>, AgentError> {
     let Some(secs) = timeout else {
-        return Ok(());
+        return Ok(None);
     };
-    if !secs.is_finite() || secs <= 0.0 {
+    if secs == 0.0 {
+        return Ok(None);
+    }
+    if !secs.is_finite() || secs < 0.0 {
         return Err(AgentError::Tool(
             "Invalid timeout: must be a finite number of seconds".into(),
         ));
     }
-    let max = 2_147_483_647.0 / 1000.0;
-    if secs > max {
+    if secs * 1000.0 > MAX_TIMEOUT_MS {
         return Err(AgentError::Tool(format!(
-            "Invalid timeout: maximum is {max} seconds"
+            "Invalid timeout: maximum is {} seconds",
+            MAX_TIMEOUT_MS / 1000.0
         )));
     }
-    Ok(())
+    Ok(Some(secs))
+}
+
+/// Combine the validated request with the host fallback and hard ceiling.
+/// The fallback only fills an omitted request; the ceiling caps everything.
+pub(crate) fn apply_timeout_limits(
+    requested: Option<f64>,
+    default_timeout: Option<f64>,
+    max_timeout: Option<f64>,
+) -> Option<f64> {
+    let timeout = requested.or(default_timeout.filter(|t| *t > 0.0));
+    match max_timeout.filter(|m| *m > 0.0) {
+        Some(max) => Some(timeout.map_or(max, |t| t.min(max))),
+        None => timeout,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn zero_or_omitted_timeout_means_none() {
+        assert_eq!(resolve_timeout(None).unwrap(), None);
+        assert_eq!(resolve_timeout(Some(0.0)).unwrap(), None);
+        assert_eq!(resolve_timeout(Some(1.5)).unwrap(), Some(1.5));
+    }
+
+    #[test]
+    fn invalid_timeouts_are_rejected_with_ice_messages() {
+        for bad in [-1.0, f64::NAN, f64::INFINITY] {
+            let err = resolve_timeout(Some(bad)).unwrap_err().to_string();
+            assert!(err.contains("must be a finite number of seconds"), "{err}");
+        }
+        let err = resolve_timeout(Some(2_147_484.0)).unwrap_err().to_string();
+        assert!(err.contains("maximum is 2147483.647 seconds"), "{err}");
+        assert!(resolve_timeout(Some(2_147_483.647)).is_ok());
+    }
+
+    #[test]
+    fn max_timeout_is_a_ceiling_the_model_cannot_raise() {
+        // Omitted request takes the ceiling; longer requests are capped;
+        // shorter requests are kept.
+        assert_eq!(apply_timeout_limits(None, None, Some(30.0)), Some(30.0));
+        assert_eq!(
+            apply_timeout_limits(Some(600.0), None, Some(30.0)),
+            Some(30.0)
+        );
+        assert_eq!(apply_timeout_limits(Some(5.0), None, Some(30.0)), Some(5.0));
+        // The fallback fills an omitted request but is still capped.
+        assert_eq!(
+            apply_timeout_limits(None, Some(120.0), Some(30.0)),
+            Some(30.0)
+        );
+        assert_eq!(apply_timeout_limits(None, Some(120.0), None), Some(120.0));
+        assert_eq!(
+            apply_timeout_limits(Some(600.0), Some(120.0), None),
+            Some(600.0)
+        );
+        // Zero host values mean unset, like TS `maxTimeoutMs || undefined`.
+        assert_eq!(apply_timeout_limits(None, Some(0.0), Some(0.0)), None);
+    }
 }
 
 fn exec_err_to_agent(e: ExecutionError) -> AgentError {

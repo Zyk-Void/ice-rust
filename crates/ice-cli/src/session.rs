@@ -2116,6 +2116,7 @@ pub fn bash_options() -> ice_tools::tools::bash::BashToolOptions {
     BashToolOptions {
         command_prefix: settings.shell_command_prefix.clone(),
         default_timeout: Some(default),
+        max_timeout: None,
         prepare: None,
     }
 }
