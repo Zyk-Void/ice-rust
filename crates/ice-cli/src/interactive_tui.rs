@@ -1951,6 +1951,7 @@ pub async fn interactive_tui(
     let ctx_for_key = ctx.clone();
     let registry_for_key = registry.clone();
     let keybindings_for_key = keybindings.clone();
+    let shells_for_key = reload_context.shells.clone();
     let double_escape_action = crate::settings::load_settings()
         .ok()
         .and_then(|settings| settings.double_escape_action)
@@ -2664,6 +2665,26 @@ pub async fn interactive_tui(
                     &tx_for_key,
                 );
                 continue;
+            }
+
+            // 2c'. Ctrl+B moves running bash calls to the background, as in
+            // ice. With nothing to release it falls through to the editor
+            // (cursor left).
+            if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::BASH_BACKGROUND,
+            ) {
+                let released = shells_for_key.release_foreground();
+                if released > 0 {
+                    let noun = if released == 1 { "command" } else { "commands" };
+                    add_note_message(
+                        &state_for_key.chat_container,
+                        &format!("Moved {released} running bash {noun} to the background."),
+                    );
+                    tui_for_key.request_render(false);
+                    continue;
+                }
             }
 
             // 2d. Tool output expansion, as in ice: Ctrl+O opens the newest

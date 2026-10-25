@@ -134,6 +134,26 @@ pub struct Settings {
     #[serde(default)]
     pub shell_command_prefix: Option<String>,
 
+    /// Whether `bash_input` may write to a background shell without asking:
+    /// `"allow"` or `"ask"` (default). ice's `bashInputApproval`.
+    #[serde(default)]
+    pub bash_input_approval: Option<String>,
+
+    /// Seconds before an automatic alert for a quiet background shell whose
+    /// last line looks like a prompt; 0 disables. Default 30.
+    #[serde(default)]
+    pub bash_prompt_alert_seconds: Option<f64>,
+
+    /// Seconds before an automatic alert for a background shell that has
+    /// produced no output; 0 (default) disables.
+    #[serde(default)]
+    pub bash_silence_alert_seconds: Option<f64>,
+
+    /// Move a foreground bash call to the background once it has run this
+    /// many seconds; unset (default) or 0 never does.
+    #[serde(default)]
+    pub bash_auto_background_seconds: Option<f64>,
+
     /// Proxy URL applied as `HTTP_PROXY` / `HTTPS_PROXY` for icers's own HTTP
     /// clients. upstream's `httpProxy`.
     #[serde(default)]

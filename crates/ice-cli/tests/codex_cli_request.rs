@@ -187,7 +187,26 @@ fn plain_prompt_uses_codex_input_text_items_through_the_cli() {
             "content": [{"type": "input_text", "text": "hey there"}]
         }])
     );
-    assert_eq!(body["tools"].as_array().map(Vec::len), Some(5));
+    // The coding tools plus docs, and the background-shell controls that come
+    // with bash.
+    let names: Vec<&str> = body["tools"]
+        .as_array()
+        .map(|tools| tools.iter().filter_map(|t| t["name"].as_str()).collect())
+        .unwrap_or_default();
+    assert_eq!(
+        names,
+        vec![
+            "read",
+            "bash",
+            "edit",
+            "write",
+            "docs",
+            "bash_output",
+            "bash_kill",
+            "bash_input",
+            "bash_watch"
+        ]
+    );
     assert!(
         output.status.success(),
         "icers failed: {}",

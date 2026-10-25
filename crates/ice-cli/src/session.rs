@@ -422,7 +422,10 @@ pub async fn build_prepared(
     // loaders below (borrowed); clone one branch so both hold a reference.
     let ctx = ExecutionToolContext::new(env_dyn.clone(), Some(mut_env));
 
-    let mut tools = build_tools(&ctx, args);
+    let shells = crate::background_shells::SessionShells::new(
+        &crate::settings::load_settings().unwrap_or_default(),
+    );
+    let mut tools = build_tools(&ctx, args, Some(&shells));
 
     // ---- Extensions (Part B2) ----
     // Load cdylib plugins from the resolved extension dirs, merge their tools
@@ -974,8 +977,10 @@ pub async fn build_prepared(
     // NOT held here (the TUI already owns a `&AgentHarness` / clone at the call
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
+    shells.connect(&harness);
     let reload_context = ReloadContext {
         mcp_tools,
+        shells,
         extension_session: extension_session_cell,
         action_bridge: Arc::new(Mutex::new(Some(Arc::clone(&action_bridge)))),
         tool_context,
@@ -1100,6 +1105,9 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 pub struct ReloadContext {
     /// Session-local MCP tools retained across extension reloads.
     pub mcp_tools: crate::mcp::McpManager,
+    /// The session's background shells and watches, kept across reloads so
+    /// running shells stay reachable from the rebuilt tools.
+    pub shells: Arc<crate::background_shells::SessionShells>,
     /// The live extension-session cell (swapped on reload).
     pub extension_session: ExtensionSessionCell,
     /// The session's plugin-tool context (`cwd` + session id), reused — not
@@ -1748,7 +1756,7 @@ where
     // on top, mirroring `build`.
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = env.clone();
     let tool_ctx = ice_tools::ExecutionToolContext::new(env_dyn.clone(), Some(mut_env));
-    let mut tools = build_tools(&tool_ctx, &effective_args);
+    let mut tools = build_tools(&tool_ctx, &effective_args, Some(&ctx.shells));
     merge_extension_tools(
         &mut tools,
         &extension_session,
@@ -2101,7 +2109,9 @@ fn merge_extension_tools(
 /// Default bash timeout: 120s when the model doesn't pass one (prevents a
 /// forgotten `timeout` from hanging the run forever — the "卡住" report).
 /// `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
-pub fn bash_options() -> ice_tools::tools::bash::BashToolOptions {
+pub fn bash_options(
+    shells: Option<&crate::background_shells::SessionShells>,
+) -> ice_tools::tools::bash::BashToolOptions {
     use ice_tools::tools::bash::BashToolOptions;
     let default = std::env::var("ICERS_BASH_TIMEOUT")
         .ok()
@@ -2116,11 +2126,17 @@ pub fn bash_options() -> ice_tools::tools::bash::BashToolOptions {
     BashToolOptions {
         command_prefix: settings.shell_command_prefix.clone(),
         default_timeout: Some(default),
+        background: shells.map(|s| s.registry()),
+        auto_background_secs: shells.and_then(|s| s.auto_background_secs()),
         ..Default::default()
     }
 }
 
-fn build_tools(ctx: &ExecutionToolContext, args: &Args) -> Vec<HarnessTool> {
+fn build_tools(
+    ctx: &ExecutionToolContext,
+    args: &Args,
+    shells: Option<&crate::background_shells::SessionShells>,
+) -> Vec<HarnessTool> {
     if args.no_tools {
         return Vec::new();
     }
@@ -2148,7 +2164,7 @@ fn build_tools(ctx: &ExecutionToolContext, args: &Args) -> Vec<HarnessTool> {
         ),
         (
             "bash",
-            HarnessTool::new(create_bash_tool(ctx, Some(bash_options()))),
+            HarnessTool::new(create_bash_tool(ctx, Some(bash_options(shells)))),
         ),
         ("edit", HarnessTool::new(create_edit_tool(ctx))),
         ("write", HarnessTool::new(create_write_tool(ctx))),
@@ -2181,6 +2197,13 @@ fn build_tools(ctx: &ExecutionToolContext, args: &Args) -> Vec<HarnessTool> {
     // Allowlist (`--tools`): keep only named built-ins.
     if let Some(allow) = &args.tools {
         all.retain(|(name, _)| allow.iter().any(|a| a == name));
+    }
+    // The background-shell controls come with bash (they are not in the
+    // seven-name built-in set, as in ice); the denylist still applies.
+    if let Some(shells) = shells {
+        if all.iter().any(|(name, _)| *name == "bash") {
+            all.extend(shells.tools());
+        }
     }
     // Denylist (`--exclude-tools`): drop named tools.
     if let Some(deny) = &args.exclude_tools {
@@ -4100,7 +4123,7 @@ mod tests {
         let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
         let mut_env: Arc<dyn ice_tools::MutatingEnv> = env.clone();
         let context = ExecutionToolContext::new(env_dyn, Some(mut_env));
-        let tools = build_tools(&context, &Args::default());
+        let tools = build_tools(&context, &Args::default(), None);
 
         let replay_of = |name: &str| {
             tools
@@ -4133,7 +4156,7 @@ mod tests {
         let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
         let mut_env: Arc<dyn ice_tools::MutatingEnv> = env.clone();
         let context = ExecutionToolContext::new(env_dyn, Some(mut_env));
-        let names: Vec<String> = build_tools(&context, &Args::default())
+        let names: Vec<String> = build_tools(&context, &Args::default(), None)
             .iter()
             .map(|tool| tool.tool.schema().name.clone())
             .collect();

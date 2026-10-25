@@ -218,6 +218,15 @@ impl Keybindings {
             },
         );
         map.insert(
+            "app.bash.background",
+            KeybindingDefinition {
+                // Shares ctrl+b with the editor's cursor-left: the TUI only
+                // claims it while a bash call can move to the background.
+                default_keys: vec![KeyCombo::new(Char('b'), M::CONTROL)],
+                description: Some("Move running bash commands to the background"),
+            },
+        );
+        map.insert(
             "app.tools.collapse",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('o'), M::ALT)],
@@ -1046,6 +1055,7 @@ pub mod keys {
     pub const MODEL_CYCLE_BACKWARD: KeybindingId = "app.model.cycleBackward";
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";
     pub const TOOLS_COLLAPSE: KeybindingId = "app.tools.collapse";
+    pub const BASH_BACKGROUND: KeybindingId = "app.bash.background";
     pub const TOOLS_EXPAND_LAST: KeybindingId = "app.tools.expandLast";
     pub const THINKING_TOGGLE: KeybindingId = "app.thinking.toggle";
     pub const EXTERNAL_EDITOR: KeybindingId = "app.editor.external";

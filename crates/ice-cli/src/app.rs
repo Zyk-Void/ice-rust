@@ -553,6 +553,9 @@ async fn run_inner() -> i32 {
     if let Some(watcher) = dev_watcher {
         let _ = watcher.join();
     }
+    // Background shells run in their own process groups; stop them (and
+    // remove their logs) rather than leaving them behind when icers exits.
+    reload_context.shells.dispose().await;
     drop(reload_context);
     drop(harness);
     if let Some(dev) = dev_cleanup {
