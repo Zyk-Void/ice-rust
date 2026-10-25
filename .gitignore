@@ -19,6 +19,9 @@ target/*
 
 # Static frontend deployment bundle
 .deploy/
+
+# Local visuals workspace
+/zks-visuals/
 .codegraph
 .icers/*
 !.icers/skills/
