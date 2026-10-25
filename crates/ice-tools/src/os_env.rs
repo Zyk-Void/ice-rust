@@ -657,6 +657,18 @@ impl FileSystem for OsExecutionEnv {
             .map_err(|e| io_to_file_error(e, Some(&abs.to_string_lossy())))
     }
 
+    async fn read_link(
+        &self,
+        path: &str,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<PathBuf, FileError> {
+        check_cancel_file(cancel, Some(path))?;
+        let abs = Self::resolve_path(&self.cwd, path);
+        tokio::fs::read_link(&abs)
+            .await
+            .map_err(|e| io_to_file_error(e, Some(&abs.to_string_lossy())))
+    }
+
     async fn exists(
         &self,
         path: &str,

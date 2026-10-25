@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use tokio_util::sync::CancellationToken;
 
-use crate::error::{ExecutionError, FileError};
+use crate::error::{ExecutionError, FileError, FileErrorCode};
 
 /// `file` | `directory` | `symlink`. Mirrors TS `FileKind`.
 ///
@@ -229,6 +229,20 @@ pub trait FileSystem: Send + Sync {
         path: &str,
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError>;
+
+    /// The target of the symlink at `path`, unresolved. Backends without
+    /// symlinks keep the default `not_supported`.
+    async fn read_link(
+        &self,
+        path: &str,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<PathBuf, FileError> {
+        let _ = cancel;
+        Err(
+            FileError::new(FileErrorCode::NotSupported, "symlinks are not supported")
+                .with_path(path),
+        )
+    }
 
     /// `false` ONLY for `not_found`; other errors propagate. Mirrors TS
     /// `exists` (which delegates to `fileInfo`, NOT `access(F_OK)`).
