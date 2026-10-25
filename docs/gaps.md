@@ -51,6 +51,8 @@ The first six gaps have no unported prerequisites:
 
 AI-006: hard output authority ported in `ice-ai` (`SimpleStreamOptions::hard_max_output_tokens`), but no caller sets it yet: it takes effect once bounded agent/subagent finalization supplies the runtime allowance. Remaining: toolChoice, service tier, per-request sampling map, prompt-cache key, transport/connect timeout, custom fetch/env, onPayload/onResponse wire hooks, headersToRecord (separate from ProviderHooks).
 
+TOOLS-019: `truncate_tail` now reports the collected line count, so byte-limited bash range notices name the right first line; both truncators label the trailing-LF-only overflow `lines` as ice does; `format_size` prints `50.0KB` without parentheses. Remaining: the TS camelCase detail field names (an on-disk tool-details format change, needs a compatibility decision). Kept as a documented deviation: `truncate_line` counts Unicode scalars, not UTF-16 units, so it never splits a surrogate pair.
+
 ## Open decisions
 
 These need an owner decision before the affected gaps can close (see [ice-gap README](ice-gap/README.md#open-questions-and-evidence-limits)):
@@ -68,7 +70,7 @@ These need an owner decision before the affected gaps can close (see [ice-gap RE
 |:-:|---:|---|---|---|---|---:|---|---|
 | [~] | 1 | G001 | [AI-006](ice-gap/ai.md#ai-006---shared-request-options-and-non-widening-hard-output-authority) | P0 | partial | 350–700 | Shared request options and non-widening hard output authority | — |
 | [ ] | 2 | G002 | [AI-012](ice-gap/ai.md#ai-012---fail-closed-tool-schema-validation-coercion-and-accurate-argument-errors) | P0 | partial | 220–420 | Fail-closed tool schema validation, coercion and accurate argument errors | — |
-| [ ] | 3 | G003 | [TOOLS-019](ice-gap/tools.md#tools-019---exact-truncation-metadata-utf-8-boundaries-and-line-numbering) | P0 | partial | 80–140 | Exact truncation metadata, UTF-8 boundaries and line numbering | — |
+| [~] | 3 | G003 | [TOOLS-019](ice-gap/tools.md#tools-019---exact-truncation-metadata-utf-8-boundaries-and-line-numbering) | P0 | partial | 80–140 | Exact truncation metadata, UTF-8 boundaries and line numbering | — |
 | [ ] | 4 | G004 | [SET-004](ice-gap/settings.md#set-004---locked-trust-store-with-canonical-ancestor-inheritance-and-grouped-updates) | P0 | partial | 170–280 | Locked trust store with canonical ancestor inheritance and grouped updates | — |
 | [ ] | 5 | G005 | [SET-003](ice-gap/settings.md#set-003---project-trust-resolution-before-loading-executable-resources) | P0 | partial | 280–480 | Project trust resolution before loading executable resources | SET-004 |
 | [ ] | 6 | G006 | [CLI-039](ice-gap/cli-packaging.md#cli-039---native-project-package-links-preserve-cargo-workflow-and-close-name-containment-holes) | P0 | partial | 100–190 | Native project package links: preserve Cargo workflow and close name-containment holes | — |

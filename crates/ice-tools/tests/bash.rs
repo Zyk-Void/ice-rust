@@ -197,6 +197,44 @@ async fn persists_truncated_full_output_to_temp_file() {
 }
 
 #[tokio::test]
+async fn byte_limited_range_notice_names_the_first_visible_line() {
+    let (env, ctx) = fresh_context();
+    // 1000 lines of 99 bytes + LF: under the line cap, over the byte cap, so
+    // the tail keeps only the last ~500 lines.
+    let total = 1000usize;
+    let lines: String = (1..=total)
+        .map(|i| format!("{:<99}\n", format!("line-{i}")))
+        .collect();
+    env.register_shell("wide", ShellScript::success(lines))
+        .await;
+
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(tool, serde_json::json!({ "command": "wide" }))
+        .await
+        .expect("ok");
+    let trunc = r.details.get("truncation").expect("truncation present");
+    assert_eq!(trunc["truncated_by"], "bytes");
+    let shown = trunc["output_lines"].as_u64().expect("output_lines") as usize;
+    assert!(shown < total, "{shown}");
+
+    let out = text_output(&r);
+    let first = total - shown + 1;
+    let (body, notice) = out.split_once("\n\n[").expect("notice present");
+    assert_eq!(body.lines().count(), shown);
+    assert!(
+        body.starts_with(&format!("line-{first} ")),
+        "body starts with {:?}",
+        &body[..20]
+    );
+    assert!(
+        notice.starts_with(&format!(
+            "Showing lines {first}-{total} of {total} (50.0KB limit)."
+        )),
+        "{notice}"
+    );
+}
+
+#[tokio::test]
 async fn reports_oversized_final_line_size() {
     let (env, ctx) = fresh_context();
     // One line that exceeds the 50KB byte cap → last_line_partial path.
