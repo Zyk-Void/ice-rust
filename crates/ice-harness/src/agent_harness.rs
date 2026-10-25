@@ -679,6 +679,8 @@ struct HarnessInner {
     after_tool_call: Option<AfterToolCall>,
     transform_context: Option<TransformContext>,
     lifecycle_hooks: Option<Arc<dyn crate::types::HarnessLifecycleHooks>>,
+    /// In-process extensions, consulted in order.
+    extensions: crate::extension::HarnessExtensions,
     /// B4: per-call provider hooks fired inside the `StreamFn` closure.
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     closed: bool,
@@ -855,6 +857,7 @@ impl AgentHarness {
             after_tool_call: options.after_tool_call,
             transform_context: options.transform_context,
             lifecycle_hooks: None,
+            extensions: Vec::new(),
             provider_hooks: options.provider_hooks,
             closed: false,
             active_run: None,
@@ -3400,6 +3403,7 @@ impl AgentHarness {
             after_tool_call: inner.after_tool_call.clone(),
             transform_context: inner.transform_context.clone(),
             lifecycle_hooks: inner.lifecycle_hooks.clone(),
+            extensions: inner.extensions.clone(),
             provider_hooks: inner.provider_hooks.clone(),
             steering_queue: Arc::clone(&inner.steering_queue),
             follow_up_queue: Arc::clone(&inner.follow_up_queue),
@@ -3591,14 +3595,32 @@ impl AgentHarness {
 
     /// Run product-format compaction with the enclosing operation's complete
     /// model/provider, stream-option, hook, thinking and retry snapshot.
+    #[allow(clippy::too_many_arguments)]
     async fn compact_coding_preparation(
         preparation: &crate::compaction::CompactionPreparation,
         snap: &ConfigSnapshot,
         signal: CancellationToken,
         custom_instructions: Option<String>,
+        trigger: crate::extension::CompactionTrigger,
+        branch: &[Entry],
+        session_id: &str,
     ) -> Result<crate::compaction::CompactResult, crate::compaction::CompactionError> {
         if let Some(hooks) = &snap.lifecycle_hooks {
             hooks.pre_compact("auto").await;
+        }
+        if let Some(result) = Self::consult_compaction_extensions(
+            snap,
+            preparation,
+            branch,
+            custom_instructions.as_deref(),
+            trigger,
+            trigger == crate::extension::CompactionTrigger::Overflow,
+            &signal,
+            session_id,
+        )
+        .await
+        {
+            return result;
         }
         let provider = Self::resolve_provider(&snap.models, &snap.model).map_err(|error| {
             crate::compaction::CompactionError::summarization_failed(error.to_string())
@@ -3729,13 +3751,21 @@ impl AgentHarness {
         &self,
         run_id: &str,
         result: &crate::compaction::CompactResult,
-        reason: CompactionReason,
+        trigger: crate::extension::CompactionTrigger,
     ) -> HarnessResult<Entry> {
+        let reason = match trigger {
+            crate::extension::CompactionTrigger::Manual => CompactionReason::Manual,
+            crate::extension::CompactionTrigger::Threshold
+            | crate::extension::CompactionTrigger::MidRun => CompactionReason::Threshold,
+            crate::extension::CompactionTrigger::Overflow => CompactionReason::Overflow,
+        };
         let id = self.session.id_generator().next();
-        let details = result
-            .details
-            .as_ref()
-            .map(|d| serde_json::to_value(d).unwrap_or(JsonValue::Null));
+        let details = result.details_json.clone().or_else(|| {
+            result
+                .details
+                .as_ref()
+                .map(|d| serde_json::to_value(d).unwrap_or(JsonValue::Null))
+        });
         let entry = ProvisionedEntry {
             id: id.clone(),
             kind: ProvisionedKind::Compaction {
@@ -3757,6 +3787,19 @@ impl AgentHarness {
         // (the reducer resets the series when `step` changes).
         self.write_step_attempt(run_id, StepKind::Compaction, 1, &id, Some(reason))
             .await?;
+        let extensions = self.extensions();
+        if let Entry::Compaction(entry) = &committed {
+            let session_id = self.session_id();
+            let event = crate::extension::AfterCompactEvent {
+                entry,
+                trigger,
+                from_extension: result.from_extension,
+                session_id: &session_id,
+            };
+            for extension in &extensions {
+                extension.after_compact(&event).await;
+            }
+        }
         Ok(committed)
     }
 
@@ -4025,6 +4068,116 @@ impl AgentHarness {
         self.inner.lock().unwrap().lifecycle_hooks = Some(hooks);
     }
 
+    /// Replace the in-process extensions. They apply from the next operation.
+    pub fn set_extensions(&self, extensions: crate::extension::HarnessExtensions) {
+        self.inner.lock().unwrap().extensions = extensions;
+    }
+
+    /// The installed in-process extensions.
+    pub fn extensions(&self) -> crate::extension::HarnessExtensions {
+        self.inner.lock().unwrap().extensions.clone()
+    }
+
+    fn session_id(&self) -> String {
+        self.session.storage().metadata().id
+    }
+
+    /// Chain extension context rewrites after the caller's transform.
+    fn compose_extension_transform(
+        &self,
+        base: Option<TransformContext>,
+        extensions: &crate::extension::HarnessExtensions,
+    ) -> Option<TransformContext> {
+        if extensions.is_empty() {
+            return base;
+        }
+        let harness = self.clone();
+        let extensions = extensions.clone();
+        Some(Arc::new(move |messages, signal| {
+            let base = base.clone();
+            let harness = harness.clone();
+            let extensions = extensions.clone();
+            Box::pin(async move {
+                let mut messages = match base {
+                    Some(base) => base(messages, signal).await,
+                    None => messages,
+                };
+                let latest_compaction_at =
+                    harness
+                        .branch_path_oldest_first()
+                        .await
+                        .ok()
+                        .and_then(|path| {
+                            path.iter().rev().find_map(|entry| match entry {
+                                Entry::Compaction(compaction) => Some(compaction.base.timestamp),
+                                _ => None,
+                            })
+                        });
+                for extension in &extensions {
+                    if let Some(next) = extension.transform_context(&messages, latest_compaction_at)
+                    {
+                        messages = next;
+                    }
+                }
+                messages
+            })
+        }))
+    }
+
+    /// Ask extensions for a checkpoint before the summarizer runs. `None`
+    /// means no extension decided and the summarizer should run.
+    #[allow(clippy::too_many_arguments)]
+    async fn consult_compaction_extensions(
+        snap: &ConfigSnapshot,
+        preparation: &crate::compaction::CompactionPreparation,
+        branch: &[Entry],
+        custom_instructions: Option<&str>,
+        trigger: crate::extension::CompactionTrigger,
+        will_retry: bool,
+        signal: &CancellationToken,
+        session_id: &str,
+    ) -> Option<Result<crate::compaction::CompactResult, crate::compaction::CompactionError>> {
+        if snap.extensions.is_empty() {
+            return None;
+        }
+        let event = crate::extension::BeforeCompactEvent {
+            preparation: preparation.clone(),
+            branch_entries: branch.to_vec(),
+            custom_instructions: custom_instructions.map(str::to_string),
+            trigger,
+            will_retry,
+            signal: signal.clone(),
+            session_id: session_id.to_string(),
+            model: snap.model.clone(),
+            provider: Self::resolve_provider(&snap.models, &snap.model).ok(),
+            providers: snap.models.clone(),
+        };
+        for extension in &snap.extensions {
+            match extension.before_compact(&event).await {
+                None => continue,
+                Some(crate::extension::BeforeCompactDecision::Cancel) => {
+                    return Some(Err(crate::compaction::CompactionError::cancelled(
+                        "Compaction cancelled by an extension",
+                    )))
+                }
+                Some(crate::extension::BeforeCompactDecision::Replace(checkpoint)) => {
+                    return Some(Ok(crate::compaction::CompactResult {
+                        summary: checkpoint.summary,
+                        tokens_before: preparation.tokens_before,
+                        usage: None,
+                        retained_tail: checkpoint
+                            .retained_tail
+                            .unwrap_or_else(|| preparation.retained_tail.clone()),
+                        details: None,
+                        details_json: checkpoint.details,
+                        from_extension: true,
+                    }))
+                }
+            }
+        }
+        None
+    }
+
     async fn admit_input(&self, message: AgentMessage) -> HarnessResult<AgentMessage> {
         let hooks = self.inner.lock().unwrap().lifecycle_hooks.clone();
         match hooks {
@@ -4207,10 +4360,14 @@ impl AgentHarness {
                                 &snap,
                                 signal.clone(),
                                 None,
+                                crate::extension::CompactionTrigger::Threshold,
+                                &path,
+                                &self.session_id(),
                             )
                             .await
                         };
                         match compacted {
+                            Err(error) if error.is_cancelled() => {}
                             Ok(_) if signal.is_cancelled() => {
                                 return self
                                     .finish_product_compaction_failure(
@@ -4229,7 +4386,7 @@ impl AgentHarness {
                                 self.persist_compaction_entry(
                                     &run_id,
                                     &result,
-                                    CompactionReason::Threshold,
+                                    crate::extension::CompactionTrigger::Threshold,
                                 )
                                 .await?;
                             }
@@ -4361,8 +4518,23 @@ impl AgentHarness {
                             if let Some(hooks) = &snap.lifecycle_hooks {
                                 hooks.pre_compact("auto").await;
                             }
-                            compact(&prep, &llm_opts).await
+                            match Self::consult_compaction_extensions(
+                                &snap,
+                                &prep,
+                                &path,
+                                None,
+                                crate::extension::CompactionTrigger::Threshold,
+                                false,
+                                &signal,
+                                &self.session_id(),
+                            )
+                            .await
+                            {
+                                Some(result) => result,
+                                None => compact(&prep, &llm_opts).await,
+                            }
                         } {
+                            Err(error) if error.is_cancelled() => {}
                             Ok(result) => {
                                 let _ = self
                                     .persist_compaction_entry(
@@ -4372,7 +4544,7 @@ impl AgentHarness {
                                         // crosses the configured threshold, i.e.
                                         // proactively, not in reaction to a provider
                                         // overflow error.
-                                        CompactionReason::Threshold,
+                                        crate::extension::CompactionTrigger::Threshold,
                                     )
                                     .await?;
                             }
@@ -4432,6 +4604,25 @@ impl AgentHarness {
             messages: ctx.messages,
             tools,
         };
+        if !snap.extensions.is_empty() {
+            for extension in &snap.extensions {
+                extension.run_start().await;
+            }
+            if let Some(prompt) = prompts.iter().rev().find_map(user_prompt_text) {
+                let session_id = self.session_id();
+                for extension in &snap.extensions {
+                    let event = crate::extension::BeforeRunEvent {
+                        prompt: &prompt,
+                        system_prompt: Some(agent_context.system_prompt.as_str()),
+                        session_id: &session_id,
+                        signal: signal.clone(),
+                    };
+                    if let Some(next) = extension.before_run(&event).await {
+                        agent_context.system_prompt = next;
+                    }
+                }
+            }
+        }
 
         // Build the config.
         let convert = Self::build_convert_to_llm(snap.to_provider_messages.clone());
@@ -4457,7 +4648,10 @@ impl AgentHarness {
             None => crate::run_budget::RunBudget::from_env(),
         }));
         let should_stop_after_turn: Option<ice_agent::ShouldStopAfterTurn> =
-            if run_budget.lock().unwrap().is_enabled() || snap.coding_compaction_policy.is_some() {
+            if run_budget.lock().unwrap().is_enabled()
+                || snap.coding_compaction_policy.is_some()
+                || !snap.extensions.is_empty()
+            {
                 let budget = Arc::clone(&run_budget);
                 let product_pause = Arc::clone(&pause_after_product_compaction);
                 let compaction_error = Arc::clone(&midrun_compaction_error);
@@ -4507,7 +4701,8 @@ impl AgentHarness {
         let mut config = AgentLoopConfig {
             model: snap.model.clone(),
             convert_to_llm: convert,
-            transform_context: snap.transform_context.clone(),
+            transform_context: self
+                .compose_extension_transform(snap.transform_context.clone(), &snap.extensions),
             get_api_key: None,
             should_stop_after_turn,
             prepare_next_turn: None,
@@ -4544,7 +4739,21 @@ impl AgentHarness {
                         Box::pin(async move {
                             let coding_policy_enabled = coding_policy.is_some();
                             let tokens = estimate_context_tokens(&context.messages).tokens;
-                            let should_compact_now = match coding_policy {
+                            let mut extension_pause: Option<bool> = None;
+                            if !coding_snapshot.extensions.is_empty() {
+                                let tools: Vec<_> = context.tools.iter().map(|tool| tool.schema().clone()).collect();
+                                let event = crate::extension::BoundaryEvent {
+                                    input_tokens: crate::compaction::tokens::estimate_request_tokens(&context.messages, &context.system_prompt, &tools),
+                                    context_window: model.context_window,
+                                };
+                                for extension in &coding_snapshot.extensions {
+                                    if let crate::extension::BoundaryDecision::Compact { pause } = extension.boundary(&event).await {
+                                        extension_pause = Some(pause);
+                                        break;
+                                    }
+                                }
+                            }
+                            let should_compact_now = extension_pause.is_some() || match coding_policy {
                                 Some(policy) => {
                                     let percent = match policy.mid_run_compaction {
                                         MidRunCompactionMode::Off => 95.0,
@@ -4610,12 +4819,17 @@ impl AgentHarness {
                                     &harness.lane,
                                     false,
                                 );
+                                let branch = harness.branch_path_oldest_first().await.unwrap_or_default();
+                                let session_id = harness.session_id();
                                 if coding_policy_enabled {
                                     AgentHarness::compact_coding_preparation(
                                         &preparation,
                                         &coding_snapshot,
                                         compaction_signal.clone(),
                                         None,
+                                        crate::extension::CompactionTrigger::MidRun,
+                                        &branch,
+                                        &session_id,
                                     )
                                     .await
                                 } else {
@@ -4634,11 +4848,26 @@ impl AgentHarness {
                                     if let Some(hooks) = &coding_snapshot.lifecycle_hooks {
                                         hooks.pre_compact("auto").await;
                                     }
-                                    compact(&preparation, &options).await
+                                    match AgentHarness::consult_compaction_extensions(
+                                        &coding_snapshot,
+                                        &preparation,
+                                        &branch,
+                                        None,
+                                        crate::extension::CompactionTrigger::MidRun,
+                                        false,
+                                        &compaction_signal,
+                                        &session_id,
+                                    )
+                                    .await
+                                    {
+                                        Some(result) => result,
+                                        None => compact(&preparation, &options).await,
+                                    }
                                 }
                             };
                             let result = match compacted {
                                 Ok(result) => result,
+                                Err(error) if error.is_cancelled() => return None,
                                 Err(error) if coding_policy_enabled => {
                                     AgentHarness::record_product_midrun_compaction_error(
                                         &compaction_error,
@@ -4662,7 +4891,7 @@ impl AgentHarness {
                                 .persist_compaction_entry(
                                     &compaction_run_id,
                                     &result,
-                                    CompactionReason::Threshold,
+                                    crate::extension::CompactionTrigger::MidRun,
                                 )
                                 .await
                             {
@@ -4689,7 +4918,11 @@ impl AgentHarness {
                                 );
                                 return None;
                             }
-                            if let Some(policy) = coding_policy {
+                            if let Some(pause_after_compaction) = extension_pause {
+                                if pause_after_compaction {
+                                    pause.store(true, Ordering::Release);
+                                }
+                            } else if let Some(policy) = coding_policy {
                                 let pause_after_compaction = match policy.mid_run_compaction {
                                     MidRunCompactionMode::Pause => true,
                                     MidRunCompactionMode::Off | MidRunCompactionMode::Resume => false,
@@ -4920,14 +5153,20 @@ impl AgentHarness {
                     preparation.previous_summary = None;
                     preparation.retained_tail = tail;
                     let compacted = Self::compact_coding_preparation(
-                        &preparation, &snap, signal.clone(), None,
+                        &preparation,
+                        &snap,
+                        signal.clone(),
+                        None,
+                        crate::extension::CompactionTrigger::Overflow,
+                        &path,
+                        &self.session_id(),
                     ).await?;
                     if signal.is_cancelled() {
                         return Err(crate::compaction::CompactionError::aborted(
                             "Context recovery cancelled before checkpoint persistence",
                         ));
                     }
-                    self.persist_compaction_entry(&run_id, &compacted, CompactionReason::Overflow)
+                    self.persist_compaction_entry(&run_id, &compacted, crate::extension::CompactionTrigger::Overflow)
                         .await.map_err(|error| crate::compaction::CompactionError::summarization_failed(error.to_string()))?;
                     Ok(())
                 }.await;
@@ -5458,16 +5697,44 @@ impl AgentHarness {
                                 &snap,
                                 signal.clone(),
                                 custom_instructions.clone(),
+                                crate::extension::CompactionTrigger::Manual,
+                                &path,
+                                &self.session_id(),
                             )
                             .await
                         } else {
                             if let Some(hooks) = &snap.lifecycle_hooks {
                                 hooks.pre_compact("auto").await;
                             }
-                            compact(&prep, &llm_opts).await
+                            match Self::consult_compaction_extensions(
+                                &snap,
+                                &prep,
+                                &path,
+                                custom_instructions.as_deref(),
+                                crate::extension::CompactionTrigger::Manual,
+                                false,
+                                &signal,
+                                &self.session_id(),
+                            )
+                            .await
+                            {
+                                Some(result) => result,
+                                None => compact(&prep, &llm_opts).await,
+                            }
                         }
                     };
                     match compacted {
+                        Err(error) if error.is_cancelled() => {
+                            self.write_operation_finished(
+                                &run_id,
+                                OperationOutcome::Completed,
+                                None,
+                            )
+                            .await?;
+                            CompactionOutcome::Declined {
+                                leaf_id: source_leaf.unwrap_or_default(),
+                            }
+                        }
                         Ok(_)
                             if snap.coding_compaction_policy.is_some() && signal.is_cancelled() =>
                         {
@@ -5488,7 +5755,7 @@ impl AgentHarness {
                                     &result,
                                     // `/compact` and the compaction command run when
                                     // the user asks for them.
-                                    CompactionReason::Manual,
+                                    crate::extension::CompactionTrigger::Manual,
                                 )
                                 .await?;
                             let leaf = entry.base().id.clone();
@@ -5601,6 +5868,7 @@ struct ConfigSnapshot {
     after_tool_call: Option<AfterToolCall>,
     transform_context: Option<TransformContext>,
     lifecycle_hooks: Option<Arc<dyn crate::types::HarnessLifecycleHooks>>,
+    extensions: crate::extension::HarnessExtensions,
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     steering_queue: SharedMessageQueue,
     follow_up_queue: SharedMessageQueue,
@@ -5609,6 +5877,24 @@ struct ConfigSnapshot {
 // ===========================================================================
 // AgentLane impl for AgentHarness (the main lane)
 // ===========================================================================
+
+/// Text of a user prompt: the string, or its text blocks joined by newlines.
+fn user_prompt_text(message: &AgentMessage) -> Option<String> {
+    let AgentMessage::User(user) = message else {
+        return None;
+    };
+    Some(match &user.content {
+        UserContent::Text(text) => text.clone(),
+        UserContent::Blocks(blocks) => blocks
+            .iter()
+            .filter_map(|block| match block {
+                Content::Text(text) => Some(text.text.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n"),
+    })
+}
 
 async fn normalize_user_images(mut message: AgentMessage) -> HarnessResult<AgentMessage> {
     let has_images = matches!(&message, AgentMessage::User(user)

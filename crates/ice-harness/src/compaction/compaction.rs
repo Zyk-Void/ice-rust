@@ -66,6 +66,8 @@ const TURN_PREFIX_SUMMARIZATION_PROMPT: &str = "This is the PREFIX of a turn tha
 pub enum CompactionErrorCode {
     Aborted,
     SummarizationFailed,
+    /// An extension declined the compaction.
+    Cancelled,
 }
 
 impl CompactionErrorCode {
@@ -73,6 +75,7 @@ impl CompactionErrorCode {
         match self {
             CompactionErrorCode::Aborted => "aborted",
             CompactionErrorCode::SummarizationFailed => "summarization_failed",
+            CompactionErrorCode::Cancelled => "cancelled",
         }
     }
 }
@@ -96,6 +99,15 @@ impl CompactionError {
             code: CompactionErrorCode::SummarizationFailed,
             message: message.into(),
         }
+    }
+    pub fn cancelled(message: impl Into<String>) -> Self {
+        Self {
+            code: CompactionErrorCode::Cancelled,
+            message: message.into(),
+        }
+    }
+    pub fn is_cancelled(&self) -> bool {
+        self.code == CompactionErrorCode::Cancelled
     }
 }
 
@@ -129,6 +141,10 @@ pub struct CompactResult {
     pub usage: Option<Usage>,
     pub retained_tail: Vec<AgentMessage>,
     pub details: Option<CompactionDetails>,
+    /// Arbitrary details from an extension engine; replaces `details` when set.
+    pub details_json: Option<serde_json::Value>,
+    /// An extension supplied this checkpoint instead of the summarizer.
+    pub from_extension: bool,
 }
 
 /// Prepared inputs for a compaction run. Mirrors TS `CompactionPreparation`.
@@ -922,6 +938,8 @@ async fn compact_impl(
             read_files,
             modified_files,
         }),
+        details_json: None,
+        from_extension: false,
     })
 }
 

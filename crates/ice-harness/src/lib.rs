@@ -15,6 +15,7 @@ pub mod context_files;
 pub mod diagnostics;
 pub mod error;
 pub mod events;
+pub mod extension;
 pub mod frame_progress;
 pub mod frontmatter;
 mod image_tool;
