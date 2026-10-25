@@ -15,6 +15,7 @@ pub mod bash_background;
 pub mod bash_watch;
 pub mod env;
 pub mod error;
+pub mod exec;
 pub mod file_mutation_queue;
 mod ignore_rules;
 pub mod image;

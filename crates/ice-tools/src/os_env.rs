@@ -271,12 +271,12 @@ fn normalize_absolute(p: &Path) -> PathBuf {
 /// across two reads is held back instead of becoming two U+FFFD, like a
 /// streaming `TextDecoder`. Invalid bytes still decode lossily.
 #[derive(Default)]
-struct Utf8StreamDecoder {
+pub(crate) struct Utf8StreamDecoder {
     pending: Vec<u8>,
 }
 
 impl Utf8StreamDecoder {
-    fn decode(&mut self, bytes: &[u8]) -> String {
+    pub(crate) fn decode(&mut self, bytes: &[u8]) -> String {
         self.pending.extend_from_slice(bytes);
         let keep = incomplete_utf8_suffix(&self.pending);
         let split = self.pending.len() - keep;
@@ -286,7 +286,7 @@ impl Utf8StreamDecoder {
     }
 
     /// Flush a dangling partial character at EOF.
-    fn finish(&mut self) -> String {
+    pub(crate) fn finish(&mut self) -> String {
         let text = String::from_utf8_lossy(&self.pending).into_owned();
         self.pending.clear();
         text
@@ -444,7 +444,7 @@ async fn run_command(cmd: &str, args: &[&str], timeout: std::time::Duration) -> 
 
 /// Kill a process tree. Windows: `taskkill /F /T /PID`. POSIX: `kill -PG` with
 /// fallback to `kill -PID`. Best-effort, errors swallowed.
-async fn kill_process_tree(pid: u32) {
+pub(crate) async fn kill_process_tree(pid: u32) {
     #[cfg(windows)]
     {
         use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
