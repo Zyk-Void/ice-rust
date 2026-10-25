@@ -83,6 +83,7 @@ async fn combines_stdout_and_stderr() {
             stderr: "err".into(),
             exit_code: 0,
             delay_ms: None,
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -105,6 +106,7 @@ async fn nonzero_exit_returns_error_with_output() {
             stderr: String::new(),
             exit_code: 7,
             delay_ms: None,
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -127,6 +129,7 @@ async fn abort_returns_error() {
             stderr: String::new(),
             exit_code: 0,
             delay_ms: Some(1000),
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -264,9 +267,7 @@ async fn supports_command_prefix() {
         &ctx,
         Some(BashToolOptions {
             command_prefix: Some("value=hello".into()),
-            default_timeout: None,
-            max_timeout: None,
-            prepare: None,
+            ..Default::default()
         }),
     );
     // The shell_script prefix-matches on the composed command start; echo is the

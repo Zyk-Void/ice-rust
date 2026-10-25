@@ -106,9 +106,37 @@ pub struct ShellExecOptions<'a> {
     /// Seconds. `None` = no timeout.
     pub timeout: Option<f64>,
     pub cancel: Option<&'a CancellationToken>,
+    /// Per-chunk output callbacks. A stream with a callback is not also
+    /// buffered into [`ShellOutput`], so long-running commands stay bounded.
     pub on_stdout: Option<Box<dyn FnMut(&str) + Send + 'a>>,
     pub on_stderr: Option<Box<dyn FnMut(&str) + Send + 'a>>,
+    /// Called once with the child's process id (its process-group id on
+    /// POSIX) right after it starts. Mirrors TS `onSpawn`.
+    pub on_spawn: Option<Box<dyn FnOnce(u32) + Send + 'a>>,
+    /// Keep the child's stdin open and feed it from this channel (bash_input).
+    /// Without it, stdin is closed at once so prompts see EOF. Backends that
+    /// deliver the command itself over stdin reject this.
+    pub stdin: Option<ShellStdin>,
 }
+
+/// One request to a running shell's stdin. Mirrors TS `onStdin` writes.
+#[derive(Debug)]
+pub enum StdinRequest {
+    /// Write these bytes; `done` reports when they were accepted by the pipe.
+    Write {
+        bytes: Vec<u8>,
+        done: tokio::sync::oneshot::Sender<Result<(), String>>,
+    },
+    /// Close stdin (EOF).
+    Close,
+}
+
+/// Receiving end of a shell's interactive stdin.
+pub type ShellStdin = tokio::sync::mpsc::UnboundedReceiver<StdinRequest>;
+
+/// Error for a shell that receives its command over stdin.
+pub const STDIN_TRANSPORT_CONFLICT: &str =
+    "This shell reads its command from stdin, so the command's stdin cannot be kept open.";
 
 impl<'a> Default for ShellExecOptions<'a> {
     fn default() -> Self {
@@ -121,6 +149,8 @@ impl<'a> Default for ShellExecOptions<'a> {
             cancel: None,
             on_stdout: None,
             on_stderr: None,
+            on_spawn: None,
+            stdin: None,
         }
     }
 }

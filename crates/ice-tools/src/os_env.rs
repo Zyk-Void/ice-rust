@@ -33,7 +33,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::{
     check_cancel_exec, check_cancel_file, ExecutionEnv, FileContent, FileInfo, FileKind,
-    FileSystem, Shell, ShellExecOptions, ShellOutput,
+    FileSystem, Shell, ShellExecOptions, ShellOutput, StdinRequest, STDIN_TRANSPORT_CONFLICT,
 };
 use crate::error::{
     io_to_file_error, ExecutionError, ExecutionErrorCode, FileError, FileErrorCode,
@@ -257,6 +257,53 @@ fn normalize_absolute(p: &Path) -> PathBuf {
         }
     }
     out
+}
+
+/// Incremental UTF-8 decoding for pipe reads. A multi-byte character split
+/// across two reads is held back instead of becoming two U+FFFD, like a
+/// streaming `TextDecoder`. Invalid bytes still decode lossily.
+#[derive(Default)]
+struct Utf8StreamDecoder {
+    pending: Vec<u8>,
+}
+
+impl Utf8StreamDecoder {
+    fn decode(&mut self, bytes: &[u8]) -> String {
+        self.pending.extend_from_slice(bytes);
+        let keep = incomplete_utf8_suffix(&self.pending);
+        let split = self.pending.len() - keep;
+        let text = String::from_utf8_lossy(&self.pending[..split]).into_owned();
+        self.pending.drain(..split);
+        text
+    }
+
+    /// Flush a dangling partial character at EOF.
+    fn finish(&mut self) -> String {
+        let text = String::from_utf8_lossy(&self.pending).into_owned();
+        self.pending.clear();
+        text
+    }
+}
+
+/// Length of a trailing, possibly incomplete UTF-8 sequence (0..=3).
+fn incomplete_utf8_suffix(bytes: &[u8]) -> usize {
+    for back in 1..=bytes.len().min(3) {
+        let byte = bytes[bytes.len() - back];
+        if byte & 0xC0 == 0x80 {
+            continue; // continuation byte; keep looking for the lead byte
+        }
+        let needed = if byte >= 0xF0 {
+            4
+        } else if byte >= 0xE0 {
+            3
+        } else if byte >= 0xC0 {
+            2
+        } else {
+            1
+        };
+        return if needed > back { back } else { 0 };
+    }
+    0
 }
 
 /// `file://` URL → local path, following Node's `fileURLToPath`: the host must
@@ -939,6 +986,12 @@ impl Shell for OsExecutionEnv {
             },
             None => self.get_shell_config().await?,
         };
+        if options.stdin.is_some() && matches!(shell_cfg.transport, CommandTransport::Stdin) {
+            return Err(ExecutionError::new(
+                ExecutionErrorCode::SpawnError,
+                STDIN_TRANSPORT_CONFLICT,
+            ));
+        }
         // Verify cwd exists.
         if !cwd.exists() {
             return Err(ExecutionError::new(
@@ -1011,6 +1064,9 @@ impl Shell for OsExecutionEnv {
         let pid = child.id();
         if let Some(pid) = pid {
             self.active_pids.lock().await.insert(pid);
+            if let Some(on_spawn) = options.on_spawn {
+                on_spawn(pid);
+            }
         }
 
         // Stdin transport: write command then close. Closing happens on BOTH
@@ -1019,6 +1075,8 @@ impl Shell for OsExecutionEnv {
         // not block on a pipe that nothing will ever write to or close. tokio's
         // `Child::wait` also drops stdin as a deadlock guard, but relying on that
         // would make the guarantee a side effect of an implementation detail.
+        // The one exception is an explicit interactive stdin (bash_input),
+        // which keeps the pipe open and feeds it from `options.stdin`.
         let mut stdin = child.stdin.take();
         if matches!(transport, CommandTransport::Stdin) {
             if let Some(stdin) = stdin.as_mut() {
@@ -1027,7 +1085,40 @@ impl Shell for OsExecutionEnv {
                 let _ = stdin.flush().await;
             }
         }
-        drop(stdin);
+        let mut stdin_requests = options.stdin;
+        // Without interactive stdin the pipe is dropped here (EOF).
+        let mut interactive_stdin = if stdin_requests.is_some() {
+            stdin
+        } else {
+            drop(stdin);
+            None
+        };
+        let stdin_task = async {
+            use tokio::io::AsyncWriteExt;
+            let Some(requests) = stdin_requests.as_mut() else {
+                return;
+            };
+            while let Some(request) = requests.recv().await {
+                match request {
+                    StdinRequest::Write { bytes, done } => {
+                        let result = match interactive_stdin.as_mut() {
+                            Some(pipe) => match pipe.write_all(&bytes).await {
+                                Ok(()) => pipe.flush().await.map_err(|e| e.to_string()),
+                                Err(e) => Err(e.to_string()),
+                            },
+                            None => Err("stdin is closed".to_string()),
+                        };
+                        if result.is_err() {
+                            interactive_stdin = None;
+                        }
+                        let _ = done.send(result);
+                    }
+                    StdinRequest::Close => interactive_stdin = None,
+                }
+            }
+            // The sender is gone: close the pipe so the child sees EOF.
+            interactive_stdin = None;
+        };
 
         // Collect stdout/stderr via separate read tasks, firing callbacks.
         let mut stdout_buf = String::new();
@@ -1042,6 +1133,7 @@ impl Shell for OsExecutionEnv {
         let stdout_task = async {
             if let Some(s) = stdout.as_mut() {
                 let mut buf = vec![0u8; 8192];
+                let mut decoder = Utf8StreamDecoder::default();
                 use tokio::io::AsyncReadExt;
                 loop {
                     let read = s.read(&mut buf);
@@ -1057,19 +1149,31 @@ impl Shell for OsExecutionEnv {
                         Ok(n) => n,
                         Err(_) => break,
                     };
-                    let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();
+                    let chunk = decoder.decode(&buf[..n]);
+                    if chunk.is_empty() {
+                        continue;
+                    }
                     if let Some(cb) = on_stdout.as_mut() {
                         // Callback errors are swallowed (TS sets callbackError;
                         // v1 simplifies — the callback contract is best-effort).
                         cb(&chunk);
+                    } else {
+                        stdout_buf.push_str(&chunk);
                     }
-                    stdout_buf.push_str(&chunk);
+                }
+                let tail = decoder.finish();
+                if !tail.is_empty() {
+                    match on_stdout.as_mut() {
+                        Some(cb) => cb(&tail),
+                        None => stdout_buf.push_str(&tail),
+                    }
                 }
             }
         };
         let stderr_task = async {
             if let Some(s) = stderr.as_mut() {
                 let mut buf = vec![0u8; 8192];
+                let mut decoder = Utf8StreamDecoder::default();
                 use tokio::io::AsyncReadExt;
                 loop {
                     let read = s.read(&mut buf);
@@ -1085,11 +1189,22 @@ impl Shell for OsExecutionEnv {
                         Ok(n) => n,
                         Err(_) => break,
                     };
-                    let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();
+                    let chunk = decoder.decode(&buf[..n]);
+                    if chunk.is_empty() {
+                        continue;
+                    }
                     if let Some(cb) = on_stderr.as_mut() {
                         cb(&chunk);
+                    } else {
+                        stderr_buf.push_str(&chunk);
                     }
-                    stderr_buf.push_str(&chunk);
+                }
+                let tail = decoder.finish();
+                if !tail.is_empty() {
+                    match on_stderr.as_mut() {
+                        Some(cb) => cb(&tail),
+                        None => stderr_buf.push_str(&tail),
+                    }
                 }
             }
         };
@@ -1160,14 +1275,16 @@ impl Shell for OsExecutionEnv {
             // that writes more than the OS pipe buffer (~64 KiB) blocks on its
             // write until someone reads, so awaiting `child.wait()` alone
             // deadlocks it until the timeout.
-            tokio::pin!(status_fut, stdout_task, stderr_task);
+            tokio::pin!(status_fut, stdout_task, stderr_task, stdin_task);
             let mut stdout_done = false;
             let mut stderr_done = false;
+            let mut stdin_done = false;
             let status_res = loop {
                 tokio::select! {
                     status = &mut status_fut => break status,
                     _ = &mut stdout_task, if !stdout_done => stdout_done = true,
                     _ = &mut stderr_task, if !stderr_done => stderr_done = true,
+                    _ = &mut stdin_task, if !stdin_done => stdin_done = true,
                 }
             };
             // Drain what is already in the pipe — a completed write is already in

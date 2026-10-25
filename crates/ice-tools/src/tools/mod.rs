@@ -4,6 +4,7 @@
 //! shared helpers.
 
 pub mod bash;
+pub mod bash_shells;
 pub mod edit;
 pub mod edit_diff;
 pub mod find;

@@ -33,7 +33,7 @@ use std::sync::Arc;
 
 use tokio_util::sync::CancellationToken;
 
-use crate::env::{ExecutionEnv, FileContent, ShellExecOptions};
+use crate::env::{ExecutionEnv, FileContent, ShellExecOptions, ShellOutput};
 use crate::error::{ExecutionError, ExecutionErrorCode};
 use crate::truncate::{
     trim_to_last_utf8_bytes, truncate_tail, TruncationLimit, TruncationOptions, TruncationResult,
@@ -152,6 +152,8 @@ struct CaptureState {
     logged_bytes: usize,
     /// Logging stopped (capped or failed); `log_issue` says why.
     logging_stopped: bool,
+    /// Create the log even below the display limits (background shells).
+    force_log: bool,
     log_issue: Option<LogFileIssue>,
 }
 
@@ -265,11 +267,12 @@ impl CaptureState {
     /// Log I/O ignores the command's cancel token: a cancelled command still
     /// gets a complete log of what it printed.
     async fn flush_log(&mut self, env: &Arc<dyn ExecutionEnv>, max_log_bytes: usize) {
-        if self.logging_stopped || self.unlogged.is_empty() {
+        let must_create = self.force_log && self.full_output_path.is_none();
+        if self.logging_stopped || (self.unlogged.is_empty() && !must_create) {
             return;
         }
         if self.full_output_path.is_none() {
-            if !self.exceeds_display_limits() {
+            if !self.force_log && !self.exceeds_display_limits() {
                 return;
             }
             match env.create_temp_file("bash-", ".log", None).await {
@@ -304,6 +307,9 @@ impl CaptureState {
             ));
         }
         let written = payload.len();
+        if payload.is_empty() {
+            return;
+        }
         if let Err(e) = env
             .append_file(&path, FileContent::Text(payload), None)
             .await
@@ -450,6 +456,8 @@ pub async fn execute_shell_with_capture(
         cancel,
         on_stdout: Some(make_sink(tx.clone(), accepting.clone())),
         on_stderr: Some(make_sink(tx, accepting.clone())),
+        on_spawn: None,
+        stdin: None,
     };
 
     let mut state = CaptureState::default();
@@ -511,6 +519,174 @@ pub async fn execute_shell_with_capture(
             ..base
         }),
         Err(e) => Err(e),
+    }
+}
+
+/// A shell command running on its own task. Output arrives on `chunks` (raw,
+/// in order) and the final result on `done`. Cancelling `cancel` kills the
+/// process tree. Unlike [`execute_shell_with_capture`], the process is owned
+/// by this handle rather than by an awaiting caller, so it can be handed from
+/// a foreground tool call to the background registry without restarting.
+pub struct LiveShell {
+    pub chunks: tokio::sync::mpsc::UnboundedReceiver<String>,
+    pub done: tokio::sync::oneshot::Receiver<Result<ShellOutput, ExecutionError>>,
+    pub cancel: CancellationToken,
+    /// The process (group) id once known. `None` for backends without one.
+    pub pid: Arc<std::sync::Mutex<Option<u32>>>,
+    /// Interactive stdin, when requested at spawn.
+    pub stdin: Option<tokio::sync::mpsc::UnboundedSender<crate::env::StdinRequest>>,
+}
+
+/// What to run for [`spawn_live_shell`].
+#[derive(Default)]
+pub struct LiveShellSpec {
+    pub command: String,
+    pub cwd: Option<PathBuf>,
+    pub env: Option<HashMap<String, String>>,
+    pub inherit_env: bool,
+    pub timeout: Option<f64>,
+    /// Keep stdin open for `bash_input`.
+    pub interactive_stdin: bool,
+}
+
+/// Start `spec` on a new task. Requires a Tokio runtime.
+pub fn spawn_live_shell(env: Arc<dyn ExecutionEnv>, spec: LiveShellSpec) -> LiveShell {
+    let (chunk_tx, chunks) = tokio::sync::mpsc::unbounded_channel::<String>();
+    let (done_tx, done) = tokio::sync::oneshot::channel();
+    let cancel = CancellationToken::new();
+    let pid = Arc::new(std::sync::Mutex::new(None));
+    let (stdin_tx, stdin_rx) = if spec.interactive_stdin {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        (Some(tx), Some(rx))
+    } else {
+        (None, None)
+    };
+    let task_cancel = cancel.clone();
+    let task_pid = pid.clone();
+    tokio::spawn(async move {
+        let out_tx = chunk_tx.clone();
+        let err_tx = chunk_tx;
+        let options = ShellExecOptions {
+            shell: None,
+            cwd: spec.cwd,
+            env: spec.env,
+            inherit_env: spec.inherit_env,
+            timeout: spec.timeout,
+            cancel: Some(&task_cancel),
+            on_stdout: Some(Box::new(move |chunk: &str| {
+                let _ = out_tx.send(chunk.to_string());
+            })),
+            on_stderr: Some(Box::new(move |chunk: &str| {
+                let _ = err_tx.send(chunk.to_string());
+            })),
+            on_spawn: Some(Box::new(move |id| {
+                *task_pid.lock().unwrap_or_else(|e| e.into_inner()) = Some(id);
+            })),
+            stdin: stdin_rx,
+        };
+        let result = env.exec(&spec.command, options).await;
+        let _ = done_tx.send(result);
+    });
+    LiveShell {
+        chunks,
+        done,
+        cancel,
+        pid,
+        stdin: stdin_tx,
+    }
+}
+
+/// Owned output accounting for a [`LiveShell`]: sanitization, counters, the
+/// bounded tail and the full-output log, shared by the foreground bash tool
+/// and the background registry so a released shell keeps one log.
+pub struct OutputCapture {
+    state: CaptureState,
+    env: Arc<dyn ExecutionEnv>,
+    max_log_bytes: usize,
+}
+
+impl OutputCapture {
+    pub fn new(env: Arc<dyn ExecutionEnv>, max_log_bytes: Option<usize>) -> Self {
+        Self {
+            state: CaptureState::default(),
+            env,
+            max_log_bytes: max_log_bytes.unwrap_or(MAX_LOG_FILE_BYTES),
+        }
+    }
+
+    /// Ingest one raw chunk; returns its sanitized text.
+    pub async fn push(&mut self, raw: &str) -> String {
+        let text = sanitize_and_strip_cr(raw);
+        if !text.is_empty() {
+            self.state
+                .accept(&text, &self.env, self.max_log_bytes, &mut None)
+                .await;
+        }
+        text
+    }
+
+    /// Start the log now, even below the display limits, and write all
+    /// output so far. Mirrors `OutputAccumulator.persist()` for background
+    /// adoption.
+    pub async fn persist(&mut self) {
+        self.state.force_log = true;
+        self.state.flush_log(&self.env, self.max_log_bytes).await;
+    }
+
+    pub fn progress(&self) -> ShellCaptureProgress {
+        self.state.create_progress()
+    }
+
+    pub fn log_path(&self) -> Option<PathBuf> {
+        self.state.full_output_path.clone()
+    }
+
+    pub fn log_issue(&self) -> Option<LogFileIssue> {
+        self.state.log_issue.clone()
+    }
+
+    /// The terminal result for an exec outcome, as
+    /// [`execute_shell_with_capture`] would build it.
+    pub fn finish(
+        &self,
+        exec: Result<ShellOutput, ExecutionError>,
+        cancelled: bool,
+    ) -> Result<ShellCaptureResult, ExecutionError> {
+        let ShellCaptureProgress {
+            output,
+            truncation,
+            full_output_path,
+            last_line_bytes,
+            log_issue,
+        } = self.progress();
+        let base = ShellCaptureResult {
+            truncated: truncation.truncated,
+            output,
+            truncation,
+            full_output_path,
+            last_line_bytes,
+            exit_code: None,
+            cancelled: false,
+            execution_error: None,
+            log_issue,
+        };
+        match exec {
+            Ok(out) => Ok(ShellCaptureResult {
+                exit_code: if cancelled { None } else { Some(out.exit_code) },
+                cancelled,
+                ..base
+            }),
+            Err(e) if e.code == ExecutionErrorCode::Aborted || cancelled => {
+                Ok(ShellCaptureResult {
+                    cancelled: true,
+                    ..base
+                })
+            }
+            Err(e) => Ok(ShellCaptureResult {
+                execution_error: Some(e),
+                ..base
+            }),
+        }
     }
 }
 

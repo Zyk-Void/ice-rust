@@ -23,11 +23,16 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 use tokio_util::sync::CancellationToken;
 
+use crate::bash_background::{
+    now_ms, summarize_shell_command, Adoption, BashBackgroundRegistry, ReleaseReason,
+    SettleFormatter, SettledOutcome, ShellOrigin, SteerProbe, MAX_RUNNING_SHELLS,
+    USER_MESSAGE_POLL,
+};
 use crate::env::ExecutionEnv;
 use crate::error::{ExecutionError, ExecutionErrorCode};
 use crate::shell_output::{
-    execute_shell_with_capture, ChunkCallback, LogFileIssue, ShellCaptureOptions,
-    ShellCaptureProgress, ShellCaptureResult,
+    spawn_live_shell, LiveShellSpec, LogFileIssue, OutputCapture, ShellCaptureProgress,
+    ShellCaptureResult,
 };
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{format_size, TruncationResult, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES};
@@ -102,7 +107,22 @@ pub struct BashToolOptions {
     pub max_timeout: Option<f64>,
     /// Optional async hook that can adjust command, cwd, and environment.
     pub prepare: Option<BashPrepare>,
+    /// The session's background shell registry. Without one,
+    /// `run_in_background` is rejected and foreground calls cannot be
+    /// released. Mirrors TS `background`.
+    pub background: Option<Arc<BashBackgroundRegistry>>,
+    /// Move a foreground call to the background once it has run this many
+    /// seconds (when its timeout is absent or longer). Mirrors TS
+    /// `autoBackgroundMs`; unset means never.
+    pub auto_background_secs: Option<f64>,
+    /// Reports a queued steering message; a foreground call running longer
+    /// than five seconds is then released so the model can read it.
+    pub steer_probe: Option<SteerProbe>,
 }
+
+/// A foreground call is released for a queued steer only after this long.
+/// Mirrors `FOREGROUND_MESSAGE_GRACE_MS`.
+const FOREGROUND_MESSAGE_GRACE: Duration = Duration::from_millis(5000);
 
 /// The built-in `bash` tool. Holds an `Arc<dyn ExecutionEnv>` (read-only view
 /// suffices — bash does not touch the mutation queue).
@@ -157,7 +177,7 @@ impl AgentTool for BashTool {
 
     async fn execute(
         &self,
-        _tool_call_id: &str,
+        tool_call_id: &str,
         params: serde_json::Value,
         signal: CancellationToken,
         on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
@@ -165,17 +185,28 @@ impl AgentTool for BashTool {
         let input: BashInput = serde_json::from_value(params)
             .map_err(|e| AgentError::Validation(format!("bash input invalid: {e}")))?;
         let requested = resolve_timeout(input.timeout)?;
-        if input.stdin == Some(true) && input.run_in_background != Some(true) {
+        let run_in_background = input.run_in_background == Some(true);
+        let want_stdin = input.stdin == Some(true);
+        if want_stdin && !run_in_background {
             return Err(AgentError::Tool(
                 "stdin: true requires run_in_background: true.".into(),
             ));
         }
-        if input.run_in_background == Some(true) {
-            return Err(AgentError::Tool(
-                "Background shells are not available here; run the command without run_in_background."
-                    .into(),
-            ));
+        let registry = self.options.background.clone();
+        if run_in_background {
+            let Some(registry) = &registry else {
+                return Err(AgentError::Tool(
+                    "Background shells are not available here; run the command without run_in_background."
+                        .into(),
+                ));
+            };
+            if registry.running_count() >= MAX_RUNNING_SHELLS {
+                return Err(AgentError::Tool(format!(
+                    "{MAX_RUNNING_SHELLS} background shells are already running. Stop ones you no longer need with bash_kill (bash_output lists them) before starting another."
+                )));
+            }
         }
+        let original_command = input.command.clone();
         let mut execution = BashExecution {
             command: match &self.options.command_prefix {
                 Some(p) => format!("{p}\n{}", input.command),
@@ -188,12 +219,14 @@ impl AgentTool for BashTool {
         if let Some(prepare) = &self.options.prepare {
             prepare(&mut execution).await.map_err(AgentError::Tool)?;
         }
-        let command = execution.command;
         let timeout = apply_timeout_limits(
             requested,
             self.options.default_timeout,
             self.options.max_timeout,
         );
+        if signal.is_cancelled() {
+            return Err(AgentError::Tool("Command aborted".into()));
+        }
 
         // Initial empty update (mirrors TS `onUpdate?.({ content: [], details: undefined })`).
         on_update(AgentToolResult {
@@ -202,88 +235,296 @@ impl AgentTool for BashTool {
             ..Default::default()
         });
 
-        let throttle = Arc::new(UpdateThrottle::new(on_update.clone()));
-        let throttle_for_cb = throttle.clone();
-        let on_chunk: ChunkCallback<'_> = Box::new(
-            move |_chunk, get_progress: &dyn Fn() -> ShellCaptureProgress| {
-                throttle_for_cb.offer(Snapshot::from_progress(get_progress()));
+        let started = tokio::time::Instant::now();
+        let started_at_ms = now_ms();
+        let mut live = spawn_live_shell(
+            self.env.clone(),
+            LiveShellSpec {
+                command: execution.command,
+                cwd: Some(execution.cwd),
+                env: Some(execution.env),
+                inherit_env: execution.inherit_env,
+                timeout,
+                interactive_stdin: want_stdin,
             },
         );
+        let mut capture = OutputCapture::new(self.env.clone(), None);
 
-        let cwd = execution.cwd;
-        let env = self.env.clone();
-        let capture_opts = ShellCaptureOptions {
-            shell: None,
-            cwd: Some(cwd),
-            env: Some(execution.env),
-            inherit_env: execution.inherit_env,
-            timeout,
-            cancel: Some(&signal),
-            on_chunk: Some(on_chunk),
-            return_execution_errors: true,
-            max_log_bytes: None,
-        };
+        if run_in_background {
+            let registry = registry.expect("checked above");
+            // The log exists before the shell runs, so its path is stable.
+            capture.persist().await;
+            let log_path = capture.log_path();
+            let id = registry.adopt(Adoption {
+                live,
+                capture,
+                command: original_command.clone(),
+                origin: ShellOrigin::Model,
+                description: input.description.clone(),
+                started,
+                started_at_ms,
+                initial_output: String::new(),
+                env: self.env.clone(),
+                settle: settle_formatter(timeout),
+            });
+            let text = format!(
+                "Started background shell {id}: {}\n{}",
+                summarize_shell_command(&original_command),
+                background_guidance(&id, want_stdin)
+            );
+            return Ok(background_result(
+                text,
+                &id,
+                ShellOrigin::Model,
+                log_path,
+                None,
+            ));
+        }
 
-        // execute_shell_with_capture wants `&Arc<dyn ExecutionEnv>`.
-        let capture = execute_shell_with_capture(&env, &command, capture_opts).await;
-        // Cancel any pending timer first so no stale partial update can follow
-        // the final one.
-        throttle.finish();
-        let capture = capture.map_err(exec_err_to_agent)?;
-        throttle.emit(Snapshot {
-            output: capture.output.clone(),
-            truncation: capture.truncated.then(|| capture.truncation.clone()),
-            full_output_path: capture
-                .full_output_path
-                .as_ref()
-                .map(|p| p.to_string_lossy().into_owned()),
+        let throttle = Arc::new(UpdateThrottle::new(on_update.clone()));
+        // Release sources: the user (release_all), a queued steering message
+        // after the grace period, or the auto-background timer.
+        let (release_tx, mut release_rx) = tokio::sync::oneshot::channel::<ReleaseReason>();
+        let _foreground = registry.as_ref().map(|registry| {
+            registry.register_foreground(tool_call_id, move |reason| {
+                let _ = release_tx.send(reason);
+            })
         });
-
-        // Build the terminal output text + details, applying truncation notices.
-        let (output_text, details) = build_bash_output(&capture);
-        let details_value = serde_json::to_value(details).unwrap_or(serde_json::Value::Null);
-
-        // Resolution: cancelled → aborted; timeout → timeout; other exec error;
-        // non-zero exit → Tool error. All become Err(AgentError).
-        let append_status = |status: String| -> String {
-            if output_text.is_empty() {
-                status
-            } else {
-                format!("{output_text}\n\n{status}")
+        let auto_after = registry
+            .as_ref()
+            .and(self.options.auto_background_secs)
+            .filter(|secs| *secs > 0.0)
+            .filter(|secs| timeout.is_none_or(|t| t > *secs));
+        let auto_timer = async move {
+            match auto_after {
+                Some(secs) => tokio::time::sleep(Duration::from_secs_f64(secs)).await,
+                None => std::future::pending::<()>().await,
             }
         };
-        if capture.cancelled {
-            return Err(AgentError::Tool(append_status("Command aborted".into())));
+        tokio::pin!(auto_timer);
+        let steer = registry.as_ref().and(self.options.steer_probe.clone());
+        let mut steer_poll = tokio::time::interval(USER_MESSAGE_POLL);
+        let mut cancel_sent = false;
+
+        enum Ending {
+            Done(Result<crate::env::ShellOutput, ExecutionError>),
+            Released(ReleaseReason),
         }
-        if let Some(ee) = &capture.execution_error {
-            if ee.code == ExecutionErrorCode::Timeout {
-                // `timeout` is `Option<f64>` in seconds; `{timeout:?}` used to render
-                // `Some(2.0)`, so the message read "timed out after Some(2.0) seconds".
-                let status = match timeout {
-                    Some(secs) => format!("Command timed out after {secs} seconds"),
-                    None => "Command timed out".to_string(),
+        let ending = loop {
+            tokio::select! {
+                biased;
+                Some(raw) = live.chunks.recv() => {
+                    capture.push(&raw).await;
+                    throttle.offer(Snapshot::from_progress(capture.progress()));
+                }
+                result = &mut live.done => {
+                    break Ending::Done(result.unwrap_or_else(|_| Err(ExecutionError::aborted())));
+                }
+                _ = signal.cancelled(), if !cancel_sent => {
+                    // The process stays ours until it exits; it is not released.
+                    cancel_sent = true;
+                    live.cancel.cancel();
+                }
+                Ok(reason) = &mut release_rx, if !cancel_sent => break Ending::Released(reason),
+                _ = &mut auto_timer, if !cancel_sent => break Ending::Released(ReleaseReason::Timer),
+                _ = steer_poll.tick(), if steer.is_some() && !cancel_sent => {
+                    if started.elapsed() >= FOREGROUND_MESSAGE_GRACE
+                        && steer.as_ref().is_some_and(|probe| probe())
+                    {
+                        break Ending::Released(ReleaseReason::Message);
+                    }
+                }
+            }
+        };
+
+        match ending {
+            Ending::Done(exec) => {
+                while let Ok(raw) = live.chunks.try_recv() {
+                    capture.push(&raw).await;
+                }
+                // Cancel any pending timer first so no stale partial update
+                // can follow the final one.
+                throttle.finish();
+                let capture_result = capture
+                    .finish(exec, signal.is_cancelled())
+                    .map_err(exec_err_to_agent)?;
+                throttle.emit(Snapshot {
+                    output: capture_result.output.clone(),
+                    truncation: capture_result
+                        .truncated
+                        .then(|| capture_result.truncation.clone()),
+                    full_output_path: capture_result
+                        .full_output_path
+                        .as_ref()
+                        .map(|p| p.to_string_lossy().into_owned()),
+                });
+                if let (Some(registry), Some(path)) = (&registry, &capture_result.full_output_path)
+                {
+                    registry.track_log(path.clone(), self.env.clone());
+                }
+                let (_, details) = build_bash_output(&capture_result);
+                let details_value =
+                    serde_json::to_value(details).unwrap_or(serde_json::Value::Null);
+                let outcome = settled_outcome(Ok(capture_result), timeout);
+                if outcome.is_error {
+                    return Err(AgentError::Tool(outcome.text));
+                }
+                Ok(AgentToolResult {
+                    content: vec![TextContentOrImage::text(outcome.text)],
+                    details: details_value,
+                    ..Default::default()
+                })
+            }
+            Ending::Released(reason) => {
+                let registry = registry.expect("only a registry can release");
+                throttle.finish();
+                capture.persist().await;
+                let progress = capture.progress();
+                let origin = match reason {
+                    ReleaseReason::Timer => ShellOrigin::Model,
+                    ReleaseReason::User | ReleaseReason::Message => ShellOrigin::User,
                 };
-                return Err(AgentError::Tool(append_status(status)));
+                let log_path = capture.log_path();
+                let truncation = progress
+                    .truncation
+                    .truncated
+                    .then(|| progress.truncation.clone());
+                let shown = progress.output.clone();
+                let id = registry.adopt(Adoption {
+                    live,
+                    capture,
+                    command: original_command,
+                    origin,
+                    description: input.description,
+                    started,
+                    started_at_ms,
+                    initial_output: shown.clone(),
+                    env: self.env.clone(),
+                    settle: settle_formatter(timeout),
+                });
+                let why = match reason {
+                    ReleaseReason::User => {
+                        "The user moved this command to the background.".to_string()
+                    }
+                    ReleaseReason::Message => {
+                        "Moved this command to the background so you can read a new message."
+                            .to_string()
+                    }
+                    ReleaseReason::Timer => format!(
+                        "Still running after {}s, so this command moved to the background.",
+                        auto_after.map_or(0, |s| s as u64)
+                    ),
+                };
+                let mut text = format!("{why} It continues as background shell {id}.");
+                if !shown.is_empty() {
+                    text.push_str(&format!("\n\nOutput so far:\n{shown}"));
+                }
+                text.push_str(&format!("\n\n{}", background_guidance(&id, false)));
+                Ok(background_result(text, &id, origin, log_path, truncation))
             }
-            return Err(AgentError::Tool(ee.to_string()));
         }
-        if let Some(code) = capture.exit_code {
-            if code != 0 {
-                return Err(AgentError::Tool(append_status(format!(
-                    "Command exited with code {code}"
-                ))));
+    }
+}
+
+/// Tell the model how to follow a background shell.
+fn background_guidance(id: &str, stdin: bool) -> String {
+    let input = if stdin {
+        format!(" Send it input with bash_input (id \"{id}\").")
+    } else {
+        String::new()
+    };
+    format!(
+        "It keeps running after this call returns: continue with other work or end your turn; you will be told when it finishes. Read new output with bash_output (id \"{id}\"; set wait_seconds to wait for it).{input} Stop it with bash_kill."
+    )
+}
+
+fn background_result(
+    text: String,
+    id: &str,
+    origin: ShellOrigin,
+    log_path: Option<PathBuf>,
+    truncation: Option<TruncationResult>,
+) -> AgentToolResult {
+    let mut details = serde_json::json!({
+        "background_task_id": id,
+        "background_origin": origin,
+    });
+    if let Some(path) = log_path {
+        details["full_output_path"] =
+            serde_json::Value::String(path.to_string_lossy().into_owned());
+    }
+    if let Some(truncation) = truncation {
+        details["truncation"] = serde_json::to_value(truncation).unwrap_or_default();
+    }
+    AgentToolResult {
+        content: vec![TextContentOrImage::text(text)],
+        details,
+        ..Default::default()
+    }
+}
+
+/// Build a settle formatter for a background shell.
+fn settle_formatter(timeout: Option<f64>) -> SettleFormatter {
+    Box::new(move |result| settled_outcome(result, timeout))
+}
+
+/// The text and status a finished command reports: its output with the
+/// truncation notice, then the termination status. Shared by foreground
+/// results and background completions.
+pub(crate) fn settled_outcome(
+    result: Result<ShellCaptureResult, ExecutionError>,
+    timeout: Option<f64>,
+) -> SettledOutcome {
+    let capture = match result {
+        Ok(capture) => capture,
+        Err(e) => {
+            return SettledOutcome {
+                text: e.to_string(),
+                is_error: true,
+                exit_code: None,
             }
         }
-        let text = if output_text.is_empty() {
+    };
+    let (output_text, _) = build_bash_output(&capture);
+    let with_status = |status: String| -> String {
+        if output_text.is_empty() {
+            status
+        } else {
+            format!("{output_text}\n\n{status}")
+        }
+    };
+    let error = |text: String, exit_code: Option<i32>| SettledOutcome {
+        text,
+        is_error: true,
+        exit_code,
+    };
+    if capture.cancelled {
+        return error(with_status("Command aborted".into()), None);
+    }
+    if let Some(ee) = &capture.execution_error {
+        if ee.code == ExecutionErrorCode::Timeout {
+            let status = match timeout {
+                Some(secs) => format!("Command timed out after {secs} seconds"),
+                None => "Command timed out".to_string(),
+            };
+            return error(with_status(status), None);
+        }
+        return error(ee.to_string(), None);
+    }
+    if let Some(code) = capture.exit_code.filter(|c| *c != 0) {
+        return error(
+            with_status(format!("Command exited with code {code}")),
+            Some(code),
+        );
+    }
+    SettledOutcome {
+        text: if output_text.is_empty() {
             "(no output)".to_string()
         } else {
             output_text
-        };
-        Ok(AgentToolResult {
-            content: vec![TextContentOrImage::text(text)],
-            details: details_value,
-            ..Default::default()
-        })
+        },
+        is_error: false,
+        exit_code: capture.exit_code,
     }
 }
 
