@@ -32,10 +32,27 @@ pub struct ReadInput {
     pub path: String,
     /// Line number to start reading from (1-indexed).
     #[serde(default)]
-    pub offset: Option<u32>,
+    pub offset: Option<f64>,
     /// Maximum number of lines to read.
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub limit: Option<f64>,
+}
+
+/// Text ice shows when the current model cannot take image input.
+const NON_VISION_WARNING: &str =
+    "[Current model does not support images. The image will be omitted from this request.]";
+
+/// Coerce a JSON number to a whole line count. ice accepts any number here;
+/// icers floors fractional values (some providers send `10.0`) and rejects
+/// non-finite ones.
+fn line_number(value: Option<f64>, name: &str) -> Result<Option<usize>, AgentError> {
+    match value {
+        None => Ok(None),
+        Some(v) if !v.is_finite() => {
+            Err(AgentError::Tool(format!("{name} must be a finite number")))
+        }
+        Some(v) => Ok(Some(v.max(0.0).floor() as usize)),
+    }
 }
 
 /// Structured details for the read tool. Mirrors TS `ReadToolDetails`.
@@ -157,6 +174,8 @@ impl AgentTool for ReadTool {
     ) -> Result<AgentToolResult, AgentError> {
         let input: ReadInput = serde_json::from_value(params)
             .map_err(|e| AgentError::Validation(format!("read input invalid: {e}")))?;
+        let offset = line_number(input.offset, "offset")?;
+        let limit = line_number(input.limit, "limit")?;
 
         let abs = resolve_read_tool_path(&*self.env, &input.path, Some(&signal))
             .await
@@ -169,37 +188,53 @@ impl AgentTool for ReadTool {
 
         // Image path.
         if let Some(mime) = detect_supported_image_mime_type(&bytes) {
-            return Ok(image_result(
-                mime,
-                &bytes,
-                &self.options,
-                self.image_processor.as_deref(),
-            ));
+            let mut result = image_result(
+                mime.to_string(),
+                bytes,
+                self.options.auto_resize_images,
+                self.image_processor.clone(),
+                &signal,
+            )
+            .await?;
+            let non_vision = ice_agent::tool_execution_scope::tool_model()
+                .is_some_and(|m| !m.input.contains(&ice_ai::InputModality::Image));
+            let has_image = result
+                .content
+                .iter()
+                .any(|c| matches!(c, TextContentOrImage::Image(_)));
+            if non_vision && has_image {
+                if let Some(TextContentOrImage::Text(t)) = result.content.first_mut() {
+                    t.text = format!("{NON_VISION_WARNING}\n{}", t.text);
+                }
+            }
+            return Ok(result);
         }
 
-        // Text path.
+        // Text path. A leading UTF-8 BOM is dropped, as the harness
+        // TextDecoder does.
         let text_content = String::from_utf8_lossy(&bytes).into_owned();
+        let text_content = text_content
+            .strip_prefix('\u{FEFF}')
+            .map(str::to_owned)
+            .unwrap_or(text_content);
         let all_lines: Vec<&str> = text_content.split('\n').collect();
         // Mirror TS: `textContent.split("\n")` keeps a trailing "" when the
         // content ends with '\n'; the line-count + slice math below uses the raw
         // split (NOT `split_lines_for_counting`), so we keep it as-is.
         let total_file_lines = all_lines.len();
-        let start_line = input
-            .offset
-            .map(|o| (o.saturating_sub(1)) as usize)
-            .unwrap_or(0);
+        let start_line = offset.map(|o| o.saturating_sub(1)).unwrap_or(0);
         let start_line_display = start_line + 1;
         if start_line >= all_lines.len() {
             return Err(AgentError::Tool(format!(
                 "Offset {} is beyond end of file ({} lines total)",
-                input.offset.unwrap_or(1),
+                offset.unwrap_or(1),
                 all_lines.len()
             )));
         }
 
         let (selected_content, user_limited_lines): (String, Option<usize>) =
-            if let Some(limit) = input.limit {
-                let end_line = std::cmp::min(start_line + limit as usize, all_lines.len());
+            if let Some(limit) = limit {
+                let end_line = std::cmp::min(start_line + limit, all_lines.len());
                 (
                     all_lines[start_line..end_line].join("\n"),
                     Some(end_line - start_line),
@@ -276,15 +311,38 @@ impl AgentTool for ReadTool {
 }
 
 /// Build the image-path result, honoring an optional processor. Mirrors the TS
-/// image branch.
-fn image_result(
-    mime: &str,
-    bytes: &[u8],
-    options: &ReadToolOptions,
-    processor: Option<&dyn ReadImageProcessor>,
-) -> AgentToolResult {
+/// image branch. Decoding and resizing are CPU-bound, so the processor runs on
+/// the blocking pool; a cancelled call returns immediately and the late result
+/// is discarded.
+async fn image_result(
+    mime: String,
+    bytes: Vec<u8>,
+    auto_resize: bool,
+    processor: Option<Arc<dyn ReadImageProcessor>>,
+    signal: &CancellationToken,
+) -> Result<AgentToolResult, AgentError> {
+    let aborted = || AgentError::Tool("Operation aborted".into());
+    if signal.is_cancelled() {
+        return Err(aborted());
+    }
     if let Some(proc) = processor {
-        match proc.process(bytes, mime, options.auto_resize_images) {
+        let job_mime = mime.clone();
+        let job = tokio::task::spawn_blocking(move || proc.process(&bytes, &job_mime, auto_resize));
+        let processed = tokio::select! {
+            _ = signal.cancelled() => return Err(aborted()),
+            joined = job => joined.unwrap_or_else(|e| Err(format!("[Image omitted: processing failed ({e}).]"))),
+        };
+        return Ok(processed_image_result(&mime, processed));
+    }
+    Ok(unprocessed_image_result(&mime, &bytes))
+}
+
+fn processed_image_result(
+    mime: &str,
+    processed: Result<ProcessedImage, String>,
+) -> AgentToolResult {
+    {
+        match processed {
             Ok(p) => {
                 let hints = if p.hints.is_empty() {
                     String::new()
@@ -318,6 +376,9 @@ fn image_result(
             }
         }
     }
+}
+
+fn unprocessed_image_result(mime: &str, bytes: &[u8]) -> AgentToolResult {
     // No processor — BMP is omitted; others are inlined.
     if mime == "image/bmp" {
         return AgentToolResult {

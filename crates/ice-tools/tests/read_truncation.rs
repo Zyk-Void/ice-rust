@@ -240,3 +240,125 @@ fn base64_png() -> Vec<u8> {
     let _ = bytes;
     full
 }
+
+#[tokio::test]
+async fn fractional_offset_and_limit_are_floored() {
+    let (env, ctx) = fresh_context();
+    seed(&env, "lines.txt", b"one\ntwo\nthree\nfour\n".to_vec()).await;
+    let tool = ice_tools::create_read_tool(&ctx, None);
+    let r = run_read(
+        tool,
+        serde_json::json!({ "path": "lines.txt", "offset": 2.0, "limit": 2.7 }),
+    )
+    .await
+    .expect("ok");
+    assert_eq!(
+        text_output(&r),
+        "two\nthree\n\n[2 more lines in file. Use offset=4 to continue.]"
+    );
+}
+
+#[tokio::test]
+async fn a_leading_utf8_bom_is_not_part_of_the_text() {
+    let (env, ctx) = fresh_context();
+    seed(&env, "bom.txt", "\u{FEFF}hello\n".as_bytes().to_vec()).await;
+    let tool = ice_tools::create_read_tool(&ctx, None);
+    let r = run_read(tool, serde_json::json!({ "path": "bom.txt" }))
+        .await
+        .expect("ok");
+    assert_eq!(text_output(&r), "hello\n");
+}
+
+fn model_with(input: Vec<ice_ai::InputModality>) -> Arc<ice_ai::Model> {
+    let mut model = ice_ai::Model::new("m", "m", ice_ai::Api::Faux, "faux", "http://localhost");
+    model.input = input;
+    Arc::new(model)
+}
+
+#[tokio::test]
+async fn non_vision_models_are_told_the_image_will_be_omitted() {
+    let (env, ctx) = fresh_context();
+    seed(&env, "image.png", base64_png()).await;
+    let tool = ice_tools::create_read_tool(&ctx, None);
+    let text_only = ice_agent::tool_execution_scope::with_tool_model(
+        model_with(vec![ice_ai::InputModality::Text]),
+        run_read(tool.clone(), serde_json::json!({ "path": "image.png" })),
+    )
+    .await
+    .expect("ok");
+    let first = match &text_only.content[0] {
+        ice_agent::types::TextContentOrImage::Text(t) => t.text.clone(),
+        _ => panic!("text first"),
+    };
+    assert!(
+        first.starts_with(
+            "[Current model does not support images. The image will be omitted from this request.]"
+        ),
+        "{first}"
+    );
+    // The image block is still returned; message conversion drops it.
+    assert!(text_only
+        .content
+        .iter()
+        .any(|c| matches!(c, ice_agent::types::TextContentOrImage::Image(_))));
+    let vision = ice_agent::tool_execution_scope::with_tool_model(
+        model_with(vec![
+            ice_ai::InputModality::Text,
+            ice_ai::InputModality::Image,
+        ]),
+        run_read(tool, serde_json::json!({ "path": "image.png" })),
+    )
+    .await
+    .expect("ok");
+    assert!(!text_output_first(&vision).contains("does not support images"));
+}
+
+fn text_output_first(r: &ice_agent::types::AgentToolResult) -> String {
+    match &r.content[0] {
+        ice_agent::types::TextContentOrImage::Text(t) => t.text.clone(),
+        _ => String::new(),
+    }
+}
+
+struct SlowProcessor;
+impl ReadImageProcessor for SlowProcessor {
+    fn process(&self, _: &[u8], mime: &str, _: bool) -> Result<ProcessedImage, String> {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        Ok(ProcessedImage {
+            data: String::new(),
+            mime_type: mime.into(),
+            hints: vec![],
+        })
+    }
+}
+
+#[tokio::test]
+async fn cancelling_during_image_processing_returns_at_once() {
+    let (env, ctx) = fresh_context();
+    seed(&env, "image.png", base64_png()).await;
+    let tool = ice_tools::create_read_tool(
+        &ctx,
+        Some(ReadToolOptions {
+            image_processor: Some(Arc::new(SlowProcessor)),
+            ..Default::default()
+        }),
+    );
+    let signal = CancellationToken::new();
+    let cancel = signal.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        cancel.cancel();
+    });
+    let started = std::time::Instant::now();
+    let err = tool
+        .execute(
+            "read-c",
+            serde_json::json!({ "path": "image.png" }),
+            signal,
+            Arc::new(|_| ()),
+        )
+        .await
+        .expect_err("aborted");
+    assert!(started.elapsed() < std::time::Duration::from_millis(400));
+    assert!(format!("{err:?}").contains("aborted"), "{err:?}");
+}

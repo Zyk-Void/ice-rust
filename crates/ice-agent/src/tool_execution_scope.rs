@@ -7,6 +7,20 @@ use tokio::sync::Notify;
 tokio::task_local! {
     static CURRENT: Arc<ToolExecutionScope>;
     static INVOCATION_SIGNAL: tokio_util::sync::CancellationToken;
+    static TOOL_MODEL: Arc<ice_ai::Model>;
+}
+
+/// Run a tool call with the model that requested it in scope. The agent loop
+/// wraps every `execute` in this, so a tool can adapt to the model (the read
+/// tool warns a non-vision model that an image will be omitted). Mirrors the
+/// TS `ctx.model` a coding-agent tool receives.
+pub async fn with_tool_model<F: Future>(model: Arc<ice_ai::Model>, future: F) -> F::Output {
+    TOOL_MODEL.scope(model, future).await
+}
+
+/// The model of the tool call running on this task, if any.
+pub fn tool_model() -> Option<Arc<ice_ai::Model>> {
+    TOOL_MODEL.try_with(Clone::clone).ok()
 }
 
 /// Bind a runtime action to the originating tool invocation, even after its
