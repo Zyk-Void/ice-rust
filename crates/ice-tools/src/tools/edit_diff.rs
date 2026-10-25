@@ -431,9 +431,9 @@ pub struct DiffResult {
 
 /// A display-oriented diff (NOT a unified patch) with line-number prefixes.
 /// Mirrors `generateDiffString` with a 4-line context window.
-pub fn generate_diff_string(
-    old_content: &str,
-    new_content: &str,
+pub fn generate_diff_string<'a>(
+    old_content: &'a str,
+    new_content: &'a str,
     context_lines: usize,
 ) -> DiffResult {
     let parts = TextDiff::from_lines(old_content, new_content);
@@ -471,17 +471,19 @@ pub fn generate_diff_string(
             if first_changed_line.is_none() {
                 first_changed_line = Some(new_line_num);
             }
-            for line in &raw {
-                if is_added {
-                    out.push(format!(
-                        "+{:>width$} {}",
-                        new_line_num,
-                        line,
-                        width = line_num_width
-                    ));
-                    new_line_num += 1;
+            // Removed lines come from the old text and added lines from the
+            // new text, removed first (TS `diffLines` emits the removed part
+            // before the added part). A `Replace` has both, possibly with
+            // different line counts.
+            let lines_of = |all: &[&'a str], range: std::ops::Range<usize>| -> Vec<&'a str> {
+                let mut lines = all[range].to_vec();
+                if lines.last().is_some_and(|s| s.is_empty()) {
+                    lines.pop();
                 }
-                if is_removed {
+                lines
+            };
+            if is_removed {
+                for line in lines_of(&old_lines, op.old_range()) {
                     out.push(format!(
                         "-{:>width$} {}",
                         old_line_num,
@@ -491,8 +493,17 @@ pub fn generate_diff_string(
                     old_line_num += 1;
                 }
             }
-            // A `Replace` op iterates both add and remove above; for pure
-            // Insert/Delete only one branch fires. Leave last_was_change set.
+            if is_added {
+                for line in lines_of(&new_lines, op.new_range()) {
+                    out.push(format!(
+                        "+{:>width$} {}",
+                        new_line_num,
+                        line,
+                        width = line_num_width
+                    ));
+                    new_line_num += 1;
+                }
+            }
             last_was_change = true;
             let _ = i; // index only needed for context lookahead below
         } else {
@@ -691,6 +702,37 @@ fn no_change_error(path: &str, total: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn replaced_lines_show_old_text_removed_then_new_text_added() {
+        // Regression: a replace used to print the new text on both the
+        // removed and the added line ("+1 beta" / "-1 beta").
+        let diff = generate_diff_string("alpha\n", "beta\n", 4);
+        assert_eq!(diff.diff, "-1 alpha\n+1 beta");
+        assert_eq!(diff.first_changed_line, Some(1));
+    }
+
+    #[test]
+    fn replace_with_unequal_line_counts_keeps_both_sides() {
+        let diff = generate_diff_string("keep\none\ntwo\nend\n", "keep\nuno\ndos\ntres\nend\n", 4);
+        assert_eq!(
+            diff.diff,
+            " 1 keep\n-2 one\n-3 two\n+2 uno\n+3 dos\n+4 tres\n 4 end"
+        );
+        assert_eq!(diff.first_changed_line, Some(2));
+    }
+
+    #[test]
+    fn pure_insert_and_delete_use_their_own_side() {
+        assert_eq!(
+            generate_diff_string("a\nc\n", "a\nb\nc\n", 4).diff,
+            " 1 a\n+2 b\n 2 c"
+        );
+        assert_eq!(
+            generate_diff_string("a\nb\nc\n", "a\nc\n", 4).diff,
+            " 1 a\n-2 b\n 3 c"
+        );
+    }
 
     #[test]
     fn normalize_to_lf_collapses_crlf_and_cr() {
