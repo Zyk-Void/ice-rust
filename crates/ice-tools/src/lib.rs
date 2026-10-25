@@ -12,6 +12,7 @@
 #![forbid(unsafe_code)]
 
 pub mod bash_background;
+pub mod bash_watch;
 pub mod env;
 pub mod error;
 pub mod file_mutation_queue;

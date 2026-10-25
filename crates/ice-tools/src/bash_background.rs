@@ -101,6 +101,9 @@ pub struct BackgroundShellSnapshot {
     /// Wall-clock runtime so far (or until it ended).
     #[serde(skip)]
     pub runtime: Duration,
+    /// Time since the last output (or since start, before any output).
+    #[serde(skip)]
+    pub since_output: Duration,
 }
 
 /// Delivered once when a shell finishes. Mirrors `BashBackgroundCompletion`.
@@ -297,6 +300,7 @@ impl ShellRecord {
             stdin_open: self.running() && self.stdin.is_some(),
             lingering: self.lingering(),
             runtime: end.saturating_duration_since(self.started),
+            since_output: Instant::now().saturating_duration_since(self.last_output),
         }
     }
 }
