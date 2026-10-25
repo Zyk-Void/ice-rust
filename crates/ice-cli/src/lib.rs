@@ -41,6 +41,7 @@ mod codex_auth;
 mod codex_backend;
 mod codex_models;
 mod codex_usage;
+pub mod cognee;
 pub mod config;
 pub mod context_breakdown;
 mod credentials;

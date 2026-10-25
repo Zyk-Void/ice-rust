@@ -1128,6 +1128,7 @@ dependencies = [
  "base64",
  "crossterm",
  "dirs",
+ "fancy-regex",
  "flate2",
  "fs2",
  "futures",
