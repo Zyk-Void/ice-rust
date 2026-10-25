@@ -79,7 +79,15 @@ struct ShellConfig {
 /// function that answers the full question. Use it rather than reading this
 /// slice, or an extension's channel will be missed — which is precisely the bug
 /// that let `LANGFUSE_PI_PARENT_*` through.
-pub const HOST_PRIVATE_ENV: &[&str] = &[ice_plugin_sdk::SESSION_ID_ENV];
+pub const HOST_PRIVATE_ENV: &[&str] = &[
+    ice_plugin_sdk::SESSION_ID_ENV,
+    // The rest of the per-call session identity bash sets explicitly (see
+    // `tools::bash::SESSION_ENV_NAMES`); an inherited copy would be stale.
+    "ICERS_SESSION_FILE",
+    "ICERS_PROVIDER",
+    "ICERS_MODEL",
+    "ICERS_REASONING_LEVEL",
+];
 
 /// Whether `name` must not be inherited by a spawned shell.
 ///

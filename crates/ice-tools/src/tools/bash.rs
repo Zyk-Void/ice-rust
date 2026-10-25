@@ -118,6 +118,52 @@ pub struct BashToolOptions {
     /// Reports a queued steering message; a foreground call running longer
     /// than five seconds is then released so the model can read it.
     pub steer_probe: Option<SteerProbe>,
+    /// Give each command the current session's identity
+    /// (`ICERS_SESSION_ID`, `ICERS_PROVIDER`, `ICERS_MODEL`,
+    /// `ICERS_REASONING_LEVEL`). Default on (`None`). Mirrors TS
+    /// `exposeSessionEnvironment`; inherited copies are never passed on.
+    pub expose_session_environment: Option<bool>,
+    /// Extra per-call session variables from the host (for example
+    /// `ICERS_SESSION_FILE`), added after the built-in ones.
+    pub session_environment: Option<SessionEnvProvider>,
+}
+
+/// Supplies host-known session variables for each bash call.
+pub type SessionEnvProvider = Arc<dyn Fn() -> HashMap<String, String> + Send + Sync>;
+
+/// Session variables bash sets per call. The host strips inherited copies
+/// (see `HOST_PRIVATE_ENV`), so a command never sees a stale parent session.
+pub const SESSION_ENV_NAMES: [&str; 5] = [
+    "ICERS_SESSION_ID",
+    "ICERS_SESSION_FILE",
+    "ICERS_PROVIDER",
+    "ICERS_MODEL",
+    "ICERS_REASONING_LEVEL",
+];
+
+/// The session environment for the bash call running on this task. Mirrors
+/// TS `resolveSpawnContext`: built fresh per invocation from the run that
+/// requested it.
+fn session_environment(extra: Option<&SessionEnvProvider>) -> HashMap<String, String> {
+    let mut env = HashMap::new();
+    if let Some(info) = ice_agent::tool_execution_scope::tool_call_info() {
+        let session_id = info
+            .session_id
+            .clone()
+            .or_else(|| std::env::var(ice_plugin_sdk::SESSION_ID_ENV).ok());
+        if let Some(id) = session_id.filter(|id| !id.is_empty()) {
+            env.insert("ICERS_SESSION_ID".to_string(), id);
+        }
+        env.insert("ICERS_PROVIDER".to_string(), info.model.provider.clone());
+        env.insert("ICERS_MODEL".to_string(), info.model.id.clone());
+        if let Ok(serde_json::Value::String(level)) = serde_json::to_value(info.thinking_level) {
+            env.insert("ICERS_REASONING_LEVEL".to_string(), level);
+        }
+    }
+    if let Some(extra) = extra {
+        env.extend(extra());
+    }
+    env
 }
 
 /// A foreground call is released for a queued steer only after this long.
@@ -213,7 +259,13 @@ impl AgentTool for BashTool {
                 None => input.command,
             },
             cwd: self.env.cwd().to_path_buf(),
-            env: HashMap::new(),
+            // Session variables come first, so the prepare hook (TS
+            // `spawnHook`) can still rewrite or remove them.
+            env: if self.options.expose_session_environment.unwrap_or(true) {
+                session_environment(self.options.session_environment.as_ref())
+            } else {
+                HashMap::new()
+            },
             inherit_env: true,
         };
         if let Some(prepare) = &self.options.prepare {

@@ -435,3 +435,81 @@ async fn background_and_stdin_requests_are_rejected_without_a_registry() {
         err_text(&err)
     );
 }
+
+#[tokio::test]
+async fn session_environment_is_built_per_call_from_the_running_turn() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("true", ShellScript::success("")).await;
+    let seen = Arc::new(std::sync::Mutex::new(std::collections::HashMap::new()));
+    let sink = seen.clone();
+    let prepare: ice_tools::BashPrepare = Arc::new(move |execution| {
+        *sink.lock().unwrap() = execution.env.clone();
+        Box::pin(async { Ok(()) })
+    });
+    let extra: ice_tools::tools::bash::SessionEnvProvider = Arc::new(|| {
+        std::collections::HashMap::from([(
+            "ICERS_SESSION_FILE".to_string(),
+            "/s.jsonl".to_string(),
+        )])
+    });
+    let tool = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            prepare: Some(prepare.clone()),
+            session_environment: Some(extra),
+            ..Default::default()
+        }),
+    );
+    let mut model = ice_ai::Model::new("m-1", "M", ice_ai::Api::Faux, "faux", "http://x");
+    model.input = vec![ice_ai::InputModality::Text];
+    let info = ice_agent::tool_execution_scope::ToolCallInfo {
+        model,
+        thinking_level: ice_ai::types::ThinkingLevel::High,
+        session_id: Some("sess-9".into()),
+    };
+    ice_agent::tool_execution_scope::with_tool_call(
+        Arc::new(info),
+        run_bash(tool, serde_json::json!({ "command": "true" })),
+    )
+    .await
+    .expect("ok");
+    let first = seen.lock().unwrap().clone();
+    assert_eq!(
+        first.get("ICERS_SESSION_ID").map(String::as_str),
+        Some("sess-9")
+    );
+    assert_eq!(
+        first.get("ICERS_PROVIDER").map(String::as_str),
+        Some("faux")
+    );
+    assert_eq!(first.get("ICERS_MODEL").map(String::as_str), Some("m-1"));
+    assert_eq!(
+        first.get("ICERS_REASONING_LEVEL").map(String::as_str),
+        Some("high")
+    );
+    assert_eq!(
+        first.get("ICERS_SESSION_FILE").map(String::as_str),
+        Some("/s.jsonl")
+    );
+
+    // Opting out sends none of them.
+    let quiet = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            prepare: Some(prepare),
+            expose_session_environment: Some(false),
+            ..Default::default()
+        }),
+    );
+    run_bash(quiet, serde_json::json!({ "command": "true" }))
+        .await
+        .expect("ok");
+    assert!(seen.lock().unwrap().is_empty());
+}
+
+#[test]
+fn inherited_session_identity_is_never_passed_to_commands() {
+    for name in ice_tools::tools::bash::SESSION_ENV_NAMES {
+        assert!(ice_tools::is_host_private_env(name), "{name}");
+    }
+}
