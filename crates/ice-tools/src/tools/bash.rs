@@ -1,12 +1,12 @@
 //! Mirrors `packages/agent/src/harness/tools/bash.ts` — the built-in `bash`
-//! `AgentTool`. Drives `execute_shell_with_capture` with a 2-second checkpoint
-//! throttle, and converts ALL failures (non-zero exit, timeout, abort,
+//! `AgentTool`. Drives `execute_shell_with_capture`, streams throttled
+//! progress, and converts ALL failures (non-zero exit, timeout, abort,
 //! executionError) into `Err(AgentError)` — the agent loop encodes those into an
 //! error `ToolResultMessage`.
 //!
-//! Throttle mirrors the TS `BASH_CHECKPOINT_INTERVAL_MS`: at most one
-//! checkpoint update per 2-second window; a final flush always follows capture
-//! resolution.
+//! Throttle mirrors the coding-agent `BASH_UPDATE_THROTTLE_MS`: the first
+//! output is emitted immediately, later output at most once per 100 ms through
+//! one pending timer, and the final update always follows capture resolution.
 
 use futures::future::BoxFuture;
 use std::collections::HashMap;
@@ -21,19 +21,19 @@ use ice_agent::types::{AgentToolResult, TextContentOrImage, ToolResultPartial};
 use ice_ai::types::{ConstrainedSamplingConfig, ConstrainedStrictness, Tool};
 use schemars::JsonSchema;
 use serde::Deserialize;
-use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::error::{ExecutionError, ExecutionErrorCode};
 use crate::shell_output::{
-    execute_shell_with_capture, ShellCaptureOptions, ShellCaptureProgress, ShellCaptureResult,
+    execute_shell_with_capture, ChunkCallback, LogFileIssue, ShellCaptureOptions,
+    ShellCaptureProgress, ShellCaptureResult,
 };
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{format_size, TruncationResult, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES};
 
 /// Throttle window for bash `on_update` flushes. Mirrors `BASH_UPDATE_THROTTLE_MS`.
-const BASH_UPDATE_THROTTLE_MS: u64 = 2_000;
+const BASH_UPDATE_THROTTLE_MS: u64 = 100;
 
 /// Input for the bash tool. Mirrors TS `BashToolInput`. `timeout` is in seconds.
 #[derive(Debug, Clone, JsonSchema, Deserialize)]
@@ -66,6 +66,9 @@ pub struct BashToolDetails {
     pub truncation: Option<TruncationResult>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub full_output_path: Option<String>,
+    /// Present when the log at `full_output_path` is incomplete or missing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_issue: Option<LogFileIssue>,
 }
 
 /// Mutable execution description passed to the optional prepare hook.
@@ -193,62 +196,17 @@ impl AgentTool for BashTool {
         );
 
         // Initial empty update (mirrors TS `onUpdate?.({ content: [], details: undefined })`).
-        emit_update(&on_update, String::new(), None, None);
+        on_update(AgentToolResult {
+            content: Vec::new(),
+            details: serde_json::Value::Null,
+            ..Default::default()
+        });
 
-        // The throttle state. Shared between the on_chunk callback (which marks
-        // dirty + schedules a flush) and the post-capture final flush.
-        let throttle = Arc::new(Mutex::new(ThrottleState {
-            dirty: false,
-            last_flush: Instant::now(),
-            latest_output: String::new(),
-            latest_truncation: None,
-            latest_full_path: None,
-        }));
-
+        let throttle = Arc::new(UpdateThrottle::new(on_update.clone()));
         let throttle_for_cb = throttle.clone();
-        let on_update_for_cb = on_update.clone();
-        let on_chunk: Box<dyn FnMut(&str, &dyn Fn() -> ShellCaptureProgress) + Send> = Box::new(
+        let on_chunk: ChunkCallback<'_> = Box::new(
             move |_chunk, get_progress: &dyn Fn() -> ShellCaptureProgress| {
-                let progress = get_progress();
-                // Snapshot the fields we need from the progress before touching
-                // the async mutex — the on_chunk callback runs on whatever thread
-                // the env's stdout/stderr callback is invoked from, which may be
-                // a runtime worker. Use try_lock so we never block (and never
-                // panic on a held lock); a missed flush is fine — the final
-                // post-capture flush always emits the terminal state.
-                let new_output = progress.output.clone();
-                let new_truncation = if progress.truncation.truncated {
-                    Some(progress.truncation.clone())
-                } else {
-                    None
-                };
-                let new_full_path = progress
-                    .full_output_path
-                    .as_ref()
-                    .map(|p| p.to_string_lossy().into_owned());
-                let mut st = match throttle_for_cb.try_lock() {
-                    Ok(g) => g,
-                    Err(_) => return, // busy — skip this update; final flush covers it
-                };
-                st.latest_output = new_output;
-                st.latest_truncation = new_truncation;
-                st.latest_full_path = new_full_path;
-                st.dirty = true;
-                let elapsed = st.last_flush.elapsed();
-                let throttle_duration = Duration::from_millis(BASH_UPDATE_THROTTLE_MS);
-                if elapsed >= throttle_duration {
-                    flush_now(&mut st, &on_update_for_cb);
-                } else {
-                    // Schedule a delayed flush (mirrors TS setTimeout)
-                    let remaining = throttle_duration - elapsed;
-                    let throttle_clone = throttle_for_cb.clone();
-                    let on_update_clone = on_update_for_cb.clone();
-                    tokio::spawn(async move {
-                        tokio::time::sleep(remaining).await;
-                        let mut st = throttle_clone.lock().await;
-                        flush_now(&mut st, &on_update_clone);
-                    });
-                }
+                throttle_for_cb.offer(Snapshot::from_progress(get_progress()));
             },
         );
 
@@ -263,29 +221,23 @@ impl AgentTool for BashTool {
             cancel: Some(&signal),
             on_chunk: Some(on_chunk),
             return_execution_errors: true,
+            max_log_bytes: None,
         };
 
         // execute_shell_with_capture wants `&Arc<dyn ExecutionEnv>`.
-        let capture = execute_shell_with_capture(&env, &command, capture_opts)
-            .await
-            .map_err(exec_err_to_agent)?;
-
-        // Final flush + emit the terminal output via on_update.
-        {
-            let mut st = throttle.lock().await;
-            st.latest_output = capture.output.clone();
-            st.latest_truncation = if capture.truncated {
-                Some(capture.truncation.clone())
-            } else {
-                None
-            };
-            st.latest_full_path = capture
+        let capture = execute_shell_with_capture(&env, &command, capture_opts).await;
+        // Cancel any pending timer first so no stale partial update can follow
+        // the final one.
+        throttle.finish();
+        let capture = capture.map_err(exec_err_to_agent)?;
+        throttle.emit(Snapshot {
+            output: capture.output.clone(),
+            truncation: capture.truncated.then(|| capture.truncation.clone()),
+            full_output_path: capture
                 .full_output_path
                 .as_ref()
-                .map(|p| p.to_string_lossy().into_owned());
-            st.dirty = true;
-            flush_now(&mut st, &on_update);
-        }
+                .map(|p| p.to_string_lossy().into_owned()),
+        });
 
         // Build the terminal output text + details, applying truncation notices.
         let (output_text, details) = build_bash_output(&capture);
@@ -335,54 +287,129 @@ impl AgentTool for BashTool {
     }
 }
 
-/// Throttle state, shared between the on_chunk callback and the final flush.
-struct ThrottleState {
-    dirty: bool,
-    last_flush: Instant,
-    latest_output: String,
-    latest_truncation: Option<TruncationResult>,
-    latest_full_path: Option<String>,
-}
-
-/// Flush a dirty throttle state by emitting an `on_update`. Mirrors
-/// `emitOutputUpdate`.
-fn flush_now(st: &mut ThrottleState, on_update: &Arc<dyn Fn(ToolResultPartial) + Send + Sync>) {
-    if !st.dirty {
-        return;
-    }
-    st.dirty = false;
-    st.last_flush = Instant::now();
-    emit_update(
-        on_update,
-        st.latest_output.clone(),
-        st.latest_truncation.clone(),
-        st.latest_full_path.clone(),
-    );
-}
-
-/// Emit a single `on_update` payload built from the given capture snapshot.
-/// Mirrors the TS `onUpdate({ content:[{text:progress.output}], details:{...} })`.
-fn emit_update(
-    on_update: &Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
+/// One model-visible progress snapshot.
+struct Snapshot {
     output: String,
     truncation: Option<TruncationResult>,
     full_output_path: Option<String>,
-) {
-    let details = match (&truncation, &full_output_path) {
-        (None, None) => serde_json::Value::Null,
-        _ => {
-            let details = BashToolDetails {
-                truncation,
-                full_output_path,
-            };
-            serde_json::to_value(details).unwrap_or(serde_json::Value::Null)
+}
+
+impl Snapshot {
+    fn from_progress(progress: ShellCaptureProgress) -> Self {
+        Self {
+            truncation: progress
+                .truncation
+                .truncated
+                .then(|| progress.truncation.clone()),
+            full_output_path: progress
+                .full_output_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().into_owned()),
+            output: progress.output,
         }
-    };
-    on_update(AgentToolResult {
-        content: vec![TextContentOrImage::text(output)],
-        details,
-        ..Default::default()
-    });
+    }
+}
+
+/// Coalesces streaming updates to at most one per
+/// [`BASH_UPDATE_THROTTLE_MS`], with an immediate first update and a single
+/// pending timer. Updates are emitted while holding the lock, so a timer that
+/// fires during `finish` cannot deliver a stale update after the final one.
+struct UpdateThrottle {
+    on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
+    inner: std::sync::Mutex<ThrottleInner>,
+}
+
+#[derive(Default)]
+struct ThrottleInner {
+    last_emit: Option<Instant>,
+    pending: Option<Snapshot>,
+    timer: Option<tokio::task::JoinHandle<()>>,
+    finished: bool,
+}
+
+impl UpdateThrottle {
+    fn new(on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>) -> Self {
+        Self {
+            on_update,
+            inner: std::sync::Mutex::new(ThrottleInner::default()),
+        }
+    }
+
+    fn lock(&self) -> std::sync::MutexGuard<'_, ThrottleInner> {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Record a new snapshot: emit now if the window has passed, otherwise
+    /// keep it for the one pending timer.
+    fn offer(self: &Arc<Self>, snapshot: Snapshot) {
+        let window = Duration::from_millis(BASH_UPDATE_THROTTLE_MS);
+        let mut inner = self.lock();
+        if inner.finished {
+            return;
+        }
+        let now = Instant::now();
+        let due = inner
+            .last_emit
+            .map_or(true, |last| now.duration_since(last) >= window);
+        if due && inner.timer.is_none() {
+            inner.last_emit = Some(now);
+            inner.pending = None;
+            self.deliver(snapshot);
+            return;
+        }
+        inner.pending = Some(snapshot);
+        if inner.timer.is_none() {
+            let wait = inner.last_emit.map_or(Duration::ZERO, |last| {
+                window.saturating_sub(now.duration_since(last))
+            });
+            let this = self.clone();
+            inner.timer = Some(tokio::spawn(async move {
+                tokio::time::sleep(wait).await;
+                let mut inner = this.lock();
+                inner.timer = None;
+                if inner.finished {
+                    return;
+                }
+                if let Some(snapshot) = inner.pending.take() {
+                    inner.last_emit = Some(Instant::now());
+                    this.deliver(snapshot);
+                }
+            }));
+        }
+    }
+
+    /// Stop streaming: drop the pending snapshot and cancel the timer.
+    fn finish(&self) {
+        let mut inner = self.lock();
+        inner.finished = true;
+        inner.pending = None;
+        if let Some(timer) = inner.timer.take() {
+            timer.abort();
+        }
+    }
+
+    /// Emit the final snapshot (after `finish`).
+    fn emit(&self, snapshot: Snapshot) {
+        let _inner = self.lock();
+        self.deliver(snapshot);
+    }
+
+    fn deliver(&self, snapshot: Snapshot) {
+        let details = match (&snapshot.truncation, &snapshot.full_output_path) {
+            (None, None) => serde_json::Value::Null,
+            _ => serde_json::to_value(BashToolDetails {
+                truncation: snapshot.truncation,
+                full_output_path: snapshot.full_output_path,
+                log_issue: None,
+            })
+            .unwrap_or(serde_json::Value::Null),
+        };
+        (self.on_update)(AgentToolResult {
+            content: vec![TextContentOrImage::text(snapshot.output)],
+            details,
+            ..Default::default()
+        });
+    }
 }
 
 /// Build the terminal `(output_text, details)` from a capture, appending the
@@ -397,40 +424,43 @@ fn build_bash_output(capture: &ShellCaptureResult) -> (String, BashToolDetails) 
             .full_output_path
             .as_ref()
             .map(|p| p.to_string_lossy().into_owned());
+        let full = path_str.as_deref().unwrap_or("unavailable");
         if t.last_line_partial {
             let last_line_size = format_size(capture.last_line_bytes);
             output_text.push_str(&format!(
-                "\n\n[Showing last {} of line {end_line} (line is {last_line_size}). Full output: {}]",
+                "\n\n[Showing last {} of line {end_line} (line is {last_line_size}). Full output: {full}]",
                 format_size(t.output_bytes),
-                path_str.as_deref().unwrap_or("?")
             ));
         } else if matches!(
             t.truncated_by,
             Some(crate::truncate::TruncationLimit::Lines)
         ) {
             output_text.push_str(&format!(
-                "\n\n[Showing lines {start_line}-{end_line} of {}. Full output: {}]",
+                "\n\n[Showing lines {start_line}-{end_line} of {}. Full output: {full}]",
                 t.total_lines,
-                path_str.as_deref().unwrap_or("?")
             ));
         } else {
             output_text.push_str(&format!(
-                "\n\n[Showing lines {start_line}-{end_line} of {} ({} limit). Full output: {}]",
+                "\n\n[Showing lines {start_line}-{end_line} of {} ({} limit). Full output: {full}]",
                 t.total_lines,
                 format_size(DEFAULT_MAX_BYTES),
-                path_str.as_deref().unwrap_or("?")
             ));
         }
         BashToolDetails {
             truncation: Some(capture.truncation.clone()),
             full_output_path: path_str,
+            log_issue: capture.log_issue.clone(),
         }
     } else {
         BashToolDetails {
             truncation: None,
             full_output_path: None,
+            log_issue: capture.log_issue.clone(),
         }
     };
+    if let Some(issue) = &capture.log_issue {
+        output_text.push_str(&format!("\n[Warning: full output {}]", issue.describe()));
+    }
     (output_text, details)
 }
 

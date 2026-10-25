@@ -279,6 +279,66 @@ async fn supports_command_prefix() {
     assert_eq!(text_output(&r), "hello");
 }
 
+#[tokio::test]
+async fn full_output_log_keeps_output_older_than_the_tail() {
+    let (env, ctx) = fresh_context();
+    // ~300 KB: three times the 100 KB in-memory tail. The log must hold the
+    // first line too, not just what the tail retained.
+    let lines: String = (1..=3000)
+        .map(|i| format!("{:<99}\n", format!("line-{i}")))
+        .collect();
+    env.register_shell("huge", ShellScript::success(lines.clone()))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(tool, serde_json::json!({ "command": "huge" }))
+        .await
+        .expect("ok");
+    let path = r
+        .details
+        .get("full_output_path")
+        .and_then(|v| v.as_str())
+        .expect("full_output_path present");
+    let log = env.read_text_file(path, None).await.expect("read log");
+    assert_eq!(log.len(), lines.len());
+    assert!(log.starts_with("line-1 "), "{}", &log[..20]);
+    assert!(log.contains("\nline-1500 "));
+    assert!(log.ends_with(&format!("{:<99}\n", "line-3000")));
+    assert!(r.details.get("log_issue").is_none());
+}
+
+#[tokio::test]
+async fn first_output_update_is_immediate_and_initial_update_is_empty() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("hello", ShellScript::success("hi\n"))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let updates = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let sink = updates.clone();
+    let on_update = Arc::new(move |p: ice_agent::types::AgentToolResult| {
+        sink.lock().unwrap().push(p);
+    });
+    tool.execute(
+        "bash-u",
+        serde_json::json!({ "command": "hello" }),
+        CancellationToken::new(),
+        on_update,
+    )
+    .await
+    .expect("ok");
+    // Let any (wrongly) pending timer fire before inspecting.
+    tokio::time::sleep(Duration::from_millis(250)).await;
+    let updates = updates.lock().unwrap();
+    assert!(
+        updates[0].content.is_empty(),
+        "initial update has no blocks"
+    );
+    // The chunk update is emitted at once, then the final update; no stale
+    // partial follows the final one.
+    assert_eq!(updates.len(), 3, "initial, first chunk, final");
+    assert_eq!(text_output(&updates[1]), "hi\n");
+    assert_eq!(text_output(&updates[2]), "hi\n");
+}
+
 fn slow(stdout: &str, delay_ms: u64) -> ShellScript {
     ShellScript {
         delay_ms: Some(delay_ms),
