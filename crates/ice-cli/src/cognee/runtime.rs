@@ -15,7 +15,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};
-use std::time::Duration;
 
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::extension::{
@@ -62,7 +61,6 @@ const MAX_TRACES_PER_TURN: u32 = 24;
 const IDLE_IMPROVE_COOLDOWN_MS: u64 = 300_000;
 const DREAM_IMPROVE_TIMEOUT_MS: u64 = 30_000;
 const DREAM_MAX_SESSIONS: usize = 2;
-const ACTIVITY_FRAME: Duration = Duration::from_millis(180);
 
 /// Tools whose results are captured as traces.
 pub const CAPTURE_TOOL_ALLOWLIST: [&str; 18] = [
@@ -346,7 +344,6 @@ struct State {
     key_source: KeySource,
     shutting_down: bool,
     turn_traces: u32,
-    activity: Option<String>,
 }
 
 impl State {
@@ -382,7 +379,6 @@ impl State {
             key_source: KeySource::None,
             shutting_down: false,
             turn_traces: 0,
-            activity: None,
         }
     }
 
@@ -439,7 +435,6 @@ pub struct CogneeRuntime {
     state: Mutex<State>,
     background: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
-    activity_task: Mutex<Option<JoinHandle<()>>>,
     tool_args: Mutex<HashMap<String, Value>>,
     /// Dream ledger writes run one at a time.
     dream_writes: tokio::sync::Mutex<()>,
@@ -468,7 +463,6 @@ impl CogneeRuntime {
             state: Mutex::new(State::new()),
             background: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
-            activity_task: Mutex::new(None),
             tool_args: Mutex::new(HashMap::new()),
             dream_writes: tokio::sync::Mutex::new(()),
             drain: tokio::sync::Mutex::new(()),
@@ -718,65 +712,14 @@ impl CogneeRuntime {
         }
     }
 
-    /// `updateStatusLine`.
+    /// The footer shows only whether Cognee is on; what it did is shown by
+    /// the activity panel above the prompt.
     pub fn update_status_line(&self) {
-        let text = {
-            let state = self.state();
-            if !Self::enabled(&state, self.offline) {
-                None
-            } else if let Some(activity) = &state.activity {
-                Some(format!("cognee:{activity} ..."))
-            } else {
-                let health = if state.connected {
-                    "ok"
-                } else if state.last_error.is_some() {
-                    "err"
-                } else {
-                    "…"
-                };
-                Some(format!(
-                    "cognee:{} {health} cap={}",
-                    state.active_dataset(),
-                    on_off(state.config.capture_session)
-                ))
-            }
-        };
-        self.set_status(text.as_deref());
-    }
-
-    fn clear_activity(&self) {
-        if let Some(task) = self.activity_task.lock().unwrap().take() {
-            task.abort();
-        }
-        self.state().activity = None;
-    }
-
-    fn start_activity(&self, activity: &str) {
-        self.clear_activity();
-        self.state().activity = Some(activity.into());
-        if self.status.lock().unwrap().is_none() {
-            return;
-        }
-        let this = self.arc();
-        let activity = activity.to_string();
-        let task = tokio::spawn(async move {
-            let frames = [".", "..", "..."];
-            let mut frame = 0usize;
-            loop {
-                if this.state().activity.as_deref() != Some(activity.as_str()) {
-                    return;
-                }
-                this.set_status(Some(&format!("cognee:{activity} {}", frames[frame % 3])));
-                frame += 1;
-                tokio::time::sleep(ACTIVITY_FRAME).await;
-            }
-        });
-        *self.activity_task.lock().unwrap() = Some(task);
-    }
-
-    fn stop_activity(&self) {
-        self.clear_activity();
-        self.update_status_line();
+        self.set_status(Some(if self.is_enabled() {
+            "cognee"
+        } else {
+            "disabled"
+        }));
     }
 
     // ── capture ──
@@ -1905,7 +1848,6 @@ impl CogneeRuntime {
             state.shutting_down = true;
             (state.client.clone(), state.session_id.clone())
         };
-        self.clear_activity();
         let settle = self.settle.lock().unwrap().take();
         if let Some(settle) = settle {
             let _ = settle.await;
@@ -2458,7 +2400,6 @@ impl HarnessExtension for CogneeRuntime {
         self.state().turn_traces = 0;
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
-        self.start_activity("recall");
         self.observe(
             "recall",
             "started",
@@ -2469,7 +2410,6 @@ impl HarnessExtension for CogneeRuntime {
             },
         );
         let result = self.recall_for_prompt(event, &request_id, started).await;
-        self.stop_activity();
         result
     }
 
@@ -2749,6 +2689,24 @@ mod tests {
             checkpoint_recall_query(&messages),
             "explain the cache eviction policy"
         );
+    }
+
+    #[tokio::test]
+    async fn footer_status_is_only_cognee_or_disabled() {
+        let transport = Arc::new(FakeTransport::default());
+        let dir = tempfile::tempdir().unwrap();
+        let on = runtime(dir.path(), &transport, Some(json!({})), false);
+        let status = ice_extensions::ExtensionStatusMailbox::new();
+        *on.status.lock().unwrap() = Some(status.clone());
+        on.update_status_line();
+        assert_eq!(status.get(STATUS_KEY).as_deref(), Some("cognee"));
+
+        let offline_dir = tempfile::tempdir().unwrap();
+        let off = runtime(offline_dir.path(), &transport, Some(json!({})), true);
+        let status = ice_extensions::ExtensionStatusMailbox::new();
+        *off.status.lock().unwrap() = Some(status.clone());
+        off.update_status_line();
+        assert_eq!(status.get(STATUS_KEY).as_deref(), Some("disabled"));
     }
 
     #[tokio::test]

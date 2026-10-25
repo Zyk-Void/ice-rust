@@ -256,7 +256,7 @@ Cognee is off until you configure it: run `/cognee on`, which writes `<agent dir
 - `/cognee improve [now]` requests consolidation immediately. `/cognee flush [pending|uncertain]` replays up to four queued writes. A write that timed out may already have landed, so it is marked uncertain and replayed only by `/cognee flush uncertain`.
 - The model gets a `cognee_search` tool while Cognee is enabled, and three skills (`cognee-search`, `cognee-remember`, `cognee-sync`).
 - `/settings` has a Cognee section with the same switches, plus `checkpointRecall`: when Blackhole is active, a bounded recall for the summarized request is written to `<agent dir>/ice-cognee/compaction-recall.json` and added once to the next Blackhole checkpoint.
-- The footer shows `cognee:<dataset> ok|err|… cap=on|off`. Activity is logged to `<agent dir>/ice-cognee/observations.jsonl` (rotated at 2 MiB).
+- The footer shows `cognee` when enabled and `disabled` otherwise. When Cognee recalls, saves or improves, a short "cognee memory" panel appears above the prompt with what was sent and what came back, and hides again when stale. Activity is also logged to `<agent dir>/ice-cognee/observations.jsonl` (rotated at 2 MiB).
 - Environment overrides: `ICERS_COGNEE_ENABLED`, `ICERS_COGNEE_RECALL`, `ICERS_COGNEE_REMEMBER`, `ICERS_COGNEE_CAPTURE`, `ICERS_COGNEE_CAPTURE_TOOLS`, `ICERS_COGNEE_IMPROVE`, `ICERS_COGNEE_BASE_URL`, `ICERS_COGNEE_DATASET`, `ICERS_COGNEE_COMPACTION_SUMMARY`, `ICERS_COGNEE_CHECKPOINT_RECALL`, plus Cognee's own `COGNEE_BASE_URL` and `COGNEE_LOCAL_API_URL`.
 
 ### macOS keyboard and plugin panels

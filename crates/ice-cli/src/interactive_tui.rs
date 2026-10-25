@@ -58,6 +58,7 @@ mod rendering;
 use rendering::*;
 mod session_header;
 use session_header::*;
+mod cognee_activity;
 mod mcp_panel;
 mod panels;
 mod pet;
@@ -1552,7 +1553,7 @@ pub async fn interactive_tui(
 
     // ---- Layout root (built ONCE; mirrors TS fullscreenLayoutRoot) ----
     // root = VStack[ scrollview(basis:0 grow:1 shrink:1 min:1), dock(shrink:1) ]
-    // dock  = VStack[ status(auto), autocomplete(auto), editor_container(shrink:0 min:3), footer(auto) ]
+    // dock  = VStack[ status(auto), autocomplete(auto), cognee activity(auto), editor_container(shrink:0 min:3), footer(auto) ]
     //
     // The scrollview gets `basis(0)` so the constrained stack allocator starts
     // it at zero height and grows it to fill the space the dock does not need
@@ -1563,6 +1564,9 @@ pub async fn interactive_tui(
     let editor_container = Arc::new(Container::new());
     editor_container.add_child(editor.clone());
 
+    let cognee_activity = Arc::new(cognee_activity::CogneeActivity::new());
+    let cognee_activity_tick = cognee_activity.clone();
+
     let dock = Arc::new(VStack::from_children(vec![
         StackChild::Entry(StackEntry::new(Arc::new(panels::RegularPanels {
             mailbox: reload_context.ext_status.clone(),
@@ -1571,6 +1575,7 @@ pub async fn interactive_tui(
         StackChild::Entry(StackEntry::new(state.pending_container().clone())),
         StackChild::Entry(StackEntry::new(status_container.clone())),
         StackChild::Entry(StackEntry::new(autocomplete_container.clone())),
+        StackChild::Entry(StackEntry::new(cognee_activity.clone())),
         // NOTE: no Spacer here. The scroll content already ends with a blank line
         // (`document_container`), and a second one in the dock stacked into a
         // two-row gap between the last message and the input box. One row of
@@ -1902,6 +1907,9 @@ pub async fn interactive_tui(
             if state_tick.sync_extension_status() || panels_changed {
                 // Status/panel updates leave chat content untouched. The scroll
                 // cache regenerates itself if enabling a sidebar changes width.
+                tui_tick.request_render_reusing_scroll_content();
+            }
+            if cognee_activity_tick.sync() {
                 tui_tick.request_render_reusing_scroll_content();
             }
             if pet_tick.tick(scroll_tick.viewport_height()) {
