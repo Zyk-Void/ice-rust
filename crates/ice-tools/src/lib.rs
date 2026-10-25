@@ -14,6 +14,7 @@
 pub mod env;
 pub mod error;
 pub mod file_mutation_queue;
+mod ignore_rules;
 pub mod image;
 pub mod image_processing;
 pub mod in_memory;

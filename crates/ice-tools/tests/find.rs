@@ -180,3 +180,122 @@ async fn find_directory_match_has_trailing_slash() {
         "dir match should have trailing slash: {out}"
     );
 }
+
+fn lines(r: &ice_agent::types::AgentToolResult) -> Vec<String> {
+    text_output(r).lines().map(str::to_owned).collect()
+}
+
+/// Seed a file, creating its parent directories first.
+async fn seed_tree(env: &InMemoryExecutionEnv, rel: &str, bytes: &[u8]) {
+    if let Some((parent, _)) = rel.rsplit_once('/') {
+        make_dir(env, parent).await;
+    }
+    seed(env, rel, bytes.to_vec()).await;
+}
+
+#[tokio::test]
+async fn find_respects_hierarchical_ignore_files() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, ".gitignore", b"target/\n*.log\n!keep.log\n").await;
+    seed_tree(&env, "a.log", b"").await;
+    seed_tree(&env, "keep.log", b"").await;
+    seed_tree(&env, "target/out.log", b"").await;
+    seed_tree(&env, "sub/.gitignore", b"local.txt\n").await;
+    seed_tree(&env, "sub/local.txt", b"").await;
+    seed_tree(&env, "sub/shared.txt", b"").await;
+    // The sibling directory is not affected by sub/.gitignore.
+    seed_tree(&env, "other/local.txt", b"").await;
+    seed_tree(&env, "sub/.ignore", b"shared.txt\n").await;
+    let tool = ice_tools::create_find_tool(&ctx, None);
+    let logs = run_find(tool.clone(), serde_json::json!({ "pattern": "*.log" }))
+        .await
+        .expect("find ok");
+    assert_eq!(lines(&logs), vec!["keep.log"]);
+    let txt = run_find(tool, serde_json::json!({ "pattern": "*.txt" }))
+        .await
+        .expect("find ok");
+    assert_eq!(lines(&txt), vec!["other/local.txt"]);
+}
+
+#[tokio::test]
+async fn find_matches_literal_basenames_at_any_depth_and_strips_dot_slash() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "target.txt", b"").await;
+    seed_tree(&env, "a/b/target.txt", b"").await;
+    seed_tree(&env, "src/lib/x.rs", b"").await;
+    let tool = ice_tools::create_find_tool(&ctx, None);
+    let r = run_find(tool.clone(), serde_json::json!({ "pattern": "target.txt" }))
+        .await
+        .expect("find ok");
+    assert_eq!(lines(&r), vec!["target.txt", "a/b/target.txt"]);
+    let r = run_find(
+        tool.clone(),
+        serde_json::json!({ "pattern": "././src/**/*.rs" }),
+    )
+    .await
+    .expect("find ok");
+    assert_eq!(lines(&r), vec!["src/lib/x.rs"]);
+    let r = run_find(
+        tool,
+        serde_json::json!({ "pattern": "/tmp/work/src/**/*.rs" }),
+    )
+    .await
+    .expect("find ok");
+    assert_eq!(lines(&r), vec!["src/lib/x.rs"]);
+}
+
+#[tokio::test]
+async fn find_reports_the_limit_when_exactly_limit_results_exist() {
+    let (env, ctx) = fresh_context();
+    for i in 0..3 {
+        seed(&env, &format!("f{i}.rs"), b"".to_vec()).await;
+    }
+    let tool = ice_tools::create_find_tool(&ctx, None);
+    let r = run_find(tool, serde_json::json!({ "pattern": "*.rs", "limit": 3 }))
+        .await
+        .expect("find ok");
+    assert!(text_output(&r).contains("3 results limit reached"));
+}
+
+#[tokio::test]
+async fn find_fails_when_cancelled_instead_of_returning_partial_results() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "a.rs", b"").await;
+    let tool = ice_tools::create_find_tool(&ctx, None);
+    let signal = CancellationToken::new();
+    signal.cancel();
+    let err = tool
+        .execute(
+            "f",
+            serde_json::json!({ "pattern": "*.rs" }),
+            signal,
+            Arc::new(|_| ()),
+        )
+        .await
+        .expect_err("cancelled");
+    assert!(
+        format!("{err:?}").to_lowercase().contains("abort"),
+        "{err:?}"
+    );
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn find_lists_symlinks_without_following_them() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("real")).unwrap();
+    std::fs::write(dir.path().join("real/inside.txt"), "").unwrap();
+    std::os::unix::fs::symlink(dir.path().join("real"), dir.path().join("link")).unwrap();
+    let env: Arc<dyn ice_tools::ExecutionEnv> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        dir.path().to_path_buf(),
+    ));
+    let tool = ice_tools::create_find_tool(&ExecutionToolContext::new(env, None), None);
+    let r = run_find(tool.clone(), serde_json::json!({ "pattern": "*.txt" }))
+        .await
+        .expect("find ok");
+    assert_eq!(lines(&r), vec!["real/inside.txt"]);
+    let r = run_find(tool, serde_json::json!({ "pattern": "link" }))
+        .await
+        .expect("find ok");
+    assert_eq!(lines(&r), vec!["link"]);
+}
