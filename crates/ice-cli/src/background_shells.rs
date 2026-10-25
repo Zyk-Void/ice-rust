@@ -208,3 +208,83 @@ fn fire_message(fire: &BashWatchFire) -> ice_agent::AgentMessage {
         now_ms(),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tools_and_settings() {
+        let settings: crate::settings::Settings = serde_json::from_str(
+            r#"{"bashInputApproval":"allow","bashAutoBackgroundSeconds":90,"bashPromptAlertSeconds":0}"#,
+        )
+        .unwrap();
+        let shells = SessionShells::new(&settings);
+        let names: Vec<&str> = shells.tools().iter().map(|(name, _)| *name).collect();
+        assert_eq!(
+            names,
+            vec!["bash_output", "bash_kill", "bash_input", "bash_watch"]
+        );
+        assert_eq!(shells.approval, BashInputApproval::Allow);
+        assert_eq!(shells.auto_background_secs(), Some(90.0));
+        let defaults = SessionShells::new(&Default::default());
+        assert_eq!(defaults.approval, BashInputApproval::Ask);
+        assert_eq!(defaults.auto_background_secs(), None);
+    }
+
+    fn text_of(message: &ice_agent::AgentMessage) -> String {
+        match message {
+            ice_agent::AgentMessage::Custom(c) => c
+                .content
+                .iter()
+                .filter_map(|b| match b {
+                    ice_ai::types::Content::Text(t) => Some(t.text.clone()),
+                    _ => None,
+                })
+                .collect(),
+            _ => String::new(),
+        }
+    }
+
+    #[test]
+    fn completion_and_fire_messages() {
+        let completion = BashBackgroundCompletion {
+            task_id: "bash-2".into(),
+            command: "npm test\nnpm run lint".into(),
+            text: "3 passed".into(),
+            is_error: false,
+            duration_ms: 4_200,
+            exit_code: Some(0),
+            description: Some("tests".into()),
+            log_path: None,
+            log_issue: None,
+            lingering: true,
+            stopped_by_user: false,
+        };
+        let text = text_of(&completion_message(&completion));
+        assert!(
+            text.starts_with(
+                "Background shell bash-2 completed after 4s: npm test (+1 more lines) (tests)"
+            ),
+            "{text}"
+        );
+        assert!(text.contains("left processes running"), "{text}");
+        assert!(text.ends_with("\n\n3 passed"), "{text}");
+        let fire = BashWatchFire {
+            watch_id: "watch-1".into(),
+            target: "bash-2".into(),
+            kind: ice_tools::bash_watch::BashWatchKind::Pattern,
+            reason: "Output matched \"ready\": ready on :3000".into(),
+            tail: "ready on :3000".into(),
+            log_path: None,
+            auto: false,
+            fire_id: "watch-1#1".into(),
+        };
+        let text = text_of(&fire_message(&fire));
+        assert!(
+            text.starts_with("Watch watch-1 on background shell bash-2 (pattern): Output matched"),
+            "{text}"
+        );
+        assert!(text.ends_with("Recent output:\nready on :3000"), "{text}");
+    }
+}
