@@ -59,6 +59,7 @@ pub mod mcp;
 pub mod model_registry;
 pub mod modes;
 mod oauth_codex;
+pub mod observe;
 pub mod packages;
 pub mod prebuilt_extensions;
 mod prebuilt_release;
