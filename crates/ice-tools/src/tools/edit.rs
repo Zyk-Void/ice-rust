@@ -217,6 +217,39 @@ impl AgentTool for EditTool {
     }
 }
 
+/// Predict an edit's result without writing. Mirrors `computeEditsDiff`:
+/// reads the current file, applies the same matching pipeline and returns the
+/// display diff, unified patch and first changed line, or the error the edit
+/// would fail with. It takes no mutation lock, so the file can change before
+/// execution; the edit itself stays authoritative.
+pub async fn compute_edits_diff(
+    env: &dyn crate::ExecutionEnv,
+    path: &str,
+    edits: &[ReplaceEdit],
+) -> Result<EditToolDetails, String> {
+    if edits.is_empty() {
+        return Err(
+            "Edit tool input is invalid. edits must contain at least one replacement.".into(),
+        );
+    }
+    let abs = resolve_tool_path(env, path, None)
+        .await
+        .map_err(|e| e.to_string())?;
+    let read = env
+        .read_text_file(&abs, None)
+        .await
+        .map_err(|e| e.to_string())?;
+    let normalized = normalize_to_lf(strip_bom(&read).text);
+    let apply =
+        apply_edits_to_normalized_content(&normalized, edits, path).map_err(|e| e.to_string())?;
+    let diff = generate_diff_string(&apply.base_content, &apply.new_content, 4);
+    Ok(EditToolDetails {
+        diff: diff.diff,
+        patch: generate_unified_patch(path, &apply.base_content, &apply.new_content),
+        first_changed_line: diff.first_changed_line,
+    })
+}
+
 /// Mirrors `prepareEditArguments`: if `edits` is a JSON string, parse it into an
 /// array; if legacy `oldText`/`newText` are present, append them to `edits` and
 /// strip them. Returns the (possibly rewritten) args value.
@@ -290,4 +323,41 @@ fn check_abort(cancel: &CancellationToken) -> Result<(), FileError> {
 
 fn file_err_to_agent(e: FileError) -> AgentError {
     AgentError::Tool(e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::FileSystem;
+
+    #[tokio::test]
+    async fn preview_matches_execution_and_does_not_write() {
+        let env = crate::InMemoryExecutionEnv::with_cwd("/w".into());
+        env.write_file("/w/f.txt", FileContent::Text("a\nb\nc\n".into()), None)
+            .await
+            .unwrap();
+        let edits = vec![ReplaceEdit {
+            old_text: "b".into(),
+            new_text: "B".into(),
+        }];
+        let preview = compute_edits_diff(&env, "f.txt", &edits).await.unwrap();
+        assert!(preview.diff.contains("-2 b"), "{}", preview.diff);
+        assert!(preview.diff.contains("+2 B"), "{}", preview.diff);
+        assert_eq!(preview.first_changed_line, Some(2));
+        assert_eq!(
+            env.read_text_file("/w/f.txt", None).await.unwrap(),
+            "a\nb\nc\n"
+        );
+        let err = compute_edits_diff(
+            &env,
+            "f.txt",
+            &[ReplaceEdit {
+                old_text: "zzz".into(),
+                new_text: "y".into(),
+            }],
+        )
+        .await
+        .unwrap_err();
+        assert!(err.contains("Could not find the exact text"), "{err}");
+    }
 }
