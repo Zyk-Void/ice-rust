@@ -72,6 +72,23 @@ fn persists_and_replays_after_reopen() {
     assert!(store.get_state("missing", None).unwrap().is_none());
 }
 
+#[cfg(unix)]
+#[test]
+fn reopening_an_existing_store_restricts_database_permissions() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("observability.sqlite");
+    let store = ObserveRunStore::open(&path).unwrap();
+    store.close().unwrap();
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+    let store = ObserveRunStore::open(&path).unwrap();
+    let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+    assert_eq!(mode, 0o600);
+    store.close().unwrap();
+}
+
 #[test]
 fn updates_replace_items_in_first_insertion_order() {
     let dir = tempfile::tempdir().unwrap();

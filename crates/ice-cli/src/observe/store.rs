@@ -199,13 +199,25 @@ impl ObserveRunStore {
         // History holds full prompts and tool output: create it private
         // (SQLite gives the -wal/-shm files the database's mode).
         #[cfg(unix)]
-        if !path.exists() {
-            use std::os::unix::fs::OpenOptionsExt;
-            let _ = std::fs::OpenOptions::new()
+        {
+            use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+            match std::fs::OpenOptions::new()
                 .write(true)
                 .create_new(true)
                 .mode(0o600)
-                .open(path);
+                .open(path)
+            {
+                Ok(_) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(error) => return Err(error.to_string()),
+            }
+            let metadata = std::fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+            if !metadata.file_type().is_file() {
+                return Err("observability database path must be a regular file".into());
+            }
+            let mut permissions = metadata.permissions();
+            permissions.set_mode(0o600);
+            std::fs::set_permissions(path, permissions).map_err(|e| e.to_string())?;
         }
         let mut conn = Connection::open(path).map_err(sql_err)?;
         conn.busy_timeout(std::time::Duration::from_millis(5_000))

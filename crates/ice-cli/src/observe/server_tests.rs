@@ -98,6 +98,8 @@ fn request_parsing() {
     assert_eq!(request.cookie(OBSERVE_COOKIE), Some("t=v"));
     assert_eq!(request.bearer(), Some("tok"));
     assert!(parse_request("garbage").is_none());
+    assert!(parse_request("GET / HTTP/1.foo\r\nHost: localhost").is_none());
+    assert!(parse_request("GET / HTTP/2.0\r\nHost: localhost").is_none());
 }
 
 #[test]
@@ -115,7 +117,18 @@ fn token_file_is_created_once_and_private() {
         assert_eq!(mode & 0o777, 0o600);
     }
     std::fs::write(&path, "  custom \n").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+    }
     assert_eq!(load_observe_token(&path).unwrap(), "custom");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
+    }
 }
 
 #[test]
@@ -221,12 +234,15 @@ async fn runs_replay_and_combined_state() {
     assert_eq!(combined.live_run_id, current.run_id());
     assert_eq!(combined.state.header.session_id, "current");
     assert_eq!(combined.runs.len(), 2);
-    let texts: Vec<_> = combined
+    let mut texts: Vec<_> = combined
         .state
         .items
         .iter()
         .map(|i| i.text.clone().unwrap())
         .collect();
+    // Cross-run events can share millisecond timestamps, so run-ID tie-breaking
+    // does not guarantee that their display order matches creation order.
+    texts.sort_unstable();
     assert_eq!(texts, ["from another process", "local"]);
     assert_eq!(combined.state.threads.len(), 2);
     srv.close().await;
@@ -276,6 +292,22 @@ async fn a_busy_port_is_reported_as_shared() {
     assert_eq!(second.port, first.port);
     second.close().await;
     first.close().await;
+}
+
+#[tokio::test]
+async fn a_busy_port_without_a_persistent_token_fails_closed() {
+    let first = server(recorder(None, "a"), None).await;
+    let result = start_observe_server(ObserveServerOptions {
+        port: first.port,
+        recorder: recorder(None, "b"),
+        store: None,
+        token: None,
+    })
+    .await;
+    first.close().await;
+
+    assert!(result.is_err());
+    assert!(result.err().unwrap().contains("persistent observe token"));
 }
 
 #[test]

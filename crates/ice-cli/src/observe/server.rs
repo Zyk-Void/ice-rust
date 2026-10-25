@@ -17,8 +17,9 @@
 //!   not the first 250 events, so late subscribers see the latest items.
 //! - Each SSE client has its own bounded queue; a client that falls behind
 //!   is sent a fresh snapshot instead of buffering without limit.
-//! - Like TS, a port already in use is reported as `shared` without checking
-//!   who owns it; the local recorder keeps recording into the shared store.
+//! - A port already in use is reported as `shared` without checking who owns
+//!   it when a persistent token is available; the local recorder keeps
+//!   recording into the shared store.
 
 use std::collections::{BTreeMap, HashMap};
 use std::net::SocketAddr;
@@ -58,7 +59,10 @@ static DASHBOARD_HTML: &str = include_str!("dashboard.html");
 /// 0700 directory. A concurrent writer that won is read back.
 pub fn load_observe_token(path: &Path) -> Result<String, String> {
     match std::fs::read_to_string(path) {
-        Ok(existing) if !existing.trim().is_empty() => return Ok(existing.trim().to_string()),
+        Ok(existing) if !existing.trim().is_empty() => {
+            set_private_token_permissions(path)?;
+            return Ok(existing.trim().to_string());
+        }
         Ok(_) => {}
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
         Err(e) => return Err(e.to_string()),
@@ -94,11 +98,26 @@ pub fn load_observe_token(path: &Path) -> Result<String, String> {
             if existing.is_empty() {
                 Err(format!("{} exists but is empty", path.display()))
             } else {
+                set_private_token_permissions(path)?;
                 Ok(existing.to_string())
             }
         }
         Err(e) => Err(e.to_string()),
     }
+}
+
+fn set_private_token_permissions(path: &Path) -> Result<(), String> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let metadata = std::fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+        if !metadata.file_type().is_file() {
+            return Err("observe token path must be a regular file".into());
+        }
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 fn random_token() -> Result<String, String> {
@@ -180,6 +199,7 @@ struct ServerState {
 
 /// Start the dashboard. Mirrors TS `startObserveServer`.
 pub async fn start_observe_server(options: ObserveServerOptions) -> Result<ObserveServer, String> {
+    let persistent_token = options.token.is_some();
     let token = match options.token {
         Some(token) => token,
         None => random_token()?,
@@ -187,6 +207,11 @@ pub async fn start_observe_server(options: ObserveServerOptions) -> Result<Obser
     let requested = options.port;
     let listener = match TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], requested))).await {
         Ok(listener) => listener,
+        Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && !persistent_token => {
+            return Err(
+                "cannot reuse an occupied observe port without a persistent observe token".into(),
+            );
+        }
         Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => {
             let url = format!("http://127.0.0.1:{requested}");
             return Ok(ObserveServer {
@@ -259,7 +284,8 @@ pub fn parse_request(head: &str) -> Option<Request> {
     let mut parts = lines.next()?.split(' ');
     let method = parts.next()?.to_string();
     let target = parts.next()?;
-    if !parts.next()?.starts_with("HTTP/1.") {
+    let version = parts.next()?;
+    if !matches!(version, "HTTP/1.0" | "HTTP/1.1") || parts.next().is_some() {
         return None;
     }
     let (path, query_str) = target.split_once('?').unwrap_or((target, ""));
