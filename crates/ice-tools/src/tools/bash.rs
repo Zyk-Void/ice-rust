@@ -326,18 +326,20 @@ impl AgentTool for BashTool {
             // The log exists before the shell runs, so its path is stable.
             capture.persist().await;
             let log_path = capture.log_path();
-            let id = registry.adopt(Adoption {
-                live,
-                capture,
-                command: original_command.clone(),
-                origin: ShellOrigin::Model,
-                description: input.description.clone(),
-                started,
-                started_at_ms,
-                initial_output: String::new(),
-                env: self.env.clone(),
-                settle: settle_formatter(timeout),
-            });
+            let id = registry
+                .adopt(Adoption {
+                    live,
+                    capture,
+                    command: original_command.clone(),
+                    origin: ShellOrigin::Model,
+                    description: input.description.clone(),
+                    started,
+                    started_at_ms,
+                    initial_output: String::new(),
+                    env: self.env.clone(),
+                    settle: settle_formatter(timeout),
+                })
+                .map_err(AgentError::Tool)?;
             let text = format!(
                 "Started background shell {id}: {}\n{}",
                 summarize_shell_command(&original_command),
@@ -365,10 +367,11 @@ impl AgentTool for BashTool {
             .as_ref()
             .and(self.options.auto_background_secs)
             .filter(|secs| *secs > 0.0)
-            .filter(|secs| timeout.is_none_or(|t| t > *secs));
+            .filter(|secs| timeout.is_none_or(|t| t > *secs))
+            .and_then(|secs| Duration::try_from_secs_f64(secs).ok());
         let auto_timer = async move {
             match auto_after {
-                Some(secs) => tokio::time::sleep(Duration::from_secs_f64(secs)).await,
+                Some(duration) => tokio::time::sleep(duration).await,
                 None => std::future::pending::<()>().await,
             }
         };
@@ -461,18 +464,20 @@ impl AgentTool for BashTool {
                     .truncated
                     .then(|| progress.truncation.clone());
                 let shown = progress.output.clone();
-                let id = registry.adopt(Adoption {
-                    live,
-                    capture,
-                    command: original_command,
-                    origin,
-                    description: input.description,
-                    started,
-                    started_at_ms,
-                    initial_output: shown.clone(),
-                    env: self.env.clone(),
-                    settle: settle_formatter(timeout),
-                });
+                let id = registry
+                    .adopt(Adoption {
+                        live,
+                        capture,
+                        command: original_command,
+                        origin,
+                        description: input.description,
+                        started,
+                        started_at_ms,
+                        initial_output: shown.clone(),
+                        env: self.env.clone(),
+                        settle: settle_formatter(timeout),
+                    })
+                    .map_err(AgentError::Tool)?;
                 let why = match reason {
                     ReleaseReason::User => {
                         "The user moved this command to the background.".to_string()
@@ -483,7 +488,7 @@ impl AgentTool for BashTool {
                     }
                     ReleaseReason::Timer => format!(
                         "Still running after {}s, so this command moved to the background.",
-                        auto_after.map_or(0, |s| s as u64)
+                        auto_after.map_or(0, |duration| duration.as_secs())
                     ),
                 };
                 let mut text = format!("{why} It continues as background shell {id}.");

@@ -51,6 +51,7 @@ fn line_number(value: Option<f64>, name: &str) -> Result<Option<usize>, AgentErr
         Some(v) if !v.is_finite() => {
             Err(AgentError::Tool(format!("{name} must be a finite number")))
         }
+        Some(v) if v >= usize::MAX as f64 => Err(AgentError::Tool(format!("{name} is too large"))),
         Some(v) => Ok(Some(v.max(0.0).floor() as usize)),
     }
 }
@@ -234,7 +235,7 @@ impl AgentTool for ReadTool {
 
         let (selected_content, user_limited_lines): (String, Option<usize>) =
             if let Some(limit) = limit {
-                let end_line = std::cmp::min(start_line + limit, all_lines.len());
+                let end_line = start_line.saturating_add(limit).min(all_lines.len());
                 (
                     all_lines[start_line..end_line].join("\n"),
                     Some(end_line - start_line),

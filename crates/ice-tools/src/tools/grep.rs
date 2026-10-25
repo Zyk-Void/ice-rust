@@ -241,12 +241,6 @@ impl AgentTool for GrepTool {
                     };
                     match entry.kind {
                         FileKind::Directory => {
-                            if glob
-                                .as_ref()
-                                .is_some_and(|g| g.excludes(&rel, &entry.name, true))
-                            {
-                                continue;
-                            }
                             queue.push_back((entry.path.clone(), rel, stack.clone()));
                         }
                         FileKind::File => {
@@ -386,8 +380,12 @@ impl SearchState {
             return Ok(());
         }
         let text = String::from_utf8_lossy(&bytes);
-        let mut lines: Vec<&str> = text.split('\n').collect();
-        if text.ends_with('\n') {
+        let mut lines: Vec<&str> = if text.is_empty() {
+            Vec::new()
+        } else {
+            text.split('\n').collect()
+        };
+        if !text.is_empty() && text.ends_with('\n') {
             lines.pop();
         }
 
@@ -450,8 +448,11 @@ impl GrepGlob {
             None => (false, glob),
         };
         let pattern = pattern.replace('\\', "/");
-        let pattern = pattern.trim_start_matches('/');
-        let basename = !pattern.contains('/');
+        // A leading slash anchors a glob to the search root. Strip exactly
+        // that anchor, and keep it in path mode even for a basename pattern.
+        let anchored = pattern.starts_with('/');
+        let pattern = if anchored { &pattern[1..] } else { &pattern };
+        let basename = !anchored && !pattern.contains('/');
         let matcher = globset::GlobBuilder::new(pattern)
             .literal_separator(true)
             .build()
@@ -475,11 +476,6 @@ impl GrepGlob {
     /// A positive glob selects files; a negated one removes them.
     fn includes_file(&self, rel: &str, name: &str) -> bool {
         self.matches(rel, name) != self.negate
-    }
-
-    /// Only a negated glob prunes directories (a positive glob never does).
-    fn excludes(&self, rel: &str, name: &str, _is_dir: bool) -> bool {
-        self.negate && self.matches(rel, name)
     }
 }
 

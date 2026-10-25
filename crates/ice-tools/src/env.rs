@@ -214,6 +214,21 @@ pub trait FileSystem: Send + Sync {
         cancel: Option<&CancellationToken>,
     ) -> Result<Vec<u8>, FileError>;
 
+    /// Read at most the newest `max_bytes` bytes and return them with the
+    /// number of earlier bytes skipped. Backends may override this to seek
+    /// without loading the whole file; the default preserves compatibility.
+    async fn read_binary_tail(
+        &self,
+        path: &str,
+        max_bytes: u64,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(Vec<u8>, u64), FileError> {
+        let bytes = self.read_binary_file(path, cancel).await?;
+        let skipped = (bytes.len() as u64).saturating_sub(max_bytes);
+        let start = usize::try_from(skipped).unwrap_or(bytes.len());
+        Ok((bytes[start..].to_vec(), skipped))
+    }
+
     /// Creates parent directories (recursive) automatically. Mirrors TS
     /// `writeFile`.
     async fn write_file(

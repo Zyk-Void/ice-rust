@@ -562,6 +562,11 @@ async fn dispose_stops_shells_and_removes_logs() {
     h.registry.dispose().await;
     assert!(!h.env.exists(&log, None).await.unwrap());
     assert!(h.registry.snapshots().is_empty());
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    assert!(
+        !h.env.exists(&log, None).await.unwrap(),
+        "ingestion must not recreate a removed log after disposal"
+    );
 }
 
 #[tokio::test]

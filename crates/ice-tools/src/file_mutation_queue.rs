@@ -66,6 +66,21 @@ impl MutationQueueRegistry {
     }
 }
 
+struct HeldQueueGuard<'a> {
+    guard: Option<tokio::sync::OwnedMutexGuard<()>>,
+    registry: &'a MutationQueueRegistry,
+    key: String,
+}
+
+impl Drop for HeldQueueGuard<'_> {
+    fn drop(&mut self) {
+        // Release the mutex before checking the registry's Arc count. This
+        // also runs during unwinding if a mutation closure panics.
+        self.guard.take();
+        self.registry.release(&self.key);
+    }
+}
+
 /// Accessor used by [`with_file_mutation_queue`] to reach the env's registry
 /// AND its `ExecutionEnv` methods. Concrete env impls (`OsExecutionEnv`,
 /// `InMemoryExecutionEnv`) implement this; the write/edit tools hold
@@ -128,7 +143,11 @@ fn canonical_key<'a>(
                             Some(parent) if target.is_relative() => parent.join(target),
                             _ => target,
                         };
-                        return canonical_key(env, normalize(&target), cancel, hops + 1).await;
+                        // Keep `..` until canonicalization has resolved any
+                        // symlink components before it. Lexically collapsing
+                        // `alias/..` is not equivalent when `alias` is itself
+                        // a symlink.
+                        return canonical_key(env, target, cancel, hops + 1).await;
                     }
                 }
             }
@@ -167,22 +186,6 @@ fn is_missing(e: &FileError) -> bool {
     )
 }
 
-/// Lexically drop `.` and resolve `..` components (no filesystem access).
-fn normalize(path: &std::path::Path) -> PathBuf {
-    use std::path::Component;
-    let mut out = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                out.pop();
-            }
-            other => out.push(other.as_os_str()),
-        }
-    }
-    out
-}
-
 /// Serialize `fn` per canonical-path key for `env`. The closure `f` runs while
 /// holding the per-key `tokio::Mutex` guard; abort/cancel during the wait does
 /// NOT skip the queue — `f` itself must observe the token and return
@@ -217,19 +220,21 @@ where
         let ready = futures::poll!(&mut acquire);
         (key, acquire, ready)
     };
-    let _guard = match ready {
+    let guard = match ready {
         std::task::Poll::Ready(guard) => guard,
         std::task::Poll::Pending => acquire.as_mut().await,
     };
     drop(acquire);
+    let _guard = HeldQueueGuard {
+        guard: Some(guard),
+        registry: &registry,
+        key,
+    };
     // Now that we hold the lock, run `f`. It may observe cancellation and
     // return Err(Aborted); the guard drops on return, releasing the next
-    // waiter. Unwinding (if `f` panics) also drops the guard — but tool/env
-    // code must never panic.
-    let result = f(cancel).await;
-    drop(_guard);
-    registry.release(&key);
-    result
+    // waiter and removing the idle registry entry. It also cleans up during
+    // unwinding if `f` panics.
+    f(cancel).await
 }
 
 #[cfg(test)]
@@ -256,11 +261,22 @@ mod tests {
         assert_eq!(env.mutation_registry().len(), 0);
     }
 
-    #[test]
-    fn normalize_resolves_dot_segments() {
-        assert_eq!(
-            normalize(std::path::Path::new("/a/./b/../c")),
-            PathBuf::from("/a/c")
-        );
+    #[tokio::test]
+    async fn panicking_mutation_releases_its_idle_registry_entry() {
+        use futures::FutureExt;
+
+        let env = crate::InMemoryExecutionEnv::with_cwd("/w".into());
+        let token = CancellationToken::new();
+        let result = std::panic::AssertUnwindSafe(with_file_mutation_queue::<_, ()>(
+            &env,
+            "a.txt",
+            &token,
+            |_| Box::pin(async { panic!("simulated mutation panic") }),
+        ))
+        .catch_unwind()
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(env.mutation_registry().len(), 0);
     }
 }

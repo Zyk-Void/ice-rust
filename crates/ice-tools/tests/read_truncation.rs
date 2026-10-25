@@ -195,6 +195,21 @@ async fn read_rejects_offset_beyond_end() {
 }
 
 #[tokio::test]
+async fn read_rejects_line_numbers_that_cannot_fit_in_usize() {
+    let (env, ctx) = fresh_context();
+    seed(&env, "short.txt", b"one\ntwo".to_vec()).await;
+    let tool = ice_tools::create_read_tool(&ctx, None);
+
+    for params in [
+        serde_json::json!({ "path": "short.txt", "offset": 1e100 }),
+        serde_json::json!({ "path": "short.txt", "limit": 1e100 }),
+    ] {
+        let err = run_read(tool.clone(), params).await.expect_err("too large");
+        assert!(matches!(err, AgentError::Tool(message) if message.contains("too large")));
+    }
+}
+
+#[tokio::test]
 async fn read_detects_supported_image_by_content() {
     use ice_tools::encode_base64;
     let (env, ctx) = fresh_context();

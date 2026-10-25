@@ -240,9 +240,21 @@ pub fn apply_edits_to_normalized_content(
         let (match_index, match_length) = match (loc, &fuzzy_content) {
             (Located::Exact(idx), None) => (*idx, e.old_text.len()),
             (Located::Exact(idx), Some(fc)) => {
-                let mapped = fuzzy_offset(normalized_content, *idx);
+                let Some(mapped) = fuzzy_offset(normalized_content, *idx) else {
+                    return Err(FileError::new(
+                        crate::error::FileErrorCode::Invalid,
+                        format!(
+                            "{} Apply the edits that need fuzzy matching in a separate call.",
+                            not_found_error(path, i, total)
+                        ),
+                    )
+                    .with_path(path));
+                };
                 let needle = normalize_for_fuzzy_match(&e.old_text);
-                if !fc[mapped..].starts_with(needle.as_str()) {
+                if !fc
+                    .get(mapped..)
+                    .is_some_and(|rest| rest.starts_with(needle.as_str()))
+                {
                     // The exact text does not survive normalization in place
                     // (e.g. it ends in trailing whitespace), so the batch
                     // cannot be applied line-preservingly.
@@ -330,15 +342,20 @@ fn duplicate(
 /// byte offset `idx` of `content`. Complete lines before `idx` are normalized
 /// as a whole (with trimEnd); the partial line is normalized without trimEnd
 /// because text follows it on that line.
-fn fuzzy_offset(content: &str, idx: usize) -> usize {
+fn fuzzy_offset(content: &str, idx: usize) -> Option<usize> {
     let prefix = &content[..idx];
-    match prefix.rfind('\n') {
+    let normalized_prefix = match prefix.rfind('\n') {
         Some(nl) => {
-            normalize_for_fuzzy_match(&prefix[..=nl]).len()
-                + normalize_chars(&prefix[nl + 1..]).len()
+            let mut normalized = normalize_for_fuzzy_match(&prefix[..=nl]);
+            normalized.push_str(&normalize_chars(&prefix[nl + 1..]));
+            normalized
         }
-        None => normalize_chars(prefix).len(),
-    }
+        None => normalize_chars(prefix),
+    };
+    let normalized = normalize_for_fuzzy_match(content);
+    let mapped = normalized_prefix.len();
+    (normalized.is_char_boundary(mapped) && normalized.starts_with(&normalized_prefix))
+        .then_some(mapped)
 }
 
 /// The NFKC + quote/dash/space mapping of [`normalize_for_fuzzy_match`]
@@ -900,6 +917,43 @@ mod tests {
             r.new_content,
             "a = \u{2018}x\u{2019}  \nmid\na = 'y'\nEND\n"
         );
+    }
+
+    #[test]
+    fn exact_edit_after_nfkc_expansion_keeps_its_normalized_position() {
+        let content = "\u{FB00} target\nit’s\n";
+        let edits = vec![
+            ReplaceEdit {
+                old_text: "target".into(),
+                new_text: "changed".into(),
+            },
+            ReplaceEdit {
+                old_text: "it's".into(),
+                new_text: "done".into(),
+            },
+        ];
+
+        let result = apply_edits_to_normalized_content(content, &edits, "/x").unwrap();
+        assert!(result.used_fuzzy_match);
+        assert_eq!(result.new_content, "ff changed\ndone\n");
+    }
+
+    #[test]
+    fn exact_edit_after_a_composing_prefix_is_rejected_in_a_fuzzy_batch() {
+        let content = "e\u{301}x\nit’s\n";
+        let edits = vec![
+            ReplaceEdit {
+                old_text: "\u{301}x".into(),
+                new_text: "X".into(),
+            },
+            ReplaceEdit {
+                old_text: "it's".into(),
+                new_text: "done".into(),
+            },
+        ];
+
+        let error = apply_edits_to_normalized_content(content, &edits, "/x").unwrap_err();
+        assert_eq!(error.code, crate::error::FileErrorCode::Invalid);
     }
 
     #[test]

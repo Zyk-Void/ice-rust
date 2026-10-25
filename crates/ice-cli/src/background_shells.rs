@@ -8,8 +8,10 @@
 //! they are read at the next turn boundary; when it is idle they start a
 //! turn so the model can react.
 
-use std::sync::Arc;
+use std::future::Future;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::task::JoinHandle;
 
 use ice_harness::agent_harness::AgentHarness;
 use ice_harness::types::HarnessTool;
@@ -28,30 +30,60 @@ use ice_tools::tools::bash_shells::{
 /// Default automatic prompt alert when the setting is absent.
 const DEFAULT_PROMPT_ALERT_SECS: f64 = 30.0;
 
+#[derive(Default)]
+struct DeliveryState {
+    closed: bool,
+    tasks: Vec<JoinHandle<()>>,
+}
+
+#[derive(Default)]
+struct DeliveryTasks(Mutex<DeliveryState>);
+
+impl DeliveryTasks {
+    fn spawn(&self, delivery: impl Future<Output = ()> + Send + 'static) {
+        let mut state = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        if !state.closed {
+            state.tasks.push(tokio::spawn(delivery));
+        }
+    }
+
+    async fn close_and_drain(&self) {
+        let tasks = {
+            let mut state = self.0.lock().unwrap_or_else(|error| error.into_inner());
+            state.closed = true;
+            std::mem::take(&mut state.tasks)
+        };
+        for task in tasks {
+            let _ = task.await;
+        }
+    }
+}
+
+fn setting_duration(value: Option<f64>, default: f64) -> Duration {
+    let secs = value.unwrap_or(default);
+    Duration::try_from_secs_f64(secs)
+        .ok()
+        .filter(|duration| !duration.is_zero())
+        .unwrap_or(Duration::ZERO)
+}
+
 /// One session's background shells and watches.
 pub struct SessionShells {
     registry: Arc<BashBackgroundRegistry>,
     watches: Arc<BashWatchRegistry>,
     approval: BashInputApproval,
     auto_background_secs: Option<f64>,
+    deliveries: Arc<DeliveryTasks>,
 }
 
 impl SessionShells {
     pub fn new(settings: &crate::settings::Settings) -> Arc<Self> {
-        let seconds = |value: Option<f64>, default: f64| {
-            let secs = value.unwrap_or(default);
-            if secs.is_finite() && secs > 0.0 {
-                Duration::from_secs_f64(secs)
-            } else {
-                Duration::ZERO
-            }
-        };
         let defaults = BashWatchDefaults {
-            prompt_alert: seconds(
+            prompt_alert: setting_duration(
                 settings.bash_prompt_alert_seconds,
                 DEFAULT_PROMPT_ALERT_SECS,
             ),
-            silence_alert: seconds(settings.bash_silence_alert_seconds, 0.0),
+            silence_alert: setting_duration(settings.bash_silence_alert_seconds, 0.0),
         };
         let registry = BashBackgroundRegistry::new();
         let watches = BashWatchRegistry::new(
@@ -68,7 +100,8 @@ impl SessionShells {
             approval,
             auto_background_secs: settings
                 .bash_auto_background_seconds
-                .filter(|s| s.is_finite() && *s > 0.0),
+                .filter(|s| *s > 0.0 && Duration::try_from_secs_f64(*s).is_ok()),
+            deliveries: Arc::new(DeliveryTasks::default()),
         })
     }
 
@@ -106,17 +139,19 @@ impl SessionShells {
     /// only a weak reference, so the harness can still be dropped.
     pub fn connect(&self, harness: &AgentHarness) {
         let weak = harness.downgrade();
+        let deliveries = self.deliveries.clone();
         self.registry.on_complete(move |completion| {
             if let Some(harness) = weak.upgrade() {
                 let message = completion_message(completion);
-                tokio::spawn(deliver(harness, message));
+                deliveries.spawn(deliver(harness, message));
             }
         });
         let weak = harness.downgrade();
+        let deliveries = self.deliveries.clone();
         self.watches.on_fire(move |fire| {
             if let Some(harness) = weak.upgrade() {
                 let message = fire_message(fire);
-                tokio::spawn(deliver(harness, message));
+                deliveries.spawn(deliver(harness, message));
             }
         });
     }
@@ -132,6 +167,7 @@ impl SessionShells {
     pub async fn dispose(&self) {
         self.watches.dispose();
         self.registry.dispose().await;
+        self.deliveries.close_and_drain().await;
     }
 }
 
@@ -213,6 +249,30 @@ fn fire_message(fire: &BashWatchFire) -> ice_agent::AgentMessage {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn closing_delivery_tasks_waits_for_started_notices() {
+        let deliveries = Arc::new(DeliveryTasks::default());
+        let (finish_tx, finish_rx) = tokio::sync::oneshot::channel::<()>();
+        let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
+        deliveries.spawn(async move {
+            let _ = finish_rx.await;
+            let _ = done_tx.send(());
+        });
+
+        let draining = {
+            let deliveries = deliveries.clone();
+            tokio::spawn(async move { deliveries.close_and_drain().await })
+        };
+        tokio::task::yield_now().await;
+        assert!(!draining.is_finished());
+        finish_tx.send(()).unwrap();
+        draining.await.unwrap();
+        assert!(done_rx.await.is_ok());
+
+        deliveries.spawn(async {});
+        assert!(deliveries.0.lock().unwrap().tasks.is_empty());
+    }
+
     #[test]
     fn tools_and_settings() {
         let settings: crate::settings::Settings = serde_json::from_str(
@@ -230,6 +290,18 @@ mod tests {
         let defaults = SessionShells::new(&Default::default());
         assert_eq!(defaults.approval, BashInputApproval::Ask);
         assert_eq!(defaults.auto_background_secs(), None);
+    }
+
+    #[test]
+    fn unrepresentable_alert_and_auto_background_durations_are_ignored() {
+        let settings: crate::settings::Settings = serde_json::from_str(
+            r#"{"bashAutoBackgroundSeconds":1e300,"bashPromptAlertSeconds":1e300,"bashSilenceAlertSeconds":1e300}"#,
+        )
+        .unwrap();
+        let shells = SessionShells::new(&settings);
+        assert_eq!(shells.auto_background_secs(), None);
+        assert_eq!(setting_duration(Some(1e300), 30.0), Duration::ZERO);
+        assert_eq!(setting_duration(Some(1e300), 0.0), Duration::ZERO);
     }
 
     fn text_of(message: &ice_agent::AgentMessage) -> String {

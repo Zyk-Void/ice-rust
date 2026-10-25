@@ -59,6 +59,17 @@ pub(crate) struct IgnoreStack {
 impl IgnoreStack {
     /// Whether `path` (absolute) is ignored. The last matching rule wins.
     pub(crate) fn is_ignored(&self, path: &Path, is_dir: bool) -> bool {
+        if path
+            .ancestors()
+            .skip(1)
+            .any(|ancestor| self.matches_rules(ancestor, true))
+        {
+            return true;
+        }
+        self.matches_rules(path, is_dir)
+    }
+
+    fn matches_rules(&self, path: &Path, is_dir: bool) -> bool {
         let mut ignored = false;
         for file in &self.files {
             let Ok(rel) = path.strip_prefix(&file.base) else {
@@ -107,7 +118,8 @@ impl IgnoreStack {
 
     /// The stack in effect at the walk root: the ignore files of every
     /// ancestor up to the enclosing repository root (and its
-    /// `.git/info/exclude`). Outside a repository no ancestor files apply.
+    /// `.git/info/exclude`). Outside a repository, ancestor ignore files
+    /// apply up to the filesystem root.
     pub(crate) async fn for_root(
         env: &dyn ExecutionEnv,
         root: &Path,
@@ -131,16 +143,15 @@ impl IgnoreStack {
             current = dir.parent();
         }
         let mut stack = IgnoreStack::default();
-        let Some(repo_root) = repo_root else {
-            return Ok(stack);
-        };
-        if let Some(file) =
-            load(env, &repo_root.join(".git").join("info"), "exclude", cancel).await?
-        {
-            stack.files.push(Arc::new(IgnoreFile {
-                base: repo_root.clone(),
-                ..file
-            }));
+        if let Some(repo_root) = repo_root {
+            if let Some(file) =
+                load(env, &repo_root.join(".git").join("info"), "exclude", cancel).await?
+            {
+                stack.files.push(Arc::new(IgnoreFile {
+                    base: repo_root,
+                    ..file
+                }));
+            }
         }
         for dir in ancestors.iter().rev() {
             for name in tool.file_names() {
@@ -301,5 +312,12 @@ mod tests {
         assert!(!s.is_ignored(Path::new("/r/sub/a.tmp"), false));
         assert!(s.is_ignored(Path::new("/r/sub/#hash"), false));
         assert!(s.is_ignored(Path::new("/r/sub/space "), false));
+    }
+
+    #[test]
+    fn negation_cannot_reinclude_a_file_under_an_ignored_directory() {
+        let s = stack("/r", "build/\n!build/keep.txt\n");
+        assert!(s.is_ignored(Path::new("/r/build"), true));
+        assert!(s.is_ignored(Path::new("/r/build/keep.txt"), false));
     }
 }

@@ -143,11 +143,14 @@ fn is_bmp(bytes: &[u8]) -> bool {
     let declared_file_size = read_u32_le(bytes, 2);
     let pixel_data_offset = read_u32_le(bytes, 10) as usize;
     let dib_header_size = read_u32_le(bytes, 14) as usize;
+    let Some(header_end) = 14usize.checked_add(dib_header_size) else {
+        return false;
+    };
 
     if declared_file_size != 0 && declared_file_size < 26 {
         return false;
     }
-    if pixel_data_offset < 14 + dib_header_size {
+    if bytes.len() < header_end || pixel_data_offset < header_end {
         return false;
     }
     if declared_file_size != 0 && pixel_data_offset >= declared_file_size as usize {
@@ -241,6 +244,19 @@ mod tests {
         // 13–39 are neither BITMAPCOREHEADER nor BITMAPINFOHEADER+.
         assert_eq!(detect_supported_image_mime_type(&bmp_with_dib(13)), None);
         assert_eq!(detect_supported_image_mime_type(&bmp_with_dib(39)), None);
+    }
+
+    #[test]
+    fn bmp_rejects_a_truncated_dib_header() {
+        let mut bytes = vec![0u8; 30];
+        bytes[0..2].copy_from_slice(b"BM");
+        bytes[2..6].copy_from_slice(&200u32.to_le_bytes());
+        bytes[10..14].copy_from_slice(&138u32.to_le_bytes());
+        bytes[14..18].copy_from_slice(&124u32.to_le_bytes());
+        bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
+        bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
+
+        assert_eq!(detect_supported_image_mime_type(&bytes), None);
     }
 
     #[test]

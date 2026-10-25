@@ -142,6 +142,17 @@ impl AgentTool for FindTool {
 
         let glob = FindGlob::new(&input.pattern)?;
         let root = PathBuf::from(&search_path);
+        let canonical_root = if glob.is_absolute() {
+            match self.env.canonical_path(&search_path, cancel).await {
+                Ok(path) => Some(path),
+                Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+                // Some execution environments cannot canonicalize paths.
+                // Keep their existing absolute-path spelling in that case.
+                Err(_) => None,
+            }
+        } else {
+            None
+        };
         let root_stack = IgnoreStack::for_root(&*self.env, &root, IgnoreTool::Find, cancel)
             .await
             .map_err(file_err_to_agent)?;
@@ -178,7 +189,11 @@ impl AgentTool for FindTool {
                 } else {
                     format!("{rel_dir}/{}", entry.name)
                 };
-                if glob.is_match(&entry.name, &rel, &entry.path) {
+                let match_path = canonical_root
+                    .as_ref()
+                    .map(|root| root.join(&rel))
+                    .unwrap_or_else(|| entry.path.clone());
+                if glob.is_match(&entry.name, &rel, &match_path) {
                     let mut shown = rel.clone();
                     if is_dir {
                         shown.push('/');
@@ -296,6 +311,10 @@ impl FindGlob {
                 .matcher
                 .is_match(abs.to_string_lossy().replace('\\', "/")),
         }
+    }
+
+    fn is_absolute(&self) -> bool {
+        matches!(self.mode, GlobMode::Absolute)
     }
 }
 

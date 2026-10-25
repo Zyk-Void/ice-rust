@@ -16,11 +16,14 @@
 use std::io::{ErrorKind, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Pause before retrying a write the sink refused for now. Mirrors ice's
 /// 10 ms `ENOBUFS`/`EAGAIN` retry.
 const TRANSIENT_RETRY: Duration = Duration::from_millis(10);
+/// Stop retrying a sink that makes no progress so RPC shutdown cannot wait
+/// forever on a permanently full or disconnected output pipe.
+const TRANSIENT_RETRY_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Why a write was refused before it was queued. Mirrors
 /// `RawStdoutLimitError` and its `code`.
@@ -137,18 +140,33 @@ impl RpcWriter {
                 return Err(RawOutputLimitError::TooLarge { bytes: len, limit });
             }
             // Reserve atomically so concurrent producers cannot both fit.
-            let reserved =
-                self.budget
-                    .queued
-                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |queued| {
-                        (queued + len <= limit).then_some(queued + len)
+            // A CAS loop keeps this compatible with the MSRV while avoiding
+            // `fetch_update`, which newer stable Rust has deprecated.
+            let mut queued = self.budget.queued.load(Ordering::SeqCst);
+            loop {
+                let Some(reserved) = queued.checked_add(len) else {
+                    return Err(RawOutputLimitError::Overflow {
+                        bytes: len,
+                        limit,
+                        queued,
                     });
-            if let Err(queued) = reserved {
-                return Err(RawOutputLimitError::Overflow {
-                    bytes: len,
-                    limit,
+                };
+                if reserved > limit {
+                    return Err(RawOutputLimitError::Overflow {
+                        bytes: len,
+                        limit,
+                        queued,
+                    });
+                }
+                match self.budget.queued.compare_exchange_weak(
                     queued,
-                });
+                    reserved,
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                ) {
+                    Ok(_) => break,
+                    Err(current) => queued = current,
+                }
             }
         } else {
             self.budget.queued.fetch_add(len, Ordering::SeqCst);
@@ -229,14 +247,32 @@ fn is_transient(error: &std::io::Error) -> bool {
     false
 }
 
-/// Write every byte, retrying transient refusals indefinitely and resuming
-/// after the bytes the sink already accepted.
-fn write_all_retrying<W: Write>(output: &mut W, mut bytes: &[u8]) -> std::io::Result<()> {
+/// Write every byte, retrying transient refusals for a bounded interval and
+/// resuming after the bytes the sink already accepted.
+fn write_all_retrying<W: Write>(output: &mut W, bytes: &[u8]) -> std::io::Result<()> {
+    write_all_retrying_with_timeout(output, bytes, TRANSIENT_RETRY_TIMEOUT)
+}
+
+fn write_all_retrying_with_timeout<W: Write>(
+    output: &mut W,
+    mut bytes: &[u8],
+    retry_timeout: Duration,
+) -> std::io::Result<()> {
+    let mut retry_deadline = Instant::now() + retry_timeout;
     while !bytes.is_empty() {
         match output.write(bytes) {
             Ok(0) => return Err(ErrorKind::WriteZero.into()),
-            Ok(n) => bytes = &bytes[n..],
-            Err(error) if is_transient(&error) => std::thread::sleep(TRANSIENT_RETRY),
+            Ok(n) => {
+                bytes = &bytes[n..];
+                retry_deadline = Instant::now() + retry_timeout;
+            }
+            Err(error) if is_transient(&error) => {
+                let remaining = retry_deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err(error);
+                }
+                std::thread::sleep(TRANSIENT_RETRY.min(remaining));
+            }
             Err(error) => return Err(error),
         }
     }
@@ -244,9 +280,16 @@ fn write_all_retrying<W: Write>(output: &mut W, mut bytes: &[u8]) -> std::io::Re
 }
 
 fn flush_retrying<W: Write>(output: &mut W) -> std::io::Result<()> {
+    let retry_deadline = Instant::now() + TRANSIENT_RETRY_TIMEOUT;
     loop {
         match output.flush() {
-            Err(error) if is_transient(&error) => std::thread::sleep(TRANSIENT_RETRY),
+            Err(error) if is_transient(&error) => {
+                let remaining = retry_deadline.saturating_duration_since(Instant::now());
+                if remaining.is_zero() {
+                    return Err(error);
+                }
+                std::thread::sleep(TRANSIENT_RETRY.min(remaining));
+            }
             result => return result,
         }
     }
@@ -286,16 +329,30 @@ mod tests {
         fail: bool,
     }
 
+    impl Sink {
+        fn take_would_block(&self) -> bool {
+            let mut remaining = self.would_block.load(Ordering::SeqCst);
+            while remaining > 0 {
+                match self.would_block.compare_exchange_weak(
+                    remaining,
+                    remaining - 1,
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                ) {
+                    Ok(_) => return true,
+                    Err(current) => remaining = current,
+                }
+            }
+            false
+        }
+    }
+
     impl Write for Sink {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
             if self.fail {
                 return Err(ErrorKind::BrokenPipe.into());
             }
-            if self
-                .would_block
-                .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-                .is_ok()
-            {
+            if self.take_would_block() {
                 return Err(ErrorKind::WouldBlock.into());
             }
             let n = if self.chunk == 0 {
@@ -345,6 +402,43 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn concurrent_reservations_cannot_exceed_the_byte_budget() {
+        use std::sync::Barrier;
+
+        const WRITERS: usize = 4;
+        const LIMIT: usize = 4;
+
+        let (writer, task, _) = start_rpc_writer(Sink::default());
+        writer.configure_limit(Some(LIMIT));
+        let barrier = Arc::new(Barrier::new(WRITERS));
+        let attempts = (0..WRITERS)
+            .map(|_| {
+                let writer = writer.clone();
+                let barrier = barrier.clone();
+                tokio::task::spawn_blocking(move || {
+                    barrier.wait();
+                    writer.reserve(vec![0; LIMIT])
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut reservations = Vec::new();
+        for attempt in attempts {
+            if let Ok(reservation) = attempt.await.unwrap() {
+                reservations.push(reservation);
+            }
+        }
+
+        assert_eq!(reservations.len(), 1);
+        assert_eq!(writer.queued_bytes(), LIMIT);
+        drop(reservations);
+        assert_eq!(writer.queued_bytes(), 0);
+
+        drop(writer);
+        task.await.unwrap().unwrap();
+    }
+
+    #[tokio::test]
     async fn transient_refusals_retry_without_duplicating_partial_writes() {
         let sink = Sink {
             would_block: Arc::new(AtomicUsize::new(3)),
@@ -361,6 +455,26 @@ mod tests {
         assert_eq!(&*data.lock().unwrap(), b"hello world\n");
         drop(writer);
         task.await.unwrap().unwrap();
+    }
+
+    #[test]
+    fn permanently_transient_sink_errors_are_bounded() {
+        struct BlockedSink;
+        impl Write for BlockedSink {
+            fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+                Err(ErrorKind::WouldBlock.into())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Err(ErrorKind::WouldBlock.into())
+            }
+        }
+
+        let mut sink = BlockedSink;
+        let started = Instant::now();
+        let result =
+            write_all_retrying_with_timeout(&mut sink, b"blocked", Duration::from_millis(25));
+        assert!(matches!(result, Err(error) if error.kind() == ErrorKind::WouldBlock));
+        assert!(started.elapsed() < Duration::from_secs(1));
     }
 
     #[tokio::test]

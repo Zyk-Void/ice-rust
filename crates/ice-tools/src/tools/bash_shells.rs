@@ -35,6 +35,13 @@ const MAX_GREP_CHARS: usize = 500;
 /// Characters of input text quoted in the approval dialog.
 const APPROVAL_PREVIEW_CHARS: usize = 400;
 
+fn approval_preview(text: &str) -> (String, bool) {
+    let mut chars = text.chars();
+    let clipped: String = chars.by_ref().take(APPROVAL_PREVIEW_CHARS).collect();
+    let truncated = chars.next().is_some();
+    (clipped, truncated)
+}
+
 /// Input for `bash_output`. Mirrors `BashOutputInput`.
 #[derive(Debug, Clone, JsonSchema, Deserialize)]
 pub struct BashOutputInput {
@@ -498,8 +505,8 @@ impl AgentTool for BashInputTool {
                 ));
             };
             let preview = text.as_deref().map_or_else(String::new, |t| {
-                let clipped: String = t.chars().take(APPROVAL_PREVIEW_CHARS).collect();
-                let ellipsis = if clipped.len() < t.len() { "…" } else { "" };
+                let (clipped, truncated) = approval_preview(t);
+                let ellipsis = if truncated { "…" } else { "" };
                 format!(
                     "Text: {}{ellipsis}",
                     serde_json::to_string(&clipped).unwrap_or_default()
@@ -538,5 +545,22 @@ impl AgentTool for BashInputTool {
             text,
             serde_json::json!({ "bytes": written.bytes }),
         ))
+    }
+}
+
+#[cfg(test)]
+mod preview_tests {
+    use super::*;
+
+    #[test]
+    fn approval_preview_measures_characters_not_utf8_bytes() {
+        let included = "é".repeat(APPROVAL_PREVIEW_CHARS);
+        let (preview, truncated) = approval_preview(&included);
+        assert_eq!(preview.chars().count(), APPROVAL_PREVIEW_CHARS);
+        assert!(!truncated);
+
+        let beyond = format!("{included}x");
+        let (_, truncated) = approval_preview(&beyond);
+        assert!(truncated);
     }
 }

@@ -8,10 +8,11 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+#[cfg(unix)]
+use ice_tools::get_mutation_queue_key;
 use ice_tools::{
-    get_mutation_queue_key, with_file_mutation_queue, ExecutionEnv, FileContent, FileError,
-    FileInfo, FileSystem, InMemoryExecutionEnv, MutatingEnv, MutationQueueRegistry, Shell,
-    ShellExecOptions, ShellOutput,
+    with_file_mutation_queue, ExecutionEnv, FileContent, FileError, FileInfo, FileSystem,
+    InMemoryExecutionEnv, MutatingEnv, MutationQueueRegistry, Shell, ShellExecOptions, ShellOutput,
 };
 use tokio_util::sync::CancellationToken;
 
@@ -287,4 +288,23 @@ async fn dangling_symlink_keys_by_its_target() {
         .await
         .unwrap();
     assert_eq!(via_link, via_target);
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn dangling_symlink_target_preserves_symlink_aware_parent_segments() {
+    let dir = tempfile::tempdir().unwrap();
+    let actual = dir.path().join("actual");
+    std::fs::create_dir_all(actual.join("sub")).unwrap();
+    std::os::unix::fs::symlink(actual.join("sub"), dir.path().join("alias")).unwrap();
+    std::os::unix::fs::symlink("alias/../target.txt", dir.path().join("dangling.txt")).unwrap();
+    let env = ice_tools::OsExecutionEnv::with_cwd(dir.path().to_path_buf());
+
+    let through_link = get_mutation_queue_key(&env, "dangling.txt", None)
+        .await
+        .unwrap();
+    let through_target = get_mutation_queue_key(&env, "actual/target.txt", None)
+        .await
+        .unwrap();
+    assert_eq!(through_link, through_target);
 }

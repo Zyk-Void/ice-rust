@@ -301,13 +301,21 @@ impl CaptureState {
         };
         let mut payload = data;
         if capped {
-            payload.push_str(&format!(
+            let marker = format!(
                 "\n[log stopped at {}; later output was not written to this file]\n",
                 crate::truncate::format_size(max_log_bytes)
-            ));
+            );
+            let remaining = max_log_bytes.saturating_sub(self.logged_bytes);
+            let marker = truncate_to_utf8_prefix(&marker, remaining.saturating_sub(payload.len()));
+            payload.push_str(marker);
         }
         let written = payload.len();
         if payload.is_empty() {
+            if capped {
+                self.stop_logging(LogFileIssue::Truncated {
+                    max_bytes: max_log_bytes,
+                });
+            }
             return;
         }
         if let Err(e) = env
@@ -779,6 +787,31 @@ mod tests {
         );
         // The visible tail is unaffected by the log cap.
         assert!(result.output.ends_with(&format!("{:<49}", 2000)));
+    }
+
+    #[tokio::test]
+    async fn capped_log_marker_never_exceeds_a_small_byte_limit() {
+        let (mem, env) = in_memory("small-cap", "x".repeat(60_000));
+        let result = execute_shell_with_capture(
+            &env,
+            "small-cap",
+            ShellCaptureOptions {
+                max_log_bytes: Some(16),
+                return_execution_errors: true,
+                ..Default::default()
+            },
+        )
+        .await
+        .expect("capture");
+        let path = result.full_output_path.expect("log path");
+        let log = crate::FileSystem::read_binary_file(&*mem, &path.to_string_lossy(), None)
+            .await
+            .expect("read");
+        assert!(log.len() <= 16, "{}", log.len());
+        assert_eq!(
+            result.log_issue,
+            Some(LogFileIssue::Truncated { max_bytes: 16 })
+        );
     }
 
     #[tokio::test]

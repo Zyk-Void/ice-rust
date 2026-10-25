@@ -251,6 +251,8 @@ struct ShellRecord {
     abort: CancellationToken,
     /// Bumped on every output or state change; waiters watch it.
     tick: watch::Sender<u64>,
+    /// Completes after the capture task has flushed its final log bytes.
+    ingest_done: Option<tokio::sync::oneshot::Receiver<()>>,
     stdin: Option<tokio::sync::mpsc::UnboundedSender<StdinRequest>>,
     input_bytes: usize,
     pid: Arc<std::sync::Mutex<Option<u32>>>,
@@ -396,8 +398,10 @@ impl BashBackgroundRegistry {
         self.lock().shells.iter().filter(|s| s.running()).count()
     }
 
-    /// Take ownership of a running shell and return its id (`bash-N`).
-    pub fn adopt(self: &Arc<Self>, adoption: Adoption) -> String {
+    /// Take ownership of a running shell and return its id (`bash-N`). If
+    /// disposal already started, cancel the shell and remove its log after it
+    /// exits instead of adding an un-settleable record.
+    pub fn adopt(self: &Arc<Self>, adoption: Adoption) -> Result<String, String> {
         let Adoption {
             live,
             capture,
@@ -418,43 +422,58 @@ impl BashBackgroundRegistry {
             stdin,
         } = live;
         let (tick, _) = watch::channel(0u64);
+        let (ingest_done_tx, ingest_done_rx) = tokio::sync::oneshot::channel();
         let id = {
             let mut inner = self.lock();
-            inner.next_id += 1;
-            let id = format!("bash-{}", inner.next_id);
-            let mut record = ShellRecord {
-                id: id.clone(),
-                command,
-                origin,
-                description: description.filter(|d| !d.is_empty()),
-                status: BackgroundShellStatus::Running,
-                started,
-                started_at_ms,
-                ended: None,
-                ended_at_ms: None,
-                last_output: started,
-                last_output_at_ms: started_at_ms,
-                chunks: VecDeque::new(),
-                retained_chars: 0,
-                total_chars: 0,
-                read_cursor: 0,
-                final_text: None,
-                log_path: capture.log_path(),
-                log_issue: capture.log_issue(),
-                abort: cancel.clone(),
-                tick,
-                stdin,
-                input_bytes: 0,
-                pid,
-                env,
-            };
-            append_chunk(&mut record, &initial_output);
-            record.read_cursor = record.total_chars;
             if inner.disposed {
-                cancel.cancel();
+                None
+            } else {
+                inner.next_id += 1;
+                let id = format!("bash-{}", inner.next_id);
+                let mut record = ShellRecord {
+                    id: id.clone(),
+                    command,
+                    origin,
+                    description: description.filter(|d| !d.is_empty()),
+                    status: BackgroundShellStatus::Running,
+                    started,
+                    started_at_ms,
+                    ended: None,
+                    ended_at_ms: None,
+                    last_output: started,
+                    last_output_at_ms: started_at_ms,
+                    chunks: VecDeque::new(),
+                    retained_chars: 0,
+                    total_chars: 0,
+                    read_cursor: 0,
+                    final_text: None,
+                    log_path: capture.log_path(),
+                    log_issue: capture.log_issue(),
+                    abort: cancel.clone(),
+                    tick,
+                    ingest_done: Some(ingest_done_rx),
+                    stdin,
+                    input_bytes: 0,
+                    pid,
+                    env: env.clone(),
+                };
+                append_chunk(&mut record, &initial_output);
+                record.read_cursor = record.total_chars;
+                inner.shells.push(record);
+                Some(id)
             }
-            inner.shells.push(record);
-            id
+        };
+        let Some(id) = id else {
+            cancel.cancel();
+            let log_path = capture.log_path();
+            tokio::spawn(async move {
+                drop(chunks);
+                let _ = done.await;
+                if let Some(path) = log_path {
+                    remove_log(env, path).await;
+                }
+            });
+            return Err("The background shell registry is shutting down.".into());
         };
         self.emit(|l| {
             if let Listener::Start(f) = l {
@@ -464,8 +483,13 @@ impl BashBackgroundRegistry {
         self.emit_change();
         let registry = Arc::clone(self);
         let task_id = id.clone();
-        tokio::spawn(registry.ingest(task_id, chunks, done, cancel, capture, settle));
-        id
+        tokio::spawn(async move {
+            registry
+                .ingest(task_id, chunks, done, cancel, capture, settle)
+                .await;
+            let _ = ingest_done_tx.send(());
+        });
+        Ok(id)
     }
 
     async fn ingest(
@@ -1005,6 +1029,12 @@ impl BashBackgroundRegistry {
             }
             record.bump();
         }
+        let mut shells = shells;
+        for record in &mut shells {
+            if let Some(done) = record.ingest_done.take() {
+                let _ = done.await;
+            }
+        }
         for record in shells {
             if let Some(path) = record.log_path {
                 remove_log(record.env, path).await;
@@ -1049,16 +1079,14 @@ const LOG_LINE_PROBE_CHARS: usize = 8 * 1024;
 /// Read at most the last `limit` bytes of a log; drop the first partial line
 /// when bytes were skipped. `None` falls back to the retained tail.
 async fn read_log_suffix(env: &dyn ExecutionEnv, path: &str, limit: u64) -> Option<(String, u64)> {
-    let bytes = env.read_binary_file(path, None).await.ok()?;
-    let len = bytes.len() as u64;
-    if len <= limit {
-        return Some((String::from_utf8_lossy(&bytes).into_owned(), 0));
-    }
-    let skipped = len - limit;
-    let tail = &bytes[skipped as usize..];
-    let tail = match tail.iter().position(|b| *b == b'\n') {
-        Some(nl) => &tail[nl + 1..],
-        None => tail,
+    let (bytes, skipped) = env.read_binary_tail(path, limit, None).await.ok()?;
+    let tail = if skipped == 0 {
+        bytes.as_slice()
+    } else {
+        match bytes.iter().position(|b| *b == b'\n') {
+            Some(nl) => &bytes[nl + 1..],
+            None => &bytes[bytes.len()..],
+        }
     };
     Some((String::from_utf8_lossy(tail).into_owned(), skipped))
 }
@@ -1236,5 +1264,69 @@ mod tests {
         assert_eq!(format_runtime(Duration::from_millis(59_999)), "59s");
         assert_eq!(format_runtime(Duration::from_secs(61)), "1m 1s");
         assert_eq!(format_runtime(Duration::from_secs(3_661)), "1h 1m");
+    }
+
+    #[tokio::test]
+    async fn adoption_after_dispose_cancels_shell_and_removes_its_log() {
+        use crate::env::{ExecutionEnv, ShellOutput};
+        use crate::in_memory::InMemoryExecutionEnv;
+
+        let registry = BashBackgroundRegistry::new();
+        registry.dispose().await;
+        let env: Arc<dyn ExecutionEnv> = Arc::new(InMemoryExecutionEnv::with_cwd("/w".into()));
+        let mut capture = crate::shell_output::OutputCapture::new(env.clone(), None);
+        capture.persist().await;
+        let log_path = capture.log_path().unwrap();
+        let (chunk_tx, chunks) = tokio::sync::mpsc::unbounded_channel();
+        let (done_tx, done) = tokio::sync::oneshot::channel();
+        let cancel = CancellationToken::new();
+        let result = registry.adopt(Adoption {
+            live: LiveShell {
+                chunks,
+                done,
+                cancel: cancel.clone(),
+                pid: Arc::new(std::sync::Mutex::new(None)),
+                stdin: None,
+            },
+            capture,
+            command: "sleep".into(),
+            origin: ShellOrigin::Model,
+            description: None,
+            started: Instant::now(),
+            started_at_ms: now_ms(),
+            initial_output: String::new(),
+            env: env.clone(),
+            settle: Box::new(|_| SettledOutcome {
+                text: String::new(),
+                is_error: false,
+                exit_code: Some(0),
+            }),
+        });
+
+        assert!(result.is_err());
+        assert!(cancel.is_cancelled());
+        drop(chunk_tx);
+        done_tx
+            .send(Ok(ShellOutput {
+                stdout: String::new(),
+                stderr: String::new(),
+                exit_code: 0,
+            }))
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(2), async {
+            loop {
+                if env
+                    .file_info(&log_path.to_string_lossy(), None)
+                    .await
+                    .is_err()
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("the rejected adoption's log should be removed");
+        assert!(registry.snapshots().is_empty());
     }
 }

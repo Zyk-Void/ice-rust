@@ -46,6 +46,10 @@ const PROMPT_REASON_CHARS: usize = 200;
 const TAIL_LINES: usize = 20;
 const TAIL_CHARS: usize = 2000;
 
+fn escape_pattern_for_reason(pattern: &str) -> String {
+    pattern.chars().flat_map(char::escape_default).collect()
+}
+
 /// What a watch reacts to. `Prompt` is internal (automatic defaults only).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
@@ -317,18 +321,22 @@ impl BashWatchRegistry {
                 shell.status.as_str()
             ));
         }
-        let explicit = self.lock().watches.iter().filter(|w| !w.auto).count();
-        if explicit >= MAX_BASH_WATCHES {
-            return Err(format!(
-                "{MAX_BASH_WATCHES} watches already exist. Cancel ones you no longer need with bash_watch action \"cancel\" first."
-            ));
-        }
-        Ok(self.insert(spec, false))
+        self.insert(spec, false)
     }
 
-    fn insert(self: &Arc<Self>, spec: BashWatchSpec, auto: bool) -> BashWatchSnapshot {
+    fn insert(
+        self: &Arc<Self>,
+        spec: BashWatchSpec,
+        auto: bool,
+    ) -> Result<BashWatchSnapshot, String> {
         let snapshot = {
             let mut inner = self.lock();
+            if !auto && inner.watches.iter().filter(|watch| !watch.auto).count() >= MAX_BASH_WATCHES
+            {
+                return Err(format!(
+                    "{MAX_BASH_WATCHES} watches already exist. Cancel ones you no longer need with bash_watch action \"cancel\" first."
+                ));
+            }
             inner.next_id += 1;
             let watch = Watch {
                 id: format!("watch-{}", inner.next_id),
@@ -352,7 +360,7 @@ impl BashWatchRegistry {
         };
         self.schedule(&snapshot.id);
         self.notify_change();
-        snapshot
+        Ok(snapshot)
     }
 
     /// Remove a watch. Mirrors `cancel`.
@@ -400,7 +408,7 @@ impl BashWatchRegistry {
             if period.is_zero() {
                 continue;
             }
-            self.insert(
+            let _ = self.insert(
                 BashWatchSpec {
                     target: shell_id.to_string(),
                     kind,
@@ -465,7 +473,8 @@ impl BashWatchRegistry {
                             let line =
                                 matching_line(&output, &pattern).unwrap_or_else(|| pattern.clone());
                             let reason = format!(
-                                "Output matched \"{pattern}\": {}",
+                                "Output matched \"{}\": {}",
+                                escape_pattern_for_reason(&pattern),
                                 clip(line.trim(), PATTERN_REASON_CHARS)
                             );
                             if let Some(fire) = record_fire(watch, reason) {
@@ -991,6 +1000,51 @@ mod tests {
     use super::*;
 
     #[test]
+    fn pattern_reason_escapes_line_and_terminal_controls() {
+        assert_eq!(
+            escape_pattern_for_reason("line\nbreak\u{1b}[31m"),
+            "line\\nbreak\\u{1b}[31m"
+        );
+    }
+
+    #[test]
+    fn concurrent_watch_inserts_never_exceed_the_explicit_limit() {
+        let shells = BashBackgroundRegistry::new();
+        let registry = BashWatchRegistry::new(shells, None);
+        let spec = || BashWatchSpec {
+            target: "bash-1".into(),
+            kind: BashWatchKind::Pattern,
+            pattern: Some("ready".into()),
+            period: None,
+            max_fires: 1,
+            rearm: BashWatchRearm::Manual,
+        };
+        for _ in 0..MAX_BASH_WATCHES - 1 {
+            registry.insert(spec(), false).unwrap();
+        }
+
+        let barrier = Arc::new(std::sync::Barrier::new(3));
+        let results: Vec<_> = (0..2)
+            .map(|_| {
+                let registry = registry.clone();
+                let barrier = barrier.clone();
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    registry.insert(spec(), false).is_ok()
+                })
+            })
+            .collect();
+        barrier.wait();
+        let successful = results
+            .into_iter()
+            .map(|thread| thread.join().unwrap())
+            .filter(|success| *success)
+            .count();
+        assert_eq!(successful, 1);
+        assert_eq!(registry.list(None).len(), MAX_BASH_WATCHES);
+    }
+
+    #[test]
     fn prompt_heuristic() {
         for yes in [
             "Continue? [Y/n]",
@@ -1022,6 +1076,7 @@ mod tests {
                 },
                 false,
             )
+            .unwrap()
             .id
     }
 

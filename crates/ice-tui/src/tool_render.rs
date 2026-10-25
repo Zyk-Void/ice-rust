@@ -53,7 +53,10 @@ pub(crate) fn read_title(path: &str, offset: Option<f64>, limit: Option<f64>) ->
         (None, None) => String::new(),
         (start, Some(limit)) => {
             let start = start.unwrap_or(1);
-            format!(":{start}-{}", start + limit - 1)
+            start
+                .checked_add(limit.saturating_sub(1))
+                .map(|end| format!(":{start}-{end}"))
+                .unwrap_or_default()
         }
         (Some(start), None) => format!(":{start}"),
     };
@@ -174,6 +177,10 @@ mod tests {
             read_title("repo/CLAUDE.MD", Some(1.0), Some(2.0)),
             "[resource] repo/CLAUDE.MD:1-2"
         );
+        assert_eq!(
+            read_title("src/a.rs", Some(u64::MAX as f64), Some(2.0)),
+            "src/a.rs"
+        );
     }
 
     #[test]
@@ -189,6 +196,7 @@ mod tests {
             Some("line 1\nline 2\nli")
         );
         assert_eq!(partial_string_field(r#"{"path":"a.rs"}"#, "content"), None);
+        assert_eq!(partial_string_field(r#"{"content":null}"#, "content"), None);
         assert_eq!(
             partial_string_field(r#"{"content":"x\"#, "content").as_deref(),
             Some("x")

@@ -153,6 +153,17 @@ impl OsExecutionEnv {
 
     /// Resolve a path (tilde, file://, absolute/relative) against `cwd`. Pure.
     fn resolve_path(cwd: &Path, path: &str) -> PathBuf {
+        Self::resolve_path_inner(cwd, path, true)
+    }
+
+    /// Resolve a path without collapsing `..` before the filesystem can
+    /// resolve symlink components. Used by `canonical_path`, whose job is to
+    /// apply filesystem path semantics rather than lexical normalization.
+    fn resolve_path_preserving_parent(cwd: &Path, path: &str) -> PathBuf {
+        Self::resolve_path_inner(cwd, path, false)
+    }
+
+    fn resolve_path_inner(cwd: &Path, path: &str, normalize: bool) -> PathBuf {
         let mut p = path.to_string();
         // Tilde expansion (literal only).
         if p == "~" {
@@ -172,10 +183,11 @@ impl OsExecutionEnv {
             }
         }
         let pb = PathBuf::from(&p);
-        if pb.is_absolute() {
-            normalize_absolute(&pb)
+        let joined = if pb.is_absolute() { pb } else { cwd.join(pb) };
+        if normalize {
+            normalize_absolute(&joined)
         } else {
-            normalize_absolute(&cwd.join(pb))
+            joined
         }
     }
 
@@ -295,21 +307,13 @@ impl Utf8StreamDecoder {
 
 /// Length of a trailing, possibly incomplete UTF-8 sequence (0..=3).
 fn incomplete_utf8_suffix(bytes: &[u8]) -> usize {
-    for back in 1..=bytes.len().min(3) {
-        let byte = bytes[bytes.len() - back];
-        if byte & 0xC0 == 0x80 {
-            continue; // continuation byte; keep looking for the lead byte
+    for len in (1..=bytes.len().min(3)).rev() {
+        let suffix = &bytes[bytes.len() - len..];
+        if let Err(error) = std::str::from_utf8(suffix) {
+            if error.valid_up_to() == 0 && error.error_len().is_none() {
+                return len;
+            }
         }
-        let needed = if byte >= 0xF0 {
-            4
-        } else if byte >= 0xE0 {
-            3
-        } else if byte >= 0xC0 {
-            2
-        } else {
-            1
-        };
-        return if needed > back { back } else { 0 };
     }
     0
 }
@@ -568,6 +572,44 @@ impl FileSystem for OsExecutionEnv {
         read_cancellable(&abs, cancel).await
     }
 
+    async fn read_binary_tail(
+        &self,
+        path: &str,
+        max_bytes: u64,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(Vec<u8>, u64), FileError> {
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
+
+        check_cancel_file(cancel, Some(path))?;
+        let abs = Self::resolve_path(&self.cwd, path);
+        let display = abs.to_string_lossy();
+        let mut file = tokio::fs::File::open(&abs)
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?;
+        let len = file
+            .metadata()
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?
+            .len();
+        let skipped = len.saturating_sub(max_bytes);
+        file.seek(std::io::SeekFrom::Start(skipped))
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?;
+
+        let mut tail = file.take(max_bytes);
+        let mut bytes = Vec::new();
+        let read = tail.read_to_end(&mut bytes);
+        let result = match cancel {
+            Some(token) => tokio::select! {
+                result = read => result,
+                _ = token.cancelled() => return Err(FileError::aborted().with_path(display)),
+            },
+            None => read.await,
+        };
+        result.map_err(|error| io_to_file_error(error, Some(&display)))?;
+        Ok((bytes, skipped))
+    }
+
     async fn write_file(
         &self,
         path: &str,
@@ -738,7 +780,7 @@ impl FileSystem for OsExecutionEnv {
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError> {
         check_cancel_file(cancel, Some(path))?;
-        let abs = Self::resolve_path(&self.cwd, path);
+        let abs = Self::resolve_path_preserving_parent(&self.cwd, path);
         tokio::fs::canonicalize(&abs)
             .await
             .map_err(|e| io_to_file_error(e, Some(&abs.to_string_lossy())))
@@ -1441,5 +1483,44 @@ mod file_url_tests {
         assert_eq!(err.code, FileErrorCode::Invalid);
         let ok = env.absolute_path("file:///tmp/a%20b", None).await.unwrap();
         assert_eq!(ok, PathBuf::from("/tmp/a b"));
+    }
+}
+
+#[cfg(test)]
+mod utf8_decoder_tests {
+    use super::Utf8StreamDecoder;
+
+    #[test]
+    fn decoder_holds_a_valid_incomplete_character_across_reads() {
+        let mut decoder = Utf8StreamDecoder::default();
+        assert_eq!(decoder.decode(&[0xE2, 0x82]), "");
+        assert_eq!(decoder.decode(&[0xAC]), "€");
+        assert_eq!(decoder.finish(), "");
+    }
+
+    #[test]
+    fn decoder_emits_invalid_lead_bytes_immediately() {
+        let mut decoder = Utf8StreamDecoder::default();
+        assert_eq!(decoder.decode(&[0xFF]), "�");
+        assert_eq!(decoder.finish(), "");
+    }
+}
+
+#[cfg(test)]
+mod binary_tail_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn reads_only_the_requested_tail_window() {
+        use crate::env::FileSystem;
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("output.log");
+        tokio::fs::write(&path, b"prefix-data-tail").await.unwrap();
+        let env = OsExecutionEnv::with_cwd(dir.path().to_path_buf());
+
+        let (tail, skipped) = env.read_binary_tail("output.log", 4, None).await.unwrap();
+        assert_eq!(tail, b"tail");
+        assert_eq!(skipped, 12);
     }
 }

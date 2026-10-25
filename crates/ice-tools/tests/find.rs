@@ -218,6 +218,25 @@ async fn find_respects_hierarchical_ignore_files() {
 }
 
 #[tokio::test]
+async fn find_respects_ancestor_ignore_files_outside_a_repository() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, ".ignore", b"ignored.txt\n").await;
+    seed_tree(&env, "sub/ignored.txt", b"").await;
+    seed_tree(&env, "sub/visible.txt", b"").await;
+
+    let tool = ice_tools::create_find_tool(&ctx, None);
+    let result = run_find(
+        tool,
+        serde_json::json!({ "pattern": "*.txt", "path": "sub" }),
+    )
+    .await
+    .expect("find ok");
+    let output = lines(&result);
+    assert!(!output.iter().any(|path| path.contains("ignored.txt")));
+    assert!(output.iter().any(|path| path.contains("visible.txt")));
+}
+
+#[tokio::test]
 async fn find_matches_literal_basenames_at_any_depth_and_strips_dot_slash() {
     let (env, ctx) = fresh_context();
     seed_tree(&env, "target.txt", b"").await;
@@ -298,4 +317,27 @@ async fn find_lists_symlinks_without_following_them() {
         .await
         .expect("find ok");
     assert_eq!(lines(&r), vec!["link"]);
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn find_absolute_pattern_matches_actual_path_through_symlinked_root() {
+    let dir = tempfile::tempdir().unwrap();
+    let real = dir.path().join("real");
+    std::fs::create_dir(&real).unwrap();
+    std::fs::write(real.join("match.txt"), "").unwrap();
+    std::os::unix::fs::symlink(&real, dir.path().join("alias")).unwrap();
+    let env: Arc<dyn ice_tools::ExecutionEnv> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        dir.path().to_path_buf(),
+    ));
+    let tool = ice_tools::create_find_tool(&ExecutionToolContext::new(env, None), None);
+    let absolute_pattern = format!("{}/*", real.to_string_lossy());
+
+    let r = run_find(
+        tool,
+        serde_json::json!({ "pattern": absolute_pattern, "path": "alias" }),
+    )
+    .await
+    .expect("find ok");
+    assert_eq!(lines(&r), vec!["match.txt"]);
 }

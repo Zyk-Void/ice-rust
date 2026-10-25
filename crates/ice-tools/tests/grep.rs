@@ -240,6 +240,7 @@ async fn grep_skips_ignored_files_and_honors_negated_globs() {
     seed_tree(&env, "dist/out.js", b"needle\n").await;
     seed_tree(&env, "src/a.ts", b"needle\n").await;
     seed_tree(&env, "src/a.test.ts", b"needle\n").await;
+    seed_tree(&env, "cache.test.ts/keep.ts", b"needle\n").await;
     seed_tree(&env, ".hidden.ts", b"needle\n").await;
     let tool = ice_tools::create_grep_tool(&ctx, None);
     let r = run_grep(tool.clone(), serde_json::json!({ "pattern": "needle" }))
@@ -259,7 +260,24 @@ async fn grep_skips_ignored_files_and_honors_negated_globs() {
     .expect("grep ok");
     let out = text_output(&r);
     assert!(out.contains("src/a.ts:1: needle"), "{out}");
+    assert!(out.contains("cache.test.ts/keep.ts:1: needle"), "{out}");
     assert!(!out.contains("a.test.ts"), "{out}");
+}
+
+#[tokio::test]
+async fn grep_glob_leading_slash_anchors_to_search_root() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "foo.txt", b"needle\n").await;
+    seed_tree(&env, "nested/foo.txt", b"needle\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+
+    let r = run_grep(
+        tool,
+        serde_json::json!({ "pattern": "needle", "glob": "/foo.txt" }),
+    )
+    .await
+    .expect("grep ok");
+    assert_eq!(text_output(&r), "foo.txt:1: needle");
 }
 
 #[tokio::test]
@@ -268,11 +286,13 @@ async fn grep_line_semantics_follow_rg() {
     // A final LF does not create an empty last line, and a lone CR does not
     // split a line.
     seed_tree(&env, "f.txt", b"one\r\ntwo\rthree\n").await;
+    seed_tree(&env, "empty.txt", b"").await;
+    seed_tree(&env, "blank.txt", b"\n").await;
     let tool = ice_tools::create_grep_tool(&ctx, None);
     let r = run_grep(tool.clone(), serde_json::json!({ "pattern": "^$" }))
         .await
         .expect("grep ok");
-    assert_eq!(text_output(&r), "No matches found");
+    assert_eq!(text_output(&r), "blank.txt:1: ");
     let r = run_grep(tool, serde_json::json!({ "pattern": "three" }))
         .await
         .expect("grep ok");
