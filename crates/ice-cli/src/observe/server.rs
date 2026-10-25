@@ -117,6 +117,8 @@ fn set_private_token_permissions(path: &Path) -> Result<(), String> {
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
             .map_err(|e| e.to_string())?;
     }
+    #[cfg(not(unix))]
+    let _ = path;
     Ok(())
 }
 
