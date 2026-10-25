@@ -646,14 +646,9 @@ impl FileSystem for OsExecutionEnv {
             let ep = entry.path();
             let meta = match tokio::fs::symlink_metadata(&ep).await {
                 Ok(m) => m,
-                Err(e) => {
-                    // Skip unsupported types silently; propagate real stat errors.
-                    let code = crate::error::io_to_file_code(&e);
-                    if code == FileErrorCode::NotSupported {
-                        continue;
-                    }
-                    return Err(io_to_file_error(e, Some(&ep.to_string_lossy())));
-                }
+                // An entry that vanished or cannot be statted is skipped
+                // rather than failing the whole listing, as ice's ls/fd/rg do.
+                Err(_) => continue,
             };
             let ft = meta.file_type();
             let kind = if ft.is_file() {
