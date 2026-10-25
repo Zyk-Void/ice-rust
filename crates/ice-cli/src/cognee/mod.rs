@@ -8,8 +8,10 @@
 
 pub mod browse;
 pub mod client;
+pub mod command;
 pub mod config;
 pub mod dream;
 pub mod observer;
 pub mod queue;
+pub mod runtime;
 pub mod text;

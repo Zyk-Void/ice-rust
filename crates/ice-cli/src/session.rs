@@ -413,6 +413,12 @@ pub async fn build_prepared(
     let catalog = crate::provider::authenticated_catalog(resolved);
     action_host.set_catalog(catalog.clone());
 
+    // ---- Built-in extensions (Cognee memory, Blackhole compaction) ----
+    let builtins = match crate::config::agent_dir() {
+        Ok(dir) => crate::builtin_extensions::BuiltinExtensions::for_agent_dir(dir),
+        Err(_) => crate::builtin_extensions::BuiltinExtensions::disabled(),
+    };
+
     // ---- Execution env + tools ----
     let env = Arc::new(OsExecutionEnv::with_cwd(cwd.to_path_buf()));
     let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
@@ -551,6 +557,7 @@ pub async fn build_prepared(
         };
         dirs.extend(args.skill.iter().cloned());
         dirs.extend(discovered.skill_paths.iter().map(PathBuf::from));
+        dirs.extend(builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
         skills = result.skills;
         skill_diags = result.diagnostics;
@@ -741,6 +748,7 @@ pub async fn build_prepared(
         }
         None => broadcast_emitter,
     };
+    let emitter = compose_agent_emitter(emitter, builtins.agent_emitter());
 
     // Saved user defaults. Best-effort: a missing or malformed file must not stop
     // a session from starting, and every accessor falls back to the harness
@@ -968,12 +976,15 @@ pub async fn build_prepared(
         ready,
     }));
 
-    // ---- Built-in extensions (Cognee memory, Blackhole compaction) ----
-    let builtins = match crate::config::agent_dir() {
-        Ok(dir) => crate::builtin_extensions::BuiltinExtensions::for_agent_dir(dir),
-        Err(_) => crate::builtin_extensions::BuiltinExtensions::disabled(),
-    };
     harness.set_extensions(builtins.harness_extensions());
+    builtins
+        .bind(
+            &harness,
+            ext_status_mailbox.clone(),
+            cwd.to_path_buf(),
+            tool_name_allowed(crate::cognee::runtime::SEARCH_TOOL_NAME, args),
+        )
+        .await;
 
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
@@ -1206,10 +1217,18 @@ pub async fn dispatch_session_event_async(
         let session = reload_context.extension_session.lock().unwrap();
         (session.snapshot_arc(), session.keepalive())
     };
-    match snapshot {
+    let veto = match snapshot {
         Some(snapshot) => ice_extensions::dispatch_lifecycle_event(&snapshot, tag, keepalive).await,
         None => None,
+    };
+    match tag {
+        ice_plugin_sdk::EventTag::SessionStart => reload_context.builtins.session_start().await,
+        ice_plugin_sdk::EventTag::SessionShutdown => {
+            reload_context.builtins.session_shutdown().await
+        }
+        _ => {}
     }
+    veto
 }
 
 /// Join plugin teardown before unloading modules. A detached timed-out handler
@@ -1558,13 +1577,14 @@ where
         // the paths it contributed at startup across `/reload`.
         let js_paths: &[PathBuf] = &[];
         let package_paths: &[PathBuf] = &[];
-        let dirs = append_reload_resource_paths(
+        let mut dirs = append_reload_resource_paths(
             skill_base_dirs,
             &effective_args.skill,
             &discovered.skill_paths,
             js_paths,
             &package_paths,
         );
+        dirs.extend(ctx.builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
         skills = result.skills;
         skill_diags = result.diagnostics;
@@ -1694,6 +1714,7 @@ where
         }
         None => ctx.broadcast.clone(),
     };
+    let emitter = compose_agent_emitter(emitter, ctx.builtins.agent_emitter());
 
     // ---- 5. Push the rebuilt state into the live harness via the B5d setters ----
     let resources = AgentHarnessResources {
@@ -1780,6 +1801,13 @@ where
     let mut active = active_tool_names(&tools, &effective_args);
     active = filter_active_tool_names(active, &effective_args);
     let _ = harness.set_tools(tools, Some(active)).await;
+    // The rebuilt set drops built-in extension tools; register them again.
+    ctx.builtins
+        .register_tools(tool_name_allowed(
+            crate::cognee::runtime::SEARCH_TOOL_NAME,
+            &effective_args,
+        ))
+        .await;
 
     if let Some(error) = codex_models_error {
         warnings = true;

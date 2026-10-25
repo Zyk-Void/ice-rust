@@ -802,6 +802,31 @@ impl SlashCommand for BlackholeCommand {
     }
 }
 
+pub(super) struct CogneeCommand;
+impl SlashCommand for CogneeCommand {
+    fn name(&self) -> &'static str {
+        "/cognee"
+    }
+    fn description(&self) -> &'static str {
+        "Cognee memory: status, search, remember, improve, flush"
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let Some(cognee) = ctx.reload_context.builtins.cognee.clone() else {
+            add_note_message(
+                &ctx.chat,
+                "Cognee is unavailable without an agent directory.",
+            );
+            ctx.tui.request_render(false);
+            return;
+        };
+        // Results arrive as notices, drained into the transcript each tick.
+        let args = args.to_string();
+        tokio::spawn(async move {
+            crate::cognee::command::run_command(&cognee, &args).await;
+        });
+    }
+}
+
 pub(super) struct ScopedModelsCommand;
 impl SlashCommand for ScopedModelsCommand {
     fn name(&self) -> &'static str {
@@ -925,6 +950,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(ThemeCommand));
     r.register(Arc::new(CompactCommand));
     r.register(Arc::new(BlackholeCommand));
+    r.register(Arc::new(CogneeCommand));
     r.register(Arc::new(CopyCommand));
     r.register(Arc::new(HotkeysCommand));
     r.register(Arc::new(ContextCommand));

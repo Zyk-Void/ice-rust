@@ -93,6 +93,7 @@ impl SettingRow {
 pub struct BuiltinExtensions {
     pub notices: NoticeMailbox,
     pub agent_dir: Option<PathBuf>,
+    pub cognee: Option<Arc<crate::cognee::runtime::CogneeRuntime>>,
     pub blackhole: Option<Arc<crate::blackhole::engine::BlackholeEngine>>,
 }
 
@@ -102,6 +103,7 @@ impl BuiltinExtensions {
         Self {
             notices: NoticeMailbox::new(),
             agent_dir: None,
+            cognee: None,
             blackhole: None,
         }
     }
@@ -113,10 +115,73 @@ impl BuiltinExtensions {
             agent_dir.clone(),
             notices.clone(),
         ));
+        let cognee = crate::cognee::runtime::CogneeRuntime::new(
+            crate::cognee::runtime::RuntimeOptions::for_agent_dir(agent_dir.clone()),
+            notices.clone(),
+        );
         Self {
             notices,
             agent_dir: Some(agent_dir),
+            cognee: Some(cognee),
             blackhole: Some(blackhole),
+        }
+    }
+
+    /// Bind the live harness: register `cognee_search` (when the tool policy
+    /// allows it) and give Cognee the footer status and working directory.
+    pub async fn bind(
+        &self,
+        harness: &ice_harness::agent_harness::AgentHarness,
+        status: ice_extensions::ExtensionStatusMailbox,
+        cwd: PathBuf,
+        search_tool_allowed: bool,
+    ) {
+        if let Some(cognee) = &self.cognee {
+            cognee.bind(harness.downgrade(), status, cwd);
+        }
+        self.register_tools(search_tool_allowed).await;
+    }
+
+    /// Register built-in tools on the bound harness (again after a reload
+    /// rebuilt its tool set).
+    pub async fn register_tools(&self, search_tool_allowed: bool) {
+        if let Some(cognee) = &self.cognee {
+            cognee.register_search_tool(search_tool_allowed).await;
+            cognee.apply_tool_state().await;
+        }
+    }
+
+    /// The agent-event observer for built-ins, composed into the session
+    /// emitter.
+    pub fn agent_emitter(&self) -> Option<Arc<dyn ice_agent::AgentEmitter>> {
+        self.cognee.as_ref().map(|cognee| {
+            Arc::new(crate::cognee::runtime::CogneeEmitter(cognee.clone()))
+                as Arc<dyn ice_agent::AgentEmitter>
+        })
+    }
+
+    /// Skill files contributed by built-ins: Cognee's three skills once
+    /// Cognee is configured.
+    pub fn skill_paths(&self) -> Vec<PathBuf> {
+        match &self.cognee {
+            Some(cognee) if cognee.is_installed() => {
+                crate::cognee::command::materialize_skills(cognee.storage_dir())
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    /// `session_start` for built-ins.
+    pub async fn session_start(&self) {
+        if let Some(cognee) = &self.cognee {
+            cognee.session_start().await;
+        }
+    }
+
+    /// `session_shutdown` for built-ins: drains Cognee's background work.
+    pub async fn session_shutdown(&self) {
+        if let Some(cognee) = &self.cognee {
+            cognee.session_shutdown().await;
         }
     }
 
@@ -124,6 +189,9 @@ impl BuiltinExtensions {
     /// its checkpoint recall is written before Blackhole consumes it.
     pub fn harness_extensions(&self) -> ice_harness::extension::HarnessExtensions {
         let mut extensions: ice_harness::extension::HarnessExtensions = Vec::new();
+        if let Some(cognee) = &self.cognee {
+            extensions.push(cognee.clone());
+        }
         if let Some(blackhole) = &self.blackhole {
             extensions.push(blackhole.clone());
         }
@@ -133,6 +201,9 @@ impl BuiltinExtensions {
     /// Namespaced `/settings` rows.
     pub fn settings_rows(&self) -> Vec<SettingRow> {
         let mut rows = Vec::new();
+        if let Some(cognee) = &self.cognee {
+            rows.extend(crate::cognee::command::settings_rows(&cognee.config()));
+        }
         if let (Some(dir), Some(_)) = (&self.agent_dir, &self.blackhole) {
             rows.extend(crate::blackhole::command::settings_rows(
                 dir,
@@ -144,6 +215,16 @@ impl BuiltinExtensions {
 
     /// Apply a namespaced settings change; `None` when no built-in owns `key`.
     pub fn apply_setting(&self, key: &str, value: &str) -> Option<Result<String, String>> {
+        if let Some(cognee) = &self.cognee {
+            if let Some(next) = crate::cognee::command::apply_setting(&cognee.config(), key, value)
+            {
+                return Some(
+                    cognee
+                        .persist_config_now(next)
+                        .map(|()| format!("Cognee {}: {value}", &key["cognee.".len()..])),
+                );
+            }
+        }
         let dir = self.agent_dir.as_ref()?;
         if self.blackhole.is_some() {
             if let Some(result) = crate::blackhole::command::apply_setting(
