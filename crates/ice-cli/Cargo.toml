@@ -49,6 +49,7 @@ sha2 = "0.10"
 percent-encoding = "2"
 flate2 = "1"
 tar = "0.4"
+unicode-segmentation = "1"
 zip = { version = "2.4", default-features = false, features = ["deflate"] }
 dirs = { workspace = true }
 rpassword = { workspace = true }
