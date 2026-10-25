@@ -14,7 +14,7 @@ fn replay_output(marker: &str) -> String {
 
 fn assert_replay_expansion(state: &TuiState, expanded: bool) {
     let output = strip_ansi(&state.chat_container.render(100).join("\n"));
-    for marker in ["WRITE_REPLAY_END", "READ_REPLAY_END", "SEARCH_REPLAY_END"] {
+    for marker in ["TOOL_REPLAY_END", "READ_REPLAY_END", "SEARCH_REPLAY_END"] {
         assert_eq!(output.contains(marker), expanded, "{marker}: {output}");
     }
     let children = state.chat_container.get_children();
@@ -67,7 +67,11 @@ fn replay_preserves_saved_expansion_live_members_and_first_toggle() {
                     .await
                     .unwrap();
                 let calls = [
-                    ("write", json!({"path": "notes.txt"}), "WRITE_REPLAY_END"),
+                    (
+                        "extension_tool",
+                        json!({"path": "notes.txt"}),
+                        "TOOL_REPLAY_END",
+                    ),
                     ("read", json!({"path": "src/lib.rs"}), "READ_REPLAY_END"),
                     (
                         "bash",
