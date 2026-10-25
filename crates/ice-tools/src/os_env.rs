@@ -156,7 +156,8 @@ impl OsExecutionEnv {
                 p = format!("{}\\{}", home_dir_string(), rest);
             }
         }
-        // file:// URL → path. Parse failure silently keeps the literal.
+        // file:// URL → path. `absolute_path` rejects an invalid URL first;
+        // other callers keep the literal.
         if p.starts_with("file://") {
             if let Some(local) = file_url_to_path(&p) {
                 p = local;
@@ -258,18 +259,47 @@ fn normalize_absolute(p: &Path) -> PathBuf {
     out
 }
 
+/// `file://` URL → local path, following Node's `fileURLToPath`: the host must
+/// be empty or `localhost`, percent-escapes are decoded, and an encoded `/`
+/// or an invalid escape is rejected. `None` means the URL is invalid.
 fn file_url_to_path(url: &str) -> Option<String> {
-    // Minimal file:// → path conversion. Handles `file:///abs/path` and
-    // Windows `file:///C:/...`. Parse failure → None (caller keeps literal).
     let rest = url.strip_prefix("file://")?;
-    if let Some(drive_rest) = rest.strip_prefix('/') {
-        // `/C:/...` (Windows drive) or `/abs/path`.
-        if drive_rest.len() >= 2 && drive_rest.as_bytes()[1] == b':' {
-            return Some(drive_rest.to_string());
-        }
-        return Some(format!("/{}", drive_rest));
+    let (host, path) = match rest.find('/') {
+        Some(slash) => (&rest[..slash], &rest[slash..]),
+        None => (rest, ""),
+    };
+    if !(host.is_empty() || host.eq_ignore_ascii_case("localhost")) || path.is_empty() {
+        return None;
     }
-    Some(rest.to_string())
+    let path = path.split(['?', '#']).next().unwrap_or("");
+    let decoded = percent_decode_path(path)?;
+    // `/C:/...` is a Windows drive path.
+    let bytes = decoded.as_bytes();
+    if bytes.len() >= 3 && bytes[2] == b':' && bytes[1].is_ascii_alphabetic() {
+        return Some(decoded[1..].to_string());
+    }
+    Some(decoded)
+}
+
+fn percent_decode_path(path: &str) -> Option<String> {
+    let bytes = path.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            let hex = std::str::from_utf8(bytes.get(i + 1..i + 3)?).ok()?;
+            let byte = u8::from_str_radix(hex, 16).ok()?;
+            if byte == b'/' || (cfg!(windows) && byte == b'\\') {
+                return None;
+            }
+            out.push(byte);
+            i += 3;
+        } else {
+            out.push(bytes[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).ok()
 }
 
 fn bash_shell_config(shell: PathBuf) -> ShellConfig {
@@ -407,6 +437,13 @@ impl FileSystem for OsExecutionEnv {
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError> {
         check_cancel_file(cancel, Some(path))?;
+        if path.starts_with("file://") && file_url_to_path(path).is_none() {
+            return Err(FileError::new(
+                FileErrorCode::Invalid,
+                format!("Invalid file URL: {path}"),
+            )
+            .with_path(path));
+        }
         Ok(Self::resolve_path(&self.cwd, path))
     }
 
@@ -1242,5 +1279,47 @@ fn resolve_timeout(timeout: Option<f64>) -> Result<Option<std::time::Duration>, 
             }
             Ok(Some(std::time::Duration::from_secs_f64(secs)))
         }
+    }
+}
+
+#[cfg(test)]
+mod file_url_tests {
+    use super::*;
+
+    #[test]
+    fn file_urls_follow_node_file_url_to_path() {
+        assert_eq!(
+            file_url_to_path("file:///a/b%20c.txt").as_deref(),
+            Some("/a/b c.txt")
+        );
+        assert_eq!(
+            file_url_to_path("file://localhost/x").as_deref(),
+            Some("/x")
+        );
+        assert_eq!(
+            file_url_to_path("file:///C:/dir/f").as_deref(),
+            Some("C:/dir/f")
+        );
+        assert_eq!(
+            file_url_to_path("file:///q?x=1#frag").as_deref(),
+            Some("/q")
+        );
+        // Remote hosts, encoded slashes and bad escapes are invalid.
+        assert_eq!(file_url_to_path("file://server/share"), None);
+        assert_eq!(file_url_to_path("file:///a%2Fb"), None);
+        assert_eq!(file_url_to_path("file:///a%zz"), None);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn absolute_path_rejects_an_invalid_file_url() {
+        let env = OsExecutionEnv::with_cwd(std::env::temp_dir());
+        let err = env
+            .absolute_path("file://server/x", None)
+            .await
+            .unwrap_err();
+        assert_eq!(err.code, FileErrorCode::Invalid);
+        let ok = env.absolute_path("file:///tmp/a%20b", None).await.unwrap();
+        assert_eq!(ok, PathBuf::from("/tmp/a b"));
     }
 }

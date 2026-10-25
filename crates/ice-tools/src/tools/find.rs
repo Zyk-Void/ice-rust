@@ -30,7 +30,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::env::FileKind;
-use crate::path_utils::resolve_read_tool_path;
+use crate::path_utils::resolve_tool_path;
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{
     format_size, truncate_head, TruncationOptions, TruncationResult, DEFAULT_MAX_BYTES,
@@ -126,7 +126,7 @@ impl AgentTool for FindTool {
 
         // Resolve the search path (read-only + fuzzy variants).
         let search_path =
-            resolve_read_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
+            resolve_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
                 .await
                 .map_err(file_err_to_agent)?;
 

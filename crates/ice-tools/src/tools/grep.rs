@@ -30,7 +30,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::env::FileKind;
-use crate::path_utils::resolve_read_tool_path;
+use crate::path_utils::resolve_tool_path;
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{
     format_size, truncate_head, truncate_line_default, TruncationOptions, TruncationResult,
@@ -172,7 +172,7 @@ impl AgentTool for GrepTool {
 
         // Resolve the search path. A `.`/absent path resolves to the env cwd.
         let search_path =
-            resolve_read_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
+            resolve_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
                 .await
                 .map_err(file_err_to_agent)?;
 
