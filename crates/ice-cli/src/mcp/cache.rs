@@ -41,6 +41,7 @@ pub(crate) fn fingerprint(config: &ServerConfig) -> String {
         "env": config.env,
         "cwd": config.cwd,
         "url": config.url,
+        "socket": config.socket,
         "headers": config.headers,
     });
     let digest = Sha256::digest(launch.to_string().as_bytes());

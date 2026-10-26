@@ -152,6 +152,22 @@ stored tokens. Until a server is signed in it shows `failed: needs sign-in`.
 Metadata, registration and token endpoints must use HTTPS (plain HTTP is
 allowed only for loopback addresses), and redirects are not followed.
 
+## Shared servers through rmcp-mux
+
+To share one server process between sessions, run it under
+[rmcp-mux](https://github.com/VetCoders/rmcp-mux) and point each session at
+its socket (Unix only):
+
+```json
+{"mcpServers": {"memory": {"socket": "~/.rmcp-servers/rmcp-mux/sockets/memory.sock"}}}
+```
+
+`socket` expands `~` and `${VAR}`, and excludes `command` and `url`. icers
+owns only its connection: closing a session, `/mcp reconnect`, or idling out a
+`lazy` server closes the socket and never starts or stops the mux or its
+server. Point a socket only at services whose tools, state and credentials you
+mean to share.
+
 ## The `mcp` proxy tool
 
 While any server is configured, the model also gets one `mcp` tool (subject to

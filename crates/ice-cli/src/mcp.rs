@@ -127,6 +127,8 @@ pub struct ServerConfig {
     pub request_timeout_ms: Option<u64>,
     /// Streamable HTTP (or legacy SSE) endpoint, instead of `command`.
     pub url: Option<String>,
+    /// An rmcp-mux Unix socket, instead of `command` or `url`; expands `~` and `${VAR}`.
+    pub socket: Option<String>,
     /// HTTP headers; values support `${VAR}` and `$env:VAR`.
     #[serde(default)]
     pub headers: BTreeMap<String, String>,
@@ -367,12 +369,19 @@ impl Drop for Process {
 enum Link {
     Process(Process),
     Http(http::HttpLink),
+    /// A connection to a shared process; closing it never stops that process.
+    #[cfg(unix)]
+    Socket(std::os::unix::net::UnixStream),
 }
 impl Link {
     fn close(&self) {
         match self {
             Link::Process(process) => process.tree.kill(),
             Link::Http(http) => http.close(),
+            #[cfg(unix)]
+            Link::Socket(stream) => {
+                let _ = stream.shutdown(std::net::Shutdown::Both);
+            }
         }
     }
 }
@@ -455,11 +464,35 @@ impl Client {
         handlers: Handlers,
         token: Option<&str>,
     ) -> Result<Arc<Self>, String> {
-        match (&config.url, config.command.is_empty()) {
-            (Some(_), true) => Self::connect_http(config, handlers, token),
-            (Some(_), false) => Err("MCP server sets both command and url".into()),
-            (None, _) => Self::spawn(name, config, cwd, handlers),
+        let set = [
+            !config.command.is_empty(),
+            config.url.is_some(),
+            config.socket.is_some(),
+        ];
+        if set.iter().filter(|set| **set).count() > 1 {
+            return Err("MCP server must set only one of command, url and socket".into());
         }
+        match (&config.url, &config.socket) {
+            (Some(_), _) => Self::connect_http(config, handlers, token),
+            (_, Some(socket)) => Self::connect_socket(socket, handlers),
+            _ => Self::spawn(name, config, cwd, handlers),
+        }
+    }
+
+    /// An rmcp-mux service socket. icers owns only this connection; the mux
+    /// owns the server process, so it is never started or stopped here.
+    #[cfg(unix)]
+    fn connect_socket(socket: &str, handlers: Handlers) -> Result<Arc<Self>, String> {
+        let path = expand_path(socket)?;
+        let stream = std::os::unix::net::UnixStream::connect(&path)
+            .map_err(|e| format!("connect {}: {e}", path.display()))?;
+        let reader = stream.try_clone().map_err(|e| e.to_string())?;
+        let writer = stream.try_clone().map_err(|e| e.to_string())?;
+        Self::over_lines(reader, writer, Link::Socket(stream), handlers)
+    }
+    #[cfg(not(unix))]
+    fn connect_socket(_: &str, _: Handlers) -> Result<Arc<Self>, String> {
+        Err("MCP socket servers (rmcp-mux) are unsupported on this platform".into())
     }
 
     fn spawn(
@@ -972,6 +1005,19 @@ impl Drop for RequestGuard<'_> {
             );
         }
     }
+}
+
+/// `~` and `${VAR}`/`$env:VAR` expansion for local paths.
+#[cfg_attr(not(unix), allow(dead_code))]
+fn expand_path(value: &str) -> Result<PathBuf, String> {
+    let value = http::interpolate(value)?;
+    Ok(match value.strip_prefix("~/") {
+        Some(rest) => dirs::home_dir()
+            .ok_or("no home directory for ~")?
+            .join(rest),
+        None if value == "~" => dirs::home_dir().ok_or("no home directory for ~")?,
+        None => PathBuf::from(value),
+    })
 }
 
 /// Distinct names can sanitize alike ("Project Notes", "project-notes"); later
