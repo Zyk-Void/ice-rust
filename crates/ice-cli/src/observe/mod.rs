@@ -10,8 +10,8 @@
 //! - [`server`] serves the dashboard, JSON state/replay and SSE on
 //!   `127.0.0.1` behind a per-user token (`icers --observe[=port]`).
 //!
-//! The Cognee knowledge views (OBS-008, OBS-017..019, OBS-024..029) are not
-//! ported; they arrive with the Cognee port (§5).
+//! Cognee memory operations reach the timeline as `memory` items (OBS-008).
+//! The Cognee knowledge views (OBS-017..019, OBS-024..029) are not ported.
 
 pub mod recorder;
 pub mod server;
@@ -21,6 +21,7 @@ pub mod types;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::cognee::observer::Observation;
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::agent_harness::{AgentHarness, AgentLane};
 use ice_harness::events::HarnessEvent;
@@ -71,6 +72,7 @@ enum Command {
     },
     Harness(HarnessEvent),
     Info(ObserveSessionInfo),
+    Memory(Observation),
     Lagged(u64),
     Stop,
 }
@@ -86,6 +88,7 @@ pub struct ObserveRuntime {
     drain: Arc<tokio::sync::Notify>,
     poll: Option<tokio::task::JoinHandle<()>>,
     _watch: HarnessWatcher,
+    _memory: crate::cognee::observer::Subscription,
 }
 
 async fn sample_info(harness: &AgentHarness) -> ObserveSessionInfo {
@@ -221,6 +224,7 @@ fn spawn(
                         }
                         Command::Harness(_) => {}
                         Command::Info(info) => recorder.update_session_info(info),
+                        Command::Memory(observation) => recorder.handle_memory(&observation),
                         Command::Lagged(n) => recorder.note(&format!(
                             "observer fell behind; {n} agent events were not recorded"
                         )),
@@ -315,6 +319,15 @@ fn spawn(
         }
     });
 
+    // Process-wide, like TS `main.ts`: every Cognee operation this process
+    // runs is recorded on the main thread.
+    let memory_tx = std::sync::Mutex::new(tx.clone());
+    let memory = crate::cognee::observer::subscribe(move |observation| {
+        if let Ok(tx) = memory_tx.lock() {
+            let _ = tx.send(Command::Memory(observation.clone()));
+        }
+    });
+
     ObserveRuntime {
         recorder,
         store,
@@ -324,6 +337,7 @@ fn spawn(
         drain,
         poll: Some(poll),
         _watch: watch,
+        _memory: memory,
     }
 }
 

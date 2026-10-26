@@ -242,6 +242,41 @@ If the scroll wheel cannot scroll through history on macOS, check that `TuiAltSc
 
 `/context` shows the current model capacity, a 20×10 category grid, and the five largest estimated items. It reads only the current branch, uses the standard compaction projection, and counts project instructions, the skills listing, and enabled tool schemas from the loaded prompts. The total uses the latest valid provider input and cache usage plus estimated output and following messages. Categories are estimated independently, and private per-request transformations are outside the public API projection, so this is not an exact request token count. `/usage` still shows cumulative billed usage.
 
+### Blackhole compaction
+
+Blackhole replaces the model-written compaction summary with a deterministic one. It compiles the summarized history into sections: session goal, user requests, findings, files read and changed, commits, preferences, recent actions and outstanding context. It also rebuilds live state (active goal, mode and plan, subagents, background shells, external tools) from the session entries at every compaction. No model call is needed, unless you turn on `refine`, which adds one short model-written "state of work" section.
+
+Blackhole is off until you configure it. Run `/blackhole percent 85` (or any other `/blackhole` subcommand that saves a setting) to create `<agent dir>/ice-blackhole/ice-blackhole-config.json`, or set one of the environment variables below.
+
+- `/blackhole` or `/blackhole status` shows the mid-run mode, threshold, tail, trimming, refine state and config path.
+- `/blackhole percent <1-99>` compacts once input reaches that share of the active model's context window. The share is resolved again when you switch models.
+- `/blackhole resume`, `/blackhole pause` and `/blackhole off` set mid-run compaction. `resume` compacts after a tool turn and continues, `pause` compacts and stops the run, and `off` turns Blackhole compaction off.
+- `/settings` has a Blackhole section: compaction (`auto`, `manual`, `off`), engine (`blackhole` or `ice-default`), mid-run mode, threshold, tail (`minimal` keeps no tail; `ice-default` keeps the normal one), trimming of large kept tool output (model context only; the session keeps full output), refine, and memory.
+- In `manual` mode, a bare `/compact` uses Blackhole. Overflow recovery always keeps the normal tail.
+- Environment overrides: `ICERS_BLACKHOLE_COMPACTION`, `ICERS_BLACKHOLE_COMPACTION_ENGINE`, `ICERS_BLACKHOLE_MID_RUN_COMPACTION`, `ICERS_BLACKHOLE_COMPACT_AFTER_PERCENT`.
+
+### Cognee memory
+
+[Cognee](https://github.com/topoteretes/cognee) is an external memory service. When it is configured, icers:
+
+- recalls memory for each prompt of four or more words and adds it to that run's system prompt only, marked as untrusted reference data;
+- stores each prompt with its final answer, and traces of the built-in coding tools (at most 24 per prompt), in the Cognee session cache;
+- asks Cognee to improve (consolidate) the session cache once the agent settles (at most every 5 minutes) and at shutdown, and improves up to two older sessions per idle pass;
+- queues each compaction checkpoint as permanent memory (`agent_actions`) and shows it once to the next prompt.
+
+The session only gains small `ice-cognee` operation records (IDs and hashes, no memory text). Credential-like text (`Bearer …`, `api_key=…`, `token: …`) is redacted before it leaves the machine. This is a heuristic, not data-loss prevention: other secrets in prompts or tool output can still be sent.
+
+Cognee is off until you configure it: run `/cognee on`, which writes `<agent dir>/ice-cognee/config.json`, or set any `ICERS_COGNEE_*` variable. icers never contacts Cognee while running offline (`--offline` or `ICERS_OFFLINE=1`). The default server is `http://127.0.0.1:8211` and the default dataset is `ice`; set the dataset to `$project` for one dataset per repository (`ice-<repo>-<hash>`). The API key comes from `COGNEE_API_KEY`, then `<agent dir>/ice-cognee/api_key.json` or `~/.cognee-plugin/api_key.json` (used only when a stored `base_url` has the same origin as the server), then `~/.cognee/.env`.
+
+- `/cognee` or `/cognee status` shows health, policy, counters, queue and circuit-breaker state. `/cognee doctor` shows the same as one diagnostic line.
+- `/cognee on|off`, `recall on|off`, `capture on|off`, `tools on|off`, `improve on|off` and `remember on|off` change policy. `/cognee compact auto|defer|own` chooses who writes compaction summaries: `auto` and `defer` keep the icers or Blackhole checkpoint; `own` writes a local anchor without a model call.
+- `/cognee search <query>` searches memory. `/cognee remember [user_context|project_docs|agent_actions] <text>` stores a fact; when Cognee is unreachable it is queued.
+- `/cognee improve [now]` requests consolidation immediately. `/cognee flush [pending|uncertain]` replays up to four queued writes. A write that timed out may already have landed, so it is marked uncertain and replayed only by `/cognee flush uncertain`.
+- The model gets a `cognee_search` tool while Cognee is enabled, and three skills (`cognee-search`, `cognee-remember`, `cognee-sync`).
+- `/settings` has a Cognee section with the same switches, plus `checkpointRecall`: when Blackhole is active, a bounded recall for the summarized request is written to `<agent dir>/ice-cognee/compaction-recall.json` and added once to the next Blackhole checkpoint.
+- The footer shows `cognee:<dataset> ok|err|… cap=on|off`. Activity is logged to `<agent dir>/ice-cognee/observations.jsonl` (rotated at 2 MiB).
+- Environment overrides: `ICERS_COGNEE_ENABLED`, `ICERS_COGNEE_RECALL`, `ICERS_COGNEE_REMEMBER`, `ICERS_COGNEE_CAPTURE`, `ICERS_COGNEE_CAPTURE_TOOLS`, `ICERS_COGNEE_IMPROVE`, `ICERS_COGNEE_BASE_URL`, `ICERS_COGNEE_DATASET`, `ICERS_COGNEE_COMPACTION_SUMMARY`, `ICERS_COGNEE_CHECKPOINT_RECALL`, plus Cognee's own `COGNEE_BASE_URL` and `COGNEE_LOCAL_API_URL`.
+
 ### macOS keyboard and plugin panels
 
 Terminals that support the Kitty keyboard protocol use the same flags 7 as Pi, enabling modifier-key recognition and key-repeat and key-release events for function keys. Regular text retains UTF-8 input so input methods in terminals such as iTerm2 can submit text correctly; flag 8, which converts all text into key events, is not enabled. Key-release events for ordinary character keys (such as Space) are not guaranteed, so plugins that depend on key holds should use function keys for which the terminal supports release events. The protocol is enabled after switching to the active screen and restored before exit or suspension; full-screen mouse scrolling is also re-enabled on resume.

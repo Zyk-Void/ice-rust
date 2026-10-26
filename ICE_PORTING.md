@@ -338,9 +338,9 @@ it has no `run_in_background` or `stdin` parameters.
 the Cognee knowledge views. `crates/ice-cli/src/observe/` holds the recorder,
 the SQLite store (`~/.icers/agent/observability.sqlite`), the loopback HTTP/SSE
 server (`icers --observe[=port]`, default 4659) and the dashboard; see
-`docs/guides/observability.md` for the differences from TS. Remaining: the
-Knowledge tab and Cognee correlation (OBS-008, OBS-017..019, OBS-024..029, with
-§5), queue-update rows (Rust emits no queue event), compaction summaries (the
+`docs/guides/observability.md` for the differences from TS. Cognee memory
+operations appear as correlated `memory` rows (OBS-008). Remaining: the
+Knowledge tab and its `/cognee/*` routes (OBS-017..019, OBS-024..029), queue-update rows (Rust emits no queue event), compaction summaries (the
 harness reports only start/finish) and the install-telemetry gate and startup
 timing items (OBS-001, OBS-002).
 
@@ -371,8 +371,33 @@ timing items (OBS-001, OBS-002).
 
 **ice:** `CA/ice-cognee.ts` (2529 lines), `ice-cognee-client.ts` (1013),
 `ice-cognee-env.ts`, `ice-cognee-observer.ts`, `CA/ice-cognee-skills/`
-(cognee-search/remember/sync), `docs/ice-cognee.md`. **ice-rust:** missing (the
-`ice-memory` plugin is unrelated).
+(cognee-search/remember/sync), `docs/ice-cognee.md`. **ice-rust:** ported as a
+built-in in `crates/ice-cli/src/cognee/` (COG-001..068, [PR #66](https://github.com/Zyk-Void/ice-rust/pull/66)). It runs through the in-process
+harness extension seam (`crates/ice-harness/src/extension.rs`) and an agent-event
+observer, not the C plugin ABI. Tests use an injected transport (no network).
+
+Deliberate differences from ice:
+- **Opt-in.** Cognee is installed only when `<agentDir>/ice-cognee/config.json`
+  exists or an `ICERS_COGNEE_*` variable is set (`/cognee on` writes the file).
+  ice enables it by default. This keeps a fresh install, and the test suite, from
+  sending prompts to whatever listens on `127.0.0.1:8211`.
+- **Offline.** `--offline` / `ICERS_OFFLINE` disables every Cognee request.
+- **Names.** `ICERS_COGNEE_*` instead of `ICE_COGNEE_*`; storage is
+  `~/.icers/agent/ice-cognee/` (`config.json`, `api_key.json`, `pending/`,
+  `warmup/`, `dream/`, `observations.jsonl`, `compaction-recall.json`). Cognee's
+  own `COGNEE_*`, `~/.cognee/.env` and `~/.cognee-plugin/api_key.json` are read
+  as in ice.
+- **Settings** rows show the current config each time `/settings` opens (ice
+  captures them at registration).
+- **`/cognee watch`** points at `observations.jsonl`; icers has no observe
+  dashboard. The browse client (COG-021..030) is ported, but its dashboard
+  consumers (OBS-017..019) are not.
+- **Health probe** reads at most 4 KiB of the `/health` body (ice reads it
+  unbounded).
+- **Compaction capture** sends the checkpoint's session-cache entry in the
+  background instead of awaiting it inside `session_compact`.
+- **Skills** are written to `<agentDir>/ice-cognee/skills/` and loaded like other
+  skill files, only while Cognee is installed.
 
 - **Hooks:**
   - `before_agent_start`: turn-scoped recall appended to the system prompt.
@@ -429,8 +454,13 @@ remain unverified. No PR has been opened for this worktree yet.
 
 ### 6.1 Blackhole compaction extension
 - **ice:** `ice:coding-agent/examples/extensions/ice-blackhole/` (index + `src/{core,extract,hooks,om}`).
-  It derives from `sting8k/ice-vcc`. **ice-rust:** missing. Rust compaction
-  (`crates/ice-harness/src/compaction`) is the upstream LLM-summary style.
+  It derives from `sting8k/ice-vcc`. **ice-rust:** ported as a built-in in
+  `crates/ice-cli/src/blackhole/` (BLACK-001..041, [PR #66](https://github.com/Zyk-Void/ice-rust/pull/66)). Like the optional ice package it
+  is off until `<agentDir>/ice-blackhole/ice-blackhole-config.json` exists or an
+  `ICERS_BLACKHOLE_*` variable is set. It hooks compaction through the harness
+  extension seam (`before_compact`, `after_compact`, `boundary`,
+  `transform_context`). Overflow recovery always keeps the host tail. The
+  `memory` setting is persisted only; ice has no memory workers either.
 - **How it works:**
   - `session_before_compact` (`hooks/before-compact.ts`) replaces the LLM
     summary with a deterministic compiler: normalize, filter noise, build
@@ -453,7 +483,10 @@ remain unverified. No PR has been opened for this worktree yet.
   read after the lock is taken. Rust: verify (no equivalent found by name).
 - **Mid-run compaction:** setting `compaction.midRunCompaction` (default off)
   and `thresholdPercent` (default 85) (`settings-manager.ts:27-30`), plus RPC
-  `abort_compaction`. Rust: missing.
+  `abort_compaction`. Rust: the settings and the tool-turn boundary compaction
+  exist (`crates/ice-cli/src/settings.rs`, `context_boundary_hook` in
+  `crates/ice-harness/src/agent_harness.rs`); extensions can also request a
+  boundary compaction (Blackhole does). RPC `abort_compaction`: missing.
 - **Abort reclassification:** an `error` stop reason seen after the run signal
   aborted is reclassified as `aborted` (`ice:agent/src/agent-loop.ts`). Verify
   in `crates/ice-agent/src/abort.rs`.
@@ -782,4 +815,5 @@ Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
    contracts, then registry/persistence, permissions, worktree patches, Hub.
 8. AI wire APIs + provider catalog (§9).
 9. JSONL RPC parity (§7.3), then decide on the CBOR remote protocol (§8).
-10. Cognee, Blackhole, llama.cpp, Claude SDK (§5, §6.1, §10) as plugins.
+10. llama.cpp, Claude SDK (§10) as plugins. Cognee and Blackhole (§5, §6.1) are
+    ported as built-ins.

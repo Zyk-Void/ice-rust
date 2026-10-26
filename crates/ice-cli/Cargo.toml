@@ -50,6 +50,8 @@ sha2 = "0.10"
 percent-encoding = "2"
 flate2 = "1"
 tar = "0.4"
+unicode-segmentation = "1"
+fancy-regex = "0.13"
 zip = { version = "2.4", default-features = false, features = ["deflate"] }
 dirs = { workspace = true }
 rpassword = { workspace = true }
@@ -72,12 +74,13 @@ windows-sys = { version = "0.59", features = [
     "Win32_System_SystemInformation",
     "Win32_System_Threading",
     "Win32_System_DataExchange",
+    "Win32_Storage_FileSystem",
     "Win32_UI_Shell",
 ] }
 
 [target.'cfg(unix)'.dependencies]
 # `nix::sys::signal::raise` for the Ctrl+Z suspend (`app.suspend`).
-nix = { version = "0.29", features = ["signal"] }
+nix = { version = "0.29", features = ["signal", "fs"] }
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
