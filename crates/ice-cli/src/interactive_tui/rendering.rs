@@ -343,6 +343,16 @@ pub(super) fn add_error_message(container: &Arc<Container>, text: &str) {
 /// JSON payload; letting those bytes reach the renderer can corrupt the input
 /// row or make the whole frame exceed terminal limits.
 pub(super) fn sanitize_error_message(text: &str) -> String {
+    let result = strip_terminal_controls(text);
+    if result.trim().is_empty() {
+        "Provider request failed.".to_string()
+    } else {
+        result
+    }
+}
+
+/// Drop terminal escapes and control characters and bound the length.
+fn strip_terminal_controls(text: &str) -> String {
     const MAX_ERROR_CHARS: usize = 16 * 1024;
     let mut result = String::with_capacity(text.len().min(MAX_ERROR_CHARS));
     let mut count = 0;
@@ -381,11 +391,7 @@ pub(super) fn sanitize_error_message(text: &str) -> String {
             }
         }
     }
-    if result.trim().is_empty() {
-        "Provider request failed.".to_string()
-    } else {
-        result
-    }
+    result
 }
 
 /// Render a built-in extension notice by severity. The text can carry
@@ -396,7 +402,10 @@ pub(super) fn add_notice_message(
     text: &str,
 ) {
     use crate::builtin_extensions::NoticeLevel;
-    let text = sanitize_error_message(text);
+    let text = strip_terminal_controls(text);
+    if text.trim().is_empty() {
+        return;
+    }
     match level {
         NoticeLevel::Info => add_note_message(container, &text),
         NoticeLevel::Error => add_error_message(container, &text),

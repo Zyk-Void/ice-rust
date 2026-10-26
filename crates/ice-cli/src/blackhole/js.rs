@@ -184,10 +184,11 @@ fn days_from_civil(year: i64, month: u32, day: u32) -> i64 {
 
 /// `Date.parse` for the ISO forms ICE writes: `YYYY-MM-DD`, and
 /// `YYYY-MM-DDTHH:MM[:SS[.fff]]` with `Z` or a `±HH:MM` offset. A date-time
-/// without a zone is read as UTC (JavaScript would use local time).
+/// without a zone is read as UTC (JavaScript would use local time). Digits
+/// are ASCII only, like JavaScript's `\d`; the byte slices below rely on it.
 pub fn parse_iso_ms(text: &str) -> Option<i64> {
     let captures = crate::blackhole::regex!(
-        r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?(Z|[+-]\d{2}:\d{2})?)?$"
+        r"^([0-9]{4})-([0-9]{2})-([0-9]{2})(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]{1,9}))?)?(Z|[+-][0-9]{2}:[0-9]{2})?)?$"
     )
     .captures(text.trim())?;
     let number = |index: usize| -> Option<i64> {
@@ -279,6 +280,9 @@ mod tests {
         assert_eq!(parse_iso_ms("2024-04-30T00:00:00+23:60"), None);
         assert_eq!(parse_iso_ms("2024-04-30T00:00:00+24:00"), None);
         assert_eq!(parse_iso_ms("2024-04-30T00:00:00+99:99"), None);
+        // Non-ASCII digits are not dates (and must not panic the slicing).
+        assert_eq!(parse_iso_ms("2024-04-30T00:00:00.\u{6F5}\u{6F5}"), None);
+        assert_eq!(parse_iso_ms("2024-04-30T00:00:00+\u{6F5}\u{6F5}:00"), None);
     }
 
     #[test]

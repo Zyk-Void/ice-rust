@@ -5754,17 +5754,10 @@ impl AgentHarness {
                         }
                     };
                     match compacted {
-                        Err(error) if error.is_cancelled() => {
-                            self.write_operation_finished(
-                                &run_id,
-                                OperationOutcome::Completed,
-                                None,
-                            )
-                            .await?;
-                            CompactionOutcome::Declined {
-                                leaf_id: source_leaf.unwrap_or_default(),
-                            }
-                        }
+                        // The shared tail below writes the declined finish.
+                        Err(error) if error.is_cancelled() => CompactionOutcome::Declined {
+                            leaf_id: source_leaf.unwrap_or_default(),
+                        },
                         Ok(_)
                             if snap.coding_compaction_policy.is_some() && signal.is_cancelled() =>
                         {

@@ -15,7 +15,10 @@ use ice_harness::extension::{
     BoundaryEvent, CompactionOverride, CompactionTrigger, HarnessExtension,
 };
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
-use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery, SessionMetadata};
+use ice_harness::session::types::{
+    BranchBounds, Entry, EntryOrder, EntryQuery, LaneRecord, OperationOutcome, RecordQuery,
+    SessionMetadata,
+};
 use ice_harness::session::{DefaultIdGenerator, Session};
 use ice_harness::types::{AgentHarnessOptions, CompactionSettings, HarnessTool};
 use ice_tools::{ExecutionToolContext, InMemoryExecutionEnv};
@@ -256,6 +259,23 @@ async fn cancelled_manual_compaction_is_declined() {
     *probe.decision.lock().unwrap() = Some(BeforeCompactDecision::Cancel);
     let result = AgentLane::compact(&harness, None).await.unwrap();
     assert!(matches!(result.outcome, CompactionOutcome::Declined { .. }));
+    // The operation ends exactly once, as declined.
+    let finished = harness
+        .session()
+        .find_records(&RecordQuery {
+            run_id: Some(result.run_id.clone()),
+            record_type: Some("operation_finished"),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    assert!(
+        matches!(
+            finished.as_slice(),
+            [LaneRecord::OperationFinished(record)] if record.outcome == OperationOutcome::Declined
+        ),
+        "{finished:?}"
+    );
     assert!(provider.system_prompts.lock().unwrap().is_empty());
     assert!(compaction_entries(&harness).await.is_empty());
     assert!(probe.seen_triggers.lock().unwrap().is_empty());

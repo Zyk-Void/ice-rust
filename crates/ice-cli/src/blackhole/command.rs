@@ -178,15 +178,30 @@ pub fn apply_setting(
     let id = key.strip_prefix("blackhole.")?;
     let patch = match id {
         "compaction" => ConfigPatch {
-            compaction: CompactionMode::parse(value),
+            compaction: Some(
+                match parse_setting_choice(id, value, CompactionMode::parse) {
+                    Ok(value) => value,
+                    Err(error) => return Some(Err(error)),
+                },
+            ),
             ..ConfigPatch::default()
         },
         "compaction-engine" => ConfigPatch {
-            compaction_engine: CompactionEngine::parse(value),
+            compaction_engine: Some(
+                match parse_setting_choice(id, value, CompactionEngine::parse) {
+                    Ok(value) => value,
+                    Err(error) => return Some(Err(error)),
+                },
+            ),
             ..ConfigPatch::default()
         },
         "mid-run-compaction" => ConfigPatch {
-            mid_run_compaction: MidRunCompaction::parse(value),
+            mid_run_compaction: Some(
+                match parse_setting_choice(id, value, MidRunCompaction::parse) {
+                    Ok(value) => value,
+                    Err(error) => return Some(Err(error)),
+                },
+            ),
             ..ConfigPatch::default()
         },
         "threshold" => {
@@ -207,7 +222,10 @@ pub fn apply_setting(
             }
         }
         "tail-behavior" => ConfigPatch {
-            tail_behavior: TailBehavior::parse(value),
+            tail_behavior: Some(match parse_setting_choice(id, value, TailBehavior::parse) {
+                Ok(value) => value,
+                Err(error) => return Some(Err(error)),
+            }),
             ..ConfigPatch::default()
         },
         "trim-kept-tool-results" => ConfigPatch {
@@ -238,6 +256,14 @@ pub fn apply_setting(
             .map(|_| format!("Blackhole {id}: {value}"))
             .map_err(|error| format!("Could not save Blackhole config: {error}")),
     )
+}
+
+fn parse_setting_choice<T>(
+    id: &str,
+    value: &str,
+    parse: fn(&str) -> Option<T>,
+) -> Result<T, String> {
+    parse(value).ok_or_else(|| format!("Invalid value for Blackhole setting {id}"))
 }
 
 fn parse_setting_boolean(id: &str, value: &str) -> Result<bool, String> {
@@ -337,6 +363,10 @@ mod tests {
             "blackhole.trim-kept-tool-results",
             "blackhole.refine",
             "blackhole.memory",
+            "blackhole.compaction",
+            "blackhole.compaction-engine",
+            "blackhole.mid-run-compaction",
+            "blackhole.tail-behavior",
         ] {
             assert!(apply_setting(dir.path(), &no_env, key, "tru")
                 .unwrap()
