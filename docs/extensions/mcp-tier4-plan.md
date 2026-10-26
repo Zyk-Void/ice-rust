@@ -594,8 +594,8 @@ queue and turn trigger, CSP header, token rejection.
 ### 7.8 `mcpScript`
 A default-on `mcpScript` tool (`settings.scriptMode: false` hides it) runs
 model-written JavaScript with `tools.search`, `tools.describe`, `tools.call`,
-`emit` and a captured `console`, in an embedded engine (D9) with a 30 s
-deadline enforced by the engine's interrupt hook and a memory limit. Calls
+`emit` and a captured `console`, in `boa_engine` (D9) with a 30 s
+deadline and bounded loop iterations, recursion and stack size. Calls
 return `{ok, data}` / `{ok: false, error}` and go through the same lazy
 connect, approval and output guard as proxy calls; details carry a `calls`
 trace. Like PMA, this is a convenience layer, not an isolation boundary.
@@ -608,21 +608,18 @@ secret values, `bearerTokenStore` (OS keychain), protocol tracing, MCP
 2026-07-28 negotiation (`protocolVersion`), agent-plugin and package
 manifests, `toolPrefix` variants, and Pi-tool entries in `mcp` search.
 
-### Decisions (D6–D9)
-- **D6. Default lifecycle.** PMA defaults to `lazy`. Recommendation: keep
-  `eager` as the icers default so existing setups behave the same; `lazy` is
-  opt-in per server.
-- **D7. Token storage.** PMA uses the OS keychain and fails closed without
-  one. Recommendation: `~/.icers/agent/mcp-auth.json` at mode 600, the same
-  convention as `auth.json`, so headless Linux works and no new dependency
-  is needed.
-- **D8. MCP UI host page.** PMA vendors a 288 KB minified AppBridge bundle
-  (MCP SDK + Zod). Recommendation: a small hand-written host page for the
-  host side of the postMessage protocol; nothing minified is vendored.
-- **D9. Script engine.** Recommendation: `rquickjs` (QuickJS: small,
-  interrupt hook for deadlines, memory limits; builds C via `cc`, which CI
-  already supports) over `boa_engine` (pure Rust but larger and slower) and
-  `deno_core` (V8, far too large). Check `cargo +1.88 check` before adding.
+### Decisions (D6–D9), decided 2026-10-26
+- **D6. Default lifecycle: `eager`.** Servers start with the session as they
+  do today; `lazy`, `keep-alive` and `lazy-keep-alive` are opt-in per server.
+  (PMA defaults to `lazy`.)
+- **D7. Token storage: `~/.icers/agent/mcp-auth.json`, mode 600,** the same
+  convention as `auth.json`. No keychain dependency; headless Linux works.
+- **D8. MCP UI host page: written in this repo.** PMA's 288 KB minified
+  AppBridge bundle is not vendored.
+- **D9. Script engine: `boa_engine`** (pure Rust, no C toolchain). Deadlines
+  are enforced with boa's loop-iteration and recursion limits plus a
+  wall-clock check between job-queue runs; check `cargo +1.88 check` before
+  adding it.
 
 ---
 
