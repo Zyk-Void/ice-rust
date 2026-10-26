@@ -1,10 +1,12 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0–3 and 4a implemented in the unmerged stack
+Status: Phases 0–3, 4a, and 4b1 implemented in the unmerged stack
 `feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
-`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts` ← `feat/cli-mcp-instructions`.
+`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts` ← `feat/cli-mcp-instructions` ←
+`feat/cli-mcp-elicitation-forms`.
 Phase 1 was cherry-picked from `ae868f2` onto Phase 0 as `e13d431`; the original
-output-guard branch is unchanged. Phase 4b and later phases are not started. Plan originally based on `main` at `ae1e46b`.
+output-guard branch is unchanged. Phase 4b2 (URL elicitation) and later phases
+are not started. Plan originally based on `main` at `ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
 prompts, server-initiated requests (elicitation, sampling, instructions),
@@ -305,6 +307,22 @@ model.
 cap; disappears on disconnect.
 
 ### 4b. Elicitation
+
+Split into independently reviewable changes after the combined implementation
+exceeded the ~600 non-test-line target:
+
+- **4b1 — form elicitation: done** on `feat/cli-mcp-elicitation-forms`. Reuses
+  `UiDialogMailbox` and the workspace `jsonschema` validator. Flat schemas are
+  validated locally with no reference resolution; input, enum/boolean selection,
+  multi-selection, omission/defaults, retry, review/edit, decline, and cancel are
+  covered. Only TUI sessions advertise `elicitation.form`; settings can disable
+  it. Aborted/timed-out client requests cancel all outstanding server handlers
+  on that connection, since the protocol does not reliably link them to tools.
+  Adds the existing workspace `jsonschema` dependency to the CLI, with no new
+  package versions, plugin ABI, persistence format, or public crate API changes.
+- **4b2 — URL elicitation: not started.** Add HTTP(S) validation, explicit browser
+  consent, accepted-ID tracking, completion notification, and offline tests on a
+  branch stacked above forms. Do not advertise `elicitation.url` before then.
 
 **Spec:** MCP spec "Client features / Elicitation"; PMA-README
 `README.md:533-538`; `PMA/elicitation-handler.ts`:

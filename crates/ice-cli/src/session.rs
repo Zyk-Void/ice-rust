@@ -973,6 +973,17 @@ pub async fn build_prepared(
         project_trusted,
         mcp_approvals.clone(),
     );
+    use std::io::IsTerminal;
+    let mcp_tools = if crate::args::resolve_mode(
+        args,
+        std::io::stdin().is_terminal(),
+        std::io::stdout().is_terminal(),
+    ) == crate::args::RunMode::Interactive
+    {
+        mcp_tools.with_elicitation_ui(ui_dialog_mailbox.clone())
+    } else {
+        mcp_tools
+    };
     let ready = crate::mcp::start(mcp_tools.clone());
     harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
         inner: Some(command_hooks),
