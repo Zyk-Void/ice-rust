@@ -20,11 +20,11 @@ use crate::theme::{theme, theme_revision};
 use crate::utils::{apply_background_to_line, truncate_to_width};
 
 /// Status an integration attaches to a user message (e.g. what memory did for
-/// that prompt). The badge sits right-aligned on the message's first line;
-/// detail rows, when there are any, render inside the message box under the
-/// text. Both may carry OSC 8 links to make them click targets.
+/// that prompt). The badge sits right-aligned on the message box's bottom
+/// padding row; detail rows, when there are any, render inside the message
+/// box under the text. Both may carry OSC 8 links to make them click targets.
 pub trait MessageAnnotation: Send + Sync {
-    /// Badge for the first line, at most `width` columns, or `None` to hide.
+    /// Badge for the bottom row, at most `width` columns, or `None` to hide.
     fn badge(&self, width: usize) -> Option<String>;
     /// Rows under the message text, each at most `width` columns.
     fn details(&self, width: usize) -> Vec<String>;
@@ -77,6 +77,18 @@ impl UserMessageComponent {
         }
     }
 
+    /// Override the inner padding.
+    pub fn with_pad(self, pad: usize) -> Self {
+        let inner = build_box(&self.text, pad);
+        Self {
+            text: self.text,
+            output_pad: pad,
+            inner: Mutex::new(inner),
+            built_revision: AtomicU64::new(theme_revision()),
+            annotation: self.annotation,
+        }
+    }
+
     /// The submitted text.
     pub fn text(&self) -> &str {
         &self.text
@@ -106,6 +118,12 @@ impl UserMessageComponent {
         // Box(pad, 1): one background row above and below the text.
         let bottom = lines.len() - 1;
         for (offset, row) in annotation.details(inner_width).into_iter().enumerate() {
+            // An over-wide row would push the box past `width`.
+            let row = if crate::visible_width(&row) > inner_width {
+                truncate_to_width(&row, inner_width, "…")
+            } else {
+                row
+            };
             lines.insert(
                 bottom + offset,
                 apply_background_to_line(&format!("{pad}{row}"), width, |s| bg.bg(s)),
@@ -240,7 +258,7 @@ mod tests {
         let c = UserMessageComponent::new("hi");
         c.set_annotation(Some(Arc::new(Fixed(
             Some("[a badge far wider than the box]"),
-            vec![],
+            vec!["a detail row that is far wider than the box"],
         ))));
         let rows = plain_rows(&c, 20);
         assert!(

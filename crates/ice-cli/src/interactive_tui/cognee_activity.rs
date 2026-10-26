@@ -24,6 +24,10 @@ const LOGO: &str = "◉";
 const PANEL_MIN_WIDTH: usize = 48;
 /// Improve attempts kept per turn (idle and dream passes can repeat).
 const MAX_IMPROVES: usize = 10;
+/// Recalls kept per turn (compaction checkpoint recalls can repeat).
+const MAX_RECALLS: usize = 10;
+/// Tool traces kept per turn; older ones are only counted.
+const MAX_TRACES: usize = 200;
 /// Detail rows start under the step names.
 const INDENT: &str = "              ";
 
@@ -72,6 +76,8 @@ struct Model {
     saved: Vec<Item>,
     traces: Vec<Item>,
     improves: Vec<Improve>,
+    /// Traces dropped from the front of `traces` by `MAX_TRACES`.
+    traces_dropped: usize,
     expanded: bool,
 }
 
@@ -117,8 +123,18 @@ fn json_field(raw: &str, key: &str) -> Option<String> {
 
 fn home_relative(path: &str) -> String {
     match std::env::var("HOME") {
-        Ok(home) if !home.is_empty() && path.starts_with(&home) => {
-            format!("~{}", &path[home.len()..])
+        Ok(home) => home_relative_to(path, &home),
+        Err(_) => path.to_string(),
+    }
+}
+
+/// `~` for `home` itself or a path under it; a sibling such as `/home/al2`
+/// for home `/home/al` is left alone.
+fn home_relative_to(path: &str, home: &str) -> String {
+    let home = home.trim_end_matches('/');
+    match path.strip_prefix(home) {
+        Some(rest) if !home.is_empty() && (rest.is_empty() || rest.starts_with('/')) => {
+            format!("~{rest}")
         }
         _ => path.to_string(),
     }
@@ -184,6 +200,14 @@ fn overall(statuses: impl Iterator<Item = Status>) -> Status {
 }
 
 impl Model {
+    /// Whether a request with this id started in this turn.
+    fn has_request(&self, id: &str) -> bool {
+        self.recalls.iter().any(|recall| recall.id == id)
+            || self.saved.iter().any(|item| item.id == id)
+            || self.traces.iter().any(|item| item.id == id)
+            || self.improves.iter().any(|improve| improve.id == id)
+    }
+
     fn is_empty(&self) -> bool {
         self.recalls.is_empty()
             && self.saved.is_empty()
@@ -251,6 +275,11 @@ impl Model {
                                 error: None,
                             },
                         );
+                        // A long tool loop under one prompt traces every call.
+                        if operation == "trace" && self.traces.len() > MAX_TRACES {
+                            self.traces.remove(0);
+                            self.traces_dropped += 1;
+                        }
                         true
                     }
                     "succeeded" => Self::finish_item(list, &id, Status::Done, None),
@@ -316,6 +345,11 @@ impl Model {
                 note: String::new(),
                 latency_ms: None,
             });
+            // Compaction checkpoint recalls join the current turn, so repeated
+            // compactions would otherwise grow it without bound.
+            if self.recalls.len() > MAX_RECALLS {
+                self.recalls.remove(0);
+            }
             return true;
         }
         let Some(index) = self.recalls.iter().position(|recall| recall.id == id) else {
@@ -421,7 +455,9 @@ fn wrapped(
     paint: impl Fn(&str) -> String,
     width: usize,
 ) -> Vec<String> {
-    let room = width.saturating_sub(ice_tui::visible_width(first)).max(10);
+    // Never wider than the panel: a forced minimum would be cut off by
+    // `linked`, losing the text wrapping exists to keep.
+    let room = width.saturating_sub(ice_tui::visible_width(first)).max(1);
     let mut rows = Vec::new();
     for paragraph in paragraphs {
         for piece in wrap_text_with_ansi(paragraph, room) {
@@ -544,11 +580,14 @@ impl Model {
                     None => counts.push((trace.kind.clone(), 1)),
                 }
             }
-            let tally = counts
+            let mut tally = counts
                 .iter()
                 .map(|(tool, count)| format!("{tool} ×{count}"))
                 .collect::<Vec<_>>()
                 .join(" · ");
+            if self.traces_dropped > 0 {
+                tally.push_str(&format!(" · +{} earlier", self.traces_dropped));
+            }
             let status = overall(self.traces.iter().map(|item| item.status));
             lines.extend(step_rows(status, "traces", &[tally], width));
             let tool_width = self.traces.iter().map(|t| t.kind.len()).max().unwrap_or(0);
@@ -643,6 +682,9 @@ fn prompt_matches(text: &str, query: &str) -> bool {
 #[derive(Default)]
 struct Router {
     turns: Mutex<Vec<Arc<Turn>>>,
+    /// Turns dropped by `MAX_TURNS` whose badge is still on a message; the
+    /// next `attach` takes it off, since a click could no longer find them.
+    evicted: Mutex<Vec<Arc<Turn>>>,
     next_id: AtomicUsize,
     dirty: AtomicBool,
 }
@@ -678,10 +720,24 @@ impl Router {
                 hovered: AtomicBool::new(false),
             }));
             if turns.len() > MAX_TURNS {
-                turns.remove(0);
+                let old = turns.remove(0);
+                if let Ok(mut evicted) = self.evicted.lock() {
+                    evicted.push(old);
+                }
             }
         }
-        let turn = turns.last().expect("a turn was just ensured");
+        // A completion belongs to the turn that saw its start, even when a
+        // newer prompt has opened a turn since (a slow save or improve).
+        let owner = (!matches!(obs.phase.as_str(), "started" | "queued"))
+            .then_some(obs.request_id.as_deref())
+            .flatten()
+            .and_then(|id| {
+                turns
+                    .iter()
+                    .rev()
+                    .find(|turn| turn.model.lock().is_ok_and(|model| model.has_request(id)))
+            });
+        let turn = owner.unwrap_or_else(|| turns.last().expect("a turn was just ensured"));
         if turn.model.lock().is_ok_and(|mut model| model.apply(obs)) {
             self.dirty.store(true, Ordering::SeqCst);
         }
@@ -693,22 +749,22 @@ impl Router {
     }
 
     fn attach(&self, chat: &Container) -> bool {
-        let turns = match self.turns.lock() {
-            Ok(turns) if !turns.is_empty() => turns.clone(),
-            _ => return false,
-        };
         let children = chat.get_children();
         let users: Vec<&UserMessageComponent> = children
             .iter()
             .filter_map(|child| child.as_any().downcast_ref::<UserMessageComponent>())
             .collect();
+        let mut changed = self.detach_evicted(&users);
+        let turns = match self.turns.lock() {
+            Ok(turns) if !turns.is_empty() => turns.clone(),
+            _ => return changed,
+        };
         let held: HashSet<*const ()> = users
             .iter()
             .filter_map(|user| user.annotation())
             .map(|annotation| Arc::as_ptr(&annotation) as *const ())
             .collect();
         let newest = turns.len() - 1;
-        let mut changed = false;
         // Newest first, so a repeated prompt's latest turn takes the latest
         // matching message.
         for (index, turn) in turns.iter().enumerate().rev() {
@@ -731,6 +787,28 @@ impl Router {
             if let Some(user) = found {
                 let annotation: Arc<dyn MessageAnnotation> = turn.clone();
                 user.set_annotation(Some(annotation));
+                changed = true;
+            }
+        }
+        changed
+    }
+
+    fn detach_evicted(&self, users: &[&UserMessageComponent]) -> bool {
+        let evicted = match self.evicted.lock() {
+            Ok(mut evicted) if !evicted.is_empty() => std::mem::take(&mut *evicted),
+            _ => return false,
+        };
+        let gone: HashSet<*const ()> = evicted
+            .iter()
+            .map(|turn| Arc::as_ptr(turn) as *const ())
+            .collect();
+        let mut changed = false;
+        for user in users {
+            if user
+                .annotation()
+                .is_some_and(|annotation| gone.contains(&(Arc::as_ptr(&annotation) as *const ())))
+            {
+                user.set_annotation(None);
                 changed = true;
             }
         }
@@ -1134,6 +1212,83 @@ mod tests {
         let first_panel = opened(&router, &first);
         assert!(!first_panel.contains("now fix the build"), "{first_panel}");
         assert!(!router.sync(&chat), "nothing new to attach or repaint");
+
+        // The first prompt's improve finishes now; it updates that turn.
+        router.ingest(&obs("improve", "succeeded", "i1", None, json!({})));
+        assert!(router.sync(&chat));
+        let first_panel = opened(&router, &first);
+        assert!(!first_panel.contains("running"), "{first_panel}");
+        assert!(first_panel.contains("idle"), "{first_panel}");
+    }
+
+    /// An evicted turn's badge comes off its message instead of staying as a
+    /// dead click target.
+    #[test]
+    fn evicted_turns_lose_their_badge() {
+        let router = Router::default();
+        let chat = Container::new();
+        let first = user(&chat, "prompt 0");
+        router.ingest(&obs("recall", "started", "r0", Some("prompt 0"), json!({})));
+        router.sync(&chat);
+        assert!(first.annotation().is_some());
+        for i in 1..=MAX_TURNS {
+            let text = format!("prompt {i}");
+            user(&chat, &text);
+            router.ingest(&obs(
+                "recall",
+                "started",
+                &format!("r{i}"),
+                Some(&text),
+                json!({}),
+            ));
+        }
+        assert!(router.sync(&chat));
+        assert!(first.annotation().is_none());
+    }
+
+    #[test]
+    fn per_turn_recalls_and_traces_are_bounded() {
+        let mut model = Model::default();
+        for i in 0..MAX_RECALLS + 3 {
+            model.apply(&obs(
+                "recall",
+                "started",
+                &format!("c{i}"),
+                Some("checkpoint"),
+                json!({"checkpoint": true}),
+            ));
+        }
+        assert_eq!(model.recalls.len(), MAX_RECALLS);
+        for i in 0..MAX_TRACES + 5 {
+            model.apply(&obs(
+                "trace",
+                "started",
+                &format!("t{i}"),
+                Some(r#"{"origin_function":"bash","method_params":{"command":"ls"}}"#),
+                json!({}),
+            ));
+        }
+        assert_eq!(model.traces.len(), MAX_TRACES);
+        model.expanded = true;
+        let text = rows(&model).join("\n");
+        assert!(
+            text.contains(&format!("bash ×{MAX_TRACES} · +5 earlier")),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn home_prefix_is_matched_by_path_component() {
+        assert_eq!(
+            home_relative_to("/home/al/src/a.rs", "/home/al"),
+            "~/src/a.rs"
+        );
+        assert_eq!(home_relative_to("/home/al", "/home/al/"), "~");
+        assert_eq!(
+            home_relative_to("/home/al2/a.rs", "/home/al"),
+            "/home/al2/a.rs"
+        );
+        assert_eq!(home_relative_to("/x", ""), "/x");
     }
 
     /// A rebuilt transcript has fresh message components; turns find their
