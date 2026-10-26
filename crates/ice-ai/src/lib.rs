@@ -13,6 +13,7 @@
 #![forbid(unsafe_code)]
 
 pub mod constrained;
+pub mod decision;
 pub mod error;
 pub mod event_stream;
 pub mod frames;

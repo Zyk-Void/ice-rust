@@ -141,6 +141,24 @@ ANTHROPIC_BASE_URL=https://gateway.example.com
 ANTHROPIC_AUTH_TOKEN=token
 ```
 
+### Decision endpoints
+
+Typed decision APIs (TypeSafe System One, OpenAI Decisions, and Inception Decisions) answer explicit Noul/predicate, Choice, and Score questions about one input. They are configured separately from chat providers under `decisionProviders` in `models.json`, so a decision model can never be selected as a chat model:
+
+```jsonc
+{
+  "decisionProviders": {
+    "typesafe": {
+      "protocol": "typesafe-systemone",   // or "openai-decisions", "inception-decisions"
+      "baseUrl": "https://api.typesafe.ai/v1",
+      "apiKey": "$TYPESAFE_API_KEY"
+    }
+  }
+}
+```
+
+`baseUrl` includes the version segment; icers appends `/systemone` or `/decisions`. It must use `https`, except for a loopback host (`localhost`, `127.0.0.1`, `::1`) such as a local proxy, because the key is sent as a bearer header. The key is an API key stored in `auth.json` under the same ID, otherwise `apiKey` (a literal, `$ENV`, or `!command`). There is no environment fallback and no OAuth for decision endpoints. Requests are never retried automatically and redirects are not followed. No built-in command sends decision requests yet; the configuration is used by features that call `ice_cli::decisions::decision_client`.
+
 ## 3. CLI commands
 
 Common global options:

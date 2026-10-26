@@ -500,6 +500,28 @@ pub struct ModelsConfig {
     // Provider entries are walked in declaration order, so declaration order
     // participates in the final available-model fallback.
     pub providers: indexmap::IndexMap<String, ProviderConfig>,
+    /// One-shot typed decision endpoints (`decisionProviders`). Kept apart
+    /// from `providers` so a decision model can never be selected as chat.
+    #[serde(default, skip_serializing_if = "indexmap::IndexMap::is_empty")]
+    pub decision_providers: indexmap::IndexMap<String, DecisionProviderConfig>,
+}
+
+/// A `decisionProviders` entry in `models.json`. `protocol` stays a string so a
+/// typo disables only this entry (reported when it is resolved) instead of
+/// failing the whole catalog; see [`crate::decisions`].
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DecisionProviderConfig {
+    /// `openai-decisions`, `typesafe-systemone`, or `inception-decisions`.
+    pub protocol: String,
+    /// Base URL including the version segment, e.g. `https://api.typesafe.ai/v1`.
+    pub base_url: String,
+    /// Key or `$ENV` / `!command` reference, as for chat providers. An
+    /// `auth.json` API key stored under the same ID takes precedence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub headers: Option<BTreeMap<String, String>>,
 }
 
 /// A provider entry in `models.json`. The fields mirror the TS `ProviderConfig`

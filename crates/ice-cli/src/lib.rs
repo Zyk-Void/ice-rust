@@ -46,6 +46,7 @@ pub mod cognee;
 pub mod config;
 pub mod context_breakdown;
 mod credentials;
+pub mod decisions;
 pub mod dev_extension;
 pub mod docs_tool;
 pub mod events;

@@ -2135,6 +2135,7 @@ mod tests {
         .unwrap();
         let models_cfg = config::ModelsConfig {
             providers: indexmap::IndexMap::from([("openai-codex".into(), provider_cfg)]),
+            ..Default::default()
         };
         let auth_store = config::AuthStore::from([(
             "openai-codex".into(),
