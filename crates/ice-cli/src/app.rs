@@ -423,6 +423,19 @@ async fn run_inner() -> i32 {
         None
     };
 
+    // ---- observability (TS main.ts: always-on history, opt-in dashboard) ----
+    let (observe, observe_server) = match start_observability(
+        &harness,
+        &event_rx,
+        &parsed,
+        matches!(mode, RunMode::Interactive),
+    )
+    .await
+    {
+        Ok(started) => started,
+        Err(code) => return code,
+    };
+
     let exit_code = match mode {
         RunMode::Print => {
             crate::modes::print(
@@ -547,18 +560,97 @@ async fn run_inner() -> i32 {
         }
     };
 
+    if let Some(server) = observe_server {
+        server.close().await;
+    }
+    observe.stop().await;
+
     if let Some(dev) = &dev_cleanup {
         dev.stop_watcher();
     }
     if let Some(watcher) = dev_watcher {
         let _ = watcher.join();
     }
+    // Background shells run in their own process groups; stop them (and
+    // remove their logs) rather than leaving them behind when icers exits.
+    reload_context.shells.dispose().await;
     drop(reload_context);
     drop(harness);
     if let Some(dev) = dev_cleanup {
         dev.cleanup();
     }
     exit_code
+}
+
+/// Start the always-on run recorder and, with `--observe`, the loopback
+/// dashboard. Mirrors TS `main.ts` observability startup: a history store
+/// that cannot open only warns; a dashboard that cannot start is fatal.
+async fn start_observability(
+    harness: &ice_harness::agent_harness::AgentHarness,
+    event_rx: &tokio::sync::broadcast::Receiver<ice_agent::AgentEvent>,
+    parsed: &Args,
+    interactive: bool,
+) -> Result<
+    (
+        crate::observe::ObserveRuntime,
+        Option<crate::observe::server::ObserveServer>,
+    ),
+    i32,
+> {
+    let agent_dir = crate::config::agent_dir().ok();
+    let (runtime, warning) =
+        crate::observe::start(harness, event_rx.resubscribe(), agent_dir.as_deref()).await;
+    if let Some(warning) = warning {
+        eprintln!("{warning}");
+    }
+    let Some(port) = parsed.observe else {
+        return Ok((runtime, None));
+    };
+    let token = match &agent_dir {
+        Some(dir) => {
+            match crate::observe::server::load_observe_token(&crate::observe::token_path(dir)) {
+                Ok(token) => Some(token),
+                Err(error) => {
+                    eprintln!("error: could not prepare the observe token: {error}");
+                    runtime.stop().await;
+                    return Err(EXIT_RUNTIME);
+                }
+            }
+        }
+        None => None,
+    };
+    let started = crate::observe::server::start_observe_server(
+        crate::observe::server::ObserveServerOptions {
+            port,
+            recorder: runtime.recorder.clone(),
+            store: runtime.store.clone(),
+            token,
+        },
+    )
+    .await;
+    match started {
+        Ok(server) => {
+            let notice = format!(
+                "Observe dashboard: {}{}",
+                server.dashboard_url,
+                if server.shared {
+                    " (shared existing port)"
+                } else {
+                    ""
+                }
+            );
+            eprintln!("{notice}");
+            if interactive {
+                crate::observe::push_startup_notice(notice);
+            }
+            Ok((runtime, Some(server)))
+        }
+        Err(error) => {
+            eprintln!("error: could not start the observe dashboard on port {port}: {error}");
+            runtime.stop().await;
+            Err(EXIT_RUNTIME)
+        }
+    }
 }
 
 fn handle_parse_short_circuits(parsed: &Args) -> Option<i32> {

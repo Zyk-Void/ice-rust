@@ -111,6 +111,7 @@ impl AgentTool for PowerShellTool {
                 cancel: Some(&signal),
                 on_chunk: None,
                 return_execution_errors: true,
+                max_log_bytes: None,
             },
         )
         .await

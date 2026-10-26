@@ -330,6 +330,7 @@ async fn run_child(root: &Path, phase: &str) {
         editor_text.clone(),
     );
     let reload = crate::session::ReloadContext {
+        shells: crate::background_shells::SessionShells::new(&Default::default()),
         mcp_tools: crate::mcp::McpManager::new(
             &harness,
             &args,

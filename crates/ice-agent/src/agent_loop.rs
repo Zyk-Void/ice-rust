@@ -1134,9 +1134,16 @@ async fn execute_prepared_tool_call(
     };
 
     let child_token = config.signal.child_token();
-    match tool
-        .execute(&tool_call.id, args.clone(), child_token, on_update)
-        .await
+    let call_info = crate::tool_execution_scope::ToolCallInfo {
+        model: config.model.clone(),
+        thinking_level: config.thinking_level,
+        session_id: config.session_id.clone(),
+    };
+    match crate::tool_execution_scope::with_tool_call(
+        Arc::new(call_info),
+        tool.execute(&tool_call.id, args.clone(), child_token, on_update),
+    )
+    .await
     {
         Ok(result) => {
             accepting_updates.store(false, Ordering::SeqCst);

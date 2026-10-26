@@ -33,7 +33,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::{
     check_cancel_exec, check_cancel_file, ExecutionEnv, FileContent, FileInfo, FileKind,
-    FileSystem, Shell, ShellExecOptions, ShellOutput,
+    FileSystem, Shell, ShellExecOptions, ShellOutput, StdinRequest, STDIN_TRANSPORT_CONFLICT,
 };
 use crate::error::{
     io_to_file_error, ExecutionError, ExecutionErrorCode, FileError, FileErrorCode,
@@ -79,7 +79,15 @@ struct ShellConfig {
 /// function that answers the full question. Use it rather than reading this
 /// slice, or an extension's channel will be missed — which is precisely the bug
 /// that let `LANGFUSE_PI_PARENT_*` through.
-pub const HOST_PRIVATE_ENV: &[&str] = &[ice_plugin_sdk::SESSION_ID_ENV];
+pub const HOST_PRIVATE_ENV: &[&str] = &[
+    ice_plugin_sdk::SESSION_ID_ENV,
+    // The rest of the per-call session identity bash sets explicitly (see
+    // `tools::bash::SESSION_ENV_NAMES`); an inherited copy would be stale.
+    "ICERS_SESSION_FILE",
+    "ICERS_PROVIDER",
+    "ICERS_MODEL",
+    "ICERS_REASONING_LEVEL",
+];
 
 /// Whether `name` must not be inherited by a spawned shell.
 ///
@@ -145,6 +153,17 @@ impl OsExecutionEnv {
 
     /// Resolve a path (tilde, file://, absolute/relative) against `cwd`. Pure.
     fn resolve_path(cwd: &Path, path: &str) -> PathBuf {
+        Self::resolve_path_inner(cwd, path, true)
+    }
+
+    /// Resolve a path without collapsing `..` before the filesystem can
+    /// resolve symlink components. Used by `canonical_path`, whose job is to
+    /// apply filesystem path semantics rather than lexical normalization.
+    fn resolve_path_preserving_parent(cwd: &Path, path: &str) -> PathBuf {
+        Self::resolve_path_inner(cwd, path, false)
+    }
+
+    fn resolve_path_inner(cwd: &Path, path: &str, normalize: bool) -> PathBuf {
         let mut p = path.to_string();
         // Tilde expansion (literal only).
         if p == "~" {
@@ -156,17 +175,19 @@ impl OsExecutionEnv {
                 p = format!("{}\\{}", home_dir_string(), rest);
             }
         }
-        // file:// URL → path. Parse failure silently keeps the literal.
+        // file:// URL → path. `absolute_path` rejects an invalid URL first;
+        // other callers keep the literal.
         if p.starts_with("file://") {
             if let Some(local) = file_url_to_path(&p) {
                 p = local;
             }
         }
         let pb = PathBuf::from(&p);
-        if pb.is_absolute() {
-            normalize_absolute(&pb)
+        let joined = if pb.is_absolute() { pb } else { cwd.join(pb) };
+        if normalize {
+            normalize_absolute(&joined)
         } else {
-            normalize_absolute(&cwd.join(pb))
+            joined
         }
     }
 
@@ -258,18 +279,86 @@ fn normalize_absolute(p: &Path) -> PathBuf {
     out
 }
 
-fn file_url_to_path(url: &str) -> Option<String> {
-    // Minimal file:// → path conversion. Handles `file:///abs/path` and
-    // Windows `file:///C:/...`. Parse failure → None (caller keeps literal).
-    let rest = url.strip_prefix("file://")?;
-    if let Some(drive_rest) = rest.strip_prefix('/') {
-        // `/C:/...` (Windows drive) or `/abs/path`.
-        if drive_rest.len() >= 2 && drive_rest.as_bytes()[1] == b':' {
-            return Some(drive_rest.to_string());
-        }
-        return Some(format!("/{}", drive_rest));
+/// Incremental UTF-8 decoding for pipe reads. A multi-byte character split
+/// across two reads is held back instead of becoming two U+FFFD, like a
+/// streaming `TextDecoder`. Invalid bytes still decode lossily.
+#[derive(Default)]
+pub(crate) struct Utf8StreamDecoder {
+    pending: Vec<u8>,
+}
+
+impl Utf8StreamDecoder {
+    pub(crate) fn decode(&mut self, bytes: &[u8]) -> String {
+        self.pending.extend_from_slice(bytes);
+        let keep = incomplete_utf8_suffix(&self.pending);
+        let split = self.pending.len() - keep;
+        let text = String::from_utf8_lossy(&self.pending[..split]).into_owned();
+        self.pending.drain(..split);
+        text
     }
-    Some(rest.to_string())
+
+    /// Flush a dangling partial character at EOF.
+    pub(crate) fn finish(&mut self) -> String {
+        let text = String::from_utf8_lossy(&self.pending).into_owned();
+        self.pending.clear();
+        text
+    }
+}
+
+/// Length of a trailing, possibly incomplete UTF-8 sequence (0..=3).
+fn incomplete_utf8_suffix(bytes: &[u8]) -> usize {
+    for len in (1..=bytes.len().min(3)).rev() {
+        let suffix = &bytes[bytes.len() - len..];
+        if let Err(error) = std::str::from_utf8(suffix) {
+            if error.valid_up_to() == 0 && error.error_len().is_none() {
+                return len;
+            }
+        }
+    }
+    0
+}
+
+/// `file://` URL → local path, following Node's `fileURLToPath`: the host must
+/// be empty or `localhost`, percent-escapes are decoded, and an encoded `/`
+/// or an invalid escape is rejected. `None` means the URL is invalid.
+fn file_url_to_path(url: &str) -> Option<String> {
+    let rest = url.strip_prefix("file://")?;
+    let (host, path) = match rest.find('/') {
+        Some(slash) => (&rest[..slash], &rest[slash..]),
+        None => (rest, ""),
+    };
+    if !(host.is_empty() || host.eq_ignore_ascii_case("localhost")) || path.is_empty() {
+        return None;
+    }
+    let path = path.split(['?', '#']).next().unwrap_or("");
+    let decoded = percent_decode_path(path)?;
+    // `/C:/...` is a Windows drive path.
+    let bytes = decoded.as_bytes();
+    if bytes.len() >= 3 && bytes[2] == b':' && bytes[1].is_ascii_alphabetic() {
+        return Some(decoded[1..].to_string());
+    }
+    Some(decoded)
+}
+
+fn percent_decode_path(path: &str) -> Option<String> {
+    let bytes = path.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            let hex = std::str::from_utf8(bytes.get(i + 1..i + 3)?).ok()?;
+            let byte = u8::from_str_radix(hex, 16).ok()?;
+            if byte == b'/' || (cfg!(windows) && byte == b'\\') {
+                return None;
+            }
+            out.push(byte);
+            i += 3;
+        } else {
+            out.push(bytes[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).ok()
 }
 
 fn bash_shell_config(shell: PathBuf) -> ShellConfig {
@@ -359,7 +448,7 @@ async fn run_command(cmd: &str, args: &[&str], timeout: std::time::Duration) -> 
 
 /// Kill a process tree. Windows: `taskkill /F /T /PID`. POSIX: `kill -PG` with
 /// fallback to `kill -PID`. Best-effort, errors swallowed.
-async fn kill_process_tree(pid: u32) {
+pub(crate) async fn kill_process_tree(pid: u32) {
     #[cfg(windows)]
     {
         use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
@@ -407,6 +496,13 @@ impl FileSystem for OsExecutionEnv {
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError> {
         check_cancel_file(cancel, Some(path))?;
+        if path.starts_with("file://") && file_url_to_path(path).is_none() {
+            return Err(FileError::new(
+                FileErrorCode::Invalid,
+                format!("Invalid file URL: {path}"),
+            )
+            .with_path(path));
+        }
         Ok(Self::resolve_path(&self.cwd, path))
     }
 
@@ -474,6 +570,44 @@ impl FileSystem for OsExecutionEnv {
         check_cancel_file(cancel, Some(path))?;
         let abs = Self::resolve_path(&self.cwd, path);
         read_cancellable(&abs, cancel).await
+    }
+
+    async fn read_binary_tail(
+        &self,
+        path: &str,
+        max_bytes: u64,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(Vec<u8>, u64), FileError> {
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
+
+        check_cancel_file(cancel, Some(path))?;
+        let abs = Self::resolve_path(&self.cwd, path);
+        let display = abs.to_string_lossy();
+        let mut file = tokio::fs::File::open(&abs)
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?;
+        let len = file
+            .metadata()
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?
+            .len();
+        let skipped = len.saturating_sub(max_bytes);
+        file.seek(std::io::SeekFrom::Start(skipped))
+            .await
+            .map_err(|error| io_to_file_error(error, Some(&display)))?;
+
+        let mut tail = file.take(max_bytes);
+        let mut bytes = Vec::new();
+        let read = tail.read_to_end(&mut bytes);
+        let result = match cancel {
+            Some(token) => tokio::select! {
+                result = read => result,
+                _ = token.cancelled() => return Err(FileError::aborted().with_path(display)),
+            },
+            None => read.await,
+        };
+        result.map_err(|error| io_to_file_error(error, Some(&display)))?;
+        Ok((bytes, skipped))
     }
 
     async fn write_file(
@@ -609,14 +743,9 @@ impl FileSystem for OsExecutionEnv {
             let ep = entry.path();
             let meta = match tokio::fs::symlink_metadata(&ep).await {
                 Ok(m) => m,
-                Err(e) => {
-                    // Skip unsupported types silently; propagate real stat errors.
-                    let code = crate::error::io_to_file_code(&e);
-                    if code == FileErrorCode::NotSupported {
-                        continue;
-                    }
-                    return Err(io_to_file_error(e, Some(&ep.to_string_lossy())));
-                }
+                // An entry that vanished or cannot be statted is skipped
+                // rather than failing the whole listing, as ice's ls/fd/rg do.
+                Err(_) => continue,
             };
             let ft = meta.file_type();
             let kind = if ft.is_file() {
@@ -651,8 +780,20 @@ impl FileSystem for OsExecutionEnv {
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError> {
         check_cancel_file(cancel, Some(path))?;
-        let abs = Self::resolve_path(&self.cwd, path);
+        let abs = Self::resolve_path_preserving_parent(&self.cwd, path);
         tokio::fs::canonicalize(&abs)
+            .await
+            .map_err(|e| io_to_file_error(e, Some(&abs.to_string_lossy())))
+    }
+
+    async fn read_link(
+        &self,
+        path: &str,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<PathBuf, FileError> {
+        check_cancel_file(cancel, Some(path))?;
+        let abs = Self::resolve_path(&self.cwd, path);
+        tokio::fs::read_link(&abs)
             .await
             .map_err(|e| io_to_file_error(e, Some(&abs.to_string_lossy())))
     }
@@ -895,6 +1036,12 @@ impl Shell for OsExecutionEnv {
             },
             None => self.get_shell_config().await?,
         };
+        if options.stdin.is_some() && matches!(shell_cfg.transport, CommandTransport::Stdin) {
+            return Err(ExecutionError::new(
+                ExecutionErrorCode::SpawnError,
+                STDIN_TRANSPORT_CONFLICT,
+            ));
+        }
         // Verify cwd exists.
         if !cwd.exists() {
             return Err(ExecutionError::new(
@@ -967,6 +1114,9 @@ impl Shell for OsExecutionEnv {
         let pid = child.id();
         if let Some(pid) = pid {
             self.active_pids.lock().await.insert(pid);
+            if let Some(on_spawn) = options.on_spawn {
+                on_spawn(pid);
+            }
         }
 
         // Stdin transport: write command then close. Closing happens on BOTH
@@ -975,6 +1125,8 @@ impl Shell for OsExecutionEnv {
         // not block on a pipe that nothing will ever write to or close. tokio's
         // `Child::wait` also drops stdin as a deadlock guard, but relying on that
         // would make the guarantee a side effect of an implementation detail.
+        // The one exception is an explicit interactive stdin (bash_input),
+        // which keeps the pipe open and feeds it from `options.stdin`.
         let mut stdin = child.stdin.take();
         if matches!(transport, CommandTransport::Stdin) {
             if let Some(stdin) = stdin.as_mut() {
@@ -983,7 +1135,40 @@ impl Shell for OsExecutionEnv {
                 let _ = stdin.flush().await;
             }
         }
-        drop(stdin);
+        let mut stdin_requests = options.stdin;
+        // Without interactive stdin the pipe is dropped here (EOF).
+        let mut interactive_stdin = if stdin_requests.is_some() {
+            stdin
+        } else {
+            drop(stdin);
+            None
+        };
+        let stdin_task = async {
+            use tokio::io::AsyncWriteExt;
+            let Some(requests) = stdin_requests.as_mut() else {
+                return;
+            };
+            while let Some(request) = requests.recv().await {
+                match request {
+                    StdinRequest::Write { bytes, done } => {
+                        let result = match interactive_stdin.as_mut() {
+                            Some(pipe) => match pipe.write_all(&bytes).await {
+                                Ok(()) => pipe.flush().await.map_err(|e| e.to_string()),
+                                Err(e) => Err(e.to_string()),
+                            },
+                            None => Err("stdin is closed".to_string()),
+                        };
+                        if result.is_err() {
+                            interactive_stdin = None;
+                        }
+                        let _ = done.send(result);
+                    }
+                    StdinRequest::Close => interactive_stdin = None,
+                }
+            }
+            // The sender is gone: close the pipe so the child sees EOF.
+            interactive_stdin = None;
+        };
 
         // Collect stdout/stderr via separate read tasks, firing callbacks.
         let mut stdout_buf = String::new();
@@ -998,6 +1183,7 @@ impl Shell for OsExecutionEnv {
         let stdout_task = async {
             if let Some(s) = stdout.as_mut() {
                 let mut buf = vec![0u8; 8192];
+                let mut decoder = Utf8StreamDecoder::default();
                 use tokio::io::AsyncReadExt;
                 loop {
                     let read = s.read(&mut buf);
@@ -1013,19 +1199,31 @@ impl Shell for OsExecutionEnv {
                         Ok(n) => n,
                         Err(_) => break,
                     };
-                    let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();
+                    let chunk = decoder.decode(&buf[..n]);
+                    if chunk.is_empty() {
+                        continue;
+                    }
                     if let Some(cb) = on_stdout.as_mut() {
                         // Callback errors are swallowed (TS sets callbackError;
                         // v1 simplifies — the callback contract is best-effort).
                         cb(&chunk);
+                    } else {
+                        stdout_buf.push_str(&chunk);
                     }
-                    stdout_buf.push_str(&chunk);
+                }
+                let tail = decoder.finish();
+                if !tail.is_empty() {
+                    match on_stdout.as_mut() {
+                        Some(cb) => cb(&tail),
+                        None => stdout_buf.push_str(&tail),
+                    }
                 }
             }
         };
         let stderr_task = async {
             if let Some(s) = stderr.as_mut() {
                 let mut buf = vec![0u8; 8192];
+                let mut decoder = Utf8StreamDecoder::default();
                 use tokio::io::AsyncReadExt;
                 loop {
                     let read = s.read(&mut buf);
@@ -1041,11 +1239,22 @@ impl Shell for OsExecutionEnv {
                         Ok(n) => n,
                         Err(_) => break,
                     };
-                    let chunk = String::from_utf8_lossy(&buf[..n]).into_owned();
+                    let chunk = decoder.decode(&buf[..n]);
+                    if chunk.is_empty() {
+                        continue;
+                    }
                     if let Some(cb) = on_stderr.as_mut() {
                         cb(&chunk);
+                    } else {
+                        stderr_buf.push_str(&chunk);
                     }
-                    stderr_buf.push_str(&chunk);
+                }
+                let tail = decoder.finish();
+                if !tail.is_empty() {
+                    match on_stderr.as_mut() {
+                        Some(cb) => cb(&tail),
+                        None => stderr_buf.push_str(&tail),
+                    }
                 }
             }
         };
@@ -1116,14 +1325,16 @@ impl Shell for OsExecutionEnv {
             // that writes more than the OS pipe buffer (~64 KiB) blocks on its
             // write until someone reads, so awaiting `child.wait()` alone
             // deadlocks it until the timeout.
-            tokio::pin!(status_fut, stdout_task, stderr_task);
+            tokio::pin!(status_fut, stdout_task, stderr_task, stdin_task);
             let mut stdout_done = false;
             let mut stderr_done = false;
+            let mut stdin_done = false;
             let status_res = loop {
                 tokio::select! {
                     status = &mut status_fut => break status,
                     _ = &mut stdout_task, if !stdout_done => stdout_done = true,
                     _ = &mut stderr_task, if !stderr_done => stderr_done = true,
+                    _ = &mut stdin_task, if !stdin_done => stdin_done = true,
                 }
             };
             // Drain what is already in the pipe — a completed write is already in
@@ -1230,5 +1441,86 @@ fn resolve_timeout(timeout: Option<f64>) -> Result<Option<std::time::Duration>, 
             }
             Ok(Some(std::time::Duration::from_secs_f64(secs)))
         }
+    }
+}
+
+#[cfg(test)]
+mod file_url_tests {
+    use super::*;
+
+    #[test]
+    fn file_urls_follow_node_file_url_to_path() {
+        assert_eq!(
+            file_url_to_path("file:///a/b%20c.txt").as_deref(),
+            Some("/a/b c.txt")
+        );
+        assert_eq!(
+            file_url_to_path("file://localhost/x").as_deref(),
+            Some("/x")
+        );
+        assert_eq!(
+            file_url_to_path("file:///C:/dir/f").as_deref(),
+            Some("C:/dir/f")
+        );
+        assert_eq!(
+            file_url_to_path("file:///q?x=1#frag").as_deref(),
+            Some("/q")
+        );
+        // Remote hosts, encoded slashes and bad escapes are invalid.
+        assert_eq!(file_url_to_path("file://server/share"), None);
+        assert_eq!(file_url_to_path("file:///a%2Fb"), None);
+        assert_eq!(file_url_to_path("file:///a%zz"), None);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn absolute_path_rejects_an_invalid_file_url() {
+        let env = OsExecutionEnv::with_cwd(std::env::temp_dir());
+        let err = env
+            .absolute_path("file://server/x", None)
+            .await
+            .unwrap_err();
+        assert_eq!(err.code, FileErrorCode::Invalid);
+        let ok = env.absolute_path("file:///tmp/a%20b", None).await.unwrap();
+        assert_eq!(ok, PathBuf::from("/tmp/a b"));
+    }
+}
+
+#[cfg(test)]
+mod utf8_decoder_tests {
+    use super::Utf8StreamDecoder;
+
+    #[test]
+    fn decoder_holds_a_valid_incomplete_character_across_reads() {
+        let mut decoder = Utf8StreamDecoder::default();
+        assert_eq!(decoder.decode(&[0xE2, 0x82]), "");
+        assert_eq!(decoder.decode(&[0xAC]), "€");
+        assert_eq!(decoder.finish(), "");
+    }
+
+    #[test]
+    fn decoder_emits_invalid_lead_bytes_immediately() {
+        let mut decoder = Utf8StreamDecoder::default();
+        assert_eq!(decoder.decode(&[0xFF]), "�");
+        assert_eq!(decoder.finish(), "");
+    }
+}
+
+#[cfg(test)]
+mod binary_tail_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn reads_only_the_requested_tail_window() {
+        use crate::env::FileSystem;
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("output.log");
+        tokio::fs::write(&path, b"prefix-data-tail").await.unwrap();
+        let env = OsExecutionEnv::with_cwd(dir.path().to_path_buf());
+
+        let (tail, skipped) = env.read_binary_tail("output.log", 4, None).await.unwrap();
+        assert_eq!(tail, b"tail");
+        assert_eq!(skipped, 12);
     }
 }

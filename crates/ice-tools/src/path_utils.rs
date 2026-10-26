@@ -14,10 +14,11 @@ use crate::env::ExecutionEnv;
 use crate::error::FileError;
 
 /// Unicode-space characters replaced with a regular ASCII space by
-/// [`normalize_tool_path`]. Same set as `normalizeForFuzzyMatch`'s space pass.
+/// [`normalize_tool_path`]. Mirrors the coding-agent path set: U+00A0,
+/// U+2000–U+200A, U+202F, U+205F and U+3000.
 const UNICODE_SPACES: &[char] = &[
-    '\u{00A0}', '\u{2002}', '\u{2003}', '\u{2004}', '\u{2005}', '\u{2006}', '\u{2007}', '\u{2008}',
-    '\u{2009}', '\u{200A}', '\u{202F}', '\u{205F}', '\u{3000}',
+    '\u{00A0}', '\u{2000}', '\u{2001}', '\u{2002}', '\u{2003}', '\u{2004}', '\u{2005}', '\u{2006}',
+    '\u{2007}', '\u{2008}', '\u{2009}', '\u{200A}', '\u{202F}', '\u{205F}', '\u{3000}',
 ];
 
 /// The narrow no-break space (U+202F) used in AM/PM timestamp variants.
@@ -157,6 +158,7 @@ mod tests {
         assert_eq!(normalize_tool_path("@/foo/bar"), "/foo/bar");
         assert_eq!(normalize_tool_path("\u{00A0}foo"), " foo");
         assert_eq!(normalize_tool_path("a\u{2003}b"), "a b");
+        assert_eq!(normalize_tool_path("a\u{2000}b\u{2001}c"), "a b c");
         // No leading @ → unchanged.
         assert_eq!(normalize_tool_path("foo/bar"), "foo/bar");
     }

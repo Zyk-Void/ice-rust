@@ -18,8 +18,8 @@ pub fn detect_supported_image_mime_type(bytes: &[u8]) -> Option<&'static str> {
     if is_png(bytes) {
         return Some("image/png");
     }
-    if starts_with_ascii_at(bytes, 0, "GIF") && bytes.len() >= 6 {
-        // GIF87a / GIF89a — signature only.
+    if starts_with_ascii_at(bytes, 0, "GIF") {
+        // The first three bytes are enough, as in ice.
         return Some("image/gif");
     }
     if starts_with_ascii_at(bytes, 0, "RIFF") && starts_with_ascii_at(bytes, 8, "WEBP") {
@@ -143,11 +143,14 @@ fn is_bmp(bytes: &[u8]) -> bool {
     let declared_file_size = read_u32_le(bytes, 2);
     let pixel_data_offset = read_u32_le(bytes, 10) as usize;
     let dib_header_size = read_u32_le(bytes, 14) as usize;
+    let Some(header_end) = 14usize.checked_add(dib_header_size) else {
+        return false;
+    };
 
     if declared_file_size != 0 && declared_file_size < 26 {
         return false;
     }
-    if pixel_data_offset < 14 + dib_header_size {
+    if bytes.len() < header_end || pixel_data_offset < header_end {
         return false;
     }
     if declared_file_size != 0 && pixel_data_offset >= declared_file_size as usize {
@@ -157,7 +160,7 @@ fn is_bmp(bytes: &[u8]) -> bool {
     let (planes, bpp) = if dib_header_size == 12 {
         // BITMAPCOREHEADER: planes @ 22, bpp @ 24 (both LE u16).
         (read_u16_le(bytes, 22), read_u16_le(bytes, 24))
-    } else if (12..=124).contains(&dib_header_size) {
+    } else if (40..=124).contains(&dib_header_size) {
         if bytes.len() < 30 {
             return false;
         }
@@ -212,6 +215,53 @@ mod tests {
         // ascii positions, so this is fine.
         let _ = &mut webp;
         assert_eq!(detect_supported_image_mime_type(&webp), Some("image/webp"));
+    }
+
+    fn bmp_with_dib(dib_header_size: u32) -> Vec<u8> {
+        let mut bytes = vec![0u8; 64];
+        bytes[0..2].copy_from_slice(b"BM");
+        bytes[2..6].copy_from_slice(&64u32.to_le_bytes());
+        bytes[10..14].copy_from_slice(&(14 + dib_header_size).to_le_bytes());
+        bytes[14..18].copy_from_slice(&dib_header_size.to_le_bytes());
+        // planes = 1, bpp = 24 for both header layouts.
+        bytes[22..24].copy_from_slice(&1u16.to_le_bytes());
+        bytes[24..26].copy_from_slice(&24u16.to_le_bytes());
+        bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
+        bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
+        bytes
+    }
+
+    #[test]
+    fn bmp_dib_header_must_be_core_or_info_sized() {
+        assert_eq!(
+            detect_supported_image_mime_type(&bmp_with_dib(12)),
+            Some("image/bmp")
+        );
+        assert_eq!(
+            detect_supported_image_mime_type(&bmp_with_dib(40)),
+            Some("image/bmp")
+        );
+        // 13–39 are neither BITMAPCOREHEADER nor BITMAPINFOHEADER+.
+        assert_eq!(detect_supported_image_mime_type(&bmp_with_dib(13)), None);
+        assert_eq!(detect_supported_image_mime_type(&bmp_with_dib(39)), None);
+    }
+
+    #[test]
+    fn bmp_rejects_a_truncated_dib_header() {
+        let mut bytes = vec![0u8; 30];
+        bytes[0..2].copy_from_slice(b"BM");
+        bytes[2..6].copy_from_slice(&200u32.to_le_bytes());
+        bytes[10..14].copy_from_slice(&138u32.to_le_bytes());
+        bytes[14..18].copy_from_slice(&124u32.to_le_bytes());
+        bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
+        bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
+
+        assert_eq!(detect_supported_image_mime_type(&bytes), None);
+    }
+
+    #[test]
+    fn gif_needs_only_its_three_byte_signature() {
+        assert_eq!(detect_supported_image_mime_type(b"GIF"), Some("image/gif"));
     }
 
     #[test]

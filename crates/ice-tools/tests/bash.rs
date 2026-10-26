@@ -83,6 +83,7 @@ async fn combines_stdout_and_stderr() {
             stderr: "err".into(),
             exit_code: 0,
             delay_ms: None,
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -105,6 +106,7 @@ async fn nonzero_exit_returns_error_with_output() {
             stderr: String::new(),
             exit_code: 7,
             delay_ms: None,
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -127,6 +129,7 @@ async fn abort_returns_error() {
             stderr: String::new(),
             exit_code: 0,
             delay_ms: Some(1000),
+            initial_stdout: String::new(),
         },
     )
     .await;
@@ -197,6 +200,44 @@ async fn persists_truncated_full_output_to_temp_file() {
 }
 
 #[tokio::test]
+async fn byte_limited_range_notice_names_the_first_visible_line() {
+    let (env, ctx) = fresh_context();
+    // 1000 lines of 99 bytes + LF: under the line cap, over the byte cap, so
+    // the tail keeps only the last ~500 lines.
+    let total = 1000usize;
+    let lines: String = (1..=total)
+        .map(|i| format!("{:<99}\n", format!("line-{i}")))
+        .collect();
+    env.register_shell("wide", ShellScript::success(lines))
+        .await;
+
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(tool, serde_json::json!({ "command": "wide" }))
+        .await
+        .expect("ok");
+    let trunc = r.details.get("truncation").expect("truncation present");
+    assert_eq!(trunc["truncated_by"], "bytes");
+    let shown = trunc["output_lines"].as_u64().expect("output_lines") as usize;
+    assert!(shown < total, "{shown}");
+
+    let out = text_output(&r);
+    let first = total - shown + 1;
+    let (body, notice) = out.split_once("\n\n[").expect("notice present");
+    assert_eq!(body.lines().count(), shown);
+    assert!(
+        body.starts_with(&format!("line-{first} ")),
+        "body starts with {:?}",
+        &body[..20]
+    );
+    assert!(
+        notice.starts_with(&format!(
+            "Showing lines {first}-{total} of {total} (50.0KB limit)."
+        )),
+        "{notice}"
+    );
+}
+
+#[tokio::test]
 async fn reports_oversized_final_line_size() {
     let (env, ctx) = fresh_context();
     // One line that exceeds the 50KB byte cap → last_line_partial path.
@@ -226,8 +267,7 @@ async fn supports_command_prefix() {
         &ctx,
         Some(BashToolOptions {
             command_prefix: Some("value=hello".into()),
-            default_timeout: None,
-            prepare: None,
+            ..Default::default()
         }),
     );
     // The shell_script prefix-matches on the composed command start; echo is the
@@ -238,4 +278,238 @@ async fn supports_command_prefix() {
         .await
         .expect("ok");
     assert_eq!(text_output(&r), "hello");
+}
+
+#[tokio::test]
+async fn full_output_log_keeps_output_older_than_the_tail() {
+    let (env, ctx) = fresh_context();
+    // ~300 KB: three times the 100 KB in-memory tail. The log must hold the
+    // first line too, not just what the tail retained.
+    let lines: String = (1..=3000)
+        .map(|i| format!("{:<99}\n", format!("line-{i}")))
+        .collect();
+    env.register_shell("huge", ShellScript::success(lines.clone()))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(tool, serde_json::json!({ "command": "huge" }))
+        .await
+        .expect("ok");
+    let path = r
+        .details
+        .get("full_output_path")
+        .and_then(|v| v.as_str())
+        .expect("full_output_path present");
+    let log = env.read_text_file(path, None).await.expect("read log");
+    assert_eq!(log.len(), lines.len());
+    assert!(log.starts_with("line-1 "), "{}", &log[..20]);
+    assert!(log.contains("\nline-1500 "));
+    assert!(log.ends_with(&format!("{:<99}\n", "line-3000")));
+    assert!(r.details.get("log_issue").is_none());
+}
+
+#[tokio::test]
+async fn first_output_update_is_immediate_and_initial_update_is_empty() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("hello", ShellScript::success("hi\n"))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let updates = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let sink = updates.clone();
+    let on_update = Arc::new(move |p: ice_agent::types::AgentToolResult| {
+        sink.lock().unwrap().push(p);
+    });
+    tool.execute(
+        "bash-u",
+        serde_json::json!({ "command": "hello" }),
+        CancellationToken::new(),
+        on_update,
+    )
+    .await
+    .expect("ok");
+    // Let any (wrongly) pending timer fire before inspecting.
+    tokio::time::sleep(Duration::from_millis(250)).await;
+    let updates = updates.lock().unwrap();
+    assert!(
+        updates[0].content.is_empty(),
+        "initial update has no blocks"
+    );
+    // The chunk update is emitted at once, then the final update; no stale
+    // partial follows the final one.
+    assert_eq!(updates.len(), 3, "initial, first chunk, final");
+    assert_eq!(text_output(&updates[1]), "hi\n");
+    assert_eq!(text_output(&updates[2]), "hi\n");
+}
+
+fn slow(stdout: &str, delay_ms: u64) -> ShellScript {
+    ShellScript {
+        delay_ms: Some(delay_ms),
+        ..ShellScript::success(stdout)
+    }
+}
+
+#[tokio::test]
+async fn zero_timeout_means_no_timeout() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("quick", ShellScript::success("done"))
+        .await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let r = run_bash(
+        tool,
+        serde_json::json!({ "command": "quick", "timeout": 0 }),
+    )
+    .await
+    .expect("timeout 0 is accepted");
+    assert_eq!(text_output(&r), "done");
+}
+
+#[tokio::test]
+async fn timeout_error_uses_seconds() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("sleepy", slow("partial", 5_000)).await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let err = run_bash(
+        tool,
+        serde_json::json!({ "command": "sleepy", "timeout": 0.05 }),
+    )
+    .await
+    .expect_err("times out");
+    let msg = err_text(&err);
+    assert!(
+        msg.ends_with("Command timed out after 0.05 seconds"),
+        "{msg}"
+    );
+}
+
+#[tokio::test]
+async fn max_timeout_caps_a_longer_model_timeout() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("sleepy", slow("", 5_000)).await;
+    let tool = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            max_timeout: Some(0.05),
+            ..Default::default()
+        }),
+    );
+    let err = run_bash(
+        tool,
+        serde_json::json!({ "command": "sleepy", "timeout": 3600 }),
+    )
+    .await
+    .expect_err("the host ceiling wins");
+    assert!(
+        err_text(&err).contains("Command timed out after 0.05 seconds"),
+        "{}",
+        err_text(&err)
+    );
+}
+
+#[tokio::test]
+async fn background_and_stdin_requests_are_rejected_without_a_registry() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("server", ShellScript::success("")).await;
+    let tool = ice_tools::create_bash_tool(&ctx, None);
+    let err = run_bash(
+        tool.clone(),
+        serde_json::json!({ "command": "server", "stdin": true }),
+    )
+    .await
+    .expect_err("stdin needs background");
+    assert_eq!(
+        err_text(&err),
+        "stdin: true requires run_in_background: true."
+    );
+    let err = run_bash(
+        tool,
+        serde_json::json!({
+            "command": "server",
+            "run_in_background": true,
+            "description": "start server"
+        }),
+    )
+    .await
+    .expect_err("no registry");
+    assert!(
+        err_text(&err).starts_with("Background shells are not available here"),
+        "{}",
+        err_text(&err)
+    );
+}
+
+#[tokio::test]
+async fn session_environment_is_built_per_call_from_the_running_turn() {
+    let (env, ctx) = fresh_context();
+    env.register_shell("true", ShellScript::success("")).await;
+    let seen = Arc::new(std::sync::Mutex::new(std::collections::HashMap::new()));
+    let sink = seen.clone();
+    let prepare: ice_tools::BashPrepare = Arc::new(move |execution| {
+        *sink.lock().unwrap() = execution.env.clone();
+        Box::pin(async { Ok(()) })
+    });
+    let extra: ice_tools::tools::bash::SessionEnvProvider = Arc::new(|| {
+        std::collections::HashMap::from([(
+            "ICERS_SESSION_FILE".to_string(),
+            "/s.jsonl".to_string(),
+        )])
+    });
+    let tool = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            prepare: Some(prepare.clone()),
+            session_environment: Some(extra),
+            ..Default::default()
+        }),
+    );
+    let mut model = ice_ai::Model::new("m-1", "M", ice_ai::Api::Faux, "faux", "http://x");
+    model.input = vec![ice_ai::InputModality::Text];
+    let info = ice_agent::tool_execution_scope::ToolCallInfo {
+        model,
+        thinking_level: ice_ai::types::ThinkingLevel::High,
+        session_id: Some("sess-9".into()),
+    };
+    ice_agent::tool_execution_scope::with_tool_call(
+        Arc::new(info),
+        run_bash(tool, serde_json::json!({ "command": "true" })),
+    )
+    .await
+    .expect("ok");
+    let first = seen.lock().unwrap().clone();
+    assert_eq!(
+        first.get("ICERS_SESSION_ID").map(String::as_str),
+        Some("sess-9")
+    );
+    assert_eq!(
+        first.get("ICERS_PROVIDER").map(String::as_str),
+        Some("faux")
+    );
+    assert_eq!(first.get("ICERS_MODEL").map(String::as_str), Some("m-1"));
+    assert_eq!(
+        first.get("ICERS_REASONING_LEVEL").map(String::as_str),
+        Some("high")
+    );
+    assert_eq!(
+        first.get("ICERS_SESSION_FILE").map(String::as_str),
+        Some("/s.jsonl")
+    );
+
+    // Opting out sends none of them.
+    let quiet = ice_tools::create_bash_tool(
+        &ctx,
+        Some(BashToolOptions {
+            prepare: Some(prepare),
+            expose_session_environment: Some(false),
+            ..Default::default()
+        }),
+    );
+    run_bash(quiet, serde_json::json!({ "command": "true" }))
+        .await
+        .expect("ok");
+    assert!(seen.lock().unwrap().is_empty());
+}
+
+#[test]
+fn inherited_session_identity_is_never_passed_to_commands() {
+    for name in ice_tools::tools::bash::SESSION_ENV_NAMES {
+        assert!(ice_tools::is_host_private_env(name), "{name}");
+    }
 }

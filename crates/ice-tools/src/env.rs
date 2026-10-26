@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use tokio_util::sync::CancellationToken;
 
-use crate::error::{ExecutionError, FileError};
+use crate::error::{ExecutionError, FileError, FileErrorCode};
 
 /// `file` | `directory` | `symlink`. Mirrors TS `FileKind`.
 ///
@@ -106,9 +106,37 @@ pub struct ShellExecOptions<'a> {
     /// Seconds. `None` = no timeout.
     pub timeout: Option<f64>,
     pub cancel: Option<&'a CancellationToken>,
+    /// Per-chunk output callbacks. A stream with a callback is not also
+    /// buffered into [`ShellOutput`], so long-running commands stay bounded.
     pub on_stdout: Option<Box<dyn FnMut(&str) + Send + 'a>>,
     pub on_stderr: Option<Box<dyn FnMut(&str) + Send + 'a>>,
+    /// Called once with the child's process id (its process-group id on
+    /// POSIX) right after it starts. Mirrors TS `onSpawn`.
+    pub on_spawn: Option<Box<dyn FnOnce(u32) + Send + 'a>>,
+    /// Keep the child's stdin open and feed it from this channel (bash_input).
+    /// Without it, stdin is closed at once so prompts see EOF. Backends that
+    /// deliver the command itself over stdin reject this.
+    pub stdin: Option<ShellStdin>,
 }
+
+/// One request to a running shell's stdin. Mirrors TS `onStdin` writes.
+#[derive(Debug)]
+pub enum StdinRequest {
+    /// Write these bytes; `done` reports when they were accepted by the pipe.
+    Write {
+        bytes: Vec<u8>,
+        done: tokio::sync::oneshot::Sender<Result<(), String>>,
+    },
+    /// Close stdin (EOF).
+    Close,
+}
+
+/// Receiving end of a shell's interactive stdin.
+pub type ShellStdin = tokio::sync::mpsc::UnboundedReceiver<StdinRequest>;
+
+/// Error for a shell that receives its command over stdin.
+pub const STDIN_TRANSPORT_CONFLICT: &str =
+    "This shell reads its command from stdin, so the command's stdin cannot be kept open.";
 
 impl<'a> Default for ShellExecOptions<'a> {
     fn default() -> Self {
@@ -121,6 +149,8 @@ impl<'a> Default for ShellExecOptions<'a> {
             cancel: None,
             on_stdout: None,
             on_stderr: None,
+            on_spawn: None,
+            stdin: None,
         }
     }
 }
@@ -184,6 +214,21 @@ pub trait FileSystem: Send + Sync {
         cancel: Option<&CancellationToken>,
     ) -> Result<Vec<u8>, FileError>;
 
+    /// Read at most the newest `max_bytes` bytes and return them with the
+    /// number of earlier bytes skipped. Backends may override this to seek
+    /// without loading the whole file; the default preserves compatibility.
+    async fn read_binary_tail(
+        &self,
+        path: &str,
+        max_bytes: u64,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(Vec<u8>, u64), FileError> {
+        let bytes = self.read_binary_file(path, cancel).await?;
+        let skipped = (bytes.len() as u64).saturating_sub(max_bytes);
+        let start = usize::try_from(skipped).unwrap_or(bytes.len());
+        Ok((bytes[start..].to_vec(), skipped))
+    }
+
     /// Creates parent directories (recursive) automatically. Mirrors TS
     /// `writeFile`.
     async fn write_file(
@@ -229,6 +274,20 @@ pub trait FileSystem: Send + Sync {
         path: &str,
         cancel: Option<&CancellationToken>,
     ) -> Result<PathBuf, FileError>;
+
+    /// The target of the symlink at `path`, unresolved. Backends without
+    /// symlinks keep the default `not_supported`.
+    async fn read_link(
+        &self,
+        path: &str,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<PathBuf, FileError> {
+        let _ = cancel;
+        Err(
+            FileError::new(FileErrorCode::NotSupported, "symlinks are not supported")
+                .with_path(path),
+        )
+    }
 
     /// `false` ONLY for `not_found`; other errors propagate. Mirrors TS
     /// `exists` (which delegates to `fileInfo`, NOT `access(F_OK)`).

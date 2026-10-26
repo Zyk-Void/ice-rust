@@ -7,6 +7,44 @@ use tokio::sync::Notify;
 tokio::task_local! {
     static CURRENT: Arc<ToolExecutionScope>;
     static INVOCATION_SIGNAL: tokio_util::sync::CancellationToken;
+    static TOOL_CALL: Arc<ToolCallInfo>;
+}
+
+/// What a running tool call knows about the run that requested it. Mirrors
+/// the `ctx.model` / session metadata a TS coding-agent tool receives.
+#[derive(Debug, Clone)]
+pub struct ToolCallInfo {
+    pub model: ice_ai::Model,
+    pub thinking_level: ice_ai::types::ThinkingLevel,
+    pub session_id: Option<String>,
+}
+
+/// Run a tool call with its run's metadata in scope. The agent loop wraps
+/// every `execute` in this, so a tool can adapt to the model (the read tool
+/// warns a non-vision model that an image will be omitted) or describe the
+/// session to the commands it spawns (bash).
+pub async fn with_tool_call<F: Future>(info: Arc<ToolCallInfo>, future: F) -> F::Output {
+    TOOL_CALL.scope(info, future).await
+}
+
+/// Like [`with_tool_call`] with only a model (tests and simple hosts).
+pub async fn with_tool_model<F: Future>(model: Arc<ice_ai::Model>, future: F) -> F::Output {
+    let info = ToolCallInfo {
+        model: (*model).clone(),
+        thinking_level: Default::default(),
+        session_id: None,
+    };
+    TOOL_CALL.scope(Arc::new(info), future).await
+}
+
+/// The metadata of the tool call running on this task, if any.
+pub fn tool_call_info() -> Option<Arc<ToolCallInfo>> {
+    TOOL_CALL.try_with(Clone::clone).ok()
+}
+
+/// The model of the tool call running on this task, if any.
+pub fn tool_model() -> Option<Arc<ice_ai::Model>> {
+    tool_call_info().map(|info| Arc::new(info.model.clone()))
 }
 
 /// Bind a runtime action to the originating tool invocation, even after its

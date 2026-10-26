@@ -149,3 +149,43 @@ async fn ls_not_a_directory() {
     };
     assert!(msg.contains("Not a directory"), "got: {msg}");
 }
+
+#[tokio::test]
+async fn ls_limit_zero_lists_nothing_and_exact_limit_has_no_notice() {
+    let (env, ctx) = fresh_context();
+    seed_file(&env, "a.txt", b"".to_vec()).await;
+    seed_file(&env, "b.txt", b"".to_vec()).await;
+    let tool = ice_tools::create_ls_tool(&ctx, None);
+    let r = run_ls(tool.clone(), serde_json::json!({ "limit": 0 }))
+        .await
+        .expect("ls ok");
+    assert_eq!(text_output(&r), "(empty directory)");
+    let r = run_ls(tool, serde_json::json!({ "limit": 2 }))
+        .await
+        .expect("ls ok");
+    assert_eq!(text_output(&r), "a.txt\nb.txt");
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn ls_follows_symlinks_and_skips_dangling_ones() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("real")).unwrap();
+    std::fs::write(dir.path().join("real/f.txt"), "").unwrap();
+    std::os::unix::fs::symlink(dir.path().join("real"), dir.path().join("dirlink")).unwrap();
+    std::os::unix::fs::symlink(dir.path().join("real/f.txt"), dir.path().join("filelink")).unwrap();
+    std::os::unix::fs::symlink(dir.path().join("missing"), dir.path().join("dangling")).unwrap();
+    let env: Arc<dyn ice_tools::ExecutionEnv> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        dir.path().to_path_buf(),
+    ));
+    let tool = ice_tools::create_ls_tool(&ExecutionToolContext::new(env, None), None);
+    let r = run_ls(tool.clone(), serde_json::json!({}))
+        .await
+        .expect("ls ok");
+    assert_eq!(text_output(&r), "dirlink/\nfilelink\nreal/");
+    // A symlinked root directory is listed, not rejected.
+    let r = run_ls(tool, serde_json::json!({ "path": "dirlink" }))
+        .await
+        .expect("ls ok");
+    assert_eq!(text_output(&r), "f.txt");
+}

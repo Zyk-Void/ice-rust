@@ -334,9 +334,15 @@ it has no `run_in_background` or `stdin` parameters.
 ## 4. Observability: run history + live dashboard
 
 **ice:** `CA/observe/{observe-recorder,observe-store,observe-server,observe-cognee}.ts`,
-`observe-dashboard.html`, `docs/observability.md`. **ice-rust:** missing.
-`crates/ice-telemetry` and the `ice-langfuse` plugin export traces.
-`crates/ice-harness/src/session/sqlite.rs` stores sessions, not run events.
+`observe-dashboard.html`, `docs/observability.md`. **ice-rust:** ported except
+the Cognee knowledge views. `crates/ice-cli/src/observe/` holds the recorder,
+the SQLite store (`~/.icers/agent/observability.sqlite`), the loopback HTTP/SSE
+server (`icers --observe[=port]`, default 4659) and the dashboard; see
+`docs/guides/observability.md` for the differences from TS. Remaining: the
+Knowledge tab and Cognee correlation (OBS-008, OBS-017..019, OBS-024..029, with
+§5), queue-update rows (Rust emits no queue event), compaction summaries (the
+harness reports only start/finish) and the install-telemetry gate and startup
+timing items (OBS-001, OBS-002).
 
 - **Recorder** (`observe-recorder.ts`, always on): subscribes to the session
   event stream. It projects tool calls (args, result preview, duration, error),
@@ -804,7 +810,7 @@ Not planned (`ice:ai/src/api/*`), except `openai-codex-responses`:
 3. Background shells (§3): self-contained, high daily value.
 4. Plan/build guarded modes (§2): one extension's worth of logic, clear spec.
 5. Skill hot reload, settings keys, CLI flags (§6.3, §7.1, §7.4).
-6. Observability store + dashboard (§4).
+6. ~~Observability store + dashboard (§4).~~ Ported; the Cognee views wait for §5.
 7. Subagents V2 (§1) in slices: definitions, then `agent` with frozen
    contracts, then registry/persistence, permissions, worktree patches, Hub.
 8. AI wire APIs + provider catalog (§9).

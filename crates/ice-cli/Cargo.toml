@@ -45,6 +45,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 reqwest = { workspace = true }
+rusqlite = { workspace = true }
 sha2 = "0.10"
 percent-encoding = "2"
 flate2 = "1"

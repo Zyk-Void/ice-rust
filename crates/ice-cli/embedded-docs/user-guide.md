@@ -287,6 +287,29 @@ Token authentication is enabled on the server by default (`--no-token` disables 
 `/name`, and `/reload` require the local harness and are unavailable in remote mode. For the full protocol, available commands, and
 limitations, see [`remote-mode.md`](remote-mode.md).
 
+### Run history and the observe dashboard (`--observe`)
+
+Every run records a read-only history of its activity (prompts, assistant
+replies, tool calls with arguments, results and timing, retries, compaction,
+and token and cost totals) to `~/.icers/agent/observability.sqlite`. The file
+is private (mode `0600`), lives apart from session storage, and keeps runs for
+30 days. Credential-shaped values (Bearer tokens, `api_key=…`, `"password": …`)
+are redacted before they are written. If the file cannot be opened, icers prints
+a warning and keeps running.
+
+```bash
+icers --observe          # dashboard on http://127.0.0.1:4659
+icers --observe=5000     # pick a port (the `=` form is required)
+```
+
+`--observe` prints a dashboard URL that carries a per-user token, stored in
+`~/.icers/agent/observe.token`. The server listens only on `127.0.0.1` and accepts
+no commands. If another icers already serves the port, the URL points at that
+dashboard, which shows every recently active run. In the dashboard, press
+`0`–`9` to filter by kind, `Space` to pause or resume auto-scroll, arrow keys
+to move between rows, and `Esc` to close the inspector. See
+[`docs/guides/observability.md`](../guides/observability.md) for the HTTP routes.
+
 ## 4. Built-in tools
 
 The default tools are Pi’s `read`, `bash`, `edit`, and `write`, plus icers’ built-in read-only `docs` documentation lookup tool. `powershell` is also registered by default on Windows. `docs` can search the user guide, extension development material, Agent project structure, Rust debugging, and architecture notes. `grep`, `find`, and `ls` remain available as library implementations but are not registered by the CLI by default.
@@ -305,6 +328,28 @@ To restrict the available tools, explicitly list Pi’s four tools:
 ```bash
 icers --tools read,bash,edit,write,docs -p "Inspect and modify project files"
 ```
+
+### Background shells
+
+When `bash` is active, the session also registers the following tools. `--exclude-tools` can still remove them.
+
+- `bash_output` lists shells or reads a shell's new output.
+- `bash_kill` stops a shell.
+- `bash_input` writes to a shell's stdin.
+- `bash_watch` sets an alert for a pattern, for silence, for a prompt, or on an interval.
+
+The model starts a background shell with `run_in_background: true`. Press `Ctrl+B` to move a running foreground command to the background. The agent is told when a shell finishes or a watch fires.
+
+Model bash calls receive the session's identity in `ICERS_SESSION_ID`, `ICERS_PROVIDER`, `ICERS_MODEL` and `ICERS_REASONING_LEVEL`. Commands you type as `!cmd` run with the same `shellCommandPrefix` as the model's bash tool.
+
+Settings (in `settings.json`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `bashInputApproval` | `"ask"` | `"allow"` lets `bash_input` write without asking |
+| `bashAutoBackgroundSeconds` | unset | Move a foreground command to the background after this many seconds |
+| `bashPromptAlertSeconds` | `30` | Alert when a quiet shell's last line looks like a prompt; `0` disables |
+| `bashSilenceAlertSeconds` | `0` | Alert when a shell produces no output for this long; `0` disables |
 
 ## 5. Project directories and resource precedence
 
