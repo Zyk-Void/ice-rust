@@ -37,13 +37,13 @@ struct Elicitation {
 #[cfg(test)]
 mod tests;
 
-fn invalid(message: impl Into<String>) -> RpcError {
+pub(super) fn invalid(message: impl Into<String>) -> RpcError {
     RpcError {
         code: -32602,
         message: message.into(),
     }
 }
-fn clean(text: &str) -> String {
+pub(super) fn clean(text: &str) -> String {
     text.chars()
         .filter(|ch| !ch.is_control() || matches!(ch, '\n' | '\t'))
         .collect()
