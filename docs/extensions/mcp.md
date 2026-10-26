@@ -216,6 +216,39 @@ start a lazy server immediately. `requestTimeoutMs` sets a per-server call
 timeout. pi-mcp-adapter defaults to `lazy`; icers keeps `eager` so existing
 setups behave the same.
 
+## MCP scripting (`mcpScript`)
+
+For work that takes several MCP calls (search, loop, filter, chain), the model
+also gets an `mcpScript` tool next to `mcp`. Its `code` is the body of an
+async JavaScript function:
+
+```js
+const { items } = await tools.search({ query: "search issues", server: "github" });
+const details = await tools.describe({ path: items[0].path });
+const result = await tools.call(details.path, { query: "is:open label:bug" });
+if (!result.ok) return result.error;
+emit({ tool: details.path });
+return result.data;
+```
+
+`tools.search({ query, server?, limit?, offset? })` returns
+`{ items: [{ path, server, description }], total, nextOffset }`;
+`tools.describe({ path })` returns the tool's `inputSchema`; and
+`tools.call(path, args)` returns `{ ok: true, data }` (structured content when
+the tool provides it, else its text) or `{ ok: false, error: { code, message } }`,
+so one failed call does not end the script. `emit(value)` and `console.log`
+output appear before the returned value, and the whole result goes through the
+output guard. Calls use the same lookup, lazy start, approval and output guard
+as `mcp`, and run one at a time. Result details list each call with its
+outcome and duration.
+
+Scripts run in an embedded JavaScript engine (Boa) on their own thread, with
+no filesystem, network or process access beyond these calls. A script stops
+after 30 seconds, after 10 million iterations of one loop, or past 400 levels
+of recursion; code is limited to 64 KiB. It is a convenience layer for the
+agent's own code, not an isolation boundary. Set `"settings":
+{"scriptMode": false}` in `mcp.json` to hide the tool.
+
 ## MCP apps (interactive TUI only)
 
 A tool whose metadata names an app (`_meta.ui.resourceUri`, a `ui://`

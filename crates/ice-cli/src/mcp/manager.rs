@@ -215,7 +215,7 @@ impl McpManager {
         Ok(self.output_guard()?.bound_text(text))
     }
     /// The session's output guard with the current `settings.outputGuard`.
-    fn output_guard(&self) -> Result<OutputGuard, String> {
+    pub(super) fn output_guard(&self) -> Result<OutputGuard, String> {
         let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
         Ok(OutputGuard {
             store: self.0.spill.clone(),
@@ -886,26 +886,45 @@ impl McpManager {
     }
     /// Register the `mcp` proxy tool while any server is configured.
     async fn sync_proxy(&self, harness: &AgentHarness) -> Result<(), String> {
-        let wanted = !self.0.servers.lock().unwrap().is_empty()
-            && crate::session::tool_name_allowed(proxy::NAME, &self.0.args);
+        let configured = !self.0.servers.lock().unwrap().is_empty();
+        let script_mode = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)
+            .map_or(true, |settings| {
+                settings.get("scriptMode") != Some(&Value::Bool(false))
+            });
+        let wanted =
+            |name: &str| configured && crate::session::tool_name_allowed(name, &self.0.args);
+        let gateways: [(&str, bool); 2] = [
+            (proxy::NAME, wanted(proxy::NAME)),
+            (script::NAME, script_mode && wanted(script::NAME)),
+        ];
         let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
-        let present = tools.iter().any(|t| t.tool.schema().name == proxy::NAME);
-        if wanted == present {
-            return Ok(());
-        }
         let mut active = harness
             .lane("main")
             .get_active_tools()
             .await
             .map_err(|e| e.to_string())?;
-        if wanted {
-            tools.push(HarnessTool::new(Arc::new(proxy::ProxyTool::new(
-                Arc::downgrade(&self.0),
-            ))));
-            active.push(proxy::NAME.into());
-        } else {
-            tools.retain(|t| t.tool.schema().name != proxy::NAME);
-            active.retain(|n| n != proxy::NAME);
+        let mut changed = false;
+        for (name, wanted) in gateways {
+            let present = tools.iter().any(|t| t.tool.schema().name == name);
+            if wanted == present {
+                continue;
+            }
+            changed = true;
+            if wanted {
+                let manager = Arc::downgrade(&self.0);
+                tools.push(if name == proxy::NAME {
+                    HarnessTool::new(Arc::new(proxy::ProxyTool::new(manager)))
+                } else {
+                    HarnessTool::new(Arc::new(script::ScriptTool::new(manager)))
+                });
+                active.push(name.into());
+            } else {
+                tools.retain(|t| t.tool.schema().name != name);
+                active.retain(|n| n != name);
+            }
+        }
+        if !changed {
+            return Ok(());
         }
         harness
             .set_tools(tools, Some(active))

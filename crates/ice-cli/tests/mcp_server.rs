@@ -47,7 +47,7 @@ async fn manager_reconnect_reloads_approval_policy_without_duplicates() {
     manager.reconnect(None).await.unwrap();
     assert!(approvals.lock().unwrap().is_empty());
     assert_eq!(manager.tools("fake").len(), 2);
-    // The two direct tools plus the `mcp` proxy.
+    // The two direct tools plus the `mcp` proxy and `mcpScript`.
     let mut names: Vec<_> = harness
         .get_tools()
         .await
@@ -56,7 +56,7 @@ async fn manager_reconnect_reloads_approval_policy_without_duplicates() {
         .map(|t| t.tool.schema().name.clone())
         .collect();
     names.sort();
-    assert_eq!(names, ["fake_echo", "fake_other", "mcp"]);
+    assert_eq!(names, ["fake_echo", "fake_other", "mcp", "mcpScript"]);
     std::fs::write(&path, "{\"mcpServers\":{}}").unwrap();
     manager.reconnect(None).await.unwrap();
     assert!(manager.snapshot().is_empty());

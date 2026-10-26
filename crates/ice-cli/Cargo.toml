@@ -41,6 +41,8 @@ semver = { workspace = true }
 shlex = "2.0.1"
 indexmap = { workspace = true }
 jsonschema = { workspace = true }
+# Runs model-written MCP scripts (`mcpScript`); pure Rust, no C toolchain.
+boa_engine = { version = "0.21.1", default-features = false }
 schemars = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }

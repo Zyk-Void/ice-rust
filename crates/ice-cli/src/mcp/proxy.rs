@@ -392,7 +392,7 @@ fn normalize(name: &str) -> String {
     name.to_ascii_lowercase().replace('-', "_")
 }
 
-enum Found<'a> {
+pub(super) enum Found<'a> {
     One(&'a Server, &'a Entry),
     Ambiguous(Vec<String>),
     None,
@@ -400,7 +400,7 @@ enum Found<'a> {
 
 /// Exact prefixed name, then the normalized prefixed name, then the normalized
 /// remote name; each stage must be unique to resolve.
-fn resolve<'a>(servers: &'a [Server], query: &str, server: Option<&str>) -> Found<'a> {
+pub(super) fn resolve<'a>(servers: &'a [Server], query: &str, server: Option<&str>) -> Found<'a> {
     let scope: Vec<&Server> = servers
         .iter()
         .filter(|s| server.is_none_or(|name| s.name == name))
@@ -571,7 +571,7 @@ fn score(server: &Server, entry: &Entry, query: &str, query_tokens: &[String]) -
     (!matched.is_empty()).then_some(total)
 }
 
-fn ranked<'a>(
+pub(super) fn ranked<'a>(
     servers: &'a [Server],
     query: &str,
     only: Option<&str>,
@@ -636,7 +636,7 @@ fn search(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn call(
+pub(super) async fn call(
     manager: &McpManager,
     servers: &[Server],
     name: &str,

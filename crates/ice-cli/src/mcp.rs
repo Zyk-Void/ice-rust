@@ -10,6 +10,7 @@ mod output_guard;
 mod prompts;
 mod proxy;
 mod sampling;
+mod script;
 pub mod setup;
 mod ui;
 pub use prompts::Prompt;
