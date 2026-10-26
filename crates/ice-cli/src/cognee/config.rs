@@ -113,7 +113,7 @@ impl Default for CogneeConfig {
             checkpoint_recall: false,
             top_k: 5,
             base_url: "http://127.0.0.1:8211".into(),
-            dataset: "ice".into(),
+            dataset: PROJECT_DATASET_SENTINEL.into(),
             recall_budget_ms: 10_000,
             recall_max_chars: 6000,
             remember_max_chars: 12_000,
@@ -848,6 +848,12 @@ mod tests {
         });
         assert!(connection.invalid_config);
         assert_eq!(connection.config, CogneeConfig::default());
+    }
+
+    #[test]
+    fn default_dataset_is_per_project() {
+        // A shared default mixed every project's memories into each recall.
+        assert_eq!(CogneeConfig::default().dataset, PROJECT_DATASET_SENTINEL);
     }
 
     #[test]

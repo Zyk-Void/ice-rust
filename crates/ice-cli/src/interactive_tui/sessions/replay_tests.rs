@@ -203,3 +203,42 @@ fn replay_preserves_saved_expansion_live_members_and_first_toggle() {
             });
     });
 }
+
+/// Hidden custom messages (`display: false`, e.g. recalled memory) are model
+/// context only; resuming the session must not print them as notes.
+#[test]
+fn replay_skips_hidden_custom_messages() {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let directory = tempfile::tempdir().unwrap();
+            let cwd = directory.path().to_string_lossy().to_string();
+            let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+                session: crate::session::create_jsonl_session(directory.path(), &cwd)
+                    .await
+                    .unwrap(),
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+            let view = harness.session().view("main");
+            for (text, display) in [("HIDDEN_MEMORY", false), ("SHOWN_NOTICE", true)] {
+                view.append_message(ice_harness::messages::create_custom_message(
+                    "test",
+                    ice_ai::types::UserContent::Text(text.into()),
+                    display,
+                    None,
+                    0,
+                ))
+                .await
+                .unwrap();
+            }
+            let chat = Arc::new(Container::new());
+            render_session_history(&harness, &chat, None, None, false, false).await;
+            let output = strip_ansi(&chat.render(100).join("\n"));
+            assert!(!output.contains("HIDDEN_MEMORY"), "{output}");
+            assert!(output.contains("SHOWN_NOTICE"), "{output}");
+        });
+}

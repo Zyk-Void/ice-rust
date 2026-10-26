@@ -413,9 +413,28 @@ Deliberate differences from ice:
   background instead of awaiting it inside `session_compact`.
 - **Skills** are written to `<agentDir>/ice-cognee/skills/` and loaded like other
   skill files, only while Cognee is installed.
+- **Recall placement.** ice appends each prompt's recall to that run's system
+  prompt. Because the recall changes every turn, the provider's prompt cache
+  stopped at the system prompt and the whole conversation was re-sent uncached
+  on every turn (observed: ~14k cached tokens per request regardless of
+  history). icers stores the recall right after the prompt as a hidden custom
+  message (`ice-cognee-memory`, `display: false`) through the harness
+  `prompt_context` hook, so the system prompt and the history stay a stable,
+  cacheable prefix, and earlier recalls stay visible to the model. Pending
+  checkpoint summaries travel the same way.
+- **Per-project dataset by default.** The default dataset is `$project`
+  (`ice-<repo>-<hash>`) instead of the shared `ice`, so one project's memories
+  are not recalled in another. Set `"dataset": "ice"` to share again.
+- **Traces record actions, not contents.** Successful `read`, `grep`, `find`,
+  `ls` and `glob` traces keep the arguments but no output, other tools keep at
+  most 600 characters of output, and errors keep their message. ice stored up to
+  8,000 characters of output, and file and skill contents were cognified into
+  misleading graph "facts". Prompt recall searches `session` and `graph` only;
+  raw traces are no longer recalled.
 
 - **Hooks:**
-  - `before_agent_start`: turn-scoped recall appended to the system prompt.
+  - `before_agent_start`: turn-scoped recall appended to the system prompt
+    (icers: stored after the prompt instead; see above).
     Prompts under 4 words (`RECALL_MIN_WORDS`) skip recall, and dedup TTL
     applies.
   - `tool_result`: captures allowlisted tools (`CAPTURE_TOOL_ALLOWLIST`, ≤

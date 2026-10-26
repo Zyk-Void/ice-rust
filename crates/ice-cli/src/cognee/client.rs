@@ -679,7 +679,7 @@ impl CogneeClient {
                 if remaining == 0 {
                     return None;
                 }
-                let text = prefix16(&result.text, remaining).to_string();
+                let text = prefix16(&drop_null_lines(&result.text), remaining).to_string();
                 remaining = remaining.saturating_sub(len16(&text));
                 if text.is_empty() {
                     return None;
@@ -959,6 +959,18 @@ impl CogneeClient {
     }
 }
 
+/// The server renders a missing context entry as the line `None` (or
+/// `- None` in a list); it carries nothing and only confuses the model.
+fn drop_null_lines(text: &str) -> String {
+    if !text.contains("None") {
+        return text.to_string();
+    }
+    text.lines()
+        .filter(|line| !matches!(line.trim(), "None" | "- None"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
@@ -1147,6 +1159,22 @@ pub(crate) mod tests {
             body_json(&sent[0]),
             json!({"query":"q","topK":5,"onlyContext":true,"scope":["session","trace","graph"],"sessionId":"ice_s","datasets":["ice"]})
         );
+    }
+
+    /// Observed from a live server: a null context entry arrives as `- None`.
+    #[tokio::test]
+    async fn recall_drops_null_lines_from_results() {
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "- real memory\n- None\nNone\n- Nonetheless kept"}, {"text": "- None"}]}),
+        ));
+        let results = client(transport)
+            .recall("q", RecallOptions::default())
+            .await
+            .unwrap();
+        assert_eq!(results.len(), 1, "a result with nothing left is dropped");
+        assert_eq!(results[0].text, "- real memory\n- Nonetheless kept");
     }
 
     #[tokio::test]

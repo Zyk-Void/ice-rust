@@ -71,18 +71,6 @@ pub fn format_recall(results: &[RecallLine], max_chars: usize) -> String {
     )
 }
 
-/// Append memory to a system prompt with a blank line.
-pub fn append_memory_to_system_prompt(system_prompt: Option<&str>, injection: &str) -> String {
-    let memory = injection.trim();
-    if memory.is_empty() {
-        return system_prompt.unwrap_or_default().to_string();
-    }
-    match system_prompt.filter(|base| !base.trim().is_empty()) {
-        Some(base) => format!("{base}\n\n{memory}"),
-        None => memory.to_string(),
-    }
-}
-
 /// The latest checkpoint as a one-shot, untrusted prompt section.
 pub fn format_last_compact_injection(summary: &str, max_chars: usize) -> String {
     redact_memory_text(
@@ -183,13 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn system_prompt_append_and_truncation() {
-        assert_eq!(
-            append_memory_to_system_prompt(Some("base"), " mem "),
-            "base\n\nmem"
-        );
-        assert_eq!(append_memory_to_system_prompt(Some("  "), "mem"), "mem");
-        assert_eq!(append_memory_to_system_prompt(None, "  "), "");
+    fn capture_truncation() {
         assert_eq!(truncate_for_capture("abcdef", 3), "abc…[truncated]");
         assert_eq!(
             truncate_value_for_capture(&serde_json::json!({"a":1}), 100),

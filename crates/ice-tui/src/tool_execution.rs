@@ -456,7 +456,15 @@ impl ToolExecutionComponent {
         // result streaming + Ctrl+O expand plumbing.
         if let Some(skill) = skill_name.as_deref() {
             let content = result.as_deref().unwrap_or("");
-            return render_skill(colors, skill, content, *expanded, width);
+            return render_skill(
+                colors,
+                skill,
+                content,
+                *expanded,
+                width,
+                self as *const Self as usize,
+                self.hovered.load(Ordering::Acquire),
+            );
         }
 
         if style == ToolStyle::Compact {
@@ -796,13 +804,17 @@ impl Component for ToolExecutionComponent {
 /// custom-message background. Collapsed it is a single line
 /// `[skill] <name> (Ctrl+O to expand)`; expanded it shows the `[skill]` label,
 /// the bold skill name, then the full skill markdown content (the `read`
-/// result) rendered with the standard markdown component.
+/// result) rendered with the standard markdown component. Like a compact tool
+/// cell, a click anywhere on the box toggles it (`expand_id` is the cell
+/// address carried by the OSC 8 links).
 fn render_skill(
     colors: &ThemeColors,
     name: &str,
     content: &str,
     expanded: bool,
     width: usize,
+    expand_id: usize,
+    hovered: bool,
 ) -> Vec<String> {
     let bg = colors.custom_message_bg;
     let label = crate::ansi::bold("[skill]");
@@ -816,16 +828,26 @@ fn render_skill(
 
     if !expanded {
         // Single collapsed line: `[skill] <name> (Ctrl+O to expand)`.
+        let hint = crate::keybindings::tools_expand_paren("expand");
+        let hint = if hovered {
+            colors
+                .accent
+                .bg(&crate::theme::Color::Rgb(0, 0, 0).fg(hint.trim_start()))
+        } else {
+            colors.dim.fg(hint.trim_start())
+        };
         let line = format!(
-            "{pad}{} {} {}",
+            "{pad}{} {} {hint}",
             colors.custom_message_label.fg(&label),
             colors.custom_message_text.fg(name),
-            colors
-                .dim
-                .fg(crate::keybindings::tools_expand_paren("expand").trim_start()),
         );
         out.push(apply_background_to_line(&line, width, |s| bg.bg(s)));
         out.push(apply_background_to_line("", width, |s| bg.bg(s)));
+        // The whole box, padding rows included, is the expand target.
+        let open = format!("\x1b]8;;{EXPAND_LINK_PREFIX}{expand_id}\x07");
+        for row in &mut out {
+            *row = format!("{open}{row}\x1b]8;;\x07");
+        }
         return out;
     }
 
@@ -859,6 +881,7 @@ fn render_skill(
 
     // Box bottom padding (pi Box(1,1)).
     out.push(apply_background_to_line("", width, |s| bg.bg(s)));
+    link_expanded_rows(&mut out, false, expand_id);
     out
 }
 
@@ -2297,6 +2320,28 @@ mod tests {
             !plain.contains("name: release"),
             "frontmatter leaked: {plain}"
         );
+    }
+
+    /// A click anywhere on a skill box toggles it, like a compact tool cell:
+    /// collapsed rows carry the expand link across every column, expanded
+    /// rows the collapse link.
+    #[test]
+    fn skill_box_is_clickable_in_both_states() {
+        let tool = ToolExecutionComponent::new("read", r#"{"path":"/skills/release/SKILL.md"}"#);
+        tool.set_skill_name("release");
+        tool.set_result("# Steps\n\nDo the thing.", false);
+        let id = &tool as *const ToolExecutionComponent as usize;
+
+        let collapsed = tool.render(80);
+        for row in &collapsed {
+            assert_eq!(expand_link_id(row, 0), Some(id), "{row:?}");
+            assert_eq!(expand_link_id(row, 79), Some(id), "{row:?}");
+        }
+
+        tool.set_expanded(true);
+        for row in tool.render(80) {
+            assert_eq!(collapse_link_id(&row), Some(id), "{row:?}");
+        }
     }
 
     #[test]
