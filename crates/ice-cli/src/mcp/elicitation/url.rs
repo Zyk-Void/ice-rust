@@ -92,7 +92,11 @@ impl UrlElicitation {
         {
             Some(0) if !signal.is_cancelled() => {
                 // No await between the final cancellation check, launch, and tracking.
-                // A dropped future cannot leave an untracked browser launch.
+                // A dropped future cannot leave an untracked browser launch. The ID
+                // accepts completion before the launch, since the server may finish
+                // while the browser is still starting; a failed launch releases it
+                // through `reservation`.
+                self.ids.lock().unwrap().insert(id.into(), true);
                 if (self.browser)(url.as_str()).is_err() {
                     let _ = self.notices.send(format!(
                         "Could not open MCP browser request for {}.",
@@ -100,7 +104,6 @@ impl UrlElicitation {
                     ));
                     return Ok(json!({"action":"cancel"}));
                 }
-                self.ids.lock().unwrap().insert(id.into(), true);
                 reservation.accepted = true;
                 Ok(json!({"action":"accept"}))
             }

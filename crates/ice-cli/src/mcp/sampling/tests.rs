@@ -210,6 +210,8 @@ async fn denied_request_never_reaches_the_provider() {
     let summary = asked.ui["summary"].as_str().unwrap();
     assert!(summary.contains("fake"), "{summary}");
     assert!(summary.contains("Hello"), "{summary}");
+    // The server's system prompt is sent to the model, so the user sees it too.
+    assert!(summary.contains("System prompt:\nBe brief"), "{summary}");
     // Untrusted request text has its control characters stripped.
     assert!(!summary.contains('\u{001b}'), "{summary:?}");
     let error = task.await.unwrap();

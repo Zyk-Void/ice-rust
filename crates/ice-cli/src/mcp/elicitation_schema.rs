@@ -130,6 +130,7 @@ impl Schema {
                     "enum",
                     "enumNames",
                     "oneOf",
+                    "anyOf",
                     "minLength",
                     "maxLength",
                     "format",
@@ -258,6 +259,11 @@ mod tests {
                 json!({"type":"string","enum":["one","two"]}),
                 json!("one"),
                 json!("bad"),
+            ),
+            (
+                json!({"type":"string","anyOf":[{"const":"one","title":"One"}]}),
+                json!("one"),
+                json!("two"),
             ),
             (
                 json!({"type":"string","format":"date"}),

@@ -149,7 +149,17 @@ impl McpManager {
                     })
             })
             .ok_or("MCP prompt is no longer available")?;
-        prompts::get_prompt(&client, &server, &prompt, input).await
+        let text = prompts::get_prompt(&client, &server, &prompt, input).await?;
+        // The text becomes a user message, so it gets the same bound as tool output.
+        Ok(self.output_guard()?.bound_text(text))
+    }
+    /// The session's output guard with the current `settings.outputGuard`.
+    fn output_guard(&self) -> Result<OutputGuard, String> {
+        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
+        Ok(OutputGuard {
+            store: self.0.spill.clone(),
+            limits: output_guard::resolve(settings.get("outputGuard")),
+        })
     }
     pub fn registered_tools(&self) -> Vec<HarnessTool> {
         self.0.tools.lock().unwrap().clone()
@@ -341,11 +351,7 @@ impl McpManager {
     /// Restart `only` (or every known server) concurrently from current configuration.
     async fn reconnect_servers(&self, only: Option<HashSet<String>>) -> Result<(), String> {
         let mut configured = self.configured()?;
-        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
-        let guard = OutputGuard {
-            store: self.0.spill.clone(),
-            limits: output_guard::resolve(settings.get("outputGuard")),
-        };
+        let guard = self.output_guard()?;
         let mut targets: HashSet<String> = configured
             .keys()
             .cloned()
@@ -356,10 +362,6 @@ impl McpManager {
         let mut discoveries = tokio::task::JoinSet::new();
         for name in targets.drain() {
             let old = self.0.servers.lock().unwrap().remove(&name);
-            self.sync_instructions().await?;
-            self.0
-                .prompt_changes
-                .send_modify(|version| *version = version.wrapping_add(1));
             let names = match &old {
                 Some(ServerState {
                     status: ServerStatus::Connected { tools },
@@ -373,7 +375,13 @@ impl McpManager {
                 client._process.tree.kill();
                 fail_pending(&client.pending, "MCP server disconnected");
             }
+            // Stop and unregister before anything fallible, so an error cannot leave
+            // tools of a server the manager no longer tracks.
             self.unregister(&harness, &names).await?;
+            self.sync_instructions().await?;
+            self.0
+                .prompt_changes
+                .send_modify(|version| *version = version.wrapping_add(1));
             let Some((config, source)) = configured.remove(&name) else {
                 continue;
             };
@@ -413,15 +421,21 @@ impl McpManager {
             discoveries.spawn(async move {
                 let result = async {
                     let client = Client::spawn(&name, &config, &cwd, handlers)?;
-                    let tools = tokio::time::timeout(
-                        START_TIMEOUT,
-                        client.discover(&name, &config, &guard),
-                    )
-                    .await
-                    .map_err(|_| "MCP discovery timed out".to_string())??;
-                    let prompts = tokio::time::timeout(START_TIMEOUT, client.list_prompts())
+                    // One budget covers discovery and prompts (see `crate::mcp::start`).
+                    let deadline = tokio::time::Instant::now() + START_TIMEOUT;
+                    let tools =
+                        tokio::time::timeout_at(deadline, client.discover(&name, &config, &guard))
+                            .await
+                            .map_err(|_| "MCP discovery timed out".to_string())??;
+                    // Prompts are optional; their failure must not cost the server its tools.
+                    let prompts = tokio::time::timeout_at(deadline, client.list_prompts())
                         .await
-                        .map_err(|_| "MCP prompts/list timed out".to_string())??;
+                        .map_err(|_| "MCP prompts/list timed out".to_string())
+                        .and_then(|prompts| prompts)
+                        .unwrap_or_else(|error| {
+                            tracing::warn!(server = %name, %error, "MCP prompts unavailable");
+                            Vec::new()
+                        });
                     Ok::<_, String>((client, tools, prompts))
                 }
                 .await;
@@ -492,25 +506,24 @@ impl McpManager {
             ),
             _ => return Ok(()),
         };
+        // A failed re-list drops the announced catalog rather than keep entries the
+        // server may have removed; `/mcp reconnect` or the next change restores it.
         if catalog == "prompts" {
-            let prompts = tokio::time::timeout(START_TIMEOUT, client.list_prompts())
+            let listed = tokio::time::timeout(START_TIMEOUT, client.list_prompts())
                 .await
-                .map_err(|_| "MCP prompts/list timed out".to_string())??;
+                .map_err(|_| "MCP prompts/list timed out".to_string())
+                .and_then(|listed| listed);
             if let Some(state) = self.0.servers.lock().unwrap().get_mut(server) {
-                state.prompts = prompts;
+                state.prompts = listed.as_ref().cloned().unwrap_or_default();
             }
             self.0
                 .prompt_changes
                 .send_modify(|version| *version = version.wrapping_add(1));
-            return Ok(());
+            return listed.map(drop);
         }
-        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
-        let guard = OutputGuard {
-            store: self.0.spill.clone(),
-            limits: output_guard::resolve(settings.get("outputGuard")),
-        };
+        let guard = self.output_guard()?;
         let resources = catalog == "resources";
-        let updated = tokio::time::timeout(START_TIMEOUT, async {
+        let listed = tokio::time::timeout(START_TIMEOUT, async {
             if resources {
                 client.list_resources(server, &config, &guard).await
             } else {
@@ -518,21 +531,24 @@ impl McpManager {
             }
         })
         .await
-        .map_err(|_| format!("MCP {catalog}/list timed out"))??;
+        .map_err(|_| format!("MCP {catalog}/list timed out"))
+        .and_then(|listed| listed);
         discovered.retain(|tool| tool.resource_uri.is_some() != resources);
-        discovered.extend(updated);
+        if let Ok(updated) = &listed {
+            discovered.extend(updated.iter().cloned());
+        }
         discovered.sort_by_key(|tool| tool.resource_uri.is_some());
         let harness = self.0.harness.upgrade().ok_or("Session ended")?;
         self.unregister(&harness, &old).await?;
-        let (tools, listed) = self
+        let (tools, catalog_view) = self
             .register(&harness, &config.direct_tools, discovered.clone())
             .await?;
         if let Some(state) = self.0.servers.lock().unwrap().get_mut(server) {
             state.discovered = discovered;
             state.status = ServerStatus::Connected { tools };
-            state.catalog = Some(listed);
+            state.catalog = Some(catalog_view);
         }
-        Ok(())
+        listed.map(drop)
     }
     pub(super) fn handlers(&self, server: &str) -> Handlers {
         let manager = Arc::downgrade(&self.0);

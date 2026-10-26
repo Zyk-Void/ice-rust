@@ -145,3 +145,97 @@ async fn prompt_catalog_notifications_reconnect_disable_and_remove() {
     manager.remove("fake").await.unwrap();
     assert!(manager.prompts().is_empty());
 }
+
+async fn prompt_manager(
+    dir: &Path,
+    config: &ServerConfig,
+    settings: Value,
+) -> (AgentHarness, McpManager) {
+    std::fs::write(
+        dir.join("mcp.json"),
+        serde_json::to_vec(&json!({"settings":settings,"mcpServers":{"fake":{"command":config.command,"env":config.env}}}))
+            .unwrap(),
+    )
+    .unwrap();
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let manager = McpManager::new(
+        &harness,
+        &Default::default(),
+        dir,
+        dir.into(),
+        false,
+        Default::default(),
+    );
+    manager.reconnect(None).await.unwrap();
+    (harness, manager)
+}
+
+#[tokio::test]
+async fn a_failing_prompt_catalog_keeps_the_servers_tools() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = fixture(true);
+    config
+        .env
+        .insert("ICERS_MCP_TEST_PROMPT_CURSOR".into(), "repeat".into());
+    let (_harness, manager) = prompt_manager(dir.path(), &config, json!({})).await;
+    assert!(matches!(
+        &manager.snapshot()[0].status,
+        ServerStatus::Connected { tools } if tools.contains(&"fake_echo".to_string())
+    ));
+    assert!(manager.prompts().is_empty());
+}
+
+#[tokio::test]
+async fn prompt_text_is_bounded_by_the_output_guard() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(true);
+    let (_harness, manager) = prompt_manager(
+        dir.path(),
+        &config,
+        json!({"outputGuard":{"maxBytes":2048}}),
+    )
+    .await;
+    let long = "x".repeat(10_000);
+    let text = manager
+        .get_prompt("/mcp__fake__Brief", &format!("day={long}"))
+        .await
+        .unwrap();
+    assert!(text.len() <= 2048, "{}", text.len());
+    assert!(text.contains("[MCP text output truncated"), "{text}");
+}
+
+#[tokio::test]
+async fn a_failed_prompt_refresh_drops_the_stale_catalog() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = fixture(true);
+    config
+        .env
+        .insert("ICERS_MCP_TEST_PROMPT_CURSOR".into(), "fail_relist".into());
+    let (_harness, manager) = prompt_manager(dir.path(), &config, json!({})).await;
+    assert_eq!(manager.prompts().len(), 2);
+    let mut changes = manager.prompt_changes();
+    let tool = manager
+        .registered_tools()
+        .into_iter()
+        .find(|t| t.tool.schema().name == "fake_echo")
+        .unwrap();
+    tool.tool
+        .execute(
+            "change",
+            json!({"mode":"change_prompts"}),
+            CancellationToken::new(),
+            Arc::new(|_| {}),
+        )
+        .await
+        .unwrap();
+    tokio::time::timeout(Duration::from_secs(3), changes.changed())
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(manager.prompts().is_empty());
+    assert!(manager
+        .get_prompt("/mcp__fake__Brief", "today")
+        .await
+        .unwrap_err()
+        .contains("no longer available"));
+}

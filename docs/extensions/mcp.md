@@ -57,13 +57,15 @@ them:
 Imported servers are the lowest layer: an entry in your global `mcp.json`, then a
 trusted project entry, replaces an imported one with the same name. If two
 imported tools define the same name, the one listed first in `imports` wins.
+Within one tool, a later file in the table wins; if its entry cannot be
+imported, the earlier entry of that name is not used either.
 `/mcp` and `--list-mcp` show the file an imported server came from.
 
 | Kind | Files read | Table |
 |---|---|---|
 | `cursor` | `~/.cursor/mcp.json` | `mcpServers` |
 | `claude-code` | `~/.claude/claude_desktop_config.json`, `~/.claude.json`, `~/.claude/mcp.json` (later wins) | `mcpServers`, plus this project's section in `~/.claude.json` (trusted projects only) |
-| `claude-desktop` | `~/Library/Application Support/Claude/claude_desktop_config.json`, `~/.config/Claude/claude_desktop_config.json` | `mcpServers` |
+| `claude-desktop` | `~/Library/Application Support/Claude/claude_desktop_config.json`, `~/.config/Claude/claude_desktop_config.json`, `%APPDATA%\Claude\claude_desktop_config.json` (Windows) | `mcpServers` |
 | `windsurf` | `~/.codeium/windsurf/mcp_config.json`, `~/.windsurf/mcp.json` | `mcpServers` |
 | `vscode` | `.vscode/mcp.json` (trusted projects only) | `servers` or `mcpServers` |
 | `opencode` | `~/.config/opencode/opencode.json`, then `./opencode.json` (trusted projects only) | `mcp` (`type: "local"`; `enabled: false` imports as disabled) |
@@ -133,7 +135,9 @@ and image blobs become image blocks. Resource tools use the same `--tools`
 filter and approval path as normal tools. For an approval list, use the
 unprefixed generated name, e.g. `"approveTools": ["read_project_notes"]`.
 Real tools take priority over resource name collisions; skipped collisions
-are logged. Resources with the same sanitized name are first-wins.
+are logged. Resources whose names sanitize alike (`Project Notes`,
+`project-notes`) get numeric suffixes in listing order: `read_project_notes`,
+then `read_project_notes_2`.
 
 `notifications/resources/list_changed` refreshes only the resource catalog on
 the existing server process, adding and removing tools and approval entries.
@@ -147,7 +151,9 @@ Servers declaring the `prompts` capability expose commands named
 completion shows their descriptions. Prompt names preserve ASCII letters,
 case, digits, `_` and `-`; other runs become `_`, leading/trailing `_` and
 `-` are removed, empty names become `prompt`, and leading digits get `_`.
-Colliding names are first-wins, without replacing built-in or extension commands.
+Colliding names are first-wins, without replacing built-in or extension
+commands; a skipped prompt is logged. A server whose `prompts/list` fails keeps
+its tools and has no prompt commands until the next successful listing.
 
 Arguments may be positional, named (`key=value`), or mixed. Shell-style quotes
 and escapes preserve spaces; a quoted `=` remains positional. Named values take
@@ -159,7 +165,8 @@ precedence over positional values for the same declared argument. For example:
 
 Missing required arguments show usage without calling the server. The returned
 messages become one user prompt, preserving `[user]`/`[assistant]` role markers
-for multi-message responses. Embedded resource text is included; binary images,
+for multi-message responses. The expansion is bounded by the output guard
+below, like a tool result. Embedded resource text is included; binary images,
 audio, and resources become descriptive placeholders rather than base64 text.
 The expansion uses normal history, rendering, prompt hooks, and steering when
 a run is active. Server calls run asynchronously; failures are shown locally.
@@ -177,7 +184,9 @@ session file:
   built-in `bash` tool. Larger output becomes a head preview plus a notice
   naming a temp file that holds the full text, so the agent can inspect it
   with `read` or `grep`.
-- Image blocks pass through unchanged.
+- Image blocks keep their position. Each image must be valid base64 of at
+  most 10 MiB decoded, or it is replaced by an omission notice; this check
+  stays on when the guard is off.
 - Embedded binary resources (`blob`) up to 10 MiB are decoded to temp files and
   replaced with a file reference. A session may materialize at most 100 MiB and
   10,000 files; beyond that, the reference says the content was omitted.
@@ -203,8 +212,11 @@ A trusted project file overrides the global value:
 
 `"outputGuard": false`, or the environment variable
 `ICERS_MCP_OUTPUT_GUARD=0`, disables text and details guarding
-(`ICERS_MCP_OUTPUT_GUARD=1` forces it on). Binary resource materialization and
-its limits stay active either way. Settings changes apply on `/mcp reconnect`.
+(`ICERS_MCP_OUTPUT_GUARD=1` forces it on). Values below 1,024 bytes
+(`maxBytes`, `detailsMaxBytes`) or 8 lines (`maxLines`) are raised to that
+floor, which still fits the truncation notice. Binary resource materialization
+and its limits stay active either way. Error results are formatted from their
+mapped blocks, so blobs and images never appear in them as base64. Settings changes apply on `/mcp reconnect`.
 
 ## Server instructions
 
@@ -274,7 +286,8 @@ it. Set `"settings": {"sampling": false}` in `mcp.json` to disable it; reconnect
 servers for the change to apply.
 
 A sampling request spends your model quota on the server's behalf, so you confirm
-twice by default: first the server, model, and request text (Allow / Deny), then
+twice by default: first the server, model, the request's system prompt (if
+any), and request text (Allow / Deny), then
 the model's reply before it is returned. Either Deny returns an error to the
 server. `"samplingAutoApprove": true` skips both prompts; it defaults to `false`
 and an unreadable `mcp.json` leaves it off.
@@ -368,7 +381,10 @@ No HTTP, SSE, OAuth, or resource subscriptions are implemented. MCP
 scripting, MCP UI resources and shared `rmcp-mux` processes are deferred until
 those transports exist. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
-`-32601 Method not found`. Tool, resource, and prompt list-change notifications refresh
+`-32601 Method not found`. At most 64 server messages wait for the dispatcher;
+beyond that, reading pauses. When a call is cancelled or times out, open server
+requests (such as a dialog) are cancelled only if no other call is still
+waiting on that server, because stdio cannot tie a request to its call. Tool, resource, and prompt list-change notifications refresh
 the targeted catalog without restarting the server. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

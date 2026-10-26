@@ -592,6 +592,11 @@ fn split_csv(v: &str) -> Vec<String> {
 /// `rpc`→rpc, `json`→json, `print` or piped-stdin/redirected-stdout→print,
 /// else interactive. Here `stdin_is_tty`/`stdout_is_tty` come from
 /// `std::io::IsTerminal`.
+/// `ICERS_FORCE_TUI=1`: a debug/testing escape hatch that runs the TUI without a TTY.
+pub fn force_tui() -> bool {
+    std::env::var("ICERS_FORCE_TUI").is_ok_and(|v| v == "1")
+}
+
 pub fn resolve_mode(parsed: &Args, stdin_is_tty: bool, stdout_is_tty: bool) -> RunMode {
     // Check for --server flag (unknown flag stored in unknown_flags map)
     if parsed.unknown_flags.contains_key("server") {

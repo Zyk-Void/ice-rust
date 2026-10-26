@@ -820,3 +820,65 @@ async fn output_guard_follows_mcp_json_settings() {
         }
     }
 }
+
+#[test]
+fn error_results_and_bad_images_never_carry_raw_base64() {
+    let guard = OutputGuard::default();
+    let error = map_result(
+        json!({"isError":true,"content":[
+            {"type":"text","text":"failed"},
+            {"type":"resource","resource":{"uri":"x:///b","blob":"aGVsbG8="}},
+            {"type":"image","data":"YWJj","mimeType":"image/png"},
+        ]}),
+        &guard,
+    )
+    .err()
+    .unwrap()
+    .to_string();
+    assert!(error.contains("MCP tool error: failed"), "{error}");
+    assert!(error.contains("Binary content saved to "), "{error}");
+    assert!(error.contains("[Image: image/png]"), "{error}");
+    assert!(
+        !error.contains("aGVsbG8=") && !error.contains("YWJj"),
+        "{error}"
+    );
+
+    let result = map_result(
+        json!({"content":[{"type":"image","data":"not base64!","mimeType":"image/png"}]}),
+        &guard,
+    )
+    .unwrap();
+    assert!(matches!(&result.content[0], TextContentOrImage::Text(t)
+        if t.text == "[Image omitted (image/png): invalid base64]"));
+    assert!(!result.details.to_string().contains("not base64!"));
+}
+
+#[tokio::test]
+async fn an_aborted_call_cancels_server_requests_only_when_no_other_call_waits() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
+    client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
+    let question = CancellationToken::new();
+    client
+        .in_flight
+        .lock()
+        .unwrap()
+        .insert("q".into(), question.clone());
+    let (other, _keep) = oneshot::channel();
+    client.pending.lock().unwrap().insert(1_000, other);
+    let aborted = |id| RequestGuard {
+        client: &client,
+        id,
+        completed: false,
+        sent: true,
+    };
+    drop(aborted(1_001));
+    assert!(!question.is_cancelled(), "another call still waits");
+    client.pending.lock().unwrap().remove(&1_000);
+    drop(aborted(1_002));
+    assert!(question.is_cancelled());
+}

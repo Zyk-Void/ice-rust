@@ -50,7 +50,11 @@ pub(in crate::interactive_tui) fn register_prompts(
 ) {
     for (server, prompt) in manager.prompts() {
         let name = prompt.command_name(&server);
-        if registry.find(&name).is_none() {
+        // Names can collide (a server named `a__b` vs prompt `b__c` on `a`, or a
+        // built-in); the first registration wins, matching `get_prompt`'s lookup.
+        if registry.find(&name).is_some() {
+            tracing::warn!(%server, prompt = %prompt.name, command = %name, "MCP prompt command name already taken; skipped");
+        } else {
             registry.register(Arc::new(McpPromptCommand {
                 name,
                 description: if prompt.description.is_empty() {

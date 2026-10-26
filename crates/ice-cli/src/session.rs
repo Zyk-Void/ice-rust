@@ -975,11 +975,13 @@ pub async fn build_prepared(
     );
     use std::io::IsTerminal;
     let providers = Arc::new(std::sync::RwLock::new(resolved.providers.clone()));
-    let mcp_tools = if crate::args::resolve_mode(
-        args,
-        std::io::stdin().is_terminal(),
-        std::io::stdout().is_terminal(),
-    ) == crate::args::RunMode::Interactive
+    // Same decision as `app.rs`, including the forced TUI.
+    let mcp_tools = if crate::args::force_tui()
+        || crate::args::resolve_mode(
+            args,
+            std::io::stdin().is_terminal(),
+            std::io::stdout().is_terminal(),
+        ) == crate::args::RunMode::Interactive
     {
         mcp_tools
             .with_elicitation_ui(ui_dialog_mailbox.clone())

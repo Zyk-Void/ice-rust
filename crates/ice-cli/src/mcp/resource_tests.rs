@@ -320,3 +320,30 @@ async fn a_new_real_tool_replaces_a_colliding_resource() {
         text(&pid)
     );
 }
+
+#[tokio::test]
+async fn resources_whose_names_sanitize_alike_get_distinct_tools() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = fixture(true);
+    config
+        .env
+        .insert("ICERS_MCP_TEST_SAME_NAME".into(), "1".into());
+    let client = Client::spawn("fake", &config, dir.path(), Handlers::default()).unwrap();
+    let tools = client
+        .discover("fake", &config, &OutputGuard::default())
+        .await
+        .unwrap();
+    let names: Vec<_> = tools
+        .iter()
+        .filter(|t| t.resource_uri.is_some())
+        .map(|t| (t.schema.name.as_str(), t.resource_uri.as_deref().unwrap()))
+        .collect();
+    assert_eq!(
+        names,
+        [
+            ("fake_read_project_notes", "test:///notes"),
+            ("fake_read_resource_9_image", "test:///image"),
+            ("fake_read_project_notes_2", "test:///notes2"),
+        ]
+    );
+}
