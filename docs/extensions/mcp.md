@@ -330,6 +330,15 @@ configured server executables, so inspect configuration before trusting it.
     Left/Right/Tab, Enter).
   - Ctrl+R reconnects the selected server and keeps the panel open. Ctrl+Y
     copies a failed server's error.
+- `/mcp setup`: open the setup panel, which `/mcp` also opens when no server is
+  configured. It lists other tools' MCP configs found on this machine with
+  their server counts; Enter adds or removes the tool in the global `imports`
+  list and reloads servers. Quick add writes a preset to the global `mcp.json`
+  (only Chrome DevTools today; DeepWiki, Context7, Parallel Search, Notion and
+  GitHub need the HTTP transport and are listed as unavailable). The panel also
+  shows server names defined in more than one place, in precedence order, and
+  the imports that were skipped. Codex is detected but not importable yet. An
+  import listed in the trusted project file has to be removed there.
 - `/mcp tools [server]`: list tools grouped by server, marking approval-required
   tools. Selecting a server also shows its full initialization instructions.
 - `/mcp prompts [server]`: list available prompt slash commands.
@@ -355,8 +364,9 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, sampling, or resource subscriptions are
-implemented. The asynchronous dispatcher answers server
+No HTTP, SSE, OAuth, or resource subscriptions are implemented. MCP
+scripting, MCP UI resources and shared `rmcp-mux` processes are deferred until
+those transports exist. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. Tool, resource, and prompt list-change notifications refresh
 the targeted catalog without restarting the server. Individual protocol frames

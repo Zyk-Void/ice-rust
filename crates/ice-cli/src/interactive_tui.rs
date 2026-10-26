@@ -59,6 +59,7 @@ use rendering::*;
 mod session_header;
 use session_header::*;
 mod mcp_panel;
+mod mcp_setup_panel;
 mod panels;
 mod pet;
 mod side_questions;
@@ -3620,6 +3621,8 @@ pub async fn interactive_tui(
                 let manager = &ctx.reload_context.mcp_tools;
                 if args.trim().is_empty() || args.trim() == "status" {
                     commands::mcp::panel(&ctx);
+                } else if args.trim() == "setup" {
+                    commands::mcp::setup_panel(&ctx);
                 } else {
                     let words: Vec<_> = args.split_whitespace().collect();
                     // Discovery can take the full startup budget; show progress like /reload.

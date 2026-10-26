@@ -266,6 +266,63 @@ impl McpManager {
             .map(|layered| layered.notes)
             .unwrap_or_default()
     }
+    /// What `/mcp setup` shows: detected import sources, conflicts and notes.
+    pub fn setup_view(&self) -> Result<setup::SetupView, String> {
+        setup::view(
+            dirs::home_dir().as_deref(),
+            &self.0.agent_dir,
+            &self.0.cwd,
+            self.0.trusted,
+        )
+    }
+    /// Add or remove `kind` in the global `imports` list, then reload every server.
+    pub async fn set_import(&self, kind: &str, enabled: bool) -> Result<(), String> {
+        if !import::KINDS.contains(&kind) {
+            return Err(format!("Unknown import kind: {kind}"));
+        }
+        let _guard = self.0.operation.lock().await;
+        let path = self.config_path(false)?;
+        if !enabled {
+            for (other, config) in read_configs(&self.0.agent_dir, &self.0.cwd, self.0.trusted)? {
+                if other != path && config.imports.iter().any(|k| k == kind) {
+                    return Err(format!(
+                        "{kind} is imported by {}; remove it there",
+                        other.display()
+                    ));
+                }
+            }
+        }
+        edit_config_root(&path, |root| {
+            let imports = root
+                .entry("imports")
+                .or_insert_with(|| json!([]))
+                .as_array_mut()
+                .ok_or("imports must be an array")?;
+            imports.retain(|k| k != kind);
+            if enabled {
+                imports.push(json!(kind));
+            }
+            Ok(())
+        })?;
+        self.reconnect_locked(None).await
+    }
+    /// Write a stdio preset to the global `mcp.json` under its id and start it.
+    pub async fn add_preset(&self, id: &str) -> Result<(), String> {
+        let preset = setup::PRESETS
+            .iter()
+            .find(|p| p.id == id)
+            .ok_or_else(|| format!("Unknown MCP preset: {id}"))?;
+        match &preset.entry {
+            setup::PresetEntry::Stdio { command, args } => {
+                let args: Vec<String> = args.iter().map(|&a| a.into()).collect();
+                self.add(preset.id, command, &args).await
+            }
+            setup::PresetEntry::Http(_) => Err(format!(
+                "{} needs the HTTP transport, which icers does not support yet",
+                preset.name
+            )),
+        }
+    }
     pub async fn reconnect(&self, name: Option<&str>) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
         self.reconnect_locked(name).await
@@ -744,20 +801,31 @@ fn edit_config(
     path: &Path,
     edit: impl FnOnce(&mut serde_json::Map<String, Value>) -> Result<(), String>,
 ) -> Result<(), String> {
+    edit_config_root(path, |object| {
+        edit(
+            object
+                .entry("mcpServers")
+                .or_insert_with(|| json!({}))
+                .as_object_mut()
+                .ok_or("mcpServers must be an object")?,
+        )
+    })
+}
+/// Edit the whole `mcp.json` object, for top-level keys such as `imports`.
+fn edit_config_root(
+    path: &Path,
+    edit: impl FnOnce(&mut serde_json::Map<String, Value>) -> Result<(), String>,
+) -> Result<(), String> {
     let mut value: Value = match std::fs::read_to_string(path) {
         Ok(text) => serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => json!({"mcpServers":{}}),
         Err(e) => return Err(e.to_string()),
     };
-    let object = value
-        .as_object_mut()
-        .ok_or("MCP config must be an object")?;
-    let servers = object
-        .entry("mcpServers")
-        .or_insert_with(|| json!({}))
-        .as_object_mut()
-        .ok_or("mcpServers must be an object")?;
-    edit(servers)?;
+    edit(
+        value
+            .as_object_mut()
+            .ok_or("MCP config must be an object")?,
+    )?;
     // Validate before writing, preserving unrecognized keys in the original value.
     let _: Config = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
     if let Some(parent) = path.parent() {

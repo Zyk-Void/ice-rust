@@ -180,7 +180,7 @@ no hub.
     `maxTokens` budget.
 
 ### 1.9 Hooks, events, settings, controller, CLI, UI
-- **Ported — session-local stdio MCP client** (PR: TBD — PR not yet opened):
+- **Ported — session-local stdio MCP client** (PRs #58, #60, #62):
   global and trusted-project `mcp.json`, background discovery, namespaced tools,
   per-tool approval, bounded calls/cancellation, and `--list-mcp`. `/mcp` now
   provides a status/tools panel, live reconnect, enable/disable, global add/remove,
@@ -196,8 +196,14 @@ no hub.
   Interactive form elicitation supports validated fields and review/edit with
   explicit submit/decline/cancel. URL elicitation requires explicit HTTP(S) browser
   consent and shows completion notices for accepted IDs. HTTP/SSE transports,
-  OAuth, resource subscriptions, and sampling remain unported. Subagent MCP pass-through
-  in §1.8 is separate and remains unported.
+  Sampling answers `sampling/createMessage` with the session's models after
+  explicit approval. Servers can be imported from Cursor, Claude Code, Claude
+  Desktop, Windsurf, VS Code and OpenCode JSON configs, and `/mcp setup` lists
+  detected sources, conflicts, skipped imports and stdio presets. HTTP/SSE
+  transports, OAuth, resource subscriptions, the Codex `config.toml` import,
+  sampling usage accounting, and the Phase 7 items in
+  `docs/extensions/mcp-tier4-plan.md` (scripting, MCP UI, rmcp-mux) remain
+  unported. Subagent MCP pass-through in §1.8 is separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are
   implemented with trusted-project gating and bounded process execution. See

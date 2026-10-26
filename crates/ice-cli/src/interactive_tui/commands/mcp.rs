@@ -1,8 +1,9 @@
 use super::*;
 use crate::interactive_tui::mcp_panel::{self, McpPanel, McpPanelView, PanelAction};
+use crate::interactive_tui::mcp_setup_panel::{self, SetupAction, SetupPanel, SetupPanelView};
 use crate::mcp::{McpManager, ServerStatus};
 
-const USAGE: &str = "/mcp [status|tools [server]|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
+const USAGE: &str = "/mcp [status|tools [server]|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]|setup]";
 
 struct McpPromptCommand {
     name: String,
@@ -163,12 +164,9 @@ pub(in crate::interactive_tui) async fn apply(
 pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
     let manager = ctx.reload_context.mcp_tools.clone();
     let snapshot = manager.snapshot();
+    // With nothing configured, start where pi-mcp-adapter does: setup.
     if snapshot.is_empty() {
-        add_note_message(
-            &ctx.chat,
-            &format!("No MCP servers configured. Use /mcp add or /mcp edit.\n{USAGE}"),
-        );
-        ctx.tui.request_render(false);
+        setup_panel(ctx);
         return;
     }
     let view = Arc::new(McpPanelView(Mutex::new(McpPanel::new(&snapshot))));
@@ -229,6 +227,76 @@ pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
         ice_tui::OverlayOptions {
             anchor: ice_tui::OverlayAnchor::Center,
             width: Some(ice_tui::tui::SizeValue::Absolute(mcp_panel::WIDTH)),
+            ..Default::default()
+        },
+        SelectorKind::Tools,
+    );
+}
+
+/// Open `/mcp setup`: import sources, presets, conflicts and skipped imports.
+pub(in crate::interactive_tui) fn setup_panel(ctx: &CommandContext) {
+    let manager = ctx.reload_context.mcp_tools.clone();
+    let view = match manager.setup_view() {
+        Ok(view) => view,
+        Err(error) => {
+            add_error_message(&ctx.chat, &error);
+            ctx.tui.request_render(false);
+            return;
+        }
+    };
+    let view = Arc::new(SetupPanelView(Mutex::new(SetupPanel::new(
+        view,
+        dirs::home_dir(),
+    ))));
+    let runtime = tokio::runtime::Handle::current();
+    let context = ctx.clone();
+    let panel = view.clone();
+    let router = SelectorView::Custom(Arc::new(move |key| {
+        let action = panel.0.lock().unwrap().handle_key(key);
+        match action {
+            SetupAction::None => {}
+            SetupAction::Close => close_selector(
+                &context.state,
+                &context.editor_container,
+                &context.editor,
+                &context.tui,
+            ),
+            // Writes and restarts run off the key thread; the panel stays open.
+            action => {
+                let (manager, panel, tui) = (manager.clone(), panel.clone(), context.tui.clone());
+                runtime.spawn(async move {
+                    let result = match action {
+                        SetupAction::SetImport(kind, enabled) => {
+                            manager.set_import(kind, enabled).await.map(|()| {
+                                if enabled {
+                                    format!("Importing {kind}.")
+                                } else {
+                                    format!("Stopped importing {kind}.")
+                                }
+                            })
+                        }
+                        SetupAction::AddPreset(id) => manager
+                            .add_preset(id)
+                            .await
+                            .map(|()| format!("Added {id}.")),
+                        SetupAction::None | SetupAction::Close => return,
+                    };
+                    panel.0.lock().unwrap().finish(manager.setup_view(), result);
+                    tui.request_render(false);
+                });
+            }
+        }
+        context.tui.request_render(false);
+    }));
+    open_overlay_selector(
+        &ctx.state,
+        &ctx.editor,
+        &ctx.tui,
+        router,
+        view,
+        ice_tui::OverlayOptions {
+            anchor: ice_tui::OverlayAnchor::Center,
+            width: Some(ice_tui::tui::SizeValue::Absolute(mcp_setup_panel::WIDTH)),
             ..Default::default()
         },
         SelectorKind::Tools,

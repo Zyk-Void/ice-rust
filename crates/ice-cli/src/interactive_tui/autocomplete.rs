@@ -29,6 +29,7 @@ impl ice_tui::AutocompleteProvider for McpAutocomplete {
                 "add",
                 "remove",
                 "edit",
+                "setup",
             ]
             .iter()
             .map(|s| (*s).into())
