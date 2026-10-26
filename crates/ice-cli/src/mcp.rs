@@ -4,6 +4,7 @@ mod elicitation_schema;
 mod manager;
 mod output_guard;
 mod prompts;
+mod sampling;
 pub use prompts::Prompt;
 #[cfg(test)]
 mod prompt_tests;
@@ -1073,14 +1074,32 @@ async fn approve(
     tool: &str,
     signal: &CancellationToken,
 ) -> Result<(), String> {
+    confirm(
+        ui,
+        call,
+        &format!("Allow MCP tool {tool}?"),
+        "MCP tool approval denied",
+        signal,
+    )
+    .await
+}
+/// Allow/Deny permission dialog; `Ok` only when the user picked Allow. Permission
+/// dialogs require a non-empty `call` id.
+async fn confirm(
+    ui: &UiDialogMailbox,
+    call: &str,
+    summary: &str,
+    denied: &str,
+    signal: &CancellationToken,
+) -> Result<(), String> {
     let id = format!("mcp-{}", uuid::Uuid::new_v4());
-    ui.handle(json!({"requestId":id,"toolCallId":call,"ui":{"purpose":"permission","kind":"confirm","summary":format!("Allow MCP tool {tool}?"),"options":[{"title":"Deny","permission":"reject_once"},{"title":"Allow","permission":"allow_once"}]}}))?;
+    ui.handle(json!({"requestId":id,"toolCallId":call,"ui":{"purpose":"permission","kind":"confirm","summary":summary,"options":[{"title":"Deny","permission":"reject_once"},{"title":"Allow","permission":"allow_once"}]}}))?;
     let _guard = ApprovalGuard { ui, id: id.clone() };
     loop {
         let state = ui.poll(&id)?;
         match state["status"].as_str() {
             Some("answered") if state["answer"]["values"][0] == "Allow" => return Ok(()),
-            Some("answered" | "cancelled") => return Err("MCP tool approval denied".into()),
+            Some("answered" | "cancelled") => return Err(denied.into()),
             _ => {}
         }
         tokio::select! {

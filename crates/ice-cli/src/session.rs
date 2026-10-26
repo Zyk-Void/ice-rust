@@ -974,13 +974,16 @@ pub async fn build_prepared(
         mcp_approvals.clone(),
     );
     use std::io::IsTerminal;
+    let providers = Arc::new(std::sync::RwLock::new(resolved.providers.clone()));
     let mcp_tools = if crate::args::resolve_mode(
         args,
         std::io::stdin().is_terminal(),
         std::io::stdout().is_terminal(),
     ) == crate::args::RunMode::Interactive
     {
-        mcp_tools.with_elicitation_ui(ui_dialog_mailbox.clone())
+        mcp_tools
+            .with_elicitation_ui(ui_dialog_mailbox.clone())
+            .with_sampling(providers.clone())
     } else {
         mcp_tools
     };
@@ -1014,7 +1017,7 @@ pub async fn build_prepared(
         action_bridge: Arc::new(Mutex::new(Some(Arc::clone(&action_bridge)))),
         tool_context,
         catalog: Arc::new(std::sync::RwLock::new(catalog)),
-        providers: Arc::new(std::sync::RwLock::new(resolved.providers.clone())),
+        providers,
         runtime: runtime.clone(),
         cwd: cwd.to_path_buf(),
         project_trusted,

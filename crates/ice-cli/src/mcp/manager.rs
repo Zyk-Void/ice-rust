@@ -57,6 +57,8 @@ struct Inner {
     prompt_changes: watch::Sender<u64>,
     elicitation_ui: Option<UiDialogMailbox>,
     elicitation_notices: tokio::sync::broadcast::Sender<String>,
+    /// Set with the dialog host: sampling needs both a UI and callable providers.
+    sampling_providers: Option<sampling::Providers>,
 }
 #[derive(Clone)]
 pub struct McpManager(Arc<Inner>);
@@ -84,7 +86,16 @@ impl McpManager {
             prompt_changes: watch::channel(0).0,
             elicitation_ui: None,
             elicitation_notices: tokio::sync::broadcast::channel(32).0,
+            sampling_providers: None,
         }))
+    }
+    /// Install only for a TUI host, after `with_elicitation_ui`. `providers` is
+    /// the live list `/reload` refreshes, so sampling follows credential changes.
+    pub fn with_sampling(mut self, providers: sampling::Providers) -> Self {
+        Arc::get_mut(&mut self.0)
+            .expect("MCP manager already shared")
+            .sampling_providers = Some(providers);
+        self
     }
     /// Install only for a TUI host, before startup clones the manager.
     pub fn with_elicitation_ui(mut self, ui: UiDialogMailbox) -> Self {
@@ -506,23 +517,45 @@ impl McpManager {
             })),
             ..Default::default()
         };
-        let enabled = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)
-            .map(|settings| {
+        // Unreadable settings disable server-initiated requests rather than enable them.
+        let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted).ok();
+        let flag = |key: &str, default: bool| {
+            settings.as_ref().is_some_and(|settings| {
                 settings
-                    .get("elicitation")
+                    .get(key)
                     .and_then(Value::as_bool)
-                    .unwrap_or(true)
+                    .unwrap_or(default)
             })
-            .unwrap_or(false);
-        if enabled {
-            if let Some(ui) = &self.0.elicitation_ui {
-                handlers = elicitation::register(
-                    handlers,
-                    elicitation_server,
-                    ui.clone(),
-                    self.0.elicitation_notices.clone(),
-                );
-            }
+        };
+        let Some(ui) = &self.0.elicitation_ui else {
+            return handlers;
+        };
+        if flag("elicitation", true) {
+            handlers = elicitation::register(
+                handlers,
+                elicitation_server,
+                ui.clone(),
+                self.0.elicitation_notices.clone(),
+            );
+        }
+        if let Some(providers) = self
+            .0
+            .sampling_providers
+            .as_ref()
+            .filter(|_| flag("sampling", true))
+        {
+            let harness = self.0.harness.clone();
+            handlers = sampling::register(
+                handlers,
+                elicitation_server,
+                ui.clone(),
+                providers.clone(),
+                Arc::new(move || {
+                    let harness = harness.upgrade();
+                    Box::pin(async move { harness?.lane("main").get_model().await.ok() })
+                }),
+                flag("samplingAutoApprove", false),
+            );
         }
         handlers
     }

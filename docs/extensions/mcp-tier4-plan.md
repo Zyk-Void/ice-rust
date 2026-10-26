@@ -64,9 +64,9 @@ phases stay small.
 | 0 | — | Bidirectional client foundation | — | ~200 | Do first |
 | 1 | 22 | Output guard (+ rendering check) | — | ~250 | Do |
 | 2 | 18 | Resources as tools | 0, 1 | ~300 | Implemented |
-| 3 | 19 | Prompts as slash commands | 0 | ~300 | Do |
-| 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Do |
-| 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Do, with confirmation always on by default |
+| 3 | 19 | Prompts as slash commands | 0 | ~300 | Implemented |
+| 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Implemented |
+| 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Implemented (usage label deferred) |
 | 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | Do imports; setup panel after Tier 1 |
 | 7 | 23 | Scripting, MCP UI, rmcp-mux | Tier 2 proxy, Tier 3 HTTP | large | Defer (rationale below) |
 
@@ -364,7 +364,25 @@ consent required; dialog cancellation when the tool call is aborted.
 
 ---
 
-## Phase 5: sampling (#20b)
+## Phase 5: sampling (#20b) — implemented
+
+**Status:** implemented in `crates/ice-cli/src/mcp/sampling.rs`, stacked above
+elicitation. Differences from the change list below:
+
+- The call uses `Provider::stream_simple` on the live provider list shared with
+  `/reload` (`McpManager::with_sampling`), with the session's current model read
+  from the main lane per request. It does not use a child harness, so it never
+  touches the transcript.
+- Interactive TUI only, like elicitation: no UI means the capability is not
+  advertised, so the "no UI and no auto-approve means denied" case cannot occur.
+- The permission dialog is the existing MCP approval dialog, generalized as
+  `mcp::confirm`. Settings: `sampling` (default `true`), `samplingAutoApprove`
+  (default `false`; an unreadable `mcp.json` leaves both off).
+- **Deferred:** counting sampling tokens in `/usage` under a separate label. The
+  reply's `usage` is available, but `total_usage` is projected from session
+  entries (assistant messages and validated `subagent_usage` custom entries), so
+  this needs a similar custom entry and a persistence-format decision (AGENTS.md
+  §7.3), which is its own change.
 
 **Spec:** MCP spec "Client features / Sampling"; PMA-README settings
 `sampling`, `samplingAutoApprove` (`README.md:419-420`) and limitations

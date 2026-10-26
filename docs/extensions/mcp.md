@@ -72,7 +72,7 @@ including descendant processes.
 A server that declares the `tools` capability can send
 `notifications/tools/list_changed`; `icers` then re-lists that server's tools
 and replaces them in the session without restarting the process. Server
-requests other than `ping` and interactive form/URL elicitation are answered with
+requests other than `ping`, interactive form/URL elicitation, and sampling are answered with
 `Method not found`.
 
 Text and embedded text resources become text content. Images retain their
@@ -230,6 +230,30 @@ requests are tracked per connection. Decline, cancellation, and dropped dialogs
 release pending IDs; completion releases accepted IDs. Reconnecting resets this
 tracking. Tool errors using the optional `-32042` URL-required fallback are not
 automatically converted into browser requests.
+
+## Sampling (interactive TUI only)
+
+The TUI advertises `sampling` so a server can ask your model for one completion
+with `sampling/createMessage`. Print, JSON, RPC, and `--list-mcp` do not advertise
+it. Set `"settings": {"sampling": false}` in `mcp.json` to disable it; reconnect
+servers for the change to apply.
+
+A sampling request spends your model quota on the server's behalf, so you confirm
+twice by default: first the server, model, and request text (Allow / Deny), then
+the model's reply before it is returned. Either Deny returns an error to the
+server. `"samplingAutoApprove": true` skips both prompts; it defaults to `false`
+and an unreadable `mcp.json` leaves it off.
+
+The model is the first `modelPreferences.hints` name that is a case-insensitive
+substring of an available model id, otherwise the session's current model. The
+call is separate from the conversation: it sees only the request's messages and
+`systemPrompt`, has no tools, and is not added to the transcript. `maxTokens` and
+`temperature` are passed through. The reply's stop reason maps to `endTurn` or
+`maxTokens`.
+
+Text only. Requests with `includeContext` other than `none`, tools or
+`toolChoice`, non-empty `stopSequences`, or image/audio content are rejected with
+an explicit error. Sampling tokens are not yet shown separately in `/usage`.
 
 ## Approval
 
