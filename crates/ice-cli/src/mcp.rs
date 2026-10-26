@@ -44,6 +44,8 @@ const CALL_TIMEOUT: Duration = Duration::from_secs(60);
 const MAX_LINE: u64 = 16 * 1024 * 1024;
 /// Bounds dialogs or model calls a single server can have waiting on this client.
 const MAX_INBOUND: usize = 8;
+/// Frames waiting for the dispatcher; when full, the reader stops reading (backpressure).
+const INBOUND_QUEUE: usize = 64;
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(untagged)]
@@ -227,6 +229,8 @@ pub fn load_config(
 }
 
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
+/// Server requests being handled, by JSON-RPC id, so they can be cancelled.
+type InFlight = Arc<Mutex<HashMap<String, CancellationToken>>>;
 
 /// JSON-RPC error returned to the server for one of its requests.
 #[derive(Debug)]
@@ -269,7 +273,6 @@ impl Handlers {
 }
 
 enum Inbound {
-    CancelHandlers,
     Shutdown,
     Request {
         id: Value,
@@ -301,7 +304,7 @@ impl Drop for Process {
 
 struct Client {
     outgoing: std::sync::mpsc::Sender<Value>,
-    inbound: mpsc::UnboundedSender<Inbound>,
+    in_flight: InFlight,
     pending: Pending,
     next_id: AtomicU64,
     closed: Arc<AtomicBool>,
@@ -368,9 +371,14 @@ impl Client {
             }
         });
         let capabilities = handlers.capabilities();
-        let (inbound, inbound_rx) = mpsc::unbounded_channel();
-        runtime.spawn(dispatch(inbound_rx, outgoing.clone(), handlers));
-        let client_inbound = inbound.clone();
+        let (inbound, inbound_rx) = mpsc::channel(INBOUND_QUEUE);
+        let in_flight = InFlight::default();
+        runtime.spawn(dispatch(
+            inbound_rx,
+            outgoing.clone(),
+            handlers,
+            in_flight.clone(),
+        ));
         let reader_pending = pending.clone();
         let reader_outgoing = outgoing.clone();
         std::thread::spawn(move || {
@@ -399,14 +407,14 @@ impl Client {
                             .send(json!({"jsonrpc":"2.0","id":id,"result":{}}))
                             .is_ok(),
                         Some(id) => inbound
-                            .send(Inbound::Request {
+                            .blocking_send(Inbound::Request {
                                 id: id.clone(),
                                 method,
                                 params,
                             })
                             .is_ok(),
                         None => inbound
-                            .send(Inbound::Notification { method, params })
+                            .blocking_send(Inbound::Notification { method, params })
                             .is_ok(),
                     };
                     if !sent {
@@ -429,7 +437,7 @@ impl Client {
                 }
             }
             reader_closed.store(true, Ordering::SeqCst);
-            let _ = inbound.send(Inbound::Shutdown);
+            let _ = inbound.blocking_send(Inbound::Shutdown);
             fail_pending(
                 &reader_pending,
                 "MCP server closed or sent an invalid frame",
@@ -450,7 +458,7 @@ impl Client {
         });
         Ok(Arc::new(Self {
             outgoing,
-            inbound: client_inbound,
+            in_flight,
             pending,
             next_id: AtomicU64::new(1),
             closed,
@@ -575,6 +583,7 @@ impl Client {
         let mut cursor = None;
         let mut cursors = HashSet::new();
         let mut tools = Vec::new();
+        let mut used = HashSet::new();
         for _ in 0..100 {
             let params = cursor
                 .as_ref()
@@ -601,7 +610,19 @@ impl Client {
                     .get("uri")
                     .and_then(Value::as_str)
                     .ok_or("MCP resource missing URI")?;
-                let name = format!("read_{}", resource_tool_name(name));
+                // Distinct names can sanitize alike ("Project Notes", "project-notes");
+                // later ones get a numeric suffix so every resource stays readable.
+                let base = format!("read_{}", resource_tool_name(name));
+                let name = (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base}_{n}")
+                        }
+                    })
+                    .find(|name| used.insert(name.clone()))
+                    .unwrap();
                 let description = item
                     .get("description")
                     .and_then(Value::as_str)
@@ -719,11 +740,11 @@ impl Client {
 }
 /// Runs each server request in its own task so a slow dialog never blocks other traffic.
 async fn dispatch(
-    mut inbound: mpsc::UnboundedReceiver<Inbound>,
+    mut inbound: mpsc::Receiver<Inbound>,
     outgoing: std::sync::mpsc::Sender<Value>,
     handlers: Handlers,
+    in_flight: InFlight,
 ) {
-    let in_flight: Arc<Mutex<HashMap<String, CancellationToken>>> = Default::default();
     let limit = Arc::new(Semaphore::new(MAX_INBOUND));
     // Reader exit (server gone) ends the loop and cancels every handler still running.
     let root = CancellationToken::new();
@@ -739,11 +760,6 @@ async fn dispatch(
     while let Some(message) = inbound.recv().await {
         match message {
             Inbound::Shutdown => break,
-            Inbound::CancelHandlers => {
-                for token in in_flight.lock().unwrap().values() {
-                    token.cancel();
-                }
-            }
             Inbound::Notification { method, params } => match method.as_str() {
                 "notifications/cancelled" => {
                     let key = params.get("requestId").map(Value::to_string);
@@ -840,11 +856,20 @@ struct RequestGuard<'a> {
 }
 impl Drop for RequestGuard<'_> {
     fn drop(&mut self) {
-        self.client.pending.lock().unwrap().remove(&self.id);
+        let idle = {
+            let mut pending = self.client.pending.lock().unwrap();
+            pending.remove(&self.id);
+            pending.is_empty()
+        };
         if self.sent && !self.completed {
-            // Servers need not cooperate with cancellation; never leave their
-            // outstanding questions alive after an aborted/timed-out call.
-            let _ = self.client.inbound.send(Inbound::CancelHandlers);
+            // Servers need not cooperate with cancellation, so drop questions they
+            // left open. stdio cannot tie a server request to the call it serves,
+            // so only do this when no other call is still waiting on the server.
+            if idle {
+                for token in self.client.in_flight.lock().unwrap().values() {
+                    token.cancel();
+                }
+            }
             self.client.notify(
                 "notifications/cancelled",
                 json!({"requestId":self.id,"reason":"client cancelled or timed out"}),
@@ -929,49 +954,79 @@ impl AgentTool for McpTool {
     }
 }
 fn map_result(mut result: Value, guard: &OutputGuard) -> Result<AgentToolResult, AgentError> {
-    if result.get("isError").and_then(Value::as_bool) == Some(true) {
-        return Err(AgentError::Tool(
-            guard.bound_text(format!("MCP tool error: {result}")),
-        ));
-    }
+    let is_error = result.get("isError").and_then(Value::as_bool) == Some(true);
     let mut content = Vec::new();
-    for item in result
-        .get_mut("content")
-        .and_then(Value::as_array_mut)
-        .ok_or_else(|| AgentError::Tool("MCP result missing content".into()))?
-    {
-        let kind = item.get("type").and_then(Value::as_str).map(str::to_owned);
-        let block = match kind.as_deref() {
-            Some("text") => {
-                TextContentOrImage::text(item.get("text").and_then(Value::as_str).unwrap_or(""))
+    match result.get_mut("content").and_then(Value::as_array_mut) {
+        Some(items) => {
+            for item in items {
+                content.push(map_block(item, guard)?);
             }
-            Some("image") => TextContentOrImage::Image(ImageContent {
-                kind: Default::default(),
-                data: item
-                    .get("data")
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| AgentError::Tool("MCP image missing data".into()))?
-                    .into(),
-                mime_type: item
-                    .get("mimeType")
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| AgentError::Tool("MCP image missing mimeType".into()))?
-                    .into(),
-            }),
-            Some("resource") if item["resource"]["blob"].is_string() => {
-                TextContentOrImage::text(guard.materialize_blob(&mut item["resource"]))
-            }
-            Some("resource") if item["resource"]["text"].is_string() => {
-                TextContentOrImage::text(item["resource"]["text"].as_str().unwrap())
-            }
-            _ => TextContentOrImage::text(item.to_string()),
+        }
+        None if is_error => {}
+        None => return Err(AgentError::Tool("MCP result missing content".into())),
+    }
+    if is_error {
+        // Blocks are mapped first, so no blob or image base64 reaches the message.
+        let text = if content.is_empty() {
+            result.to_string()
+        } else {
+            content
+                .iter()
+                .map(|block| match block {
+                    TextContentOrImage::Text(text) => text.text.clone(),
+                    TextContentOrImage::Image(image) => format!("[Image: {}]", image.mime_type),
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
         };
-        content.push(block);
+        return Err(AgentError::Tool(
+            guard.bound_text(format!("MCP tool error: {text}")),
+        ));
     }
     Ok(AgentToolResult {
         content: guard.bound_content(content),
         details: guard.bound_details(result),
         ..Default::default()
+    })
+}
+
+/// One MCP content block. Blobs become file references and oversized or invalid
+/// images become a notice, also in `item`, so `details` never keeps that base64.
+fn map_block(item: &mut Value, guard: &OutputGuard) -> Result<TextContentOrImage, AgentError> {
+    let kind = item.get("type").and_then(Value::as_str).map(str::to_owned);
+    Ok(match kind.as_deref() {
+        Some("text") => {
+            TextContentOrImage::text(item.get("text").and_then(Value::as_str).unwrap_or(""))
+        }
+        Some("image") => {
+            let data = item
+                .get("data")
+                .and_then(Value::as_str)
+                .ok_or_else(|| AgentError::Tool("MCP image missing data".into()))?;
+            let mime_type = item
+                .get("mimeType")
+                .and_then(Value::as_str)
+                .ok_or_else(|| AgentError::Tool("MCP image missing mimeType".into()))?;
+            match output_guard::check_image(data) {
+                Ok(()) => TextContentOrImage::Image(ImageContent {
+                    kind: Default::default(),
+                    data: data.into(),
+                    mime_type: mime_type.into(),
+                }),
+                Err(reason) => {
+                    let text = format!("[Image omitted ({mime_type}): {reason}]");
+                    *item = json!({"type":"text","text":text});
+                    TextContentOrImage::text(text)
+                }
+            }
+        }
+        Some("resource") if item["resource"]["blob"].is_string() => {
+            TextContentOrImage::text(guard.materialize_blob(&mut item["resource"]))
+        }
+        Some("resource") if item["resource"]["text"].is_string() => {
+            TextContentOrImage::text(item["resource"]["text"].as_str().unwrap())
+        }
+        _ => TextContentOrImage::text(item.to_string()),
     })
 }
 

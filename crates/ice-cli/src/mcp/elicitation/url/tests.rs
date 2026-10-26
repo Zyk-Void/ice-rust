@@ -200,3 +200,39 @@ async fn completion_notification_routes_through_transport() {
             .contains("retry the tool")
     );
 }
+
+#[tokio::test]
+async fn completion_during_the_browser_launch_is_not_lost() {
+    let (state, _, mut notices) = setup(false);
+    // The launcher stands in for a server that finishes while the browser starts.
+    let mut url = UrlElicitation::new(state.url.notices.clone());
+    let early = Arc::new(Mutex::new(None::<Arc<Elicitation>>));
+    let during = early.clone();
+    url.browser = Arc::new(move |_| {
+        let state = during.lock().unwrap().clone().unwrap();
+        state
+            .url
+            .complete("fake", &json!({"elicitationId":"login"}));
+        Ok(())
+    });
+    let state = Arc::new(Elicitation {
+        server: "fake".into(),
+        ui: state.ui.clone(),
+        url,
+    });
+    *early.lock().unwrap() = Some(state.clone());
+    let child = state.clone();
+    let task = tokio::spawn(async move {
+        child
+            .handle(request(), &CancellationToken::new())
+            .await
+            .unwrap()
+    });
+    let dialog = next(&state.ui).await;
+    state
+        .ui
+        .respond(&dialog.request_id, json!({"values":["Open"]}))
+        .unwrap();
+    assert_eq!(task.await.unwrap(), json!({"action":"accept"}));
+    assert!(notices.try_recv().unwrap().contains("completed"));
+}

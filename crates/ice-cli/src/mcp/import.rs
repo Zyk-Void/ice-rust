@@ -70,6 +70,15 @@ fn sources(kind: &str, home: Option<&Path>, cwd: &Path) -> Option<Vec<Source>> {
                 "claude_desktop_config.json",
             ]),
             user(&[".config", "Claude", "claude_desktop_config.json"]),
+            // Windows keeps it under %APPDATA%, which need not be inside home.
+            std::env::var_os("APPDATA")
+                .filter(|_| cfg!(windows))
+                .map(|appdata| Source {
+                    path: Path::new(&appdata)
+                        .join("Claude")
+                        .join("claude_desktop_config.json"),
+                    project: false,
+                }),
         ],
         "windsurf" => vec![
             user(&[".codeium", "windsurf", "mcp_config.json"]),
@@ -211,7 +220,14 @@ pub(super) fn load(kinds: &[String], home: Option<&Path>, cwd: &Path, trusted: b
                             out.shadowed.push((name.clone(), path));
                         }
                     }
-                    Err(reason) => out.notes.push(format!("import:{kind}: {name}: {reason}")),
+                    Err(reason) => {
+                        // A newer file redefined the name; never fall back to the
+                        // entry it replaced.
+                        if let Some((_, path)) = kind_servers.remove(name) {
+                            out.shadowed.push((name.clone(), path));
+                        }
+                        out.notes.push(format!("import:{kind}: {name}: {reason}"))
+                    }
                 }
             }
         }

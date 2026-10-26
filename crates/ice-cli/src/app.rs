@@ -396,10 +396,7 @@ async fn run_inner() -> i32 {
 
     // Debug/testing escape hatch: ICERS_FORCE_TUI=1 forces interactive mode
     // (for testing the TUI in non-TTY environments).
-    let mode = if std::env::var("ICERS_FORCE_TUI")
-        .map(|v| v == "1")
-        .unwrap_or(false)
-    {
+    let mode = if crate::args::force_tui() {
         RunMode::Interactive
     } else {
         mode

@@ -19,6 +19,11 @@ const MAX_SESSION_BLOB_BYTES: usize = 100 * 1024 * 1024;
 /// Bounds metadata from empty or tiny blobs.
 const MAX_SESSION_BLOB_FILES: usize = 10_000;
 const SUMMARY_ITEMS: usize = 20;
+/// Room for the truncation notice, which names a spill path.
+const MIN_MAX_BYTES: usize = 1024;
+const MIN_MAX_LINES: usize = 8;
+/// Room for the smallest details fallback, which names a spill path.
+const MIN_DETAILS_MAX_BYTES: usize = 1024;
 const KEY_MAX_BYTES: usize = 120;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -46,18 +51,24 @@ fn resolve_with(env: Option<&str>, setting: Option<&Value>) -> Option<Limits> {
         return None;
     }
     // Non-positive or non-numeric tuning falls back to the default, as in PMA.
-    let tuning = |key: &str, default: usize| {
+    // Smaller values are raised to a floor that still fits the truncation notice
+    // or the details summary, so the result never exceeds the configured limit.
+    let tuning = |key: &str, default: usize, floor: usize| {
         setting
             .and_then(|s| s.get(key))
             .and_then(Value::as_f64)
             .map(f64::floor)
             .filter(|n| *n >= 1.0)
-            .map_or(default, |n| n as usize)
+            .map_or(default, |n| (n as usize).max(floor))
     };
     Some(Limits {
-        max_bytes: tuning("maxBytes", DEFAULT_MAX_BYTES),
-        max_lines: tuning("maxLines", DEFAULT_MAX_LINES),
-        details_max_bytes: tuning("detailsMaxBytes", DEFAULT_DETAILS_MAX_BYTES),
+        max_bytes: tuning("maxBytes", DEFAULT_MAX_BYTES, MIN_MAX_BYTES),
+        max_lines: tuning("maxLines", DEFAULT_MAX_LINES, MIN_MAX_LINES),
+        details_max_bytes: tuning(
+            "detailsMaxBytes",
+            DEFAULT_DETAILS_MAX_BYTES,
+            MIN_DETAILS_MAX_BYTES,
+        ),
     })
 }
 
@@ -75,48 +86,45 @@ struct Spill {
 impl SpillStore {
     /// Writes a new mode-600 file; `blob` counts toward the session blob caps.
     fn write(&self, name: &str, bytes: &[u8], blob: bool) -> Result<PathBuf, String> {
-        let path = {
-            let mut spill = self.0.lock().unwrap();
-            if spill.closed {
-                return Err("session ended".into());
+        // Held through the write, so `cleanup` cannot delete the directory under a
+        // write in progress, and the quota is charged only for a file that exists.
+        let mut spill = self.0.lock().unwrap();
+        if spill.closed {
+            return Err("session ended".into());
+        }
+        if blob {
+            if bytes.len() > MAX_BLOB_BYTES {
+                return Err("decoded size exceeds 10 MiB".into());
             }
-            if blob {
-                if bytes.len() > MAX_BLOB_BYTES {
-                    return Err("decoded size exceeds 10 MiB".into());
-                }
-                if spill.blob_files >= MAX_SESSION_BLOB_FILES
-                    || spill.blob_bytes + bytes.len() > MAX_SESSION_BLOB_BYTES
-                {
-                    return Err("session resource limit reached".into());
-                }
-                spill.blob_bytes += bytes.len();
-                spill.blob_files += 1;
+            if spill.blob_files >= MAX_SESSION_BLOB_FILES
+                || spill.blob_bytes + bytes.len() > MAX_SESSION_BLOB_BYTES
+            {
+                return Err("session resource limit reached".into());
             }
-            if spill.dir.is_none() {
-                let mut builder = tempfile::Builder::new();
-                builder.prefix("icers-mcp-");
-                // Otherwise the directory gets the umask default, typically 755.
-                #[cfg(unix)]
-                builder.permissions(std::os::unix::fs::PermissionsExt::from_mode(0o700));
-                spill.dir = Some(builder.tempdir().map_err(|e| e.to_string())?);
-            }
-            spill.sequence += 1;
-            spill
-                .dir
-                .as_ref()
-                .unwrap()
-                .path()
-                .join(format!("{name}-{}", spill.sequence))
-        };
+        }
+        if spill.dir.is_none() {
+            let mut builder = tempfile::Builder::new();
+            builder.prefix("icers-mcp-");
+            // Otherwise the directory gets the umask default, typically 755.
+            #[cfg(unix)]
+            builder.permissions(std::os::unix::fs::PermissionsExt::from_mode(0o700));
+            spill.dir = Some(builder.tempdir().map_err(|e| e.to_string())?);
+        }
+        spill.sequence += 1;
+        let path = spill
+            .dir
+            .as_ref()
+            .unwrap()
+            .path()
+            .join(format!("{name}-{}", spill.sequence));
         let written = create_private(&path).and_then(|mut file| file.write_all(bytes));
         if let Err(error) = written {
             let _ = std::fs::remove_file(&path);
-            if blob {
-                let mut spill = self.0.lock().unwrap();
-                spill.blob_bytes -= bytes.len();
-                spill.blob_files -= 1;
-            }
             return Err(error.to_string());
+        }
+        if blob {
+            spill.blob_bytes += bytes.len();
+            spill.blob_files += 1;
         }
         Ok(path)
     }
@@ -137,6 +145,18 @@ fn create_private(path: &std::path::Path) -> std::io::Result<std::fs::File> {
     #[cfg(unix)]
     std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
     options.open(path)
+}
+
+/// Images go to the model as base64, so they get the blob size cap and must decode.
+/// Active even when the guard is off, like blob materialization.
+pub(crate) fn check_image(data: &str) -> Result<(), String> {
+    if data.len() / 4 * 3 > MAX_BLOB_BYTES + 3 {
+        return Err("decoded size exceeds 10 MiB".into());
+    }
+    base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .map(drop)
+        .map_err(|_| "invalid base64".into())
 }
 
 #[derive(Clone, Default)]
@@ -176,8 +196,8 @@ impl OutputGuard {
         text
     }
 
-    /// Text over the limits becomes a head preview plus a notice naming the spill file.
-    /// Images pass through unchanged after the text.
+    /// Text over the limits becomes a head preview plus a notice naming the spill file,
+    /// in place of the first text block. Images keep their positions.
     pub fn bound_content(&self, content: Vec<TextContentOrImage>) -> Vec<TextContentOrImage> {
         let Some(limits) = self.limits else {
             return content;
@@ -193,13 +213,14 @@ impl OutputGuard {
         if !over(&text, limits) {
             return content;
         }
-        let mut bounded = vec![TextContentOrImage::text(self.truncate(&text, limits))];
-        bounded.extend(
-            content
-                .into_iter()
-                .filter(|block| matches!(block, TextContentOrImage::Image(_))),
-        );
-        bounded
+        let mut truncated = Some(self.truncate(&text, limits));
+        content
+            .into_iter()
+            .filter_map(|block| match block {
+                TextContentOrImage::Text(_) => truncated.take().map(TextContentOrImage::text),
+                image => Some(image),
+            })
+            .collect()
     }
 
     pub fn bound_text(&self, text: String) -> String {
@@ -373,12 +394,22 @@ mod tests {
         assert_eq!(resolve_with(None, None), Some(defaults));
         assert_eq!(resolve_with(None, Some(&json!(true))), Some(defaults));
         assert_eq!(resolve_with(None, Some(&json!(false))), None);
-        let tuned = json!({"maxBytes":100.9,"maxLines":0,"detailsMaxBytes":"x"});
+        let tuned = json!({"maxBytes":4000.9,"maxLines":0,"detailsMaxBytes":"x"});
         assert_eq!(
             resolve_with(None, Some(&tuned)),
             Some(Limits {
-                max_bytes: 100,
+                max_bytes: 4000,
                 ..defaults
+            })
+        );
+        // Values too small for the notice are raised to the floor.
+        let tiny = json!({"maxBytes":1,"maxLines":1,"detailsMaxBytes":1});
+        assert_eq!(
+            resolve_with(None, Some(&tiny)),
+            Some(Limits {
+                max_bytes: MIN_MAX_BYTES,
+                max_lines: MIN_MAX_LINES,
+                details_max_bytes: MIN_DETAILS_MAX_BYTES,
             })
         );
         for off in ["0", "false", " OFF ", "no"] {
@@ -386,6 +417,40 @@ mod tests {
         }
         assert_eq!(resolve_with(Some("1"), Some(&json!(false))), Some(defaults));
         assert_eq!(resolve_with(Some("maybe"), Some(&json!(false))), None);
+    }
+
+    #[test]
+    fn truncation_keeps_images_in_place_and_images_are_capped() {
+        let guard = limited(200, 10, 1024);
+        let image = |data: &str| {
+            TextContentOrImage::Image(ice_ai::types::ImageContent {
+                kind: Default::default(),
+                data: data.into(),
+                mime_type: "image/png".into(),
+            })
+        };
+        let long = (0..50)
+            .map(|i| format!("line {i}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let bounded = guard.bound_content(vec![
+            TextContentOrImage::text(long),
+            image("YWJj"),
+            TextContentOrImage::text("caption"),
+            image("ZGVm"),
+        ]);
+        assert!(matches!(&bounded[0], TextContentOrImage::Text(t) if t.text.contains("truncated")));
+        assert!(matches!(&bounded[1], TextContentOrImage::Image(i) if i.data == "YWJj"));
+        assert!(matches!(&bounded[2], TextContentOrImage::Image(i) if i.data == "ZGVm"));
+        assert_eq!(bounded.len(), 3);
+
+        assert_eq!(check_image("YWJj"), Ok(()));
+        assert_eq!(check_image("not base64!"), Err("invalid base64".into()));
+        let huge = "A".repeat((MAX_BLOB_BYTES + 8) / 3 * 4);
+        assert_eq!(
+            check_image(&huge),
+            Err("decoded size exceeds 10 MiB".into())
+        );
     }
 
     #[test]

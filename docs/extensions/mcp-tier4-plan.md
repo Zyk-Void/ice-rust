@@ -437,8 +437,8 @@ mapping; no UI and no auto-approve means denied.
   is not in `Cargo.lock`; it reports `unsupported` today), and showing notes in
   the `/mcp` panel. `source` shows the originating file path rather than the
   `import:<kind>` label, because `ServerView.source` is already a path.
-- **Differences from the list below:** Windows paths for Claude Desktop are not
-  read; the Linux path `~/.config/Claude/...` and the Codeium Windsurf path are
+- **Differences from the list below:** Claude Desktop is also read from
+  `%APPDATA%` on Windows; the Linux path `~/.config/Claude/...` and the Codeium Windsurf path are
   added; files must be strict JSON, so JSONC comments in `opencode.json` or
   `.vscode/mcp.json` are reported as a parse note.
 

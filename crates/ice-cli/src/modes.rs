@@ -1786,9 +1786,7 @@ pub async fn interactive(
     }
 
     // Check if TUI is supported
-    let force_tui = std::env::var("ICERS_FORCE_TUI")
-        .map(|v| v == "1")
-        .unwrap_or(false);
+    let force_tui = crate::args::force_tui();
     let code = if force_tui || crate::interactive_tui::is_tui_supported() {
         // Use TUI-based interactive mode
         crate::interactive_tui::interactive_tui(

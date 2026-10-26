@@ -241,9 +241,16 @@ impl Sampling {
             .map(|(_, text)| text.as_str())
             .collect::<Vec<_>>()
             .join("\n\n");
+        // The server's system prompt steers the completion, so it is shown too.
+        let system = request
+            .system
+            .as_deref()
+            .filter(|system| !system.trim().is_empty())
+            .map(|system| format!("System prompt:\n{}\n\n", preview(system)))
+            .unwrap_or_default();
         self.allow(
             format!(
-                "MCP server {} wants a completion from {}/{} (up to {} tokens):\n\n{}",
+                "MCP server {} wants a completion from {}/{} (up to {} tokens):\n\n{system}{}",
                 clean(&self.server),
                 clean(&model.provider),
                 clean(&model.id),

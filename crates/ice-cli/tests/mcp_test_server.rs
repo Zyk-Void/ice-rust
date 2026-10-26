@@ -69,6 +69,8 @@ fn main() {
                 match std::env::var("ICERS_MCP_TEST_PROMPT_CURSOR").as_deref() {
                     Ok("repeat") => json!({"prompts":[],"nextCursor":"same"}),
                     Ok("endless") => json!({"prompts":[],"nextCursor":prompt_lists.to_string()}),
+                    // The first listing (two pages) succeeds; every re-list is malformed.
+                    Ok("fail_relist") if prompt_lists > 2 => json!({"prompts":"malformed"}),
                     _ if value["params"]["cursor"] == "second" => {
                         json!({"prompts":[{"name":"Review-Code"}]})
                     }
@@ -102,6 +104,9 @@ fn main() {
                         let mut resources = vec![json!({"name":"9 image!","uri":"test:///image"})];
                         if std::env::var_os("ICERS_MCP_TEST_COLLISION").is_some() {
                             resources.push(json!({"name":"Echo","uri":"test:///collision"}));
+                        }
+                        if std::env::var_os("ICERS_MCP_TEST_SAME_NAME").is_some() {
+                            resources.push(json!({"name":"project-notes","uri":"test:///notes2"}));
                         }
                         json!({"resources":resources})
                     }

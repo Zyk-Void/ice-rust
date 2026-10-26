@@ -368,3 +368,24 @@ async fn panel_save_on_an_imported_server_copies_it_and_keeps_its_disabled_flag(
         json!({"command":"echo","args":[],"disabled":true,"directTools":["one"]})
     );
 }
+
+#[test]
+fn a_broken_newer_entry_masks_the_one_it_replaced() {
+    let env = Env::new();
+    let older = env.home(
+        ".codeium/windsurf/mcp_config.json",
+        json!({"mcpServers": {"s": {"command":"old"}, "kept": {"command":"k"}}}),
+    );
+    env.home(
+        ".windsurf/mcp.json",
+        json!({"mcpServers": {"s": {"url":"https://example.invalid/mcp"}}}),
+    );
+    let imported = env.load(&["windsurf"], false);
+    assert!(!imported.servers.contains_key("s"));
+    assert_eq!(command(&imported, "kept").0, "k");
+    assert_eq!(imported.shadowed, [("s".to_string(), older)]);
+    assert_eq!(
+        imported.notes,
+        ["import:windsurf: s: unsupported (http)".to_string()]
+    );
+}
