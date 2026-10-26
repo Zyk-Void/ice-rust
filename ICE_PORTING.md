@@ -194,8 +194,9 @@ no hub.
   Connected-server instructions are bounded system-prompt sections, with full
   text available through `/mcp tools <server>`; reconnect/disconnect updates them.
   Interactive form elicitation supports validated fields and review/edit with
-  explicit submit/decline/cancel. HTTP/SSE transports, OAuth, resource
-  subscriptions, sampling, and URL elicitation remain unported. Subagent MCP pass-through
+  explicit submit/decline/cancel. URL elicitation requires explicit HTTP(S) browser
+  consent and shows completion notices for accepted IDs. HTTP/SSE transports,
+  OAuth, resource subscriptions, and sampling remain unported. Subagent MCP pass-through
   in §1.8 is separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are

@@ -56,6 +56,7 @@ struct Inner {
     spill: Arc<output_guard::SpillStore>,
     prompt_changes: watch::Sender<u64>,
     elicitation_ui: Option<UiDialogMailbox>,
+    elicitation_notices: tokio::sync::broadcast::Sender<String>,
 }
 #[derive(Clone)]
 pub struct McpManager(Arc<Inner>);
@@ -82,6 +83,7 @@ impl McpManager {
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
             elicitation_ui: None,
+            elicitation_notices: tokio::sync::broadcast::channel(32).0,
         }))
     }
     /// Install only for a TUI host, before startup clones the manager.
@@ -93,6 +95,9 @@ impl McpManager {
     }
     pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
         self.0.operation.lock().await
+    }
+    pub fn elicitation_notices(&self) -> tokio::sync::broadcast::Receiver<String> {
+        self.0.elicitation_notices.subscribe()
     }
     pub fn prompt_changes(&self) -> watch::Receiver<u64> {
         self.0.prompt_changes.subscribe()
@@ -511,7 +516,12 @@ impl McpManager {
             .unwrap_or(false);
         if enabled {
             if let Some(ui) = &self.0.elicitation_ui {
-                handlers = elicitation::register(handlers, elicitation_server, ui.clone());
+                handlers = elicitation::register(
+                    handlers,
+                    elicitation_server,
+                    ui.clone(),
+                    self.0.elicitation_notices.clone(),
+                );
             }
         }
         handlers

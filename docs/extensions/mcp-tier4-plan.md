@@ -1,12 +1,11 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0–3, 4a, and 4b1 implemented in the unmerged stack
+Status: Phases 0–3, 4a, and 4b implemented in the unmerged stack
 `feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
 `feat/cli-mcp-resources` ← `feat/cli-mcp-prompts` ← `feat/cli-mcp-instructions` ←
-`feat/cli-mcp-elicitation-forms`.
+`feat/cli-mcp-elicitation-forms` ← `feat/cli-mcp-elicitation-url`.
 Phase 1 was cherry-picked from `ae868f2` onto Phase 0 as `e13d431`; the original
-output-guard branch is unchanged. Phase 4b2 (URL elicitation) and later phases
-are not started. Plan originally based on `main` at `ae1e46b`.
+output-guard branch is unchanged. Phase 5 and later phases are not started. Plan originally based on `main` at `ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
 prompts, server-initiated requests (elicitation, sampling, instructions),
@@ -320,9 +319,14 @@ exceeded the ~600 non-test-line target:
   on that connection, since the protocol does not reliably link them to tools.
   Adds the existing workspace `jsonschema` dependency to the CLI, with no new
   package versions, plugin ABI, persistence format, or public crate API changes.
-- **4b2 — URL elicitation: not started.** Add HTTP(S) validation, explicit browser
-  consent, accepted-ID tracking, completion notification, and offline tests on a
-  branch stacked above forms. Do not advertise `elicitation.url` before then.
+- **4b2 — URL elicitation: implemented** on `feat/cli-mcp-elicitation-url`, stacked
+  above forms. TUI-only `elicitation.url` validates HTTP(S) URLs without embedded
+  credentials, asks explicit browser consent, and tracks accepted IDs per
+  connection for one-shot completion notices. Tracking is bounded and pending
+  reservations are reclaimed on decline/cancel/drop. Offline tests inject the
+  browser launcher and cover transport notifications. Reuses the installed URL
+  parser and browser launcher; no dependency, ABI, persistence, or public crate
+  API changes. The optional `-32042` URL-required tool-error fallback is deferred.
 
 **Spec:** MCP spec "Client features / Elicitation"; PMA-README
 `README.md:533-538`; `PMA/elicitation-handler.ts`:

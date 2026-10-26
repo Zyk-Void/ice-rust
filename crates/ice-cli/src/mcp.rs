@@ -192,6 +192,7 @@ pub(crate) struct Handlers {
     requests: BTreeMap<&'static str, (Value, RequestHandler)>,
     /// Receives the catalog (`tools`, `prompts`, `resources`) named by a list_changed notification.
     list_changed: Option<Arc<dyn Fn(&str) + Send + Sync>>,
+    elicitation_complete: Option<Arc<dyn Fn(Value) + Send + Sync>>,
 }
 impl Handlers {
     /// `method` is e.g. `sampling/createMessage`; its prefix names the advertised capability.
@@ -705,6 +706,11 @@ async fn dispatch(
                 | "notifications/resources/list_changed" => {
                     if let Some(callback) = &handlers.list_changed {
                         callback(method.split('/').nth(1).unwrap_or_default());
+                    }
+                }
+                "notifications/elicitation/complete" => {
+                    if let Some(callback) = &handlers.elicitation_complete {
+                        callback(params);
                     }
                 }
                 _ => tracing::debug!(%method, "ignored MCP notification"),

@@ -162,6 +162,12 @@ fn main() {
                         serde_json::from_str(&lines.next().unwrap().unwrap()).unwrap();
                     json!({"content":[{"type":"text","text":response.to_string()}]})
                 }
+                Some("elicit_complete") => {
+                    send(
+                        json!({"jsonrpc":"2.0","method":"notifications/elicitation/complete","params":{"elicitationId":value["params"]["arguments"]["elicitationId"]}}),
+                    );
+                    json!({"content":[]})
+                }
                 Some("crash") => std::process::exit(0),
                 Some("hang") => continue,
                 Some("server_requests") => {
