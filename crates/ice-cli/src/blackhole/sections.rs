@@ -635,29 +635,36 @@ fn wrap_line_with_continuation(line: &str, max_chars: usize) -> Vec<String> {
 
 /// Undo [`wrap_long_lines`] for `- ` list items: each continuation row joins
 /// the item it belongs to. The wrapper drops the space at a word break, so
-/// rows rejoin with one space, except after a row that filled the whole width,
-/// which was split inside a word. Other lines pass through unchanged.
+/// rows rejoin with one space, except after a row split inside a word. The
+/// wrapper starts a word too long for the row on a row of its own, so such a
+/// row is one that fills the width and holds no space. Other lines pass
+/// through unchanged.
 pub fn unwrap_list_lines(text: &str) -> Vec<String> {
-    // `- ` gives a two-column continuation indent (see `wrap_line_with_continuation`).
+    // `- ` gives a two-column continuation indent, and every row of the item
+    // wraps at the remaining width (see `wrap_line_with_continuation`).
     let full = TUI_SAFE_LINE_CHARS - 2;
+    let split_in_word = |row: &str| !row.contains(' ') && ice_tui::visible_width(row) >= full;
     let mut lines: Vec<String> = Vec::new();
     let mut in_item = false;
-    let mut last_row_full = false;
+    let mut last_row_split = false;
     for line in text.split('\n') {
         let continuation = line
             .strip_prefix("  ")
             .filter(|rest| !rest.trim().is_empty());
         match (in_item, continuation, lines.last_mut()) {
             (true, Some(rest), Some(last)) => {
-                if !last_row_full {
+                if !last_row_split {
                     last.push(' ');
                 }
                 last.push_str(rest);
-                last_row_full = ice_tui::visible_width(rest) >= full;
+                last_row_split = split_in_word(rest);
             }
             _ => {
-                in_item = line.starts_with("- ");
-                last_row_full = in_item && ice_tui::visible_width(line) >= full;
+                // A one-word item too long for the row wraps as a bare `-`.
+                in_item = line.starts_with("- ") || line == "-";
+                // The `- ` marker always holds a space, so a first row is never
+                // a mid-word split.
+                last_row_split = false;
                 lines.push(line.to_string());
             }
         }

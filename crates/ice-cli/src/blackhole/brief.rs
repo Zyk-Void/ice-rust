@@ -13,7 +13,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use super::js::{last_index_of16, len16, prefix16};
 use super::normalize::{
-    clip, collapse_skill_text, extract_path, first_line, single_line, NormalizedBlock,
+    clip, collapse_skill_text, extract_path, first_line, sanitize, single_line, NormalizedBlock,
 };
 use crate::blackhole::regex;
 
@@ -114,7 +114,8 @@ pub fn tool_one_liner(name: &str, args: &Value) -> String {
             .or_else(|| args.get("description").filter(|value| !value.is_null()))
             .and_then(Value::as_str)
             .unwrap_or("");
-        return format!("* {name} \"{}\"", compress_bash(raw));
+        // `sanitize` turns a bare CR into LF, which `compress_bash` joins.
+        return format!("* {name} \"{}\"", compress_bash(&sanitize(raw)));
     }
     if let Some(query) = args.get("query").and_then(Value::as_str) {
         return format!("* {name} \"{}\"", clip(&single_line(query), 60));
@@ -564,6 +565,11 @@ mod tests {
         assert_eq!(
             tool_one_liner("read", &json!({"path":"a\nb"})),
             "* read \"a\\nb\""
+        );
+        // A bare CR in a command would let a terminal overwrite the line.
+        assert_eq!(
+            tool_one_liner("bash", &json!({"command":"make\rrm -rf /"})),
+            "* bash \"make; rm -rf /\""
         );
     }
 

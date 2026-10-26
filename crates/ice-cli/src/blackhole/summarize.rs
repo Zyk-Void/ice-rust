@@ -422,6 +422,18 @@ mod tests {
             "[Commits]\n- def5678 next",
         );
         assert_eq!(commits, format!("[Commits]\n{commit}\n- def5678 next"));
+
+        // A word break whose row fills the width exactly keeps its space, and
+        // an item that is one long word still rejoins.
+        for item in [
+            format!("- {} {}", "a".repeat(116), "tail"),
+            format!("- {} b", "c ".repeat(57) + "dd"),
+            format!("- {}", "y".repeat(300)),
+        ] {
+            let wrapped = wrap_long_lines(&item);
+            assert!(wrapped.contains('\n'), "{wrapped}");
+            assert_eq!(unwrap_list_lines(&wrapped), vec![item]);
+        }
     }
 
     #[test]
