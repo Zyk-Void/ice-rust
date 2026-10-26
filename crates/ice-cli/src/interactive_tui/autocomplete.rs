@@ -22,6 +22,7 @@ impl ice_tui::AutocompleteProvider for McpAutocomplete {
             [
                 "status",
                 "tools",
+                "prompts",
                 "reconnect",
                 "enable",
                 "disable",
@@ -32,7 +33,10 @@ impl ice_tui::AutocompleteProvider for McpAutocomplete {
             .iter()
             .map(|s| (*s).into())
             .collect()
-        } else if matches!(prefix, "reconnect" | "enable" | "disable" | "remove") {
+        } else if matches!(
+            prefix,
+            "reconnect" | "enable" | "disable" | "remove" | "prompts"
+        ) {
             self.manager
                 .as_ref()?
                 .snapshot()

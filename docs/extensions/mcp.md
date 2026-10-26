@@ -104,6 +104,34 @@ the existing server process, adding and removing tools and approval entries.
 Tool catalog refreshes preserve resources and real-tool priority. Resource
 subscriptions, update notifications, and resource templates are not supported.
 
+## Prompts (interactive TUI only)
+
+Servers declaring the `prompts` capability expose commands named
+`/mcp__<server>__<prompt>`. `/mcp prompts [server]` lists them, and slash
+completion shows their descriptions. Prompt names preserve ASCII letters,
+case, digits, `_` and `-`; other runs become `_`, leading/trailing `_` and
+`-` are removed, empty names become `prompt`, and leading digits get `_`.
+Colliding names are first-wins, without replacing built-in or extension commands.
+
+Arguments may be positional, named (`key=value`), or mixed. Shell-style quotes
+and escapes preserve spaces; a quoted `=` remains positional. Named values take
+precedence over positional values for the same declared argument. For example:
+
+```text
+/mcp__notes__daily_brief today topic="important tasks"
+```
+
+Missing required arguments show usage without calling the server. The returned
+messages become one user prompt, preserving `[user]`/`[assistant]` role markers
+for multi-message responses. Embedded resource text is included; binary images,
+audio, and resources become descriptive placeholders rather than base64 text.
+The expansion uses normal history, rendering, prompt hooks, and steering when
+a run is active. Server calls run asynchronously; failures are shown locally.
+
+Reconnects and `notifications/prompts/list_changed` refresh dispatch and
+completion, removing stale commands. Disable/remove removes the commands too.
+Prompt commands are not available in print (`-p`) or RPC mode.
+
 ## Output guard
 
 Large tool results are bounded before they reach the model context and the
@@ -182,6 +210,7 @@ configured server executables, so inspect configuration before trusting it.
   - Ctrl+R reconnects the selected server and keeps the panel open. Ctrl+Y
     copies a failed server's error.
 - `/mcp tools`: list tools grouped by server, marking approval-required tools.
+- `/mcp prompts [server]`: list available prompt slash commands.
 - `/mcp reconnect [server]`: reconnect one server or reload all configuration.
   Removed servers lose their tools; newly configured servers are started.
 - `/mcp enable <server>` and `/mcp disable <server>`: persist the flag in the
@@ -204,10 +233,10 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, prompt discovery, sampling, elicitation, or resource
-subscriptions are implemented. The asynchronous dispatcher answers server
+No HTTP, SSE, OAuth, sampling, elicitation, or resource subscriptions are
+implemented. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
-`-32601 Method not found`. Tool and resource list-change notifications refresh
+`-32601 Method not found`. Tool, resource, and prompt list-change notifications refresh
 the targeted catalog without restarting the server. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

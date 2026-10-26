@@ -10,6 +10,9 @@ fn main() {
     let mut added_tool = false;
     let resources_enabled = std::env::var_os("ICERS_MCP_TEST_RESOURCES").is_some();
     let mut changed_resources = false;
+    let prompts_enabled = std::env::var_os("ICERS_MCP_TEST_PROMPTS").is_some();
+    let mut changed_prompts = false;
+    let mut prompt_lists = 0;
     let mut resource_lists = 0;
     let mut tool_lists = 0;
     // Client replies to server-initiated requests, reported by the `responses` mode.
@@ -43,6 +46,9 @@ fn main() {
                 assert_eq!(value["params"]["clientInfo"]["name"], "icers");
                 client_capabilities = value["params"]["capabilities"].clone();
                 let mut result = json!({"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"fake","version":"1"},"instructions":"Call echo first."});
+                if prompts_enabled {
+                    result["capabilities"]["prompts"] = json!({"listChanged":true});
+                }
                 if resources_enabled {
                     result["capabilities"]["resources"] = json!({"listChanged":true});
                 }
@@ -53,6 +59,30 @@ fn main() {
                         .remove("tools");
                 }
                 result
+            }
+            "prompts/list" => {
+                assert!(
+                    initialized && prompts_enabled,
+                    "prompts probed without capability"
+                );
+                prompt_lists += 1;
+                match std::env::var("ICERS_MCP_TEST_PROMPT_CURSOR").as_deref() {
+                    Ok("repeat") => json!({"prompts":[],"nextCursor":"same"}),
+                    Ok("endless") => json!({"prompts":[],"nextCursor":prompt_lists.to_string()}),
+                    _ if value["params"]["cursor"] == "second" => {
+                        json!({"prompts":[{"name":"Review-Code"}]})
+                    }
+                    _ => {
+                        json!({"prompts":[{"name":if changed_prompts {"New Brief"} else {"Brief"},"description":"Daily\u{001b} brief","arguments":[{"name":"day","required":true},{"name":"topic"}]}],"nextCursor":"second"})
+                    }
+                }
+            }
+            "prompts/get" => {
+                assert!(prompts_enabled);
+                if let Some(path) = std::env::var_os("ICERS_MCP_TEST_PROMPT_GET") {
+                    std::fs::write(path, value["params"].to_string()).unwrap();
+                }
+                json!({"messages":[{"role":"user","content":{"type":"text","text":value["params"]["arguments"].to_string()}},{"role":"assistant","content":{"type":"text","text":"Ready"}}]})
             }
             "resources/list" => {
                 assert!(
@@ -168,6 +198,11 @@ fn main() {
                 }
                 Some("client_capabilities") => {
                     json!({"content":[{"type":"text","text":client_capabilities.to_string()}]})
+                }
+                Some("change_prompts") => {
+                    changed_prompts = !changed_prompts;
+                    send(json!({"jsonrpc":"2.0","method":"notifications/prompts/list_changed"}));
+                    json!({"content":[{"type":"text","text":"changed"}]})
                 }
                 Some("catalog_counts") => {
                     json!({"content":[{"type":"text","text":json!({"tools":tool_lists,"resources":resource_lists}).to_string()}]})

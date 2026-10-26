@@ -289,6 +289,81 @@ struct CommandContext {
     session: Arc<crate::agent_session::AgentSession>,
 }
 
+fn submit_user_prompt(ctx: &CommandContext, text: &str) {
+    let run_status = *ctx.state.status.lock().unwrap();
+    if run_status != RunStatus::Idle {
+        let images = ctx.state.take_pending_images();
+        let message = user_message_with_images(text, images.clone());
+        let lane = ctx.lane.clone();
+        let chat = ctx.chat.clone();
+        let tui = ctx.tui.clone();
+        let state = ctx.state.clone();
+        tokio::spawn(async move {
+            // Queue immediately while the agent loop is still running.
+            // Routing this through the TUI's main channel delayed it until
+            // `prompt_text()` returned, after the loop's drain points had
+            // passed, so the queued message appeared to disappear.
+            //
+            // upstream's `steer()` enqueues unconditionally, even after
+            // the run ends, and the message stays in the queue for the
+            // next run. This matches the TS design and avoids the race
+            // between `activeRun` clearing and the status check.
+            if let Err(error) = lane.steer(message).await {
+                state.restore_pending_images(images);
+                add_error_message(&chat, &format!("Could not queue message: {error}"));
+                tui.render_now(false);
+                return;
+            }
+            // Surface the queued entry in the pending dock immediately;
+            // the drain-time refresh only fires on the next agent event.
+            refresh_pending_messages(&state, &lane).await;
+            tui.request_render(false);
+        });
+        // A queued prompt is echoed only once the loop actually consumes
+        // it: the run's `AgentEvent::MessageStart` renders the user bubble
+        // (upstream renders `message_start` for user messages). Until
+        // then it is surfaced by the pending-messages display, so the
+        // transcript never shows a message that is still waiting.
+        ctx.tui.request_render(false);
+        return;
+    }
+
+    if !ctx.state.try_start_working() {
+        return;
+    }
+
+    // Render the user bubble here, NOT from `AgentEvent::MessageStart`.
+    //
+    // The harness persists the prompt itself and then drives
+    // `run_agent_loop` with an EMPTY prompts vec (so the prompt is not
+    // double-counted in the provider context), which means the loop emits
+    // no `message_start` for it — see
+    // `directly_sent_prompt_emits_no_user_message_start` in
+    // `crates/ice-harness/tests/harness_run_e2e.rs`. Queued steering /
+    // follow-up prompts DO get a `message_start` (the loop drains those
+    // itself), so those are deliberately rendered from the event instead.
+    add_user_message(&ctx.chat, text);
+    // A new prompt starts a fresh interaction at the tail even when the
+    // user had scrolled up to inspect older output.
+    if let Some(scroll) = ctx.tui.get_primary_scroll_view() {
+        scroll.scroll_to_end();
+    }
+    ctx.tui.request_render(false);
+    // Remember the message for ↑ recall (slash commands are not part of
+    // the replayable message history).
+    push_history(&ctx.state, text);
+    if ctx
+        .tx
+        .send(TuiMessage::UserInput(
+            text.to_string(),
+            ctx.state.take_pending_images(),
+        ))
+        .is_err()
+    {
+        ctx.state.set_status(RunStatus::Idle);
+    }
+}
+
 /// One slash command.
 trait SlashCommand: Send + Sync {
     /// Canonical name, with the leading `/` (e.g. "/model").
@@ -535,12 +610,12 @@ fn dispatch_key_event(state: &TuiState, key: &KeyEvent, editor: &Editor) -> bool
 /// converted into a local error before input handlers or the agent see it.
 /// Returns `true` only when a registered slash command handled the input.
 fn dispatch_slash(text: &str, ctx: &CommandContext, registry: &CommandRegistry) -> bool {
-    let mut parts = text.split_whitespace();
-    let token = parts.next().unwrap_or("");
-    let args = parts.collect::<Vec<_>>().join(" ");
+    let text = text.trim();
+    let (token, args) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
+    let args = args.trim();
     match registry.find(token) {
         Some(cmd) => {
-            cmd.execute(ctx, &args);
+            cmd.execute(ctx, args);
             true
         }
         None => false,
@@ -897,6 +972,7 @@ enum TuiMessage {
     Mcp(String),
     /// Persist staged `/mcp` panel edits and restart the changed servers.
     McpSave(Vec<crate::mcp::PanelChange>),
+    McpPromptsChanged,
     UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
@@ -1419,7 +1495,21 @@ pub async fn interactive_tui(
         &mut command_registry,
         reload_context.extension_session.clone(),
     );
+    commands::mcp::register_prompts(&mut command_registry, &reload_context.mcp_tools);
     let registry = Arc::new(command_registry);
+    let mut prompt_changes = reload_context.mcp_tools.prompt_changes();
+    let prompt_tx = tx.clone();
+    tokio::spawn(async move {
+        loop {
+            if prompt_tx.send(TuiMessage::McpPromptsChanged).is_err() {
+                break;
+            }
+            tokio::select! {
+                result = prompt_changes.changed() => if result.is_err() { break; },
+                _ = prompt_tx.closed() => break,
+            }
+        }
+    });
     let autocomplete = AutocompleteManager::new();
     autocomplete.set_provider(autocomplete::build_autocomplete_with_mcp(
         &registry,
@@ -1673,78 +1763,7 @@ pub async fn interactive_tui(
             return;
         }
 
-        let run_status = *ctx_for_cb.state.status.lock().unwrap();
-        if run_status != RunStatus::Idle {
-            let images = ctx_for_cb.state.take_pending_images();
-            let message = user_message_with_images(text, images.clone());
-            let lane = ctx_for_cb.lane.clone();
-            let chat = ctx_for_cb.chat.clone();
-            let tui = ctx_for_cb.tui.clone();
-            let state = ctx_for_cb.state.clone();
-            tokio::spawn(async move {
-                // Queue immediately while the agent loop is still running.
-                // Routing this through the TUI's main channel delayed it until
-                // `prompt_text()` returned, after the loop's drain points had
-                // passed, so the queued message appeared to disappear.
-                //
-                // upstream's `steer()` enqueues unconditionally, even after
-                // the run ends, and the message stays in the queue for the
-                // next run. This matches the TS design and avoids the race
-                // between `activeRun` clearing and the status check.
-                if let Err(error) = lane.steer(message).await {
-                    state.restore_pending_images(images);
-                    add_error_message(&chat, &format!("Could not queue message: {error}"));
-                    tui.render_now(false);
-                    return;
-                }
-                // Surface the queued entry in the pending dock immediately;
-                // the drain-time refresh only fires on the next agent event.
-                refresh_pending_messages(&state, &lane).await;
-                tui.request_render(false);
-            });
-            // A queued prompt is echoed only once the loop actually consumes
-            // it: the run's `AgentEvent::MessageStart` renders the user bubble
-            // (upstream renders `message_start` for user messages). Until
-            // then it is surfaced by the pending-messages display, so the
-            // transcript never shows a message that is still waiting.
-            ctx_for_cb.tui.request_render(false);
-            return;
-        }
-
-        if !ctx_for_cb.state.try_start_working() {
-            return;
-        }
-
-        // Render the user bubble here, NOT from `AgentEvent::MessageStart`.
-        //
-        // The harness persists the prompt itself and then drives
-        // `run_agent_loop` with an EMPTY prompts vec (so the prompt is not
-        // double-counted in the provider context), which means the loop emits
-        // no `message_start` for it — see
-        // `directly_sent_prompt_emits_no_user_message_start` in
-        // `crates/ice-harness/tests/harness_run_e2e.rs`. Queued steering /
-        // follow-up prompts DO get a `message_start` (the loop drains those
-        // itself), so those are deliberately rendered from the event instead.
-        add_user_message(&ctx_for_cb.chat, text);
-        // A new prompt starts a fresh interaction at the tail even when the
-        // user had scrolled up to inspect older output.
-        if let Some(scroll) = ctx_for_cb.tui.get_primary_scroll_view() {
-            scroll.scroll_to_end();
-        }
-        ctx_for_cb.tui.request_render(false);
-        // Remember the message for ↑ recall (slash commands are not part of
-        // the replayable message history).
-        push_history(&ctx_for_cb.state, text);
-        if ctx_for_cb
-            .tx
-            .send(TuiMessage::UserInput(
-                text.to_string(),
-                ctx_for_cb.state.take_pending_images(),
-            ))
-            .is_err()
-        {
-            ctx_for_cb.state.set_status(RunStatus::Idle);
-        }
+        submit_user_prompt(&ctx_for_cb, text);
     }));
 
     // Turn on the native-pi frame throttle before the first frame: from here on
@@ -3553,6 +3572,31 @@ pub async fn interactive_tui(
                 }
                 tui.request_render(false);
             }
+            Some(TuiMessage::McpPromptsChanged) => {
+                let mut fresh = build_builtin_registry();
+                register_extension_commands(
+                    &mut fresh,
+                    ctx.reload_context.extension_session.clone(),
+                );
+                commands::mcp::register_prompts(&mut fresh, &ctx.reload_context.mcp_tools);
+                registry.replace(fresh);
+                state
+                    .autocomplete
+                    .set_provider(autocomplete::build_autocomplete_with_mcp(
+                        &registry,
+                        &ctx.resources.lock().unwrap(),
+                        &cwd,
+                        Some(Arc::new({
+                            let tx = tx.clone();
+                            move || {
+                                let _ = tx.send(TuiMessage::AutocompleteReady);
+                            }
+                        })),
+                        Some(ctx.reload_context.mcp_tools.clone()),
+                    ));
+                refresh_autocomplete(&state, &editor);
+                tui.request_render(false);
+            }
             Some(TuiMessage::Mcp(args)) => {
                 let manager = &ctx.reload_context.mcp_tools;
                 if args.trim().is_empty() || args.trim() == "status" {
@@ -3560,7 +3604,7 @@ pub async fn interactive_tui(
                 } else {
                     let words: Vec<_> = args.split_whitespace().collect();
                     // Discovery can take the full startup budget; show progress like /reload.
-                    if !matches!(words.as_slice(), ["tools"]) {
+                    if !matches!(words.as_slice(), ["tools"] | ["prompts"] | ["prompts", _]) {
                         add_note_message(&chat_container, "Updating MCP servers…");
                         tui.request_render(false);
                     }
@@ -4037,6 +4081,7 @@ pub async fn interactive_tui(
                             &mut fresh_registry,
                             reload_ctx.extension_session.clone(),
                         );
+                        commands::mcp::register_prompts(&mut fresh_registry, &reload_ctx.mcp_tools);
                         registry.replace(fresh_registry);
                         state
                             .autocomplete
