@@ -223,3 +223,139 @@ async fn grep_glob_filter() {
         "txt should be filtered out: {out}"
     );
 }
+
+async fn seed_tree(env: &InMemoryExecutionEnv, rel: &str, bytes: &[u8]) {
+    if let Some((parent, _)) = rel.rsplit_once('/') {
+        env.create_dir(parent, true, None)
+            .await
+            .expect("create_dir");
+    }
+    seed(env, rel, bytes.to_vec()).await;
+}
+
+#[tokio::test]
+async fn grep_skips_ignored_files_and_honors_negated_globs() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, ".gitignore", b"dist/\n").await;
+    seed_tree(&env, "dist/out.js", b"needle\n").await;
+    seed_tree(&env, "src/a.ts", b"needle\n").await;
+    seed_tree(&env, "src/a.test.ts", b"needle\n").await;
+    seed_tree(&env, "cache.test.ts/keep.ts", b"needle\n").await;
+    seed_tree(&env, ".hidden.ts", b"needle\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let r = run_grep(tool.clone(), serde_json::json!({ "pattern": "needle" }))
+        .await
+        .expect("grep ok");
+    let out = text_output(&r);
+    assert!(!out.contains("dist/out.js"), "{out}");
+    assert!(
+        out.contains(".hidden.ts:1: needle"),
+        "hidden files are searched: {out}"
+    );
+    let r = run_grep(
+        tool,
+        serde_json::json!({ "pattern": "needle", "glob": "!*.test.ts" }),
+    )
+    .await
+    .expect("grep ok");
+    let out = text_output(&r);
+    assert!(out.contains("src/a.ts:1: needle"), "{out}");
+    assert!(out.contains("cache.test.ts/keep.ts:1: needle"), "{out}");
+    assert!(!out.contains("a.test.ts"), "{out}");
+}
+
+#[tokio::test]
+async fn grep_glob_leading_slash_anchors_to_search_root() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "foo.txt", b"needle\n").await;
+    seed_tree(&env, "nested/foo.txt", b"needle\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+
+    let r = run_grep(
+        tool,
+        serde_json::json!({ "pattern": "needle", "glob": "/foo.txt" }),
+    )
+    .await
+    .expect("grep ok");
+    assert_eq!(text_output(&r), "foo.txt:1: needle");
+}
+
+#[tokio::test]
+async fn grep_line_semantics_follow_rg() {
+    let (env, ctx) = fresh_context();
+    // A final LF does not create an empty last line, and a lone CR does not
+    // split a line.
+    seed_tree(&env, "f.txt", b"one\r\ntwo\rthree\n").await;
+    seed_tree(&env, "empty.txt", b"").await;
+    seed_tree(&env, "blank.txt", b"\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let r = run_grep(tool.clone(), serde_json::json!({ "pattern": "^$" }))
+        .await
+        .expect("grep ok");
+    assert_eq!(text_output(&r), "blank.txt:1: ");
+    let r = run_grep(tool, serde_json::json!({ "pattern": "three" }))
+        .await
+        .expect("grep ok");
+    assert_eq!(text_output(&r), "f.txt:2: twothree");
+}
+
+#[tokio::test]
+async fn grep_searches_invalid_utf8_and_skips_binary_files() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "latin1.txt", b"caf\xe9 needle\n").await;
+    seed_tree(&env, "blob.bin", b"needle\x00\x01\x02").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let r = run_grep(tool, serde_json::json!({ "pattern": "needle" }))
+        .await
+        .expect("grep ok");
+    let out = text_output(&r);
+    assert!(out.contains("latin1.txt:1: caf\u{FFFD} needle"), "{out}");
+    assert!(!out.contains("blob.bin"), "{out}");
+}
+
+#[tokio::test]
+async fn grep_reports_the_limit_when_the_last_match_hits_it() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "f.txt", b"x\nx\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let r = run_grep(tool, serde_json::json!({ "pattern": "x", "limit": 2 }))
+        .await
+        .expect("grep ok");
+    assert!(
+        text_output(&r).contains("2 matches limit reached"),
+        "{}",
+        text_output(&r)
+    );
+}
+
+#[tokio::test]
+async fn grep_fails_when_cancelled() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "f.txt", b"x\n").await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let signal = CancellationToken::new();
+    signal.cancel();
+    let err = tool
+        .execute(
+            "g",
+            serde_json::json!({ "pattern": "x" }),
+            signal,
+            Arc::new(|_| ()),
+        )
+        .await
+        .expect_err("cancelled");
+    assert!(
+        format!("{err:?}").to_lowercase().contains("abort"),
+        "{err:?}"
+    );
+}
+
+#[tokio::test]
+async fn grep_missing_path_is_path_not_found() {
+    let (_env, ctx) = fresh_context();
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let err = run_grep(tool, serde_json::json!({ "pattern": "x", "path": "nope" }))
+        .await
+        .expect_err("missing");
+    assert!(format!("{err:?}").contains("Path not found"), "{err:?}");
+}

@@ -48,6 +48,8 @@ struct Inner {
     /// Tracked "child pids" — simulated; `cleanup` clears them. Kept as a set
     /// of opaque i64 handles.
     active_pids: Vec<i64>,
+    /// Bytes written to interactive shell stdin (see `stdin_written`).
+    stdin_log: Vec<u8>,
 }
 
 /// A canned shell result for `InMemoryExecutionEnv::exec`.
@@ -59,6 +61,9 @@ pub struct ShellScript {
     /// Optional delay before the result resolves (simulates a slow command for
     /// timeout/abort tests).
     pub delay_ms: Option<u64>,
+    /// Printed right after the command starts, before `delay_ms` (simulates a
+    /// long-running command that produces output while it runs).
+    pub initial_stdout: String,
 }
 
 impl ShellScript {
@@ -68,6 +73,7 @@ impl ShellScript {
             stderr: String::new(),
             exit_code: 0,
             delay_ms: None,
+            initial_stdout: String::new(),
         }
     }
     pub fn failure(exit_code: i32, stderr: impl Into<String>) -> Self {
@@ -76,6 +82,16 @@ impl ShellScript {
             stderr: stderr.into(),
             exit_code,
             delay_ms: None,
+            initial_stdout: String::new(),
+        }
+    }
+    /// A command that prints `initial` at once, runs for `delay_ms`, then
+    /// prints `stdout` and exits with `exit_code`.
+    pub fn long_running(initial: impl Into<String>, delay_ms: u64) -> Self {
+        Self {
+            initial_stdout: initial.into(),
+            delay_ms: Some(delay_ms),
+            ..Self::success("")
         }
     }
 }
@@ -128,6 +144,7 @@ impl InMemoryExecutionEnv {
                 clock: 0,
                 shell_scripts: Vec::new(),
                 active_pids: Vec::new(),
+                stdin_log: Vec::new(),
             })),
             registry: Arc::new(MutationQueueRegistry::new()),
             cwd_snapshot: snap,
@@ -141,6 +158,11 @@ impl InMemoryExecutionEnv {
         g.shell_scripts.push((prefix.into(), script));
         // Stable: longest-prefix-first lookup below.
         g.shell_scripts.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+    }
+
+    /// Everything written to interactive shell stdin so far (test helper).
+    pub async fn stdin_written(&self) -> Vec<u8> {
+        self.inner.lock().await.stdin_log.clone()
     }
 
     /// Directly seed a file at an absolute path (test setup). Bumps mtime.
@@ -681,44 +703,82 @@ impl Shell for InMemoryExecutionEnv {
         let script = match matched {
             Some((_, s)) => s.clone(),
             None => ShellScript {
-                stdout: String::new(),
                 stderr: format!("no shell script registered for: {command}"),
-                exit_code: 127,
-                delay_ms: None,
+                ..ShellScript::failure(127, "")
             },
         };
 
         // Simulate a child pid tracking.
-        {
+        let pid = {
             let mut g = self.inner.lock().await;
+            g.clock += 1;
             let pid = g.clock;
             g.active_pids.push(pid);
+            pid
+        };
+        // Simulated processes have no OS process id. `on_spawn` is never
+        // called: a fake id must not reach code that signals process groups.
+        let _ = (pid, options.on_spawn.take());
+        // Interactive stdin: record every write (tests read it back with
+        // `stdin_written`). The recorder stops when the command finishes.
+        let stdin_task = options.stdin.take().map(|mut requests| {
+            let inner = self.inner.clone();
+            tokio::spawn(async move {
+                let mut open = true;
+                while let Some(request) = requests.recv().await {
+                    match request {
+                        crate::env::StdinRequest::Write { bytes, done } => {
+                            let result = if open {
+                                inner.lock().await.stdin_log.extend_from_slice(&bytes);
+                                Ok(())
+                            } else {
+                                Err("stdin is closed".to_string())
+                            };
+                            let _ = done.send(result);
+                        }
+                        crate::env::StdinRequest::Close => open = false,
+                    }
+                }
+            })
+        });
+        struct AbortOnDrop(Option<tokio::task::JoinHandle<()>>);
+        impl Drop for AbortOnDrop {
+            fn drop(&mut self) {
+                if let Some(task) = self.0.take() {
+                    task.abort();
+                }
+            }
+        }
+        let _stdin_guard = AbortOnDrop(stdin_task);
+        // Output a long-running script prints before its delay.
+        if !script.initial_stdout.is_empty() {
+            if let Some(cb) = options.on_stdout.as_mut() {
+                cb(&script.initial_stdout);
+            }
         }
 
         // Optional delay — honor cancellation during it.
         if let Some(ms) = script.delay_ms {
             let dur = std::time::Duration::from_millis(ms);
-            if let Some(token) = options.cancel {
-                tokio::select! {
-                    _ = tokio::time::sleep(dur) => {}
-                    _ = token.cancelled() => {
-                        return Err(ExecutionError::aborted());
+            let cancel = options.cancel.cloned().unwrap_or_default();
+            let timeout = options.timeout;
+            let deadline = async move {
+                match timeout {
+                    Some(secs) => {
+                        tokio::time::sleep(std::time::Duration::from_secs_f64(secs)).await
                     }
+                    None => std::future::pending::<()>().await,
                 }
-            } else if let Some(secs) = options.timeout {
-                let to = std::time::Duration::from_secs_f64(secs);
-                let sleep = tokio::time::sleep(dur.min(to));
-                tokio::pin!(sleep);
-                let deadline = tokio::time::sleep(to);
-                tokio::pin!(deadline);
-                tokio::select! {
-                    _ = &mut sleep => {}
-                    _ = &mut deadline => {
-                        return Err(ExecutionError::timeout(secs as u64));
-                    }
+            };
+            tokio::select! {
+                biased;
+                _ = cancel.cancelled() => {
+                    return Err(ExecutionError::aborted());
                 }
-            } else {
-                tokio::time::sleep(dur).await;
+                _ = deadline => {
+                    return Err(ExecutionError::timeout(timeout.unwrap_or(0.0) as u64));
+                }
+                _ = tokio::time::sleep(dur) => {}
             }
         } else if let Some(secs) = options.timeout {
             // No delay but a timeout — simulate instant completion; the timeout

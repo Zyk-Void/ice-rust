@@ -18,7 +18,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```no_run
 //! use ice_tools::utils::open_browser::open_browser;
 //!
 //! // Open a URL in the default browser

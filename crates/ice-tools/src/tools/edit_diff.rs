@@ -77,20 +77,7 @@ pub fn normalize_for_fuzzy_match(text: &str) -> String {
         .map(|line| line.trim_end())
         .collect::<Vec<_>>()
         .join("\n");
-    let mut out = String::with_capacity(trimmed.len());
-    for c in trimmed.chars() {
-        match c {
-            '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}' => out.push('\''),
-            '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{201F}' => out.push('"'),
-            '\u{2010}' | '\u{2011}' | '\u{2012}' | '\u{2013}' | '\u{2014}' | '\u{2015}'
-            | '\u{2212}' => out.push('-'),
-            '\u{00A0}' | '\u{2002}' | '\u{2003}' | '\u{2004}' | '\u{2005}' | '\u{2006}'
-            | '\u{2007}' | '\u{2008}' | '\u{2009}' | '\u{200A}' | '\u{202F}' | '\u{205F}'
-            | '\u{3000}' => out.push(' '),
-            other => out.push(other),
-        }
-    }
-    out
+    trimmed.chars().map(fuzzy_char).collect()
 }
 
 /// Result of [`fuzzy_find_text`].
@@ -172,7 +159,15 @@ pub struct ApplyResult {
 }
 
 /// Empty-`old_text` / not-found / duplicate / overlap / no-change → `Err`.
-/// Mirrors `applyEditsToNormalizedContent`.
+/// Mirrors the coding-agent `applyEditsToNormalizedContent`:
+///
+/// - Exact occurrences are counted first. More than one is ambiguous; exactly
+///   one wins even when fuzzy-normalized lookalikes exist elsewhere.
+/// - Only an edit with zero exact matches is searched fuzzily (zero fuzzy
+///   matches is not-found, more than one is ambiguous).
+/// - When any edit is fuzzy, the batch is applied to the normalized text and
+///   exact matches keep their original positions, mapped into it, instead of
+///   being searched again (which could move them to a lookalike).
 pub fn apply_edits_to_normalized_content(
     normalized_content: &str,
     edits: &[ReplaceEdit],
@@ -198,43 +193,88 @@ pub fn apply_edits_to_normalized_content(
         }
     }
 
-    let initial_matches: Vec<FuzzyMatchResult> = normalized_edits
-        .iter()
-        .map(|e| fuzzy_find_text(normalized_content, &e.old_text))
-        .collect();
-    let used_fuzzy_match = initial_matches.iter().any(|m| m.used_fuzzy_match);
-    let replacement_base_content = if used_fuzzy_match {
-        normalize_for_fuzzy_match(normalized_content)
-    } else {
-        normalized_content.to_string()
-    };
-
-    let mut matched_edits: Vec<MatchedEdit> = Vec::new();
+    enum Located {
+        Exact(usize),
+        Fuzzy(usize),
+    }
+    let mut fuzzy_content: Option<String> = None;
+    let mut located: Vec<Located> = Vec::with_capacity(total);
     for (i, e) in normalized_edits.iter().enumerate() {
-        let m = fuzzy_find_text(&replacement_base_content, &e.old_text);
-        if !m.found {
+        let mut exact = normalized_content.match_indices(e.old_text.as_str());
+        let first = exact.next().map(|(idx, _)| idx);
+        let exact_count = first.map_or(0, |_| 1 + exact.count());
+        if exact_count > 1 {
+            return Err(duplicate(
+                path,
+                normalized_content,
+                e,
+                i,
+                total,
+                exact_count,
+            ));
+        }
+        if let Some(idx) = first {
+            located.push(Located::Exact(idx));
+            continue;
+        }
+        let fc = fuzzy_content.get_or_insert_with(|| normalize_for_fuzzy_match(normalized_content));
+        let needle = normalize_for_fuzzy_match(&e.old_text);
+        let mut fuzzy = fc.match_indices(needle.as_str());
+        let Some((idx, _)) = fuzzy.next() else {
             return Err(FileError::new(
                 crate::error::FileErrorCode::NotFound,
                 not_found_error(path, i, total),
             )
             .with_path(path));
+        };
+        let extra = fuzzy.count();
+        if extra > 0 {
+            return Err(duplicate(path, normalized_content, e, i, total, extra + 1));
         }
-        let occurrences = count_occurrences(&replacement_base_content, &e.old_text);
-        if occurrences > 1 {
-            return Err(FileError::new(
-                crate::error::FileErrorCode::Invalid,
-                format!(
-                    "{}{}",
-                    duplicate_error(path, i, total, occurrences),
-                    duplicate_match_context(normalized_content, &e.old_text),
-                ),
-            )
-            .with_path(path));
-        }
+        located.push(Located::Fuzzy(idx));
+    }
+
+    let used_fuzzy_match = fuzzy_content.is_some();
+    let mut matched_edits: Vec<MatchedEdit> = Vec::with_capacity(total);
+    for (i, (e, loc)) in normalized_edits.iter().zip(&located).enumerate() {
+        let (match_index, match_length) = match (loc, &fuzzy_content) {
+            (Located::Exact(idx), None) => (*idx, e.old_text.len()),
+            (Located::Exact(idx), Some(fc)) => {
+                let Some(mapped) = fuzzy_offset(normalized_content, *idx) else {
+                    return Err(FileError::new(
+                        crate::error::FileErrorCode::Invalid,
+                        format!(
+                            "{} Apply the edits that need fuzzy matching in a separate call.",
+                            not_found_error(path, i, total)
+                        ),
+                    )
+                    .with_path(path));
+                };
+                let needle = normalize_for_fuzzy_match(&e.old_text);
+                if !fc
+                    .get(mapped..)
+                    .is_some_and(|rest| rest.starts_with(needle.as_str()))
+                {
+                    // The exact text does not survive normalization in place
+                    // (e.g. it ends in trailing whitespace), so the batch
+                    // cannot be applied line-preservingly.
+                    return Err(FileError::new(
+                        crate::error::FileErrorCode::Invalid,
+                        format!(
+                            "{} Apply the edits that need fuzzy matching in a separate call.",
+                            not_found_error(path, i, total)
+                        ),
+                    )
+                    .with_path(path));
+                }
+                (mapped, needle.len())
+            }
+            (Located::Fuzzy(idx), _) => (*idx, normalize_for_fuzzy_match(&e.old_text).len()),
+        };
         matched_edits.push(MatchedEdit {
             edit_index: i,
-            match_index: m.index,
-            match_length: m.match_length,
+            match_index,
+            match_length,
             new_text: e.new_text.clone(),
         });
     }
@@ -257,14 +297,11 @@ pub fn apply_edits_to_normalized_content(
     }
 
     let base_content = normalized_content.to_string();
-    let new_content = if used_fuzzy_match {
-        apply_replacements_preserving_unchanged_lines(
-            normalized_content,
-            &replacement_base_content,
-            &matched_edits,
-        )?
-    } else {
-        apply_replacements(&replacement_base_content, &matched_edits)
+    let new_content = match &fuzzy_content {
+        Some(fc) => {
+            apply_replacements_preserving_unchanged_lines(normalized_content, fc, &matched_edits)?
+        }
+        None => apply_replacements(normalized_content, &matched_edits),
     };
 
     if base_content == new_content {
@@ -280,6 +317,65 @@ pub fn apply_edits_to_normalized_content(
         new_content,
         used_fuzzy_match,
     })
+}
+
+fn duplicate(
+    path: &str,
+    content: &str,
+    edit: &ReplaceEdit,
+    i: usize,
+    total: usize,
+    occurrences: usize,
+) -> FileError {
+    FileError::new(
+        crate::error::FileErrorCode::Invalid,
+        format!(
+            "{}{}",
+            duplicate_error(path, i, total, occurrences),
+            duplicate_match_context(content, &edit.old_text),
+        ),
+    )
+    .with_path(path)
+}
+
+/// Byte offset in `normalize_for_fuzzy_match(content)` that corresponds to
+/// byte offset `idx` of `content`. Complete lines before `idx` are normalized
+/// as a whole (with trimEnd); the partial line is normalized without trimEnd
+/// because text follows it on that line.
+fn fuzzy_offset(content: &str, idx: usize) -> Option<usize> {
+    let prefix = &content[..idx];
+    let normalized_prefix = match prefix.rfind('\n') {
+        Some(nl) => {
+            let mut normalized = normalize_for_fuzzy_match(&prefix[..=nl]);
+            normalized.push_str(&normalize_chars(&prefix[nl + 1..]));
+            normalized
+        }
+        None => normalize_chars(prefix),
+    };
+    let normalized = normalize_for_fuzzy_match(content);
+    let mapped = normalized_prefix.len();
+    (normalized.is_char_boundary(mapped) && normalized.starts_with(&normalized_prefix))
+        .then_some(mapped)
+}
+
+/// The NFKC + quote/dash/space mapping of [`normalize_for_fuzzy_match`]
+/// without the per-line trimEnd.
+fn normalize_chars(text: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    text.nfkc().map(fuzzy_char).collect()
+}
+
+fn fuzzy_char(c: char) -> char {
+    match c {
+        '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}' => '\'',
+        '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{201F}' => '"',
+        '\u{2010}' | '\u{2011}' | '\u{2012}' | '\u{2013}' | '\u{2014}' | '\u{2015}'
+        | '\u{2212}' => '-',
+        '\u{00A0}' | '\u{2002}' | '\u{2003}' | '\u{2004}' | '\u{2005}' | '\u{2006}'
+        | '\u{2007}' | '\u{2008}' | '\u{2009}' | '\u{200A}' | '\u{202F}' | '\u{205F}'
+        | '\u{3000}' => ' ',
+        other => other,
+    }
 }
 
 /// Splice replacements in reverse match-index order. Mirrors `applyReplacements`.
@@ -451,39 +547,22 @@ pub fn generate_diff_string<'a>(
 
     for (i, op) in ops.iter().enumerate() {
         let tag = op.tag();
-        // The raw lines for this op — sliced from the op ranges directly
-        // (mirrors TS `part.value.split("\n")` + trailing-empty pop).
-        let mut raw: Vec<&str> = match tag {
-            similar::DiffTag::Equal | similar::DiffTag::Delete => {
-                old_lines[op.old_range().start..op.old_range().end].to_vec()
-            }
-            _ => new_lines[op.new_range().start..op.new_range().end].to_vec(),
-        };
-        if raw.last().map(|s| s.is_empty()).unwrap_or(false) {
-            raw.pop();
-        }
+        // Each side's lines come from its own range. `similar` line indices
+        // match the LF split, and ranges never include the empty element
+        // after a final LF, so blank lines are kept as real lines.
+        let removed: &[&str] = &old_lines[op.old_range()];
+        let added: &[&str] = &new_lines[op.new_range()];
+        let raw = removed;
         let raw_len = raw.len();
 
-        let is_added = matches!(tag, similar::DiffTag::Insert | similar::DiffTag::Replace);
-        let is_removed = matches!(tag, similar::DiffTag::Delete | similar::DiffTag::Replace);
-
-        if is_added || is_removed {
+        if tag != similar::DiffTag::Equal {
             if first_changed_line.is_none() {
                 first_changed_line = Some(new_line_num);
             }
-            // Removed lines come from the old text and added lines from the
-            // new text, removed first (TS `diffLines` emits the removed part
-            // before the added part). A `Replace` has both, possibly with
-            // different line counts.
-            let lines_of = |all: &[&'a str], range: std::ops::Range<usize>| -> Vec<&'a str> {
-                let mut lines = all[range].to_vec();
-                if lines.last().is_some_and(|s| s.is_empty()) {
-                    lines.pop();
-                }
-                lines
-            };
-            if is_removed {
-                for line in lines_of(&old_lines, op.old_range()) {
+            // A replacement shows the old block removed, then the new block
+            // added (TS `diffLines` emits a removed part then an added part).
+            if matches!(tag, similar::DiffTag::Delete | similar::DiffTag::Replace) {
+                for line in removed {
                     out.push(format!(
                         "-{:>width$} {}",
                         old_line_num,
@@ -493,8 +572,8 @@ pub fn generate_diff_string<'a>(
                     old_line_num += 1;
                 }
             }
-            if is_added {
-                for line in lines_of(&new_lines, op.new_range()) {
+            if matches!(tag, similar::DiffTag::Insert | similar::DiffTag::Replace) {
+                for line in added {
                     out.push(format!(
                         "+{:>width$} {}",
                         new_line_num,
@@ -505,7 +584,6 @@ pub fn generate_diff_string<'a>(
                 }
             }
             last_was_change = true;
-            let _ = i; // index only needed for context lookahead below
         } else {
             // Equal → context lines, show a few before/after changes.
             let next_is_change = i + 1 < ops.len()
@@ -518,7 +596,7 @@ pub fn generate_diff_string<'a>(
 
             if has_leading_change && has_trailing_change {
                 if raw_len <= context_lines * 2 {
-                    for line in &raw {
+                    for line in raw {
                         out.push(format!(
                             " {:>width$} {}",
                             old_line_num,
@@ -821,8 +899,9 @@ mod tests {
                 new_text: "changed".into(),
             },
         ];
+        // No exact "it's" exists, and two smart-quote spellings match fuzzily.
         let error = apply_edits_to_normalized_content(
-            "heading\n第一处 it’s\n中间\n第二处 it's\n",
+            "heading\n第一处 it’s\n中间\n第二处 it‘s\n",
             &edits,
             "/x",
         )
@@ -832,6 +911,96 @@ mod tests {
         assert!(error.contains("Match 1 at line 2"));
         assert!(error.contains("Match 2 at line 4"));
         assert!(error.contains("2: 第一处 it’s"));
+    }
+
+    #[test]
+    fn a_unique_exact_match_wins_over_fuzzy_lookalikes() {
+        // Mirrors edit-diff-exact-precedence.test.ts.
+        let content = "say \u{201C}hi\u{201D}\nsay \"hi\"\n";
+        let edits = vec![ReplaceEdit {
+            old_text: "say \"hi\"".into(),
+            new_text: "say \"bye\"".into(),
+        }];
+        let r = apply_edits_to_normalized_content(content, &edits, "/x").unwrap();
+        assert!(!r.used_fuzzy_match);
+        assert_eq!(r.new_content, "say \u{201C}hi\u{201D}\nsay \"bye\"\n");
+    }
+
+    #[test]
+    fn exact_edits_keep_their_position_when_another_edit_is_fuzzy() {
+        // edits[0] matches exactly on line 3 only; a fuzzy rescan of the
+        // normalized text would find line 1's smart-quote lookalike first.
+        // edits[1] needs fuzzy matching. Untouched lines keep their bytes.
+        let content = "a = \u{2018}x\u{2019}  \nmid\na = 'x'\nend \u{2014} here\n";
+        let edits = vec![
+            ReplaceEdit {
+                old_text: "a = 'x'".into(),
+                new_text: "a = 'y'".into(),
+            },
+            ReplaceEdit {
+                old_text: "end - here".into(),
+                new_text: "END".into(),
+            },
+        ];
+        let r = apply_edits_to_normalized_content(content, &edits, "/x").unwrap();
+        assert!(r.used_fuzzy_match);
+        assert_eq!(
+            r.new_content,
+            "a = \u{2018}x\u{2019}  \nmid\na = 'y'\nEND\n"
+        );
+    }
+
+    #[test]
+    fn exact_edit_after_nfkc_expansion_keeps_its_normalized_position() {
+        let content = "\u{FB00} target\nit’s\n";
+        let edits = vec![
+            ReplaceEdit {
+                old_text: "target".into(),
+                new_text: "changed".into(),
+            },
+            ReplaceEdit {
+                old_text: "it's".into(),
+                new_text: "done".into(),
+            },
+        ];
+
+        let result = apply_edits_to_normalized_content(content, &edits, "/x").unwrap();
+        assert!(result.used_fuzzy_match);
+        assert_eq!(result.new_content, "ff changed\ndone\n");
+    }
+
+    #[test]
+    fn exact_edit_after_a_composing_prefix_is_rejected_in_a_fuzzy_batch() {
+        let content = "e\u{301}x\nit’s\n";
+        let edits = vec![
+            ReplaceEdit {
+                old_text: "\u{301}x".into(),
+                new_text: "X".into(),
+            },
+            ReplaceEdit {
+                old_text: "it's".into(),
+                new_text: "done".into(),
+            },
+        ];
+
+        let error = apply_edits_to_normalized_content(content, &edits, "/x").unwrap_err();
+        assert_eq!(error.code, crate::error::FileErrorCode::Invalid);
+    }
+
+    #[test]
+    fn diff_shows_removed_and_added_text_for_unequal_replacements() {
+        let old = "keep\nold one\nold two\ntail\n";
+        let new = "keep\nnew\ntail\n";
+        let d = generate_diff_string(old, new, 4);
+        assert_eq!(d.diff, " 1 keep\n-2 old one\n-3 old two\n+2 new\n 4 tail");
+        assert_eq!(d.first_changed_line, Some(2));
+    }
+
+    #[test]
+    fn diff_keeps_deleted_blank_lines() {
+        let d = generate_diff_string("a\n\nb\n", "a\nb\n", 4);
+        // Context lines carry the old-side number, as in ice.
+        assert_eq!(d.diff, " 1 a\n-2 \n 3 b");
     }
 
     #[test]

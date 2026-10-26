@@ -100,6 +100,9 @@ impl AgentTool for WriteTool {
         // The mutation-queue closure. Abort does NOT unblock the queue: we still
         // acquire the lock, then check the token before+after the write.
         let content = input.content;
+        // ice reports `content.length` (UTF-16 units) as "bytes"; icers reports
+        // the real UTF-8 byte count written.
+        let byte_count = content.len();
         let env = self.env.clone();
         // `with_file_mutation_queue` borrows the env for the whole call, so keep
         // a separate owned clone for the borrow reference and let the closure
@@ -131,7 +134,7 @@ impl AgentTool for WriteTool {
 
         Ok(AgentToolResult {
             content: vec![TextContentOrImage::text(format!(
-                "Successfully wrote to {path_for_msg}"
+                "Successfully wrote {byte_count} bytes to {path_for_msg}"
             ))],
             details: serde_json::Value::Null,
             ..Default::default()
@@ -150,4 +153,36 @@ fn check_abort(cancel: &CancellationToken) -> Result<(), FileError> {
 
 fn file_err_to_agent(e: FileError) -> AgentError {
     AgentError::Tool(e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::FileSystem;
+
+    #[tokio::test]
+    async fn result_reports_utf8_bytes_and_original_path() {
+        let env = Arc::new(crate::InMemoryExecutionEnv::with_cwd("/w".into()));
+        let env_dyn: Arc<dyn crate::ExecutionEnv> = env.clone();
+        let mutating: Arc<dyn MutatingEnv> = env.clone();
+        let tool = create_write_tool(&ExecutionToolContext::new(env_dyn, Some(mutating)));
+        let result = tool
+            .execute(
+                "w",
+                serde_json::json!({ "path": "dir/é.txt", "content": "héllo" }),
+                CancellationToken::new(),
+                Arc::new(|_| ()),
+            )
+            .await
+            .expect("write ok");
+        let text = match &result.content[0] {
+            TextContentOrImage::Text(t) => t.text.clone(),
+            _ => panic!("text result"),
+        };
+        assert_eq!(text, "Successfully wrote 6 bytes to dir/é.txt");
+        assert_eq!(
+            env.read_text_file("/w/dir/é.txt", None).await.unwrap(),
+            "héllo"
+        );
+    }
 }

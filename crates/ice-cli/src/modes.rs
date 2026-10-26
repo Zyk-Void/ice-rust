@@ -29,7 +29,7 @@ use ice_harness::session::types::{EntryOrder, LaneRecord, RecordQuery};
 
 use crate::args::Args;
 use crate::rpc::protocol as rpc_protocol;
-use crate::rpc::writer::{start_rpc_writer, write_line, RpcWriter};
+use crate::rpc::writer::{start_rpc_writer, write_line, write_print_output, RpcWriter};
 
 /// Extract the concatenated text content from an assistant message. Mirrors the
 /// TS print-mode loop (`for content of assistantMsg.content if type===text`).
@@ -139,12 +139,10 @@ pub async fn print(
             }
             _ => {
                 let text = assistant_text(m);
-                let mut out = std::io::stdout();
-                let _ = out.write_all(text.as_bytes());
-                if !text.ends_with('\n') {
-                    let _ = out.write_all(b"\n");
+                if let Err(error) = write_print_output(&mut std::io::stdout(), &text) {
+                    eprintln!("[icers] stdout write failed: {error}");
+                    last_exit = 1;
                 }
-                let _ = out.flush();
             }
         }
     }

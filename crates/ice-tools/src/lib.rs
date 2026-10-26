@@ -11,9 +11,13 @@
 
 #![forbid(unsafe_code)]
 
+pub mod bash_background;
+pub mod bash_watch;
 pub mod env;
 pub mod error;
+pub mod exec;
 pub mod file_mutation_queue;
+mod ignore_rules;
 pub mod image;
 pub mod image_processing;
 pub mod in_memory;
@@ -28,6 +32,7 @@ pub mod utils {
 }
 
 pub mod tools;
+pub mod user_bash;
 pub use tools::{
     create_bash_tool, create_edit_tool, create_find_tool, create_grep_tool, create_ls_tool,
     create_powershell_tool, create_read_tool, create_write_tool, BashExecution, BashPrepare,

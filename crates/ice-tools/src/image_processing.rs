@@ -35,8 +35,21 @@ use std::io::Cursor;
 pub const INLINE_IMAGE_MAX_SIDE: u32 = 2000;
 pub const INLINE_IMAGE_MAX_BASE64_BYTES: usize = 9 * 1024 * 1024 / 2;
 
-/// Decode, orient, resize and encode an image for model input. Small supported
-/// images retain their original bytes; oversized images fall back to JPEG.
+/// Default JPEG quality tried first. Mirrors `ImageResizeOptions.jpegQuality`.
+pub const INLINE_IMAGE_JPEG_QUALITY: u8 = 80;
+
+/// Decode, orient, resize and encode an image for model input. Mirrors
+/// `resizeImage` + `processImage`:
+///
+/// - A supported image already within 2000x2000 and the base64 budget keeps
+///   its original bytes (only when no EXIF orientation transform applies;
+///   ice keeps the original bytes even then, which shows the wrong rotation).
+/// - Otherwise fit the oriented image within 2000x2000 and, at each candidate
+///   size, resize from the original decoded image and try PNG, then JPEG at
+///   qualities 80, 85, 70, 55 and 40, returning the first encoding strictly
+///   under the budget. If none fits, shrink both sides by 0.75 and repeat
+///   down to 1x1.
+/// - A resized or re-encoded result carries ice's coordinate hint.
 pub fn prepare_inline_image(bytes: &[u8]) -> Result<crate::tools::read::ProcessedImage, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     use image::ImageDecoder;
@@ -49,13 +62,13 @@ pub fn prepare_inline_image(bytes: &[u8]) -> Result<crate::tools::read::Processe
     img.apply_orientation(orientation);
     let original = (img.width(), img.height());
     let mime = crate::image::detect_supported_image_mime_type(bytes);
-    let base64_len = bytes.len().div_ceil(3) * 4;
+    let fits = |len: usize| len.div_ceil(3) * 4 < INLINE_IMAGE_MAX_BASE64_BYTES;
     if matches!(
         mime,
         Some("image/png" | "image/jpeg" | "image/gif" | "image/webp")
     ) && original.0 <= INLINE_IMAGE_MAX_SIDE
         && original.1 <= INLINE_IMAGE_MAX_SIDE
-        && base64_len < INLINE_IMAGE_MAX_BASE64_BYTES
+        && fits(bytes.len())
         && orientation == image::metadata::Orientation::NoTransforms
     {
         return Ok(crate::tools::read::ProcessedImage {
@@ -64,62 +77,97 @@ pub fn prepare_inline_image(bytes: &[u8]) -> Result<crate::tools::read::Processe
             hints: vec![],
         });
     }
-    img = resize_image(
-        img,
-        Some(INLINE_IMAGE_MAX_SIDE),
-        Some(INLINE_IMAGE_MAX_SIDE),
-    );
-    for _ in 0..8 {
-        let png = encode_image(&img, Some(OutputFormat::Png))?;
-        let mut candidate = (png, "image/png");
-        if candidate.0.len().div_ceil(3) * 4 >= INLINE_IMAGE_MAX_BASE64_BYTES {
-            // JPEG cannot encode alpha; convert explicitly before encoding.
-            let mut rgb = img.to_rgb8();
-            let rgba = img.to_rgba8();
-            for (target, source) in rgb.pixels_mut().zip(rgba.pixels()) {
-                let alpha = source[3] as u16;
-                for channel in 0..3 {
-                    target[channel] =
-                        ((source[channel] as u16 * alpha + 255 * (255 - alpha)) / 255) as u8;
-                }
-            }
-            let rgb = DynamicImage::ImageRgb8(rgb);
-            for quality in [85, 70, 50] {
-                let jpeg = encode_image(&rgb, Some(OutputFormat::Jpeg { quality }))?;
-                if jpeg.len() < candidate.0.len() {
-                    candidate = (jpeg, "image/jpeg");
-                }
-                if candidate.0.len().div_ceil(3) * 4 < INLINE_IMAGE_MAX_BASE64_BYTES {
-                    break;
-                }
-            }
+
+    let (mut width, mut height) =
+        fit_within(original, INLINE_IMAGE_MAX_SIDE, INLINE_IMAGE_MAX_SIDE);
+    let mut qualities = vec![INLINE_IMAGE_JPEG_QUALITY];
+    for q in [85, 70, 55, 40] {
+        if !qualities.contains(&q) {
+            qualities.push(q);
         }
-        if candidate.0.len().div_ceil(3) * 4 < INLINE_IMAGE_MAX_BASE64_BYTES {
+    }
+    loop {
+        let candidate = if (width, height) == original {
+            img.clone()
+        } else {
+            img.resize_exact(width, height, image::imageops::FilterType::Lanczos3)
+        };
+        if let Some((data, encoded_mime)) = encode_within_budget(&candidate, &qualities, &fits)? {
             let mut hints = vec![];
             if let Some(mime) = mime {
-                if mime != candidate.1 {
-                    hints.push(format!("[Image converted from {mime} to {}.]", candidate.1));
+                if mime != encoded_mime {
+                    hints.push(format!("[Image converted from {mime} to {encoded_mime}.]"));
                 }
             }
-            if original != (img.width(), img.height()) {
-                hints.push(format!(
-                    "[Image resized from {}x{} to {}x{}.]",
-                    original.0,
-                    original.1,
-                    img.width(),
-                    img.height()
-                ));
-            }
+            hints.push(format_dimension_note(original, (width, height)));
             return Ok(crate::tools::read::ProcessedImage {
-                data: STANDARD.encode(candidate.0),
-                mime_type: candidate.1.into(),
+                data: STANDARD.encode(data),
+                mime_type: encoded_mime.into(),
                 hints,
             });
         }
-        let bounds = ((img.width() * 3 / 4).max(1), (img.height() * 3 / 4).max(1));
-        img = resize_image(img, Some(bounds.0), Some(bounds.1));
+        if (width, height) == (1, 1) {
+            return Err("Image could not be resized below the inline image size limit".into());
+        }
+        width = ((width as f64 * 0.75).floor() as u32).max(1);
+        height = ((height as f64 * 0.75).floor() as u32).max(1);
     }
-    Err("Image could not be resized below the inline image size limit".into())
+}
+
+/// Constrain width, then height, rounding like ice's `Math.round`.
+fn fit_within((w, h): (u32, u32), max_w: u32, max_h: u32) -> (u32, u32) {
+    let (mut w, mut h) = (w as f64, h as f64);
+    if w > max_w as f64 {
+        h = (h * max_w as f64 / w).round();
+        w = max_w as f64;
+    }
+    if h > max_h as f64 {
+        w = (w * max_h as f64 / h).round();
+        h = max_h as f64;
+    }
+    ((w as u32).max(1), (h as u32).max(1))
+}
+
+/// The first encoding strictly under the budget: PNG, then each JPEG quality.
+fn encode_within_budget(
+    img: &DynamicImage,
+    qualities: &[u8],
+    fits: &dyn Fn(usize) -> bool,
+) -> Result<Option<(Vec<u8>, &'static str)>, String> {
+    let png = encode_image(img, Some(OutputFormat::Png))?;
+    if fits(png.len()) {
+        return Ok(Some((png, "image/png")));
+    }
+    // JPEG cannot encode alpha; composite onto white first.
+    let mut rgb = img.to_rgb8();
+    let rgba = img.to_rgba8();
+    for (target, source) in rgb.pixels_mut().zip(rgba.pixels()) {
+        let alpha = source[3] as u16;
+        for channel in 0..3 {
+            target[channel] = ((source[channel] as u16 * alpha + 255 * (255 - alpha)) / 255) as u8;
+        }
+    }
+    let rgb = DynamicImage::ImageRgb8(rgb);
+    for &quality in qualities {
+        let jpeg = encode_image(&rgb, Some(OutputFormat::Jpeg { quality }))?;
+        if fits(jpeg.len()) {
+            return Ok(Some((jpeg, "image/jpeg")));
+        }
+    }
+    Ok(None)
+}
+
+/// Mirrors `formatDimensionNote`: how displayed coordinates map back to the
+/// original image.
+pub fn format_dimension_note(original: (u32, u32), displayed: (u32, u32)) -> String {
+    format!(
+        "[Image: original {}x{}, displayed at {}x{}. Multiply coordinates by {:.2} to map to original image.]",
+        original.0,
+        original.1,
+        displayed.0,
+        displayed.1,
+        original.0 as f64 / displayed.0 as f64
+    )
 }
 
 /// Shared processor for the built-in read tool.
@@ -165,21 +213,25 @@ impl crate::tools::read::ReadImageProcessor for InlineImageProcessor {
         }
         use base64::{engine::general_purpose::STANDARD, Engine};
         let mime = crate::image::detect_supported_image_mime_type(bytes);
-        let (bytes, mime) = if matches!(
+        let (bytes, out_mime, hints) = if matches!(
             mime,
             Some("image/png" | "image/jpeg" | "image/gif" | "image/webp")
         ) {
-            (bytes.to_vec(), mime.unwrap())
+            (bytes.to_vec(), mime.unwrap(), vec![])
         } else {
+            let converted = process_image(bytes, ImageProcessingOptions::default())
+                .map_err(|e| format!("[Image omitted: could not convert image ({e}).]"))?;
+            let from = mime.unwrap_or(_mime_type);
             (
-                process_image(bytes, ImageProcessingOptions::default())?,
+                converted,
                 "image/png",
+                vec![format!("[Image converted from {from} to image/png.]")],
             )
         };
         Ok(crate::tools::read::ProcessedImage {
             data: STANDARD.encode(bytes),
-            mime_type: mime.into(),
-            hints: vec![],
+            mime_type: out_mime.into(),
+            hints,
         })
     }
 }
@@ -417,7 +469,13 @@ mod tests {
         assert!(processed.data.len() < INLINE_IMAGE_MAX_BASE64_BYTES);
         let resized = image::load_from_memory(&STANDARD.decode(processed.data).unwrap()).unwrap();
         assert_eq!((resized.width(), resized.height()), (2000, 1000));
-        assert!(processed.hints[0].contains("2400x1200 to 2000x1000"));
+        assert_eq!(
+            processed.hints,
+            vec![
+                "[Image: original 2400x1200, displayed at 2000x1000. Multiply coordinates by 1.20 to map to original image.]"
+                    .to_string()
+            ]
+        );
     }
 
     #[test]
@@ -456,6 +514,30 @@ mod tests {
         let processed = prepare_inline_image(&png).unwrap();
         assert!(processed.data.len() < INLINE_IMAGE_MAX_BASE64_BYTES);
         assert_eq!(processed.mime_type, "image/jpeg");
+    }
+
+    #[test]
+    fn fit_within_constrains_width_then_height() {
+        assert_eq!(fit_within((4000, 1000), 2000, 2000), (2000, 500));
+        assert_eq!(fit_within((1000, 3000), 2000, 2000), (667, 2000));
+        assert_eq!(fit_within((10, 10), 2000, 2000), (10, 10));
+    }
+
+    #[test]
+    fn bmp_without_auto_resize_reports_the_conversion() {
+        use crate::tools::read::ReadImageProcessor;
+        let mut bmp = Cursor::new(Vec::new());
+        DynamicImage::new_rgb8(4, 4)
+            .write_to(&mut bmp, ImageFormat::Bmp)
+            .unwrap();
+        let processed = InlineImageProcessor
+            .process(&bmp.into_inner(), "image/bmp", false)
+            .unwrap();
+        assert_eq!(processed.mime_type, "image/png");
+        assert_eq!(
+            processed.hints,
+            vec!["[Image converted from image/bmp to image/png.]".to_string()]
+        );
     }
 
     #[test]

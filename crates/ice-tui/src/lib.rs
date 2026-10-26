@@ -58,6 +58,7 @@ pub mod theme;
 pub mod tool_execution;
 pub mod tool_group;
 mod tool_panel;
+mod tool_render;
 pub mod truncated_text;
 pub mod tui;
 pub mod tui_alt_screen;

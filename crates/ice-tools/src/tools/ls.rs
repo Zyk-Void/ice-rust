@@ -25,7 +25,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::env::FileKind;
-use crate::path_utils::resolve_read_tool_path;
+use crate::path_utils::resolve_tool_path;
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{
     format_size, truncate_head, TruncationOptions, TruncationResult, DEFAULT_MAX_BYTES,
@@ -82,6 +82,28 @@ impl LsTool {
             constrained_sampling: None,
         }
     }
+
+    /// The kind of `path` after following symlinks (`None` when the target
+    /// is neither a file nor a directory). A dangling link is an error.
+    async fn followed_kind(
+        &self,
+        path: &str,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<Option<FileKind>, crate::error::FileError> {
+        let info = self.env.file_info(path, cancel).await?;
+        if info.kind != FileKind::Symlink {
+            return Ok(Some(info.kind));
+        }
+        let target = self.env.canonical_path(path, cancel).await?;
+        let info = self
+            .env
+            .file_info(&target.to_string_lossy(), cancel)
+            .await?;
+        Ok(match info.kind {
+            FileKind::Symlink => None,
+            kind => Some(kind),
+        })
+    }
 }
 
 /// Build the `ls` tool from a context. Mirrors TS `createLsTool`.
@@ -116,13 +138,13 @@ impl AgentTool for LsTool {
             .map_err(|e| AgentError::Validation(format!("ls input invalid: {e}")))?;
 
         let cancel = Some(&signal);
-        let effective_limit = input.limit.unwrap_or(DEFAULT_LIMIT).max(1) as usize;
+        // ice applies no minimum: `limit: 0` lists nothing.
+        let effective_limit = input.limit.unwrap_or(DEFAULT_LIMIT) as usize;
 
-        // Resolve the directory path (read-only resolution + fuzzy variants).
-        let dir_path =
-            resolve_read_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
-                .await
-                .map_err(file_err_to_agent)?;
+        // Resolve the directory path.
+        let dir_path = resolve_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
+            .await
+            .map_err(file_err_to_agent)?;
 
         // Path-not-found.
         if !self
@@ -133,44 +155,56 @@ impl AgentTool for LsTool {
         {
             return Err(AgentError::Tool(format!("Path not found: {dir_path}")));
         }
-        // Must be a directory.
-        let info = self
-            .env
-            .file_info(&dir_path, cancel)
+        // Must be a directory; like ice's `stat`, a symlinked root is followed.
+        let root_kind = self
+            .followed_kind(&dir_path, cancel)
             .await
             .map_err(file_err_to_agent)?;
-        if info.kind != FileKind::Directory {
+        if root_kind != Some(FileKind::Directory) {
             return Err(AgentError::Tool(format!("Not a directory: {dir_path}")));
         }
 
-        // Read entries. (TS wraps readdir in try/catch → "Cannot read directory";
-        // the env surfaces that as a FileError which we map here.)
-        let mut entries = self
-            .env
-            .list_dir(&dir_path, cancel)
-            .await
-            .map_err(file_err_to_agent)?;
+        let mut entries = match self.env.list_dir(&dir_path, cancel).await {
+            Ok(entries) => entries,
+            Err(e) if e.code == crate::error::FileErrorCode::Aborted => {
+                return Err(file_err_to_agent(e))
+            }
+            Err(e) => return Err(AgentError::Tool(format!("Cannot read directory: {e}"))),
+        };
 
-        // Sort alphabetically, case-insensitive. Mirrors TS
-        // `entries.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()))`.
+        // Sort alphabetically, case-insensitive. ice uses
+        // `a.toLowerCase().localeCompare(b.toLowerCase())`; icers compares the
+        // lowercased strings by code point, which agrees for ASCII names but is
+        // locale-independent for others.
         entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
-        // Format with directory indicators.
+        // Format with directory indicators. Only entries that stat
+        // successfully count toward the limit.
         let mut results: Vec<String> = Vec::new();
         let mut entry_limit_reached = false;
         for entry in &entries {
             if results.len() >= effective_limit {
-                entry_limit_reached = true;
+                entry_limit_reached = effective_limit > 0;
                 break;
             }
-            let suffix = if entry.kind == FileKind::Directory {
-                "/"
+            let kind = if entry.kind == FileKind::Symlink {
+                match self
+                    .followed_kind(&entry.path.to_string_lossy(), cancel)
+                    .await
+                {
+                    Ok(Some(kind)) => kind,
+                    Err(e) if e.code == crate::error::FileErrorCode::Aborted => {
+                        return Err(file_err_to_agent(e))
+                    }
+                    // A dangling link fails ice's `stat` and is skipped.
+                    _ => continue,
+                }
             } else {
-                ""
+                entry.kind
             };
+            let suffix = if kind == FileKind::Directory { "/" } else { "" };
             results.push(format!("{}{suffix}", entry.name));
         }
-
         if results.is_empty() {
             return Ok(AgentToolResult {
                 content: vec![TextContentOrImage::text("(empty directory)")],

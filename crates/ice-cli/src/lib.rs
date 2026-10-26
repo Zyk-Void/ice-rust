@@ -32,6 +32,7 @@ pub mod app;
 pub mod args;
 pub mod auth;
 pub mod auth_guidance;
+pub mod background_shells;
 pub mod brand;
 pub mod changelog;
 mod child_agents;

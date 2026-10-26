@@ -591,10 +591,30 @@ impl ToolExecutionComponent {
             }
         }
 
+        // write: preview the content argument as it arrives (ice's write
+        // `renderCall`), so the successful result needs no body of its own.
+        if name.as_str() == "write" {
+            let hint = |more: usize| {
+                colors.muted.fg(&format!(
+                    "… {more} more lines{}",
+                    crate::keybindings::tools_expand_paren("expand")
+                ))
+            };
+            for row in crate::tool_render::write_preview_lines(colors, &args, *expanded, hint) {
+                for part in wrap_text_with_ansi(&row, content_width) {
+                    lines.push(panel.line(&part));
+                }
+            }
+        }
+
         // Show result if available (always — a failure's error text is the
         // payload, not a detail to hide behind expand). Long logical lines wrap
         // inside the panel instead of overflowing into the next terminal row.
-        if let Some(ref r) = *result {
+        // Per-tool rules (`tool_render`): a successful write shows nothing
+        // more, and a collapsed successful read keeps only its notices.
+        let succeeded = *status == ToolStatus::Completed;
+        let hide_result = name.as_str() == "write" && succeeded;
+        if let Some(r) = result.as_ref().filter(|_| !hide_result) {
             // The gutter belongs to the content, not the panel's outer inset.
             // Drop it only when it would leave no room for output text.
             let gutter = !*result_markdown && content_width > 2;
@@ -603,21 +623,43 @@ impl ToolExecutionComponent {
             // wraps and styles its own rows (tables, lists, inline code). The
             // plain path keeps the existing naive wrap so non-markdown tool
             // output is unchanged.
+            let collapsed_read = name.as_str() == "read" && succeeded && !*expanded;
+            let mut folded_read_lines = 0;
             let visual_lines: Vec<String> = if *result_markdown {
                 crate::markdown::Markdown::new(r.clone(), 0, 0).render(body_width)
             } else {
-                normalized_output_lines(r)
+                let mut source = normalized_output_lines(r);
+                if collapsed_read {
+                    while source.last().is_some_and(|line| line.trim().is_empty()) {
+                        source.pop();
+                    }
+                    let notices = crate::tool_render::read_notice_lines(&source);
+                    folded_read_lines = source.len() - notices.len();
+                    source = notices;
+                }
+                source
                     .into_iter()
                     .flat_map(|line| wrap_text_with_ansi(&line, body_width))
                     .collect()
             };
+            if folded_read_lines > 0 {
+                let hint = colors.muted.fg(&format!(
+                    "{folded_read_lines} lines{}",
+                    crate::keybindings::tools_expand_paren("expand")
+                ));
+                for part in wrap_text_with_ansi(&hint, content_width) {
+                    lines.push(panel.line(&part));
+                }
+            }
             // Bash output ends with the result (exit status, last test line),
             // so its collapsed preview is the tail, as in ice.
             let tail = name.as_str() == "bash" && !*expanded;
             let limit = if tail {
                 BASH_PREVIEW_LINES
+            } else if name.as_str() == "read" && !succeeded {
+                crate::tool_render::READ_ERROR_PREVIEW_LINES
             } else {
-                OUTPUT_PREVIEW_LINES
+                crate::tool_render::result_preview_lines(&name, OUTPUT_PREVIEW_LINES)
             };
             let shown = if *expanded {
                 visual_lines.len()
@@ -660,7 +702,7 @@ impl ToolExecutionComponent {
                 } else {
                     lines.extend(hint_rows);
                 }
-            } else if *expanded && visual_lines.len() > OUTPUT_PREVIEW_LINES {
+            } else if *expanded && visual_lines.len() > limit {
                 let hint = colors
                     .muted
                     .fg(crate::keybindings::tools_expand_paren("collapse").trim_start());
@@ -1207,7 +1249,11 @@ mod tools {
         };
         let get = |k: &str| field(&map, k);
         match tool {
-            "read" => get("path"),
+            "read" => crate::tool_render::read_title(
+                &get("path"),
+                get("offset").parse().ok(),
+                get("limit").parse().ok(),
+            ),
             "write" => get("path"),
             "ls" => get("path"),
             "find" => {
@@ -1734,7 +1780,7 @@ mod tests {
     fn generic_output_wraps_between_both_insets() {
         let theme = Theme::default();
         let output = "abcdefghijklmnop你好世界qrstuvwxyz";
-        let tool = ToolExecutionComponent::new("read", "{}");
+        let tool = ToolExecutionComponent::new("extension_tool", "{}");
         tool.set_result(output, false);
         for expanded in [false, true] {
             tool.set_expanded(expanded);
@@ -1874,7 +1920,7 @@ mod tests {
 
     #[test]
     fn tool_output_wraps_with_a_stable_gutter_and_background() {
-        let tool = ToolExecutionComponent::new("read", r#"{"path":"wide.txt"}"#);
+        let tool = ToolExecutionComponent::new("extension_tool", r#"{"path":"wide.txt"}"#);
         tool.set_result("0123456789ABCDEFGHIJ", false);
         let rendered = tool.render(12);
         let body: Vec<String> = rendered
@@ -1932,7 +1978,7 @@ mod tests {
 
     #[test]
     fn long_tool_output_collapses_and_ctrl_o_expands() {
-        let tool = ToolExecutionComponent::new("read", r#"{"path":"large.rs"}"#);
+        let tool = ToolExecutionComponent::new("extension_tool", r#"{"path":"large.rs"}"#);
         let output = (1..=20)
             .map(|line| format!("line {line}"))
             .collect::<Vec<_>>()
@@ -1949,6 +1995,66 @@ mod tests {
         let expanded_plain = crate::ansi::strip_ansi(&expanded.join("\n"));
         assert!(expanded_plain.contains("line 20"));
         assert!(expanded_plain.contains("Ctrl+O to collapse"));
+    }
+
+    #[test]
+    fn read_title_shows_range_and_collapsed_success_keeps_only_notices() {
+        let tool =
+            ToolExecutionComponent::new("read", r#"{"path":"src/lib.rs","offset":10,"limit":5}"#);
+        let body = format!(
+            "{}\n\n[5 more lines in file. Use offset=15 to continue.]",
+            numbered(5)
+        );
+        tool.set_result(&body, false);
+        let collapsed = crate::ansi::strip_ansi(&tool.render(80).join("\n"));
+        assert!(collapsed.contains("src/lib.rs:10-14"), "{collapsed}");
+        assert!(!collapsed.contains("line 1"), "{collapsed}");
+        assert!(collapsed.contains("Use offset=15 to continue."));
+        assert!(
+            collapsed.contains("6 lines (Ctrl+O to expand)"),
+            "{collapsed}"
+        );
+        tool.set_expanded(true);
+        let expanded = crate::ansi::strip_ansi(&tool.render(80).join("\n"));
+        assert!(expanded.contains("line 5"));
+
+        let failed = ToolExecutionComponent::new("read", r#"{"path":"missing"}"#);
+        failed.set_result(&numbered(12), true);
+        let shown = crate::ansi::strip_ansi(&failed.render(80).join("\n"));
+        assert!(shown.contains("line 10") && !shown.contains("line 11"));
+        assert!(shown.contains("2 more lines"));
+    }
+
+    #[test]
+    fn write_previews_streaming_content_and_hides_the_success_text() {
+        let content = numbered(14).replace('\n', "\\n");
+        let tool = ToolExecutionComponent::new(
+            "write",
+            &format!(r#"{{"path":"notes.txt","content":"{content}"#),
+        );
+        tool.set_running();
+        let streaming = crate::ansi::strip_ansi(&tool.render(80).join("\n"));
+        assert!(streaming.contains("line 10") && !streaming.contains("line 11"));
+        assert!(streaming.contains("4 more lines"));
+
+        tool.set_result("Successfully wrote 120 bytes to notes.txt", false);
+        let done = crate::ansi::strip_ansi(&tool.render(80).join("\n"));
+        assert!(!done.contains("Successfully wrote"), "{done}");
+        let failed = ToolExecutionComponent::new("write", r#"{"path":"/ro/x"}"#);
+        failed.set_result("EACCES: permission denied", true);
+        assert!(crate::ansi::strip_ansi(&failed.render(80).join("\n")).contains("EACCES"));
+    }
+
+    #[test]
+    fn search_tools_preview_more_result_lines() {
+        let grep = ToolExecutionComponent::new("grep", r#"{"pattern":"x"}"#);
+        grep.set_result(&numbered(30), false);
+        let shown = crate::ansi::strip_ansi(&grep.render(80).join("\n"));
+        assert!(shown.contains("line 15") && !shown.contains("line 16"));
+        let ls = ToolExecutionComponent::new("ls", "{}");
+        ls.set_result(&numbered(30), false);
+        let shown = crate::ansi::strip_ansi(&ls.render(80).join("\n"));
+        assert!(shown.contains("line 20") && !shown.contains("line 21"));
     }
 
     /// A collapsed bash panel is one header row plus the output tail, so a

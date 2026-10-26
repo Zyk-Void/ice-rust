@@ -4,19 +4,17 @@
 //! through the `FileSystem` trait so it runs against both `OsExecutionEnv` and
 //! `InMemoryExecutionEnv`.
 //!
-//! Divergence from TS (documented): the TS tool **shells out to `fd`** (with
-//! gitignore-aware walking + `--full-path` rewrites + optional auto-download).
-//! The Rust port implements the walk **in-process** via the `FileSystem` trait
-//! and the `globset` crate, so it works against any `ExecutionEnv`. Trade-offs:
-//! no full `.gitignore` awareness in v1 (only `.git/` directories are skipped;
-//! revisit via the `ignore` crate for an `OsExecutionEnv`-only fast path), no
-//! external binary, and a deterministic sorted BFS walk order rather than fd's
-//! walk. The `**/`-prepend rule for path-containing patterns is ported; the
-//! Windows `[/\\]` separator rewrite is unnecessary (we normalize to posix
-//! internally). `relativizeFindResultPath` is ported directly.
+//! Divergence from TS (documented): the TS tool **shells out to `fd`**. The
+//! Rust port walks **in-process** via the `FileSystem` trait and `globset`, so
+//! it works against any `ExecutionEnv` and needs no external binary. It keeps
+//! fd's observable rules: hidden files are included, `.gitignore`/`.ignore`/
+//! `.fdignore` apply hierarchically (see `ignore_rules`), `.git/` is skipped,
+//! symlinks are listed but not followed, and basename versus full-path glob
+//! modes follow ice's `fd --glob [--full-path]` arguments. The walk order is a
+//! deterministic sorted BFS rather than fd's.
 
 use std::collections::VecDeque;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -30,7 +28,9 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::env::FileKind;
-use crate::path_utils::resolve_read_tool_path;
+use crate::error::FileErrorCode;
+use crate::ignore_rules::{is_vcs_dir, IgnoreStack, IgnoreTool};
+use crate::path_utils::resolve_tool_path;
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{
     format_size, truncate_head, TruncationOptions, TruncationResult, DEFAULT_MAX_BYTES,
@@ -80,7 +80,7 @@ impl FindTool {
             name: "find".to_string(),
             description: format!(
                 "Search for files by glob pattern. Returns matching file paths relative to the \
-                 search directory. Skips `.git/` directories. Output is truncated to {DEFAULT_LIMIT} \
+                 search directory. Respects .gitignore and skips `.git/`. Output is truncated to {DEFAULT_LIMIT} \
                  results or {kb}KB (whichever is hit first).",
                 kb = DEFAULT_MAX_BYTES / 1024
             ),
@@ -124,9 +124,8 @@ impl AgentTool for FindTool {
         let cancel = Some(&signal);
         let effective_limit = input.limit.unwrap_or(DEFAULT_LIMIT).max(1) as usize;
 
-        // Resolve the search path (read-only + fuzzy variants).
         let search_path =
-            resolve_read_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
+            resolve_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
                 .await
                 .map_err(file_err_to_agent)?;
 
@@ -141,70 +140,78 @@ impl AgentTool for FindTool {
             return Err(AgentError::Tool(format!("Path not found: {search_path}")));
         }
 
-        // Compile the glob, applying the TS `**/`-prepend rewrite for
-        // path-containing patterns. `**` alone matches everything.
-        let effective_pattern = rewrite_pattern(&input.pattern);
-        let matcher = globset::Glob::new(&effective_pattern)
-            .map_err(|e| AgentError::Validation(format!("find pattern invalid: {e}")))?
-            .compile_matcher();
-
-        // Collect matching paths up to the limit.
-        let mut collected: Vec<String> = Vec::new();
-        let mut result_limit_reached = false;
-
-        // BFS walk from the search root. Match against the relative posix path.
-        let mut queue: VecDeque<(String, String)> = VecDeque::new();
-        queue.push_back((search_path.clone(), String::new()));
-        while let Some((abs_dir, rel_dir)) = queue.pop_front() {
-            if collected.len() >= effective_limit {
-                result_limit_reached = true;
-                break;
+        let glob = FindGlob::new(&input.pattern)?;
+        let root = PathBuf::from(&search_path);
+        let canonical_root = if glob.is_absolute() {
+            match self.env.canonical_path(&search_path, cancel).await {
+                Ok(path) => Some(path),
+                Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+                // Some execution environments cannot canonicalize paths.
+                // Keep their existing absolute-path spelling in that case.
+                Err(_) => None,
             }
-            let mut entries = match self.env.list_dir(&abs_dir, cancel).await {
+        } else {
+            None
+        };
+        let root_stack = IgnoreStack::for_root(&*self.env, &root, IgnoreTool::Find, cancel)
+            .await
+            .map_err(file_err_to_agent)?;
+
+        let mut collected: Vec<String> = Vec::new();
+        // BFS walk from the search root, sorted per directory for a stable
+        // order (fd's order is unspecified).
+        let mut queue: VecDeque<(PathBuf, String, IgnoreStack)> = VecDeque::new();
+        queue.push_back((root.clone(), String::new(), root_stack));
+        'walk: while let Some((abs_dir, rel_dir, parent_stack)) = queue.pop_front() {
+            check_cancelled(&signal)?;
+            let mut entries = match self.env.list_dir(&abs_dir.to_string_lossy(), cancel).await {
                 Ok(e) => e,
-                Err(_) => continue, // unreadable dir — skip
+                Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+                // An unreadable directory is skipped, as fd does.
+                Err(_) => continue,
             };
             entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+            let names: Vec<String> = entries.iter().map(|e| e.name.clone()).collect();
+            let stack = parent_stack
+                .enter(&*self.env, &abs_dir, &names, IgnoreTool::Find, cancel)
+                .await
+                .map_err(file_err_to_agent)?;
             for entry in entries {
-                if collected.len() >= effective_limit {
-                    result_limit_reached = true;
-                    break;
+                if is_vcs_dir(&entry.name, entry.kind) {
+                    continue;
                 }
-                let child_abs = entry.path.to_string_lossy().into_owned();
+                let is_dir = entry.kind == FileKind::Directory;
+                if stack.is_ignored(&entry.path, is_dir) {
+                    continue;
+                }
                 let rel = if rel_dir.is_empty() {
                     entry.name.clone()
                 } else {
                     format!("{rel_dir}/{}", entry.name)
                 };
-                match entry.kind {
-                    FileKind::File => {
-                        if matcher.is_match(&rel) {
-                            collected.push(relativize(&rel));
-                        }
+                let match_path = canonical_root
+                    .as_ref()
+                    .map(|root| root.join(&rel))
+                    .unwrap_or_else(|| entry.path.clone());
+                if glob.is_match(&entry.name, &rel, &match_path) {
+                    let mut shown = rel.clone();
+                    if is_dir {
+                        shown.push('/');
                     }
-                    FileKind::Directory => {
-                        // Skip `.git/` (v1 has no full .gitignore support).
-                        if entry.name == ".git" {
-                            continue;
-                        }
-                        // Directories that match the glob are reported with a
-                        // trailing slash (mirrors `relativizeFindResultPath`).
-                        if matcher.is_match(&rel) {
-                            let mut r = relativize(&rel);
-                            if !r.ends_with('/') {
-                                r.push('/');
-                            }
-                            collected.push(r);
-                        }
-                        queue.push_back((child_abs, rel));
+                    collected.push(shown);
+                    if collected.len() >= effective_limit {
+                        break 'walk;
                     }
-                    FileKind::Symlink => {
-                        // Skip symlinks during the walk (avoid loops).
-                    }
+                }
+                // Symlinks are listed but not followed, as fd does by default.
+                if is_dir {
+                    queue.push_back((entry.path.clone(), rel, stack.clone()));
                 }
             }
         }
-
+        // Mirrors TS: the notice appears when the returned count reaches the
+        // limit (fd --max-results), not only when more results existed.
+        let result_limit_reached = collected.len() >= effective_limit;
         if collected.is_empty() {
             return Ok(AgentToolResult {
                 content: vec![TextContentOrImage::text("No files found matching pattern")],
@@ -253,44 +260,74 @@ impl AgentTool for FindTool {
     }
 }
 
-/// Rewrite the glob pattern the way TS `find.ts` does for the `fd --full-path`
-/// branch: a path-containing pattern (has a `/`) that isn't already rooted or
-/// `**`-prefixed gets a `**/` prepend so it matches at any depth. Patterns with
-/// no `/` are used as-is (basename match). `**` alone stays `**`.
-///
-/// The TS Windows `[/\\]` separator rewrite is intentionally NOT ported — we
-/// normalize all relative paths to posix internally, so the matcher sees `/`.
-fn rewrite_pattern(pattern: &str) -> String {
-    if !pattern.contains('/') {
-        return pattern.to_string();
+/// The compiled find pattern. Mirrors how ice drives `fd --glob`: repeated
+/// leading `./` is stripped; a pattern without `/` matches the entry's
+/// basename; one with `/` matches the full path (`--full-path`), prefixed with
+/// `**/` unless it is absolute or already `**/`-prefixed. An absolute pattern
+/// matches the absolute path; a relative one the path below the search root.
+struct FindGlob {
+    matcher: globset::GlobMatcher,
+    mode: GlobMode,
+}
+
+enum GlobMode {
+    Basename,
+    Relative,
+    Absolute,
+}
+
+impl FindGlob {
+    fn new(pattern: &str) -> Result<Self, AgentError> {
+        let mut stripped = pattern;
+        while let Some(rest) = stripped.strip_prefix("./") {
+            stripped = rest;
+        }
+        if stripped.is_empty() {
+            stripped = pattern;
+        }
+        let normalized = stripped.replace('\\', "/");
+        let (glob, mode) = if !normalized.contains('/') {
+            (normalized, GlobMode::Basename)
+        } else if normalized.starts_with('/') || is_windows_absolute(&normalized) {
+            (normalized, GlobMode::Absolute)
+        } else if normalized.starts_with("**/") {
+            (normalized, GlobMode::Relative)
+        } else {
+            (format!("**/{normalized}"), GlobMode::Relative)
+        };
+        let matcher = globset::GlobBuilder::new(&glob)
+            .literal_separator(true)
+            .build()
+            .map_err(|e| AgentError::Validation(format!("find pattern invalid: {e}")))?
+            .compile_matcher();
+        Ok(Self { matcher, mode })
     }
-    if pattern == "**" || pattern.starts_with('/') || pattern.starts_with("**/") {
-        return strip_native_sep(pattern);
+
+    fn is_match(&self, name: &str, rel: &str, abs: &Path) -> bool {
+        match self.mode {
+            GlobMode::Basename => self.matcher.is_match(name),
+            GlobMode::Relative => self.matcher.is_match(rel),
+            GlobMode::Absolute => self
+                .matcher
+                .is_match(abs.to_string_lossy().replace('\\', "/")),
+        }
     }
-    strip_native_sep(&format!("**/{pattern}"))
+
+    fn is_absolute(&self) -> bool {
+        matches!(self.mode, GlobMode::Absolute)
+    }
 }
 
-/// Normalize any backslash separators to posix `/` (defensive — user patterns
-/// on Windows may contain `\`).
-fn strip_native_sep(p: &str) -> String {
-    p.replace('\\', "/")
+fn is_windows_absolute(p: &str) -> bool {
+    let b = p.as_bytes();
+    b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && b[2] == b'/'
 }
 
-/// Relativize a walk result path. `rel` is already relative to the search root
-/// and posix-normalized; this keeps a trailing `/` for directory matches
-/// (mirrors `relativizeFindResultPath`'s trailing-separator preservation).
-fn relativize(rel: &str) -> String {
-    rel.to_string()
-}
-
-/// Filename component of a path string (for the no-`/` debugging path; unused
-/// in the main walk but kept for parity/debugging clarity).
-#[allow(dead_code)]
-fn basename(p: &str) -> String {
-    Path::new(p)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| p.to_string())
+fn check_cancelled(signal: &CancellationToken) -> Result<(), AgentError> {
+    if signal.is_cancelled() {
+        return Err(AgentError::Tool("Operation aborted".into()));
+    }
+    Ok(())
 }
 
 /// Map a `FileError` into an `AgentError::Tool` (same shape as `read.rs`).

@@ -8,15 +8,18 @@
 //! (ripgrep), parsing its `--json` stream, and re-reads files only for context
 //! blocks. The Rust port implements search **in-process** via the `FileSystem`
 //! trait + the `regex` crate, so the tool works against any `ExecutionEnv`
-//! (including `InMemoryExecutionEnv`, which has no shell). Trade-offs: no
-//! `.gitignore` awareness in v1 (only `.git/` directories are skipped; revisit
-//! via the `ignore` crate for an `OsExecutionEnv`-only fast path), no
-//! auto-download of a binary, and traversal order is a deterministic sorted BFS
-//! rather than rg's walk order. Output shape, match/context line formats,
-//! per-line + byte truncation, and the match-limit semantics match TS exactly.
+//! (including `InMemoryExecutionEnv`, which has no shell). It keeps rg's
+//! observable rules: hidden files are searched, `.gitignore`/`.ignore`/
+//! `.rgignore` apply hierarchically (see `ignore_rules`), `.git/` and
+//! symlinks are not walked, binary files are skipped during the walk, and
+//! `--glob` uses gitignore-style matching with `!` negation. Regex syntax is
+//! Rust's `regex` crate, not JavaScript's or PCRE. Traversal order is a
+//! deterministic sorted BFS rather than rg's walk order. Output shape,
+//! match/context line formats, per-line + byte truncation, and the
+//! match-limit semantics match TS.
 
 use std::collections::VecDeque;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -30,7 +33,9 @@ use tokio_util::sync::CancellationToken;
 
 use crate::env::ExecutionEnv;
 use crate::env::FileKind;
-use crate::path_utils::resolve_read_tool_path;
+use crate::error::FileErrorCode;
+use crate::ignore_rules::{is_vcs_dir, IgnoreStack, IgnoreTool};
+use crate::path_utils::resolve_tool_path;
 use crate::tools::tool_context::ExecutionToolContext;
 use crate::truncate::{
     format_size, truncate_head, truncate_line_default, TruncationOptions, TruncationResult,
@@ -98,7 +103,7 @@ impl GrepTool {
             name: "grep".to_string(),
             description: format!(
                 "Search file contents for a pattern. Returns matching lines with file paths and \
-                 line numbers. Skips `.git/` directories. Output is truncated to {DEFAULT_LIMIT} \
+                 line numbers. Respects .gitignore and skips `.git/`. Output is truncated to {DEFAULT_LIMIT} \
                  matches or {kb}KB (whichever is hit first). Long lines are truncated to \
                  {GREP_MAX_LINE_LENGTH} chars.",
                 kb = DEFAULT_MAX_BYTES / 1024
@@ -157,31 +162,24 @@ impl AgentTool for GrepTool {
             .build()
             .map_err(|e| AgentError::Validation(format!("grep pattern invalid: {e}")))?;
 
-        // Compile the optional glob filter. `has_separator` decides whether to
-        // match the full relative path (`**/*.ts`) or just the basename (`*.ts`),
-        // mirroring rg's basename-glob leniency.
-        let glob: Option<(globset::GlobMatcher, bool)> = match input.glob.as_deref() {
-            Some(g) if !g.is_empty() => {
-                let compiled = globset::Glob::new(g)
-                    .map_err(|e| AgentError::Validation(format!("grep glob invalid: {e}")))?
-                    .compile_matcher();
-                Some((compiled, g.contains('/')))
-            }
+        let glob = match input.glob.as_deref() {
+            Some(g) if !g.is_empty() => Some(GrepGlob::new(g)?),
             _ => None,
         };
 
         // Resolve the search path. A `.`/absent path resolves to the env cwd.
         let search_path =
-            resolve_read_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
+            resolve_tool_path(&*self.env, input.path.as_deref().unwrap_or("."), cancel)
                 .await
                 .map_err(file_err_to_agent)?;
 
         // Determine dir vs file (following a symlinked root via canonical_path).
-        let info = self
-            .env
-            .file_info(&search_path, cancel)
-            .await
-            .map_err(file_err_to_agent)?;
+        // Any failure to stat the root is "Path not found", as in ice.
+        let info = match self.env.file_info(&search_path, cancel).await {
+            Ok(info) => info,
+            Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+            Err(_) => return Err(AgentError::Tool(format!("Path not found: {search_path}"))),
+        };
         let root_kind = if info.kind == FileKind::Symlink {
             match self.env.canonical_path(&search_path, cancel).await {
                 Ok(canon) => match self.env.file_info(&canon.to_string_lossy(), cancel).await {
@@ -194,97 +192,100 @@ impl AgentTool for GrepTool {
             info.kind
         };
 
-        // Mutable collection state shared across the file-search helper.
-        let mut matches: usize = 0;
-        let mut match_limit_reached = false;
-        let mut lines_truncated = false;
-        let mut output_lines: Vec<String> = Vec::new();
+        let mut state = SearchState {
+            re,
+            context: context_val,
+            limit: effective_limit,
+            matches: 0,
+            match_limit_reached: false,
+            lines_truncated: false,
+            output_lines: Vec::new(),
+        };
 
         if root_kind == FileKind::Directory {
+            let root = PathBuf::from(&search_path);
+            let root_stack = IgnoreStack::for_root(&*self.env, &root, IgnoreTool::Grep, cancel)
+                .await
+                .map_err(file_err_to_agent)?;
             // Iterative BFS walk (avoids async-recursion boxing). Sorted entries
             // for deterministic output order.
-            let mut queue: VecDeque<(String, String)> = VecDeque::new();
-            queue.push_back((search_path.clone(), String::new()));
-            while let Some((abs_dir, rel_dir)) = queue.pop_front() {
-                if matches >= effective_limit {
-                    break;
-                }
-                let mut entries = match self.env.list_dir(&abs_dir, cancel).await {
+            let mut queue: VecDeque<(PathBuf, String, IgnoreStack)> = VecDeque::new();
+            queue.push_back((root, String::new(), root_stack));
+            'walk: while let Some((abs_dir, rel_dir, parent_stack)) = queue.pop_front() {
+                check_cancelled(&signal)?;
+                let mut entries = match self.env.list_dir(&abs_dir.to_string_lossy(), cancel).await
+                {
                     Ok(e) => e,
-                    Err(_) => continue, // unreadable dir — skip (TS relies on rg to ignore)
+                    Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+                    // An unreadable directory is skipped, as rg does.
+                    Err(_) => continue,
                 };
                 entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+                let names: Vec<String> = entries.iter().map(|e| e.name.clone()).collect();
+                let stack = parent_stack
+                    .enter(&*self.env, &abs_dir, &names, IgnoreTool::Grep, cancel)
+                    .await
+                    .map_err(file_err_to_agent)?;
                 for entry in entries {
-                    if matches >= effective_limit {
-                        match_limit_reached = true;
-                        break;
+                    if is_vcs_dir(&entry.name, entry.kind) {
+                        continue;
                     }
-                    let child_abs = entry.path.to_string_lossy().into_owned();
+                    let is_dir = entry.kind == FileKind::Directory;
+                    if stack.is_ignored(&entry.path, is_dir) {
+                        continue;
+                    }
+                    let rel = if rel_dir.is_empty() {
+                        entry.name.clone()
+                    } else {
+                        format!("{rel_dir}/{}", entry.name)
+                    };
                     match entry.kind {
                         FileKind::Directory => {
-                            // Skip `.git/` (v1 has no full .gitignore support).
-                            if entry.name == ".git" {
-                                continue;
-                            }
-                            let rel = if rel_dir.is_empty() {
-                                entry.name.clone()
-                            } else {
-                                format!("{rel_dir}/{}", entry.name)
-                            };
-                            queue.push_back((child_abs, rel));
+                            queue.push_back((entry.path.clone(), rel, stack.clone()));
                         }
                         FileKind::File => {
-                            let rel = if rel_dir.is_empty() {
-                                entry.name.clone()
-                            } else {
-                                format!("{rel_dir}/{}", entry.name)
-                            };
-                            search_file(
-                                &*self.env,
-                                cancel,
-                                &re,
-                                glob.as_ref(),
-                                context_val,
-                                effective_limit,
-                                &child_abs,
-                                &rel,
-                                &mut matches,
-                                &mut match_limit_reached,
-                                &mut lines_truncated,
-                                &mut output_lines,
-                            )
-                            .await?;
+                            if let Some(g) = &glob {
+                                if !g.includes_file(&rel, &entry.name) {
+                                    continue;
+                                }
+                            }
+                            check_cancelled(&signal)?;
+                            state
+                                .search_file(
+                                    &*self.env,
+                                    cancel,
+                                    &entry.path.to_string_lossy(),
+                                    &rel,
+                                    true,
+                                )
+                                .await?;
+                            if state.match_limit_reached {
+                                break 'walk;
+                            }
                         }
-                        FileKind::Symlink => {
-                            // Skip symlinks during the walk (avoids loops). The
-                            // search root symlink is followed above.
-                        }
+                        // rg does not follow symlinks while walking.
+                        FileKind::Symlink => {}
                     }
                 }
             }
         } else if root_kind == FileKind::File {
+            // An explicit file is searched even if binary or ignored, as rg does.
             let rel = basename(&search_path);
-            search_file(
-                &*self.env,
-                cancel,
-                &re,
-                glob.as_ref(),
-                context_val,
-                effective_limit,
-                &search_path,
-                &rel,
-                &mut matches,
-                &mut match_limit_reached,
-                &mut lines_truncated,
-                &mut output_lines,
-            )
-            .await?;
+            state
+                .search_file(&*self.env, cancel, &search_path, &rel, false)
+                .await?;
         } else {
             // Symlink root that didn't resolve to a file/dir (or not_supported).
             return Err(AgentError::Tool(format!(
                 "Path is neither a file nor a directory: {search_path}"
             )));
         }
+        let SearchState {
+            match_limit_reached,
+            lines_truncated,
+            output_lines,
+            ..
+        } = state;
 
         if output_lines.is_empty() {
             return Ok(AgentToolResult {
@@ -341,82 +342,146 @@ impl AgentTool for GrepTool {
     }
 }
 
-/// Search a single file for `re`, appending formatted match/context lines to
-/// `output_lines` and bumping `matches`. Reads via the `FileSystem` trait; an
-/// unreadable file (non-UTF-8, etc.) is silently skipped (a clean divergence —
-/// in-process search can't match lines it can't decode).
-#[allow(clippy::too_many_arguments)]
-async fn search_file(
-    env: &dyn ExecutionEnv,
-    cancel: Option<&CancellationToken>,
-    re: &regex::Regex,
-    glob: Option<&(globset::GlobMatcher, bool)>,
-    context_val: usize,
-    effective_limit: usize,
-    abs: &str,
-    rel: &str,
-    matches: &mut usize,
-    match_limit_reached: &mut bool,
-    lines_truncated: &mut bool,
-    output_lines: &mut Vec<String>,
-) -> Result<(), AgentError> {
-    // Glob filter (basename vs full-relative-path per `has_separator`).
-    if let Some((matcher, has_sep)) = glob {
-        let basename = basename(abs);
-        let passes = if *has_sep {
-            matcher.is_match(rel)
-        } else {
-            matcher.is_match(&basename)
+/// Match state shared across the files of one search.
+struct SearchState {
+    re: regex::Regex,
+    context: usize,
+    limit: usize,
+    matches: usize,
+    match_limit_reached: bool,
+    lines_truncated: bool,
+    output_lines: Vec<String>,
+}
+
+/// Bytes rg inspects for a NUL to classify a file as binary.
+const BINARY_PROBE_BYTES: usize = 8 * 1024;
+
+impl SearchState {
+    /// Search one file, appending formatted match/context lines. Lines follow
+    /// rg: split on LF only (no extra empty line after a final LF, and a lone
+    /// CR does not start a new line); displayed text drops CR. Invalid UTF-8 is
+    /// decoded lossily rather than skipping the file. A walked file with a NUL
+    /// byte near its start is treated as binary and skipped.
+    async fn search_file(
+        &mut self,
+        env: &dyn ExecutionEnv,
+        cancel: Option<&CancellationToken>,
+        abs: &str,
+        rel: &str,
+        skip_binary: bool,
+    ) -> Result<(), AgentError> {
+        let bytes = match env.read_binary_file(abs, cancel).await {
+            Ok(b) => b,
+            Err(e) if e.code == FileErrorCode::Aborted => return Err(file_err_to_agent(e)),
+            // Unreadable files are skipped, as rg does.
+            Err(_) => return Ok(()),
         };
-        if !passes {
+        if skip_binary && bytes[..bytes.len().min(BINARY_PROBE_BYTES)].contains(&0) {
             return Ok(());
+        }
+        let text = String::from_utf8_lossy(&bytes);
+        let mut lines: Vec<&str> = if text.is_empty() {
+            Vec::new()
+        } else {
+            text.split('\n').collect()
+        };
+        if !text.is_empty() && text.ends_with('\n') {
+            lines.pop();
+        }
+
+        for (idx, line) in lines.iter().enumerate() {
+            if !self.re.is_match(line) {
+                continue;
+            }
+            let line_number = idx + 1; // 1-indexed.
+            self.matches += 1;
+            if self.context == 0 {
+                self.push_line(rel, line_number, line, true);
+            } else {
+                // Context block: match line uses `:`, context lines use `-`.
+                // Overlapping windows repeat lines, as in ice.
+                let start = line_number.saturating_sub(self.context).max(1);
+                let end = (line_number + self.context).min(lines.len());
+                for current in start..=end {
+                    let text_line = lines.get(current - 1).copied().unwrap_or("");
+                    self.push_line(rel, current, text_line, current == line_number);
+                }
+            }
+            // Stop as soon as the cap is reached (ice kills rg here).
+            if self.matches >= self.limit {
+                self.match_limit_reached = true;
+                return Ok(());
+            }
+        }
+        Ok(())
+    }
+
+    fn push_line(&mut self, rel: &str, number: usize, line: &str, is_match: bool) {
+        let display = line.replace('\r', "");
+        let out = truncate_line_default(&display);
+        if out.was_truncated {
+            self.lines_truncated = true;
+        }
+        if is_match {
+            self.output_lines
+                .push(format!("{rel}:{number}: {}", out.text));
+        } else {
+            self.output_lines
+                .push(format!("{rel}-{number}- {}", out.text));
+        }
+    }
+}
+
+/// An rg `--glob` filter. Like rg, it uses gitignore-style matching: a
+/// pattern without `/` matches the basename at any depth, one with `/`
+/// matches the path below the search root, and a leading `!` excludes.
+struct GrepGlob {
+    matcher: globset::GlobMatcher,
+    negate: bool,
+    basename: bool,
+}
+
+impl GrepGlob {
+    fn new(glob: &str) -> Result<Self, AgentError> {
+        let (negate, pattern) = match glob.strip_prefix('!') {
+            Some(rest) => (true, rest),
+            None => (false, glob),
+        };
+        let pattern = pattern.replace('\\', "/");
+        // A leading slash anchors a glob to the search root. Strip exactly
+        // that anchor, and keep it in path mode even for a basename pattern.
+        let anchored = pattern.starts_with('/');
+        let pattern = if anchored { &pattern[1..] } else { &pattern };
+        let basename = !anchored && !pattern.contains('/');
+        let matcher = globset::GlobBuilder::new(pattern)
+            .literal_separator(true)
+            .build()
+            .map_err(|e| AgentError::Validation(format!("grep glob invalid: {e}")))?
+            .compile_matcher();
+        Ok(Self {
+            matcher,
+            negate,
+            basename,
+        })
+    }
+
+    fn matches(&self, rel: &str, name: &str) -> bool {
+        if self.basename {
+            self.matcher.is_match(name)
+        } else {
+            self.matcher.is_match(rel)
         }
     }
 
-    // Read; skip on failure (non-UTF-8 / unreadable).
-    let text = match env.read_text_file(abs, cancel).await {
-        Ok(t) => t,
-        Err(_) => return Ok(()),
-    };
-    // Normalize line endings, split on `\n` (mirror TS getFileLines).
-    let normalized = text.replace("\r\n", "\n").replace('\r', "\n");
-    let lines: Vec<&str> = normalized.split('\n').collect();
+    /// A positive glob selects files; a negated one removes them.
+    fn includes_file(&self, rel: &str, name: &str) -> bool {
+        self.matches(rel, name) != self.negate
+    }
+}
 
-    for (idx, line) in lines.iter().enumerate() {
-        if *matches >= effective_limit {
-            *match_limit_reached = true;
-            return Ok(());
-        }
-        if !re.is_match(line) {
-            continue;
-        }
-        let line_number = idx + 1; // 1-indexed.
-        *matches += 1;
-
-        if context_val == 0 {
-            // No context: emit the single match line (truncated).
-            let out = truncate_line_default(line);
-            if out.was_truncated {
-                *lines_truncated = true;
-            }
-            output_lines.push(format!("{rel}:{line_number}: {}", out.text));
-        } else {
-            // Context block: match line uses `:`, context lines use `-`.
-            let start = line_number.saturating_sub(context_val).max(1);
-            let end = (line_number + context_val).min(lines.len());
-            for current in start..=end {
-                let text_line = lines.get(current - 1).copied().unwrap_or("");
-                let out = truncate_line_default(text_line);
-                if out.was_truncated {
-                    *lines_truncated = true;
-                }
-                if current == line_number {
-                    output_lines.push(format!("{rel}:{current}: {}", out.text));
-                } else {
-                    output_lines.push(format!("{rel}-{current}- {}", out.text));
-                }
-            }
-        }
+fn check_cancelled(signal: &CancellationToken) -> Result<(), AgentError> {
+    if signal.is_cancelled() {
+        return Err(AgentError::Tool("Operation aborted".into()));
     }
     Ok(())
 }
