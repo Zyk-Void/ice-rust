@@ -696,6 +696,7 @@ pub(super) async fn render_session_history(
                     chat.add_child(Arc::new(Spacer::new(1)));
                     rendered_any = true;
                 }
+                AgentMessage::Custom(custom) if is_hidden_custom(custom) => {}
                 AgentMessage::Custom(custom) => {
                     if let Some(session) = &extension_session {
                         if let Some(component) = extension_message_component(
@@ -931,6 +932,17 @@ pub(super) fn launch_restores_history(args: &Args) -> bool {
         || args.session.is_some()
         || args.session_id.is_some()
         || args.fork.is_some()
+}
+
+/// A custom message stored with `display: false` (extension context such as
+/// recalled memory) is model input only, never a transcript row.
+pub(super) fn is_hidden_custom(custom: &ice_agent::CustomMessage) -> bool {
+    custom.role == ice_harness::messages::CUSTOM_ROLE
+        && custom
+            .data
+            .get("display")
+            .and_then(|display| display.as_bool())
+            == Some(false)
 }
 
 pub(super) fn custom_message_fallback(custom: &ice_agent::CustomMessage) -> String {

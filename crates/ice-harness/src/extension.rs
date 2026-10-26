@@ -55,6 +55,14 @@ pub struct BeforeRunEvent<'a> {
     pub signal: CancellationToken,
 }
 
+/// Text an extension adds to the model context for one prompt.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PromptContext {
+    /// Custom message type the text is stored under.
+    pub custom_type: String,
+    pub text: String,
+}
+
 /// Everything known before the summarizer runs (`session_before_compact`).
 #[derive(Clone)]
 pub struct BeforeCompactEvent {
@@ -129,6 +137,14 @@ pub trait HarnessExtension: Send + Sync {
     /// Replacement system prompt for this run only. Returning `None` keeps the
     /// composed prompt. Nothing is persisted.
     async fn before_run(&self, _event: &BeforeRunEvent<'_>) -> Option<String> {
+        None
+    }
+
+    /// Context for this run's prompt (e.g. recalled memory). It is stored
+    /// right after the prompt as a hidden custom message, so later requests
+    /// resend it unchanged: the history stays a stable prefix the provider can
+    /// cache, which a per-run system prompt change would break every turn.
+    async fn prompt_context(&self, _event: &BeforeRunEvent<'_>) -> Option<PromptContext> {
         None
     }
 

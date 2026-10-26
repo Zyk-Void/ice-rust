@@ -96,6 +96,9 @@ impl TranscriptSnapshot {
     }
 }
 
+/// URL scheme of the click-target links components embed in their rows.
+const INTERNAL_LINK_SCHEME: &str = "ice://";
+
 /// The normalized, composed fullscreen frame used for screen-wide selection.
 /// Rows are captured after layout, jump indicator and overlays, but before any
 /// selection highlight. `cursor` is kept separately because cursor markers are
@@ -1470,6 +1473,19 @@ impl TuiAltScreen {
         if let Ok(mut snapshot) = self.current_screen_snapshot.lock() {
             *snapshot = Some(displayed_snapshot);
         }
+        // `ice://` links only mark click targets for the screen snapshot. Sent
+        // to the terminal they are styled as hyperlinks (underlined on hover),
+        // so they stop here; hover feedback is painted by the components.
+        let visible: Vec<String> = visible
+            .into_iter()
+            .map(|row| {
+                if row.contains(INTERNAL_LINK_SCHEME) {
+                    crate::strip_osc8_links(&row, |url| url.starts_with(INTERNAL_LINK_SCHEME))
+                } else {
+                    row
+                }
+            })
+            .collect();
 
         // Check for full redraw
         let previous = self
@@ -2184,6 +2200,30 @@ mod tests {
         let rows = tui.screen_snapshot().unwrap().rows;
         assert_eq!(crate::expand_link_id(&rows[1], 1), Some(7));
         assert_eq!(crate::expand_link_id(&rows[0], 1), None);
+    }
+
+    #[test]
+    fn internal_click_links_stay_in_the_snapshot_but_never_reach_the_terminal() {
+        let screen = Arc::new(Text::new(
+            "\x1b]8;;ice://expand/7\x07+3 lines\x1b]8;;\x07 \x1b]8;;https://a\x07web\x1b]8;;\x07",
+            0,
+            0,
+        ));
+        let terminal = ResizableTerminal::new(24, 4);
+        let output = terminal.output();
+        let tui = TuiAltScreen::new(Box::new(terminal), false, None);
+        tui.set_layout_root(Some(screen));
+        tui.start_readerless();
+
+        let rows = tui.screen_snapshot().unwrap().rows;
+        assert_eq!(crate::expand_link_id(&rows[0], 1), Some(7));
+        let written = output.lock().unwrap().clone();
+        assert!(written.contains("+3 lines"), "{written:?}");
+        assert!(!written.contains("ice://"), "{written:?}");
+        assert!(
+            written.contains("https://a"),
+            "real links are kept: {written:?}"
+        );
     }
 
     #[test]

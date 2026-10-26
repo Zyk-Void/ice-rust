@@ -11,12 +11,24 @@
 
 use std::any::Any;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use super::component::Component;
 use crate::box_component::Box;
 use crate::markdown::Markdown;
 use crate::theme::{theme, theme_revision};
+use crate::utils::{apply_background_to_line, truncate_to_width};
+
+/// Status an integration attaches to a user message (e.g. what memory did for
+/// that prompt). The badge sits right-aligned on the message box's bottom
+/// padding row; detail rows, when there are any, render inside the message
+/// box under the text. Both may carry OSC 8 links to make them click targets.
+pub trait MessageAnnotation: Send + Sync {
+    /// Badge for the bottom row, at most `width` columns, or `None` to hide.
+    fn badge(&self, width: usize) -> Option<String>;
+    /// Rows under the message text, each at most `width` columns.
+    fn details(&self, width: usize) -> Vec<String>;
+}
 
 const OSC133_ZONE_START: &str = "\x1b]133;A\x07";
 const OSC133_ZONE_END: &str = "\x1b]133;B\x07";
@@ -36,6 +48,7 @@ pub struct UserMessageComponent {
     inner: Mutex<Box>,
     /// Theme revision the current inner box was built against.
     built_revision: AtomicU64,
+    annotation: Mutex<Option<Arc<dyn MessageAnnotation>>>,
 }
 
 fn build_box(text: &str, output_pad: usize) -> Box {
@@ -60,6 +73,7 @@ impl UserMessageComponent {
             output_pad: 1,
             inner: Mutex::new(inner),
             built_revision: AtomicU64::new(theme_revision()),
+            annotation: Mutex::new(None),
         }
     }
 
@@ -71,6 +85,59 @@ impl UserMessageComponent {
             output_pad: pad,
             inner: Mutex::new(inner),
             built_revision: AtomicU64::new(theme_revision()),
+            annotation: self.annotation,
+        }
+    }
+
+    /// The submitted text.
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+
+    /// Attach (or with `None`, remove) the message's annotation.
+    pub fn set_annotation(&self, annotation: Option<Arc<dyn MessageAnnotation>>) {
+        if let Ok(mut slot) = self.annotation.lock() {
+            *slot = annotation;
+        }
+    }
+
+    pub fn annotation(&self) -> Option<Arc<dyn MessageAnnotation>> {
+        self.annotation.lock().ok().and_then(|slot| slot.clone())
+    }
+
+    /// Lay the annotation over the box rows: details under the text, and the
+    /// badge right-aligned on the box's bottom padding row, so a collapsed
+    /// annotation adds no height.
+    fn annotate(&self, lines: &mut Vec<String>, width: usize) {
+        let Some(annotation) = self.annotation() else {
+            return;
+        };
+        let bg = theme().colors.surface;
+        let pad = " ".repeat(self.output_pad);
+        let inner_width = width.saturating_sub(self.output_pad * 2).max(1);
+        // Box(pad, 1): one background row above and below the text.
+        let bottom = lines.len() - 1;
+        for (offset, row) in annotation.details(inner_width).into_iter().enumerate() {
+            // An over-wide row would push the box past `width`.
+            let row = if crate::visible_width(&row) > inner_width {
+                truncate_to_width(&row, inner_width, "…")
+            } else {
+                row
+            };
+            lines.insert(
+                bottom + offset,
+                apply_background_to_line(&format!("{pad}{row}"), width, |s| bg.bg(s)),
+            );
+        }
+        if let Some(badge) = annotation.badge(inner_width) {
+            let badge = truncate_to_width(&badge, inner_width, "…");
+            let gap = " ".repeat(inner_width - crate::visible_width(&badge));
+            let last = lines.len() - 1;
+            lines[last] = apply_background_to_line(
+                &format!("{pad}{}{badge}{pad}", bg.bg(&gap)),
+                width,
+                |s| bg.bg(s),
+            );
         }
     }
 }
@@ -94,6 +161,7 @@ impl Component for UserMessageComponent {
         if lines.is_empty() {
             return lines;
         }
+        self.annotate(&mut lines, width);
         // Prepend zone-start to the first line, append zone-end+final to the
         // last line. These are zero-width escapes so visible layout is unchanged.
         let first = lines.first_mut().unwrap();
@@ -142,6 +210,62 @@ mod tests {
         assert!(joined.contains(OSC133_ZONE_START), "missing zone-start A");
         assert!(joined.contains(OSC133_ZONE_END), "missing zone-end B");
         assert!(joined.contains(OSC133_ZONE_FINAL), "missing zone-final C");
+    }
+
+    struct Fixed(Option<&'static str>, Vec<&'static str>);
+    impl MessageAnnotation for Fixed {
+        fn badge(&self, _width: usize) -> Option<String> {
+            self.0.map(String::from)
+        }
+        fn details(&self, _width: usize) -> Vec<String> {
+            self.1.iter().map(|row| row.to_string()).collect()
+        }
+    }
+
+    fn plain_rows(c: &UserMessageComponent, width: usize) -> Vec<String> {
+        c.render(width).iter().map(|row| strip_ansi(row)).collect()
+    }
+
+    #[test]
+    fn annotation_badge_sits_bottom_right_and_details_go_inside_the_box() {
+        let c = UserMessageComponent::new("hey");
+        let before = plain_rows(&c, 30);
+        c.set_annotation(Some(Arc::new(Fixed(Some("[mem]"), vec![]))));
+        let collapsed = plain_rows(&c, 30);
+        assert_eq!(collapsed.len(), before.len(), "a badge adds no rows");
+        assert_eq!(collapsed[1], before[1], "the text row is untouched");
+        assert_eq!(
+            collapsed.last().unwrap(),
+            &format!("{}[mem] ", " ".repeat(30 - 6))
+        );
+
+        c.set_annotation(Some(Arc::new(Fixed(Some("[mem]"), vec!["detail one"]))));
+        let rows = plain_rows(&c, 30);
+        assert_eq!(rows.len(), before.len() + 1, "{rows:?}");
+        assert_eq!(rows[2].trim_end(), " detail one");
+        assert!(rows.last().unwrap().ends_with("[mem] "), "{rows:?}");
+        assert!(
+            rows.iter().all(|row| crate::visible_width(row) == 30),
+            "{rows:?}"
+        );
+
+        c.set_annotation(Some(Arc::new(Fixed(None, vec![]))));
+        assert_eq!(plain_rows(&c, 30), before);
+    }
+
+    #[test]
+    fn annotation_badge_is_cut_to_the_box_width() {
+        let c = UserMessageComponent::new("hi");
+        c.set_annotation(Some(Arc::new(Fixed(
+            Some("[a badge far wider than the box]"),
+            vec!["a detail row that is far wider than the box"],
+        ))));
+        let rows = plain_rows(&c, 20);
+        assert!(
+            rows.iter().all(|row| crate::visible_width(row) == 20),
+            "{rows:?}"
+        );
+        assert!(rows.last().unwrap().contains('…'), "{rows:?}");
     }
 
     #[test]
