@@ -1,8 +1,8 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0–2 implemented in the unmerged stack
+Status: Phases 0–3 implemented in the unmerged stack
 `feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
-`feat/cli-mcp-resources`. Phase 1 was cherry-picked from `ae868f2` onto Phase 0
+`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts`. Phase 1 was cherry-picked from `ae868f2` onto Phase 0
 as `e13d431`; the original output-guard branch is unchanged. Later phases are
 not started. Plan originally based on `main` at `ae1e46b`.
 
@@ -233,7 +233,14 @@ and removals, approval cleanup, targeted refresh without process restart,
 
 ---
 
-## Phase 3: prompts as slash commands (#19)
+## Phase 3: prompts as slash commands (#19) — done
+
+Implemented on `feat/cli-mcp-prompts`: paginated capability-gated metadata,
+PMA-style prompt names, quoted positional/named arguments, required-argument
+validation before server calls, multi-message flattening, and asynchronous
+normal TUI submission. A manager watch channel refreshes both slash dispatch
+and autocomplete after discovery, reconnect, disable/remove, and targeted
+prompt catalog changes. Offline fixtures cover these lifecycle paths.
 
 **Spec:** PMA-README "MCP Prompts" (`README.md:521-532`); `PMA/prompts.ts`:
 `resolveCachedPrompts` 19, `parsePromptArgs` 44 (quotes, `key=value`),

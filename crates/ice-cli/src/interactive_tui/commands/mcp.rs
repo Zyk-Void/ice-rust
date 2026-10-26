@@ -2,7 +2,80 @@ use super::*;
 use crate::interactive_tui::mcp_panel::{self, McpPanel, McpPanelView, PanelAction};
 use crate::mcp::{McpManager, ServerStatus};
 
-const USAGE: &str = "/mcp [status|tools|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
+const USAGE: &str = "/mcp [status|tools|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
+
+struct McpPromptCommand {
+    name: String,
+    description: String,
+}
+impl SlashCommand for McpPromptCommand {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn description_owned(&self) -> String {
+        self.description.clone()
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let ctx = ctx.clone();
+        let storage = ctx.session.harness().session().storage();
+        let command = self.name.clone();
+        let args = args.to_owned();
+        tokio::spawn(async move {
+            let result = ctx
+                .reload_context
+                .mcp_tools
+                .get_prompt(&command, &args)
+                .await;
+            if ctx
+                .state
+                .event_drain
+                .session_changing
+                .load(std::sync::atomic::Ordering::Acquire)
+                || !Arc::ptr_eq(&storage, &ctx.session.harness().session().storage())
+            {
+                return;
+            }
+            match result {
+                Ok(prompt) => submit_user_prompt(&ctx, &prompt),
+                Err(error) => add_error_message(&ctx.chat, &error),
+            }
+            ctx.tui.request_render(false);
+        });
+    }
+}
+pub(in crate::interactive_tui) fn register_prompts(
+    registry: &mut CommandRegistry,
+    manager: &McpManager,
+) {
+    for (server, prompt) in manager.prompts() {
+        let name = prompt.command_name(&server);
+        if registry.find(&name).is_none() {
+            registry.register(Arc::new(McpPromptCommand {
+                name,
+                description: if prompt.description.is_empty() {
+                    "Run MCP prompt".into()
+                } else {
+                    prompt.description
+                },
+            }));
+        }
+    }
+}
+fn prompts_report(manager: &McpManager, selected: Option<&str>) -> String {
+    let lines: Vec<_> = manager
+        .prompts()
+        .into_iter()
+        .filter(|(server, _)| selected.map_or(true, |selected| selected == server))
+        .map(|(server, prompt)| {
+            format!("{} — {}", prompt.command_name(&server), prompt.description)
+        })
+        .collect();
+    if lines.is_empty() {
+        "No MCP prompts available.".into()
+    } else {
+        lines.join("\n")
+    }
+}
 pub(super) struct McpCommand;
 impl SlashCommand for McpCommand {
     fn name(&self) -> &'static str {
@@ -56,6 +129,8 @@ pub(in crate::interactive_tui) async fn apply(
     let words: Vec<_> = parsed.iter().map(String::as_str).collect();
     match words.as_slice() {
         ["tools"] => return Ok(tools_report(manager, None)),
+        ["prompts"] => return Ok(prompts_report(manager, None)),
+        ["prompts", server] => return Ok(prompts_report(manager, Some(server))),
         ["reconnect"] => manager.reconnect(None).await?,
         ["reconnect", name] => manager.reconnect(Some(name)).await?,
         ["enable", name] => manager.set_disabled(name, false).await?,
@@ -151,6 +226,10 @@ pub(in crate::interactive_tui) fn panel(ctx: &CommandContext) {
 }
 
 #[cfg(test)]
+#[path = "mcp_prompt_tests.rs"]
+mod prompt_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use ice_tui::AutocompleteProvider;
@@ -231,7 +310,12 @@ mod tests {
             provider.get_suggestions(input, input.len()).unwrap().items[0].text,
             "disable"
         );
-        for command in ["reconnect", "enable", "disable", "remove"] {
+        let input = "/mcp pro";
+        assert_eq!(
+            provider.get_suggestions(input, input.len()).unwrap().items[0].text,
+            "prompts"
+        );
+        for command in ["reconnect", "enable", "disable", "remove", "prompts"] {
             let input = format!("/mcp {command} de");
             let suggestions = provider.get_suggestions(&input, input.len()).unwrap();
             assert_eq!(suggestions.items[0].text, "demo");

@@ -189,7 +189,9 @@ no hub.
   Resource discovery/read tools (default-on `exposeResources`), targeted tool
   and resource catalog refresh, asynchronous server-request dispatch, and bounded
   output/blob materialization are implemented in the Tier 4 stack (PRs: TBD).
-  HTTP/SSE transports, OAuth, prompt discovery, resource subscriptions, sampling,
+  MCP prompts are discovered with pagination and exposed as live TUI slash
+  commands with quoted positional/named arguments and normal user submission.
+  HTTP/SSE transports, OAuth, resource subscriptions, sampling,
   and elicitation remain unported. Subagent MCP pass-through
   in §1.8 is separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,

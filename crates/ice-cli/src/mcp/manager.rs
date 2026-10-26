@@ -38,6 +38,7 @@ struct ServerState {
     client: Option<Arc<Client>>,
     catalog: Option<Vec<ToolInfo>>,
     discovered: Vec<McpTool>,
+    prompts: Vec<Prompt>,
 }
 struct Inner {
     harness: ice_harness::agent_harness::WeakAgentHarness,
@@ -53,6 +54,7 @@ struct Inner {
     operation: tokio::sync::Mutex<()>,
     /// Output spill files for the whole session; survives reconnects.
     spill: Arc<output_guard::SpillStore>,
+    prompt_changes: watch::Sender<u64>,
 }
 #[derive(Clone)]
 pub struct McpManager(Arc<Inner>);
@@ -77,10 +79,52 @@ impl McpManager {
             refreshing: Mutex::new(HashSet::new()),
             operation: tokio::sync::Mutex::new(()),
             spill: Default::default(),
+            prompt_changes: watch::channel(0).0,
         }))
     }
     pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
         self.0.operation.lock().await
+    }
+    pub fn prompt_changes(&self) -> watch::Receiver<u64> {
+        self.0.prompt_changes.subscribe()
+    }
+    pub fn prompts(&self) -> Vec<(String, Prompt)> {
+        self.0
+            .servers
+            .lock()
+            .unwrap()
+            .iter()
+            .flat_map(|(server, state)| {
+                state
+                    .prompts
+                    .iter()
+                    .cloned()
+                    .map(|prompt| (server.clone(), prompt))
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    }
+    pub async fn get_prompt(&self, command: &str, input: &str) -> Result<String, String> {
+        let (server, prompt, client) = self
+            .0
+            .servers
+            .lock()
+            .unwrap()
+            .iter()
+            .find_map(|(server, state)| {
+                state
+                    .prompts
+                    .iter()
+                    .find(|prompt| prompt.command_name(server) == command)
+                    .and_then(|prompt| {
+                        state
+                            .client
+                            .clone()
+                            .map(|client| (server.clone(), prompt.clone(), client))
+                    })
+            })
+            .ok_or("MCP prompt is no longer available")?;
+        prompts::get_prompt(&client, &server, &prompt, input).await
     }
     pub fn registered_tools(&self) -> Vec<HarnessTool> {
         self.0.tools.lock().unwrap().clone()
@@ -197,6 +241,9 @@ impl McpManager {
         let mut discoveries = tokio::task::JoinSet::new();
         for name in targets.drain() {
             let old = self.0.servers.lock().unwrap().remove(&name);
+            self.0
+                .prompt_changes
+                .send_modify(|version| *version = version.wrapping_add(1));
             let names = match &old {
                 Some(ServerState {
                     status: ServerStatus::Connected { tools },
@@ -238,6 +285,7 @@ impl McpManager {
                     client: None,
                     catalog,
                     discovered: Vec::new(),
+                    prompts: Vec::new(),
                 },
             );
             if disabled {
@@ -255,7 +303,10 @@ impl McpManager {
                     )
                     .await
                     .map_err(|_| "MCP discovery timed out".to_string())??;
-                    Ok::<_, String>((client, tools))
+                    let prompts = tokio::time::timeout(START_TIMEOUT, client.list_prompts())
+                        .await
+                        .map_err(|_| "MCP prompts/list timed out".to_string())??;
+                    Ok::<_, String>((client, tools, prompts))
                 }
                 .await;
                 (name, result)
@@ -264,7 +315,7 @@ impl McpManager {
         while let Some(result) = discoveries.join_next().await {
             let (name, discovered) = result.map_err(|e| e.to_string())?;
             let result = async {
-                let (client, discovered) = discovered?;
+                let (client, discovered, prompts) = discovered?;
                 let direct_tools = self.0.servers.lock().unwrap()[&name]
                     .config
                     .direct_tools
@@ -277,13 +328,14 @@ impl McpManager {
                     Arc::downgrade(&client),
                     self.0.spill.clone(),
                 );
-                Ok::<_, String>((client, names, catalog, discovered))
+                Ok::<_, String>((client, names, catalog, discovered, prompts))
             }
             .await;
             let mut servers = self.0.servers.lock().unwrap();
             let state = servers.get_mut(&name).unwrap();
             match result {
-                Ok((client, tools, catalog, discovered)) => {
+                Ok((client, tools, catalog, discovered, prompts)) => {
+                    state.prompts = prompts;
                     state.discovered = discovered;
                     state.client = Some(client);
                     state.status = ServerStatus::Connected { tools };
@@ -292,6 +344,9 @@ impl McpManager {
                 Err(error) => state.status = ServerStatus::Failed(error),
             }
         }
+        self.0
+            .prompt_changes
+            .send_modify(|version| *version = version.wrapping_add(1));
         Ok(())
     }
     /// Re-list only the changed catalog, then register real tools before resources.
@@ -319,6 +374,18 @@ impl McpManager {
             ),
             _ => return Ok(()),
         };
+        if catalog == "prompts" {
+            let prompts = tokio::time::timeout(START_TIMEOUT, client.list_prompts())
+                .await
+                .map_err(|_| "MCP prompts/list timed out".to_string())??;
+            if let Some(state) = self.0.servers.lock().unwrap().get_mut(server) {
+                state.prompts = prompts;
+            }
+            self.0
+                .prompt_changes
+                .send_modify(|version| *version = version.wrapping_add(1));
+            return Ok(());
+        }
         let settings = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
         let guard = OutputGuard {
             store: self.0.spill.clone(),
@@ -354,8 +421,7 @@ impl McpManager {
         let server = server.to_owned();
         Handlers {
             list_changed: Some(Arc::new(move |catalog| {
-                // Prompts have no catalog yet.
-                if catalog != "tools" && catalog != "resources" {
+                if !matches!(catalog, "tools" | "resources" | "prompts") {
                     return;
                 }
                 let Some(inner) = manager.upgrade() else {

@@ -1,6 +1,10 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
 mod manager;
 mod output_guard;
+mod prompts;
+pub use prompts::Prompt;
+#[cfg(test)]
+mod prompt_tests;
 #[cfg(test)]
 mod resource_tests;
 #[cfg(test)]
