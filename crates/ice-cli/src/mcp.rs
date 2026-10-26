@@ -1,12 +1,18 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
+mod cache;
 mod elicitation;
 mod elicitation_schema;
+mod http;
 mod import;
 mod manager;
+pub mod oauth;
 mod output_guard;
 mod prompts;
+mod proxy;
 mod sampling;
+mod script;
 pub mod setup;
+mod ui;
 pub use prompts::Prompt;
 #[cfg(test)]
 mod prompt_tests;
@@ -34,7 +40,7 @@ use ice_extensions::UiDialogMailbox;
 use ice_harness::agent_harness::AgentHarness;
 use ice_harness::types::{HarnessLifecycleHooks, HarnessTool};
 use ice_plugin_sdk::process::ProcessTree;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::sync::{mpsc, oneshot, watch, Semaphore};
 use tokio_util::sync::CancellationToken;
@@ -44,6 +50,8 @@ const CALL_TIMEOUT: Duration = Duration::from_secs(60);
 const MAX_LINE: u64 = 16 * 1024 * 1024;
 /// Bounds dialogs or model calls a single server can have waiting on this client.
 const MAX_INBOUND: usize = 8;
+/// `requestTimeoutMs` above a day is treated as a day.
+const MAX_REQUEST_TIMEOUT_MS: u64 = 24 * 60 * 60 * 1000;
 /// Frames waiting for the dispatcher; when full, the reader stops reading (backpressure).
 const INBOUND_QUEUE: usize = 64;
 
@@ -111,6 +119,68 @@ pub struct ServerConfig {
     pub direct_tools: DirectTools,
     #[serde(default = "expose_resources_default")]
     pub expose_resources: bool,
+    /// Extra `mcp` search vocabulary: `{ "tool-or-glob": ["keyword", ...] }`.
+    #[serde(default)]
+    pub search_keywords: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub lifecycle: Lifecycle,
+    /// Minutes before a `lazy` server is stopped when unused; `settings.idleTimeout`
+    /// otherwise, then ten minutes.
+    pub idle_timeout: Option<f64>,
+    /// Per-call timeout for this server's tools, in milliseconds.
+    pub request_timeout_ms: Option<u64>,
+    /// Streamable HTTP (or legacy SSE) endpoint, instead of `command`.
+    pub url: Option<String>,
+    /// An rmcp-mux Unix socket, instead of `command` or `url`; expands `~` and `${VAR}`.
+    pub socket: Option<String>,
+    /// HTTP headers; values support `${VAR}` and `$env:VAR`.
+    #[serde(default)]
+    pub headers: BTreeMap<String, String>,
+    pub auth: Option<Auth>,
+    pub bearer_token: Option<String>,
+    pub bearer_token_env: Option<String>,
+    /// Settings for `auth: "oauth"`.
+    #[serde(default)]
+    pub oauth: oauth::OAuthConfig,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Auth {
+    Bearer,
+    Oauth,
+}
+impl ServerConfig {
+    fn request_timeout(&self) -> Duration {
+        self.request_timeout_ms
+            .filter(|ms| *ms > 0)
+            // Bounded so the deadline arithmetic cannot overflow.
+            .map_or(CALL_TIMEOUT, |ms| {
+                Duration::from_millis(ms.min(MAX_REQUEST_TIMEOUT_MS))
+            })
+    }
+}
+
+/// When a server runs. `eager` is the icers default (D6); pi-mcp-adapter's is `lazy`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Lifecycle {
+    /// Start with the session.
+    #[default]
+    Eager,
+    /// Start on first use; stop after `idleTimeout`.
+    Lazy,
+    /// Start with the session; restart with backoff when it stops.
+    KeepAlive,
+    /// Start on first use; then never idle out and restart with backoff.
+    LazyKeepAlive,
+}
+impl Lifecycle {
+    fn lazy(self) -> bool {
+        matches!(self, Lifecycle::Lazy | Lifecycle::LazyKeepAlive)
+    }
+    fn keep_alive(self) -> bool {
+        matches!(self, Lifecycle::KeepAlive | Lifecycle::LazyKeepAlive)
+    }
 }
 fn expose_resources_default() -> bool {
     true
@@ -302,6 +372,90 @@ impl Drop for Process {
     }
 }
 
+/// What keeps a connection open; `close` ends it from any thread.
+enum Link {
+    Process(Process),
+    Http(http::HttpLink),
+    /// A connection to a shared process; closing it never stops that process.
+    #[cfg(unix)]
+    Socket(std::os::unix::net::UnixStream),
+}
+impl Link {
+    fn close(&self) {
+        match self {
+            Link::Process(process) => process.tree.kill(),
+            Link::Http(http) => http.close(),
+            #[cfg(unix)]
+            Link::Socket(stream) => {
+                let _ = stream.shutdown(std::net::Shutdown::Both);
+            }
+        }
+    }
+}
+/// A dropped client must not leave its transport running: a socket's reader
+/// and writer threads hold their own handles to it.
+impl Drop for Link {
+    fn drop(&mut self) {
+        self.close();
+    }
+}
+
+/// Routes frames from any transport: responses settle `pending`, `ping` is
+/// answered at once, and other requests and notifications go to the dispatcher.
+#[derive(Clone)]
+struct Router {
+    outgoing: std::sync::mpsc::Sender<Value>,
+    pending: Pending,
+    closed: Arc<AtomicBool>,
+}
+impl Router {
+    /// `Err` means the frame is not JSON-RPC 2.0 and the connection must end;
+    /// `Ok(Some)` is a frame for the dispatcher.
+    fn route(&self, value: Value) -> Result<Option<Inbound>, ()> {
+        if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
+            return Err(());
+        }
+        if let Some(method) = value.get("method") {
+            let method = method.as_str().unwrap_or_default().to_owned();
+            let params = value.get("params").cloned().unwrap_or(Value::Null);
+            return Ok(match value.get("id") {
+                // Answered here so a busy dispatcher can never delay liveness checks.
+                Some(id) if method == "ping" => {
+                    let _ = self
+                        .outgoing
+                        .send(json!({"jsonrpc":"2.0","id":id,"result":{}}));
+                    None
+                }
+                Some(id) => Some(Inbound::Request {
+                    id: id.clone(),
+                    method,
+                    params,
+                }),
+                None => Some(Inbound::Notification { method, params }),
+            });
+        }
+        if let Some(id) = value.get("id").and_then(Value::as_u64) {
+            if let Some(reply) = self.pending.lock().unwrap().remove(&id) {
+                let result = if let Some(error) = value.get("error") {
+                    Err(format!("MCP RPC error: {error}"))
+                } else {
+                    value
+                        .get("result")
+                        .cloned()
+                        .ok_or_else(|| "MCP response has no result".into())
+                };
+                let _ = reply.send(result);
+            }
+        }
+        Ok(None)
+    }
+    /// The transport is gone: stop the dispatcher's loop and fail waiting calls.
+    fn fail(&self, reason: &str) {
+        self.closed.store(true, Ordering::SeqCst);
+        fail_pending(&self.pending, reason);
+    }
+}
+
 struct Client {
     outgoing: std::sync::mpsc::Sender<Value>,
     in_flight: InFlight,
@@ -310,9 +464,51 @@ struct Client {
     closed: Arc<AtomicBool>,
     capabilities: Value,
     init: OnceLock<ServerInit>,
-    _process: Process,
+    link: Link,
+    /// When a request last started; lazy servers stop after their idle timeout.
+    last_used: Mutex<std::time::Instant>,
 }
 impl Client {
+    /// Connect with the transport the config names: `url` or `command`.
+    /// `token` is the OAuth access token for an `auth: "oauth"` server.
+    fn start(
+        name: &str,
+        config: &ServerConfig,
+        cwd: &Path,
+        handlers: Handlers,
+        token: Option<&str>,
+    ) -> Result<Arc<Self>, String> {
+        let set = [
+            !config.command.is_empty(),
+            config.url.is_some(),
+            config.socket.is_some(),
+        ];
+        if set.iter().filter(|set| **set).count() > 1 {
+            return Err("MCP server must set only one of command, url and socket".into());
+        }
+        match (&config.url, &config.socket) {
+            (Some(_), _) => Self::connect_http(config, handlers, token),
+            (_, Some(socket)) => Self::connect_socket(socket, handlers),
+            _ => Self::spawn(name, config, cwd, handlers),
+        }
+    }
+
+    /// An rmcp-mux service socket. icers owns only this connection; the mux
+    /// owns the server process, so it is never started or stopped here.
+    #[cfg(unix)]
+    fn connect_socket(socket: &str, handlers: Handlers) -> Result<Arc<Self>, String> {
+        let path = expand_path(socket)?;
+        let stream = std::os::unix::net::UnixStream::connect(&path)
+            .map_err(|e| format!("connect {}: {e}", path.display()))?;
+        let reader = stream.try_clone().map_err(|e| e.to_string())?;
+        let writer = stream.try_clone().map_err(|e| e.to_string())?;
+        Self::over_lines(reader, writer, Link::Socket(stream), handlers)
+    }
+    #[cfg(not(unix))]
+    fn connect_socket(_: &str, _: Handlers) -> Result<Arc<Self>, String> {
+        Err("MCP socket servers (rmcp-mux) are unsupported on this platform".into())
+    }
+
     fn spawn(
         name: &str,
         config: &ServerConfig,
@@ -322,8 +518,8 @@ impl Client {
         if config.command.is_empty() {
             return Err("missing MCP command".into());
         }
-        let runtime = tokio::runtime::Handle::try_current()
-            .map_err(|_| "MCP client requires a Tokio runtime")?;
+        // Checked before spawning, so a missing runtime cannot strand the child's readers.
+        tokio::runtime::Handle::try_current().map_err(|_| "MCP client requires a Tokio runtime")?;
         let mut command = Command::new(&config.command);
         command
             .args(&config.args)
@@ -349,100 +545,9 @@ impl Client {
             }
         };
         let mut process = Process { child, tree };
-        let mut stdin = process.child.stdin.take().ok_or("missing stdin")?;
+        let stdin = process.child.stdin.take().ok_or("missing stdin")?;
         let stdout = process.child.stdout.take().ok_or("missing stdout")?;
         let stderr = process.child.stderr.take().ok_or("missing stderr")?;
-        let pending: Pending = Arc::new(Mutex::new(HashMap::new()));
-        let (outgoing, receiver) = std::sync::mpsc::channel::<Value>();
-        let closed = Arc::new(AtomicBool::new(false));
-        let writer_closed = closed.clone();
-        let reader_closed = closed.clone();
-        let writer_pending = pending.clone();
-        std::thread::spawn(move || {
-            for value in receiver {
-                if writeln!(stdin, "{value}")
-                    .and_then(|_| stdin.flush())
-                    .is_err()
-                {
-                    writer_closed.store(true, Ordering::SeqCst);
-                    fail_pending(&writer_pending, "MCP stdin closed");
-                    break;
-                }
-            }
-        });
-        let capabilities = handlers.capabilities();
-        let (inbound, inbound_rx) = mpsc::channel(INBOUND_QUEUE);
-        let in_flight = InFlight::default();
-        runtime.spawn(dispatch(
-            inbound_rx,
-            outgoing.clone(),
-            handlers,
-            in_flight.clone(),
-        ));
-        let reader_pending = pending.clone();
-        let reader_outgoing = outgoing.clone();
-        std::thread::spawn(move || {
-            let mut reader = BufReader::new(stdout);
-            loop {
-                // Bound individual protocol frames, including a server that never sends a newline.
-                let mut line = Vec::new();
-                let read =
-                    std::io::Read::take(&mut reader, MAX_LINE + 1).read_until(b'\n', &mut line);
-                if !matches!(read, Ok(n) if n > 0 && n as u64 <= MAX_LINE) {
-                    break;
-                }
-                let value: Value = match serde_json::from_slice(&line) {
-                    Ok(value) => value,
-                    Err(_) => break,
-                };
-                if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
-                    break;
-                }
-                if let Some(method) = value.get("method") {
-                    let method = method.as_str().unwrap_or_default().to_owned();
-                    let params = value.get("params").cloned().unwrap_or(Value::Null);
-                    let sent = match value.get("id") {
-                        // Answered here so a busy dispatcher can never delay liveness checks.
-                        Some(id) if method == "ping" => reader_outgoing
-                            .send(json!({"jsonrpc":"2.0","id":id,"result":{}}))
-                            .is_ok(),
-                        Some(id) => inbound
-                            .blocking_send(Inbound::Request {
-                                id: id.clone(),
-                                method,
-                                params,
-                            })
-                            .is_ok(),
-                        None => inbound
-                            .blocking_send(Inbound::Notification { method, params })
-                            .is_ok(),
-                    };
-                    if !sent {
-                        break;
-                    }
-                    continue;
-                }
-                if let Some(id) = value.get("id").and_then(Value::as_u64) {
-                    if let Some(reply) = reader_pending.lock().unwrap().remove(&id) {
-                        let result = if let Some(error) = value.get("error") {
-                            Err(format!("MCP RPC error: {error}"))
-                        } else {
-                            value
-                                .get("result")
-                                .cloned()
-                                .ok_or_else(|| "MCP response has no result".into())
-                        };
-                        let _ = reply.send(result);
-                    }
-                }
-            }
-            reader_closed.store(true, Ordering::SeqCst);
-            let _ = inbound.blocking_send(Inbound::Shutdown);
-            fail_pending(
-                &reader_pending,
-                "MCP server closed or sent an invalid frame",
-            );
-        });
         let server = name.to_owned();
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stderr);
@@ -456,7 +561,93 @@ impl Client {
                 }
             }
         });
-        Ok(Arc::new(Self {
+        Self::over_lines(stdout, stdin, Link::Process(process), handlers)
+    }
+
+    /// A client over newline-delimited JSON-RPC (stdio, Unix sockets).
+    fn over_lines(
+        reader: impl std::io::Read + Send + 'static,
+        mut writer: impl Write + Send + 'static,
+        link: Link,
+        handlers: Handlers,
+    ) -> Result<Arc<Self>, String> {
+        let (client, router, inbound, receiver) = Self::new(link, handlers)?;
+        let writer_router = router.clone();
+        std::thread::spawn(move || {
+            for value in receiver {
+                if writeln!(writer, "{value}")
+                    .and_then(|_| writer.flush())
+                    .is_err()
+                {
+                    writer_router.fail("MCP stdin closed");
+                    break;
+                }
+            }
+        });
+        std::thread::spawn(move || {
+            let mut reader = BufReader::new(reader);
+            loop {
+                // Bound individual protocol frames, including a server that never sends a newline.
+                let mut line = Vec::new();
+                let read =
+                    std::io::Read::take(&mut reader, MAX_LINE + 1).read_until(b'\n', &mut line);
+                if !matches!(read, Ok(n) if n > 0 && n as u64 <= MAX_LINE) {
+                    break;
+                }
+                let Ok(value) = serde_json::from_slice::<Value>(&line) else {
+                    break;
+                };
+                match router.route(value) {
+                    Err(()) => break,
+                    Ok(Some(frame)) => {
+                        if inbound.blocking_send(frame).is_err() {
+                            break;
+                        }
+                    }
+                    Ok(None) => {}
+                }
+            }
+            let _ = inbound.blocking_send(Inbound::Shutdown);
+            router.fail("MCP server closed or sent an invalid frame");
+        });
+        Ok(client)
+    }
+
+    /// The transport-independent half: dispatcher, pending map and outgoing queue.
+    /// The transport drains `receiver` and feeds frames through the `Router`.
+    #[allow(clippy::type_complexity)]
+    fn new(
+        link: Link,
+        handlers: Handlers,
+    ) -> Result<
+        (
+            Arc<Self>,
+            Router,
+            mpsc::Sender<Inbound>,
+            std::sync::mpsc::Receiver<Value>,
+        ),
+        String,
+    > {
+        let runtime = tokio::runtime::Handle::try_current()
+            .map_err(|_| "MCP client requires a Tokio runtime")?;
+        let pending: Pending = Arc::new(Mutex::new(HashMap::new()));
+        let (outgoing, receiver) = std::sync::mpsc::channel::<Value>();
+        let closed = Arc::new(AtomicBool::new(false));
+        let capabilities = handlers.capabilities();
+        let (inbound, inbound_rx) = mpsc::channel(INBOUND_QUEUE);
+        let in_flight = InFlight::default();
+        runtime.spawn(dispatch(
+            inbound_rx,
+            outgoing.clone(),
+            handlers,
+            in_flight.clone(),
+        ));
+        let router = Router {
+            outgoing: outgoing.clone(),
+            pending: pending.clone(),
+            closed: closed.clone(),
+        };
+        let client = Arc::new(Self {
             outgoing,
             in_flight,
             pending,
@@ -464,8 +655,25 @@ impl Client {
             closed,
             capabilities,
             init: OnceLock::new(),
-            _process: process,
-        }))
+            link,
+            last_used: Mutex::new(std::time::Instant::now()),
+        });
+        Ok((client, router, inbound, receiver))
+    }
+
+    fn idle_for(&self) -> Duration {
+        self.last_used.lock().unwrap().elapsed()
+    }
+    /// A call or a server request is still open.
+    fn busy(&self) -> bool {
+        !self.pending.lock().unwrap().is_empty() || !self.in_flight.lock().unwrap().is_empty()
+    }
+
+    /// Stop the connection (kills a stdio server's process tree) and fail waiting calls.
+    fn shut_down(&self, reason: &str) {
+        self.closed.store(true, Ordering::SeqCst);
+        self.link.close();
+        fail_pending(&self.pending, reason);
     }
 
     fn instructions(&self) -> Option<&str> {
@@ -493,6 +701,7 @@ impl Client {
         timeout: Duration,
     ) -> Result<Value, String> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        *self.last_used.lock().unwrap() = std::time::Instant::now();
         let (tx, rx) = oneshot::channel();
         {
             let mut pending = self.pending.lock().unwrap();
@@ -602,49 +811,14 @@ impl Client {
                 .and_then(Value::as_array)
                 .ok_or("MCP resources/list missing resources")?
             {
-                let name = item
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP resource missing name")?;
-                let uri = item
-                    .get("uri")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP resource missing URI")?;
-                // Distinct names can sanitize alike ("Project Notes", "project-notes");
-                // later ones get a numeric suffix so every resource stays readable.
-                let base = format!("read_{}", resource_tool_name(name));
-                let name = (1..)
-                    .map(|n| {
-                        if n == 1 {
-                            base.clone()
-                        } else {
-                            format!("{base}_{n}")
-                        }
-                    })
-                    .find(|name| used.insert(name.clone()))
-                    .unwrap();
-                let description = item
-                    .get("description")
-                    .and_then(Value::as_str)
-                    .unwrap_or("Read MCP resource");
-                tools.push(McpTool {
-                    schema: Tool {
-                        name: format!("{server}_{name}"),
-                        description: description.chars().filter(|c| !c.is_control()).collect(),
-                        parameters: serde_json::from_value(
-                            json!({"type":"object","properties":{},"additionalProperties":false}),
-                        )
-                        .unwrap(),
-                        constrained_sampling: None,
-                    },
-                    remote_name: name.clone(),
-                    // Resource tools are not listed in the `/mcp` catalog.
-                    tokens: 0,
-                    resource_uri: Some(uri.to_owned()),
-                    client: self.clone(),
-                    approval: config.approve_tools.requires(&name),
-                    guard: guard.clone(),
-                });
+                tools.push(McpTool::resource(
+                    server,
+                    item,
+                    config,
+                    &mut used,
+                    ToolLink::Live(self.clone()),
+                    guard,
+                )?);
             }
             cursor = page
                 .get("nextCursor")
@@ -685,43 +859,14 @@ impl Client {
                 .and_then(Value::as_array)
                 .ok_or("MCP tools/list missing tools")?
             {
-                let name = item
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP tool missing name")?;
-                if name.is_empty()
-                    || !name
-                        .chars()
-                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-                    || !names.insert(name.to_owned())
-                {
-                    return Err(format!("invalid or duplicate MCP tool name: {name}"));
-                }
-                let schema = item
-                    .get("inputSchema")
-                    .cloned()
-                    .ok_or("MCP tool missing inputSchema")?;
-                let description = item.get("description").and_then(Value::as_str);
-                // Same rough estimate as pi-mcp-adapter's panel.
-                let tokens =
-                    (name.len() + description.map_or(0, str::len) + schema.to_string().len())
-                        .div_ceil(4)
-                        + 10;
-                tools.push(McpTool {
-                    schema: Tool {
-                        name: format!("{server}_{name}"),
-                        description: description.unwrap_or("MCP tool").into(),
-                        parameters: serde_json::from_value(schema)
-                            .map_err(|e| format!("invalid MCP inputSchema: {e}"))?,
-                        constrained_sampling: None,
-                    },
-                    remote_name: name.into(),
-                    tokens,
-                    resource_uri: None,
-                    client: self.clone(),
-                    approval: config.approve_tools.requires(name),
-                    guard: guard.clone(),
-                });
+                tools.push(McpTool::tool(
+                    server,
+                    item,
+                    config,
+                    &mut names,
+                    ToolLink::Live(self.clone()),
+                    guard,
+                )?);
             }
             cursor = page
                 .get("nextCursor")
@@ -878,6 +1023,35 @@ impl Drop for RequestGuard<'_> {
     }
 }
 
+/// `~` and `${VAR}`/`$env:VAR` expansion for local paths.
+#[cfg_attr(not(unix), allow(dead_code))]
+fn expand_path(value: &str) -> Result<PathBuf, String> {
+    let value = http::interpolate(value)?;
+    Ok(match value.strip_prefix("~/") {
+        Some(rest) => dirs::home_dir()
+            .ok_or("no home directory for ~")?
+            .join(rest),
+        None if value == "~" => dirs::home_dir().ok_or("no home directory for ~")?,
+        None => PathBuf::from(value),
+    })
+}
+
+/// Distinct names can sanitize alike ("Project Notes", "project-notes"); later
+/// ones get a numeric suffix so every resource stays readable.
+fn unique_resource_name(used: &mut HashSet<String>, name: &str) -> String {
+    let base = format!("read_{}", resource_tool_name(name));
+    (1..)
+        .map(|n| {
+            if n == 1 {
+                base.clone()
+            } else {
+                format!("{base}_{n}")
+            }
+        })
+        .find(|name| used.insert(name.clone()))
+        .unwrap()
+}
+
 fn resource_tool_name(name: &str) -> String {
     let mut sanitized = String::new();
     for part in name
@@ -898,15 +1072,156 @@ fn resource_tool_name(name: &str) -> String {
     sanitized
 }
 
+/// Same rough schema-cost estimate as pi-mcp-adapter's panel.
+fn tool_tokens(name: &str, description: Option<&str>, schema: &Value) -> usize {
+    (name.len() + description.map_or(0, str::len) + schema.to_string().len()).div_ceil(4) + 10
+}
+
+/// How a tool reaches its server: a live client, or a server that is started
+/// on the first call (lazy lifecycle, registered from the metadata cache).
+#[derive(Clone)]
+enum ToolLink {
+    Live(Arc<Client>),
+    Lazy {
+        manager: std::sync::Weak<manager::Inner>,
+        server: String,
+    },
+}
+
 #[derive(Clone)]
 struct McpTool {
+    server: String,
+    /// `_meta.ui`: the tool has an MCP App to open after a call.
+    ui: Option<ui::UiMeta>,
+    /// The server's `tools/list` or `resources/list` entry, kept for the cache.
+    raw: Value,
     schema: Tool,
     remote_name: String,
     tokens: usize,
     resource_uri: Option<String>,
-    client: Arc<Client>,
+    link: ToolLink,
     approval: bool,
     guard: OutputGuard,
+    timeout: Duration,
+}
+impl McpTool {
+    /// One `tools/list` entry; `names` rejects duplicates within the server.
+    fn tool(
+        server: &str,
+        item: &Value,
+        config: &ServerConfig,
+        names: &mut HashSet<String>,
+        link: ToolLink,
+        guard: &OutputGuard,
+    ) -> Result<Self, String> {
+        let name = item
+            .get("name")
+            .and_then(Value::as_str)
+            .ok_or("MCP tool missing name")?;
+        if name.is_empty()
+            || !name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            || !names.insert(name.to_owned())
+        {
+            return Err(format!("invalid or duplicate MCP tool name: {name}"));
+        }
+        let schema = item
+            .get("inputSchema")
+            .cloned()
+            .ok_or("MCP tool missing inputSchema")?;
+        let description = item.get("description").and_then(Value::as_str);
+        Ok(Self {
+            server: server.into(),
+            ui: ui::meta(item),
+            raw: item.clone(),
+            tokens: tool_tokens(name, description, &schema),
+            schema: Tool {
+                name: format!("{server}_{name}"),
+                description: description.unwrap_or("MCP tool").into(),
+                parameters: serde_json::from_value(schema)
+                    .map_err(|e| format!("invalid MCP inputSchema: {e}"))?,
+                constrained_sampling: None,
+            },
+            remote_name: name.into(),
+            resource_uri: None,
+            link,
+            approval: config.approve_tools.requires(name),
+            guard: guard.clone(),
+            timeout: config.request_timeout(),
+        })
+    }
+
+    /// One `resources/list` entry as a no-argument read tool.
+    fn resource(
+        server: &str,
+        item: &Value,
+        config: &ServerConfig,
+        used: &mut HashSet<String>,
+        link: ToolLink,
+        guard: &OutputGuard,
+    ) -> Result<Self, String> {
+        let name = item
+            .get("name")
+            .and_then(Value::as_str)
+            .ok_or("MCP resource missing name")?;
+        let uri = item
+            .get("uri")
+            .and_then(Value::as_str)
+            .ok_or("MCP resource missing URI")?;
+        let name = unique_resource_name(used, name);
+        let description = item
+            .get("description")
+            .and_then(Value::as_str)
+            .unwrap_or("Read MCP resource");
+        Ok(Self {
+            server: server.into(),
+            ui: None,
+            schema: Tool {
+                name: format!("{server}_{name}"),
+                description: description.chars().filter(|c| !c.is_control()).collect(),
+                parameters: serde_json::from_value(
+                    json!({"type":"object","properties":{},"additionalProperties":false}),
+                )
+                .unwrap(),
+                constrained_sampling: None,
+            },
+            raw: item.clone(),
+            approval: config.approve_tools.requires(&name),
+            remote_name: name,
+            // Resource tools are not listed in the `/mcp` catalog.
+            tokens: 0,
+            resource_uri: Some(uri.to_owned()),
+            link,
+            guard: guard.clone(),
+            timeout: config.request_timeout(),
+        })
+    }
+
+    /// The cached catalog as lazy tools; entries that no longer parse are skipped.
+    fn from_cache(
+        server: &str,
+        cached: &cache::CachedServer,
+        config: &ServerConfig,
+        link: &ToolLink,
+        guard: &OutputGuard,
+    ) -> Vec<Self> {
+        let mut names = HashSet::new();
+        let mut tools: Vec<_> = cached
+            .tools
+            .iter()
+            .filter_map(|item| {
+                Self::tool(server, item, config, &mut names, link.clone(), guard).ok()
+            })
+            .collect();
+        if config.expose_resources {
+            let mut used = HashSet::new();
+            tools.extend(cached.resources.iter().filter_map(|item| {
+                Self::resource(server, item, config, &mut used, link.clone(), guard).ok()
+            }));
+        }
+        tools
+    }
 }
 #[async_trait]
 impl AgentTool for McpTool {
@@ -918,11 +1233,33 @@ impl AgentTool for McpTool {
     }
     async fn execute(
         &self,
-        _: &str,
+        call_id: &str,
         params: Value,
         signal: CancellationToken,
-        _: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
+        on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
     ) -> Result<AgentToolResult, AgentError> {
+        if let ToolLink::Lazy { manager, server } = &self.link {
+            // Start the server, then run the live tool that replaced this cached
+            // one, so a changed schema or resource URI is used from the first call.
+            let manager = manager
+                .upgrade()
+                .map(McpManager)
+                .ok_or_else(|| AgentError::Tool("MCP session ended".into()))?;
+            manager
+                .connect_lazy(server)
+                .await
+                .map_err(AgentError::Tool)?;
+            let (live, _, _) = manager
+                .live_tool(server, &self.schema.name)
+                .filter(|(live, _, _)| matches!(live.link, ToolLink::Live(_)))
+                .ok_or_else(|| {
+                    AgentError::Tool(format!(
+                        "MCP server {server} no longer offers {}",
+                        self.remote_name
+                    ))
+                })?;
+            return live.execute(call_id, params, signal, on_update).await;
+        }
         let (method, params) = match &self.resource_uri {
             Some(uri) => ("resources/read", json!({"uri":uri})),
             None => (
@@ -930,9 +1267,11 @@ impl AgentTool for McpTool {
                 json!({"name":self.remote_name,"arguments":params}),
             ),
         };
-        let mut result = self
-            .client
-            .request(method, params, signal, CALL_TIMEOUT)
+        let ToolLink::Live(client) = &self.link else {
+            unreachable!("lazy tools return above");
+        };
+        let mut result = client
+            .request(method, params, signal, self.timeout)
             .await
             .map_err(AgentError::Tool)?;
         if self.resource_uri.is_some() {
@@ -1103,9 +1442,7 @@ fn watch_shutdown(
             };
             if closed {
                 if let Some(client) = client.upgrade() {
-                    client.closed.store(true, Ordering::SeqCst);
-                    client._process.tree.kill();
-                    fail_pending(&client.pending, "MCP session ended");
+                    client.shut_down("MCP session ended");
                 }
                 spill.cleanup();
                 break;
@@ -1120,8 +1457,18 @@ async fn discover_server(
     name: &str,
     config: &ServerConfig,
     cwd: &Path,
+    agent_dir: &Path,
 ) -> Result<Vec<McpTool>, String> {
-    let client = Client::spawn(name, config, cwd, Handlers::default())?;
+    // Same transport choice as a session; an OAuth server uses its stored token.
+    let token = match (&config.url, config.auth) {
+        (Some(url), Some(Auth::Oauth)) => Some(
+            oauth::access_token(agent_dir, name, &http::interpolate(url)?, &config.oauth)
+                .await?
+                .ok_or_else(|| format!("needs sign-in: run /mcp-auth {name}"))?,
+        ),
+        _ => None,
+    };
+    let client = Client::start(name, config, cwd, Handlers::default(), token.as_deref())?;
     // Inspection never executes tools, so nothing is ever spilled.
     let guard = OutputGuard::default();
     tokio::time::timeout(START_TIMEOUT, client.discover(name, config, &guard))
@@ -1223,6 +1570,7 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
     let mut tasks = Vec::new();
     for (name, (config, source)) in layered.servers {
         let cwd = cwd.to_path_buf();
+        let agent_dir = dir.clone();
         let label = if own.contains(&source) {
             name.clone()
         } else {
@@ -1232,7 +1580,7 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
             if config.disabled {
                 return (format!("{label}: disabled\n"), false);
             }
-            match discover_server(&name, &config, &cwd).await {
+            match discover_server(&name, &config, &cwd, &agent_dir).await {
                 Ok(tools) => (
                     format!(
                         "{label}: ready\n{}",

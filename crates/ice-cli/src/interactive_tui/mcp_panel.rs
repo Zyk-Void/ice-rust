@@ -466,6 +466,7 @@ impl McpPanel {
             match server.status {
                 ServerStatus::Connecting => format!("  {}", colors.warning.fg("connecting")),
                 ServerStatus::Failed(_) => format!("  {}", colors.error.fg("failed")),
+                ServerStatus::Idle { .. } => format!("  {}", colors.dim.fg("idle")),
                 _ => String::new(),
             }
         };

@@ -18,7 +18,7 @@ fn view_lists_detected_sources_conflicts_and_notes() {
         json!({"mcpServers": {
             "shared": {"command":"cursor"},
             "only": {"command":"c"},
-            "remote": {"url":"https://example.invalid/mcp"},
+            "remote": {"type":"http"},
         }}),
     );
     write(home.path(), ".codex/config.toml", json!({}));
@@ -69,10 +69,7 @@ fn view_lists_detected_sources_conflicts_and_notes() {
             },
         ]
     );
-    assert_eq!(
-        view.notes,
-        ["import:cursor: remote: unsupported (http)".to_string()]
-    );
+    assert_eq!(view.notes, ["import:cursor: remote: no url".to_string()]);
     assert_eq!(view.configured, ["only", "shared"]);
 
     let trusted = view_from(home.path(), agent.path(), project.path());
@@ -139,12 +136,23 @@ async fn set_import_edits_global_imports_and_reloads_servers() {
 }
 
 #[tokio::test]
-async fn presets_add_stdio_entries_and_refuse_http_and_duplicates() {
+async fn presets_write_their_entries_and_refuse_duplicates() {
     let agent = tempfile::tempdir().unwrap();
     let project = tempfile::tempdir().unwrap();
     let (_harness, manager) = manager(agent.path(), project.path()).await;
-    let error = manager.add_preset("context7").await.unwrap_err();
-    assert!(error.contains("HTTP"), "{error}");
+    let entry = |id: &str| PRESETS.iter().find(|p| p.id == id).unwrap().entry_json();
+    assert_eq!(
+        entry("context7"),
+        json!({"url":"https://mcp.context7.com/mcp"})
+    );
+    assert_eq!(
+        entry("notion"),
+        json!({"url":"https://mcp.notion.com/mcp","auth":"oauth"})
+    );
+    assert_eq!(
+        entry("chrome-devtools"),
+        json!({"command":"npx","args":["-y","chrome-devtools-mcp@1.6.0"]})
+    );
     assert!(manager.add_preset("missing").await.is_err());
     // An existing entry is never overwritten (and nothing is spawned).
     write(

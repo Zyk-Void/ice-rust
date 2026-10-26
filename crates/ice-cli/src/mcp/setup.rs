@@ -12,8 +12,8 @@ pub enum PresetEntry {
         command: &'static str,
         args: &'static [&'static str],
     },
-    /// Needs the HTTP transport, which icers does not have yet.
-    Http(&'static str),
+    /// A remote server; `oauth` presets sign in with `/mcp-auth` (step 7.5).
+    Http { url: &'static str, oauth: bool },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -31,31 +31,46 @@ pub const PRESETS: [Preset; 6] = [
         id: "deepwiki",
         name: "DeepWiki",
         summary: "Ask questions about public GitHub repositories.",
-        entry: PresetEntry::Http("https://mcp.deepwiki.com/mcp"),
+        entry: PresetEntry::Http {
+            url: "https://mcp.deepwiki.com/mcp",
+            oauth: false,
+        },
     },
     Preset {
         id: "context7",
         name: "Context7",
         summary: "Look up current library documentation and examples.",
-        entry: PresetEntry::Http("https://mcp.context7.com/mcp"),
+        entry: PresetEntry::Http {
+            url: "https://mcp.context7.com/mcp",
+            oauth: false,
+        },
     },
     Preset {
         id: "parallel-search",
         name: "Parallel Search",
         summary: "Search the web and fetch pages without an API key.",
-        entry: PresetEntry::Http("https://search.parallel.ai/mcp"),
+        entry: PresetEntry::Http {
+            url: "https://search.parallel.ai/mcp",
+            oauth: false,
+        },
     },
     Preset {
         id: "notion",
         name: "Notion",
         summary: "Search and work with your Notion workspace.",
-        entry: PresetEntry::Http("https://mcp.notion.com/mcp"),
+        entry: PresetEntry::Http {
+            url: "https://mcp.notion.com/mcp",
+            oauth: true,
+        },
     },
     Preset {
         id: "github",
         name: "GitHub",
         summary: "Work with GitHub through your Copilot account.",
-        entry: PresetEntry::Http("https://api.githubcopilot.com/mcp"),
+        entry: PresetEntry::Http {
+            url: "https://api.githubcopilot.com/mcp",
+            oauth: true,
+        },
     },
     Preset {
         id: "chrome-devtools",
@@ -67,6 +82,17 @@ pub const PRESETS: [Preset; 6] = [
         },
     },
 ];
+
+impl Preset {
+    /// The `mcp.json` server entry this preset writes.
+    pub fn entry_json(&self) -> Value {
+        match &self.entry {
+            PresetEntry::Stdio { command, args } => json!({"command":command,"args":args}),
+            PresetEntry::Http { url, oauth: false } => json!({"url":url}),
+            PresetEntry::Http { url, oauth: true } => json!({"url":url,"auth":"oauth"}),
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ImportSource {

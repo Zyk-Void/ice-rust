@@ -882,3 +882,109 @@ async fn an_aborted_call_cancels_server_requests_only_when_no_other_call_waits()
     drop(aborted(1_002));
     assert!(question.is_cancelled());
 }
+
+#[tokio::test]
+async fn the_cache_shows_a_catalog_before_or_without_a_connection() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let write = |server: Value| {
+        std::fs::write(
+            dir.path().join("mcp.json"),
+            serde_json::to_vec(&json!({"mcpServers":{"fake":server}})).unwrap(),
+        )
+        .unwrap()
+    };
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let manager = || {
+        McpManager::new(
+            &harness,
+            &Default::default(),
+            dir.path(),
+            dir.path().into(),
+            false,
+            Default::default(),
+        )
+    };
+    let catalog = |manager: &McpManager| {
+        manager.snapshot()[0]
+            .catalog
+            .as_ref()
+            .map(|tools| tools.iter().map(|t| t.name.clone()).collect::<Vec<_>>())
+    };
+    write(json!({"command":config.command,"env":config.env}));
+    manager().reconnect(None).await.unwrap();
+
+    // A new session with the server disabled still lists the cached tools.
+    write(json!({"command":config.command,"env":config.env,"disabled":true}));
+    let offline = manager();
+    offline.reconnect(None).await.unwrap();
+    assert!(matches!(
+        offline.snapshot()[0].status,
+        ServerStatus::Disabled
+    ));
+    assert_eq!(catalog(&offline), Some(vec!["echo".into(), "other".into()]));
+
+    // A different launch command must not reuse that catalog.
+    write(json!({"command":"icers-missing-mcp-fixture","disabled":true}));
+    let changed = manager();
+    changed.reconnect(None).await.unwrap();
+    assert_eq!(catalog(&changed), None);
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn socket_servers_share_a_process_that_closing_never_stops() {
+    use std::io::{BufRead, Write};
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("mux.sock");
+    let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+    let (closed_tx, closed_rx) = std::sync::mpsc::channel();
+    // A stand-in for rmcp-mux: serves each connection until the client hangs up.
+    std::thread::spawn(move || {
+        for stream in listener.incoming() {
+            let stream = stream.unwrap();
+            let mut writer = stream.try_clone().unwrap();
+            for line in std::io::BufReader::new(stream).lines() {
+                let Ok(line) = line else { break };
+                let message: Value = serde_json::from_str(&line).unwrap();
+                let result = match message["method"].as_str() {
+                    Some("initialize") => {
+                        json!({"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"mux","version":"1"}})
+                    }
+                    Some("tools/list") => {
+                        json!({"tools":[{"name":"shared","inputSchema":{"type":"object"}}]})
+                    }
+                    _ => continue,
+                };
+                let reply = json!({"jsonrpc":"2.0","id":message["id"],"result":result});
+                writeln!(writer, "{reply}").unwrap();
+            }
+            closed_tx.send(()).unwrap();
+        }
+    });
+    std::env::set_var("ICERS_MCP_SOCKET_TEST_DIR", dir.path());
+    let config: ServerConfig =
+        serde_json::from_value(json!({"socket":"${ICERS_MCP_SOCKET_TEST_DIR}/mux.sock"})).unwrap();
+    for _ in 0..2 {
+        let client = Client::start("mux", &config, dir.path(), Handlers::default(), None).unwrap();
+        let tools = client
+            .discover("mux", &config, &OutputGuard::default())
+            .await
+            .unwrap();
+        assert_eq!(tools[0].schema.name, "mux_shared");
+        client.shut_down("done");
+        // The connection ends; the listener (the mux) keeps serving the next one.
+        closed_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+    }
+    let both: ServerConfig =
+        serde_json::from_value(json!({"socket":"/tmp/x.sock","command":"c"})).unwrap();
+    assert!(Client::start("x", &both, dir.path(), Handlers::default(), None).is_err());
+    let missing: ServerConfig =
+        serde_json::from_value(json!({"socket":"~/icers-no-such-mux.sock"})).unwrap();
+    assert!(
+        Client::start("x", &missing, dir.path(), Handlers::default(), None)
+            .err()
+            .unwrap()
+            .contains("icers-no-such-mux.sock")
+    );
+}

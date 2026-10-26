@@ -11,7 +11,7 @@ fn state() -> Arc<Elicitation> {
         url: url::UrlElicitation::new(tokio::sync::broadcast::channel(8).0),
     })
 }
-pub(super) async fn next(ui: &UiDialogMailbox) -> ice_extensions::UiDialogRequest {
+pub(crate) async fn next(ui: &UiDialogMailbox) -> ice_extensions::UiDialogRequest {
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             if let Some(request) = ui.take_pending() {

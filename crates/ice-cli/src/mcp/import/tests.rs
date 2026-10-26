@@ -130,32 +130,48 @@ fn opencode_project_overrides_user_and_maps_local_entries() {
 }
 
 #[test]
-fn url_entries_are_reported_not_dropped_silently() {
+fn remote_entries_import_their_url_and_headers() {
     let env = Env::new();
     env.home(
         ".cursor/mcp.json",
         json!({"mcpServers": {
-            "web": {"url":"https://example.com/mcp"},
+            "web": {"url":"https://example.com/mcp","headers":{"x-key":"${KEY}"}},
             "typed": {"type":"sse","command":"ignored"},
             "ok": {"command":"fine"},
         }}),
     );
+    env.home(
+        ".windsurf/mcp.json",
+        json!({"mcpServers": {"surf": {"serverUrl":"https://surf.example/mcp","disabled":true}}}),
+    );
     env.project(
         "opencode.json",
-        json!({"mcp": {"remote": {"type":"remote","url":"https://example.com"}}}),
+        json!({"mcp": {"remote": {"type":"remote","url":"https://example.com","enabled":false}}}),
     );
-    let imported = env.load(&["cursor", "opencode"], true);
-    assert_eq!(imported.servers.keys().collect::<Vec<_>>(), ["ok"]);
-    for name in ["web", "typed", "remote"] {
-        assert!(
-            imported
-                .notes
-                .iter()
-                .any(|note| note.contains(name) && note.contains("unsupported (http)")),
-            "{name}: {:?}",
-            imported.notes
-        );
-    }
+    let imported = env.load(&["cursor", "windsurf", "opencode"], true);
+    assert_eq!(
+        imported.servers.keys().collect::<Vec<_>>(),
+        ["ok", "remote", "surf", "web"]
+    );
+    let web = &imported.servers["web"].0;
+    assert_eq!(web.url.as_deref(), Some("https://example.com/mcp"));
+    assert_eq!(web.headers["x-key"], "${KEY}");
+    assert!(web.command.is_empty());
+    assert!(imported.servers["remote"].0.disabled);
+    let surf = &imported.servers["surf"].0;
+    assert_eq!(
+        entry_json(surf),
+        json!({"url":"https://surf.example/mcp","disabled":true})
+    );
+    // A remote type without a URL is reported, not dropped silently.
+    assert!(
+        imported
+            .notes
+            .iter()
+            .any(|note| note.contains("typed") && note.contains("no url")),
+        "{:?}",
+        imported.notes
+    );
 }
 
 #[test]
@@ -378,7 +394,7 @@ fn a_broken_newer_entry_masks_the_one_it_replaced() {
     );
     env.home(
         ".windsurf/mcp.json",
-        json!({"mcpServers": {"s": {"url":"https://example.invalid/mcp"}}}),
+        json!({"mcpServers": {"s": {"args":["no command"]}}}),
     );
     let imported = env.load(&["windsurf"], false);
     assert!(!imported.servers.contains_key("s"));
@@ -386,6 +402,6 @@ fn a_broken_newer_entry_masks_the_one_it_replaced() {
     assert_eq!(imported.shadowed, [("s".to_string(), older)]);
     assert_eq!(
         imported.notes,
-        ["import:windsurf: s: unsupported (http)".to_string()]
+        ["import:windsurf: s: no command".to_string()]
     );
 }

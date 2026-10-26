@@ -502,7 +502,7 @@ async fn callback_is_loopback_only_bounded_and_cancellable() {
     let cancel_wait = cancellation.clone();
     let wait = tokio::spawn(async move {
         listener
-            .wait_for_code_with_timeout(&request, cancel_wait, Duration::from_secs(5))
+            .wait_for_state(&request.state, cancel_wait, Duration::from_secs(5))
             .await
     });
     cancellation.cancel();
@@ -516,8 +516,8 @@ async fn callback_is_loopback_only_bounded_and_cancellable() {
             .unwrap();
     let timeout_address = timeout_listener.local_addr().unwrap();
     let timed_out = timeout_listener
-        .wait_for_code_with_timeout(
-            &timeout_request,
+        .wait_for_state(
+            &timeout_request.state,
             CancellationToken::new(),
             Duration::from_millis(25),
         )

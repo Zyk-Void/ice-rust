@@ -35,7 +35,7 @@ struct Elicitation {
     url: url::UrlElicitation,
 }
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 pub(super) fn invalid(message: impl Into<String>) -> RpcError {
     RpcError {

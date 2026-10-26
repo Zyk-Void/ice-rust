@@ -1,7 +1,8 @@
-# MCP stdio tools
+# MCP tools
 
 icers includes a session-local Model Context Protocol client. No plugin or
-Node adapter is required. Only stdio servers are supported.
+Node adapter is required. Servers run as local processes over stdio, or are
+reached over Streamable HTTP (with the legacy HTTP+SSE fallback).
 
 ## Configuration and trust
 
@@ -40,14 +41,14 @@ configuration. A disabled entry need not specify a command and is never spawned.
 `directTools` selects which discovered tools are registered, using
 pi-mcp-adapter's key and shape: `true` registers every tool, `false` registers
 none, and a list registers those **remote** tool names. Omission registers
-every tool. icers has no `mcp` proxy tool yet, so a tool that is not direct is
-not callable at all; the server still runs and its tools stay listed in the
+every tool. A tool that is not direct is not in the model's tool list but
+stays callable through the `mcp` proxy tool below, and stays listed in the
 `/mcp` panel. Resource tools are controlled by `exposeResources` instead and
 are not listed in the panel.
 
 ### Importing other tools' servers
 
-List tools in `"imports"` to reuse the stdio servers you already configured in
+List tools in `"imports"` to reuse the servers you already configured in
 them:
 
 ```json
@@ -75,12 +76,209 @@ enabling an imported server, or saving `/mcp` panel changes to it, copies its
 entry into your global `mcp.json` first, and that copy then takes over. Values are used as written, so `${VAR}` placeholders
 are not expanded, and files must be strict JSON (comments are not accepted).
 
-Anything that cannot be imported is reported instead of dropped silently:
-`--list-mcp` prints a `skipped import:<kind>: ...` line for URL/remote servers
-(`unsupported (http)`), invalid names or fields, unreadable files, and unknown
-kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
+Remote entries (`url`, Windsurf's `serverUrl`, OpenCode's `type: "remote"`)
+import with their `headers`. Anything that cannot be imported is reported
+instead of dropped silently: `--list-mcp` prints a `skipped import:<kind>: ...`
+line for entries with no command or URL, invalid names or fields, unreadable
+files, and unknown kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
 needs a TOML parser the project does not depend on yet. `ice` is not an import
 kind.
+
+## Remote (HTTP) servers
+
+Set `url` instead of `command` to reach a server over HTTP:
+
+```json
+{
+  "mcpServers": {
+    "docs": {
+      "url": "https://mcp.example.com/mcp",
+      "headers": {"X-Team": "${TEAM_ID}"},
+      "auth": "bearer",
+      "bearerTokenEnv": "EXAMPLE_MCP_TOKEN"
+    }
+  }
+}
+```
+
+icers speaks Streamable HTTP (MCP 2025-06-18): each message is a POST, replies
+come back as JSON or an event stream, the `Mcp-Session-Id` from `initialize`
+is sent on later requests, and a GET stream (when the server offers one)
+carries server-initiated requests. If the endpoint rejects Streamable HTTP
+(HTTP 404, 405, 406 or 415 on `initialize`), icers falls back to the legacy
+HTTP+SSE transport and posts to the `endpoint` the stream names; an endpoint
+on another origin is refused. The session is closed with a DELETE.
+
+`url` and `headers` values expand `${VAR}` and `$env:VAR`; a variable that is
+not set fails the connection before anything is sent. `auth: "bearer"` sends
+`Authorization: Bearer` with `bearerToken` (which also expands variables) or
+the value of the variable named by `bearerTokenEnv`. A 401 or 403 is reported
+as needing authentication. Setting both `command` and `url` is an error.
+
+### OAuth
+
+`auth: "oauth"` signs in with OAuth 2.1:
+
+```json
+{"mcpServers": {"notion": {"url": "https://mcp.notion.com/mcp", "auth": "oauth"}}}
+```
+
+Run `/mcp-auth notion` (or `/mcp auth notion`). icers finds the authorization
+server from the server's protected-resource metadata (RFC 9728, including the
+`resource_metadata` hint in a 401), reads its metadata (RFC 8414) and checks
+that its `issuer` matches, registers a client (RFC 7591) unless
+`oauth.clientId` is set, and opens the browser for a PKCE (S256) sign-in that
+returns to a loopback listener on `127.0.0.1`. Over SSH, copy the address the
+browser ends on and run `/mcp-auth notion <that URL>`. The model can do the
+same with `mcp({ action: "auth-start", server })` and
+`mcp({ action: "auth-complete", server, args: { redirectUrl } })`.
+
+Tokens are stored in `~/.icers/agent/mcp-auth.json` (mode 600), bound to the
+server URL they were issued for, and refreshed before they expire. A token
+that expires mid-session makes calls fail with an authentication error until
+`/mcp reconnect <server>` refreshes it. `/mcp logout <server>` deletes the
+stored tokens. Until a server is signed in it shows `failed: needs sign-in`.
+
+| `oauth` key | Meaning |
+|---|---|
+| `grantType` | `authorization_code` (default) or `client_credentials` (no browser; needs `clientId` and usually `clientSecret`, which expands `${VAR}`) |
+| `clientId`, `clientSecret` | A pre-registered client instead of dynamic registration |
+| `scope` | Requested scopes |
+| `redirectUri` | Exact registered redirect: a loopback `http://127.0.0.1:<port>/path` gets a listener on that port; anything else is completed by pasting |
+| `clientName` | Name sent during dynamic registration (default `icers`) |
+| `authServerMetadataUrl` | Use this metadata document instead of discovery; its `issuer` must be on the same origin |
+| `skipIssuerMetadataValidation` | Disable the issuer check for one misconfigured internal server (weakens mix-up protection) |
+
+Metadata, registration and token endpoints must use HTTPS (plain HTTP is
+allowed only for loopback addresses), and redirects are not followed.
+
+## Shared servers through rmcp-mux
+
+To share one server process between sessions, run it under
+[rmcp-mux](https://github.com/VetCoders/rmcp-mux) and point each session at
+its socket (Unix only):
+
+```json
+{"mcpServers": {"memory": {"socket": "~/.rmcp-servers/rmcp-mux/sockets/memory.sock"}}}
+```
+
+`socket` expands `~` and `${VAR}`, and excludes `command` and `url`. icers
+owns only its connection: closing a session, `/mcp reconnect`, or idling out a
+`lazy` server closes the socket and never starts or stops the mux or its
+server. Point a socket only at services whose tools, state and credentials you
+mean to share.
+
+## The `mcp` proxy tool
+
+While any server is configured, the model also gets one `mcp` tool (subject to
+`--tools` filtering), which reaches every server's tools without registering
+each one:
+
+| Call | Does |
+|---|---|
+| `mcp({})` | Server status and tool counts |
+| `mcp({ server: "name" })` | List a server's tools |
+| `mcp({ search: "words", limit: 12, offset: 0 })` | Ranked search over tool name, server, description and `searchKeywords` |
+| `mcp({ describe: "tool" })` | One tool's description and JSON parameters |
+| `mcp({ instructions: "name" })` | A server's full instructions |
+| `mcp({ connect: "name" })` | Reconnect a server and refresh its catalog |
+| `mcp({ tool: "name", args: {...} })` | Call one tool; `args` may also be a JSON string, and `server` narrows the lookup |
+
+Tool names match exactly, then with `-`/`_` and case ignored, then by the
+server's own (unprefixed) name; an ambiguous or unknown name returns the
+candidates or the closest matches. Proxied calls use the same approval list
+and output guard as direct tools; without an approval dialog (print or RPC
+mode) a tool that requires approval is refused. Servers that are disabled or
+not connected list their cached tools but cannot be called. Per-server
+`searchKeywords` adds search vocabulary that the model never sees:
+
+```json
+{"mcpServers": {"github": {"command": "github-mcp", "searchKeywords": {"search_code": ["grep"], "*": ["gh"]}}}}
+```
+
+## Lifecycle
+
+Each server may set `lifecycle`:
+
+| Value | Behavior |
+|---|---|
+| `eager` (default) | Starts with the session. |
+| `lazy` | Starts on its first call and stops after `idleTimeout` minutes without a request (default 10, or `settings.idleTimeout`). |
+| `keep-alive` | Starts with the session; if it exits or fails, it is restarted after 30 s, doubling to at most 5 min between attempts. |
+| `lazy-keep-alive` | Starts on its first call, then never idles out and restarts like `keep-alive`. |
+
+A lazy server that is not running is shown as `idle`. Its tools, resources and
+prompts come from the metadata cache, so they stay in the model's tool list
+and in `/mcp`; calling one (directly, through `mcp`, or as a prompt command)
+starts the server first. A lazy server with no cache entry yet starts with the
+session once to fill it. `/mcp reconnect <server>` and `mcp({ connect })`
+start a lazy server immediately. `requestTimeoutMs` sets a per-server call
+timeout. pi-mcp-adapter defaults to `lazy`; icers keeps `eager` so existing
+setups behave the same.
+
+## MCP scripting (`mcpScript`)
+
+For work that takes several MCP calls (search, loop, filter, chain), the model
+also gets an `mcpScript` tool next to `mcp`. Its `code` is the body of an
+async JavaScript function:
+
+```js
+const { items } = await tools.search({ query: "search issues", server: "github" });
+const details = await tools.describe({ path: items[0].path });
+const result = await tools.call(details.path, { query: "is:open label:bug" });
+if (!result.ok) return result.error;
+emit({ tool: details.path });
+return result.data;
+```
+
+`tools.search({ query, server?, limit?, offset? })` returns
+`{ items: [{ path, server, description }], total, nextOffset }`;
+`tools.describe({ path })` returns the tool's `inputSchema`; and
+`tools.call(path, args)` returns `{ ok: true, data }` (structured content when
+the tool provides it, else its text) or `{ ok: false, error: { code, message } }`,
+so one failed call does not end the script. `emit(value)` and `console.log`
+output appear before the returned value, and the whole result goes through the
+output guard. Calls use the same lookup, lazy start, approval and output guard
+as `mcp`, and run one at a time. Result details list each call with its
+outcome and duration.
+
+Scripts run in an embedded JavaScript engine (Boa) on their own thread, with
+no filesystem, network or process access beyond these calls. A script stops
+after 30 seconds, after 10 million iterations of one loop, or past 400 levels
+of recursion; code is limited to 64 KiB. It is a convenience layer for the
+agent's own code, not an isolation boundary. Set `"settings":
+{"scriptMode": false}` in `mcp.json` to hide the tool.
+
+## MCP apps (interactive TUI only)
+
+A tool whose metadata names an app (`_meta.ui.resourceUri`, a `ui://`
+resource) opens that app in your browser after a successful call, whether the
+model called it directly or through `mcp`. icers reads the resource and serves
+it from a loopback server on `127.0.0.1` behind a random token, inside a host
+page that runs the app in a sandboxed iframe. The app's own CSP comes from
+`_meta.ui.csp` (`connectDomains`, `resourceDomains`); everything else is
+blocked. Calling the same tool again updates the open window.
+
+The app can call its own server's tools and read its resources. The first
+tool call asks once per server and session whether the app may do that, and
+tools on `approveTools` still ask every time. Tools marked
+`_meta.ui.visibility: ["app"]` are callable only by the app, never by the
+model. When the app sends a message (`ui/message`), it is submitted like
+typed input (starting a turn, or steering one in progress) and also queued;
+`mcp({ action: "ui-messages" })` returns and clears the queue.
+`ICERS_MCP_UI_VIEWER=none` prints the window's URL instead of opening a
+browser. Print and RPC modes do not open apps. Native (Glimpse) windows are not
+supported.
+
+## Metadata cache
+
+After each successful discovery or catalog refresh, a server's tools,
+resources, prompts and instructions are saved to
+`~/.icers/agent/mcp-cache.json` (mode 600). The `/mcp` panel uses the cache to
+list a server's tools before it connects, while it is disabled, or after it
+fails. An entry is used only while the server's `command`, `args`, `env` and
+`cwd` are unchanged, and entries for removed servers are dropped on a full
+reload. Deleting the file is safe; it is rebuilt on the next connection.
 
 ## Naming and execution
 
@@ -347,8 +545,8 @@ configured server executables, so inspect configuration before trusting it.
   configured. It lists other tools' MCP configs found on this machine with
   their server counts; Enter adds or removes the tool in the global `imports`
   list and reloads servers. Quick add writes a preset to the global `mcp.json`
-  (only Chrome DevTools today; DeepWiki, Context7, Parallel Search, Notion and
-  GitHub need the HTTP transport and are listed as unavailable). The panel also
+  (DeepWiki, Context7, Parallel Search, Notion, GitHub and Chrome DevTools;
+  Notion and GitHub are marked `sign-in` because they use OAuth). The panel also
   shows server names defined in more than one place, in precedence order, and
   the imports that were skipped. Codex is detected but not importable yet. An
   import listed in the trusted project file has to be removed there.
@@ -377,14 +575,12 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, or resource subscriptions are implemented. MCP
-scripting, MCP UI resources and shared `rmcp-mux` processes are deferred until
-those transports exist. The asynchronous dispatcher answers server
+Resource subscriptions are not implemented. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. At most 64 server messages wait for the dispatcher;
 beyond that, reading pauses. When a call is cancelled or times out, open server
 requests (such as a dialog) are cancelled only if no other call is still
-waiting on that server, because stdio cannot tie a request to its call. Tool, resource, and prompt list-change notifications refresh
+waiting on that server, because the client cannot tie a request to its call. Tool, resource, and prompt list-change notifications refresh
 the targeted catalog without restarting the server. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

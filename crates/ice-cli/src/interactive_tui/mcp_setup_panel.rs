@@ -118,13 +118,6 @@ impl SetupPanel {
                     self.notice = Some(format!("{} is already configured.", preset.name));
                     return SetupAction::None;
                 }
-                if let PresetEntry::Http(_) = preset.entry {
-                    self.notice = Some(format!(
-                        "{} needs the HTTP transport, which icers does not support yet.",
-                        preset.name
-                    ));
-                    return SetupAction::None;
-                }
                 SetupAction::AddPreset(preset.id)
             }
             None => SetupAction::None,
@@ -191,8 +184,11 @@ impl SetupPanel {
             let configured = self.view.configured.iter().any(|name| name == preset.id);
             let (icon, note) = match (&preset.entry, configured) {
                 (_, true) => (colors.success.fg("✓"), "configured".to_string()),
-                (PresetEntry::Http(_), _) => (colors.dim.fg("·"), "needs HTTP".to_string()),
-                (PresetEntry::Stdio { .. }, _) => (colors.accent.fg("+"), preset.summary.into()),
+                (PresetEntry::Http { oauth: true, .. }, _) => (
+                    colors.accent.fg("+"),
+                    format!("sign-in · {}", preset.summary),
+                ),
+                _ => (colors.accent.fg("+"), preset.summary.into()),
             };
             let room = frame.inner.saturating_sub(24);
             lines.push(frame.row(&format!(
@@ -333,8 +329,11 @@ mod tests {
         assert!(panel.notice.as_deref().unwrap().contains("Codex"));
 
         select(&mut panel, Item::Preset(1));
-        assert_eq!(panel.handle_key(key(KeyCode::Enter)), SetupAction::None);
-        assert!(panel.notice.as_deref().unwrap().contains("HTTP"));
+        assert_eq!(
+            panel.handle_key(key(KeyCode::Enter)),
+            SetupAction::AddPreset("context7")
+        );
+        panel.refresh(panel.view.clone());
         let chrome = PRESETS
             .iter()
             .position(|p| p.id == "chrome-devtools")
@@ -377,7 +376,8 @@ mod tests {
         assert!(text.contains("~/.cursor/mcp.json"));
         assert!(text.contains("unsupported (config.toml)"));
         assert!(text.contains("+ Chrome DevTools"));
-        assert!(text.contains("· DeepWiki"));
+        assert!(text.contains("+ DeepWiki"));
+        assert!(text.contains("Notion            sign-in · "));
         assert!(text.contains("a [31m: ~/.cursor/mcp.json → ~/.icers/agent/mcp.json"));
         assert!(text.contains("… 2 more"));
         let empty = SetupPanel::new(SetupView::default(), None);

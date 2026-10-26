@@ -30,13 +30,15 @@ impl ice_tui::AutocompleteProvider for McpAutocomplete {
                 "remove",
                 "edit",
                 "setup",
+                "auth",
+                "logout",
             ]
             .iter()
             .map(|s| (*s).into())
             .collect()
         } else if matches!(
             prefix,
-            "reconnect" | "enable" | "disable" | "remove" | "prompts" | "tools"
+            "reconnect" | "enable" | "disable" | "remove" | "prompts" | "tools" | "auth" | "logout"
         ) {
             self.manager
                 .as_ref()?

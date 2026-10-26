@@ -115,6 +115,9 @@ fn main() {
                     }
                 }
             }
+            "resources/read" if value["params"]["uri"] == "ui://fake/app" => {
+                json!({"contents":[{"uri":"ui://fake/app","mimeType":"text/html;profile=mcp-app","text":"<p>fake app</p>","_meta":{"ui":{"csp":{"connectDomains":["https://api.fake.test"],"resourceDomains":["https://cdn.fake.test","bad; script-src *"]}}}}]})
+            }
             "resources/read" => {
                 assert!(resources_enabled);
                 assert_eq!(value["params"].as_object().unwrap().len(), 1);
@@ -144,6 +147,10 @@ fn main() {
                     if std::env::var("ICERS_MCP_TEST_COLLISION").as_deref() == Ok("1") || added_tool
                     {
                         tools.push(json!({"name":"read_echo","inputSchema":{"type":"object"}}));
+                    }
+                    if std::env::var_os("ICERS_MCP_TEST_UI").is_some() {
+                        tools.push(json!({"name":"show","inputSchema":{"type":"object"},"_meta":{"ui":{"resourceUri":"ui://fake/app"}}}));
+                        tools.push(json!({"name":"refresh","inputSchema":{"type":"object"},"_meta":{"ui":{"resourceUri":"ui://fake/app","visibility":["app"]}}}));
                     }
                     json!({ "tools": tools })
                 } else {

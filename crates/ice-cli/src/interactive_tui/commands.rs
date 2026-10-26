@@ -4,7 +4,7 @@ use super::*;
 
 mod context_usage;
 pub(super) mod mcp;
-use mcp::McpCommand;
+use mcp::{McpAuthCommand, McpCommand};
 
 // ---- Built-in command implementations ----
 
@@ -945,6 +945,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(ThinkingCommand));
     r.register(Arc::new(ToolsCommand));
     r.register(Arc::new(McpCommand));
+    r.register(Arc::new(McpAuthCommand));
     r.register(Arc::new(ImagesCommand));
     r.register(Arc::new(SessionCommand));
     r.register(Arc::new(ThemeCommand));
