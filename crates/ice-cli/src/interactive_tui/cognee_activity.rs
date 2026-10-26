@@ -276,8 +276,15 @@ impl Model {
                             },
                         );
                         // A long tool loop under one prompt traces every call.
+                        // Drop the oldest finished trace first, so a failure or
+                        // a pending save still shows in the badge and panel.
                         if operation == "trace" && self.traces.len() > MAX_TRACES {
-                            self.traces.remove(0);
+                            let oldest = self
+                                .traces
+                                .iter()
+                                .position(|trace| trace.status == Status::Done)
+                                .unwrap_or(0);
+                            self.traces.remove(oldest);
                             self.traces_dropped += 1;
                         }
                         true
@@ -1259,20 +1266,25 @@ mod tests {
             ));
         }
         assert_eq!(model.recalls.len(), MAX_RECALLS);
+        // An early failure outlives the cap; finished traces go first.
+        let trace = r#"{"origin_function":"bash","method_params":{"command":"ls"}}"#;
+        model.apply(&obs("trace", "started", "bad", Some(trace), json!({})));
+        model.apply(&obs("trace", "failed", "bad", None, json!({})));
         for i in 0..MAX_TRACES + 5 {
-            model.apply(&obs(
-                "trace",
-                "started",
-                &format!("t{i}"),
-                Some(r#"{"origin_function":"bash","method_params":{"command":"ls"}}"#),
-                json!({}),
-            ));
+            let id = format!("t{i}");
+            model.apply(&obs("trace", "started", &id, Some(trace), json!({})));
+            model.apply(&obs("trace", "succeeded", &id, None, json!({})));
         }
         assert_eq!(model.traces.len(), MAX_TRACES);
+        assert!(model.traces.iter().any(|trace| trace.id == "bad"));
+        assert_eq!(
+            overall(model.traces.iter().map(|trace| trace.status)),
+            Status::Failed
+        );
         model.expanded = true;
         let text = rows(&model).join("\n");
         assert!(
-            text.contains(&format!("bash ×{MAX_TRACES} · +5 earlier")),
+            text.contains(&format!("bash ×{MAX_TRACES} · +6 earlier")),
             "{text}"
         );
     }
