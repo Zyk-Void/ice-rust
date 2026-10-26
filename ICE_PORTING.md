@@ -180,30 +180,22 @@ no hub.
     `maxTokens` budget.
 
 ### 1.9 Hooks, events, settings, controller, CLI, UI
-- **Ported — session-local stdio MCP client** (PRs #58, #60, #62):
-  global and trusted-project `mcp.json`, background discovery, namespaced tools,
-  per-tool approval, bounded calls/cancellation, and `--list-mcp`. `/mcp` now
-  provides a status/tools panel, live reconnect, enable/disable, global add/remove,
-  external configuration editing and argument completion. See
-  `docs/extensions/mcp.md` and the `docs/extensions/context-mode.md` recipe.
-  Resource discovery/read tools (default-on `exposeResources`), targeted tool
-  and resource catalog refresh, asynchronous server-request dispatch, and bounded
-  output/blob materialization are implemented in the Tier 4 stack (PRs: TBD).
-  MCP prompts are discovered with pagination and exposed as live TUI slash
-  commands with quoted positional/named arguments and normal user submission.
-  Connected-server instructions are bounded system-prompt sections, with full
-  text available through `/mcp tools <server>`; reconnect/disconnect updates them.
-  Interactive form elicitation supports validated fields and review/edit with
-  explicit submit/decline/cancel. URL elicitation requires explicit HTTP(S) browser
-  consent and shows completion notices for accepted IDs. HTTP/SSE transports,
-  Sampling answers `sampling/createMessage` with the session's models after
-  explicit approval. Servers can be imported from Cursor, Claude Code, Claude
-  Desktop, Windsurf, VS Code and OpenCode JSON configs, and `/mcp setup` lists
-  detected sources, conflicts, skipped imports and stdio presets. HTTP/SSE
-  transports, OAuth, resource subscriptions, the Codex `config.toml` import,
-  sampling usage accounting, and the Phase 7 items in
-  `docs/extensions/mcp-tier4-plan.md` (scripting, MCP UI, rmcp-mux) remain
-  unported. Subagent MCP pass-through in §1.8 is separate and remains unported.
+- **Ported — MCP client** (PRs #58, #60, #62, #68; Phase 7 on
+  `feat/cli-mcp-tier2-3`): global and trusted-project `mcp.json`, namespaced
+  tools, per-tool approval, bounded calls and cancellation, `--list-mcp`, and the
+  `/mcp` panel (status/tools, reconnect, enable/disable, add/remove, editing,
+  completion). Tier 4 (#68): resources as tools, prompts as slash commands,
+  server instructions in the system prompt, form and URL elicitation, sampling
+  with approval, output guarding, imports from Cursor, Claude Code, Claude
+  Desktop, Windsurf, VS Code and OpenCode, and `/mcp setup`. Phase 7 and its
+  Tier 2/3 prerequisites: a metadata cache, the `mcp` proxy tool (search,
+  describe, indirect calls), `lazy`/`keep-alive` lifecycles, Streamable HTTP
+  with the legacy SSE fallback, OAuth sign-in (`/mcp-auth`), rmcp-mux sockets,
+  MCP apps (`_meta.ui`), and `mcpScript`. See `docs/extensions/mcp.md` and
+  `docs/extensions/mcp-tier4-plan.md`. Not ported: resource subscriptions, the
+  Codex `config.toml` import, sampling usage accounting, `settings.autoAuth`,
+  and the non-goals listed in the plan. Subagent MCP pass-through (§1.8) is
+  separate and remains unported.
 - **Ported — command hooks** (PR: TBD — PR not yet opened): settings-driven `PreToolUse`, `PostToolUse`,
   `UserPromptSubmit`, `SessionStart`, `PreCompact`, and `Stop` shell hooks are
   implemented with trusted-project gating and bounded process execution. See

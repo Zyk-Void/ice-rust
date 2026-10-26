@@ -1,11 +1,10 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0 to 6 are implemented on `feat/cli-mcp-elicitation-url`,
-rebased onto `main@743f750` after the Tier 1 `/mcp` panel (#62) merged.
-Deferred inside those phases: resource subscriptions, the `-32042` URL
-fallback, sampling usage accounting and the Codex `config.toml` importer.
-Phase 7 and its Tier 2/3 prerequisites are planned as steps 7.0–7.8. Phase 1 was cherry-picked from `ae868f2`; the
-original output-guard branch is unchanged. The plan was first written against
+Status: Phases 0 to 6 merged in #68. Phase 7 and its Tier 2/3 prerequisites
+(steps 7.0–7.8) are implemented on `feat/cli-mcp-tier2-3`, one commit per
+step. Still deferred: resource subscriptions, the `-32042` URL fallback,
+sampling usage accounting, the Codex `config.toml` importer, and
+`settings.autoAuth` (see 7.5). The plan was first written against
 `main@ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
@@ -496,6 +495,11 @@ embedded JavaScript engine. This plan closes all of it as one stack on
 `feat/cli-mcp-tier2-3`, built in this worktree, one reviewable commit per
 step. Each step lists its PMA source, what ships, and how it is proven.
 
+All steps are implemented, one commit each: 7.0 `refactor(cli): split MCP
+framing from the stdio process`, 7.1 metadata cache, 7.2 `mcp` proxy, 7.3
+lifecycles, 7.4 Streamable HTTP + SSE, 7.5 OAuth, 7.6 rmcp-mux sockets, 7.7
+MCP apps, 7.8 `mcpScript`. User docs: `docs/extensions/mcp.md`.
+
 | Step | What | PMA source | Est. size (excl. tests) |
 |---|---|---|---|
 | 7.0 | Transport seam | `server-manager.ts` (transport creation) | ~150 |
@@ -567,7 +571,10 @@ absent, PKCE S256 authorization code with a loopback callback (reusing the
 listener in `oauth_codex.rs`) or manual paste of the callback URL for remote
 sessions, refresh tokens, and `grantType: "client_credentials"`. Tokens are
 stored per D7. Commands: `/mcp-auth [server]`, `/mcp logout <server>`; proxy
-actions `auth-start` / `auth-complete`; `settings.autoAuth`. Proof: fixture
+actions `auth-start` / `auth-complete`. `settings.autoAuth` (sign in and
+retry automatically on a call) is not implemented: a server that is not
+signed in fails with a hint to run `/mcp-auth`, and a token that expires
+mid-session is refreshed on the next reconnect. Proof: fixture
 authorization server for discovery, issuer mismatch rejection, DCR, code
 exchange, refresh, logout.
 
