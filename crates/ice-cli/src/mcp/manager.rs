@@ -40,7 +40,7 @@ struct ServerState {
     discovered: Vec<McpTool>,
     prompts: Vec<Prompt>,
 }
-struct Inner {
+pub(super) struct Inner {
     harness: ice_harness::agent_harness::WeakAgentHarness,
     args: crate::args::Args,
     cwd: PathBuf,
@@ -56,12 +56,14 @@ struct Inner {
     spill: Arc<output_guard::SpillStore>,
     prompt_changes: watch::Sender<u64>,
     elicitation_ui: Option<UiDialogMailbox>,
+    /// Asks approval for proxied calls; the same mailbox the approval hook uses.
+    approval_ui: Option<UiDialogMailbox>,
     elicitation_notices: tokio::sync::broadcast::Sender<String>,
     /// Set with the dialog host: sampling needs both a UI and callable providers.
     sampling_providers: Option<sampling::Providers>,
 }
 #[derive(Clone)]
-pub struct McpManager(Arc<Inner>);
+pub struct McpManager(pub(super) Arc<Inner>);
 impl McpManager {
     pub fn new(
         harness: &AgentHarness,
@@ -85,6 +87,7 @@ impl McpManager {
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
             elicitation_ui: None,
+            approval_ui: None,
             elicitation_notices: tokio::sync::broadcast::channel(32).0,
             sampling_providers: None,
         }))
@@ -95,6 +98,14 @@ impl McpManager {
         Arc::get_mut(&mut self.0)
             .expect("MCP manager already shared")
             .sampling_providers = Some(providers);
+        self
+    }
+    /// Install before startup clones the manager. Without it, proxied calls to
+    /// tools that require approval are refused, like direct ones without a UI.
+    pub fn with_approval_ui(mut self, ui: UiDialogMailbox) -> Self {
+        Arc::get_mut(&mut self.0)
+            .expect("MCP manager already shared")
+            .approval_ui = Some(ui);
         self
     }
     /// Install only for a TUI host, before startup clones the manager.
@@ -488,6 +499,7 @@ impl McpManager {
         if only.is_none() {
             cache::retain(&self.0.agent_dir, &configured_names);
         }
+        self.sync_proxy(&harness).await?;
         self.sync_instructions().await?;
         self.0
             .prompt_changes
@@ -568,6 +580,92 @@ impl McpManager {
             self.save_cache(server);
         }
         listed.map(drop)
+    }
+    /// Register the `mcp` proxy tool while any server is configured.
+    async fn sync_proxy(&self, harness: &AgentHarness) -> Result<(), String> {
+        let wanted = !self.0.servers.lock().unwrap().is_empty()
+            && crate::session::tool_name_allowed(proxy::NAME, &self.0.args);
+        let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;
+        let present = tools.iter().any(|t| t.tool.schema().name == proxy::NAME);
+        if wanted == present {
+            return Ok(());
+        }
+        let mut active = harness
+            .lane("main")
+            .get_active_tools()
+            .await
+            .map_err(|e| e.to_string())?;
+        if wanted {
+            tools.push(HarnessTool::new(Arc::new(proxy::ProxyTool::new(
+                Arc::downgrade(&self.0),
+            ))));
+            active.push(proxy::NAME.into());
+        } else {
+            tools.retain(|t| t.tool.schema().name != proxy::NAME);
+            active.retain(|n| n != proxy::NAME);
+        }
+        harness
+            .set_tools(tools, Some(active))
+            .await
+            .map_err(|e| e.to_string())
+    }
+    /// Every server as the proxy sees it: live catalogs, else the metadata cache.
+    pub(super) fn proxy_view(&self) -> Vec<proxy::Server> {
+        let servers = self.0.servers.lock().unwrap();
+        servers
+            .iter()
+            .map(|(name, state)| {
+                let live = state.client.is_some()
+                    && matches!(state.status, ServerStatus::Connected { .. });
+                let (entries, instructions, cached) = if live {
+                    (
+                        state
+                            .discovered
+                            .iter()
+                            .map(proxy::Entry::from_tool)
+                            .collect(),
+                        state
+                            .client
+                            .as_ref()
+                            .and_then(|c| c.instructions().map(str::to_owned)),
+                        false,
+                    )
+                } else {
+                    match cache::load(&self.0.agent_dir, name, &state.config) {
+                        Some(cached) => (
+                            proxy::Entry::from_cache(name, &cached, &state.config),
+                            cached.instructions,
+                            true,
+                        ),
+                        None => (Vec::new(), None, false),
+                    }
+                };
+                proxy::Server {
+                    name: name.clone(),
+                    status: state.status.clone(),
+                    cached,
+                    entries,
+                    instructions,
+                    config: state.config.clone(),
+                }
+            })
+            .collect()
+    }
+    /// The live tool behind a proxied name, with the mailbox for its approval.
+    pub(super) fn live_tool(
+        &self,
+        server: &str,
+        name: &str,
+    ) -> Option<(McpTool, bool, Option<UiDialogMailbox>)> {
+        let servers = self.0.servers.lock().unwrap();
+        let state = servers.get(server)?;
+        let tool = state
+            .discovered
+            .iter()
+            .find(|tool| tool.schema.name == name)?
+            .clone();
+        let approval = tool.approval;
+        Some((tool, approval, self.0.approval_ui.clone()))
     }
     /// Record a connected server's catalog for offline listing.
     fn save_cache(&self, server: &str) {

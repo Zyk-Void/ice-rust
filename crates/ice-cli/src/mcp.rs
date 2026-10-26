@@ -6,6 +6,7 @@ mod import;
 mod manager;
 mod output_guard;
 mod prompts;
+mod proxy;
 mod sampling;
 pub mod setup;
 pub use prompts::Prompt;
@@ -112,6 +113,9 @@ pub struct ServerConfig {
     pub direct_tools: DirectTools,
     #[serde(default = "expose_resources_default")]
     pub expose_resources: bool,
+    /// Extra `mcp` search vocabulary: `{ "tool-or-glob": ["keyword", ...] }`.
+    #[serde(default)]
+    pub search_keywords: BTreeMap<String, Vec<String>>,
 }
 fn expose_resources_default() -> bool {
     true
@@ -680,19 +684,7 @@ impl Client {
                     .get("uri")
                     .and_then(Value::as_str)
                     .ok_or("MCP resource missing URI")?;
-                // Distinct names can sanitize alike ("Project Notes", "project-notes");
-                // later ones get a numeric suffix so every resource stays readable.
-                let base = format!("read_{}", resource_tool_name(name));
-                let name = (1..)
-                    .map(|n| {
-                        if n == 1 {
-                            base.clone()
-                        } else {
-                            format!("{base}_{n}")
-                        }
-                    })
-                    .find(|name| used.insert(name.clone()))
-                    .unwrap();
+                let name = unique_resource_name(&mut used, name);
                 let description = item
                     .get("description")
                     .and_then(Value::as_str)
@@ -944,6 +936,22 @@ impl Drop for RequestGuard<'_> {
             );
         }
     }
+}
+
+/// Distinct names can sanitize alike ("Project Notes", "project-notes"); later
+/// ones get a numeric suffix so every resource stays readable.
+fn unique_resource_name(used: &mut HashSet<String>, name: &str) -> String {
+    let base = format!("read_{}", resource_tool_name(name));
+    (1..)
+        .map(|n| {
+            if n == 1 {
+                base.clone()
+            } else {
+                format!("{base}_{n}")
+            }
+        })
+        .find(|name| used.insert(name.clone()))
+        .unwrap()
 }
 
 fn resource_tool_name(name: &str) -> String {

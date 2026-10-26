@@ -533,8 +533,8 @@ Names resolve fuzzily (`-` vs `_`, missing prefix) with suggestions on a miss.
 This makes `directTools` meaningful: a tool that is not direct is now
 reachable through the proxy instead of not at all. Proxy calls reuse the
 output guard and the per-tool approval list (the approval prompt names the
-real target tool). Instructions move from the system prompt to the proxy for
-servers with no direct tools, as PMA does. Proof: faux-provider tests for
+real target tool). Instructions stay in the system prompt for connected
+servers and are also available through `instructions`. Proof: faux-provider tests for
 each mode, ranking order, approval of a proxied call.
 
 ### 7.3 Lifecycle modes

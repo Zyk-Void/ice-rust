@@ -40,8 +40,8 @@ configuration. A disabled entry need not specify a command and is never spawned.
 `directTools` selects which discovered tools are registered, using
 pi-mcp-adapter's key and shape: `true` registers every tool, `false` registers
 none, and a list registers those **remote** tool names. Omission registers
-every tool. icers has no `mcp` proxy tool yet, so a tool that is not direct is
-not callable at all; the server still runs and its tools stay listed in the
+every tool. A tool that is not direct is not in the model's tool list but
+stays callable through the `mcp` proxy tool below, and stays listed in the
 `/mcp` panel. Resource tools are controlled by `exposeResources` instead and
 are not listed in the panel.
 
@@ -81,6 +81,34 @@ Anything that cannot be imported is reported instead of dropped silently:
 kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
 needs a TOML parser the project does not depend on yet. `ice` is not an import
 kind.
+
+## The `mcp` proxy tool
+
+While any server is configured, the model also gets one `mcp` tool (subject to
+`--tools` filtering), which reaches every server's tools without registering
+each one:
+
+| Call | Does |
+|---|---|
+| `mcp({})` | Server status and tool counts |
+| `mcp({ server: "name" })` | List a server's tools |
+| `mcp({ search: "words", limit: 12, offset: 0 })` | Ranked search over tool name, server, description and `searchKeywords` |
+| `mcp({ describe: "tool" })` | One tool's description and JSON parameters |
+| `mcp({ instructions: "name" })` | A server's full instructions |
+| `mcp({ connect: "name" })` | Reconnect a server and refresh its catalog |
+| `mcp({ tool: "name", args: {...} })` | Call one tool; `args` may also be a JSON string, and `server` narrows the lookup |
+
+Tool names match exactly, then with `-`/`_` and case ignored, then by the
+server's own (unprefixed) name; an ambiguous or unknown name returns the
+candidates or the closest matches. Proxied calls use the same approval list
+and output guard as direct tools; without an approval dialog (print or RPC
+mode) a tool that requires approval is refused. Servers that are disabled or
+not connected list their cached tools but cannot be called. Per-server
+`searchKeywords` adds search vocabulary that the model never sees:
+
+```json
+{"mcpServers": {"github": {"command": "github-mcp", "searchKeywords": {"search_code": ["grep"], "*": ["gh"]}}}}
+```
 
 ## Metadata cache
 

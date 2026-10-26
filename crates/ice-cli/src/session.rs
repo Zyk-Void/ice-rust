@@ -972,7 +972,8 @@ pub async fn build_prepared(
         crate::config::agent_dir().map_err(|e| BuildError::SessionDir(e.to_string()))?,
         project_trusted,
         mcp_approvals.clone(),
-    );
+    )
+    .with_approval_ui(ui_dialog_mailbox.clone());
     use std::io::IsTerminal;
     let providers = Arc::new(std::sync::RwLock::new(resolved.providers.clone()));
     // Same decision as `app.rs`, including the forced TUI.
