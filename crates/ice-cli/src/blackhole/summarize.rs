@@ -6,7 +6,8 @@ use indexmap::IndexSet;
 
 use super::normalize::{filter_noise, normalize, FileOps};
 use super::sections::{
-    build_sections, cap_brief, format_summary, wrap_long_lines, BuildSectionsInput,
+    build_sections, cap_brief, format_summary, unwrap_list_lines, wrap_long_lines,
+    BuildSectionsInput,
 };
 use crate::blackhole::regex;
 
@@ -158,7 +159,7 @@ fn merge_file_lines(prev: &str, fresh: &str) -> String {
     let mut merged: [IndexSet<String>; 3] = Default::default();
     let more = regex!(r"\s*\(\+\d+ more\)\s*$");
     for text in [prev, fresh] {
-        for line in text.split('\n') {
+        for line in unwrap_list_lines(text) {
             for (index, category) in categories.iter().enumerate() {
                 let prefix = format!("- {category}: ");
                 let Some(rest) = line.strip_prefix(&prefix) else {
@@ -216,10 +217,12 @@ fn merge_header_section(header: &str, prev: &str, fresh: &str) -> String {
     let is_clean = |line: &&str| {
         line.starts_with("- ") && !line.contains("<skill") && !line.contains("</skill")
     };
+    let (prev, fresh) = (unwrap_list_lines(prev), unwrap_list_lines(fresh));
     let combined: IndexSet<&str> = prev
-        .split('\n')
+        .iter()
+        .chain(fresh.iter())
+        .map(String::as_str)
         .filter(is_clean)
-        .chain(fresh.split('\n').filter(is_clean))
         .collect();
     let cap = if header == "Commits" { 8 } else { 15 };
     let lines: Vec<&str> = combined.into_iter().collect();
@@ -389,6 +392,36 @@ mod tests {
             merge_session_goal(prev, fresh),
             "[Session Goal]\n- Build parser (#0)\n- [Scope change]\n- Old scope (#3)"
         );
+    }
+
+    #[test]
+    fn wrapped_list_items_survive_a_merge() {
+        // Word breaks (between paths and inside a commit message) and a hard
+        // split inside one path longer than the row.
+        let paths: Vec<String> = (0..8)
+            .map(|i| format!("src/module_{i}/file_{i}.rs"))
+            .collect();
+        let long_path = format!("src/{}.rs", "x".repeat(150));
+        let commit = format!("- abc1234 {}", "word ".repeat(40).trim_end());
+        let prev = wrap_long_lines(&format!(
+            "[Files And Changes]\n- Modified: {}, {long_path}\n\n[Commits]\n{commit}",
+            paths.join(", ")
+        ));
+        assert!(prev.lines().any(|line| line.starts_with("  ")), "{prev}");
+        let files = merge_file_lines(&section_of(&prev, "Files And Changes"), "");
+        assert_eq!(
+            files,
+            format!(
+                "[Files And Changes]\n- Modified: {}, {long_path}",
+                paths.join(", ")
+            )
+        );
+        let commits = merge_header_section(
+            "Commits",
+            &section_of(&prev, "Commits"),
+            "[Commits]\n- def5678 next",
+        );
+        assert_eq!(commits, format!("[Commits]\n{commit}\n- def5678 next"));
     }
 
     #[test]

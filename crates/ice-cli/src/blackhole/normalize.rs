@@ -102,6 +102,13 @@ pub fn user_text_of(content: &UserContent) -> String {
 }
 
 /// Clip to `max` UTF-16 units, preferring a late word boundary.
+/// [`sanitize`], then escape line breaks, for a tool argument rendered inside
+/// one summary line: a newline in a path or query must not start a line of
+/// its own (a forged section header or list item) in the checkpoint.
+pub fn single_line(text: &str) -> String {
+    sanitize(text).replace('\n', "\\n")
+}
+
 pub fn clip(text: &str, max: usize) -> String {
     if len16(text) <= max {
         return text.to_string();

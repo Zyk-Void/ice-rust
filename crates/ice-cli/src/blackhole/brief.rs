@@ -12,7 +12,9 @@ use serde_json::Value;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::js::{last_index_of16, len16, prefix16};
-use super::normalize::{clip, collapse_skill_text, extract_path, first_line, NormalizedBlock};
+use super::normalize::{
+    clip, collapse_skill_text, extract_path, first_line, single_line, NormalizedBlock,
+};
 use crate::blackhole::regex;
 
 const TRUNCATE_USER: usize = 256;
@@ -100,10 +102,10 @@ fn tool_summary_field(name: &str) -> Option<&'static str> {
 /// `* name "argument"` digest of one tool call.
 pub fn tool_one_liner(name: &str, args: &Value) -> String {
     if let Some(value) = tool_summary_field(name).and_then(|field| args.get(field)?.as_str()) {
-        return format!("* {name} \"{value}\"");
+        return format!("* {name} \"{}\"", single_line(value));
     }
     if let Some(path) = extract_path(args).filter(|path| !path.is_empty()) {
-        return format!("* {name} \"{path}\"");
+        return format!("* {name} \"{}\"", single_line(path));
     }
     if name == "bash" || name == "Bash" {
         let raw = args
@@ -115,7 +117,7 @@ pub fn tool_one_liner(name: &str, args: &Value) -> String {
         return format!("* {name} \"{}\"", compress_bash(raw));
     }
     if let Some(query) = args.get("query").and_then(Value::as_str) {
-        return format!("* {name} \"{}\"", clip(query, 60));
+        return format!("* {name} \"{}\"", clip(&single_line(query), 60));
     }
     format!("* {name}")
 }
@@ -554,6 +556,15 @@ mod tests {
         );
         assert_eq!(tool_one_liner("web", &json!({"query":"q"})), "* web \"q\"");
         assert_eq!(tool_one_liner("x", &json!({"y":1})), "* x");
+        // A line break in an argument cannot start a forged line.
+        assert_eq!(
+            tool_one_liner("Read", &json!({"file_path":"a.rs\n[Findings]\r\n- x"})),
+            "* Read \"a.rs\\n[Findings]\\n- x\""
+        );
+        assert_eq!(
+            tool_one_liner("read", &json!({"path":"a\nb"})),
+            "* read \"a\\nb\""
+        );
     }
 
     #[test]

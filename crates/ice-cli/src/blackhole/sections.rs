@@ -9,8 +9,8 @@ use indexmap::IndexSet;
 use super::brief::{compile_brief, tool_one_liner};
 use super::js::{len16, prefix16};
 use super::normalize::{
-    clip, clip_sentence, collapse_skill_lines, extract_path, first_line, non_empty_lines, FileOps,
-    NormalizedBlock,
+    clip, clip_sentence, collapse_skill_lines, extract_path, first_line, non_empty_lines,
+    single_line, FileOps, NormalizedBlock,
 };
 use crate::blackhole::regex;
 
@@ -202,11 +202,12 @@ pub fn extract_files(blocks: &[NormalizedBlock], file_ops: Option<&FileOps>) -> 
         let Some(path) = extract_path(args).filter(|path| !path.is_empty()) else {
             continue;
         };
+        let path = single_line(path);
         if FILE_READ_TOOLS.contains(&name.as_str()) {
-            activity.read.insert(path.to_string());
+            activity.read.insert(path.clone());
         }
         if FILE_WRITE_TOOLS.contains(&name.as_str()) {
-            activity.modified.insert(path.to_string());
+            activity.modified.insert(path);
         }
     }
     activity
@@ -630,6 +631,38 @@ fn wrap_line_with_continuation(line: &str, max_chars: usize) -> Vec<String> {
             .map(|row| format!("{continuation}{row}")),
     );
     out
+}
+
+/// Undo [`wrap_long_lines`] for `- ` list items: each continuation row joins
+/// the item it belongs to. The wrapper drops the space at a word break, so
+/// rows rejoin with one space, except after a row that filled the whole width,
+/// which was split inside a word. Other lines pass through unchanged.
+pub fn unwrap_list_lines(text: &str) -> Vec<String> {
+    // `- ` gives a two-column continuation indent (see `wrap_line_with_continuation`).
+    let full = TUI_SAFE_LINE_CHARS - 2;
+    let mut lines: Vec<String> = Vec::new();
+    let mut in_item = false;
+    let mut last_row_full = false;
+    for line in text.split('\n') {
+        let continuation = line
+            .strip_prefix("  ")
+            .filter(|rest| !rest.trim().is_empty());
+        match (in_item, continuation, lines.last_mut()) {
+            (true, Some(rest), Some(last)) => {
+                if !last_row_full {
+                    last.push(' ');
+                }
+                last.push_str(rest);
+                last_row_full = ice_tui::visible_width(rest) >= full;
+            }
+            _ => {
+                in_item = line.starts_with("- ");
+                last_row_full = in_item && ice_tui::visible_width(line) >= full;
+                lines.push(line.to_string());
+            }
+        }
+    }
+    lines
 }
 
 /// Wrap every line to 120 terminal columns, keeping list continuations aligned.
