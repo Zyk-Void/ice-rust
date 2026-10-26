@@ -1761,11 +1761,20 @@ async fn coding_budget_reserves_selected_model_output_and_recomputes_on_switch()
     model.context_window = 8000;
     model.max_tokens = 4000;
     AgentLane::set_model(&harness, model.clone()).await.unwrap();
-    // The shared provider allowance is context-clamped (8,000 - 150 -
-    // 4,096 = 3,754), not blindly reserved at the advertised maximum.
+    // The reserve is the configured request fitted to the window alone
+    // (8,000 - 4,096 = 3,904), never to current usage.
     assert_eq!(
         harness.context_snapshot().await.unwrap().compact_at_tokens,
-        Some(4246)
+        Some(4096)
+    );
+
+    // A catalog whose output maximum equals its window still leaves an
+    // input budget.
+    model.max_tokens = 8000;
+    AgentLane::set_model(&harness, model.clone()).await.unwrap();
+    assert_eq!(
+        harness.context_snapshot().await.unwrap().compact_at_tokens,
+        Some(4096)
     );
 
     model.context_window = 0;
@@ -1773,6 +1782,54 @@ async fn coding_budget_reserves_selected_model_output_and_recomputes_on_switch()
     assert_eq!(
         harness.context_snapshot().await.unwrap().compact_at_tokens,
         Some(0)
+    );
+}
+
+/// Regression: when the output maximum equals the window, fitting the reserve
+/// to current usage made the ceiling track the input, so with a request hook
+/// every turn boundary compacted (and compacted again after each compaction).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn coding_ceiling_does_not_track_usage_when_output_max_equals_window() {
+    let small = {
+        let (harness, _) = harness_with_history(
+            300,
+            100,
+            100,
+            100,
+            272_000,
+            272_000,
+            CompactionSettings::default(),
+        )
+        .await;
+        harness
+            .set_coding_compaction_policy(Some(small_recent_policy()))
+            .await
+            .unwrap();
+        harness.context_snapshot().await.unwrap()
+    };
+    let large = {
+        let (harness, _) = harness_with_history(
+            120_000,
+            100,
+            100,
+            100,
+            272_000,
+            272_000,
+            CompactionSettings::default(),
+        )
+        .await;
+        harness
+            .set_coding_compaction_policy(Some(small_recent_policy()))
+            .await
+            .unwrap();
+        harness.context_snapshot().await.unwrap()
+    };
+    assert_eq!(small.compact_at_tokens, Some(136_000));
+    assert_eq!(large.compact_at_tokens, small.compact_at_tokens);
+    let used = ice_harness::compaction::estimate_context_tokens(&large.context.messages).tokens;
+    assert!(
+        used < 136_000,
+        "history of {used} tokens must sit below the ceiling"
     );
 }
 

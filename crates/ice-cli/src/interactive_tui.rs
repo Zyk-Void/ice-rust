@@ -1553,7 +1553,7 @@ pub async fn interactive_tui(
 
     // ---- Layout root (built ONCE; mirrors TS fullscreenLayoutRoot) ----
     // root = VStack[ scrollview(basis:0 grow:1 shrink:1 min:1), dock(shrink:1) ]
-    // dock  = VStack[ status(auto), autocomplete(auto), cognee activity(auto), editor_container(shrink:0 min:3), footer(auto) ]
+    // dock  = VStack[ status(auto), autocomplete(auto), editor_container(shrink:0 min:3), footer(auto) ]
     //
     // The scrollview gets `basis(0)` so the constrained stack allocator starts
     // it at zero height and grows it to fill the space the dock does not need
@@ -1575,7 +1575,6 @@ pub async fn interactive_tui(
         StackChild::Entry(StackEntry::new(state.pending_container().clone())),
         StackChild::Entry(StackEntry::new(status_container.clone())),
         StackChild::Entry(StackEntry::new(autocomplete_container.clone())),
-        StackChild::Entry(StackEntry::new(cognee_activity.clone())),
         // NOTE: no Spacer here. The scroll content already ends with a blank line
         // (`document_container`), and a second one in the dock stacked into a
         // two-row gap between the last message and the input box. One row of
@@ -1909,8 +1908,10 @@ pub async fn interactive_tui(
                 // cache regenerates itself if enabling a sidebar changes width.
                 tui_tick.request_render_reusing_scroll_content();
             }
-            if cognee_activity_tick.sync() {
-                tui_tick.request_render_reusing_scroll_content();
+            // Cognee activity is drawn on the prompt messages in the
+            // transcript, so a change repaints the transcript.
+            if cognee_activity_tick.sync(&chat_tick) {
+                tui_tick.request_render(false);
             }
             if pet_tick.tick(scroll_tick.viewport_height()) {
                 tui_tick.request_render(false);
@@ -1961,6 +1962,7 @@ pub async fn interactive_tui(
     let editor_for_key = editor.clone();
     let scroll_for_key = scroll_view.clone();
     let side_for_key = side_ui.clone();
+    let cognee_for_key = cognee_activity.clone();
     let lane_for_key = lane.clone();
     let state_for_key = state.clone();
     let model_catalog_for_key = model_catalog_arc.clone();
@@ -2117,10 +2119,19 @@ pub async fn interactive_tui(
                         );
                     }
                     MouseEventKind::Moved => {
-                        let hovered = tui_for_key.screen_snapshot().and_then(|snapshot| {
-                            expand_link_at(&snapshot, (m.column as usize, m.row as usize))
-                        });
-                        if state_for_key.transcript_view().set_hover(hovered) {
+                        let point = (m.column as usize, m.row as usize);
+                        let snapshot = tui_for_key.screen_snapshot();
+                        let hovered = snapshot
+                            .as_ref()
+                            .and_then(|snapshot| expand_link_at(snapshot, point));
+                        let memory_row = snapshot
+                            .as_ref()
+                            .filter(|snapshot| !snapshot.has_capturing_overlay)
+                            .and_then(|snapshot| snapshot.rows.get(point.1))
+                            .map(String::as_str);
+                        // Both run: one may clear a highlight the other sets.
+                        let memory_changed = cognee_for_key.hover(memory_row, point.0);
+                        if state_for_key.transcript_view().set_hover(hovered) | memory_changed {
                             tui_for_key.request_render(false);
                         }
                     }
@@ -2152,6 +2163,15 @@ pub async fn interactive_tui(
                                     .filter(|snapshot| snapshot.generation == generation)
                                 {
                                     if !snapshot.has_capturing_overlay {
+                                        if snapshot
+                                            .rows
+                                            .get(origin.1)
+                                            .is_some_and(|row| cognee_for_key.click(row, origin.0))
+                                        {
+                                            cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                            tui_for_key.request_render(false);
+                                            continue;
+                                        }
                                         if click_link_at(&snapshot, origin).is_some_and(|id| {
                                             state_for_key.transcript_view().toggle_cell(id)
                                         }) {

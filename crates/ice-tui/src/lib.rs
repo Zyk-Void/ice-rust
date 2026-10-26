@@ -162,7 +162,7 @@ pub use tui_alt_screen::{
 };
 pub use tui_main_screen::TuiMainScreen;
 pub use undo_stack::{RedoStack, UndoRedoManager, UndoStack};
-pub use user_message::UserMessageComponent;
+pub use user_message::{MessageAnnotation, UserMessageComponent};
 pub use utils::{
     apply_background_to_line, extract_segments, get_grapheme_segmenter, get_osc8_link_at_column,
     is_punctuation_char, is_whitespace_char, slice_by_column, slice_with_width, strip_osc8_links,

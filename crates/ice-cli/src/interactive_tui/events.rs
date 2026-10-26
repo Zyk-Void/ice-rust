@@ -563,6 +563,7 @@ pub(super) async fn handle_agent_event(
                 );
                 tui.request_render(false);
             }
+            AgentMessage::Custom(custom) if is_hidden_custom(&custom) => {}
             AgentMessage::Custom(custom) => {
                 state.new_message_count.custom_message();
                 let payload = serde_json::json!({

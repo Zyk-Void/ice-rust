@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex, Weak};
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::extension::{
     AfterCompactEvent, BeforeCompactDecision, BeforeCompactEvent, BeforeRunEvent,
-    CompactionOverride, CompactionTrigger, HarnessExtension,
+    CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
 use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
@@ -38,16 +38,15 @@ use super::dream::{
     claim_dream_candidate, mark_dream_captured, mark_dream_improved, read_dream_candidates,
     read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
-use super::observer::{append_observation, sanitize_endpoint, Observation};
+use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
     read_warmup_batch, remove_pending_remember, select_drain_batch, update_pending_remember_state,
     CircuitState, PendingState,
 };
 use super::text::{
-    append_memory_to_system_prompt, extract_message_text, format_last_compact_injection,
-    format_recall, redact_memory_text, truncate_for_capture, truncate_value_for_capture,
-    RecallLine,
+    extract_message_text, format_last_compact_injection, format_recall, redact_memory_text,
+    truncate_for_capture, truncate_value_for_capture, RecallLine,
 };
 use crate::blackhole::js::{iso_from_ms, len16, prefix16};
 use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
@@ -61,12 +60,25 @@ const MAX_TRACES_PER_TURN: u32 = 24;
 const IDLE_IMPROVE_COOLDOWN_MS: u64 = 300_000;
 const DREAM_IMPROVE_TIMEOUT_MS: u64 = 30_000;
 const DREAM_MAX_SESSIONS: usize = 2;
+/// Custom message type of the memory stored after each prompt.
+pub const MEMORY_CUSTOM_TYPE: &str = "ice-cognee-memory";
 
 /// Tools whose results are captured as traces.
 pub const CAPTURE_TOOL_ALLOWLIST: [&str; 18] = [
     "bash", "Bash", "read", "Read", "write", "Write", "edit", "Edit", "grep", "Grep", "find",
     "Find", "ls", "Ls", "glob", "Glob", "agent", "Agent",
 ];
+
+/// Tools whose output is file or listing contents. Their traces record what
+/// was looked at, not what was read: the repository is the source of truth,
+/// and stored contents (docs, skill files) were turned into misleading "facts"
+/// in the memory graph.
+const CONTENT_TOOLS: [&str; 5] = ["read", "grep", "find", "ls", "glob"];
+/// Output kept from another tool's successful trace (a command's result).
+const TRACE_RESULT_CHARS: usize = 600;
+/// Prompt recall searches session memory and the graph. Raw tool traces are
+/// left out: they matched on incidental words and crowded out real memories.
+const AUTO_RECALL_SCOPE: [&str; 2] = ["session", "graph"];
 
 /// Fewer than four words containing a letter or digit.
 pub fn is_low_signal_recall_prompt(prompt: &str) -> bool {
@@ -668,6 +680,13 @@ impl CogneeRuntime {
                 state.server_model.clone(),
             )
         };
+        let detail = fields.preview.as_ref().map(|value| {
+            let text = match value {
+                Value::String(text) => text.clone(),
+                other => other.to_string(),
+            };
+            redact_memory_text(&text, super::observer::MAX_DETAIL_CHARS)
+        });
         let preview = fields
             .preview
             .map(|value| redact_memory_text(&truncate_value_for_capture(&value, 900), 900));
@@ -687,9 +706,14 @@ impl CogneeRuntime {
             error: fields.error.map(|error| prefix16(&error, 160).to_string()),
             model,
             meta: fields.meta,
+            detail,
         };
+        // Listeners (the TUI panel) are notified here, in emission order; only
+        // the file append runs off-thread. Notifying from the blocking task let
+        // a "succeeded" overtake its "started" and leave a row stuck pending.
+        let safe = publish_observation(observation);
         let storage = self.storage_dir.clone();
-        let handle = tokio::task::spawn_blocking(move || append_observation(&storage, observation));
+        let handle = tokio::task::spawn_blocking(move || persist_observation(&storage, &safe));
         self.background.lock().unwrap().push(handle);
     }
 
@@ -1931,11 +1955,20 @@ impl CogneeRuntime {
             })
             .collect::<Vec<_>>()
             .join("\n");
-        let return_limit = 8000.min(max);
-        let safe_return = redact_memory_text(
-            &truncate_for_capture(&return_text, return_limit),
-            return_limit,
-        );
+        let content_tool = CONTENT_TOOLS.contains(&tool_name.to_lowercase().as_str());
+        let safe_return = if content_tool && !is_error {
+            String::new()
+        } else {
+            let return_limit = if is_error {
+                limit
+            } else {
+                TRACE_RESULT_CHARS.min(max)
+            };
+            redact_memory_text(
+                &truncate_for_capture(&return_text, return_limit),
+                return_limit,
+            )
+        };
         let error_text = if return_text.is_empty() {
             "error"
         } else {
@@ -2207,11 +2240,9 @@ impl CogneeRuntime {
         }
     }
 
-    fn turn_scoped_memory(
-        &self,
-        system_prompt: Option<&str>,
-        extra: Option<String>,
-    ) -> Option<String> {
+    /// The memory text for this prompt: a pending checkpoint summary and the
+    /// recall, if any. The harness stores it after the prompt in the history.
+    fn turn_scoped_memory(&self, extra: Option<String>) -> Option<String> {
         let (summary, max_chars) = {
             let mut state = self.state();
             (
@@ -2225,13 +2256,7 @@ impl CogneeRuntime {
             .chain(extra)
             .filter(|part| !part.is_empty())
             .collect();
-        if parts.is_empty() {
-            return None;
-        }
-        Some(append_memory_to_system_prompt(
-            system_prompt,
-            &parts.join("\n\n"),
-        ))
+        (!parts.is_empty()).then(|| parts.join("\n\n"))
     }
 
     async fn recall_for_prompt(
@@ -2272,7 +2297,7 @@ impl CogneeRuntime {
         };
         if !auto_recall || !can_attempt {
             self.observe("recall", "succeeded", succeeded(json!({"skipped": true})));
-            return self.turn_scoped_memory(event.system_prompt, None);
+            return self.turn_scoped_memory(None);
         }
         if is_low_signal_recall_prompt(event.prompt) {
             self.observe(
@@ -2280,7 +2305,7 @@ impl CogneeRuntime {
                 "succeeded",
                 succeeded(json!({"skipped": true, "reason": "short_prompt"})),
             );
-            return self.turn_scoped_memory(event.system_prompt, None);
+            return self.turn_scoped_memory(None);
         }
         let recall_key = format!("{session_id}\n{}", event.prompt);
         let now = self.now();
@@ -2291,7 +2316,7 @@ impl CogneeRuntime {
             {
                 drop(state);
                 self.observe("recall", "succeeded", succeeded(json!({"duplicate": true})));
-                return self.turn_scoped_memory(event.system_prompt, None);
+                return self.turn_scoped_memory(None);
             }
         }
         let result = client
@@ -2301,7 +2326,10 @@ impl CogneeRuntime {
                     top_k: Some(top_k),
                     dataset: Some(dataset),
                     session_id: Some(session_id),
-                    scope: vec!["session".into(), "trace".into(), "graph".into()],
+                    scope: AUTO_RECALL_SCOPE
+                        .iter()
+                        .map(|scope| scope.to_string())
+                        .collect(),
                     signal: Some(event.signal.clone()),
                     ..RecallOptions::default()
                 },
@@ -2335,7 +2363,7 @@ impl CogneeRuntime {
                 );
                 let extra = (!results.is_empty())
                     .then(|| format_recall(&recall_lines(&results), max_chars));
-                self.turn_scoped_memory(event.system_prompt, extra)
+                self.turn_scoped_memory(extra)
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -2354,7 +2382,7 @@ impl CogneeRuntime {
                         ..ObserveFields::default()
                     },
                 );
-                self.turn_scoped_memory(event.system_prompt, None)
+                self.turn_scoped_memory(None)
             }
         }
     }
@@ -2392,7 +2420,10 @@ fn chrono_now_ms() -> i64 {
 
 #[async_trait::async_trait]
 impl HarnessExtension for CogneeRuntime {
-    async fn before_run(&self, event: &BeforeRunEvent<'_>) -> Option<String> {
+    /// Recalled memory goes into the history after the prompt, not into the
+    /// system prompt: a system prompt that changed every turn kept the
+    /// provider from caching any of the conversation after it.
+    async fn prompt_context(&self, event: &BeforeRunEvent<'_>) -> Option<PromptContext> {
         // An unconfigured Cognee leaves no trace: no spinner, no log.
         if !self.is_installed() {
             return None;
@@ -2409,8 +2440,11 @@ impl HarnessExtension for CogneeRuntime {
                 ..ObserveFields::default()
             },
         );
-        let result = self.recall_for_prompt(event, &request_id, started).await;
-        result
+        let text = self.recall_for_prompt(event, &request_id, started).await?;
+        Some(PromptContext {
+            custom_type: MEMORY_CUSTOM_TYPE.into(),
+            text,
+        })
     }
 
     async fn before_compact(&self, event: &BeforeCompactEvent) -> Option<BeforeCompactDecision> {
@@ -2617,6 +2651,17 @@ mod tests {
         )
     }
 
+    /// The memory text Cognee adds after `prompt`, checking its message type.
+    async fn memory(
+        rt: &CogneeRuntime,
+        prompt: &str,
+        system_prompt: Option<&str>,
+    ) -> Option<String> {
+        let context = rt.prompt_context(&run_event(prompt, system_prompt)).await?;
+        assert_eq!(context.custom_type, MEMORY_CUSTOM_TYPE);
+        Some(context.text)
+    }
+
     fn run_event<'a>(prompt: &'a str, system_prompt: Option<&'a str>) -> BeforeRunEvent<'a> {
         BeforeRunEvent {
             prompt,
@@ -2691,6 +2736,37 @@ mod tests {
         );
     }
 
+    /// Regression: listeners were notified from the blocking append task, so
+    /// a "succeeded" could reach the TUI panel before its "started" and leave
+    /// the row pending forever.
+    #[tokio::test]
+    async fn observation_listeners_see_phases_in_emission_order() {
+        let transport = Arc::new(FakeTransport::default());
+        let dir = tempfile::tempdir().unwrap();
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let request_id = uuid::Uuid::new_v4().to_string();
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let sink = seen.clone();
+        let wanted = request_id.clone();
+        let _subscription = super::super::observer::subscribe(move |obs| {
+            if obs.request_id.as_deref() == Some(wanted.as_str()) {
+                sink.lock().unwrap().push(obs.phase.clone());
+            }
+        });
+        for phase in ["started", "succeeded"] {
+            rt.observe(
+                "recall",
+                phase,
+                ObserveFields {
+                    request_id: Some(request_id.clone()),
+                    ..ObserveFields::default()
+                },
+            );
+        }
+        assert_eq!(*seen.lock().unwrap(), ["started", "succeeded"]);
+    }
+
     #[tokio::test]
     async fn footer_status_is_only_cognee_or_disabled() {
         let transport = Arc::new(FakeTransport::default());
@@ -2716,8 +2792,7 @@ mod tests {
         let rt = runtime(dir.path(), &transport, None, false);
         assert!(!rt.is_installed());
         assert_eq!(
-            rt.before_run(&run_event("how does the cache layer work", Some("base")))
-                .await,
+            memory(&rt, "how does the cache layer work", Some("base")).await,
             None
         );
         rt.wait_for_background().await;
@@ -2727,8 +2802,7 @@ mod tests {
         assert!(rt.is_installed());
         assert!(!rt.is_enabled());
         assert_eq!(
-            rt.before_run(&run_event("how does the cache layer work", None))
-                .await,
+            memory(&rt, "how does the cache layer work", None).await,
             None
         );
         rt.wait_for_background().await;
@@ -2778,22 +2852,33 @@ mod tests {
         ));
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         let prompt = "How does the cache layer evict entries?";
-        let injected = rt
-            .before_run(&run_event(prompt, Some("base")))
-            .await
-            .unwrap();
-        assert!(injected.starts_with("base\n\n<ice-void-cognee-memory>\n"));
+        let injected = memory(&rt, prompt, Some("base")).await.unwrap();
+        assert!(
+            injected.starts_with("<ice-void-cognee-memory>\n"),
+            "{injected}"
+        );
         assert!(injected.contains("1. Cache uses LRU eviction (score 0.9)"));
         // Exact duplicate within 15 s: no request, nothing injected.
-        assert_eq!(rt.before_run(&run_event(prompt, Some("base"))).await, None);
+        assert_eq!(memory(&rt, prompt, Some("base")).await, None);
         // Low-signal prompt: no request.
-        assert_eq!(rt.before_run(&run_event("fix it", None)).await, None);
+        assert_eq!(memory(&rt, "fix it", None).await, None);
         rt.wait_for_background().await;
         let sent = transport.sent();
         assert_eq!(sent.len(), 1);
         let body = json_body(&sent[0]);
         assert_eq!(body["sessionId"], "ice_host1");
-        assert_eq!(body["datasets"], json!(["ice"]));
+        // Each project gets its own dataset by default.
+        assert!(
+            rt.active_dataset().starts_with("ice-"),
+            "{}",
+            rt.active_dataset()
+        );
+        assert_eq!(body["datasets"], json!([rt.active_dataset()]));
+        assert_eq!(
+            body["scope"],
+            json!(["session", "graph"]),
+            "raw traces are not recalled"
+        );
         assert!(dir
             .path()
             .join("ice-cognee")
@@ -2808,7 +2893,7 @@ mod tests {
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         for index in 0..4 {
             let prompt = format!("question number {index} about the cache");
-            assert_eq!(rt.before_run(&run_event(&prompt, None)).await, None);
+            assert_eq!(memory(&rt, &prompt, None).await, None);
         }
         // Three failures open the breaker; the fourth prompt sends nothing.
         assert_eq!(transport.sent().len(), 3);
@@ -2817,12 +2902,81 @@ mod tests {
         assert_eq!(report.last_error.as_deref(), Some("unreachable"));
     }
 
+    /// Traces record actions, not contents: a successful read keeps its path
+    /// but not the file, a command keeps a short result, and an error keeps
+    /// its message.
+    #[tokio::test]
+    async fn traces_keep_actions_and_errors_but_not_file_contents() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        memory(&rt, "hi there", None).await;
+        let long = "line of output ".repeat(200);
+        let calls = [
+            (
+                "c1",
+                "read",
+                json!({"path": "/skills/x/SKILL.md"}),
+                "SKILL BODY",
+                false,
+            ),
+            (
+                "c2",
+                "bash",
+                json!({"command": "cargo test"}),
+                long.as_str(),
+                false,
+            ),
+            (
+                "c3",
+                "read",
+                json!({"path": "/missing"}),
+                "ENOENT: no such file",
+                true,
+            ),
+        ];
+        for (id, tool, args, output, is_error) in calls {
+            transport.push(FakeResponse::json(200, json!({"entry_id": id})));
+            rt.on_agent_event(&AgentEvent::ToolExecutionStart {
+                tool_call_id: id.into(),
+                tool_name: tool.into(),
+                args,
+            });
+            rt.on_agent_event(&AgentEvent::ToolExecutionEnd {
+                tool_call_id: id.into(),
+                tool_name: tool.into(),
+                result: AgentToolResult::text(output),
+                is_error,
+            });
+        }
+        rt.wait_for_background().await;
+        let traces: Vec<Value> = transport
+            .sent()
+            .iter()
+            .filter(|request| request.url.ends_with("/api/v1/remember/entry"))
+            .map(json_body)
+            .filter(|body| body["entry"]["type"] == "trace")
+            .map(|body| body["entry"].clone())
+            .collect();
+        assert_eq!(traces.len(), 3);
+        assert_eq!(traces[0]["method_params"]["path"], "/skills/x/SKILL.md");
+        assert_eq!(traces[0]["method_return_value"], "");
+        let command = traces[1]["method_return_value"].as_str().unwrap();
+        assert!(command.starts_with("line of output"), "{command}");
+        assert!(
+            command.chars().count() < TRACE_RESULT_CHARS + 20,
+            "{command}"
+        );
+        assert_eq!(traces[2]["status"], "error");
+        assert_eq!(traces[2]["method_return_value"], "ENOENT: no such file");
+    }
+
     #[tokio::test]
     async fn tool_traces_and_answers_are_captured_with_dream_revisions() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
-        rt.before_run(&run_event("hi there", None)).await;
+        memory(&rt, "hi there", None).await;
         transport.push(FakeResponse::json(200, json!({"entry_id": "t"})));
         transport.push(FakeResponse::json(200, json!({"entry_id": "a"})));
         rt.on_agent_event(&AgentEvent::ToolExecutionStart {
@@ -2881,7 +3035,9 @@ mod tests {
                 answer: 1
             }
         );
-        let record = read_dream_record_for_dataset(&rt.dream_dir(), "ice_host1", "ice").unwrap();
+        let record =
+            read_dream_record_for_dataset(&rt.dream_dir(), "ice_host1", &rt.active_dataset())
+                .unwrap();
         assert_eq!(record.capture_revision, 2.0);
         assert!(rt.state().dream_dirty);
     }
@@ -2891,7 +3047,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
-        rt.before_run(&run_event("hi there", None)).await;
+        memory(&rt, "hi there", None).await;
         rt.on_agent_event(&AgentEvent::AgentEnd {
             messages: vec![assistant("Answer")],
         });
@@ -2940,10 +3096,10 @@ mod tests {
             "ICE compaction checkpoint\nSession: ice_host1\nReason: threshold\nEngine: native\nSummary:\nCheckpoint summary"
         );
         assert!(read_pending_remember(&rt.pending_dir()).is_empty());
-        let injected = rt.before_run(&run_event("ok", Some("base"))).await.unwrap();
+        let injected = memory(&rt, "ok", Some("base")).await.unwrap();
         assert!(injected.contains("<ice-void-last-compact>"));
         assert!(injected.contains("Checkpoint summary"));
-        assert_eq!(rt.before_run(&run_event("ok", Some("base"))).await, None);
+        assert_eq!(memory(&rt, "ok", Some("base")).await, None);
     }
 
     #[tokio::test]

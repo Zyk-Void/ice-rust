@@ -12,7 +12,7 @@ use ice_harness::agent_harness::{AgentHarness, AgentLane, CompactionOutcome};
 use ice_harness::compaction::settings::CodingAgentCompactionPolicy;
 use ice_harness::extension::{
     AfterCompactEvent, BeforeCompactDecision, BeforeCompactEvent, BeforeRunEvent, BoundaryDecision,
-    BoundaryEvent, CompactionOverride, CompactionTrigger, HarnessExtension,
+    BoundaryEvent, CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
 use ice_harness::session::types::{BranchBounds, Entry, EntryOrder, EntryQuery, SessionMetadata};
@@ -23,6 +23,7 @@ use ice_tools::{ExecutionToolContext, InMemoryExecutionEnv};
 struct RecordingProvider {
     inner: Arc<FauxProvider>,
     system_prompts: Mutex<Vec<String>>,
+    contexts: Mutex<Vec<Context>>,
 }
 
 #[async_trait]
@@ -43,6 +44,7 @@ impl Provider for RecordingProvider {
             .lock()
             .unwrap()
             .push(context.system_prompt.clone().unwrap_or_default());
+        self.contexts.lock().unwrap().push(context.clone());
         self.inner.stream_simple(model, context, options).await
     }
 }
@@ -161,6 +163,7 @@ async fn harness_with_compaction_settings(
     let provider = Arc::new(RecordingProvider {
         inner: faux.clone(),
         system_prompts: Mutex::new(Vec::new()),
+        contexts: Mutex::new(Vec::new()),
     });
     let mut model = faux.default_model().clone();
     model.context_window = 2000;
@@ -319,6 +322,98 @@ async fn before_run_adds_transient_prompt_text_and_transform_sees_compaction_tim
     let times = probe.transform_times.lock().unwrap().clone();
     assert!(!times.is_empty());
     assert!(times.iter().all(|time| time.is_some()));
+}
+
+struct MemoryProbe;
+
+#[async_trait]
+impl HarnessExtension for MemoryProbe {
+    async fn prompt_context(&self, event: &BeforeRunEvent<'_>) -> Option<PromptContext> {
+        Some(PromptContext {
+            custom_type: "test-memory".into(),
+            text: format!("MEMORY for: {}", event.prompt),
+        })
+    }
+}
+
+fn user_texts(context: &Context) -> Vec<String> {
+    context
+        .messages
+        .iter()
+        .filter_map(|message| match message {
+            ice_ai::types::Message::User(user) => Some(match &user.content {
+                UserContent::Text(text) => text.clone(),
+                UserContent::Blocks(blocks) => blocks
+                    .iter()
+                    .filter_map(|block| match block {
+                        ice_ai::types::Content::Text(text) => Some(text.text.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            }),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Prompt context is stored after the prompt as hidden history: the system
+/// prompt never changes, and each request starts with the previous request
+/// unchanged, so the provider's prompt cache keeps covering the history.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stable() {
+    let (harness, provider, _) = harness(vec![FauxStep::text("one"), FauxStep::text("two")]).await;
+    harness.set_extensions(vec![Arc::new(MemoryProbe) as Arc<dyn HarnessExtension>]);
+    harness
+        .prompt_text("first question", Vec::new())
+        .await
+        .unwrap();
+    harness
+        .prompt_text("second question", Vec::new())
+        .await
+        .unwrap();
+
+    let prompts = provider.system_prompts.lock().unwrap().clone();
+    assert_eq!(prompts.len(), 2);
+    assert_eq!(prompts[0], prompts[1], "the system prompt is stable");
+    assert!(!prompts[0].contains("MEMORY"), "{}", prompts[0]);
+
+    let contexts = provider.contexts.lock().unwrap().clone();
+    let first = user_texts(&contexts[0]);
+    assert_eq!(
+        first[first.len() - 2..],
+        ["first question", "MEMORY for: first question"]
+    );
+    let second = user_texts(&contexts[1]);
+    assert_eq!(
+        second[second.len() - 2..],
+        ["second question", "MEMORY for: second question"]
+    );
+    assert_eq!(
+        contexts[1].messages[..contexts[0].messages.len()],
+        contexts[0].messages[..],
+        "the first request is an unchanged prefix of the second"
+    );
+
+    let hidden: Vec<_> = harness
+        .session()
+        .view("main")
+        .find_entries(&EntryQuery {
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .unwrap()
+        .into_iter()
+        .filter_map(|entry| match entry {
+            Entry::Message(message) => ice_harness::messages::custom_data(&message.message),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(hidden.len(), 2);
+    assert!(hidden
+        .iter()
+        .all(|data| data.custom_type == "test-memory" && !data.display));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

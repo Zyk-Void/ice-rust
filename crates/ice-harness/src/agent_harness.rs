@@ -2270,13 +2270,7 @@ impl AgentHarness {
             .collect();
         let compact_at_tokens = if let Some(policy) = snapshot.coding_compaction_policy {
             policy.enabled.then(|| {
-                Self::coding_input_ceiling(
-                    &snapshot,
-                    &context.messages,
-                    &system_prompt,
-                    &tools,
-                    policy.normalized_threshold_percent(),
-                )
+                Self::coding_input_ceiling(&snapshot, policy.normalized_threshold_percent())
             })
         } else {
             snapshot.compaction.enabled.then(|| {
@@ -3475,31 +3469,29 @@ impl AgentHarness {
     }
 
     /// Input ceiling for the known coding request. Keep the configured trigger,
-    /// but never place it above the selected provider's shared output allowance.
+    /// but leave room for the selected model's output allowance, capped at half
+    /// the window (TS `modelAwareReserveTokens`) so a catalog whose `maxTokens`
+    /// equals its window still has an input budget. The allowance is the
+    /// configured request, not the context-fitted one: fitting it to the current
+    /// context made the ceiling track usage, so every turn boundary compacted.
     /// Hooks/custom converters can still change a request; this is an estimate,
     /// not authority over their payload or an exact tokenizer.
-    fn coding_input_ceiling(
-        snap: &ConfigSnapshot,
-        messages: &[AgentMessage],
-        system_prompt: &str,
-        tools: &[ice_ai::types::Tool],
-        percent: f64,
-    ) -> i64 {
+    fn coding_input_ceiling(snap: &ConfigSnapshot, percent: f64) -> i64 {
         let window = snap.model.context_window.min(i64::MAX as u64) as i64;
         if window == 0 {
             return 0;
         }
-        let context = ice_ai::types::Context {
-            system_prompt: (!system_prompt.is_empty()).then(|| system_prompt.to_string()),
-            messages: harness_convert_to_llm(messages.to_vec()),
-            tools: tools.to_vec(),
-        };
         let options = snap
             .stream_options
             .merge_into(ice_ai::SimpleStreamOptions::default());
-        let output = ice_ai::simple_options::request_max_tokens(&snap.model, &context, &options)
-            .unwrap_or(snap.model.max_tokens)
-            .min(i64::MAX as u64) as i64;
+        let output = ice_ai::simple_options::request_max_tokens(
+            &snap.model,
+            &ice_ai::types::Context::default(),
+            &options,
+        )
+        .unwrap_or(snap.model.max_tokens)
+        .min(i64::MAX as u64) as i64;
+        let output = output.min(window / 2);
         // Hooks and custom converters run later and can grow the request; hold
         // a bounded estimate for them instead of replaying them while budgeting.
         let transform_reserve = if snap.provider_hooks.is_some()
@@ -3532,7 +3524,7 @@ impl AgentHarness {
             .collect();
         (
             crate::compaction::tokens::estimate_request_tokens(messages, &system_prompt, &tools),
-            Self::coding_input_ceiling(snap, messages, &system_prompt, &tools, percent),
+            Self::coding_input_ceiling(snap, percent),
         )
     }
 
@@ -4632,6 +4624,38 @@ impl AgentHarness {
                         agent_context.system_prompt = next;
                     }
                 }
+                for extension in &snap.extensions {
+                    let event = crate::extension::BeforeRunEvent {
+                        prompt: &prompt,
+                        system_prompt: Some(agent_context.system_prompt.as_str()),
+                        session_id: &session_id,
+                        signal: signal.clone(),
+                    };
+                    let Some(context) = extension.prompt_context(&event).await else {
+                        continue;
+                    };
+                    if context.text.trim().is_empty() {
+                        continue;
+                    }
+                    let message = crate::messages::create_custom_message(
+                        &context.custom_type,
+                        UserContent::Text(context.text),
+                        false,
+                        None,
+                        now_ms(),
+                    );
+                    // Only context that is in the history is sent: unpersisted
+                    // text would vanish from the next request and break the
+                    // cached prefix this hook exists to keep.
+                    match self.view().append_message(message.clone()).await {
+                        Ok(_) => agent_context.messages.push(message),
+                        Err(error) => tracing::warn!(
+                            custom_type = %context.custom_type,
+                            %error,
+                            "could not persist extension prompt context; skipping it"
+                        ),
+                    }
+                }
             }
         }
 
@@ -4773,7 +4797,7 @@ impl AgentHarness {
                                     };
                                     let tools: Vec<_> = context.tools.iter().map(|tool| tool.schema().clone()).collect();
                                     let input = crate::compaction::tokens::estimate_request_tokens(&context.messages, &context.system_prompt, &tools);
-                                    let ceiling = AgentHarness::coding_input_ceiling(&coding_snapshot, &context.messages, &context.system_prompt, &tools, percent);
+                                    let ceiling = AgentHarness::coding_input_ceiling(&coding_snapshot, percent);
                                     policy.enabled && model.context_window > 0 && input > ceiling
                                 },
                                 None => {

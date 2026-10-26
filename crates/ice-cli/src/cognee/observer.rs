@@ -17,6 +17,8 @@ use super::text::redact_memory_text;
 pub const OBSERVATION_FILE: &str = "observations.jsonl";
 pub const MAX_EVENTS: usize = 500;
 pub const MAX_PREVIEW_CHARS: usize = 900;
+/// Bound on the in-process `detail` text.
+pub const MAX_DETAIL_CHARS: usize = 64_000;
 pub const MAX_OBSERVATION_FILE_BYTES: u64 = 2 * 1024 * 1024;
 
 /// `CogneeObservation`. `operation` is one of session, recall,
@@ -51,6 +53,10 @@ pub struct Observation {
     pub model: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Map<String, Value>>,
+    /// The whole redacted preview, for in-process listeners (the TUI shows it
+    /// in full). Never written to the log, which keeps the capped `preview`.
+    #[serde(skip)]
+    pub detail: Option<String>,
 }
 
 type Listener = Arc<dyn Fn(&Observation) + Send + Sync>;
@@ -98,6 +104,13 @@ pub fn subscribe(listener: impl Fn(&Observation) + Send + Sync + 'static) -> Sub
 
 /// `appendCogneeObservation`: redact the preview, notify, then append.
 pub fn append_observation(storage_dir: &Path, observation: Observation) {
+    let safe = publish_observation(observation);
+    persist_observation(storage_dir, &safe);
+}
+
+/// Redact the preview and notify listeners on the calling thread, so they see
+/// observations in emission order. Returns the redacted observation to persist.
+pub fn publish_observation(observation: Observation) -> Observation {
     let mut safe = observation;
     safe.preview = safe
         .preview
@@ -109,8 +122,13 @@ pub fn append_observation(storage_dir: &Path, observation: Observation) {
     for listener in current {
         let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| listener(&safe)));
     }
+    safe
+}
+
+/// Append an already-published observation to the log.
+pub fn persist_observation(storage_dir: &Path, safe: &Observation) {
     let _guard = append_lock().lock();
-    let _ = write_observation(storage_dir, &safe);
+    let _ = write_observation(storage_dir, safe);
 }
 
 fn write_observation(storage_dir: &Path, safe: &Observation) -> std::io::Result<()> {
@@ -207,6 +225,17 @@ mod tests {
             preview: preview.map(str::to_string),
             ..Observation::default()
         }
+    }
+
+    #[test]
+    fn full_detail_text_is_never_logged() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut observation = event("obs-detail", Some("short"));
+        observation.detail = Some("FULL_DETAIL_SENTINEL".into());
+        append_observation(dir.path(), observation);
+        let logged = std::fs::read_to_string(dir.path().join(OBSERVATION_FILE)).unwrap();
+        assert!(logged.contains("short"), "{logged}");
+        assert!(!logged.contains("FULL_DETAIL_SENTINEL"), "{logged}");
     }
 
     #[test]
