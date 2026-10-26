@@ -1,6 +1,7 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
 mod elicitation;
 mod elicitation_schema;
+mod import;
 mod manager;
 mod output_guard;
 mod prompts;
@@ -115,13 +116,20 @@ fn expose_resources_default() -> bool {
 struct Config {
     #[serde(default, rename = "mcpServers")]
     servers: BTreeMap<String, ServerConfig>,
+    /// Other tools whose stdio servers are imported as the lowest layer.
+    #[serde(default)]
+    imports: Vec<String>,
     /// Read leniently: a malformed value falls back to defaults, never rejects the file.
     #[serde(default)]
     settings: Value,
 }
 
 /// Global configuration first, then the project file only when trusted.
-fn read_configs(agent_dir: &Path, cwd: &Path, trusted: bool) -> Result<Vec<Config>, String> {
+fn read_configs(
+    agent_dir: &Path,
+    cwd: &Path,
+    trusted: bool,
+) -> Result<Vec<(PathBuf, Config)>, String> {
     let mut paths = vec![agent_dir.join("mcp.json")];
     if trusted {
         paths.push(cwd.join(".icers/mcp.json"));
@@ -133,7 +141,8 @@ fn read_configs(agent_dir: &Path, cwd: &Path, trusted: bool) -> Result<Vec<Confi
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
             Err(e) => return Err(format!("{}: {e}", path.display())),
         };
-        configs.push(serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?);
+        let config = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+        configs.push((path, config));
     }
     Ok(configs)
 }
@@ -145,7 +154,7 @@ fn load_settings(
     trusted: bool,
 ) -> Result<serde_json::Map<String, Value>, String> {
     let mut settings = serde_json::Map::new();
-    for config in read_configs(agent_dir, cwd, trusted)? {
+    for (_, config) in read_configs(agent_dir, cwd, trusted)? {
         if let Value::Object(values) = config.settings {
             settings.extend(values);
         }
@@ -153,26 +162,61 @@ fn load_settings(
     Ok(settings)
 }
 
-/// Merge whole server entries, never consulting project configuration unless trusted.
+fn valid_name(name: &str) -> bool {
+    !name.is_empty()
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+}
+
+/// Effective servers, each with the file that provides it, plus import problems.
+pub(crate) struct Layered {
+    pub servers: BTreeMap<String, (ServerConfig, PathBuf)>,
+    pub notes: Vec<String>,
+}
+
+/// Imports are the lowest layer, then global, then the project file only when trusted.
+/// Whole server entries are replaced by name, never merged.
+pub(crate) fn load_layered(agent_dir: &Path, cwd: &Path, trusted: bool) -> Result<Layered, String> {
+    load_layered_from(dirs::home_dir().as_deref(), agent_dir, cwd, trusted)
+}
+fn load_layered_from(
+    home: Option<&Path>,
+    agent_dir: &Path,
+    cwd: &Path,
+    trusted: bool,
+) -> Result<Layered, String> {
+    let configs = read_configs(agent_dir, cwd, trusted)?;
+    let kinds: Vec<String> = configs
+        .iter()
+        .flat_map(|(_, config)| config.imports.iter().cloned())
+        .collect();
+    let imported = import::load(&kinds, home, cwd, trusted);
+    let mut servers = imported.servers;
+    for (path, config) in configs {
+        for (name, server) in config.servers {
+            if !valid_name(&name) {
+                return Err(format!("invalid MCP server name: {name:?}"));
+            }
+            servers.insert(name, (server, path.clone()));
+        }
+    }
+    Ok(Layered {
+        servers,
+        notes: imported.notes,
+    })
+}
+
 pub fn load_config(
     agent_dir: &Path,
     cwd: &Path,
     trusted: bool,
 ) -> Result<BTreeMap<String, ServerConfig>, String> {
-    let mut servers = BTreeMap::new();
-    for config in read_configs(agent_dir, cwd, trusted)? {
-        for (name, server) in config.servers {
-            if name.is_empty()
-                || !name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-            {
-                return Err(format!("invalid MCP server name: {name:?}"));
-            }
-            servers.insert(name, server);
-        }
-    }
-    Ok(servers)
+    Ok(load_layered(agent_dir, cwd, trusted)?
+        .servers
+        .into_iter()
+        .map(|(name, (server, _))| (name, server))
+        .collect())
 }
 
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
@@ -1112,18 +1156,24 @@ async fn confirm(
 /// Inspection does not resolve a model or require credentials.
 pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool), String> {
     let dir = crate::config::agent_dir().map_err(|e| e.to_string())?;
-    let servers = load_config(&dir, cwd, crate::session::resolve_project_trust(args, cwd))?;
+    let layered = load_layered(&dir, cwd, crate::session::resolve_project_trust(args, cwd))?;
+    let own = [dir.join("mcp.json"), cwd.join(".icers/mcp.json")];
     let mut tasks = Vec::new();
-    for (name, config) in servers {
+    for (name, (config, source)) in layered.servers {
         let cwd = cwd.to_path_buf();
+        let label = if own.contains(&source) {
+            name.clone()
+        } else {
+            format!("{name} (imported from {})", source.display())
+        };
         tasks.push(tokio::spawn(async move {
             if config.disabled {
-                return (format!("{name}: disabled\n"), false);
+                return (format!("{label}: disabled\n"), false);
             }
             match discover_server(&name, &config, &cwd).await {
                 Ok(tools) => (
                     format!(
-                        "{name}: ready\n{}",
+                        "{label}: ready\n{}",
                         tools
                             .iter()
                             .map(|t| format!(
@@ -1139,7 +1189,7 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
                     ),
                     false,
                 ),
-                Err(error) => (format!("{name}: failed ({error})\n"), true),
+                Err(error) => (format!("{label}: failed ({error})\n"), true),
             }
         }));
     }
@@ -1152,6 +1202,9 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
     }
     if output.is_empty() {
         output.push_str("No MCP servers configured.\n");
+    }
+    for note in layered.notes {
+        output.push_str(&format!("skipped {note}\n"));
     }
     Ok((output, failed))
 }
