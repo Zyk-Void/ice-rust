@@ -8,6 +8,96 @@ fn fixture(dir: &Path) -> ServerConfig {
 }
 
 #[tokio::test]
+async fn instructions_follow_connections_without_overwriting_base_prompt() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    std::fs::write(
+        dir.path().join("mcp.json"),
+        serde_json::to_vec(
+            &json!({"mcpServers":{"fake":{"command":config.command,"env":config.env}}}),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let provider = FauxProvider::new(FauxScript::new());
+    let harness = AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+        model: provider.default_model().clone(),
+        models: vec![provider],
+        system_prompt: Some("BASE".into()),
+        ..Default::default()
+    })
+    .await
+    .unwrap();
+    let manager = McpManager::new(
+        &harness,
+        &Default::default(),
+        dir.path(),
+        dir.path().into(),
+        false,
+        Default::default(),
+    );
+    manager.reconnect(None).await.unwrap();
+    assert_eq!(
+        manager.instructions("fake").as_deref(),
+        Some("Call echo first.")
+    );
+    assert!(harness
+        .context_snapshot()
+        .await
+        .unwrap()
+        .system_prompt
+        .contains("Call echo first."));
+    manager.reconnect(Some("fake")).await.unwrap();
+    assert_eq!(
+        harness
+            .context_snapshot()
+            .await
+            .unwrap()
+            .system_prompt
+            .matches("Call echo first.")
+            .count(),
+        1
+    );
+    manager.set_disabled("fake", true).await.unwrap();
+    assert!(manager.instructions("fake").is_none());
+    assert_eq!(
+        harness.context_snapshot().await.unwrap().system_prompt,
+        "BASE"
+    );
+    manager.set_disabled("fake", false).await.unwrap();
+    let tool = manager
+        .registered_tools()
+        .into_iter()
+        .find(|tool| tool.tool.schema().name == "fake_echo")
+        .unwrap();
+    assert!(tool
+        .tool
+        .execute(
+            "disconnect",
+            json!({"mode":"disconnect"}),
+            CancellationToken::new(),
+            Arc::new(|_| {})
+        )
+        .await
+        .is_err());
+    tokio::time::timeout(Duration::from_secs(3), async {
+        while harness.context_snapshot().await.unwrap().system_prompt != "BASE" {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(manager.instructions("fake").is_none());
+    manager.reconnect(Some("fake")).await.unwrap();
+    manager.remove("fake").await.unwrap();
+    assert_eq!(
+        harness.context_snapshot().await.unwrap().system_prompt,
+        "BASE"
+    );
+}
+
+#[tokio::test]
 async fn call_answers_server_ping_and_unknown_requests() {
     let dir = tempfile::tempdir().unwrap();
     let config = fixture(dir.path());

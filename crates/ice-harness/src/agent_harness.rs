@@ -660,6 +660,7 @@ struct HarnessInner {
     driving: DrivingMode,
     tool_execution: HarnessToolExecution,
     system_prompt: Option<String>,
+    mcp_instructions: BTreeMap<String, String>,
     /// Provider registry; the harness resolves by `model.provider`.
     models: Vec<Arc<dyn AiProvider>>,
     /// Optional caller-supplied converter; if `None` the harness-level
@@ -847,6 +848,7 @@ impl AgentHarness {
             driving: options.drive,
             tool_execution: options.tool_execution,
             system_prompt: options.system_prompt,
+            mcp_instructions: BTreeMap::new(),
             models: options.models,
             to_provider_messages: options.to_provider_messages,
             entry_projectors: options.entry_projectors,
@@ -2263,6 +2265,7 @@ impl AgentHarness {
             snapshot.system_prompt.as_deref(),
             &snapshot.resources,
             &snapshot.active_tool_names,
+            &snapshot.mcp_instructions,
         );
         let tools: Vec<_> = Self::active_tools(&snapshot.tools, &snapshot.active_tool_names)
             .iter()
@@ -2361,6 +2364,20 @@ impl AgentHarness {
             return Err(HarnessError::closed());
         }
         inner.system_prompt = prompt;
+        Ok(())
+    }
+
+    /// Replace live MCP instruction sections without modifying the caller's base
+    /// prompt. Reconnects and disconnects replace this map; reloads preserve it.
+    pub async fn set_mcp_instructions(
+        &self,
+        instructions: BTreeMap<String, String>,
+    ) -> HarnessResult<()> {
+        let mut inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        inner.mcp_instructions = instructions;
         Ok(())
     }
 
@@ -3405,6 +3422,7 @@ impl AgentHarness {
             active_tool_names: inner.active_tool_names.clone(),
             tools: inner.tools.clone(),
             system_prompt: inner.system_prompt.clone(),
+            mcp_instructions: inner.mcp_instructions.clone(),
             resources: inner.resources.clone(),
             stream_options: inner.stream_options.clone(),
             retry: inner.retry.clone(),
@@ -3464,6 +3482,7 @@ impl AgentHarness {
         base: Option<&str>,
         resources: &AgentHarnessResources,
         active_tool_names: &[String],
+        mcp_instructions: &BTreeMap<String, String>,
     ) -> String {
         let all_skills: &[Skill] = resources.skills.as_deref().unwrap_or(&[]);
         let skills: &[Skill] = if active_tool_names.iter().any(|n| n == "read") {
@@ -3471,7 +3490,11 @@ impl AgentHarness {
         } else {
             &[]
         };
-        compose_system_prompt(base, skills, None, None)
+        let mut prompt = compose_system_prompt(base, skills, None, None);
+        prompt.push_str(&crate::system_prompt::format_mcp_instructions(
+            mcp_instructions,
+        ));
+        prompt
     }
 
     /// Input ceiling for the known coding request. Keep the configured trigger,
@@ -3525,6 +3548,7 @@ impl AgentHarness {
             snap.system_prompt.as_deref(),
             &snap.resources,
             &snap.active_tool_names,
+            &snap.mcp_instructions,
         );
         let tools: Vec<_> = Self::active_tools(&snap.tools, &snap.active_tool_names)
             .iter()
@@ -4607,6 +4631,7 @@ impl AgentHarness {
             snap.system_prompt.as_deref(),
             &snap.resources,
             &snap.active_tool_names,
+            &snap.mcp_instructions,
         );
         let tools = Self::active_tools(&snap.tools, &snap.active_tool_names);
 
@@ -5874,6 +5899,7 @@ struct ConfigSnapshot {
     active_tool_names: Vec<String>,
     tools: Vec<HarnessTool>,
     system_prompt: Option<String>,
+    mcp_instructions: BTreeMap<String, String>,
     resources: AgentHarnessResources,
     stream_options: AgentHarnessStreamOptions,
     retry: RetryPolicy,

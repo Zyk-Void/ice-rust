@@ -35,7 +35,7 @@ impl ice_tui::AutocompleteProvider for McpAutocomplete {
             .collect()
         } else if matches!(
             prefix,
-            "reconnect" | "enable" | "disable" | "remove" | "prompts"
+            "reconnect" | "enable" | "disable" | "remove" | "prompts" | "tools"
         ) {
             self.manager
                 .as_ref()?

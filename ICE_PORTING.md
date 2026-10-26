@@ -191,6 +191,8 @@ no hub.
   output/blob materialization are implemented in the Tier 4 stack (PRs: TBD).
   MCP prompts are discovered with pagination and exposed as live TUI slash
   commands with quoted positional/named arguments and normal user submission.
+  Connected-server instructions are bounded system-prompt sections, with full
+  text available through `/mcp tools <server>`; reconnect/disconnect updates them.
   HTTP/SSE transports, OAuth, resource subscriptions, sampling,
   and elicitation remain unported. Subagent MCP pass-through
   in §1.8 is separate and remains unported.

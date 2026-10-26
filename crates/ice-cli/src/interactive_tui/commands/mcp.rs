@@ -2,7 +2,7 @@ use super::*;
 use crate::interactive_tui::mcp_panel::{self, McpPanel, McpPanelView, PanelAction};
 use crate::mcp::{McpManager, ServerStatus};
 
-const USAGE: &str = "/mcp [status|tools|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
+const USAGE: &str = "/mcp [status|tools [server]|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]]";
 
 struct McpPromptCommand {
     name: String,
@@ -99,6 +99,15 @@ pub(in crate::interactive_tui) fn tools_report(
         .filter(|s| selected.map_or(true, |name| s.name == name))
     {
         lines.push(format!("{}: {}", server.name, status(&server.status)));
+        if selected.is_some() {
+            if let Some(instructions) = manager.instructions(&server.name) {
+                let instructions: String = instructions
+                    .chars()
+                    .filter(|ch| !ch.is_control() || *ch == '\n' || *ch == '\t')
+                    .collect();
+                lines.push(format!("Instructions:\n{instructions}"));
+            }
+        }
         for (name, approval) in manager.tools(&server.name) {
             lines.push(format!(
                 "  {name}{}",
@@ -129,6 +138,7 @@ pub(in crate::interactive_tui) async fn apply(
     let words: Vec<_> = parsed.iter().map(String::as_str).collect();
     match words.as_slice() {
         ["tools"] => return Ok(tools_report(manager, None)),
+        ["tools", server] => return Ok(tools_report(manager, Some(server))),
         ["prompts"] => return Ok(prompts_report(manager, None)),
         ["prompts", server] => return Ok(prompts_report(manager, Some(server))),
         ["reconnect"] => manager.reconnect(None).await?,
