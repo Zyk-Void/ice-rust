@@ -302,6 +302,74 @@ impl Drop for Process {
     }
 }
 
+/// What keeps a connection open; `close` ends it from any thread.
+enum Link {
+    Process(Process),
+}
+impl Link {
+    fn close(&self) {
+        match self {
+            Link::Process(process) => process.tree.kill(),
+        }
+    }
+}
+
+/// Routes frames from any transport: responses settle `pending`, `ping` is
+/// answered at once, and other requests and notifications go to the dispatcher.
+#[derive(Clone)]
+struct Router {
+    outgoing: std::sync::mpsc::Sender<Value>,
+    pending: Pending,
+    closed: Arc<AtomicBool>,
+}
+impl Router {
+    /// `Err` means the frame is not JSON-RPC 2.0 and the connection must end;
+    /// `Ok(Some)` is a frame for the dispatcher.
+    fn route(&self, value: Value) -> Result<Option<Inbound>, ()> {
+        if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
+            return Err(());
+        }
+        if let Some(method) = value.get("method") {
+            let method = method.as_str().unwrap_or_default().to_owned();
+            let params = value.get("params").cloned().unwrap_or(Value::Null);
+            return Ok(match value.get("id") {
+                // Answered here so a busy dispatcher can never delay liveness checks.
+                Some(id) if method == "ping" => {
+                    let _ = self
+                        .outgoing
+                        .send(json!({"jsonrpc":"2.0","id":id,"result":{}}));
+                    None
+                }
+                Some(id) => Some(Inbound::Request {
+                    id: id.clone(),
+                    method,
+                    params,
+                }),
+                None => Some(Inbound::Notification { method, params }),
+            });
+        }
+        if let Some(id) = value.get("id").and_then(Value::as_u64) {
+            if let Some(reply) = self.pending.lock().unwrap().remove(&id) {
+                let result = if let Some(error) = value.get("error") {
+                    Err(format!("MCP RPC error: {error}"))
+                } else {
+                    value
+                        .get("result")
+                        .cloned()
+                        .ok_or_else(|| "MCP response has no result".into())
+                };
+                let _ = reply.send(result);
+            }
+        }
+        Ok(None)
+    }
+    /// The transport is gone: stop the dispatcher's loop and fail waiting calls.
+    fn fail(&self, reason: &str) {
+        self.closed.store(true, Ordering::SeqCst);
+        fail_pending(&self.pending, reason);
+    }
+}
+
 struct Client {
     outgoing: std::sync::mpsc::Sender<Value>,
     in_flight: InFlight,
@@ -310,7 +378,7 @@ struct Client {
     closed: Arc<AtomicBool>,
     capabilities: Value,
     init: OnceLock<ServerInit>,
-    _process: Process,
+    link: Link,
 }
 impl Client {
     fn spawn(
@@ -322,8 +390,6 @@ impl Client {
         if config.command.is_empty() {
             return Err("missing MCP command".into());
         }
-        let runtime = tokio::runtime::Handle::try_current()
-            .map_err(|_| "MCP client requires a Tokio runtime")?;
         let mut command = Command::new(&config.command);
         command
             .args(&config.args)
@@ -349,100 +415,9 @@ impl Client {
             }
         };
         let mut process = Process { child, tree };
-        let mut stdin = process.child.stdin.take().ok_or("missing stdin")?;
+        let stdin = process.child.stdin.take().ok_or("missing stdin")?;
         let stdout = process.child.stdout.take().ok_or("missing stdout")?;
         let stderr = process.child.stderr.take().ok_or("missing stderr")?;
-        let pending: Pending = Arc::new(Mutex::new(HashMap::new()));
-        let (outgoing, receiver) = std::sync::mpsc::channel::<Value>();
-        let closed = Arc::new(AtomicBool::new(false));
-        let writer_closed = closed.clone();
-        let reader_closed = closed.clone();
-        let writer_pending = pending.clone();
-        std::thread::spawn(move || {
-            for value in receiver {
-                if writeln!(stdin, "{value}")
-                    .and_then(|_| stdin.flush())
-                    .is_err()
-                {
-                    writer_closed.store(true, Ordering::SeqCst);
-                    fail_pending(&writer_pending, "MCP stdin closed");
-                    break;
-                }
-            }
-        });
-        let capabilities = handlers.capabilities();
-        let (inbound, inbound_rx) = mpsc::channel(INBOUND_QUEUE);
-        let in_flight = InFlight::default();
-        runtime.spawn(dispatch(
-            inbound_rx,
-            outgoing.clone(),
-            handlers,
-            in_flight.clone(),
-        ));
-        let reader_pending = pending.clone();
-        let reader_outgoing = outgoing.clone();
-        std::thread::spawn(move || {
-            let mut reader = BufReader::new(stdout);
-            loop {
-                // Bound individual protocol frames, including a server that never sends a newline.
-                let mut line = Vec::new();
-                let read =
-                    std::io::Read::take(&mut reader, MAX_LINE + 1).read_until(b'\n', &mut line);
-                if !matches!(read, Ok(n) if n > 0 && n as u64 <= MAX_LINE) {
-                    break;
-                }
-                let value: Value = match serde_json::from_slice(&line) {
-                    Ok(value) => value,
-                    Err(_) => break,
-                };
-                if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0") {
-                    break;
-                }
-                if let Some(method) = value.get("method") {
-                    let method = method.as_str().unwrap_or_default().to_owned();
-                    let params = value.get("params").cloned().unwrap_or(Value::Null);
-                    let sent = match value.get("id") {
-                        // Answered here so a busy dispatcher can never delay liveness checks.
-                        Some(id) if method == "ping" => reader_outgoing
-                            .send(json!({"jsonrpc":"2.0","id":id,"result":{}}))
-                            .is_ok(),
-                        Some(id) => inbound
-                            .blocking_send(Inbound::Request {
-                                id: id.clone(),
-                                method,
-                                params,
-                            })
-                            .is_ok(),
-                        None => inbound
-                            .blocking_send(Inbound::Notification { method, params })
-                            .is_ok(),
-                    };
-                    if !sent {
-                        break;
-                    }
-                    continue;
-                }
-                if let Some(id) = value.get("id").and_then(Value::as_u64) {
-                    if let Some(reply) = reader_pending.lock().unwrap().remove(&id) {
-                        let result = if let Some(error) = value.get("error") {
-                            Err(format!("MCP RPC error: {error}"))
-                        } else {
-                            value
-                                .get("result")
-                                .cloned()
-                                .ok_or_else(|| "MCP response has no result".into())
-                        };
-                        let _ = reply.send(result);
-                    }
-                }
-            }
-            reader_closed.store(true, Ordering::SeqCst);
-            let _ = inbound.blocking_send(Inbound::Shutdown);
-            fail_pending(
-                &reader_pending,
-                "MCP server closed or sent an invalid frame",
-            );
-        });
         let server = name.to_owned();
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stderr);
@@ -456,7 +431,93 @@ impl Client {
                 }
             }
         });
-        Ok(Arc::new(Self {
+        Self::over_lines(stdout, stdin, Link::Process(process), handlers)
+    }
+
+    /// A client over newline-delimited JSON-RPC (stdio, Unix sockets).
+    fn over_lines(
+        reader: impl std::io::Read + Send + 'static,
+        mut writer: impl Write + Send + 'static,
+        link: Link,
+        handlers: Handlers,
+    ) -> Result<Arc<Self>, String> {
+        let (client, router, inbound, receiver) = Self::new(link, handlers)?;
+        let writer_router = router.clone();
+        std::thread::spawn(move || {
+            for value in receiver {
+                if writeln!(writer, "{value}")
+                    .and_then(|_| writer.flush())
+                    .is_err()
+                {
+                    writer_router.fail("MCP stdin closed");
+                    break;
+                }
+            }
+        });
+        std::thread::spawn(move || {
+            let mut reader = BufReader::new(reader);
+            loop {
+                // Bound individual protocol frames, including a server that never sends a newline.
+                let mut line = Vec::new();
+                let read =
+                    std::io::Read::take(&mut reader, MAX_LINE + 1).read_until(b'\n', &mut line);
+                if !matches!(read, Ok(n) if n > 0 && n as u64 <= MAX_LINE) {
+                    break;
+                }
+                let Ok(value) = serde_json::from_slice::<Value>(&line) else {
+                    break;
+                };
+                match router.route(value) {
+                    Err(()) => break,
+                    Ok(Some(frame)) => {
+                        if inbound.blocking_send(frame).is_err() {
+                            break;
+                        }
+                    }
+                    Ok(None) => {}
+                }
+            }
+            let _ = inbound.blocking_send(Inbound::Shutdown);
+            router.fail("MCP server closed or sent an invalid frame");
+        });
+        Ok(client)
+    }
+
+    /// The transport-independent half: dispatcher, pending map and outgoing queue.
+    /// The transport drains `receiver` and feeds frames through the `Router`.
+    #[allow(clippy::type_complexity)]
+    fn new(
+        link: Link,
+        handlers: Handlers,
+    ) -> Result<
+        (
+            Arc<Self>,
+            Router,
+            mpsc::Sender<Inbound>,
+            std::sync::mpsc::Receiver<Value>,
+        ),
+        String,
+    > {
+        let runtime = tokio::runtime::Handle::try_current()
+            .map_err(|_| "MCP client requires a Tokio runtime")?;
+        let pending: Pending = Arc::new(Mutex::new(HashMap::new()));
+        let (outgoing, receiver) = std::sync::mpsc::channel::<Value>();
+        let closed = Arc::new(AtomicBool::new(false));
+        let capabilities = handlers.capabilities();
+        let (inbound, inbound_rx) = mpsc::channel(INBOUND_QUEUE);
+        let in_flight = InFlight::default();
+        runtime.spawn(dispatch(
+            inbound_rx,
+            outgoing.clone(),
+            handlers,
+            in_flight.clone(),
+        ));
+        let router = Router {
+            outgoing: outgoing.clone(),
+            pending: pending.clone(),
+            closed: closed.clone(),
+        };
+        let client = Arc::new(Self {
             outgoing,
             in_flight,
             pending,
@@ -464,8 +525,16 @@ impl Client {
             closed,
             capabilities,
             init: OnceLock::new(),
-            _process: process,
-        }))
+            link,
+        });
+        Ok((client, router, inbound, receiver))
+    }
+
+    /// Stop the connection (kills a stdio server's process tree) and fail waiting calls.
+    fn shut_down(&self, reason: &str) {
+        self.closed.store(true, Ordering::SeqCst);
+        self.link.close();
+        fail_pending(&self.pending, reason);
     }
 
     fn instructions(&self) -> Option<&str> {
@@ -1103,9 +1172,7 @@ fn watch_shutdown(
             };
             if closed {
                 if let Some(client) = client.upgrade() {
-                    client.closed.store(true, Ordering::SeqCst);
-                    client._process.tree.kill();
-                    fail_pending(&client.pending, "MCP session ended");
+                    client.shut_down("MCP session ended");
                 }
                 spill.cleanup();
                 break;

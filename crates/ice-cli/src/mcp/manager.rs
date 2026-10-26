@@ -371,9 +371,7 @@ impl McpManager {
             };
             let old_catalog = old.as_ref().and_then(|s| s.catalog.clone());
             if let Some(client) = old.and_then(|s| s.client) {
-                client.closed.store(true, Ordering::SeqCst);
-                client._process.tree.kill();
-                fail_pending(&client.pending, "MCP server disconnected");
+                client.shut_down("MCP server disconnected");
             }
             // Stop and unregister before anything fallible, so an error cannot leave
             // tools of a server the manager no longer tracks.
