@@ -483,7 +483,7 @@ Estimated Rust implementation: **110-200 lines** (estimate, not measured source)
 
 ### 1. Title and status
 
-Cognee observation correlation and recall evidence. **Status: missing.**
+Cognee observation correlation and recall evidence. **Status: ported** (`rust:crates/ice-cli/src/observe/recorder.rs` `handle_memory`, subscribed in `observe/mod.rs`). A terminal observation whose started item was already evicted from the ring appends a new row instead of patching the detached item.
 
 ### 2. ice source
 

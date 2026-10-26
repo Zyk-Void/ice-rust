@@ -490,10 +490,11 @@ pub(super) async fn run_compact(
     harness: &AgentHarness,
     tui: &Arc<TuiAltScreen>,
     state: &Arc<TuiState>,
+    instructions: Option<&str>,
 ) {
     state.set_status(RunStatus::Working);
     tui.request_render(false);
-    match harness.lane("main").compact(None).await {
+    match harness.lane("main").compact(instructions).await {
         Ok(result) => match compact_outcome_message(result.outcome) {
             Ok(()) => {
                 add_note_message(&state.chat_container, "Conversation compacted.");

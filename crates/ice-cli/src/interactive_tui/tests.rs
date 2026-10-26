@@ -4036,6 +4036,18 @@ fn sanitize_error_message_keeps_diagnostics_without_terminal_controls() {
 }
 
 #[test]
+fn blank_extension_notice_renders_nothing() {
+    use crate::builtin_extensions::NoticeLevel;
+    let chat = Arc::new(Container::new());
+    add_notice_message(&chat, NoticeLevel::Info, "  \x1b[2J ");
+    assert!(chat.render(80).iter().all(|line| line.trim().is_empty()));
+    add_notice_message(&chat, NoticeLevel::Warning, "memory\x1b[2J ready");
+    let text = strip_ansi(&chat.render(80).join("\n"));
+    assert!(text.contains("memory ready"), "{text}");
+    assert!(!text.contains("Provider request failed"));
+}
+
+#[test]
 fn test_cycle_next_model_wraps_around() {
     use ice_ai::{Api, Model};
     let mk = |id: &str| {

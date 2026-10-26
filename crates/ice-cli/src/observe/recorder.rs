@@ -25,6 +25,7 @@ use indexmap::IndexMap;
 use tokio::sync::broadcast;
 
 use super::types::*;
+use crate::cognee::observer::Observation;
 
 /// Maximum retained activity items. Mirrors TS `MAX_ITEMS`.
 pub const MAX_ITEMS: usize = 500;
@@ -83,6 +84,9 @@ struct Inner {
     next_child_color: usize,
     /// Exact dedup summaries for goal/verifier/child transitions.
     transitions: HashMap<String, String>,
+    /// In-flight Cognee requests: request id to the started item's id, so
+    /// the terminal phase updates that item.
+    pending_memory: IndexMap<String, u64>,
     /// Tokens of the latest assistant usage, for context occupancy.
     last_context_tokens: Option<i64>,
     context_window: Option<u64>,
@@ -453,6 +457,7 @@ impl ObserveRecorder {
             next_item_id: 0,
             next_child_color: 0,
             transitions: HashMap::new(),
+            pending_memory: IndexMap::new(),
             last_context_tokens: None,
             context_window: options.info.context_window,
             last_persisted_header: None,
@@ -962,6 +967,68 @@ impl ObserveRecorder {
         self.push_child(inner, &child_id, None, agent, fields);
     }
 
+    /// Project one Cognee memory operation. Mirrors TS `handleMemory`
+    /// (OBS-008): a started request is a running item that its terminal
+    /// phase (succeeded/failed) updates in place.
+    pub fn handle_memory(&self, observation: &Observation) {
+        let mut inner = self.lock();
+        if inner.stopped {
+            return;
+        }
+        let terminal = matches!(observation.phase.as_str(), "succeeded" | "failed");
+        let state = match observation.phase.as_str() {
+            "failed" => ObserveItemState::Error,
+            "succeeded" => ObserveItemState::Done,
+            _ => ObserveItemState::Running,
+        };
+        let raw = serde_json::to_value(observation)
+            .map(|value| safe_json(&value))
+            .unwrap_or_default();
+        let request_id = observation.request_id.as_deref();
+        if terminal {
+            let pending = request_id.and_then(|id| inner.pending_memory.shift_remove(id));
+            if let Some(found) = pending.and_then(|id| inner.items.iter_mut().find(|i| i.id == id))
+            {
+                found.state = Some(state);
+                found.text = Some(memory_title(observation));
+                found.result = Some(memory_result(observation));
+                found.raw = Some(raw);
+                found.duration_ms = Some(
+                    observation
+                        .latency_ms
+                        .map(|ms| ms as i64)
+                        .unwrap_or_else(|| (now_ms() - found.ts).max(0)),
+                );
+                let item = found.clone();
+                self.emit(
+                    &mut inner,
+                    ObserveRecorderEvent::ActivityUpdate { item },
+                    true,
+                );
+                return;
+            }
+        }
+        let mut fields = item(ObserveItemKind::Memory, "cognee_observation");
+        fields.tool_name = Some(observation.operation.clone());
+        fields.state = Some(state);
+        fields.text = Some(memory_title(observation));
+        fields.result = Some(memory_result(observation));
+        fields.raw = Some(raw);
+        // A started request's preview is its input (the recall query).
+        if !terminal {
+            fields.args = observation.preview.clone().map(limit_payload);
+        }
+        fields.duration_ms = observation.latency_ms.map(|ms| ms as i64);
+        let pushed = self.push_main(&mut inner, fields);
+        if let (Some(id), false) = (request_id, terminal) {
+            inner.pending_memory.insert(id.to_string(), pushed.id);
+            // Requests that never finish must not grow this map forever.
+            if inner.pending_memory.len() > MAX_ITEMS {
+                inner.pending_memory.shift_remove_index(0);
+            }
+        }
+    }
+
     /// Record a non-fatal observer note (for example a lagged event feed).
     pub fn note(&self, text: &str) {
         let mut inner = self.lock();
@@ -991,6 +1058,54 @@ impl ObserveRecorder {
             let _ = persistence.close();
         }
     }
+}
+
+/// `Cognee <operation>[ (compaction)] · dataset · model`. Mirrors TS
+/// `memoryTitle`.
+fn memory_title(observation: &Observation) -> String {
+    let checkpoint = observation
+        .meta
+        .as_ref()
+        .and_then(|meta| meta.get("checkpoint"))
+        .and_then(serde_json::Value::as_bool)
+        == Some(true);
+    let head = format!(
+        "Cognee {}{}",
+        observation.operation,
+        if checkpoint { " (compaction)" } else { "" }
+    );
+    [
+        Some(head.as_str()),
+        observation.dataset.as_deref(),
+        observation.model.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>()
+    .join(" · ")
+}
+
+/// Error, `key=value` meta and preview lines. Mirrors TS `memoryResult`.
+fn memory_result(observation: &Observation) -> String {
+    let mut lines = Vec::new();
+    if let Some(error) = observation.error.as_deref().filter(|e| !e.is_empty()) {
+        lines.push(format!("error: {error}"));
+    }
+    if let Some(meta) = observation.meta.as_ref().filter(|m| !m.is_empty()) {
+        let pairs: Vec<String> = meta
+            .iter()
+            .map(|(key, value)| match value {
+                serde_json::Value::String(s) => format!("{key}={s}"),
+                other => format!("{key}={other}"),
+            })
+            .collect();
+        lines.push(pairs.join(", "));
+    }
+    if let Some(preview) = observation.preview.as_deref().filter(|p| !p.is_empty()) {
+        lines.push(preview.to_string());
+    }
+    limit_payload(lines.join("\n"))
 }
 
 /// Newest retained main-thread tool item for `tool_call_id`. Mirrors the TS

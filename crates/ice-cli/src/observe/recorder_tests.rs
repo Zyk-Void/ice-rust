@@ -295,6 +295,52 @@ fn retry_compaction_and_queue_rows() {
     assert_eq!(items[4].kind, ObserveItemKind::Queue);
 }
 
+fn observation(request_id: &str, phase: &str) -> Observation {
+    Observation {
+        operation: "recall".into(),
+        phase: phase.into(),
+        request_id: Some(request_id.into()),
+        dataset: Some("ice".into()),
+        ..Default::default()
+    }
+}
+
+#[test]
+fn memory_terminal_phase_updates_its_started_item() {
+    let sink = Arc::new(MemorySink::default());
+    let recorder = recorder_with(Some(sink.clone()));
+    let mut started = observation("r1", "started");
+    started.preview = Some("what changed?".into());
+    recorder.handle_memory(&started);
+    let mut done = observation("r1", "succeeded");
+    done.latency_ms = Some(42);
+    done.meta = Some(serde_json::Map::from_iter([(
+        "checkpoint".into(),
+        serde_json::Value::Bool(true),
+    )]));
+    recorder.handle_memory(&done);
+    let mut failed = observation("r2", "failed");
+    failed.error = Some("timeout".into());
+    recorder.handle_memory(&failed);
+
+    let items = recorder.get_state().items;
+    assert_eq!(items.len(), 2, "terminal phase reuses the started item");
+    assert_eq!(items[0].kind, ObserveItemKind::Memory);
+    assert_eq!(items[0].tool_name.as_deref(), Some("recall"));
+    assert_eq!(items[0].state, Some(ObserveItemState::Done));
+    assert_eq!(items[0].args.as_deref(), Some("what changed?"));
+    assert_eq!(
+        items[0].text.as_deref(),
+        Some("Cognee recall (compaction) · ice")
+    );
+    assert_eq!(items[0].duration_ms, Some(42));
+    assert_eq!(items[1].state, Some(ObserveItemState::Error));
+    assert_eq!(items[1].result.as_deref(), Some("error: timeout"));
+    assert!(sink.events.lock().unwrap().iter().any(
+        |e| matches!(e, ObserveRecorderEvent::ActivityUpdate { item } if item.id == items[0].id)
+    ));
+}
+
 #[test]
 fn goal_transitions_are_deduplicated_and_cleared() {
     let recorder = recorder_with(None);
