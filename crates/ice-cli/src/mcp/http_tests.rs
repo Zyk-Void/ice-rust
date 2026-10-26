@@ -194,7 +194,7 @@ async fn streamable_http_initializes_calls_and_answers_server_requests() {
     std::env::set_var("ICERS_MCP_HTTP_TEST_HEADER", "yes");
     let (url, log) = fixture(Mode::Streamable).await;
     let config = config(&url);
-    let client = Client::start("web", &config, Path::new("."), Handlers::default()).unwrap();
+    let client = Client::start("web", &config, Path::new("."), Handlers::default(), None).unwrap();
     let tools = client
         .discover("web", &config, &OutputGuard::default())
         .await
@@ -226,7 +226,7 @@ async fn streamable_http_initializes_calls_and_answers_server_requests() {
 async fn legacy_sse_servers_are_reached_through_their_endpoint() {
     let (url, log) = fixture(Mode::Legacy).await;
     let config: ServerConfig = serde_json::from_value(json!({"url":url})).unwrap();
-    let client = Client::start("old", &config, Path::new("."), Handlers::default()).unwrap();
+    let client = Client::start("old", &config, Path::new("."), Handlers::default(), None).unwrap();
     let tools = client
         .discover("old", &config, &OutputGuard::default())
         .await
@@ -249,7 +249,8 @@ async fn legacy_sse_servers_are_reached_through_their_endpoint() {
 async fn http_errors_surface_and_missing_variables_fail_before_sending() {
     let (url, _) = fixture(Mode::Unauthorized).await;
     let config: ServerConfig = serde_json::from_value(json!({"url":url})).unwrap();
-    let client = Client::start("locked", &config, Path::new("."), Handlers::default()).unwrap();
+    let client =
+        Client::start("locked", &config, Path::new("."), Handlers::default(), None).unwrap();
     let error = client
         .discover("locked", &config, &OutputGuard::default())
         .await
@@ -263,13 +264,13 @@ async fn http_errors_surface_and_missing_variables_fail_before_sending() {
     let missing: ServerConfig =
         serde_json::from_value(json!({"url":"http://127.0.0.1:9/${ICERS_MCP_HTTP_TEST_MISSING}"}))
             .unwrap();
-    let error = Client::start("x", &missing, Path::new("."), Handlers::default())
+    let error = Client::start("x", &missing, Path::new("."), Handlers::default(), None)
         .err()
         .unwrap();
     assert!(error.contains("ICERS_MCP_HTTP_TEST_MISSING"), "{error}");
     let both: ServerConfig =
         serde_json::from_value(json!({"url":"http://127.0.0.1:9/","command":"c"})).unwrap();
-    assert!(Client::start("x", &both, Path::new("."), Handlers::default()).is_err());
+    assert!(Client::start("x", &both, Path::new("."), Handlers::default(), None).is_err());
 }
 
 #[test]
@@ -290,11 +291,11 @@ fn interpolation_bearer_tokens_and_sse_parsing() {
         "url":"https://example.test/mcp","auth":"bearer","bearerTokenEnv":"ICERS_MCP_HTTP_TEST_TOKEN"
     }))
     .unwrap();
-    let resolved = target(&bearer).unwrap();
+    let resolved = target(&bearer, None).unwrap();
     assert_eq!(resolved.headers["authorization"], "Bearer tok");
     assert!(resolved.headers["authorization"].is_sensitive());
     let ftp: ServerConfig = serde_json::from_value(json!({"url":"ftp://example.test/"})).unwrap();
-    assert!(target(&ftp).is_err());
+    assert!(target(&ftp, None).is_err());
 
     let mut parser = SseParser::default();
     let mut events = Vec::new();
@@ -314,4 +315,21 @@ fn interpolation_bearer_tokens_and_sse_parsing() {
             ("message".to_string(), "{\"x\":1}\n2".to_string()),
         ]
     );
+}
+
+#[tokio::test]
+async fn list_mcp_inspects_http_servers_too() {
+    let (url, _) = fixture(Mode::Streamable).await;
+    let config: ServerConfig = serde_json::from_value(json!({"url":url})).unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let tools = discover_server("web", &config, dir.path(), dir.path())
+        .await
+        .unwrap();
+    assert_eq!(tools[0].schema.name, "web_echo");
+    let oauth: ServerConfig = serde_json::from_value(json!({"url":url,"auth":"oauth"})).unwrap();
+    let error = discover_server("web", &oauth, dir.path(), dir.path())
+        .await
+        .err()
+        .unwrap();
+    assert!(error.contains("/mcp-auth web"), "{error}");
 }

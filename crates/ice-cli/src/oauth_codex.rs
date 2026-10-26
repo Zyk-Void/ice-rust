@@ -326,6 +326,17 @@ impl AuthorizationRequest {
     /// state value it must match this request. Automatic loopback callbacks
     /// always require a state value.
     pub(crate) fn parse_manual_input(&self, input: &str) -> Result<AuthorizationCode, OAuthError> {
+        parse_manual_code(input, &self.state)
+    }
+}
+
+/// Parses a pasted callback URL, `code#state`, query string, or bare code. A
+/// state in the input must equal `expected_state`.
+pub(crate) fn parse_manual_code(
+    input: &str,
+    expected_state: &str,
+) -> Result<AuthorizationCode, OAuthError> {
+    {
         let value = input.trim();
         if value.is_empty() {
             return Err(OAuthError::MissingAuthorizationCode);
@@ -345,7 +356,7 @@ impl AuthorizationRequest {
             return Err(OAuthError::ProviderDenied);
         }
         if let Some(state) = supplied_state {
-            if state != self.state {
+            if state != expected_state {
                 return Err(OAuthError::StateMismatch);
             }
         }
@@ -400,7 +411,7 @@ impl AuthorizationCode {
         Ok(Self(value))
     }
 
-    fn as_str(&self) -> &str {
+    pub(crate) fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -413,32 +424,51 @@ impl fmt::Debug for AuthorizationCode {
     }
 }
 
-fn create_code_verifier() -> Result<String, OAuthError> {
+pub(crate) fn create_code_verifier() -> Result<String, OAuthError> {
     let mut random = [0_u8; 32];
     getrandom(&mut random).map_err(|_| OAuthError::RandomnessUnavailable)?;
     Ok(URL_SAFE_NO_PAD.encode(random))
 }
 
-fn create_code_challenge(verifier: &str) -> String {
+pub(crate) fn create_code_challenge(verifier: &str) -> String {
     URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()))
 }
 
-fn create_state() -> Result<String, OAuthError> {
+pub(crate) fn create_state() -> Result<String, OAuthError> {
     let mut random = [0_u8; 16];
     getrandom(&mut random).map_err(|_| OAuthError::RandomnessUnavailable)?;
     Ok(random.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
-/// Loopback listener for `http://localhost:1455/auth/callback`.
+/// The callback path and the pages the browser shows when it lands there.
+#[derive(Clone)]
+pub(crate) struct CallbackPages {
+    pub path: std::borrow::Cow<'static, str>,
+    pub success: &'static str,
+    pub error: &'static str,
+}
+const CODEX_PAGES: CallbackPages = CallbackPages {
+    path: std::borrow::Cow::Borrowed(CALLBACK_PATH),
+    success: CALLBACK_SUCCESS_HTML,
+    error: CALLBACK_ERROR_HTML,
+};
+
+/// Loopback listener for `http://localhost:1455/auth/callback`, or another
+/// callback path (MCP OAuth uses its own pages).
 pub(crate) struct CallbackListener {
     listener: TcpListener,
     ipv6_listener: Option<TcpListener>,
+    pages: CallbackPages,
 }
 
 impl CallbackListener {
     /// Bind a caller-selected loopback address. Production callers should use
     /// loopback port 1455; the address form enables isolated tests.
     pub(crate) async fn bind(address: SocketAddr) -> io::Result<Self> {
+        Self::bind_with(address, CODEX_PAGES).await
+    }
+
+    pub(crate) async fn bind_with(address: SocketAddr, pages: CallbackPages) -> io::Result<Self> {
         if !address.ip().is_loopback() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -458,10 +488,10 @@ impl CallbackListener {
         Ok(Self {
             listener,
             ipv6_listener,
+            pages,
         })
     }
 
-    #[cfg(test)]
     pub(crate) fn local_addr(&self) -> io::Result<SocketAddr> {
         self.listener.local_addr()
     }
@@ -483,16 +513,18 @@ impl CallbackListener {
         request: &AuthorizationRequest,
         cancellation: CancellationToken,
     ) -> Result<AuthorizationCode, OAuthError> {
-        self.wait_for_code_with_timeout(request, cancellation, CALLBACK_TIMEOUT)
+        self.wait_for_state(&request.state, cancellation, CALLBACK_TIMEOUT)
             .await
     }
 
-    async fn wait_for_code_with_timeout(
+    /// Wait for a callback carrying `state`, for any caller's authorization request.
+    pub(crate) async fn wait_for_state(
         self,
-        request: &AuthorizationRequest,
+        expected_state: &str,
         cancellation: CancellationToken,
         max_wait: Duration,
     ) -> Result<AuthorizationCode, OAuthError> {
+        let error_page = self.pages.error;
         let deadline = Instant::now() + max_wait;
         loop {
             let accepted = tokio::select! {
@@ -513,7 +545,7 @@ impl CallbackListener {
                                 &mut stream,
                                 408,
                                 "Request timed out",
-                                CALLBACK_ERROR_HTML,
+                                error_page,
                             ).await;
                             continue;
                         }
@@ -523,7 +555,7 @@ impl CallbackListener {
                                 &mut stream,
                                 413,
                                 "Request too large",
-                                CALLBACK_ERROR_HTML,
+                                error_page,
                             ).await;
                             continue;
                         }
@@ -532,7 +564,7 @@ impl CallbackListener {
                                 &mut stream,
                                 400,
                                 "Bad request",
-                                CALLBACK_ERROR_HTML,
+                                error_page,
                             ).await;
                             continue;
                         }
@@ -540,25 +572,23 @@ impl CallbackListener {
                 }
             };
 
-            match parse_callback_request(&request_bytes, &request.state) {
+            match parse_callback_request(&request_bytes, expected_state, &self.pages.path) {
                 CallbackResult::Retry(status, reason) => {
-                    let _ =
-                        write_callback_response(&mut stream, status, reason, CALLBACK_ERROR_HTML)
-                            .await;
+                    let _ = write_callback_response(&mut stream, status, reason, error_page).await;
                 }
                 CallbackResult::Denied => {
                     let _ = write_callback_response(
                         &mut stream,
                         400,
                         "Authorization denied",
-                        CALLBACK_ERROR_HTML,
+                        error_page,
                     )
                     .await;
                     return Err(OAuthError::ProviderDenied);
                 }
                 CallbackResult::Code(code) => {
-                    let _ = write_callback_response(&mut stream, 200, "OK", CALLBACK_SUCCESS_HTML)
-                        .await;
+                    let _ =
+                        write_callback_response(&mut stream, 200, "OK", self.pages.success).await;
                     return Ok(code);
                 }
             }
@@ -745,7 +775,7 @@ where
     }
 }
 
-fn parse_callback_request(request: &[u8], expected_state: &str) -> CallbackResult {
+fn parse_callback_request(request: &[u8], expected_state: &str, path: &str) -> CallbackResult {
     let Some(line_end) = request.windows(2).position(|window| window == b"\r\n") else {
         return CallbackResult::Retry(400, "Bad request");
     };
@@ -770,7 +800,7 @@ fn parse_callback_request(request: &[u8], expected_state: &str) -> CallbackResul
     let Ok(url) = Url::parse(&format!("http://localhost{target}")) else {
         return CallbackResult::Retry(400, "Bad request");
     };
-    if url.path() != CALLBACK_PATH {
+    if url.path() != path {
         return CallbackResult::Retry(404, "Not found");
     }
 

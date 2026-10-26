@@ -115,6 +115,43 @@ not set fails the connection before anything is sent. `auth: "bearer"` sends
 the value of the variable named by `bearerTokenEnv`. A 401 or 403 is reported
 as needing authentication. Setting both `command` and `url` is an error.
 
+### OAuth
+
+`auth: "oauth"` signs in with OAuth 2.1:
+
+```json
+{"mcpServers": {"notion": {"url": "https://mcp.notion.com/mcp", "auth": "oauth"}}}
+```
+
+Run `/mcp-auth notion` (or `/mcp auth notion`). icers finds the authorization
+server from the server's protected-resource metadata (RFC 9728, including the
+`resource_metadata` hint in a 401), reads its metadata (RFC 8414) and checks
+that its `issuer` matches, registers a client (RFC 7591) unless
+`oauth.clientId` is set, and opens the browser for a PKCE (S256) sign-in that
+returns to a loopback listener on `127.0.0.1`. Over SSH, copy the address the
+browser ends on and run `/mcp-auth notion <that URL>`. The model can do the
+same with `mcp({ action: "auth-start", server })` and
+`mcp({ action: "auth-complete", server, args: { redirectUrl } })`.
+
+Tokens are stored in `~/.icers/agent/mcp-auth.json` (mode 600), bound to the
+server URL they were issued for, and refreshed before they expire. A token
+that expires mid-session makes calls fail with an authentication error until
+`/mcp reconnect <server>` refreshes it. `/mcp logout <server>` deletes the
+stored tokens. Until a server is signed in it shows `failed: needs sign-in`.
+
+| `oauth` key | Meaning |
+|---|---|
+| `grantType` | `authorization_code` (default) or `client_credentials` (no browser; needs `clientId` and usually `clientSecret`, which expands `${VAR}`) |
+| `clientId`, `clientSecret` | A pre-registered client instead of dynamic registration |
+| `scope` | Requested scopes |
+| `redirectUri` | Exact registered redirect: a loopback `http://127.0.0.1:<port>/path` gets a listener on that port; anything else is completed by pasting |
+| `clientName` | Name sent during dynamic registration (default `icers`) |
+| `authServerMetadataUrl` | Use this metadata document instead of discovery; its `issuer` must be on the same origin |
+| `skipIssuerMetadataValidation` | Disable the issuer check for one misconfigured internal server (weakens mix-up protection) |
+
+Metadata, registration and token endpoints must use HTTPS (plain HTTP is
+allowed only for loopback addresses), and redirects are not followed.
+
 ## The `mcp` proxy tool
 
 While any server is configured, the model also gets one `mcp` tool (subject to
@@ -468,7 +505,7 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-OAuth and resource subscriptions are not implemented yet. The asynchronous dispatcher answers server
+Resource subscriptions are not implemented. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. At most 64 server messages wait for the dispatcher;
 beyond that, reading pauses. When a call is cancelled or times out, open server

@@ -102,6 +102,7 @@ impl ProxyTool {
                 "describe": {"type":"string","description":"Show one tool's description and parameters"},
                 "instructions": {"type":"string","description":"Show a server's full instructions"},
                 "connect": {"type":"string","description":"Connect or reconnect a server to refresh its catalog"},
+                "action": {"type":"string","enum":["auth-start","auth-complete"],"description":"OAuth sign-in for `server`: start returns a URL to open; complete takes args.redirectUrl (the address the browser ended on) or args.code"},
                 "limit": {"type":"integer","description":"Search page size (default 12)"},
                 "offset": {"type":"integer","description":"Search results to skip"}
             },
@@ -150,6 +151,36 @@ impl AgentTool for ProxyTool {
     ) -> Result<AgentToolResult, AgentError> {
         let manager = self.manager()?;
         let field = |key: &str| params.get(key).and_then(Value::as_str);
+        if let Some(action) = field("action") {
+            let server = field("server")
+                .ok_or_else(|| AgentError::Tool("`action` needs `server`".into()))?;
+            return match action {
+                "auth-start" => {
+                    let url = manager.auth_start(server).await.map_err(AgentError::Tool)?;
+                    Ok(text(
+                        format!("Open this URL to sign in to {}:\n{url}\n\nThen call mcp({{ action: \"auth-complete\", server: \"{server}\", args: {{ redirectUrl: \"...\" }} }}) with the address the browser ends on, unless the sign-in completes on its own.", clean(server)),
+                        json!({"mode":"auth-start","server":server,"authorizationUrl":url}),
+                    ))
+                }
+                "auth-complete" => {
+                    let args = params.get("args").cloned().unwrap_or(Value::Null);
+                    let input = args["redirectUrl"]
+                        .as_str()
+                        .or_else(|| args["code"].as_str())
+                        .ok_or_else(|| {
+                            AgentError::Tool(
+                                "auth-complete needs args.redirectUrl or args.code".into(),
+                            )
+                        })?;
+                    manager
+                        .auth_complete(server, input)
+                        .await
+                        .map_err(AgentError::Tool)?;
+                    Ok(status(&manager.proxy_view()))
+                }
+                other => Err(AgentError::Tool(format!("Unknown mcp action: {other}"))),
+            };
+        }
         if let Some(server) = field("connect") {
             manager
                 .reconnect(Some(server))

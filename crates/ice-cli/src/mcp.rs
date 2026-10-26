@@ -5,6 +5,7 @@ mod elicitation_schema;
 mod http;
 mod import;
 mod manager;
+pub mod oauth;
 mod output_guard;
 mod prompts;
 mod proxy;
@@ -132,6 +133,9 @@ pub struct ServerConfig {
     pub auth: Option<Auth>,
     pub bearer_token: Option<String>,
     pub bearer_token_env: Option<String>,
+    /// Settings for `auth: "oauth"`.
+    #[serde(default)]
+    pub oauth: oauth::OAuthConfig,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -443,14 +447,16 @@ struct Client {
 }
 impl Client {
     /// Connect with the transport the config names: `url` or `command`.
+    /// `token` is the OAuth access token for an `auth: "oauth"` server.
     fn start(
         name: &str,
         config: &ServerConfig,
         cwd: &Path,
         handlers: Handlers,
+        token: Option<&str>,
     ) -> Result<Arc<Self>, String> {
         match (&config.url, config.command.is_empty()) {
-            (Some(_), true) => Self::connect_http(config, handlers),
+            (Some(_), true) => Self::connect_http(config, handlers, token),
             (Some(_), false) => Err("MCP server sets both command and url".into()),
             (None, _) => Self::spawn(name, config, cwd, handlers),
         }
@@ -1386,8 +1392,18 @@ async fn discover_server(
     name: &str,
     config: &ServerConfig,
     cwd: &Path,
+    agent_dir: &Path,
 ) -> Result<Vec<McpTool>, String> {
-    let client = Client::spawn(name, config, cwd, Handlers::default())?;
+    // Same transport choice as a session; an OAuth server uses its stored token.
+    let token = match (&config.url, config.auth) {
+        (Some(url), Some(Auth::Oauth)) => Some(
+            oauth::access_token(agent_dir, name, &http::interpolate(url)?, &config.oauth)
+                .await?
+                .ok_or_else(|| format!("needs sign-in: run /mcp-auth {name}"))?,
+        ),
+        _ => None,
+    };
+    let client = Client::start(name, config, cwd, Handlers::default(), token.as_deref())?;
     // Inspection never executes tools, so nothing is ever spilled.
     let guard = OutputGuard::default();
     tokio::time::timeout(START_TIMEOUT, client.discover(name, config, &guard))
@@ -1489,6 +1505,7 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
     let mut tasks = Vec::new();
     for (name, (config, source)) in layered.servers {
         let cwd = cwd.to_path_buf();
+        let agent_dir = dir.clone();
         let label = if own.contains(&source) {
             name.clone()
         } else {
@@ -1498,7 +1515,7 @@ pub async fn list(args: &crate::args::Args, cwd: &Path) -> Result<(String, bool)
             if config.disabled {
                 return (format!("{label}: disabled\n"), false);
             }
-            match discover_server(&name, &config, &cwd).await {
+            match discover_server(&name, &config, &cwd, &agent_dir).await {
                 Ok(tools) => (
                     format!(
                         "{label}: ready\n{}",

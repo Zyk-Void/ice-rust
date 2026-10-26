@@ -74,6 +74,18 @@ pub(super) struct Inner {
     retries: Mutex<HashMap<String, (std::time::Instant, Duration)>>,
     /// Set once the lifecycle ticker runs.
     ticking: AtomicBool,
+    /// OAuth sign-ins in progress: state, the pending exchange, and its listener's stop.
+    #[allow(clippy::type_complexity)]
+    signins: Mutex<
+        HashMap<
+            String,
+            (
+                String,
+                Arc<Mutex<Option<oauth::Pending>>>,
+                CancellationToken,
+            ),
+        >,
+    >,
     /// Catalogs with a refresh queued; coalesces list_changed bursts to one re-list.
     refreshing: Mutex<HashSet<(String, String)>>,
     operation: tokio::sync::Mutex<()>,
@@ -110,6 +122,7 @@ impl McpManager {
             refreshing: Mutex::new(HashSet::new()),
             retries: Mutex::new(HashMap::new()),
             ticking: AtomicBool::new(false),
+            signins: Mutex::new(HashMap::new()),
             operation: tokio::sync::Mutex::new(()),
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
@@ -368,6 +381,100 @@ impl McpManager {
             .ok_or_else(|| format!("Unknown MCP preset: {id}"))?;
         self.add_entry(preset.id, preset.entry_json()).await
     }
+    /// Begin an OAuth sign-in and return the URL to open. A loopback callback
+    /// finishes it in the background; `auth_complete` accepts a pasted one.
+    /// Either way the server is reconnected once tokens are stored.
+    pub async fn auth_start(&self, server: &str) -> Result<String, String> {
+        let (config, _) = self
+            .configured()?
+            .remove(server)
+            .ok_or_else(|| format!("Unknown MCP server: {server}"))?;
+        let url = match (&config.url, config.auth) {
+            (Some(url), Some(Auth::Oauth)) => http::interpolate(url)?,
+            _ => return Err(format!("{server} is not configured with auth \"oauth\"")),
+        };
+        let mut pending = oauth::start(&url, &config.oauth).await?;
+        let authorize_url = pending.authorize_url.clone();
+        let listener = pending.listener.take();
+        let state = pending.state().to_owned();
+        let cancel = CancellationToken::new();
+        let slot = Arc::new(Mutex::new(Some(pending)));
+        // A new sign-in replaces (and stops) an earlier one for the same server.
+        if let Some((_, _, old)) = self.0.signins.lock().unwrap().insert(
+            server.to_owned(),
+            (state.clone(), slot.clone(), cancel.clone()),
+        ) {
+            old.cancel();
+        }
+        if let Some(listener) = listener {
+            let manager = Arc::downgrade(&self.0);
+            let server = server.to_owned();
+            tokio::spawn(async move {
+                let code = oauth::Pending::wait(listener, state, cancel).await;
+                let Some(manager) = manager.upgrade().map(McpManager) else {
+                    return;
+                };
+                let outcome = match code {
+                    Ok(code) => manager.finish_signin(&server, &slot, &code).await,
+                    // Replaced or completed by paste: nothing to report.
+                    Err(_) if slot.lock().unwrap().is_none() => return,
+                    Err(error) => Err(error),
+                };
+                manager.report_signin(&server, outcome);
+            });
+        }
+        Ok(authorize_url)
+    }
+    /// Finish a sign-in with a pasted callback URL, query string, or code.
+    pub async fn auth_complete(&self, server: &str, input: &str) -> Result<(), String> {
+        let (slot, cancel) = {
+            let signins = self.0.signins.lock().unwrap();
+            let (_, slot, cancel) = signins.get(server).ok_or_else(|| {
+                format!("No sign-in in progress for {server}; run /mcp-auth {server}")
+            })?;
+            (slot.clone(), cancel.clone())
+        };
+        let code = slot
+            .lock()
+            .unwrap()
+            .as_ref()
+            .ok_or("This sign-in already finished")?
+            .parse(input)?;
+        let outcome = self.finish_signin(server, &slot, &code).await;
+        cancel.cancel();
+        outcome
+    }
+    async fn finish_signin(
+        &self,
+        server: &str,
+        slot: &Mutex<Option<oauth::Pending>>,
+        code: &str,
+    ) -> Result<(), String> {
+        let pending = slot
+            .lock()
+            .unwrap()
+            .take()
+            .ok_or("This sign-in already finished")?;
+        self.0.signins.lock().unwrap().remove(server);
+        pending.finish(&self.0.agent_dir, server, code).await?;
+        self.reconnect(Some(server)).await
+    }
+    fn report_signin(&self, server: &str, outcome: Result<(), String>) {
+        let notice = match outcome {
+            Ok(()) => format!("Signed in to MCP server {server}."),
+            Err(error) => format!("MCP sign-in to {server} failed: {error}"),
+        };
+        let _ = self.0.elicitation_notices.send(notice);
+    }
+    /// Forget stored OAuth tokens for `server` and reconnect it (signed out).
+    pub async fn logout(&self, server: &str) -> Result<bool, String> {
+        if let Some((_, _, cancel)) = self.0.signins.lock().unwrap().remove(server) {
+            cancel.cancel();
+        }
+        let removed = oauth::remove(&self.0.agent_dir, server)?;
+        self.reconnect(Some(server)).await?;
+        Ok(removed)
+    }
     /// Reload every server, or restart one. Restarting a named server connects
     /// it even when it is lazy; a full reload leaves lazy servers idle.
     pub async fn reconnect(&self, name: Option<&str>) -> Result<(), String> {
@@ -516,9 +623,23 @@ impl McpManager {
             let cwd = self.0.cwd.clone();
             let handlers = self.handlers(&name);
             let guard = guard.clone();
+            let agent_dir = self.0.agent_dir.clone();
             discoveries.spawn(async move {
                 let result = async {
-                    let client = Client::start(&name, &config, &cwd, handlers)?;
+                    let token = match (&config.url, config.auth) {
+                        (Some(url), Some(Auth::Oauth)) => {
+                            let url = http::interpolate(url)?;
+                            Some(
+                                oauth::access_token(&agent_dir, &name, &url, &config.oauth)
+                                    .await?
+                                    .ok_or_else(|| {
+                                        format!("needs sign-in: run /mcp-auth {name}")
+                                    })?,
+                            )
+                        }
+                        _ => None,
+                    };
+                    let client = Client::start(&name, &config, &cwd, handlers, token.as_deref())?;
                     // One budget covers discovery and prompts (see `crate::mcp::start`).
                     let deadline = tokio::time::Instant::now() + START_TIMEOUT;
                     let tools =

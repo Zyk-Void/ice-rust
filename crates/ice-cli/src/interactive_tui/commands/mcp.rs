@@ -3,7 +3,7 @@ use crate::interactive_tui::mcp_panel::{self, McpPanel, McpPanelView, PanelActio
 use crate::interactive_tui::mcp_setup_panel::{self, SetupAction, SetupPanel, SetupPanelView};
 use crate::mcp::{McpManager, ServerStatus};
 
-const USAGE: &str = "/mcp [status|tools [server]|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]|setup]";
+const USAGE: &str = "/mcp [status|tools [server]|prompts [server]|reconnect [server]|enable <server>|disable <server>|add <name> <command> [args...]|remove <name>|edit [project]|setup|auth <server> [callback-url]|logout <server>]";
 
 struct McpPromptCommand {
     name: String,
@@ -87,10 +87,23 @@ impl SlashCommand for McpCommand {
         "/mcp"
     }
     fn description(&self) -> &'static str {
-        "Manage stdio MCP servers"
+        "Manage MCP servers"
     }
     fn execute(&self, ctx: &CommandContext, args: &str) {
         let _ = ctx.tx.send(TuiMessage::Mcp(args.into()));
+    }
+}
+/// `/mcp-auth <server> [callback-url]`, pi-mcp-adapter's name for `/mcp auth`.
+pub(super) struct McpAuthCommand;
+impl SlashCommand for McpAuthCommand {
+    fn name(&self) -> &'static str {
+        "/mcp-auth"
+    }
+    fn description(&self) -> &'static str {
+        "Sign in to an OAuth MCP server"
+    }
+    fn execute(&self, ctx: &CommandContext, args: &str) {
+        let _ = ctx.tx.send(TuiMessage::Mcp(format!("auth {args}")));
     }
 }
 pub(in crate::interactive_tui) fn tools_report(
@@ -152,6 +165,28 @@ pub(in crate::interactive_tui) async fn apply(
         ["enable", name] => manager.set_disabled(name, false).await?,
         ["disable", name] => manager.set_disabled(name, true).await?,
         ["remove", name] => manager.remove(name).await?,
+        ["auth", name] => {
+            let url = manager.auth_start(name).await?;
+            let opened = crate::codex_auth::open_browser(&url).is_ok();
+            return Ok(format!(
+                "{}Sign in to {name}:\n{url}\n\nIf the browser cannot reach icers (for example over SSH), copy the address the browser ends on and run /mcp-auth {name} <that URL>.",
+                if opened { "Opened your browser. " } else { "" }
+            ));
+        }
+        ["auth", name, input] => {
+            manager.auth_complete(name, input).await?;
+            return Ok(format!(
+                "Signed in to {name}.\n{}",
+                tools_report(manager, Some(name))
+            ));
+        }
+        ["logout", name] => {
+            return Ok(if manager.logout(name).await? {
+                format!("Signed out of {name}; its stored tokens were removed.")
+            } else {
+                format!("{name} had no stored tokens.")
+            });
+        }
         ["add", name, command, rest @ ..] => {
             manager
                 .add(

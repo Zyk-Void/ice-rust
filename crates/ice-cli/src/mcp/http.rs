@@ -53,7 +53,7 @@ pub(super) struct Target {
     pub url: reqwest::Url,
     pub headers: HeaderMap,
 }
-pub(super) fn target(config: &ServerConfig) -> Result<Target, String> {
+pub(super) fn target(config: &ServerConfig, token: Option<&str>) -> Result<Target, String> {
     let raw = config.url.as_deref().ok_or("missing MCP url")?;
     let url =
         reqwest::Url::parse(&interpolate(raw)?).map_err(|e| format!("invalid MCP url: {e}"))?;
@@ -68,8 +68,9 @@ pub(super) fn target(config: &ServerConfig) -> Result<Target, String> {
             .map_err(|_| format!("invalid value for MCP header {name}"))?;
         headers.insert(name, value);
     }
-    if config.auth == Some(Auth::Bearer) {
-        let token = match (&config.bearer_token, &config.bearer_token_env) {
+    let token = match config.auth {
+        Some(Auth::Oauth) => Some(token.ok_or("not signed in")?.to_owned()),
+        Some(Auth::Bearer) => Some(match (&config.bearer_token, &config.bearer_token_env) {
             (Some(token), _) => interpolate(token)?,
             (None, Some(env)) => {
                 std::env::var(env).map_err(|_| format!("environment variable {env} is not set"))?
@@ -77,7 +78,10 @@ pub(super) fn target(config: &ServerConfig) -> Result<Target, String> {
             (None, None) => {
                 return Err("auth \"bearer\" needs bearerToken or bearerTokenEnv".into())
             }
-        };
+        }),
+        None => None,
+    };
+    if let Some(token) = token {
         let mut value = HeaderValue::from_str(&format!("Bearer {}", token.trim()))
             .map_err(|_| "invalid bearer token")?;
         value.set_sensitive(true);
@@ -175,8 +179,9 @@ impl Client {
     pub(super) fn connect_http(
         config: &ServerConfig,
         handlers: Handlers,
+        token: Option<&str>,
     ) -> Result<Arc<Self>, String> {
-        let target = target(config)?;
+        let target = target(config, token)?;
         let runtime = tokio::runtime::Handle::try_current()
             .map_err(|_| "MCP client requires a Tokio runtime")?;
         let stop = CancellationToken::new();
