@@ -106,6 +106,14 @@ async fn prompt_dispatch_submission_and_live_completion() {
     assert!(prompt.ends_with("[assistant] Ready"));
     assert!(*state.status.lock().unwrap() == RunStatus::Working);
     assert!(ctx.chat.child_count() > 0);
+    assert!(apply(&manager, "tools fake")
+        .await
+        .unwrap()
+        .contains("Instructions:\nCall echo first."));
+    assert!(!apply(&manager, "tools")
+        .await
+        .unwrap()
+        .contains("Instructions:"));
     assert!(prompts_report(&manager, Some("fake")).contains("/mcp__fake__Brief"));
     assert_eq!(
         prompts_report(&manager, Some("missing")),

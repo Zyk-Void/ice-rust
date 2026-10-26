@@ -76,6 +76,52 @@ pub fn compose_system_prompt(
     out
 }
 
+/// Bounded live instructions from connected MCP servers. Limits include headers
+/// and truncation notices and are measured in UTF-8 bytes, not characters.
+pub fn format_mcp_instructions(
+    instructions: &std::collections::BTreeMap<String, String>,
+) -> String {
+    const PER_SERVER: usize = 2048;
+    const TOTAL: usize = 8192;
+    const NOTICE: &str = "\n[truncated; use /mcp tools <server> for full instructions]";
+    let mut output = String::new();
+    for (server, text) in instructions {
+        let clean = |value: &str| {
+            value
+                .chars()
+                .filter(|ch| !ch.is_control() || *ch == '\n' || *ch == '\t')
+                .collect::<String>()
+        };
+        let text = clean(text);
+        if text.trim().is_empty() {
+            continue;
+        }
+        let server: String = server
+            .chars()
+            .filter(|ch| !ch.is_control())
+            .take(128)
+            .collect();
+        let header = format!("\n\nMCP server `{server}` instructions:\n");
+        let available = PER_SERVER.min(TOTAL - output.len());
+        if available <= header.len() + NOTICE.len() {
+            break;
+        }
+        let budget = available - header.len();
+        output.push_str(&header);
+        if text.len() <= budget {
+            output.push_str(&text);
+        } else {
+            let mut end = budget - NOTICE.len();
+            while !text.is_char_boundary(end) {
+                end -= 1;
+            }
+            output.push_str(&text[..end]);
+            output.push_str(NOTICE);
+        }
+    }
+    output
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -142,6 +188,76 @@ mod tests {
         let out = compose_system_prompt(Some("BASE"), &[], Some(&context), None);
         assert!(out.starts_with("BASE\n\n<project_context>"));
         assert!(out.ends_with("</project_context>\n"));
+    }
+
+    #[test]
+    fn mcp_instructions_are_bounded_and_utf8_safe() {
+        let instructions = (0..20)
+            .map(|index| (format!("server-{index:02}"), "💧".repeat(3000)))
+            .collect();
+        let output = format_mcp_instructions(&instructions);
+        assert!(output.len() <= 8192);
+        assert!(output.contains("MCP server `server-00` instructions:"));
+        assert!(output.contains("[truncated; use /mcp tools <server>"));
+        for section in output.split("\n\n").filter(|part| !part.is_empty()) {
+            assert!(section.len() + 2 <= 2048);
+        }
+        assert!(!output.contains("server-19"));
+    }
+
+    #[test]
+    fn mcp_instructions_strip_terminal_controls_and_skip_empty_sections() {
+        let instructions = [
+            ("a\u{001b}".into(), "Hello\u{001b}[31m\nWorld\t!".into()),
+            ("empty".into(), " \n\t".into()),
+        ]
+        .into();
+        let output = format_mcp_instructions(&instructions);
+        assert_eq!(
+            output,
+            "\n\nMCP server `a` instructions:\nHello[31m\nWorld\t!"
+        );
+        assert!(format_mcp_instructions(&Default::default()).is_empty());
+    }
+
+    #[tokio::test]
+    async fn mcp_instructions_survive_base_reload_without_accumulating() {
+        let harness = crate::agent_harness::AgentHarness::create(Default::default())
+            .await
+            .unwrap();
+        harness
+            .set_system_prompt(Some("BASE".into()))
+            .await
+            .unwrap();
+        harness
+            .set_mcp_instructions([("demo".into(), "Use echo.".into())].into())
+            .await
+            .unwrap();
+        let snapshot = harness.context_snapshot().await.unwrap();
+        assert_eq!(snapshot.base_system_prompt.as_deref(), Some("BASE"));
+        assert!(snapshot
+            .system_prompt
+            .ends_with("MCP server `demo` instructions:\nUse echo."));
+        harness
+            .set_system_prompt(Some("RELOADED".into()))
+            .await
+            .unwrap();
+        harness
+            .set_mcp_instructions([("demo".into(), "Updated.".into())].into())
+            .await
+            .unwrap();
+        let prompt = harness.context_snapshot().await.unwrap().system_prompt;
+        assert!(prompt.starts_with("RELOADED"));
+        assert!(!prompt.contains("Use echo."));
+        assert_eq!(prompt.matches("MCP server `demo`").count(), 1);
+        harness
+            .set_mcp_instructions(Default::default())
+            .await
+            .unwrap();
+        assert_eq!(
+            harness.context_snapshot().await.unwrap().system_prompt,
+            "RELOADED"
+        );
     }
 
     #[test]

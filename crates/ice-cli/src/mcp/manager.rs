@@ -168,14 +168,57 @@ impl McpManager {
     /// Instructions from the server's `initialize` result, while it is connected.
     pub fn instructions(&self, server: &str) -> Option<String> {
         let servers = self.0.servers.lock().unwrap();
-        Some(
-            servers
-                .get(server)?
-                .client
-                .as_ref()?
-                .instructions()?
-                .to_owned(),
-        )
+        let client = servers.get(server)?.client.as_ref()?;
+        if client.closed.load(Ordering::SeqCst) {
+            return None;
+        }
+        Some(client.instructions()?.to_owned())
+    }
+    async fn sync_instructions(&self) -> Result<(), String> {
+        let instructions = self
+            .0
+            .servers
+            .lock()
+            .unwrap()
+            .iter()
+            .filter_map(|(name, state)| {
+                let client = state.client.as_ref()?;
+                if client.closed.load(Ordering::SeqCst) {
+                    return None;
+                }
+                Some((name.clone(), client.instructions()?.to_owned()))
+            })
+            .collect();
+        self.0
+            .harness
+            .upgrade()
+            .ok_or("Session ended")?
+            .set_mcp_instructions(instructions)
+            .await
+            .map_err(|error| error.to_string())
+    }
+    fn watch_instructions(&self, client: &Arc<Client>) {
+        let manager = Arc::downgrade(&self.0);
+        let client = Arc::downgrade(client);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let Some(client) = client.upgrade() else {
+                    break;
+                };
+                if client.closed.load(Ordering::SeqCst) {
+                    if let Some(inner) = manager.upgrade() {
+                        let manager = McpManager(inner);
+                        let _guard = manager.0.operation.lock().await;
+                        let _ = manager.sync_instructions().await;
+                    }
+                    break;
+                }
+                if manager.strong_count() == 0 {
+                    break;
+                }
+            }
+        });
     }
     pub fn config_path(&self, project: bool) -> Result<PathBuf, String> {
         if project && !self.0.trusted {
@@ -241,6 +284,7 @@ impl McpManager {
         let mut discoveries = tokio::task::JoinSet::new();
         for name in targets.drain() {
             let old = self.0.servers.lock().unwrap().remove(&name);
+            self.sync_instructions().await?;
             self.0
                 .prompt_changes
                 .send_modify(|version| *version = version.wrapping_add(1));
@@ -323,6 +367,7 @@ impl McpManager {
                 let (names, catalog) = self
                     .register(&harness, &direct_tools, discovered.clone())
                     .await?;
+                self.watch_instructions(&client);
                 watch_shutdown(
                     harness.downgrade(),
                     Arc::downgrade(&client),
@@ -344,6 +389,7 @@ impl McpManager {
                 Err(error) => state.status = ServerStatus::Failed(error),
             }
         }
+        self.sync_instructions().await?;
         self.0
             .prompt_changes
             .send_modify(|version| *version = version.wrapping_add(1));

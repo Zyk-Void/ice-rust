@@ -212,6 +212,7 @@ fn main() {
                     send(json!({"jsonrpc":"2.0","method":"notifications/resources/list_changed"}));
                     json!({"content":[{"type":"text","text":"changed"}]})
                 }
+                Some("disconnect") => return,
                 Some("pid") => {
                     json!({"content":[{"type":"text","text":std::process::id().to_string()}]})
                 }

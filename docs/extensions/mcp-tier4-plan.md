@@ -1,10 +1,10 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0–3 implemented in the unmerged stack
+Status: Phases 0–3 and 4a implemented in the unmerged stack
 `feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
-`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts`. Phase 1 was cherry-picked from `ae868f2` onto Phase 0
-as `e13d431`; the original output-guard branch is unchanged. Later phases are
-not started. Plan originally based on `main` at `ae1e46b`.
+`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts` ← `feat/cli-mcp-instructions`.
+Phase 1 was cherry-picked from `ae868f2` onto Phase 0 as `e13d431`; the original
+output-guard branch is unchanged. Phase 4b and later phases are not started. Plan originally based on `main` at `ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
 prompts, server-initiated requests (elicitation, sampling, instructions),
@@ -273,7 +273,22 @@ required); flattening of multi-message results; command set refreshes after
 
 ## Phase 4: server instructions + elicitation (#20a, #20c)
 
-### 4a. Server instructions
+Phase 4 is split into independently verifiable branches to keep the
+instructions change separate from elicitation's schema validation, dialogs,
+URL consent, and cancellation surface.
+
+### 4a. Server instructions — done
+
+Implemented on `feat/cli-mcp-instructions`. The harness stores server sections
+separately from the base prompt and includes them in run, context-inspection,
+and token-budget snapshots. Each server section has a 2 KiB UTF-8 byte cap;
+the total is capped at 8 KiB, including headers and truncation notices.
+Reconnect replaces sections, reload preserves them, and disable/remove or a
+detected connection close removes them. `/mcp tools <server>` shows full
+instructions with terminal controls removed. Tests cover caps, multibyte text,
+reload isolation, and fixture reconnect/disable/remove/disconnect lifecycle.
+The public harness API adds `set_mcp_instructions`; no persistence format or
+plugin ABI changes.
 
 **Spec:** MCP spec `InitializeResult.instructions`; PMA
 `server-manager.ts:878-889`, `proxy-modes.ts:751-757` (preview plus "use

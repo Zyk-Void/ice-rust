@@ -3604,7 +3604,10 @@ pub async fn interactive_tui(
                 } else {
                     let words: Vec<_> = args.split_whitespace().collect();
                     // Discovery can take the full startup budget; show progress like /reload.
-                    if !matches!(words.as_slice(), ["tools"] | ["prompts"] | ["prompts", _]) {
+                    if !matches!(
+                        words.as_slice(),
+                        ["tools"] | ["tools", _] | ["prompts"] | ["prompts", _]
+                    ) {
                         add_note_message(&chat_container, "Updating MCP servers…");
                         tui.request_render(false);
                     }

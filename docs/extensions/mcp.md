@@ -170,6 +170,21 @@ A trusted project file overrides the global value:
 (`ICERS_MCP_OUTPUT_GUARD=1` forces it on). Binary resource materialization and
 its limits stay active either way. Settings changes apply on `/mcp reconnect`.
 
+## Server instructions
+
+Instructions returned by `initialize` are appended to the system prompt for
+connected servers. Each section is capped at 2 KiB, including its header and
+truncation notice, with an 8 KiB total cap in server-name order. UTF-8 boundaries
+are preserved and terminal control characters are removed. Instructions are
+server-provided context, not a replacement for project trust or tool approval.
+
+`/mcp tools <server>` (or Enter in the server panel) shows the full instructions
+with terminal controls removed. Reconnect replaces instructions without duplicate
+sections; disable, removal, or a detected closed connection removes them from
+future prompt snapshots. An already-running request keeps its original snapshot.
+Reloading the base system prompt preserves live server sections. This applies in
+TUI, print, and RPC sessions; inspection via `--list-mcp` still only lists tools.
+
 ## Approval
 
 `approveTools: true` requires approval for every tool on that server;
@@ -209,7 +224,8 @@ configured server executables, so inspect configuration before trusting it.
     Left/Right/Tab, Enter).
   - Ctrl+R reconnects the selected server and keeps the panel open. Ctrl+Y
     copies a failed server's error.
-- `/mcp tools`: list tools grouped by server, marking approval-required tools.
+- `/mcp tools [server]`: list tools grouped by server, marking approval-required
+  tools. Selecting a server also shows its full initialization instructions.
 - `/mcp prompts [server]`: list available prompt slash commands.
 - `/mcp reconnect [server]`: reconnect one server or reload all configuration.
   Removed servers lose their tools; newly configured servers are started.
