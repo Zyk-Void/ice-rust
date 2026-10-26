@@ -152,6 +152,11 @@ pub struct Args {
     pub list_mcp: bool,
     /// `--offline`: disable best-effort startup network checks.
     pub offline: bool,
+    /// `--observe[=port]`: serve the read-only observability dashboard on
+    /// `127.0.0.1` (default port 4659). Recording itself is always on.
+    /// Mirrors TS `observe?: number | true`; like TS, the space-separated
+    /// form does not consume a following port.
+    pub observe: Option<u16>,
     /// `--export <session-file>`: export a JSONL session to HTML (or copy it
     /// when the destination ends in `.jsonl`).
     pub export: Option<PathBuf>,
@@ -491,6 +496,15 @@ pub fn parse_args(args: &[String]) -> Args {
                 result.list_models = Some(search);
             }
             "--offline" => result.offline = true,
+            "--observe" => match inline.as_deref() {
+                None => result.observe = Some(crate::observe::server::OBSERVE_DEFAULT_PORT),
+                Some(value) => match value.trim().parse::<u16>() {
+                    Ok(port) if port > 0 => result.observe = Some(port),
+                    _ => result
+                        .errors
+                        .push("--observe requires a valid port number".to_string()),
+                },
+            },
             "--export" => {
                 if let Some(value) = take_value(&mut result, &flag_key) {
                     result.export = Some(PathBuf::from(value));
@@ -662,6 +676,8 @@ pub fn print_help() {
                                  .icers/extensions, no global extensions)
   --package-only, --project-only Load project skills/prompts/extensions/packages
                                  from the active project; exclude global resources
+  --observe[=port]               Serve the read-only run dashboard on 127.0.0.1
+                                 (default port 4659); history is always recorded
   --debug-system-prompt          Print the resolved system-prompt sections to stderr (verification)
   --verbose                      Show startup warnings (e.g. ignored flags)
   --help, -h                     Show this help
@@ -972,6 +988,32 @@ mod tests {
         assert_eq!(args.export, Some(PathBuf::from("session.jsonl")));
         assert_eq!(args.messages, vec!["transcript.html".to_string()]);
         assert!(args.ignored.is_empty());
+    }
+
+    #[test]
+    fn observe_flag_parses_optional_inline_port() {
+        assert_eq!(parse_args(&s(&[])).observe, None);
+        let bare = parse_args(&s(&["--observe", "4000"]));
+        assert_eq!(bare.observe, Some(4659));
+        // The space form does not consume the port (TS parity).
+        assert_eq!(bare.messages, vec!["4000".to_string()]);
+        assert_eq!(parse_args(&s(&["--observe=4000"])).observe, Some(4000));
+        for bad in [
+            "--observe=0",
+            "--observe=70000",
+            "--observe=x",
+            "--observe=",
+        ] {
+            let parsed = parse_args(&s(&[bad]));
+            assert_eq!(parsed.observe, None, "{bad}");
+            assert_eq!(
+                parsed.errors,
+                vec!["--observe requires a valid port number"]
+            );
+        }
+        assert!(!parse_args(&s(&["--observe"]))
+            .unknown_flags
+            .contains_key("observe"));
     }
 
     #[test]

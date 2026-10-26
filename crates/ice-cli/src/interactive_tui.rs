@@ -1785,6 +1785,17 @@ pub async fn interactive_tui(
         ice_tui.request_render(false);
     }));
 
+    // `--observe` prints its dashboard URL before the TUI clears the screen;
+    // repeat it in the transcript (TS passes it as a startup notice).
+    for notice in crate::observe::take_startup_notices() {
+        add_update_panel(
+            &chat_container,
+            "Observability",
+            &notice,
+            current_theme().colors.accent,
+        );
+    }
+
     // ---- Streaming drain task ----
     let drain_handle = if let Some(rx) = event_rx {
         let requests = state.event_drain.install();
