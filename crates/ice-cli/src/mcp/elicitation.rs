@@ -3,14 +3,26 @@ use super::elicitation_schema::{Field, Schema};
 use super::*;
 use serde_json::Map;
 
-pub(super) fn register(handlers: Handlers, server: &str, ui: UiDialogMailbox) -> Handlers {
+mod url;
+
+pub(super) fn register(
+    mut handlers: Handlers,
+    server: &str,
+    ui: UiDialogMailbox,
+    notices: tokio::sync::broadcast::Sender<String>,
+) -> Handlers {
     let state = Arc::new(Elicitation {
         server: server.into(),
         ui,
+        url: url::UrlElicitation::new(notices),
     });
+    let completion = state.clone();
+    handlers.elicitation_complete = Some(Arc::new(move |params| {
+        completion.url.complete(&completion.server, &params);
+    }));
     handlers.request(
         "elicitation/create",
-        json!({"form":{}}),
+        json!({"form":{},"url":{}}),
         Arc::new(move |params, signal| {
             let state = state.clone();
             Box::pin(async move { state.handle(params, &signal).await })
@@ -20,6 +32,7 @@ pub(super) fn register(handlers: Handlers, server: &str, ui: UiDialogMailbox) ->
 struct Elicitation {
     server: String,
     ui: UiDialogMailbox,
+    url: url::UrlElicitation,
 }
 #[cfg(test)]
 mod tests;
@@ -73,8 +86,11 @@ impl Elicitation {
         options.iter().position(|option| clean(option) == selected)
     }
     async fn handle(&self, params: Value, signal: &CancellationToken) -> Result<Value, RpcError> {
+        if params["mode"] == "url" {
+            return self.url.handle(self, &params, signal).await;
+        }
         if params.get("mode").is_some_and(|mode| mode != "form") {
-            return Err(invalid("Only form elicitation is supported"));
+            return Err(invalid("Unsupported elicitation mode"));
         }
         let message = params["message"]
             .as_str()

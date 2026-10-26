@@ -1,6 +1,6 @@
 use super::*;
 #[path = "../../../tests/support/mcp_fixture.rs"]
-mod mcp_fixture;
+pub(super) mod mcp_fixture;
 
 fn state() -> Arc<Elicitation> {
     let ui = UiDialogMailbox::new();
@@ -8,9 +8,10 @@ fn state() -> Arc<Elicitation> {
     Arc::new(Elicitation {
         server: "fake".into(),
         ui,
+        url: url::UrlElicitation::new(tokio::sync::broadcast::channel(8).0),
     })
 }
-async fn next(ui: &UiDialogMailbox) -> ice_extensions::UiDialogRequest {
+pub(super) async fn next(ui: &UiDialogMailbox) -> ice_extensions::UiDialogRequest {
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             if let Some(request) = ui.take_pending() {
@@ -117,10 +118,18 @@ async fn dialog_is_reclaimed_on_cancellation_and_future_drop() {
     }
 }
 #[tokio::test]
-async fn capability_is_form_only_and_invalid_requests_never_open_dialogs() {
+async fn capability_supports_both_modes_and_invalid_requests_never_open_dialogs() {
     let state = state();
-    let handlers = register(Handlers::default(), "fake", state.ui.clone());
-    assert_eq!(handlers.capabilities(), json!({"elicitation":{"form":{}}}));
+    let handlers = register(
+        Handlers::default(),
+        "fake",
+        state.ui.clone(),
+        tokio::sync::broadcast::channel(8).0,
+    );
+    assert_eq!(
+        handlers.capabilities(),
+        json!({"elicitation":{"form":{},"url":{}}})
+    );
     assert!(state
         .handle(
             json!({"mode":"url","message":"open?"}),
@@ -148,7 +157,12 @@ async fn transport_tool_abort_reclaims_uncooperative_server_dialog() {
             .unwrap();
     let ui = UiDialogMailbox::new();
     ui.attach();
-    let handlers = register(Handlers::default(), "fake", ui.clone());
+    let handlers = register(
+        Handlers::default(),
+        "fake",
+        ui.clone(),
+        tokio::sync::broadcast::channel(8).0,
+    );
     let client = Client::spawn("fake", &config, dir.path(), handlers).unwrap();
     let tools = client
         .discover("fake", &config, &OutputGuard::default())
@@ -188,7 +202,12 @@ async fn transport_pre_cancelled_call_preserves_another_calls_form() {
         "fake",
         &config,
         dir.path(),
-        register(Handlers::default(), "fake", state.ui.clone()),
+        register(
+            Handlers::default(),
+            "fake",
+            state.ui.clone(),
+            tokio::sync::broadcast::channel(8).0,
+        ),
     )
     .unwrap();
     client
@@ -276,7 +295,12 @@ async fn transport_returns_form_response_and_handles_server_cancellation() {
         "fake",
         &config,
         dir.path(),
-        register(Handlers::default(), "fake", state.ui.clone()),
+        register(
+            Handlers::default(),
+            "fake",
+            state.ui.clone(),
+            tokio::sync::broadcast::channel(8).0,
+        ),
     )
     .unwrap();
     client

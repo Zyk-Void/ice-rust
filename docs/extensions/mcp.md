@@ -72,7 +72,7 @@ including descendant processes.
 A server that declares the `tools` capability can send
 `notifications/tools/list_changed`; `icers` then re-lists that server's tools
 and replaces them in the session without restarting the process. Server
-requests other than `ping` and interactive form elicitation are answered with
+requests other than `ping` and interactive form/URL elicitation are answered with
 `Method not found`.
 
 Text and embedded text resources become text content. Images retain their
@@ -211,7 +211,25 @@ opening a dialog; schema validation never fetches URLs or files. Aborting or
 timing out a client request cancels outstanding server dialogs on that connection;
 server cancellation, disconnect, and TUI teardown reclaim dialogs too.
 
-URL elicitation and browser-completion notifications are not implemented yet.
+### URL elicitation
+
+The same TUI-only setting enables `elicitation.url`. A URL request displays the
+server, message, target host, and full normalized URL, then offers Open / Decline /
+Cancel. Only Open launches the system browser; nothing opens automatically.
+Only HTTP(S) URLs without embedded credentials or control characters are accepted.
+The browser launch is best-effort: a successful launcher spawn returns `accept`,
+not proof that authentication or the browser interaction succeeded. A launcher
+spawn failure returns `cancel` and shows a notice without exposing the URL.
+
+Accepted `elicitationId` values are tracked only on their current connection.
+A matching `notifications/elicitation/complete` displays a notice that the tool
+can be retried; it never retries the tool or opens another URL automatically.
+Unknown, premature, and duplicate completions are ignored. IDs must contain
+1–256 bytes without control characters; at most 128 pending or accepted browser
+requests are tracked per connection. Decline, cancellation, and dropped dialogs
+release pending IDs; completion releases accepted IDs. Reconnecting resets this
+tracking. Tool errors using the optional `-32042` URL-required fallback are not
+automatically converted into browser requests.
 
 ## Approval
 
@@ -277,7 +295,7 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, sampling, URL elicitation, or resource subscriptions are
+No HTTP, SSE, OAuth, sampling, or resource subscriptions are
 implemented. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. Tool, resource, and prompt list-change notifications refresh

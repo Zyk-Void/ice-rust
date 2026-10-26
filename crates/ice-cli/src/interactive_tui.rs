@@ -973,6 +973,7 @@ enum TuiMessage {
     /// Persist staged `/mcp` panel edits and restart the changed servers.
     McpSave(Vec<crate::mcp::PanelChange>),
     McpPromptsChanged,
+    McpElicitationNotice(String),
     UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
@@ -1497,6 +1498,20 @@ pub async fn interactive_tui(
     );
     commands::mcp::register_prompts(&mut command_registry, &reload_context.mcp_tools);
     let registry = Arc::new(command_registry);
+    let mut elicitation_notices = reload_context.mcp_tools.elicitation_notices();
+    let notice_tx = tx.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                result = elicitation_notices.recv() => match result {
+                    Ok(notice) => if notice_tx.send(TuiMessage::McpElicitationNotice(notice)).is_err() { break; },
+                    Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(broadcast::error::RecvError::Closed) => break,
+                },
+                _ = notice_tx.closed() => break,
+            }
+        }
+    });
     let mut prompt_changes = reload_context.mcp_tools.prompt_changes();
     let prompt_tx = tx.clone();
     tokio::spawn(async move {
@@ -3570,6 +3585,10 @@ pub async fn interactive_tui(
                     ),
                     Err(error) => add_error_message(&chat_container, &error),
                 }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::McpElicitationNotice(notice)) => {
+                add_note_message(&chat_container, &notice);
                 tui.request_render(false);
             }
             Some(TuiMessage::McpPromptsChanged) => {
