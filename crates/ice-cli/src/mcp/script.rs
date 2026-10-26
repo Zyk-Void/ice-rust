@@ -239,7 +239,13 @@ impl AgentTool for ScriptTool {
                 },
                 Some(call) = requests.recv() => {
                     let started = std::time::Instant::now();
-                    let reply = dispatch(&manager, &call, call_id, &signal).await;
+                    let reply = tokio::select! {
+                        _ = signal.cancelled() => return Err(AgentError::Tool("mcpScript cancelled".into())),
+                        _ = tokio::time::sleep_until(stop) => {
+                            return Err(AgentError::Tool("mcpScript timed out after 30 seconds".into()))
+                        }
+                        reply = dispatch(&manager, &call, call_id, &signal) => reply,
+                    };
                     trace.push(json!({
                         "op": call.op,
                         "target": call.payload.get("path").or_else(|| call.payload.get("query")),

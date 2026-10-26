@@ -12,6 +12,69 @@ const PROTOCOL: &str = "mcp-protocol-version";
 /// How long the legacy fallback waits for the server's `endpoint` event.
 const ENDPOINT_WAIT: Duration = Duration::from_secs(10);
 const LISTEN_RETRY_MAX: Duration = Duration::from_secs(30);
+/// Notifications and replies get no streamed answer; a stuck POST must not
+/// stall the ordered queue behind it.
+const NOTIFY_TIMEOUT: Duration = Duration::from_secs(30);
+/// How much of an error response is read for its diagnostic.
+const ERROR_BODY: usize = 4096;
+const MAX_REDIRECTS: usize = 5;
+
+/// Read at most `max` bytes of a body; `Err` when it is longer (unless `truncate`).
+pub(super) async fn read_body(
+    response: reqwest::Response,
+    max: usize,
+    truncate: bool,
+) -> Result<Vec<u8>, String> {
+    if !truncate
+        && response
+            .content_length()
+            .is_some_and(|len| len > max as u64)
+    {
+        return Err(format!("response exceeds {max} bytes"));
+    }
+    let mut body = Vec::new();
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| e.to_string())?;
+        if body.len() + chunk.len() > max {
+            if truncate {
+                body.extend_from_slice(&chunk[..max - body.len()]);
+                return Ok(body);
+            }
+            return Err(format!("response exceeds {max} bytes"));
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(body)
+}
+
+/// Follow redirects only within the same origin, so headers and bodies never
+/// move to another host, port or scheme.
+pub(super) fn same_origin_redirects() -> reqwest::redirect::Policy {
+    reqwest::redirect::Policy::custom(|attempt| {
+        let same = attempt
+            .previous()
+            .first()
+            .is_some_and(|first| first.origin() == attempt.url().origin());
+        if same && attempt.previous().len() <= MAX_REDIRECTS {
+            attempt.follow()
+        } else {
+            attempt.stop()
+        }
+    })
+}
+
+pub(super) fn loopback(url: &reqwest::Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    host.eq_ignore_ascii_case("localhost")
+        || host
+            .trim_start_matches('[')
+            .trim_end_matches(']')
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| ip.is_loopback())
+}
 
 /// Expand `${VAR}` and `$env:VAR`; a missing variable is an error, so nothing is
 /// sent with a half-resolved URL or header.
@@ -59,6 +122,16 @@ pub(super) fn target(config: &ServerConfig, token: Option<&str>) -> Result<Targe
         reqwest::Url::parse(&interpolate(raw)?).map_err(|e| format!("invalid MCP url: {e}"))?;
     if !matches!(url.scheme(), "http" | "https") {
         return Err("MCP url must use http or https".into());
+    }
+    // Credentials never travel in cleartext beyond this machine.
+    if url.scheme() == "http"
+        && !loopback(&url)
+        && (config.auth.is_some() || !config.headers.is_empty())
+    {
+        return Err(
+            "MCP url must use https when auth or headers are set (plain http only for localhost)"
+                .into(),
+        );
     }
     let mut headers = HeaderMap::new();
     for (name, value) in &config.headers {
@@ -189,6 +262,7 @@ impl Client {
             Self::new(Link::Http(HttpLink { stop: stop.clone() }), handlers)?;
         let http = reqwest::Client::builder()
             .connect_timeout(START_TIMEOUT)
+            .redirect(same_origin_redirects())
             .build()
             .map_err(|e| e.to_string())?;
         let endpoint = Arc::new(Endpoint {
@@ -223,9 +297,17 @@ impl Client {
                 // order so `notifications/initialized` precedes later requests.
                 if message.get("method").is_some() && message.get("id").is_some() {
                     let endpoint = endpoint.clone();
-                    tokio::spawn(async move { endpoint.post(message).await });
+                    let id = message["id"].as_u64();
+                    tokio::spawn(async move {
+                        // Stop when the caller gave up (timeout or cancel): its
+                        // pending entry is gone, and nobody reads this response.
+                        tokio::select! {
+                            _ = endpoint.post(message) => {}
+                            _ = endpoint.abandoned(id) => {}
+                        }
+                    });
                 } else {
-                    endpoint.post(message).await;
+                    let _ = tokio::time::timeout(NOTIFY_TIMEOUT, endpoint.post(message)).await;
                 }
             }
             endpoint.shut_down().await;
@@ -270,7 +352,28 @@ impl Endpoint {
         }
     }
 
+    /// Resolves once request `id` no longer has a waiting caller.
+    async fn abandoned(&self, id: Option<u64>) {
+        let Some(id) = id else {
+            return std::future::pending().await;
+        };
+        loop {
+            if !self.router.pending.lock().unwrap().contains_key(&id) {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+    }
+
     async fn post(self: &Arc<Self>, message: Value) {
+        // A call can expire while queued behind an ordered notification or reply.
+        if message.get("method").is_some() {
+            if let Some(id) = message.get("id").and_then(Value::as_u64) {
+                if !self.router.pending.lock().unwrap().contains_key(&id) {
+                    return;
+                }
+            }
+        }
         let legacy = self.legacy.lock().unwrap().clone();
         let url = legacy.clone().unwrap_or_else(|| self.target.url.clone());
         let mut headers = self.headers();
@@ -306,8 +409,10 @@ impl Endpoint {
             );
         }
         if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            let body: String = body.chars().take(200).collect();
+            let body = read_body(response, ERROR_BODY, true)
+                .await
+                .unwrap_or_default();
+            let body: String = String::from_utf8_lossy(&body).chars().take(200).collect();
             return self.fail(&message, format!("MCP HTTP {status}: {}", body.trim()));
         }
         if let Some(session) = response
@@ -317,20 +422,32 @@ impl Endpoint {
         {
             *self.session.lock().unwrap() = Some(session.to_owned());
         }
+        // The session exists now; open the server-to-client stream.
+        if initialize && legacy.is_none() {
+            let endpoint = self.clone();
+            tokio::spawn(async move { endpoint.listen().await });
+        }
         if status == reqwest::StatusCode::ACCEPTED {
+            // A legacy server answers on its SSE stream; Streamable HTTP must
+            // answer a request in this response.
+            if legacy.is_none() && message.get("id").is_some() {
+                self.fail(
+                    &message,
+                    "MCP server accepted a request without answering it".into(),
+                );
+            }
             return;
         }
         let event_stream = response
             .headers()
             .get(CONTENT_TYPE)
             .and_then(|v| v.to_str().ok())
-            .is_some_and(|v| v.starts_with("text/event-stream"));
+            .is_some_and(|v| v.to_ascii_lowercase().starts_with("text/event-stream"));
         if event_stream {
             self.read_events(response, |_, _| {}).await;
         } else {
-            let bytes = match response.bytes().await {
-                Ok(bytes) if bytes.len() as u64 <= MAX_LINE => bytes,
-                Ok(_) => return self.fail(&message, "MCP HTTP response exceeds 16 MiB".into()),
+            let bytes = match read_body(response, MAX_LINE as usize, false).await {
+                Ok(bytes) => bytes,
                 Err(error) => {
                     return self.fail(&message, format!("MCP HTTP response failed: {error}"))
                 }
@@ -356,10 +473,6 @@ impl Endpoint {
                     return;
                 }
             }
-        }
-        if initialize && legacy.is_none() {
-            let endpoint = self.clone();
-            tokio::spawn(async move { endpoint.listen().await });
         }
     }
 
@@ -489,12 +602,9 @@ impl Endpoint {
     }
 
     async fn shut_down(&self) {
-        let session = self.session.lock().unwrap().take();
-        if let Some(session) = session {
-            let mut headers = self.target.headers.clone();
-            if let Ok(value) = HeaderValue::from_str(&session) {
-                headers.insert(SESSION, value);
-            }
+        // With the session id and negotiated protocol, as for any later request.
+        let headers = self.headers();
+        if self.session.lock().unwrap().take().is_some() {
             let delete = self
                 .http
                 .delete(self.target.url.clone())

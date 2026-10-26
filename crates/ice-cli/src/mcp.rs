@@ -50,6 +50,8 @@ const CALL_TIMEOUT: Duration = Duration::from_secs(60);
 const MAX_LINE: u64 = 16 * 1024 * 1024;
 /// Bounds dialogs or model calls a single server can have waiting on this client.
 const MAX_INBOUND: usize = 8;
+/// `requestTimeoutMs` above a day is treated as a day.
+const MAX_REQUEST_TIMEOUT_MS: u64 = 24 * 60 * 60 * 1000;
 /// Frames waiting for the dispatcher; when full, the reader stops reading (backpressure).
 const INBOUND_QUEUE: usize = 64;
 
@@ -151,7 +153,10 @@ impl ServerConfig {
     fn request_timeout(&self) -> Duration {
         self.request_timeout_ms
             .filter(|ms| *ms > 0)
-            .map_or(CALL_TIMEOUT, Duration::from_millis)
+            // Bounded so the deadline arithmetic cannot overflow.
+            .map_or(CALL_TIMEOUT, |ms| {
+                Duration::from_millis(ms.min(MAX_REQUEST_TIMEOUT_MS))
+            })
     }
 }
 
@@ -387,6 +392,13 @@ impl Link {
         }
     }
 }
+/// A dropped client must not leave its transport running: a socket's reader
+/// and writer threads hold their own handles to it.
+impl Drop for Link {
+    fn drop(&mut self) {
+        self.close();
+    }
+}
 
 /// Routes frames from any transport: responses settle `pending`, `ping` is
 /// answered at once, and other requests and notifications go to the dispatcher.
@@ -506,6 +518,8 @@ impl Client {
         if config.command.is_empty() {
             return Err("missing MCP command".into());
         }
+        // Checked before spawning, so a missing runtime cannot strand the child's readers.
+        tokio::runtime::Handle::try_current().map_err(|_| "MCP client requires a Tokio runtime")?;
         let mut command = Command::new(&config.command);
         command
             .args(&config.args)
@@ -1219,11 +1233,33 @@ impl AgentTool for McpTool {
     }
     async fn execute(
         &self,
-        _: &str,
+        call_id: &str,
         params: Value,
         signal: CancellationToken,
-        _: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
+        on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
     ) -> Result<AgentToolResult, AgentError> {
+        if let ToolLink::Lazy { manager, server } = &self.link {
+            // Start the server, then run the live tool that replaced this cached
+            // one, so a changed schema or resource URI is used from the first call.
+            let manager = manager
+                .upgrade()
+                .map(McpManager)
+                .ok_or_else(|| AgentError::Tool("MCP session ended".into()))?;
+            manager
+                .connect_lazy(server)
+                .await
+                .map_err(AgentError::Tool)?;
+            let (live, _, _) = manager
+                .live_tool(server, &self.schema.name)
+                .filter(|(live, _, _)| matches!(live.link, ToolLink::Live(_)))
+                .ok_or_else(|| {
+                    AgentError::Tool(format!(
+                        "MCP server {server} no longer offers {}",
+                        self.remote_name
+                    ))
+                })?;
+            return live.execute(call_id, params, signal, on_update).await;
+        }
         let (method, params) = match &self.resource_uri {
             Some(uri) => ("resources/read", json!({"uri":uri})),
             None => (
@@ -1231,34 +1267,8 @@ impl AgentTool for McpTool {
                 json!({"name":self.remote_name,"arguments":params}),
             ),
         };
-        let client = match &self.link {
-            ToolLink::Live(client) => client.clone(),
-            ToolLink::Lazy { manager, server } => {
-                // Start the server, then run the live tool that replaced this one.
-                let manager = manager
-                    .upgrade()
-                    .map(McpManager)
-                    .ok_or_else(|| AgentError::Tool("MCP session ended".into()))?;
-                manager
-                    .connect_lazy(server)
-                    .await
-                    .map_err(AgentError::Tool)?;
-                let (live, _, _) =
-                    manager
-                        .live_tool(server, &self.schema.name)
-                        .ok_or_else(|| {
-                            AgentError::Tool(format!(
-                                "MCP server {server} no longer offers {}",
-                                self.remote_name
-                            ))
-                        })?;
-                let ToolLink::Live(client) = live.link else {
-                    return Err(AgentError::Tool(format!(
-                        "MCP server {server} is not connected"
-                    )));
-                };
-                client
-            }
+        let ToolLink::Live(client) = &self.link else {
+            unreachable!("lazy tools return above");
         };
         let mut result = client
             .request(method, params, signal, self.timeout)

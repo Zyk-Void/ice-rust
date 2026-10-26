@@ -100,7 +100,12 @@ pub(crate) fn load(agent_dir: &Path, server: &str, url: &str) -> Option<Record> 
     read_all(agent_dir).remove(server).filter(|r| r.url == url)
 }
 
+/// Serializes this process's read-modify-write of the token file, so a refresh
+/// for one server cannot overwrite a concurrent sign-in or logout for another.
+static STORE: Mutex<()> = Mutex::new(());
+
 fn save(agent_dir: &Path, server: &str, record: Record) -> Result<(), String> {
+    let _store = STORE.lock().unwrap();
     let mut records = read_all(agent_dir);
     records.insert(server.to_owned(), record);
     write_all(agent_dir, &records)
@@ -108,6 +113,7 @@ fn save(agent_dir: &Path, server: &str, record: Record) -> Result<(), String> {
 
 /// Forget a server's credentials; `false` when there were none.
 pub(crate) fn remove(agent_dir: &Path, server: &str) -> Result<bool, String> {
+    let _store = STORE.lock().unwrap();
     let mut records = read_all(agent_dir);
     let removed = records.remove(server).is_some();
     if removed {
@@ -127,9 +133,7 @@ fn http() -> Result<reqwest::Client, String> {
 
 /// HTTPS, or plain HTTP to a loopback host (local servers and tests).
 fn secure(url: &reqwest::Url) -> bool {
-    url.scheme() == "https"
-        || (url.scheme() == "http"
-            && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]")))
+    url.scheme() == "https" || (url.scheme() == "http" && http::loopback(url))
 }
 
 async fn get_json(http: &reqwest::Client, url: &reqwest::Url) -> Result<Value, String> {
@@ -149,10 +153,10 @@ async fn get_json(http: &reqwest::Client, url: &reqwest::Url) -> Result<Value, S
 }
 
 async fn bounded_json(response: reqwest::Response) -> Result<Value, String> {
-    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
-    if bytes.len() > MAX_RESPONSE {
-        return Err("OAuth response too large".into());
-    }
+    // Bounded while reading, so a hostile endpoint cannot exhaust memory.
+    let bytes = http::read_body(response, MAX_RESPONSE, false)
+        .await
+        .map_err(|e| format!("OAuth {e}"))?;
     serde_json::from_slice(&bytes).map_err(|e| format!("OAuth response is not JSON: {e}"))
 }
 
@@ -222,11 +226,23 @@ async fn discover(
         // the document's own origin unless the check is explicitly disabled.
         let url = reqwest::Url::parse(url).map_err(|e| format!("authServerMetadataUrl: {e}"))?;
         let value = get_json(http, &url).await?;
-        let origin = url.origin().ascii_serialization();
         let declared = value["issuer"].as_str().unwrap_or_default();
-        if !config.skip_issuer_metadata_validation
-            && reqwest::Url::parse(declared).map(|u| u.origin().ascii_serialization()) != Ok(origin)
-        {
+        // A well-known document names its issuer exactly (RFC 8414 path
+        // insertion); any other document must at least share its origin.
+        let well_known = [
+            "/.well-known/oauth-authorization-server",
+            "/.well-known/openid-configuration",
+        ]
+        .iter()
+        .find_map(|prefix| url.path().strip_prefix(prefix));
+        let matches = match well_known {
+            Some(path) => same_issuer(
+                declared,
+                &format!("{}{path}", url.origin().ascii_serialization()),
+            ),
+            None => reqwest::Url::parse(declared).map(|u| u.origin()) == Ok(url.origin()),
+        };
+        if !config.skip_issuer_metadata_validation && !matches {
             return Err(format!(
                 "OAuth issuer mismatch: {declared:?} is not served by {url}"
             ));
@@ -418,7 +434,10 @@ async fn token(
             .as_str()
             .map(str::to_owned)
             .or(previous_refresh),
-        expires_at: value["expires_in"].as_i64().map(|secs| now() + secs),
+        // A hostile `expires_in` cannot overflow.
+        expires_at: value["expires_in"]
+            .as_i64()
+            .map(|secs| now().saturating_add(secs.clamp(0, 10 * 365 * 24 * 3600))),
         resource: resource.map(str::to_owned),
     })
 }
@@ -435,7 +454,7 @@ pub(crate) async fn access_token(
     if let Some(record) = &record {
         if record
             .expires_at
-            .is_none_or(|at| at - EXPIRY_SKEW_SECS > now())
+            .is_none_or(|at| at.saturating_sub(EXPIRY_SKEW_SECS) > now())
         {
             return Ok(Some(record.access_token.clone()));
         }
@@ -550,6 +569,12 @@ pub(crate) async fn start(url: &str, config: &OAuthConfig) -> Result<Pending, St
                 }
                 (true, None) => {
                     return Err("a loopback oauth.redirectUri needs an explicit port".into())
+                }
+                // The code would travel to a remote host in cleartext.
+                _ if parsed.scheme() == "http" => {
+                    return Err(
+                        "oauth.redirectUri must use https unless it is a loopback address".into(),
+                    )
                 }
                 _ => None,
             };

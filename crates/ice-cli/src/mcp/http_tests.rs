@@ -190,6 +190,87 @@ fn config(url: &str) -> ServerConfig {
 }
 
 #[tokio::test]
+async fn abandoned_http_calls_are_not_sent_from_queue() {
+    for cancel in [false, true] {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/mcp", listener.local_addr().unwrap());
+        let log = Log::default();
+        let release = Arc::new(tokio::sync::Semaphore::new(0));
+        let server_log = log.clone();
+        let server_release = release.clone();
+        let server = tokio::spawn(async move {
+            loop {
+                let (stream, _) = listener.accept().await.unwrap();
+                let log = server_log.clone();
+                let release = server_release.clone();
+                tokio::spawn(async move {
+                    let mut stream = AsyncBufReader::new(stream);
+                    let request = read_request(&mut stream).await.unwrap();
+                    let body: Value = serde_json::from_slice(&request.body).unwrap();
+                    let method = body["method"].as_str().unwrap();
+                    log.push(method.to_owned());
+                    if method == "test/block" {
+                        release.acquire().await.unwrap().forget();
+                    }
+                    if body.get("id").is_some() {
+                        let reply = json!({"jsonrpc":"2.0","id":body["id"],"result":{}});
+                        respond(
+                            &mut stream,
+                            "200 OK",
+                            "Content-Type: application/json\r\n",
+                            &reply.to_string(),
+                        )
+                        .await;
+                    } else {
+                        respond(&mut stream, "202 Accepted", "", "").await;
+                    }
+                });
+            }
+        });
+        let config: ServerConfig = serde_json::from_value(json!({"url":url})).unwrap();
+        let client =
+            Client::start("web", &config, Path::new("."), Handlers::default(), None).unwrap();
+        client.notify("test/block", json!({}));
+        log.wait("test/block").await;
+
+        let signal = CancellationToken::new();
+        let mut call = Box::pin(client.request(
+            "tools/call",
+            json!({"name":"must-not-run","arguments":{}}),
+            signal.clone(),
+            Duration::from_millis(50),
+        ));
+        assert!(futures::poll!(&mut call).is_pending());
+        if cancel {
+            signal.cancel();
+        }
+        let error = call.await.unwrap_err();
+        assert!(error.contains(if cancel { "cancelled" } else { "timed out" }));
+        assert!(client.pending.lock().unwrap().is_empty());
+
+        release.add_permits(1);
+        client
+            .request(
+                "test/barrier",
+                json!({}),
+                CancellationToken::new(),
+                Duration::from_secs(5),
+            )
+            .await
+            .unwrap();
+        // Allow any concurrently spawned POST to reach the local fixture too.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(
+            !log.lines().iter().any(|method| method == "tools/call"),
+            "abandoned call reached the server: {:?}",
+            log.lines()
+        );
+        client.shut_down("test done");
+        server.abort();
+    }
+}
+
+#[tokio::test]
 async fn streamable_http_initializes_calls_and_answers_server_requests() {
     std::env::set_var("ICERS_MCP_HTTP_TEST_HEADER", "yes");
     let (url, log) = fixture(Mode::Streamable).await;

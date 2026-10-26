@@ -128,6 +128,35 @@ async fn runaway_and_failing_scripts_stop_with_an_error() {
 }
 
 #[tokio::test]
+async fn script_deadline_interrupts_a_pending_tool_call() {
+    let dir = tempfile::tempdir().unwrap();
+    let (harness, manager) = session(
+        dir.path(),
+        fixture(json!({"requestTimeoutMs":60000})),
+        json!({}),
+    )
+    .await;
+    let result = tokio::time::timeout(
+        DEADLINE + Duration::from_secs(2),
+        script(
+            &harness,
+            "return await tools.call('fake_echo', { mode: 'hang' });",
+        ),
+    )
+    .await;
+    let error = result
+        .expect("script deadline must interrupt dispatch before the tool timeout")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("mcpScript timed out"), "{error}");
+    assert!(!manager.0.servers.lock().unwrap()["fake"]
+        .client
+        .as_ref()
+        .unwrap()
+        .busy());
+}
+
+#[tokio::test]
 async fn script_mode_false_hides_the_tool() {
     let dir = tempfile::tempdir().unwrap();
     let (harness, _manager) =
