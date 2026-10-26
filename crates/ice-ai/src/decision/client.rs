@@ -200,6 +200,21 @@ impl DecisionClient {
                 "base URL must be an http(s) URL with a host",
             ));
         }
+        // The API key travels as a bearer header, so cleartext HTTP is only
+        // accepted for a local proxy on this machine.
+        let loopback = parsed.host_str().is_some_and(|host| {
+            host.eq_ignore_ascii_case("localhost")
+                || host
+                    .trim_start_matches('[')
+                    .trim_end_matches(']')
+                    .parse::<std::net::IpAddr>()
+                    .is_ok_and(|ip| ip.is_loopback())
+        });
+        if parsed.scheme() == "http" && !loopback {
+            return Err(DecisionError::InvalidEndpoint(
+                "base URL must use https unless the host is loopback",
+            ));
+        }
         if !parsed.username().is_empty() || parsed.password().is_some() {
             return Err(DecisionError::InvalidEndpoint(
                 "base URL must not embed credentials",
@@ -248,6 +263,9 @@ impl DecisionClient {
                 endpoint: self.endpoint.protocol,
             });
         }
+        if cancel.is_cancelled() {
+            return Err(DecisionError::Cancelled);
+        }
         let body = request.encode()?;
         if cancel.is_cancelled() {
             return Err(DecisionError::Cancelled);
@@ -278,6 +296,10 @@ impl DecisionClient {
             _ = cancel.cancelled() => return Err(DecisionError::Cancelled),
             result = send_and_read(builder) => result?,
         };
+        // A cancel that lands with the last chunk wins over decoding.
+        if cancel.is_cancelled() {
+            return Err(DecisionError::Cancelled);
+        }
         Ok(request.decode(&bytes)?)
     }
 }
@@ -452,6 +474,15 @@ mod tests {
             error,
             DecisionError::Codec(DecisionCodecError::InvalidRequest(_))
         ));
+
+        // An already-cancelled call returns before encoding the request.
+        let cancelled = CancellationToken::new();
+        cancelled.cancel();
+        let error = client
+            .decide(&empty, DEFAULT_DECISION_TIMEOUT, &cancelled)
+            .await
+            .unwrap_err();
+        assert!(matches!(error, DecisionError::Cancelled), "{error}");
     }
 
     #[tokio::test]
@@ -596,6 +627,29 @@ mod tests {
             bad("https://x.test/v1?key=1"),
             DecisionError::InvalidEndpoint(_)
         ));
+        // The bearer key never goes over cleartext HTTP to a remote host.
+        assert!(matches!(
+            bad("http://api.typesafe.ai/v1"),
+            DecisionError::InvalidEndpoint(_)
+        ));
+        assert!(matches!(
+            bad("http://10.0.0.5:8080/v1"),
+            DecisionError::InvalidEndpoint(_)
+        ));
+        for local in [
+            "http://127.0.0.1:20128/v1",
+            "http://localhost:8080/v1",
+            "http://[::1]:8080/v1",
+        ] {
+            assert!(
+                DecisionClient::new(
+                    endpoint(DecisionProtocol::TypeSafeSystemOne, local.into()),
+                    None
+                )
+                .is_ok(),
+                "{local}"
+            );
+        }
 
         let client = DecisionClient::new(
             endpoint(

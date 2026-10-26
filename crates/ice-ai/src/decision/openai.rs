@@ -221,12 +221,16 @@ impl Request {
             questions: &'a [Question],
         }
 
-        serde_json::to_vec(&WireRequest {
-            model: &self.model,
-            input: &self.input,
-            questions: &self.questions,
-        })
-        .map_err(|_| DecisionCodecError::SerializationFailed)
+        // OpenAI documents no body cap; use the same ceiling as TypeSafe so
+        // oversized text fails before a whole body is built.
+        encode_bounded_json(
+            &WireRequest {
+                model: &self.model,
+                input: &self.input,
+                questions: &self.questions,
+            },
+            32 * 1024 * 1024,
+        )
     }
 }
 
@@ -537,6 +541,24 @@ mod tests {
         assert!(matches!(response.answers()[1], Answer::Choice { .. }));
         assert_eq!(response.usage().input_tokens_details.cached_tokens, 0);
         assert_eq!(response.usage().output_tokens_details.reasoning_tokens, 1);
+    }
+
+    #[test]
+    fn oversized_text_input_fails_before_the_body_is_built() {
+        let request = Request::new(
+            "explicit-model",
+            Input::Text("x".repeat(32 * 1024 * 1024)),
+            vec![Question::Predicate {
+                name: "big".into(),
+                instructions: "Is it big?".into(),
+            }],
+        );
+        assert!(matches!(
+            request.encode_json(),
+            Err(DecisionCodecError::InvalidRequest(
+                DecisionValidationError::RequestBodyTooLarge
+            ))
+        ));
     }
 
     #[test]
