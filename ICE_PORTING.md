@@ -338,9 +338,9 @@ it has no `run_in_background` or `stdin` parameters.
 the Cognee knowledge views. `crates/ice-cli/src/observe/` holds the recorder,
 the SQLite store (`~/.icers/agent/observability.sqlite`), the loopback HTTP/SSE
 server (`icers --observe[=port]`, default 4659) and the dashboard; see
-`docs/guides/observability.md` for the differences from TS. Remaining: the
-Knowledge tab and Cognee correlation (OBS-008, OBS-017..019, OBS-024..029, with
-§5), queue-update rows (Rust emits no queue event), compaction summaries (the
+`docs/guides/observability.md` for the differences from TS. Cognee memory
+operations appear as correlated `memory` rows (OBS-008). Remaining: the
+Knowledge tab and its `/cognee/*` routes (OBS-017..019, OBS-024..029), queue-update rows (Rust emits no queue event), compaction summaries (the
 harness reports only start/finish) and the install-telemetry gate and startup
 timing items (OBS-001, OBS-002).
 
