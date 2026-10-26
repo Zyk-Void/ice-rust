@@ -6,6 +6,7 @@ mod manager;
 mod output_guard;
 mod prompts;
 mod sampling;
+pub mod setup;
 pub use prompts::Prompt;
 #[cfg(test)]
 mod prompt_tests;
@@ -173,6 +174,8 @@ fn valid_name(name: &str) -> bool {
 pub(crate) struct Layered {
     pub servers: BTreeMap<String, (ServerConfig, PathBuf)>,
     pub notes: Vec<String>,
+    /// Entries replaced by a higher layer or an earlier import, lowest first.
+    pub shadowed: Vec<(String, PathBuf)>,
 }
 
 /// Imports are the lowest layer, then global, then the project file only when trusted.
@@ -193,17 +196,21 @@ fn load_layered_from(
         .collect();
     let imported = import::load(&kinds, home, cwd, trusted);
     let mut servers = imported.servers;
+    let mut shadowed = imported.shadowed;
     for (path, config) in configs {
         for (name, server) in config.servers {
             if !valid_name(&name) {
                 return Err(format!("invalid MCP server name: {name:?}"));
             }
-            servers.insert(name, (server, path.clone()));
+            if let Some((_, old)) = servers.insert(name.clone(), (server, path.clone())) {
+                shadowed.push((name, old));
+            }
         }
     }
     Ok(Layered {
         servers,
         notes: imported.notes,
+        shadowed,
     })
 }
 

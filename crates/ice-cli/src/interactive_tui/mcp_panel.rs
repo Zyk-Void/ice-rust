@@ -325,26 +325,12 @@ impl McpPanel {
 
     pub(super) fn render(&self, width: usize) -> Vec<String> {
         let colors = current_theme().colors;
-        let inner = width.saturating_sub(2);
-        let border = |s: &str| colors.border_muted.fg(s);
-        let row = |content: &str| {
-            format!(
-                "{}{}{}",
-                border("│"),
-                truncate_to_width_padded(&format!(" {content}"), inner, "…"),
-                border("│")
-            )
-        };
-        let empty = || row("");
-        let divider = || border(&format!("├{}┤", "─".repeat(inner)));
-        let title = " MCP Servers ";
-        let fill = inner.saturating_sub(visible_width(title));
-        let mut lines = vec![format!(
-            "{}{}{}",
-            border(&format!("╭{}", "─".repeat(fill / 2))),
-            ice_tui::bold(title),
-            border(&format!("{}╮", "─".repeat(fill - fill / 2)))
-        )];
+        let frame = Frame::new(width);
+        let inner = frame.inner;
+        let row = |content: &str| frame.row(content);
+        let empty = || frame.row("");
+        let divider = || frame.divider();
+        let mut lines = vec![frame.top("MCP Servers")];
         lines.push(empty());
         let caret = colors.accent.fg("│");
         lines.push(row(&match &self.desc_query {
@@ -455,23 +441,8 @@ impl McpPanel {
             Some("ctrl+s save"),
             Some("esc clear/close"),
         ];
-        let mut line = String::new();
-        for hint in hints.into_iter().flatten() {
-            if !line.is_empty()
-                && visible_width(&line) + 2 + visible_width(hint) > inner.saturating_sub(2)
-            {
-                lines.push(row(&colors.dim.fg(&line)));
-                line.clear();
-            }
-            if !line.is_empty() {
-                line.push_str("  ");
-            }
-            line.push_str(hint);
-        }
-        if !line.is_empty() {
-            lines.push(row(&colors.dim.fg(&line)));
-        }
-        lines.push(border(&format!("╰{}╯", "─".repeat(inner))));
+        lines.extend(frame.hints(&hints.into_iter().flatten().collect::<Vec<_>>()));
+        lines.push(frame.bottom());
         lines
     }
 
@@ -520,6 +491,67 @@ impl McpPanel {
             }
         }
         format!("{prefix} {icon} {name}  {}{status}", colors.dim.fg(&info))
+    }
+}
+
+/// The rounded box both `/mcp` overlays draw in; `inner` excludes the borders.
+pub(super) struct Frame {
+    pub(super) inner: usize,
+}
+impl Frame {
+    pub(super) fn new(width: usize) -> Self {
+        Self {
+            inner: width.saturating_sub(2),
+        }
+    }
+    fn border(s: &str) -> String {
+        current_theme().colors.border_muted.fg(s)
+    }
+    pub(super) fn top(&self, title: &str) -> String {
+        let title = format!(" {title} ");
+        let fill = self.inner.saturating_sub(visible_width(&title));
+        format!(
+            "{}{}{}",
+            Self::border(&format!("╭{}", "─".repeat(fill / 2))),
+            ice_tui::bold(&title),
+            Self::border(&format!("{}╮", "─".repeat(fill - fill / 2)))
+        )
+    }
+    pub(super) fn row(&self, content: &str) -> String {
+        format!(
+            "{}{}{}",
+            Self::border("│"),
+            truncate_to_width_padded(&format!(" {content}"), self.inner, "…"),
+            Self::border("│")
+        )
+    }
+    pub(super) fn divider(&self) -> String {
+        Self::border(&format!("├{}┤", "─".repeat(self.inner)))
+    }
+    pub(super) fn bottom(&self) -> String {
+        Self::border(&format!("╰{}╯", "─".repeat(self.inner)))
+    }
+    /// Key hints joined by two spaces, wrapped to the box width.
+    pub(super) fn hints(&self, hints: &[&str]) -> Vec<String> {
+        let dim = |s: &str| current_theme().colors.dim.fg(s);
+        let mut lines = Vec::new();
+        let mut line = String::new();
+        for hint in hints {
+            if !line.is_empty()
+                && visible_width(&line) + 2 + visible_width(hint) > self.inner.saturating_sub(2)
+            {
+                lines.push(self.row(&dim(&line)));
+                line.clear();
+            }
+            if !line.is_empty() {
+                line.push_str("  ");
+            }
+            line.push_str(hint);
+        }
+        if !line.is_empty() {
+            lines.push(self.row(&dim(&line)));
+        }
+        lines
     }
 }
 

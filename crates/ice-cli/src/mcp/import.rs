@@ -10,6 +10,28 @@ pub(super) struct Imported {
     pub servers: BTreeMap<String, (ServerConfig, PathBuf)>,
     /// Entries or files that could not be imported, one line each.
     pub notes: Vec<String>,
+    /// Entries that lost a name collision, with the file that defined them.
+    pub shadowed: Vec<(String, PathBuf)>,
+}
+
+/// Import kinds in the order `/mcp setup` lists them (pi-mcp-adapter's `IMPORT_PATHS`).
+pub(crate) const KINDS: [&str; 7] = [
+    "cursor",
+    "claude-code",
+    "claude-desktop",
+    "codex",
+    "opencode",
+    "windsurf",
+    "vscode",
+];
+
+/// An import kind with at least one config file on this machine.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Detected {
+    pub kind: &'static str,
+    pub files: Vec<PathBuf>,
+    /// Server names it would import; empty for `codex`, which cannot be read yet.
+    pub servers: Vec<String>,
 }
 
 struct Source {
@@ -54,6 +76,8 @@ fn sources(kind: &str, home: Option<&Path>, cwd: &Path) -> Option<Vec<Source>> {
             user(&[".windsurf", "mcp.json"]),
         ],
         "vscode" => vec![Some(project(&[".vscode", "mcp.json"]))],
+        // Detected for `/mcp setup`, but `load` reports it as unsupported.
+        "codex" => vec![user(&[".codex", "config.toml"])],
         "opencode" => vec![
             user(&[".config", "opencode", "opencode.json"]),
             Some(project(&["opencode.json"])),
@@ -181,17 +205,55 @@ pub(super) fn load(kinds: &[String], home: Option<&Path>, cwd: &Path, trusted: b
                 }
                 match convert(kind, entry) {
                     Ok(config) => {
-                        kind_servers.insert(name.clone(), (config, source.path.clone()));
+                        if let Some((_, path)) =
+                            kind_servers.insert(name.clone(), (config, source.path.clone()))
+                        {
+                            out.shadowed.push((name.clone(), path));
+                        }
                     }
                     Err(reason) => out.notes.push(format!("import:{kind}: {name}: {reason}")),
                 }
             }
         }
         for (name, server) in kind_servers {
-            out.servers.entry(name).or_insert(server);
+            match out.servers.entry(name) {
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert(server);
+                }
+                std::collections::btree_map::Entry::Occupied(entry) => {
+                    out.shadowed.push((entry.key().clone(), server.1));
+                }
+            }
         }
     }
     out
+}
+
+/// Every known kind that has a config file here, whether or not `imports` lists it.
+/// Project-scoped files are only looked at in a trusted project.
+pub(super) fn detect(home: Option<&Path>, cwd: &Path, trusted: bool) -> Vec<Detected> {
+    KINDS
+        .iter()
+        .filter_map(|&kind| {
+            let files: Vec<_> = sources(kind, home, cwd)?
+                .into_iter()
+                .filter(|source| (trusted || !source.project) && source.path.is_file())
+                .map(|source| source.path)
+                .collect();
+            if files.is_empty() {
+                return None;
+            }
+            let servers = load(&[kind.into()], home, cwd, trusted)
+                .servers
+                .into_keys()
+                .collect();
+            Some(Detected {
+                kind,
+                files,
+                servers,
+            })
+        })
+        .collect()
 }
 
 /// The `mcp.json` form of an imported server, written when the user first edits it.

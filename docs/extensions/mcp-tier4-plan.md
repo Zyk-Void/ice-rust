@@ -1,11 +1,12 @@
 # MCP Tier 4 port plan
 
-Status: Phases 0–3, 4a, and 4b implemented in the unmerged stack
-`feat/cli-mcp-server-requests` ← `feat/cli-mcp-output-guard-stacked` ←
-`feat/cli-mcp-resources` ← `feat/cli-mcp-prompts` ← `feat/cli-mcp-instructions` ←
-`feat/cli-mcp-elicitation-forms` ← `feat/cli-mcp-elicitation-url`.
-Phase 1 was cherry-picked from `ae868f2` onto Phase 0 as `e13d431`; the original
-output-guard branch is unchanged. Phase 5 and later phases are not started. Plan originally based on `main` at `ae1e46b`.
+Status: Phases 0 to 6 are implemented on `feat/cli-mcp-elicitation-url`,
+rebased onto `main@743f750` after the Tier 1 `/mcp` panel (#62) merged.
+Deferred inside those phases: resource subscriptions, the `-32042` URL
+fallback, sampling usage accounting and the Codex `config.toml` importer.
+Phase 7 stays deferred (D5). Phase 1 was cherry-picked from `ae868f2`; the
+original output-guard branch is unchanged. The plan was first written against
+`main@ae1e46b`.
 
 Tier 4 is the "wider MCP protocol" set from the `/mcp` gap review: resources,
 prompts, server-initiated requests (elicitation, sampling, instructions),
@@ -67,8 +68,8 @@ phases stay small.
 | 3 | 19 | Prompts as slash commands | 0 | ~300 | Implemented |
 | 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Implemented |
 | 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Implemented (usage label deferred) |
-| 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | 6a implemented (JSON kinds); Codex and setup panel pending |
-| 7 | 23 | Scripting, MCP UI, rmcp-mux | Tier 2 proxy, Tier 3 HTTP | large | Defer (rationale below) |
+| 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | Implemented (Codex importer deferred) |
+| 7 | 23 | Scripting, MCP UI, rmcp-mux | Tier 2 proxy, Tier 3 HTTP | large | Deferred (D5) |
 
 Each phase is one PR off `main` (stacked where it depends on Phase 0), in line
 with the ~600-line guideline in AGENTS.md §7.3.
@@ -108,7 +109,7 @@ PMA `server-manager.ts:1028-1036` (advertised client capabilities),
 4. Notifications: route `notifications/tools/list_changed`,
    `.../prompts/list_changed`, `.../resources/list_changed` to a manager
    callback that re-lists only that catalog on the live client (implemented
-   as `McpManager::refresh_tools`, which reuses the `register` / `unregister`
+   as `McpManager::refresh_catalog`, which reuses the `register` / `unregister`
    helpers split out of `reconnect_locked`; no process restart). Prompts and
    resources notifications are ignored until Phases 2-3 add those catalogs.
    `notifications/resources/updated` remains ignored; subscriptions are deferred
@@ -423,7 +424,9 @@ mapping; no UI and no auto-approve means denied.
 ## Phase 6: config import + `/mcp setup` (#21)
 
 **Status:** 6a is implemented for the JSON-based kinds in
-`crates/ice-cli/src/mcp/import.rs`; 6b waits for Tier 1.
+`crates/ice-cli/src/mcp/import.rs`; 6b is implemented in
+`crates/ice-cli/src/mcp/setup.rs` and
+`crates/ice-cli/src/interactive_tui/mcp_setup_panel.rs`.
 
 - **Done:** `imports` in `mcp.json`; cursor, claude-code (including this project's
   `~/.claude.json` section, trusted only), claude-desktop, windsurf, vscode and
@@ -467,11 +470,16 @@ mapping; no UI and no auto-approve means denied.
 - Only stdio entries are imported until Tier 3 HTTP exists. `url` entries are
   listed as "unsupported (http)" rather than dropped silently.
 
-**6b. `/mcp setup` panel (after Tier 1):** Centered overlay listing detected
-import sources with server counts, conflicts, and the curated
-`KNOWN_SERVER_PRESETS` quick-adds. Writing goes through the existing atomic
-`edit_config` (`manager.rs:326`). It reuses the Tier 1 overlay helper, so it
-waits for that PR.
+**6b. `/mcp setup` panel — done:** Centered overlay (sharing the Tier 1
+panel's frame) listing detected import sources with server counts, conflicts
+in precedence order, skipped-import notes, and the `KNOWN_SERVER_PRESETS`
+quick-adds. Enter toggles a kind in the global `imports` list or writes a
+preset through the atomic `edit_config`; both reload servers live. `/mcp` opens
+it when nothing is configured, like PMA's `empty` mode. Only the stdio preset
+(Chrome DevTools) can be added; the five HTTP presets are listed as needing
+HTTP. PMA's shared `.mcp.json` scaffold, example config and precedence screens
+are not ported: icers has no shared-config layer. Saving `/mcp` panel edits to
+an imported server copies it into the global `mcp.json`, like `set_disabled`.
 
 **Tests:** each importer against fixture files in a temp `HOME`
 (`ICERS_CODING_AGENT_DIR` set, as existing tests do); precedence; untrusted
@@ -512,7 +520,7 @@ project imports ignored; `url` entries reported; copy-on-edit.
 
 ## Decisions needed from you
 
-- **D1. Order.** Proposed: 0 → 1 → 2 → 3 → 4 → 5 → 6a, then 6b after Tier 1.
+- **D1. Order.** Done: 0 → 1 → 2 → 3 → 4 → 5 → 6a → 6b.
   Phase 1 does not depend on Phase 0 and could go first if you want the
   safety fix soonest.
 - **D2. Decided:** one tool per resource, PMA style, named
@@ -523,4 +531,5 @@ project imports ignored; `url` entries reported; copy-on-edit.
   `samplingAutoApprove` is set.
 - **D4. Instructions placement.** System prompt (until Tier 2) or only
   visible in `/mcp`? Recommendation: system prompt, capped.
-- **D5. Phase 7.** Confirm that scripting and MCP UI stay deferred.
+- **D5. Decided (2026-10-26):** Phase 7 stays deferred until Tier 2 (proxy)
+  and Tier 3 (HTTP) exist.
