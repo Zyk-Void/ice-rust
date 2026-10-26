@@ -38,6 +38,7 @@ impl Entry {
         let mut entries: Vec<_> = cached
             .tools
             .iter()
+            .filter(|item| !ui::meta(item).is_some_and(|ui| ui.app_only))
             .filter_map(|item| {
                 let remote = item.get("name")?.as_str()?;
                 Some(Self {
@@ -102,7 +103,7 @@ impl ProxyTool {
                 "describe": {"type":"string","description":"Show one tool's description and parameters"},
                 "instructions": {"type":"string","description":"Show a server's full instructions"},
                 "connect": {"type":"string","description":"Connect or reconnect a server to refresh its catalog"},
-                "action": {"type":"string","enum":["auth-start","auth-complete"],"description":"OAuth sign-in for `server`: start returns a URL to open; complete takes args.redirectUrl (the address the browser ended on) or args.code"},
+                "action": {"type":"string","enum":["ui-messages","auth-start","auth-complete"],"description":"ui-messages: read and clear messages sent by open MCP app windows. auth-start / auth-complete: OAuth sign-in for `server`; start returns a URL to open, complete takes args.redirectUrl (the address the browser ended on) or args.code"},
                 "limit": {"type":"integer","description":"Search page size (default 12)"},
                 "offset": {"type":"integer","description":"Search results to skip"}
             },
@@ -151,6 +152,30 @@ impl AgentTool for ProxyTool {
     ) -> Result<AgentToolResult, AgentError> {
         let manager = self.manager()?;
         let field = |key: &str| params.get(key).and_then(Value::as_str);
+        if field("action") == Some("ui-messages") {
+            let messages = manager.take_ui_messages();
+            let listing = if messages.is_empty() {
+                "No messages from MCP app windows.".to_string()
+            } else {
+                messages
+                    .iter()
+                    .map(|m| {
+                        format!(
+                            "[{} {}/{}] {}",
+                            m["type"].as_str().unwrap_or_default(),
+                            clean(m["serverName"].as_str().unwrap_or_default()),
+                            clean(m["toolName"].as_str().unwrap_or_default()),
+                            clean(m["prompt"].as_str().unwrap_or_default())
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            };
+            return Ok(text(
+                listing,
+                json!({"mode":"ui-messages","messages":messages}),
+            ));
+        }
         if let Some(action) = field("action") {
             let server = field("server")
                 .ok_or_else(|| AgentError::Tool("`action` needs `server`".into()))?;
@@ -680,7 +705,11 @@ async fn call(
             .await
             .map_err(AgentError::Tool)?;
     }
-    tool.execute(call_id, args, signal, on_update).await
+    let result = tool
+        .execute(call_id, args.clone(), signal, on_update)
+        .await?;
+    manager.show_ui(&tool, args, &result);
+    Ok(result)
 }
 
 #[cfg(test)]

@@ -975,6 +975,8 @@ enum TuiMessage {
     McpSave(Vec<crate::mcp::PanelChange>),
     McpPromptsChanged,
     McpElicitationNotice(String),
+    /// A prompt an MCP app sent with `ui/message`; submitted like typed input.
+    McpUiPrompt(String),
     UsageReady(u64, usage_panel::UsagePanel),
     /// Fork the whole current branch (extension runtime action).
     ForkSession,
@@ -1513,6 +1515,21 @@ pub async fn interactive_tui(
             }
         }
     });
+    if let Some(mut ui_prompts) = reload_context.mcp_tools.ui_prompts() {
+        let ui_tx = tx.clone();
+        tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    result = ui_prompts.recv() => match result {
+                        Ok(prompt) => if ui_tx.send(TuiMessage::McpUiPrompt(prompt)).is_err() { break; },
+                        Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                        Err(broadcast::error::RecvError::Closed) => break,
+                    },
+                    _ = ui_tx.closed() => break,
+                }
+            }
+        });
+    }
     let mut prompt_changes = reload_context.mcp_tools.prompt_changes();
     let prompt_tx = tx.clone();
     tokio::spawn(async move {
@@ -3586,6 +3603,11 @@ pub async fn interactive_tui(
                     ),
                     Err(error) => add_error_message(&chat_container, &error),
                 }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::McpUiPrompt(prompt)) => {
+                // Starts a turn when idle, or steers the running one.
+                submit_user_prompt(&ctx, &prompt);
                 tui.request_render(false);
             }
             Some(TuiMessage::McpElicitationNotice(notice)) => {

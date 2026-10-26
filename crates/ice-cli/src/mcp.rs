@@ -11,6 +11,7 @@ mod prompts;
 mod proxy;
 mod sampling;
 pub mod setup;
+mod ui;
 pub use prompts::Prompt;
 #[cfg(test)]
 mod prompt_tests;
@@ -1074,6 +1075,9 @@ enum ToolLink {
 
 #[derive(Clone)]
 struct McpTool {
+    server: String,
+    /// `_meta.ui`: the tool has an MCP App to open after a call.
+    ui: Option<ui::UiMeta>,
     /// The server's `tools/list` or `resources/list` entry, kept for the cache.
     raw: Value,
     schema: Tool,
@@ -1113,6 +1117,8 @@ impl McpTool {
             .ok_or("MCP tool missing inputSchema")?;
         let description = item.get("description").and_then(Value::as_str);
         Ok(Self {
+            server: server.into(),
+            ui: ui::meta(item),
             raw: item.clone(),
             tokens: tool_tokens(name, description, &schema),
             schema: Tool {
@@ -1154,6 +1160,8 @@ impl McpTool {
             .and_then(Value::as_str)
             .unwrap_or("Read MCP resource");
         Ok(Self {
+            server: server.into(),
+            ui: None,
             schema: Tool {
                 name: format!("{server}_{name}"),
                 description: description.chars().filter(|c| !c.is_control()).collect(),

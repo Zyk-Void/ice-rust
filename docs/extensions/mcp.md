@@ -216,6 +216,27 @@ start a lazy server immediately. `requestTimeoutMs` sets a per-server call
 timeout. pi-mcp-adapter defaults to `lazy`; icers keeps `eager` so existing
 setups behave the same.
 
+## MCP apps (interactive TUI only)
+
+A tool whose metadata names an app (`_meta.ui.resourceUri`, a `ui://`
+resource) opens that app in your browser after a successful call, whether the
+model called it directly or through `mcp`. icers reads the resource and serves
+it from a loopback server on `127.0.0.1` behind a random token, inside a host
+page that runs the app in a sandboxed iframe. The app's own CSP comes from
+`_meta.ui.csp` (`connectDomains`, `resourceDomains`); everything else is
+blocked. Calling the same tool again updates the open window.
+
+The app can call its own server's tools and read its resources. The first
+tool call asks once per server and session whether the app may do that, and
+tools on `approveTools` still ask every time. Tools marked
+`_meta.ui.visibility: ["app"]` are callable only by the app, never by the
+model. When the app sends a message (`ui/message`), it is submitted like
+typed input (starting a turn, or steering one in progress) and also queued;
+`mcp({ action: "ui-messages" })` returns and clears the queue.
+`ICERS_MCP_UI_VIEWER=none` prints the window's URL instead of opening a
+browser. Print and RPC modes do not open apps. Native (Glimpse) windows are not
+supported.
+
 ## Metadata cache
 
 After each successful discovery or catalog refresh, a server's tools,

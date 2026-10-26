@@ -52,13 +52,13 @@ pub struct PanelChange {
     pub disabled: Option<bool>,
     pub direct_tools: Option<DirectTools>,
 }
-struct ServerState {
+pub(super) struct ServerState {
     config: ServerConfig,
     source: PathBuf,
     status: ServerStatus,
-    client: Option<Arc<Client>>,
+    pub(super) client: Option<Arc<Client>>,
     catalog: Option<Vec<ToolInfo>>,
-    discovered: Vec<McpTool>,
+    pub(super) discovered: Vec<McpTool>,
     prompts: Vec<Prompt>,
 }
 pub(super) struct Inner {
@@ -69,7 +69,9 @@ pub(super) struct Inner {
     trusted: bool,
     approvals: Arc<Mutex<HashSet<String>>>,
     tools: Mutex<Vec<HarnessTool>>,
-    servers: Mutex<BTreeMap<String, ServerState>>,
+    pub(super) servers: Mutex<BTreeMap<String, ServerState>>,
+    /// MCP UI: loopback server, open app windows, queued app messages, consent.
+    pub(super) ui: ui::Host,
     /// Keep-alive restarts: when the next attempt is due, and the current backoff.
     retries: Mutex<HashMap<String, (std::time::Instant, Duration)>>,
     /// Set once the lifecycle ticker runs.
@@ -92,10 +94,10 @@ pub(super) struct Inner {
     /// Output spill files for the whole session; survives reconnects.
     spill: Arc<output_guard::SpillStore>,
     prompt_changes: watch::Sender<u64>,
-    elicitation_ui: Option<UiDialogMailbox>,
+    pub(super) elicitation_ui: Option<UiDialogMailbox>,
     /// Asks approval for proxied calls; the same mailbox the approval hook uses.
-    approval_ui: Option<UiDialogMailbox>,
-    elicitation_notices: tokio::sync::broadcast::Sender<String>,
+    pub(super) approval_ui: Option<UiDialogMailbox>,
+    pub(super) elicitation_notices: tokio::sync::broadcast::Sender<String>,
     /// Set with the dialog host: sampling needs both a UI and callable providers.
     sampling_providers: Option<sampling::Providers>,
 }
@@ -123,6 +125,7 @@ impl McpManager {
             retries: Mutex::new(HashMap::new()),
             ticking: AtomicBool::new(false),
             signins: Mutex::new(HashMap::new()),
+            ui: ui::Host::default(),
             operation: tokio::sync::Mutex::new(()),
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
@@ -150,9 +153,10 @@ impl McpManager {
     }
     /// Install only for a TUI host, before startup clones the manager.
     pub fn with_elicitation_ui(mut self, ui: UiDialogMailbox) -> Self {
-        Arc::get_mut(&mut self.0)
-            .expect("MCP manager already shared")
-            .elicitation_ui = Some(ui);
+        let inner = Arc::get_mut(&mut self.0).expect("MCP manager already shared");
+        inner.elicitation_ui = Some(ui);
+        // A TUI also submits prompts that MCP apps send.
+        inner.ui.prompts = Some(tokio::sync::broadcast::channel(16).0);
         self
     }
     pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
@@ -921,6 +925,7 @@ impl McpManager {
                         state
                             .discovered
                             .iter()
+                            .filter(|tool| !tool.ui.as_ref().is_some_and(|ui| ui.app_only))
                             .map(proxy::Entry::from_tool)
                             .collect(),
                         state
@@ -935,6 +940,7 @@ impl McpManager {
                         state
                             .discovered
                             .iter()
+                            .filter(|tool| !tool.ui.as_ref().is_some_and(|ui| ui.app_only))
                             .map(proxy::Entry::from_tool)
                             .collect(),
                         cache::load(&self.0.agent_dir, name, &state.config)
@@ -1127,8 +1133,9 @@ impl McpManager {
                 });
             }
             let name = tool.schema.name.clone();
-            // Without a proxy tool, a tool that is not direct is not registered.
-            if !direct {
+            // Not direct: reachable through the `mcp` proxy only. App-only UI
+            // tools are never offered to the model at all.
+            if !direct || tool.ui.as_ref().is_some_and(|ui| ui.app_only) {
                 continue;
             }
             if !crate::session::tool_name_allowed(&name, &self.0.args) {
@@ -1143,7 +1150,14 @@ impl McpManager {
             }
             names.push(name.clone());
             active.push(name);
-            let tool = HarnessTool::new(Arc::new(tool));
+            let tool = if tool.ui.is_some() {
+                HarnessTool::new(Arc::new(ui::UiTool {
+                    tool,
+                    manager: Arc::downgrade(&self.0),
+                }))
+            } else {
+                HarnessTool::new(Arc::new(tool))
+            };
             self.0.tools.lock().unwrap().push(tool.clone());
             tools.push(tool);
         }
