@@ -55,6 +55,7 @@ struct Inner {
     /// Output spill files for the whole session; survives reconnects.
     spill: Arc<output_guard::SpillStore>,
     prompt_changes: watch::Sender<u64>,
+    elicitation_ui: Option<UiDialogMailbox>,
 }
 #[derive(Clone)]
 pub struct McpManager(Arc<Inner>);
@@ -80,7 +81,15 @@ impl McpManager {
             operation: tokio::sync::Mutex::new(()),
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
+            elicitation_ui: None,
         }))
+    }
+    /// Install only for a TUI host, before startup clones the manager.
+    pub fn with_elicitation_ui(mut self, ui: UiDialogMailbox) -> Self {
+        Arc::get_mut(&mut self.0)
+            .expect("MCP manager already shared")
+            .elicitation_ui = Some(ui);
+        self
     }
     pub async fn lock_registry(&self) -> tokio::sync::MutexGuard<'_, ()> {
         self.0.operation.lock().await
@@ -462,10 +471,11 @@ impl McpManager {
         }
         Ok(())
     }
-    fn handlers(&self, server: &str) -> Handlers {
+    pub(super) fn handlers(&self, server: &str) -> Handlers {
         let manager = Arc::downgrade(&self.0);
+        let elicitation_server = server;
         let server = server.to_owned();
-        Handlers {
+        let mut handlers = Handlers {
             list_changed: Some(Arc::new(move |catalog| {
                 if !matches!(catalog, "tools" | "resources" | "prompts") {
                     return;
@@ -490,7 +500,21 @@ impl McpManager {
                 });
             })),
             ..Default::default()
+        };
+        let enabled = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)
+            .map(|settings| {
+                settings
+                    .get("elicitation")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(true)
+            })
+            .unwrap_or(false);
+        if enabled {
+            if let Some(ui) = &self.0.elicitation_ui {
+                handlers = elicitation::register(handlers, elicitation_server, ui.clone());
+            }
         }
+        handlers
     }
     async fn unregister(&self, harness: &AgentHarness, names: &[String]) -> Result<(), String> {
         let mut tools = harness.get_tools().await.map_err(|e| e.to_string())?;

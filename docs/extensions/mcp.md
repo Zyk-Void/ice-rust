@@ -72,7 +72,8 @@ including descendant processes.
 A server that declares the `tools` capability can send
 `notifications/tools/list_changed`; `icers` then re-lists that server's tools
 and replaces them in the session without restarting the process. Server
-requests other than `ping` are answered with `Method not found`.
+requests other than `ping` and interactive form elicitation are answered with
+`Method not found`.
 
 Text and embedded text resources become text content. Images retain their
 base64 data and MIME type. Other content is returned as JSON text. MCP
@@ -185,6 +186,33 @@ future prompt snapshots. An already-running request keeps its original snapshot.
 Reloading the base system prompt preserves live server sections. This applies in
 TUI, print, and RPC sessions; inspection via `--list-mcp` still only lists tools.
 
+## Form elicitation (interactive TUI only)
+
+The TUI advertises `elicitation.form` for server-initiated `elicitation/create`
+requests. Print, JSON, RPC, and `--list-mcp` do not advertise elicitation.
+Set `"settings": {"elicitation": false}` in `mcp.json` to disable it; reconnect
+applies the setting. A trusted project setting overrides the global value.
+
+Each request first offers Continue / Decline / Cancel. Fields use input,
+boolean/enum selection, or enum-array multi-selection. Invalid values are
+re-asked, and a final review offers Submit / Edit / Decline / Cancel. Optional
+fields can be omitted; explicit defaults can be selected. Display labels are
+control-stripped and mapped back to the original enum values. Nothing is sent
+as accepted content until Submit. Form values are sent to the requesting MCP
+server; do not enter credentials or other sensitive information.
+
+Supported schemas are flat objects with up to 64 fields: strings (including
+`enum`/`enumNames` or titled `oneOf` choices), finite numbers, integers, booleans,
+and string enum arrays. String length/pattern and email/URI/date/date-time
+formats, numeric minimum/maximum, array item counts, and required fields are
+validated locally. Each enum allows at most 256 distinct values. Nested objects,
+references, unknown keywords, and unsupported formats are rejected without
+opening a dialog; schema validation never fetches URLs or files. Aborting or
+timing out a client request cancels outstanding server dialogs on that connection;
+server cancellation, disconnect, and TUI teardown reclaim dialogs too.
+
+URL elicitation and browser-completion notifications are not implemented yet.
+
 ## Approval
 
 `approveTools: true` requires approval for every tool on that server;
@@ -249,7 +277,7 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, sampling, elicitation, or resource subscriptions are
+No HTTP, SSE, OAuth, sampling, URL elicitation, or resource subscriptions are
 implemented. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. Tool, resource, and prompt list-change notifications refresh

@@ -1143,6 +1143,7 @@ dependencies = [
  "ice-tools",
  "ice-tui",
  "indexmap 2.14.2",
+ "jsonschema",
  "nix",
  "percent-encoding",
  "png",

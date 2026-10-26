@@ -1,4 +1,6 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
+mod elicitation;
+mod elicitation_schema;
 mod manager;
 mod output_guard;
 mod prompts;
@@ -175,6 +177,7 @@ pub fn load_config(
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
 /// JSON-RPC error returned to the server for one of its requests.
+#[derive(Debug)]
 pub(crate) struct RpcError {
     pub code: i64,
     pub message: String,
@@ -213,6 +216,8 @@ impl Handlers {
 }
 
 enum Inbound {
+    CancelHandlers,
+    Shutdown,
     Request {
         id: Value,
         method: String,
@@ -243,6 +248,7 @@ impl Drop for Process {
 
 struct Client {
     outgoing: std::sync::mpsc::Sender<Value>,
+    inbound: mpsc::UnboundedSender<Inbound>,
     pending: Pending,
     next_id: AtomicU64,
     closed: Arc<AtomicBool>,
@@ -311,6 +317,7 @@ impl Client {
         let capabilities = handlers.capabilities();
         let (inbound, inbound_rx) = mpsc::unbounded_channel();
         runtime.spawn(dispatch(inbound_rx, outgoing.clone(), handlers));
+        let client_inbound = inbound.clone();
         let reader_pending = pending.clone();
         let reader_outgoing = outgoing.clone();
         std::thread::spawn(move || {
@@ -369,6 +376,7 @@ impl Client {
                 }
             }
             reader_closed.store(true, Ordering::SeqCst);
+            let _ = inbound.send(Inbound::Shutdown);
             fail_pending(
                 &reader_pending,
                 "MCP server closed or sent an invalid frame",
@@ -389,6 +397,7 @@ impl Client {
         });
         Ok(Arc::new(Self {
             outgoing,
+            inbound: client_inbound,
             pending,
             next_id: AtomicU64::new(1),
             closed,
@@ -436,6 +445,7 @@ impl Client {
             client: self,
             id,
             completed: false,
+            sent: false,
         };
         if signal.is_cancelled() {
             return Err("MCP call cancelled".into());
@@ -443,6 +453,7 @@ impl Client {
         self.outgoing
             .send(json!({"jsonrpc":"2.0","id":id,"method":method,"params":params}))
             .map_err(|_| "MCP writer closed")?;
+        guard.sent = true;
         let result = tokio::select! {
             biased;
             _ = signal.cancelled() => Err("MCP call cancelled".into()),
@@ -674,6 +685,12 @@ async fn dispatch(
     };
     while let Some(message) = inbound.recv().await {
         match message {
+            Inbound::Shutdown => break,
+            Inbound::CancelHandlers => {
+                for token in in_flight.lock().unwrap().values() {
+                    token.cancel();
+                }
+            }
             Inbound::Notification { method, params } => match method.as_str() {
                 "notifications/cancelled" => {
                     let key = params.get("requestId").map(Value::to_string);
@@ -761,11 +778,15 @@ struct RequestGuard<'a> {
     client: &'a Client,
     id: u64,
     completed: bool,
+    sent: bool,
 }
 impl Drop for RequestGuard<'_> {
     fn drop(&mut self) {
         self.client.pending.lock().unwrap().remove(&self.id);
-        if !self.completed {
+        if self.sent && !self.completed {
+            // Servers need not cooperate with cancellation; never leave their
+            // outstanding questions alive after an aborted/timed-out call.
+            let _ = self.client.inbound.send(Inbound::CancelHandlers);
             self.client.notify(
                 "notifications/cancelled",
                 json!({"requestId":self.id,"reason":"client cancelled or timed out"}),

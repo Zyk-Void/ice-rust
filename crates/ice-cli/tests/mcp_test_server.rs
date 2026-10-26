@@ -146,6 +146,22 @@ fn main() {
                 }
             }
             "tools/call" => match value["params"]["arguments"]["mode"].as_str() {
+                Some("elicit") | Some("elicit_hang") | Some("elicit_cancel") => {
+                    send(
+                        json!({"jsonrpc":"2.0","id":"elicitation","method":"elicitation/create","params":value["params"]["arguments"]["request"]}),
+                    );
+                    if value["params"]["arguments"]["mode"] == "elicit_cancel" {
+                        send(
+                            json!({"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":"elicitation"}}),
+                        );
+                    }
+                    if value["params"]["arguments"]["mode"] != "elicit" {
+                        continue;
+                    }
+                    let response: Value =
+                        serde_json::from_str(&lines.next().unwrap().unwrap()).unwrap();
+                    json!({"content":[{"type":"text","text":response.to_string()}]})
+                }
                 Some("crash") => std::process::exit(0),
                 Some("hang") => continue,
                 Some("server_requests") => {
