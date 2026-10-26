@@ -2,6 +2,7 @@
 mod cache;
 mod elicitation;
 mod elicitation_schema;
+mod http;
 mod import;
 mod manager;
 mod output_guard;
@@ -123,6 +124,20 @@ pub struct ServerConfig {
     pub idle_timeout: Option<f64>,
     /// Per-call timeout for this server's tools, in milliseconds.
     pub request_timeout_ms: Option<u64>,
+    /// Streamable HTTP (or legacy SSE) endpoint, instead of `command`.
+    pub url: Option<String>,
+    /// HTTP headers; values support `${VAR}` and `$env:VAR`.
+    #[serde(default)]
+    pub headers: BTreeMap<String, String>,
+    pub auth: Option<Auth>,
+    pub bearer_token: Option<String>,
+    pub bearer_token_env: Option<String>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Auth {
+    Bearer,
+    Oauth,
 }
 impl ServerConfig {
     fn request_timeout(&self) -> Duration {
@@ -347,11 +362,13 @@ impl Drop for Process {
 /// What keeps a connection open; `close` ends it from any thread.
 enum Link {
     Process(Process),
+    Http(http::HttpLink),
 }
 impl Link {
     fn close(&self) {
         match self {
             Link::Process(process) => process.tree.kill(),
+            Link::Http(http) => http.close(),
         }
     }
 }
@@ -425,6 +442,20 @@ struct Client {
     last_used: Mutex<std::time::Instant>,
 }
 impl Client {
+    /// Connect with the transport the config names: `url` or `command`.
+    fn start(
+        name: &str,
+        config: &ServerConfig,
+        cwd: &Path,
+        handlers: Handlers,
+    ) -> Result<Arc<Self>, String> {
+        match (&config.url, config.command.is_empty()) {
+            (Some(_), true) => Self::connect_http(config, handlers),
+            (Some(_), false) => Err("MCP server sets both command and url".into()),
+            (None, _) => Self::spawn(name, config, cwd, handlers),
+        }
+    }
+
     fn spawn(
         name: &str,
         config: &ServerConfig,

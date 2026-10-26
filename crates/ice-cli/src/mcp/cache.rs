@@ -40,6 +40,8 @@ pub(crate) fn fingerprint(config: &ServerConfig) -> String {
         "args": config.args,
         "env": config.env,
         "cwd": config.cwd,
+        "url": config.url,
+        "headers": config.headers,
     });
     let digest = Sha256::digest(launch.to_string().as_bytes());
     digest.iter().map(|byte| format!("{byte:02x}")).collect()

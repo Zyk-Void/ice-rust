@@ -360,22 +360,13 @@ impl McpManager {
         })?;
         self.reconnect_locked(None).await
     }
-    /// Write a stdio preset to the global `mcp.json` under its id and start it.
+    /// Write a preset to the global `mcp.json` under its id and start it.
     pub async fn add_preset(&self, id: &str) -> Result<(), String> {
         let preset = setup::PRESETS
             .iter()
             .find(|p| p.id == id)
             .ok_or_else(|| format!("Unknown MCP preset: {id}"))?;
-        match &preset.entry {
-            setup::PresetEntry::Stdio { command, args } => {
-                let args: Vec<String> = args.iter().map(|&a| a.into()).collect();
-                self.add(preset.id, command, &args).await
-            }
-            setup::PresetEntry::Http(_) => Err(format!(
-                "{} needs the HTTP transport, which icers does not support yet",
-                preset.name
-            )),
-        }
+        self.add_entry(preset.id, preset.entry_json()).await
     }
     /// Reload every server, or restart one. Restarting a named server connects
     /// it even when it is lazy; a full reload leaves lazy servers idle.
@@ -527,7 +518,7 @@ impl McpManager {
             let guard = guard.clone();
             discoveries.spawn(async move {
                 let result = async {
-                    let client = Client::spawn(&name, &config, &cwd, handlers)?;
+                    let client = Client::start(&name, &config, &cwd, handlers)?;
                     // One budget covers discovery and prompts (see `crate::mcp::start`).
                     let deadline = tokio::time::Instant::now() + START_TIMEOUT;
                     let tools =
@@ -1115,16 +1106,21 @@ impl McpManager {
         result
     }
     pub async fn add(&self, name: &str, command: &str, args: &[String]) -> Result<(), String> {
-        validate_name(name)?;
         if command.is_empty() {
             return Err("Missing MCP command".into());
         }
+        self.add_entry(name, json!({"command":command,"args":args}))
+            .await
+    }
+    /// Add a new server entry to the global `mcp.json`; never overwrites one.
+    async fn add_entry(&self, name: &str, entry: Value) -> Result<(), String> {
+        validate_name(name)?;
         let _guard = self.0.operation.lock().await;
         edit_config(&self.config_path(false)?, |servers| {
             if servers.contains_key(name) {
                 return Err(format!("MCP server already exists: {name}"));
             }
-            servers.insert(name.into(), json!({"command":command,"args":args}));
+            servers.insert(name.into(), entry);
             Ok(())
         })?;
         self.reconnect_locked(Some(name)).await

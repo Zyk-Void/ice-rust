@@ -130,16 +130,25 @@ const HTTP_TYPES: [&str; 4] = ["http", "sse", "streamable-http", "remote"];
 
 fn convert(kind: &str, entry: &Value) -> Result<ServerConfig, String> {
     let object = entry.as_object().ok_or("not an object")?;
-    if object.contains_key("url")
+    let mut normalized = serde_json::Map::new();
+    // Windsurf names the endpoint `serverUrl`; the other tools use `url`.
+    let url = object.get("url").or_else(|| object.get("serverUrl"));
+    let remote = url.is_some()
         || object
             .get("type")
             .and_then(Value::as_str)
-            .is_some_and(|ty| HTTP_TYPES.contains(&ty))
-    {
-        return Err("unsupported (http)".into());
-    }
-    let mut normalized = serde_json::Map::new();
-    if kind == "opencode" {
+            .is_some_and(|ty| HTTP_TYPES.contains(&ty));
+    if remote {
+        normalized.insert("url".into(), url.cloned().ok_or("no url")?);
+        if let Some(headers) = object.get("headers") {
+            normalized.insert("headers".into(), headers.clone());
+        }
+        let disabled = object.get("disabled") == Some(&Value::Bool(true))
+            || object.get("enabled") == Some(&Value::Bool(false));
+        if disabled {
+            normalized.insert("disabled".into(), Value::Bool(true));
+        }
+    } else if kind == "opencode" {
         let command = object
             .get("command")
             .and_then(Value::as_array)
@@ -165,7 +174,7 @@ fn convert(kind: &str, entry: &Value) -> Result<ServerConfig, String> {
     }
     let config: ServerConfig =
         serde_json::from_value(Value::Object(normalized)).map_err(|e| e.to_string())?;
-    if config.command.is_empty() {
+    if config.command.is_empty() && config.url.is_none() {
         return Err("no command".into());
     }
     Ok(config)
@@ -274,6 +283,16 @@ pub(super) fn detect(home: Option<&Path>, cwd: &Path, trusted: bool) -> Vec<Dete
 
 /// The `mcp.json` form of an imported server, written when the user first edits it.
 pub(super) fn entry_json(config: &ServerConfig) -> Value {
+    if let Some(url) = &config.url {
+        let mut entry = json!({"url": url});
+        if !config.headers.is_empty() {
+            entry["headers"] = json!(config.headers);
+        }
+        if config.disabled {
+            entry["disabled"] = json!(true);
+        }
+        return entry;
+    }
     let mut entry = json!({"command": config.command, "args": config.args});
     if !config.env.is_empty() {
         entry["env"] = json!(config.env);

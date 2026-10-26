@@ -1,7 +1,8 @@
-# MCP stdio tools
+# MCP tools
 
 icers includes a session-local Model Context Protocol client. No plugin or
-Node adapter is required. Only stdio servers are supported.
+Node adapter is required. Servers run as local processes over stdio, or are
+reached over Streamable HTTP (with the legacy HTTP+SSE fallback).
 
 ## Configuration and trust
 
@@ -47,7 +48,7 @@ are not listed in the panel.
 
 ### Importing other tools' servers
 
-List tools in `"imports"` to reuse the stdio servers you already configured in
+List tools in `"imports"` to reuse the servers you already configured in
 them:
 
 ```json
@@ -75,12 +76,44 @@ enabling an imported server, or saving `/mcp` panel changes to it, copies its
 entry into your global `mcp.json` first, and that copy then takes over. Values are used as written, so `${VAR}` placeholders
 are not expanded, and files must be strict JSON (comments are not accepted).
 
-Anything that cannot be imported is reported instead of dropped silently:
-`--list-mcp` prints a `skipped import:<kind>: ...` line for URL/remote servers
-(`unsupported (http)`), invalid names or fields, unreadable files, and unknown
-kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
+Remote entries (`url`, Windsurf's `serverUrl`, OpenCode's `type: "remote"`)
+import with their `headers`. Anything that cannot be imported is reported
+instead of dropped silently: `--list-mcp` prints a `skipped import:<kind>: ...`
+line for entries with no command or URL, invalid names or fields, unreadable
+files, and unknown kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
 needs a TOML parser the project does not depend on yet. `ice` is not an import
 kind.
+
+## Remote (HTTP) servers
+
+Set `url` instead of `command` to reach a server over HTTP:
+
+```json
+{
+  "mcpServers": {
+    "docs": {
+      "url": "https://mcp.example.com/mcp",
+      "headers": {"X-Team": "${TEAM_ID}"},
+      "auth": "bearer",
+      "bearerTokenEnv": "EXAMPLE_MCP_TOKEN"
+    }
+  }
+}
+```
+
+icers speaks Streamable HTTP (MCP 2025-06-18): each message is a POST, replies
+come back as JSON or an event stream, the `Mcp-Session-Id` from `initialize`
+is sent on later requests, and a GET stream (when the server offers one)
+carries server-initiated requests. If the endpoint rejects Streamable HTTP
+(HTTP 404, 405, 406 or 415 on `initialize`), icers falls back to the legacy
+HTTP+SSE transport and posts to the `endpoint` the stream names; an endpoint
+on another origin is refused. The session is closed with a DELETE.
+
+`url` and `headers` values expand `${VAR}` and `$env:VAR`; a variable that is
+not set fails the connection before anything is sent. `auth: "bearer"` sends
+`Authorization: Bearer` with `bearerToken` (which also expands variables) or
+the value of the variable named by `bearerTokenEnv`. A 401 or 403 is reported
+as needing authentication. Setting both `command` and `url` is an error.
 
 ## The `mcp` proxy tool
 
@@ -405,8 +438,8 @@ configured server executables, so inspect configuration before trusting it.
   configured. It lists other tools' MCP configs found on this machine with
   their server counts; Enter adds or removes the tool in the global `imports`
   list and reloads servers. Quick add writes a preset to the global `mcp.json`
-  (only Chrome DevTools today; DeepWiki, Context7, Parallel Search, Notion and
-  GitHub need the HTTP transport and are listed as unavailable). The panel also
+  (DeepWiki, Context7, Parallel Search, Notion, GitHub and Chrome DevTools;
+  Notion and GitHub are marked `sign-in` because they use OAuth). The panel also
   shows server names defined in more than one place, in precedence order, and
   the imports that were skipped. Codex is detected but not importable yet. An
   import listed in the trusted project file has to be removed there.
@@ -435,14 +468,12 @@ routing hook, system instructions, and skills.
 
 ## Limits
 
-No HTTP, SSE, OAuth, or resource subscriptions are implemented. MCP
-scripting, MCP UI resources and shared `rmcp-mux` processes are deferred until
-those transports exist. The asynchronous dispatcher answers server
+OAuth and resource subscriptions are not implemented yet. The asynchronous dispatcher answers server
 requests without blocking tool replies; unsupported methods return
 `-32601 Method not found`. At most 64 server messages wait for the dispatcher;
 beyond that, reading pauses. When a call is cancelled or times out, open server
 requests (such as a dialog) are cancelled only if no other call is still
-waiting on that server, because stdio cannot tie a request to its call. Tool, resource, and prompt list-change notifications refresh
+waiting on that server, because the client cannot tie a request to its call. Tool, resource, and prompt list-change notifications refresh
 the targeted catalog without restarting the server. Individual protocol frames
 are limited to 16 MiB. Stdout must contain only newline-delimited JSON-RPC 2.0;
 servers must send diagnostics to stderr.

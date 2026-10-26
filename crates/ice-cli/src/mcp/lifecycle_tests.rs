@@ -41,7 +41,12 @@ async fn call(harness: &AgentHarness, name: &str, mode: &str) -> Result<String, 
         .unwrap_or_else(|| panic!("{name} registered"));
     let result = tool
         .tool
-        .execute("t", json!({"mode":mode}), CancellationToken::new(), Arc::new(|_| {}))
+        .execute(
+            "t",
+            json!({"mode":mode}),
+            CancellationToken::new(),
+            Arc::new(|_| {}),
+        )
         .await?;
     match &result.content[0] {
         TextContentOrImage::Text(text) => Ok(text.text.clone()),
