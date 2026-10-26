@@ -1,11 +1,32 @@
 use super::*;
 
+const LIFECYCLE_TICK: Duration = Duration::from_secs(15);
+const DEFAULT_IDLE_MINUTES: f64 = 10.0;
+const RETRY_FIRST: Duration = Duration::from_secs(30);
+const RETRY_MAX: Duration = Duration::from_secs(300);
+
 #[derive(Clone, Debug)]
 pub enum ServerStatus {
     Disabled,
     Connecting,
-    Connected { tools: Vec<String> },
+    Connected {
+        tools: Vec<String>,
+    },
+    /// A lazy server that is not running; `tools` were registered from the
+    /// metadata cache and start the server on first use.
+    Idle {
+        tools: Vec<String>,
+    },
     Failed(String),
+}
+impl ServerStatus {
+    /// Tool names this state registered, which a restart must unregister.
+    fn registered(&self) -> &[String] {
+        match self {
+            ServerStatus::Connected { tools } | ServerStatus::Idle { tools } => tools,
+            _ => &[],
+        }
+    }
 }
 /// One discovered tool. `name` is the remote name used by `directTools`.
 #[derive(Clone, Debug, PartialEq)]
@@ -49,6 +70,10 @@ pub(super) struct Inner {
     approvals: Arc<Mutex<HashSet<String>>>,
     tools: Mutex<Vec<HarnessTool>>,
     servers: Mutex<BTreeMap<String, ServerState>>,
+    /// Keep-alive restarts: when the next attempt is due, and the current backoff.
+    retries: Mutex<HashMap<String, (std::time::Instant, Duration)>>,
+    /// Set once the lifecycle ticker runs.
+    ticking: AtomicBool,
     /// Catalogs with a refresh queued; coalesces list_changed bursts to one re-list.
     refreshing: Mutex<HashSet<(String, String)>>,
     operation: tokio::sync::Mutex<()>,
@@ -83,6 +108,8 @@ impl McpManager {
             tools: Mutex::new(Vec::new()),
             servers: Mutex::new(BTreeMap::new()),
             refreshing: Mutex::new(HashSet::new()),
+            retries: Mutex::new(HashMap::new()),
+            ticking: AtomicBool::new(false),
             operation: tokio::sync::Mutex::new(()),
             spill: Default::default(),
             prompt_changes: watch::channel(0).0,
@@ -141,25 +168,31 @@ impl McpManager {
             .collect()
     }
     pub async fn get_prompt(&self, command: &str, input: &str) -> Result<String, String> {
-        let (server, prompt, client) = self
-            .0
-            .servers
-            .lock()
-            .unwrap()
-            .iter()
-            .find_map(|(server, state)| {
-                state
-                    .prompts
-                    .iter()
-                    .find(|prompt| prompt.command_name(server) == command)
-                    .and_then(|prompt| {
-                        state
-                            .client
-                            .clone()
-                            .map(|client| (server.clone(), prompt.clone(), client))
-                    })
-            })
-            .ok_or("MCP prompt is no longer available")?;
+        let find = || {
+            self.0
+                .servers
+                .lock()
+                .unwrap()
+                .iter()
+                .find_map(|(server, state)| {
+                    let prompt = state
+                        .prompts
+                        .iter()
+                        .find(|prompt| prompt.command_name(server) == command)?;
+                    Some((server.clone(), prompt.clone(), state.client.clone()))
+                })
+        };
+        let (server, prompt, client) = find().ok_or("MCP prompt is no longer available")?;
+        let client = match client {
+            Some(client) => client,
+            // An idle lazy server lists cached prompts; start it for this one.
+            None => {
+                self.connect_lazy(&server).await?;
+                find()
+                    .and_then(|(_, _, client)| client)
+                    .ok_or("MCP prompt is no longer available")?
+            }
+        };
         let text = prompts::get_prompt(&client, &server, &prompt, input).await?;
         // The text becomes a user message, so it gets the same bound as tool output.
         Ok(self.output_guard()?.bound_text(text))
@@ -199,8 +232,8 @@ impl McpManager {
             .get(server)
             .map(|s| s.status.clone())
         {
-            Some(ServerStatus::Connected { tools }) => tools,
-            _ => Vec::new(),
+            Some(status) => status.registered().to_vec(),
+            None => Vec::new(),
         };
         let approvals = self.0.approvals.lock().unwrap();
         names
@@ -344,11 +377,16 @@ impl McpManager {
             )),
         }
     }
+    /// Reload every server, or restart one. Restarting a named server connects
+    /// it even when it is lazy; a full reload leaves lazy servers idle.
     pub async fn reconnect(&self, name: Option<&str>) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
-        self.reconnect_locked(name).await
+        self.reconnect_with(name, name.is_some()).await
     }
     async fn reconnect_locked(&self, name: Option<&str>) -> Result<(), String> {
+        self.reconnect_with(name, false).await
+    }
+    async fn reconnect_with(&self, name: Option<&str>, force: bool) -> Result<(), String> {
         if let Some(name) = name {
             if !self.configured()?.contains_key(name)
                 && !self.0.servers.lock().unwrap().contains_key(name)
@@ -356,11 +394,47 @@ impl McpManager {
                 return Err(format!("Unknown MCP server: {name}"));
             }
         }
-        self.reconnect_servers(name.map(|n| HashSet::from([n.to_owned()])))
+        self.reconnect_servers(name.map(|n| HashSet::from([n.to_owned()])), force)
             .await
     }
+    /// Start a lazy server for a call; a no-op when it is already running.
+    pub(super) async fn connect_lazy(&self, server: &str) -> Result<(), String> {
+        let _guard = self.0.operation.lock().await;
+        let idle = matches!(
+            self.0
+                .servers
+                .lock()
+                .unwrap()
+                .get(server)
+                .map(|s| &s.status),
+            Some(ServerStatus::Idle { .. })
+        );
+        if idle {
+            self.reconnect_servers(Some(HashSet::from([server.to_owned()])), true)
+                .await?;
+        }
+        match self
+            .0
+            .servers
+            .lock()
+            .unwrap()
+            .get(server)
+            .map(|s| &s.status)
+        {
+            Some(ServerStatus::Connected { .. }) => Ok(()),
+            Some(ServerStatus::Failed(error)) => Err(error.clone()),
+            Some(ServerStatus::Disabled) => Err(format!("MCP server {server} is disabled")),
+            _ => Err(format!("MCP server {server} is not connected")),
+        }
+    }
     /// Restart `only` (or every known server) concurrently from current configuration.
-    async fn reconnect_servers(&self, only: Option<HashSet<String>>) -> Result<(), String> {
+    /// Lazy servers with a cached catalog stay idle unless `force` is set.
+    async fn reconnect_servers(
+        &self,
+        only: Option<HashSet<String>>,
+        force: bool,
+    ) -> Result<(), String> {
+        self.start_ticker();
         let mut configured = self.configured()?;
         let configured_names: HashSet<String> = configured.keys().cloned().collect();
         let guard = self.output_guard()?;
@@ -374,13 +448,10 @@ impl McpManager {
         let mut discoveries = tokio::task::JoinSet::new();
         for name in targets.drain() {
             let old = self.0.servers.lock().unwrap().remove(&name);
-            let names = match &old {
-                Some(ServerState {
-                    status: ServerStatus::Connected { tools },
-                    ..
-                }) => tools.clone(),
-                _ => Vec::new(),
-            };
+            let names = old
+                .as_ref()
+                .map(|s| s.status.registered().to_vec())
+                .unwrap_or_default();
             let old_catalog = old.as_ref().and_then(|s| s.catalog.clone());
             if let Some(client) = old.and_then(|s| s.client) {
                 client.shut_down("MCP server disconnected");
@@ -430,6 +501,26 @@ impl McpManager {
             );
             if disabled {
                 continue;
+            }
+            if config.lifecycle.lazy() && !force {
+                if let Some(cached) = cache::load(&self.0.agent_dir, &name, &config) {
+                    // Registered from the cache; the first call starts the server.
+                    let link = ToolLink::Lazy {
+                        manager: Arc::downgrade(&self.0),
+                        server: name.clone(),
+                    };
+                    let tools = McpTool::from_cache(&name, &cached, &config, &link, &guard);
+                    let (names, catalog) = self
+                        .register(&harness, &config.direct_tools, tools.clone())
+                        .await?;
+                    if let Some(state) = self.0.servers.lock().unwrap().get_mut(&name) {
+                        state.status = ServerStatus::Idle { tools: names };
+                        state.catalog = Some(catalog);
+                        state.discovered = tools;
+                        state.prompts = cached.prompts;
+                    }
+                    continue;
+                }
             }
             let cwd = self.0.cwd.clone();
             let handlers = self.handlers(&name);
@@ -581,6 +672,102 @@ impl McpManager {
         }
         listed.map(drop)
     }
+    /// Run `check_lifecycle` periodically for as long as the manager lives.
+    fn start_ticker(&self) {
+        if self.0.ticking.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        let manager = Arc::downgrade(&self.0);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(LIFECYCLE_TICK).await;
+                let Some(inner) = manager.upgrade() else {
+                    break;
+                };
+                McpManager(inner).check_lifecycle().await;
+            }
+        });
+    }
+    /// Stop `lazy` servers unused for their idle timeout, and restart stopped
+    /// `keep-alive` servers with backoff (30 s doubling to 5 min).
+    pub(super) async fn check_lifecycle(&self) {
+        let default_idle = load_settings(&self.0.agent_dir, &self.0.cwd, self.0.trusted)
+            .ok()
+            .and_then(|settings| settings.get("idleTimeout").and_then(Value::as_f64));
+        let now = std::time::Instant::now();
+        let (idle, revive): (Vec<_>, Vec<_>) = {
+            let servers = self.0.servers.lock().unwrap();
+            let idle = servers
+                .iter()
+                .filter(|(_, state)| state.config.lifecycle == Lifecycle::Lazy)
+                .filter_map(|(name, state)| {
+                    let client = state.client.as_ref()?;
+                    let minutes = state
+                        .config
+                        .idle_timeout
+                        .or(default_idle)
+                        .filter(|m| m.is_finite() && *m > 0.0)
+                        .unwrap_or(DEFAULT_IDLE_MINUTES);
+                    (matches!(state.status, ServerStatus::Connected { .. })
+                        && !client.busy()
+                        && client.idle_for() >= Duration::from_secs_f64(minutes * 60.0))
+                    .then(|| name.clone())
+                })
+                .collect();
+            let revive = servers
+                .iter()
+                .filter(|(_, state)| state.config.lifecycle.keep_alive())
+                .filter(|(_, state)| match (&state.status, &state.client) {
+                    (ServerStatus::Connected { .. }, Some(client)) => {
+                        client.closed.load(Ordering::SeqCst)
+                    }
+                    (ServerStatus::Failed(_), _) => true,
+                    _ => false,
+                })
+                .map(|(name, _)| name.clone())
+                .filter(|name| {
+                    self.0
+                        .retries
+                        .lock()
+                        .unwrap()
+                        .get(name)
+                        .is_none_or(|(due, _)| *due <= now)
+                })
+                .collect();
+            (idle, revive)
+        };
+        for name in idle {
+            let _guard = self.0.operation.lock().await;
+            if let Err(error) = self
+                .reconnect_servers(Some(HashSet::from([name.clone()])), false)
+                .await
+            {
+                tracing::warn!(server = %name, %error, "MCP idle stop failed");
+            }
+        }
+        for name in revive {
+            let _guard = self.0.operation.lock().await;
+            let result = self
+                .reconnect_servers(Some(HashSet::from([name.clone()])), true)
+                .await;
+            let connected = matches!(
+                self.0.servers.lock().unwrap().get(&name).map(|s| &s.status),
+                Some(ServerStatus::Connected { .. })
+            );
+            let mut retries = self.0.retries.lock().unwrap();
+            if connected {
+                retries.remove(&name);
+            } else {
+                let backoff = retries
+                    .get(&name)
+                    .map_or(RETRY_FIRST, |(_, backoff)| (*backoff * 2).min(RETRY_MAX));
+                retries.insert(name.clone(), (std::time::Instant::now() + backoff, backoff));
+                if let Err(error) = result {
+                    tracing::warn!(server = %name, %error, "MCP keep-alive restart failed");
+                }
+            }
+        }
+    }
     /// Register the `mcp` proxy tool while any server is configured.
     async fn sync_proxy(&self, harness: &AgentHarness) -> Result<(), String> {
         let wanted = !self.0.servers.lock().unwrap().is_empty()
@@ -629,6 +816,18 @@ impl McpManager {
                             .as_ref()
                             .and_then(|c| c.instructions().map(str::to_owned)),
                         false,
+                    )
+                } else if matches!(state.status, ServerStatus::Idle { .. }) {
+                    // Idle tools are registered from the cache and start the server.
+                    (
+                        state
+                            .discovered
+                            .iter()
+                            .map(proxy::Entry::from_tool)
+                            .collect(),
+                        cache::load(&self.0.agent_dir, name, &state.config)
+                            .and_then(|cached| cached.instructions),
+                        true,
                     )
                 } else {
                     match cache::load(&self.0.agent_dir, name, &state.config) {
@@ -911,7 +1110,7 @@ impl McpManager {
             written.extend(changes.iter().map(|(c, _)| c.server.clone()));
         }
         if !written.is_empty() {
-            self.reconnect_servers(Some(written)).await?;
+            self.reconnect_servers(Some(written), false).await?;
         }
         result
     }
@@ -1024,3 +1223,7 @@ fn cached_catalog(cached: &cache::CachedServer) -> Vec<ToolInfo> {
         })
         .collect()
 }
+
+#[cfg(test)]
+#[path = "lifecycle_tests.rs"]
+mod lifecycle_tests;

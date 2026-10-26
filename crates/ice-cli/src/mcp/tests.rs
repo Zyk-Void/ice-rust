@@ -918,7 +918,10 @@ async fn the_cache_shows_a_catalog_before_or_without_a_connection() {
     write(json!({"command":config.command,"env":config.env,"disabled":true}));
     let offline = manager();
     offline.reconnect(None).await.unwrap();
-    assert!(matches!(offline.snapshot()[0].status, ServerStatus::Disabled));
+    assert!(matches!(
+        offline.snapshot()[0].status,
+        ServerStatus::Disabled
+    ));
     assert_eq!(catalog(&offline), Some(vec!["echo".into(), "other".into()]));
 
     // A different launch command must not reuse that catalog.

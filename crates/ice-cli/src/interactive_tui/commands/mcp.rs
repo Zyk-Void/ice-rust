@@ -131,6 +131,7 @@ fn status(status: &ServerStatus) -> String {
         ServerStatus::Disabled => "disabled".into(),
         ServerStatus::Connecting => "connecting".into(),
         ServerStatus::Connected { tools } => format!("connected · {} tools", tools.len()),
+        ServerStatus::Idle { tools } => format!("idle (starts on use) · {} tools", tools.len()),
         ServerStatus::Failed(error) => format!("failed: {error}"),
     }
 }

@@ -116,6 +116,43 @@ pub struct ServerConfig {
     /// Extra `mcp` search vocabulary: `{ "tool-or-glob": ["keyword", ...] }`.
     #[serde(default)]
     pub search_keywords: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub lifecycle: Lifecycle,
+    /// Minutes before a `lazy` server is stopped when unused; `settings.idleTimeout`
+    /// otherwise, then ten minutes.
+    pub idle_timeout: Option<f64>,
+    /// Per-call timeout for this server's tools, in milliseconds.
+    pub request_timeout_ms: Option<u64>,
+}
+impl ServerConfig {
+    fn request_timeout(&self) -> Duration {
+        self.request_timeout_ms
+            .filter(|ms| *ms > 0)
+            .map_or(CALL_TIMEOUT, Duration::from_millis)
+    }
+}
+
+/// When a server runs. `eager` is the icers default (D6); pi-mcp-adapter's is `lazy`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Lifecycle {
+    /// Start with the session.
+    #[default]
+    Eager,
+    /// Start on first use; stop after `idleTimeout`.
+    Lazy,
+    /// Start with the session; restart with backoff when it stops.
+    KeepAlive,
+    /// Start on first use; then never idle out and restart with backoff.
+    LazyKeepAlive,
+}
+impl Lifecycle {
+    fn lazy(self) -> bool {
+        matches!(self, Lifecycle::Lazy | Lifecycle::LazyKeepAlive)
+    }
+    fn keep_alive(self) -> bool {
+        matches!(self, Lifecycle::KeepAlive | Lifecycle::LazyKeepAlive)
+    }
 }
 fn expose_resources_default() -> bool {
     true
@@ -384,6 +421,8 @@ struct Client {
     capabilities: Value,
     init: OnceLock<ServerInit>,
     link: Link,
+    /// When a request last started; lazy servers stop after their idle timeout.
+    last_used: Mutex<std::time::Instant>,
 }
 impl Client {
     fn spawn(
@@ -531,8 +570,17 @@ impl Client {
             capabilities,
             init: OnceLock::new(),
             link,
+            last_used: Mutex::new(std::time::Instant::now()),
         });
         Ok((client, router, inbound, receiver))
+    }
+
+    fn idle_for(&self) -> Duration {
+        self.last_used.lock().unwrap().elapsed()
+    }
+    /// A call or a server request is still open.
+    fn busy(&self) -> bool {
+        !self.pending.lock().unwrap().is_empty() || !self.in_flight.lock().unwrap().is_empty()
     }
 
     /// Stop the connection (kills a stdio server's process tree) and fail waiting calls.
@@ -567,6 +615,7 @@ impl Client {
         timeout: Duration,
     ) -> Result<Value, String> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        *self.last_used.lock().unwrap() = std::time::Instant::now();
         let (tx, rx) = oneshot::channel();
         {
             let mut pending = self.pending.lock().unwrap();
@@ -676,38 +725,14 @@ impl Client {
                 .and_then(Value::as_array)
                 .ok_or("MCP resources/list missing resources")?
             {
-                let name = item
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP resource missing name")?;
-                let uri = item
-                    .get("uri")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP resource missing URI")?;
-                let name = unique_resource_name(&mut used, name);
-                let description = item
-                    .get("description")
-                    .and_then(Value::as_str)
-                    .unwrap_or("Read MCP resource");
-                tools.push(McpTool {
-                    schema: Tool {
-                        name: format!("{server}_{name}"),
-                        description: description.chars().filter(|c| !c.is_control()).collect(),
-                        parameters: serde_json::from_value(
-                            json!({"type":"object","properties":{},"additionalProperties":false}),
-                        )
-                        .unwrap(),
-                        constrained_sampling: None,
-                    },
-                    raw: item.clone(),
-                    remote_name: name.clone(),
-                    // Resource tools are not listed in the `/mcp` catalog.
-                    tokens: 0,
-                    resource_uri: Some(uri.to_owned()),
-                    client: self.clone(),
-                    approval: config.approve_tools.requires(&name),
-                    guard: guard.clone(),
-                });
+                tools.push(McpTool::resource(
+                    server,
+                    item,
+                    config,
+                    &mut used,
+                    ToolLink::Live(self.clone()),
+                    guard,
+                )?);
             }
             cursor = page
                 .get("nextCursor")
@@ -748,40 +773,14 @@ impl Client {
                 .and_then(Value::as_array)
                 .ok_or("MCP tools/list missing tools")?
             {
-                let name = item
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .ok_or("MCP tool missing name")?;
-                if name.is_empty()
-                    || !name
-                        .chars()
-                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-                    || !names.insert(name.to_owned())
-                {
-                    return Err(format!("invalid or duplicate MCP tool name: {name}"));
-                }
-                let schema = item
-                    .get("inputSchema")
-                    .cloned()
-                    .ok_or("MCP tool missing inputSchema")?;
-                let description = item.get("description").and_then(Value::as_str);
-                let tokens = tool_tokens(name, description, &schema);
-                tools.push(McpTool {
-                    raw: item.clone(),
-                    schema: Tool {
-                        name: format!("{server}_{name}"),
-                        description: description.unwrap_or("MCP tool").into(),
-                        parameters: serde_json::from_value(schema)
-                            .map_err(|e| format!("invalid MCP inputSchema: {e}"))?,
-                        constrained_sampling: None,
-                    },
-                    remote_name: name.into(),
-                    tokens,
-                    resource_uri: None,
-                    client: self.clone(),
-                    approval: config.approve_tools.requires(name),
-                    guard: guard.clone(),
-                });
+                tools.push(McpTool::tool(
+                    server,
+                    item,
+                    config,
+                    &mut names,
+                    ToolLink::Live(self.clone()),
+                    guard,
+                )?);
             }
             cursor = page
                 .get("nextCursor")
@@ -979,6 +978,17 @@ fn tool_tokens(name: &str, description: Option<&str>, schema: &Value) -> usize {
     (name.len() + description.map_or(0, str::len) + schema.to_string().len()).div_ceil(4) + 10
 }
 
+/// How a tool reaches its server: a live client, or a server that is started
+/// on the first call (lazy lifecycle, registered from the metadata cache).
+#[derive(Clone)]
+enum ToolLink {
+    Live(Arc<Client>),
+    Lazy {
+        manager: std::sync::Weak<manager::Inner>,
+        server: String,
+    },
+}
+
 #[derive(Clone)]
 struct McpTool {
     /// The server's `tools/list` or `resources/list` entry, kept for the cache.
@@ -987,9 +997,125 @@ struct McpTool {
     remote_name: String,
     tokens: usize,
     resource_uri: Option<String>,
-    client: Arc<Client>,
+    link: ToolLink,
     approval: bool,
     guard: OutputGuard,
+    timeout: Duration,
+}
+impl McpTool {
+    /// One `tools/list` entry; `names` rejects duplicates within the server.
+    fn tool(
+        server: &str,
+        item: &Value,
+        config: &ServerConfig,
+        names: &mut HashSet<String>,
+        link: ToolLink,
+        guard: &OutputGuard,
+    ) -> Result<Self, String> {
+        let name = item
+            .get("name")
+            .and_then(Value::as_str)
+            .ok_or("MCP tool missing name")?;
+        if name.is_empty()
+            || !name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            || !names.insert(name.to_owned())
+        {
+            return Err(format!("invalid or duplicate MCP tool name: {name}"));
+        }
+        let schema = item
+            .get("inputSchema")
+            .cloned()
+            .ok_or("MCP tool missing inputSchema")?;
+        let description = item.get("description").and_then(Value::as_str);
+        Ok(Self {
+            raw: item.clone(),
+            tokens: tool_tokens(name, description, &schema),
+            schema: Tool {
+                name: format!("{server}_{name}"),
+                description: description.unwrap_or("MCP tool").into(),
+                parameters: serde_json::from_value(schema)
+                    .map_err(|e| format!("invalid MCP inputSchema: {e}"))?,
+                constrained_sampling: None,
+            },
+            remote_name: name.into(),
+            resource_uri: None,
+            link,
+            approval: config.approve_tools.requires(name),
+            guard: guard.clone(),
+            timeout: config.request_timeout(),
+        })
+    }
+
+    /// One `resources/list` entry as a no-argument read tool.
+    fn resource(
+        server: &str,
+        item: &Value,
+        config: &ServerConfig,
+        used: &mut HashSet<String>,
+        link: ToolLink,
+        guard: &OutputGuard,
+    ) -> Result<Self, String> {
+        let name = item
+            .get("name")
+            .and_then(Value::as_str)
+            .ok_or("MCP resource missing name")?;
+        let uri = item
+            .get("uri")
+            .and_then(Value::as_str)
+            .ok_or("MCP resource missing URI")?;
+        let name = unique_resource_name(used, name);
+        let description = item
+            .get("description")
+            .and_then(Value::as_str)
+            .unwrap_or("Read MCP resource");
+        Ok(Self {
+            schema: Tool {
+                name: format!("{server}_{name}"),
+                description: description.chars().filter(|c| !c.is_control()).collect(),
+                parameters: serde_json::from_value(
+                    json!({"type":"object","properties":{},"additionalProperties":false}),
+                )
+                .unwrap(),
+                constrained_sampling: None,
+            },
+            raw: item.clone(),
+            approval: config.approve_tools.requires(&name),
+            remote_name: name,
+            // Resource tools are not listed in the `/mcp` catalog.
+            tokens: 0,
+            resource_uri: Some(uri.to_owned()),
+            link,
+            guard: guard.clone(),
+            timeout: config.request_timeout(),
+        })
+    }
+
+    /// The cached catalog as lazy tools; entries that no longer parse are skipped.
+    fn from_cache(
+        server: &str,
+        cached: &cache::CachedServer,
+        config: &ServerConfig,
+        link: &ToolLink,
+        guard: &OutputGuard,
+    ) -> Vec<Self> {
+        let mut names = HashSet::new();
+        let mut tools: Vec<_> = cached
+            .tools
+            .iter()
+            .filter_map(|item| {
+                Self::tool(server, item, config, &mut names, link.clone(), guard).ok()
+            })
+            .collect();
+        if config.expose_resources {
+            let mut used = HashSet::new();
+            tools.extend(cached.resources.iter().filter_map(|item| {
+                Self::resource(server, item, config, &mut used, link.clone(), guard).ok()
+            }));
+        }
+        tools
+    }
 }
 #[async_trait]
 impl AgentTool for McpTool {
@@ -1013,9 +1139,37 @@ impl AgentTool for McpTool {
                 json!({"name":self.remote_name,"arguments":params}),
             ),
         };
-        let mut result = self
-            .client
-            .request(method, params, signal, CALL_TIMEOUT)
+        let client = match &self.link {
+            ToolLink::Live(client) => client.clone(),
+            ToolLink::Lazy { manager, server } => {
+                // Start the server, then run the live tool that replaced this one.
+                let manager = manager
+                    .upgrade()
+                    .map(McpManager)
+                    .ok_or_else(|| AgentError::Tool("MCP session ended".into()))?;
+                manager
+                    .connect_lazy(server)
+                    .await
+                    .map_err(AgentError::Tool)?;
+                let (live, _, _) =
+                    manager
+                        .live_tool(server, &self.schema.name)
+                        .ok_or_else(|| {
+                            AgentError::Tool(format!(
+                                "MCP server {server} no longer offers {}",
+                                self.remote_name
+                            ))
+                        })?;
+                let ToolLink::Live(client) = live.link else {
+                    return Err(AgentError::Tool(format!(
+                        "MCP server {server} is not connected"
+                    )));
+                };
+                client
+            }
+        };
+        let mut result = client
+            .request(method, params, signal, self.timeout)
             .await
             .map_err(AgentError::Tool)?;
         if self.resource_uri.is_some() {

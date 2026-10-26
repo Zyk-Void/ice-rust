@@ -110,6 +110,26 @@ not connected list their cached tools but cannot be called. Per-server
 {"mcpServers": {"github": {"command": "github-mcp", "searchKeywords": {"search_code": ["grep"], "*": ["gh"]}}}}
 ```
 
+## Lifecycle
+
+Each server may set `lifecycle`:
+
+| Value | Behavior |
+|---|---|
+| `eager` (default) | Starts with the session. |
+| `lazy` | Starts on its first call and stops after `idleTimeout` minutes without a request (default 10, or `settings.idleTimeout`). |
+| `keep-alive` | Starts with the session; if it exits or fails, it is restarted after 30 s, doubling to at most 5 min between attempts. |
+| `lazy-keep-alive` | Starts on its first call, then never idles out and restarts like `keep-alive`. |
+
+A lazy server that is not running is shown as `idle`. Its tools, resources and
+prompts come from the metadata cache, so they stay in the model's tool list
+and in `/mcp`; calling one (directly, through `mcp`, or as a prompt command)
+starts the server first. A lazy server with no cache entry yet starts with the
+session once to fill it. `/mcp reconnect <server>` and `mcp({ connect })`
+start a lazy server immediately. `requestTimeoutMs` sets a per-server call
+timeout. pi-mcp-adapter defaults to `lazy`; icers keeps `eager` so existing
+setups behave the same.
+
 ## Metadata cache
 
 After each successful discovery or catalog refresh, a server's tools,

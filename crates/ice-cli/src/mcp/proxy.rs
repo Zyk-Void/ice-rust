@@ -216,6 +216,12 @@ fn status(servers: &[Server]) -> AgentToolResult {
             ServerStatus::Connected { .. } => {
                 format!("✓ {name} ({} tools)\n", server.entries.len())
             }
+            ServerStatus::Idle { .. } => {
+                format!(
+                    "○ {name} ({} tools, idle; starts on first call)\n",
+                    server.entries.len()
+                )
+            }
             ServerStatus::Failed(error) => {
                 format!("✗ {name} (failed: {})\n", clean(error))
             }
@@ -248,6 +254,7 @@ fn status_name(status: &ServerStatus) -> &'static str {
         ServerStatus::Disabled => "disabled",
         ServerStatus::Connecting => "connecting",
         ServerStatus::Connected { .. } => "connected",
+        ServerStatus::Idle { .. } => "idle",
         ServerStatus::Failed(_) => "failed",
     }
 }
@@ -624,6 +631,10 @@ async fn call(
         }
         ServerStatus::Connecting => return Ok(not_live("still connecting")),
         ServerStatus::Failed(_) => return Ok(not_live("not connected")),
+        ServerStatus::Idle { .. } => manager
+            .connect_lazy(&owner.name)
+            .await
+            .map_err(AgentError::Tool)?,
         ServerStatus::Connected { .. } => {}
     }
     let Some((tool, approval, ui)) = manager.live_tool(&owner.name, &entry.name) else {
