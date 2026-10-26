@@ -4,7 +4,7 @@ Status: Phases 0 to 6 are implemented on `feat/cli-mcp-elicitation-url`,
 rebased onto `main@743f750` after the Tier 1 `/mcp` panel (#62) merged.
 Deferred inside those phases: resource subscriptions, the `-32042` URL
 fallback, sampling usage accounting and the Codex `config.toml` importer.
-Phase 7 stays deferred (D5). Phase 1 was cherry-picked from `ae868f2`; the
+Phase 7 and its Tier 2/3 prerequisites are planned as steps 7.0–7.8. Phase 1 was cherry-picked from `ae868f2`; the
 original output-guard branch is unchanged. The plan was first written against
 `main@ae1e46b`.
 
@@ -69,7 +69,7 @@ phases stay small.
 | 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Implemented |
 | 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Implemented (usage label deferred) |
 | 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | Implemented (Codex importer deferred) |
-| 7 | 23 | Scripting, MCP UI, rmcp-mux | Tier 2 proxy, Tier 3 HTTP | large | Deferred (D5) |
+| 7 | 23 | Scripting, MCP UI, rmcp-mux (+ Tier 2/3 prerequisites) | 7.0–7.5 | ~3,500 | Planned (steps 7.0–7.8) |
 
 Each phase is one PR off `main` (stacked where it depends on Phase 0), in line
 with the ~600-line guideline in AGENTS.md §7.3.
@@ -487,13 +487,142 @@ project imports ignored; `url` entries reported; copy-on-edit.
 
 ---
 
-## Phase 7: deferred (#23), with reasons
+## Phase 7 and its prerequisites (#23): plan
 
-| Item | PMA reference | Why defer | Revisit when |
+Phase 7 was deferred because each item sits on work icers does not have yet:
+MCP UI needs the Tier 2 `mcp` proxy tool (its `ui-messages` action and turn
+trigger), rmcp-mux needs the Tier 3 transport seam, and scripting needs an
+embedded JavaScript engine. This plan closes all of it as one stack on
+`feat/cli-mcp-tier2-3`, built in this worktree, one reviewable commit per
+step. Each step lists its PMA source, what ships, and how it is proven.
+
+| Step | What | PMA source | Est. size (excl. tests) |
 |---|---|---|---|
-| MCP scripting (`mcpScript`) | `mcp-code.ts:108` (`runMcpScript`), `mcp-script-worker.mjs`, README `:483` | Runs model-written JavaScript. A Rust port needs an embedded JS engine (e.g. `boa_engine` or `deno_core`): a large dependency and a new sandbox surface. The model can already chain calls turn by turn. | Users ask for it and a sandbox design is agreed |
-| MCP UI (`_meta.ui.resourceUri`) | `ui-session.ts:200`, `ui-server.ts:86`, `ui-resource-handler.ts:28`, `app-bridge.bundle.js` (288 KB), README `:637` | Needs a local HTTP server, a browser bridge, a vendored JS bundle and a turn-trigger path. Few servers ship UIs yet. | After Tier 2 proxy (`ui-messages` action lives there) |
-| Shared processes via `rmcp-mux` | `unix-socket-transport.ts:7`, README `:317` | Small on its own (Unix-socket JSON-RPC), but it needs the transport abstraction that Tier 3 HTTP introduces. | Right after Tier 3 HTTP, as a second transport |
+| 7.0 | Transport seam | `server-manager.ts` (transport creation) | ~150 |
+| 7.1 | Metadata cache | `metadata-cache.ts` | ~250 |
+| 7.2 | `mcp` proxy tool | `proxy-modes.ts`, `search-ranking.ts`, `namespace-tools.ts` | ~500 |
+| 7.3 | Lifecycle modes | `lifecycle.ts`, README "Lifecycle Modes" | ~300 |
+| 7.4 | Streamable HTTP + SSE | `server-manager.ts`, README "Server Options" | ~500 |
+| 7.5 | OAuth and bearer auth | `mcp-auth*.ts`, `mcp-oauth-provider.ts`, `mcp-callback-server.ts` | ~650 |
+| 7.6 | rmcp-mux sockets | `unix-socket-transport.ts`, README `:317` | ~120 |
+| 7.7 | MCP UI | `ui-session.ts`, `ui-server.ts`, `ui-resource-handler.ts`, `host-html-template.ts` | ~650 |
+| 7.8 | `mcpScript` | `mcp-code.ts`, `mcp-script-worker.mjs`, README `:483` | ~400 |
+
+### 7.0 Transport seam
+`Client` today owns a child process and its stdio framing. Split the framing
+(`send(Value)`, inbound frames into the existing reader/dispatcher) from the
+connection so stdio, HTTP and Unix sockets share the dispatcher, pending map,
+cancellation and handlers. No behavior change; the existing MCP tests are the
+proof.
+
+### 7.1 Metadata cache
+Persist each server's last catalog (tools with schemas, resources, prompts,
+instructions) to `~/.icers/agent/mcp-cache.json` (mode 600), keyed by server
+name plus a fingerprint of its launch config, so a changed command never
+serves stale tools. Written after each successful discovery or refresh; read
+at startup. The `/mcp` panel shows cached catalogs before a server connects.
+Proof: write/read round trip, fingerprint invalidation, corrupt-file fallback.
+
+### 7.2 `mcp` proxy tool (Tier 2)
+One `mcp` tool, registered when any server is configured, with PMA's modes:
+status (no args), `server` (list), `search` (ranked over name, server,
+description and per-server `searchKeywords`, paged by `limit`/`offset`),
+`describe`, `instructions`, `tool` + `args` (call), `connect`, and
+`action: "ui-messages"` (7.7) / `"auth-start"` / `"auth-complete"` (7.5).
+Names resolve fuzzily (`-` vs `_`, missing prefix) with suggestions on a miss.
+This makes `directTools` meaningful: a tool that is not direct is now
+reachable through the proxy instead of not at all. Proxy calls reuse the
+output guard and the per-tool approval list (the approval prompt names the
+real target tool). Instructions move from the system prompt to the proxy for
+servers with no direct tools, as PMA does. Proof: faux-provider tests for
+each mode, ranking order, approval of a proxied call.
+
+### 7.3 Lifecycle modes
+Per-server `lifecycle` (`eager`, `lazy`, `keep-alive`, `lazy-keep-alive`),
+`idleTimeout` (minutes, plus `settings.idleTimeout`) and `requestTimeoutMs`.
+Lazy servers connect on the first proxy or direct call (direct tools come from
+the cache) and disconnect after the idle timeout; keep-alive servers reconnect
+with bounded backoff (30 s up to 5 min). A lazy server with no cache entry is
+connected once at startup to fill it. Default: see D6. Proof: idle disconnect
+and reconnect on call with a paused clock; backoff bounds.
+
+### 7.4 Streamable HTTP + SSE (Tier 3)
+`url` servers speak Streamable HTTP (POST JSON-RPC, JSON or SSE responses, a
+GET SSE stream for server-to-client messages, `Mcp-Session-Id`, DELETE on
+close), falling back to legacy SSE only when the endpoint rejects Streamable
+HTTP (404/405/406/415). `headers` and `url` support `${VAR}` interpolation;
+a missing variable fails before any request. `bearerToken`/`bearerTokenEnv`
+with `auth: "bearer"`. Imports stop skipping `url` entries, and the five HTTP
+presets in `/mcp setup` become addable. Uses the existing `reqwest`
+(`stream` feature). Proof: an in-process HTTP fixture server covering JSON
+and SSE responses, the session header, server requests over the GET stream,
+SSE fallback, and 401 surfacing.
+
+### 7.5 OAuth and bearer auth
+`auth: "oauth"`: protected-resource discovery from `WWW-Authenticate`
+(RFC 9728), authorization-server metadata with the issuer check (RFC 8414;
+`oauth.authServerMetadataUrl` and `skipIssuerMetadataValidation` as in PMA),
+dynamic client registration fallback (RFC 7591) when `oauth.clientId` is
+absent, PKCE S256 authorization code with a loopback callback (reusing the
+listener in `oauth_codex.rs`) or manual paste of the callback URL for remote
+sessions, refresh tokens, and `grantType: "client_credentials"`. Tokens are
+stored per D7. Commands: `/mcp-auth [server]`, `/mcp logout <server>`; proxy
+actions `auth-start` / `auth-complete`; `settings.autoAuth`. Proof: fixture
+authorization server for discovery, issuer mismatch rejection, DCR, code
+exchange, refresh, logout.
+
+### 7.6 rmcp-mux sockets
+`socket` (mutually exclusive with `command`/`url`, with `~` and `${VAR}`
+expansion) connects to an rmcp-mux Unix socket through the 7.0 seam. icers
+never starts or stops the mux. Unix only; on Windows the server reports
+"unsupported". Proof: a test listener speaking the fixture protocol.
+
+### 7.7 MCP UI
+When a called tool declares `_meta.ui.resourceUri`, read that `ui://`
+resource and serve it from a loopback HTTP server (token-guarded, reusing the
+observe server's request parsing) with the CSP from `_meta.ui.csp`. The host
+page is written in this repo (D8) and speaks the MCP Apps postMessage
+protocol to the app iframe: initialize, tool calls back to the server (behind
+a per-server consent prompt: never / once / always), `ui/message` prompts
+and intents (queued for `mcp({action: "ui-messages"})` and waking the agent
+like a follow-up), and pushing later results to the open session.
+`_meta.ui.visibility` app-only tools stay out of the model's tool list.
+`ICERS_MCP_UI_VIEWER=browser|none`. Glimpse native windows are not ported.
+Proof: host-page protocol tests against the served page, consent, message
+queue and turn trigger, CSP header, token rejection.
+
+### 7.8 `mcpScript`
+A default-on `mcpScript` tool (`settings.scriptMode: false` hides it) runs
+model-written JavaScript with `tools.search`, `tools.describe`, `tools.call`,
+`emit` and a captured `console`, in an embedded engine (D9) with a 30 s
+deadline enforced by the engine's interrupt hook and a memory limit. Calls
+return `{ok, data}` / `{ok: false, error}` and go through the same lazy
+connect, approval and output guard as proxy calls; details carry a `calls`
+trace. Like PMA, this is a convenience layer, not an isolation boundary.
+Proof: chained calls, infinite loop killed at the deadline, memory cap,
+approval inside a script.
+
+### Not ported (non-goals)
+Glimpse windows, the npx binary resolver, `requestHeadersCommand`, `!command`
+secret values, `bearerTokenStore` (OS keychain), protocol tracing, MCP
+2026-07-28 negotiation (`protocolVersion`), agent-plugin and package
+manifests, `toolPrefix` variants, and Pi-tool entries in `mcp` search.
+
+### Decisions (D6–D9)
+- **D6. Default lifecycle.** PMA defaults to `lazy`. Recommendation: keep
+  `eager` as the icers default so existing setups behave the same; `lazy` is
+  opt-in per server.
+- **D7. Token storage.** PMA uses the OS keychain and fails closed without
+  one. Recommendation: `~/.icers/agent/mcp-auth.json` at mode 600, the same
+  convention as `auth.json`, so headless Linux works and no new dependency
+  is needed.
+- **D8. MCP UI host page.** PMA vendors a 288 KB minified AppBridge bundle
+  (MCP SDK + Zod). Recommendation: a small hand-written host page for the
+  host side of the postMessage protocol; nothing minified is vendored.
+- **D9. Script engine.** Recommendation: `rquickjs` (QuickJS: small,
+  interrupt hook for deadlines, memory limits; builds C via `cc`, which CI
+  already supports) over `boa_engine` (pure Rust but larger and slower) and
+  `deno_core` (V8, far too large). Check `cargo +1.88 check` before adding.
 
 ---
 
@@ -531,5 +660,6 @@ project imports ignored; `url` entries reported; copy-on-edit.
   `samplingAutoApprove` is set.
 - **D4. Instructions placement.** System prompt (until Tier 2) or only
   visible in `/mcp`? Recommendation: system prompt, capped.
-- **D5. Decided (2026-10-26):** Phase 7 stays deferred until Tier 2 (proxy)
-  and Tier 3 (HTTP) exist.
+- **D5. Revised (2026-10-26):** Phase 7 is planned above together with the
+  Tier 2 proxy and Tier 3 transports it depends on (steps 7.0–7.8).
+- **D6–D9:** see "Phase 7 and its prerequisites".
