@@ -67,7 +67,7 @@ phases stay small.
 | 3 | 19 | Prompts as slash commands | 0 | ~300 | Implemented |
 | 4 | 20a, 20c | Server instructions + elicitation | 0 | ~400 | Implemented |
 | 5 | 20b | Sampling | 0, 4 (dialogs) | ~350 | Implemented (usage label deferred) |
-| 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | Do imports; setup panel after Tier 1 |
+| 6 | 21 | Config import + `/mcp setup` | Tier 1 panel for the setup UI | ~450 | 6a implemented (JSON kinds); Codex and setup panel pending |
 | 7 | 23 | Scripting, MCP UI, rmcp-mux | Tier 2 proxy, Tier 3 HTTP | large | Defer (rationale below) |
 
 Each phase is one PR off `main` (stacked where it depends on Phase 0), in line
@@ -421,6 +421,23 @@ mapping; no UI and no auto-approve means denied.
 ---
 
 ## Phase 6: config import + `/mcp setup` (#21)
+
+**Status:** 6a is implemented for the JSON-based kinds in
+`crates/ice-cli/src/mcp/import.rs`; 6b waits for Tier 1.
+
+- **Done:** `imports` in `mcp.json`; cursor, claude-code (including this project's
+  `~/.claude.json` section, trusted only), claude-desktop, windsurf, vscode and
+  opencode readers; lowest-layer precedence; project-scoped sources gated on
+  trust; `url`/remote entries, bad names and unreadable files reported as notes
+  in `--list-mcp`; copy-on-edit in `set_disabled`. No new dependency.
+- **Deferred:** the Codex importer (`config.toml` needs a `toml` dependency, which
+  is not in `Cargo.lock`; it reports `unsupported` today), and showing notes in
+  the `/mcp` panel. `source` shows the originating file path rather than the
+  `import:<kind>` label, because `ServerView.source` is already a path.
+- **Differences from the list below:** Windows paths for Claude Desktop are not
+  read; the Linux path `~/.config/Claude/...` and the Codeium Windsurf path are
+  added; files must be strict JSON, so JSONC comments in `opencode.json` or
+  `.vscode/mcp.json` are reported as a parse note.
 
 **Spec:** PMA-README "Import Existing Configs" (`README.md:698-712`);
 `PMA/config.ts`: `KNOWN_SERVER_PRESETS` 32, `IMPORT_PATHS` 75-93,

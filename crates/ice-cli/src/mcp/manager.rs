@@ -255,26 +255,16 @@ impl McpManager {
             self.0.agent_dir.join("mcp.json")
         })
     }
+    /// Each server with the file providing it: `mcp.json`, the project file, or an
+    /// imported tool's config.
     fn configured(&self) -> Result<BTreeMap<String, (ServerConfig, PathBuf)>, String> {
-        let servers = load_config(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?;
-        let project = self.0.cwd.join(".icers/mcp.json");
-        let overrides: Config = if self.0.trusted && project.exists() {
-            serde_json::from_str(&std::fs::read_to_string(&project).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?
-        } else {
-            Config::default()
-        };
-        Ok(servers
-            .into_iter()
-            .map(|(name, config)| {
-                let source = if overrides.servers.contains_key(&name) {
-                    project.clone()
-                } else {
-                    self.0.agent_dir.join("mcp.json")
-                };
-                (name, (config, source))
-            })
-            .collect())
+        Ok(load_layered(&self.0.agent_dir, &self.0.cwd, self.0.trusted)?.servers)
+    }
+    /// Imports that were skipped (unsupported transport, unreadable file, unknown kind).
+    pub fn import_notes(&self) -> Vec<String> {
+        load_layered(&self.0.agent_dir, &self.0.cwd, self.0.trusted)
+            .map(|layered| layered.notes)
+            .unwrap_or_default()
     }
     pub async fn reconnect(&self, name: Option<&str>) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
@@ -640,42 +630,57 @@ impl McpManager {
     }
     pub async fn set_disabled(&self, name: &str, disabled: bool) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
-        let path = self
+        let (config, source) = self
             .configured()?
             .remove(name)
-            .ok_or_else(|| format!("Unknown MCP server: {name}"))?
-            .1;
-        edit_config(&path, |servers| {
+            .ok_or_else(|| format!("Unknown MCP server: {name}"))?;
+        edit_config(&self.edit_path(&source)?, |servers| {
             servers
-                .get_mut(name)
-                .and_then(Value::as_object_mut)
+                .entry(name)
+                .or_insert_with(|| import::entry_json(&config))
+                .as_object_mut()
                 .ok_or("Invalid server entry")?
                 .insert("disabled".into(), json!(disabled));
             Ok(())
         })?;
         self.reconnect_locked(Some(name)).await
     }
-    /// Persist staged panel edits to each server's source file, then restart
+    /// The file an edit to a server from `source` is written to. An imported
+    /// server lives in another tool's file, which is never written: the edit
+    /// lands in our global config, seeded with the imported entry.
+    fn edit_path(&self, source: &Path) -> Result<PathBuf, String> {
+        let project = self.0.cwd.join(".icers/mcp.json");
+        if source == project {
+            Ok(project)
+        } else {
+            self.config_path(false)
+        }
+    }
+    /// Persist staged panel edits to each server's config file, then restart
     /// the changed servers. Servers whose file was written are restarted even
     /// when a later file fails, so live state matches disk.
     pub async fn save_panel(&self, changes: &[PanelChange]) -> Result<(), String> {
         let _guard = self.0.operation.lock().await;
         let configured = self.configured()?;
-        let mut by_file = BTreeMap::<PathBuf, Vec<&PanelChange>>::new();
+        let mut by_file = BTreeMap::<PathBuf, Vec<(&PanelChange, &ServerConfig)>>::new();
         for change in changes {
-            let (_, path) = configured
+            let (config, source) = configured
                 .get(&change.server)
                 .ok_or_else(|| format!("Unknown MCP server: {}", change.server))?;
-            by_file.entry(path.clone()).or_default().push(change);
+            by_file
+                .entry(self.edit_path(source)?)
+                .or_default()
+                .push((change, config));
         }
         let mut written = HashSet::new();
         let mut result = Ok(());
         for (path, changes) in by_file {
             result = edit_config(&path, |servers| {
-                for change in &changes {
+                for (change, config) in &changes {
                     let entry = servers
-                        .get_mut(&change.server)
-                        .and_then(Value::as_object_mut)
+                        .entry(change.server.as_str())
+                        .or_insert_with(|| import::entry_json(config))
+                        .as_object_mut()
                         .ok_or("Invalid server entry")?;
                     if let Some(disabled) = change.disabled {
                         entry.insert("disabled".into(), json!(disabled));
@@ -689,7 +694,7 @@ impl McpManager {
             if result.is_err() {
                 break;
             }
-            written.extend(changes.iter().map(|c| c.server.clone()));
+            written.extend(changes.iter().map(|(c, _)| c.server.clone()));
         }
         if !written.is_empty() {
             self.reconnect_servers(Some(written)).await?;
@@ -723,14 +728,10 @@ impl McpManager {
     }
 }
 fn validate_name(name: &str) -> Result<(), String> {
-    if name.is_empty()
-        || !name
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-    {
-        Err(format!("invalid MCP server name: {name:?}"))
-    } else {
+    if valid_name(name) {
         Ok(())
+    } else {
+        Err(format!("invalid MCP server name: {name:?}"))
     }
 }
 pub fn ensure_config(path: &Path) -> Result<(), String> {

@@ -45,6 +45,41 @@ not callable at all; the server still runs and its tools stay listed in the
 `/mcp` panel. Resource tools are controlled by `exposeResources` instead and
 are not listed in the panel.
 
+### Importing other tools' servers
+
+List tools in `"imports"` to reuse the stdio servers you already configured in
+them:
+
+```json
+{"imports": ["cursor", "claude-code", "claude-desktop", "windsurf", "vscode", "opencode"]}
+```
+
+Imported servers are the lowest layer: an entry in your global `mcp.json`, then a
+trusted project entry, replaces an imported one with the same name. If two
+imported tools define the same name, the one listed first in `imports` wins.
+`/mcp` and `--list-mcp` show the file an imported server came from.
+
+| Kind | Files read | Table |
+|---|---|---|
+| `cursor` | `~/.cursor/mcp.json` | `mcpServers` |
+| `claude-code` | `~/.claude/claude_desktop_config.json`, `~/.claude.json`, `~/.claude/mcp.json` (later wins) | `mcpServers`, plus this project's section in `~/.claude.json` (trusted projects only) |
+| `claude-desktop` | `~/Library/Application Support/Claude/claude_desktop_config.json`, `~/.config/Claude/claude_desktop_config.json` | `mcpServers` |
+| `windsurf` | `~/.codeium/windsurf/mcp_config.json`, `~/.windsurf/mcp.json` | `mcpServers` |
+| `vscode` | `.vscode/mcp.json` (trusted projects only) | `servers` or `mcpServers` |
+| `opencode` | `~/.config/opencode/opencode.json`, then `./opencode.json` (trusted projects only) | `mcp` (`type: "local"`; `enabled: false` imports as disabled) |
+
+Imports are read-only: the other tool's file is never written. Disabling or
+enabling an imported server, or saving `/mcp` panel changes to it, copies its
+entry into your global `mcp.json` first, and that copy then takes over. Values are used as written, so `${VAR}` placeholders
+are not expanded, and files must be strict JSON (comments are not accepted).
+
+Anything that cannot be imported is reported instead of dropped silently:
+`--list-mcp` prints a `skipped import:<kind>: ...` line for URL/remote servers
+(`unsupported (http)`), invalid names or fields, unreadable files, and unknown
+kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
+needs a TOML parser the project does not depend on yet. `ice` is not an import
+kind.
+
 ## Naming and execution
 
 A server named `example` exposing `lookup` registers `example_lookup` in the
@@ -289,7 +324,8 @@ configured server executables, so inspect configuration before trusting it.
     toggles a tool, or every tool of the selected server. Ctrl+D toggles the
     server's disabled flag.
   - Toggles are staged until Ctrl+S, which writes `directTools` and `disabled`
-    to the file defining each changed server and restarts those servers.
+    to the file defining each changed server and restarts those servers. An
+    imported server is copied into your global `mcp.json` first.
     Esc with unsaved changes asks to Discard or Keep & Close (`y`/`n`,
     Left/Right/Tab, Enter).
   - Ctrl+R reconnects the selected server and keeps the panel open. Ctrl+Y
