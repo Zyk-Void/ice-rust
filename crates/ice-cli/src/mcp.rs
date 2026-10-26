@@ -1,4 +1,5 @@
 //! Session-local stdio MCP client. No network transports or extension ABI.
+mod cache;
 mod elicitation;
 mod elicitation_schema;
 mod import;
@@ -34,7 +35,7 @@ use ice_extensions::UiDialogMailbox;
 use ice_harness::agent_harness::AgentHarness;
 use ice_harness::types::{HarnessLifecycleHooks, HarnessTool};
 use ice_plugin_sdk::process::ProcessTree;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::sync::{mpsc, oneshot, watch, Semaphore};
 use tokio_util::sync::CancellationToken;
@@ -706,6 +707,7 @@ impl Client {
                         .unwrap(),
                         constrained_sampling: None,
                     },
+                    raw: item.clone(),
                     remote_name: name.clone(),
                     // Resource tools are not listed in the `/mcp` catalog.
                     tokens: 0,
@@ -771,12 +773,9 @@ impl Client {
                     .cloned()
                     .ok_or("MCP tool missing inputSchema")?;
                 let description = item.get("description").and_then(Value::as_str);
-                // Same rough estimate as pi-mcp-adapter's panel.
-                let tokens =
-                    (name.len() + description.map_or(0, str::len) + schema.to_string().len())
-                        .div_ceil(4)
-                        + 10;
+                let tokens = tool_tokens(name, description, &schema);
                 tools.push(McpTool {
+                    raw: item.clone(),
                     schema: Tool {
                         name: format!("{server}_{name}"),
                         description: description.unwrap_or("MCP tool").into(),
@@ -967,8 +966,15 @@ fn resource_tool_name(name: &str) -> String {
     sanitized
 }
 
+/// Same rough schema-cost estimate as pi-mcp-adapter's panel.
+fn tool_tokens(name: &str, description: Option<&str>, schema: &Value) -> usize {
+    (name.len() + description.map_or(0, str::len) + schema.to_string().len()).div_ceil(4) + 10
+}
+
 #[derive(Clone)]
 struct McpTool {
+    /// The server's `tools/list` or `resources/list` entry, kept for the cache.
+    raw: Value,
     schema: Tool,
     remote_name: String,
     tokens: usize,

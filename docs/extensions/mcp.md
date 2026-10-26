@@ -82,6 +82,16 @@ kinds. `codex` is accepted but reports `unsupported`, because its `config.toml`
 needs a TOML parser the project does not depend on yet. `ice` is not an import
 kind.
 
+## Metadata cache
+
+After each successful discovery or catalog refresh, a server's tools,
+resources, prompts and instructions are saved to
+`~/.icers/agent/mcp-cache.json` (mode 600). The `/mcp` panel uses the cache to
+list a server's tools before it connects, while it is disabled, or after it
+fails. An entry is used only while the server's `command`, `args`, `env` and
+`cwd` are unchanged, and entries for removed servers are dropped on a full
+reload. Deleting the file is safe; it is rebuilt on the next connection.
+
 ## Naming and execution
 
 A server named `example` exposing `lookup` registers `example_lookup` in the

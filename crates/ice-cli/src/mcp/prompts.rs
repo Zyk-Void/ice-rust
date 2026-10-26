@@ -1,13 +1,13 @@
 use super::*;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct PromptArgument {
     pub name: String,
     #[serde(default)]
     pub required: bool,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Prompt {
     pub name: String,
     #[serde(default)]

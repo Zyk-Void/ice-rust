@@ -882,3 +882,48 @@ async fn an_aborted_call_cancels_server_requests_only_when_no_other_call_waits()
     drop(aborted(1_002));
     assert!(question.is_cancelled());
 }
+
+#[tokio::test]
+async fn the_cache_shows_a_catalog_before_or_without_a_connection() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = fixture(dir.path());
+    let write = |server: Value| {
+        std::fs::write(
+            dir.path().join("mcp.json"),
+            serde_json::to_vec(&json!({"mcpServers":{"fake":server}})).unwrap(),
+        )
+        .unwrap()
+    };
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let manager = || {
+        McpManager::new(
+            &harness,
+            &Default::default(),
+            dir.path(),
+            dir.path().into(),
+            false,
+            Default::default(),
+        )
+    };
+    let catalog = |manager: &McpManager| {
+        manager.snapshot()[0]
+            .catalog
+            .as_ref()
+            .map(|tools| tools.iter().map(|t| t.name.clone()).collect::<Vec<_>>())
+    };
+    write(json!({"command":config.command,"env":config.env}));
+    manager().reconnect(None).await.unwrap();
+
+    // A new session with the server disabled still lists the cached tools.
+    write(json!({"command":config.command,"env":config.env,"disabled":true}));
+    let offline = manager();
+    offline.reconnect(None).await.unwrap();
+    assert!(matches!(offline.snapshot()[0].status, ServerStatus::Disabled));
+    assert_eq!(catalog(&offline), Some(vec!["echo".into(), "other".into()]));
+
+    // A different launch command must not reuse that catalog.
+    write(json!({"command":"icers-missing-mcp-fixture","disabled":true}));
+    let changed = manager();
+    changed.reconnect(None).await.unwrap();
+    assert_eq!(catalog(&changed), None);
+}

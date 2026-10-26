@@ -351,6 +351,7 @@ impl McpManager {
     /// Restart `only` (or every known server) concurrently from current configuration.
     async fn reconnect_servers(&self, only: Option<HashSet<String>>) -> Result<(), String> {
         let mut configured = self.configured()?;
+        let configured_names: HashSet<String> = configured.keys().cloned().collect();
         let guard = self.output_guard()?;
         let mut targets: HashSet<String> = configured
             .keys()
@@ -384,16 +385,22 @@ impl McpManager {
                 continue;
             };
             let disabled = config.disabled;
-            // Keep the catalog visible while the server is disabled or failing.
-            let catalog = old_catalog.map(|catalog| {
-                catalog
-                    .into_iter()
-                    .map(|tool| ToolInfo {
-                        direct: config.direct_tools.allows(&tool.name),
-                        ..tool
-                    })
-                    .collect()
-            });
+            // Keep the catalog visible while the server is disabled or failing,
+            // falling back to the metadata cache before its first connection.
+            let catalog = old_catalog
+                .or_else(|| {
+                    cache::load(&self.0.agent_dir, &name, &config)
+                        .map(|cached| cached_catalog(&cached))
+                })
+                .map(|catalog| {
+                    catalog
+                        .into_iter()
+                        .map(|tool| ToolInfo {
+                            direct: config.direct_tools.allows(&tool.name),
+                            ..tool
+                        })
+                        .collect()
+                });
             self.0.servers.lock().unwrap().insert(
                 name.clone(),
                 ServerState {
@@ -470,8 +477,16 @@ impl McpManager {
                     state.status = ServerStatus::Connected { tools };
                     state.catalog = Some(catalog);
                 }
-                Err(error) => state.status = ServerStatus::Failed(error),
+                Err(error) => {
+                    state.status = ServerStatus::Failed(error);
+                    continue;
+                }
             }
+            drop(servers);
+            self.save_cache(&name);
+        }
+        if only.is_none() {
+            cache::retain(&self.0.agent_dir, &configured_names);
         }
         self.sync_instructions().await?;
         self.0
@@ -517,6 +532,9 @@ impl McpManager {
             self.0
                 .prompt_changes
                 .send_modify(|version| *version = version.wrapping_add(1));
+            if listed.is_ok() {
+                self.save_cache(server);
+            }
             return listed.map(drop);
         }
         let guard = self.output_guard()?;
@@ -546,7 +564,34 @@ impl McpManager {
             state.status = ServerStatus::Connected { tools };
             state.catalog = Some(catalog_view);
         }
+        if listed.is_ok() {
+            self.save_cache(server);
+        }
         listed.map(drop)
+    }
+    /// Record a connected server's catalog for offline listing.
+    fn save_cache(&self, server: &str) {
+        let entry = {
+            let servers = self.0.servers.lock().unwrap();
+            let Some(state) = servers.get(server) else {
+                return;
+            };
+            let Some(client) = &state.client else {
+                return;
+            };
+            let (resources, tools): (Vec<_>, Vec<_>) = state
+                .discovered
+                .iter()
+                .partition(|tool| tool.resource_uri.is_some());
+            cache::CachedServer {
+                fingerprint: cache::fingerprint(&state.config),
+                tools: tools.into_iter().map(|tool| tool.raw.clone()).collect(),
+                resources: resources.into_iter().map(|tool| tool.raw.clone()).collect(),
+                prompts: state.prompts.clone(),
+                instructions: client.instructions().map(str::to_owned),
+            }
+        };
+        cache::save(&self.0.agent_dir, server, entry);
     }
     pub(super) fn handlers(&self, server: &str) -> Handlers {
         let manager = Arc::downgrade(&self.0);
@@ -862,4 +907,22 @@ fn edit_config_root(
     file.as_file().sync_all().map_err(|e| e.to_string())?;
     file.persist(path).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// Panel entries for a cached `tools/list`; `direct` is set by the caller.
+fn cached_catalog(cached: &cache::CachedServer) -> Vec<ToolInfo> {
+    cached
+        .tools
+        .iter()
+        .filter_map(|item| {
+            let name = item.get("name")?.as_str()?;
+            let description = item.get("description").and_then(Value::as_str);
+            Some(ToolInfo {
+                name: name.into(),
+                description: description.unwrap_or("MCP tool").into(),
+                tokens: tool_tokens(name, description, item.get("inputSchema")?),
+                direct: true,
+            })
+        })
+        .collect()
 }
