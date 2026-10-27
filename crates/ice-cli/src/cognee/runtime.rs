@@ -283,8 +283,8 @@ impl DoctorReport {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         [
             "mode=http".to_string(),
-            "nativeRecall=POST:/api/v1/recall (support unverified)".to_string(),
-            "nativeImprove=POST:/api/v1/improve (background acceptance only; completion status unsupported)".to_string(),
+            "nativeRecall=POST:/api/v1/recall (support unverified; sends query, topK, onlyContext, scope, sessionId, datasets)".to_string(),
+            "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status unsupported)".to_string(),
             "mcpCognee=separate catalog (not probed)".to_string(),
             format!("health={}", self.health()),
             format!("endpoint={}", sanitize_endpoint(&self.base_url)),
@@ -3076,7 +3076,9 @@ mod tests {
         let mut report = rt.collect_doctor().await;
         report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
         let doctor = report.doctor_line();
-        assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified)"));
+        assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified;"));
+        assert!(doctor.contains("sends query, topK, onlyContext, scope, sessionId, datasets"));
+        assert!(doctor.contains("sends datasetName, sessionIds, runInBackground"));
         assert!(doctor.contains("completion status unsupported"));
         assert!(doctor.contains("mcpCognee=separate catalog (not probed)"));
         assert!(!doctor.contains("secret"));
