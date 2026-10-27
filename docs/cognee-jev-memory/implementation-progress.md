@@ -28,7 +28,7 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 | M4.4 | In progress | Records accepted revisions separately from searchable state; automatic improves coalesce accepted revisions and back off after failures. Completion status and searchability remain unverified because the adapter exposes no status endpoint. |
 | M5.1, M5.2, M5.3, M5.4 | Not started | Optional JEV; no live JEV evaluation under the Luna-only restriction. |
 | M6.1 | In progress | Local catalog snapshots live precedence-loader winners and diagnostic-identified shadowed skills, classifies existing skill roots and snapshots the MCP manager without connecting. Explicit `skillDirs` supports extra paths such as `~/.agents/skills`; no new scan. Session skill snapshots update on resource reload; MCP refresh is independent, so catalog refresh is explicit rather than wired to a single combined reload. Suggestions and context-state tracking remain out of scope. Verification is reported with the change. |
-| M6.2, M6.3 | Not started | Capability discovery and skill suggestions. |
+| M6.2, M6.3 | M6.2 in progress; M6.3 not started | Added pure branch-message skill coverage and skill-only catalog state access. Nothing consumes coverage yet; M6.3 suggestions have not started. |
 | M6.4 | In progress | Native search propagates disabled and transport failures as tool errors; fake transport verifies failure, empty success, 404, cancellation and offline paths. MCP proxy fixtures cover an isError HTTP 404 result, JSON-RPC error and request timeout; the existing MCP mapper propagates them as tool errors. |
 | M7.1, M7.2, M7.3 | Not started | Evaluation, rollout and release gates. |
 

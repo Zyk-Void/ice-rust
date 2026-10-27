@@ -84,6 +84,7 @@ mod session_import;
 mod session_search;
 pub mod settings;
 mod side_questions;
+pub mod skill_coverage;
 pub mod source_info;
 mod terminal_theme;
 pub mod timings;

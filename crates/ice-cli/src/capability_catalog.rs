@@ -12,6 +12,7 @@ use ice_harness::types::Skill;
 use sha2::{Digest, Sha256};
 
 use crate::mcp::{ServerStatus, ServerView};
+use crate::skill_coverage::SkillContextState;
 
 /// Roots already supplied to the skill loader. More specific paths win; ties
 /// prefer explicit settings, then builtin, package, project and global.
@@ -177,6 +178,27 @@ impl CapabilityCatalog {
     /// Replace the snapshot after the owning registries have refreshed.
     pub fn refresh(&mut self, skills: &[(&str, Skill)], servers: &[ServerView]) {
         *self = Self::build(skills, servers);
+    }
+
+    /// Return skill descriptors with their branch-derived context state.
+    /// MCP tools do not have full instruction bodies and are omitted.
+    pub fn with_context_state(
+        &self,
+        coverage: &HashMap<String, SkillContextState>,
+    ) -> Vec<(&CapabilityDescriptor, SkillContextState)> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.kind == CapabilityKind::Skill)
+            .map(|entry| {
+                (
+                    entry,
+                    coverage
+                        .get(&entry.id)
+                        .copied()
+                        .unwrap_or(SkillContextState::Advertised),
+                )
+            })
+            .collect()
     }
 
     pub fn shortlist(&self, query: &str, limit: usize) -> Vec<&CapabilityDescriptor> {
