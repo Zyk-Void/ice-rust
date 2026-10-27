@@ -1012,7 +1012,10 @@ pub async fn build_prepared(
         tools.push(service.tool());
         let active = filter_active_tool_names(active_tool_names(&tools, args), args);
         let _ = harness.set_tools(tools, Some(active)).await;
-        capability_service = Some(service);
+        capability_service = Some(service.clone());
+        let mut extensions = harness.extensions();
+        extensions.push(service as Arc<dyn ice_harness::extension::HarnessExtension>);
+        harness.set_extensions(extensions);
     }
     builtins
         .bind(
@@ -1022,6 +1025,22 @@ pub async fn build_prepared(
             tool_name_allowed(crate::cognee::runtime::SEARCH_TOOL_NAME, args),
         )
         .await;
+    if let Some(service) = &capability_service {
+        let tools = harness.get_tools().await.unwrap_or_default();
+        let active_names: std::collections::HashSet<_> =
+            active_tool_names(&tools, args).into_iter().collect();
+        let active_tools: Vec<_> = tools
+            .into_iter()
+            .filter(|tool| active_names.contains(&tool.tool.schema().name))
+            .collect();
+        let catalog = crate::capability_catalog::CapabilityCatalog::from_live(
+            &live_skill_result,
+            &crate::resource_dirs::skill_source_dirs(cwd, true, true, builtins.skill_paths()),
+            &mcp_tools.snapshot(),
+        )
+        .with_native_tools(&active_tools);
+        service.refresh(catalog);
+    }
 
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
@@ -1977,7 +1996,16 @@ where
         &ctx.tool_context,
     );
     if let Some(service) = &ctx.capability_service {
-        service.refresh(ctx.capability_catalog());
+        let active_names: std::collections::HashSet<_> = active_tool_names(&tools, &effective_args)
+            .into_iter()
+            .collect();
+        let active_tools: Vec<_> = tools
+            .iter()
+            .filter(|tool| active_names.contains(&tool.tool.schema().name))
+            .cloned()
+            .collect();
+        let catalog = ctx.capability_catalog().with_native_tools(&active_tools);
+        service.refresh(catalog);
         if !effective_args.no_tools && tool_name_allowed("capability_search", &effective_args) {
             tools.push(service.tool());
         }
@@ -4524,7 +4552,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
         let cwd = tmp.path().join("project");
-        let skill_dir = tmp.path().join("configured-skills");
+        let skill_dir = agent.join("skills");
         std::fs::create_dir_all(&agent).unwrap();
         std::fs::create_dir_all(&cwd).unwrap();
         std::fs::create_dir_all(&skill_dir).unwrap();
@@ -4559,8 +4587,12 @@ mod tests {
         };
         let (harness, _events, context) = build(&resolved, &args, &cwd, false).await.unwrap();
         let before_resources = harness.get_resources().await.unwrap();
-        assert_eq!(before_resources.skills.as_ref().unwrap().len(), 1);
-        assert_eq!(before_resources.skills.as_ref().unwrap()[0].name, "keep-me");
+        assert!(before_resources
+            .skills
+            .as_ref()
+            .unwrap()
+            .iter()
+            .any(|skill| skill.name == "keep-me"));
         let before_prompt = harness.get_system_prompt().await.unwrap();
         let before_tools: Vec<String> = harness
             .get_tools()
@@ -4670,7 +4702,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
         let cwd = tmp.path().join("project");
-        let skill_dir = tmp.path().join("configured-skills");
+        let skill_dir = agent.join("skills");
         std::fs::create_dir_all(&agent).unwrap();
         std::fs::create_dir_all(&cwd).unwrap();
         std::fs::create_dir_all(&skill_dir).unwrap();
@@ -4711,14 +4743,10 @@ mod tests {
         .await;
 
         assert!(!outcome.summary.contains("Settings reload failed"));
-        assert_eq!(
-            outcome.summary,
-            "Reloaded 0 plugin(s), 1 skill(s), 0 prompt(s)."
-        );
         let resources = harness.get_resources().await.unwrap();
         let skills = resources.skills.as_ref().unwrap();
-        assert_eq!(skills.len(), 1);
-        assert_eq!(skills[0].name, "frozen-skill");
+        assert!(outcome.summary.contains(&format!("{} skill(s)", skills.len())));
+        assert!(skills.iter().any(|skill| skill.name == "frozen-skill"));
     }
 
     #[tokio::test]

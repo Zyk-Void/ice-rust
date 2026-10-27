@@ -129,6 +129,7 @@ fn tool() -> ToolInfo {
         description: "search".into(),
         tokens: 0,
         direct: false,
+        schema_hash: None,
     }
 }
 
@@ -147,6 +148,33 @@ fn disabled_server_tool_is_unavailable() {
     );
     assert!(!catalog.entries[0].available);
     assert!(catalog.shortlist("find", 8).is_empty());
+}
+
+#[test]
+fn mcp_schema_only_change_updates_capability_fingerprint() {
+    let mut first = tool();
+    first.direct = true;
+    first.schema_hash = Some("schema-one".into());
+    let mut second = first.clone();
+    second.schema_hash = Some("schema-two".into());
+    let make_catalog = |tool| {
+        CapabilityCatalog::from_live(
+            &LoadSkillsResult::default(),
+            &SkillSourceDirs::default(),
+            &[server(
+                "remote",
+                ServerStatus::Connected { tools: vec!["remote_find".into()] },
+                false,
+                Some(vec![tool]),
+            )],
+        )
+    };
+    let old = make_catalog(first);
+    let updated = make_catalog(second);
+    assert_eq!(old.entries[0].name, updated.entries[0].name);
+    assert_eq!(old.entries[0].description, updated.entries[0].description);
+    assert_ne!(old.entries[0].content_hash, updated.entries[0].content_hash);
+    assert!(old.entries[0].model_invocable && updated.entries[0].model_invocable);
 }
 
 #[test]

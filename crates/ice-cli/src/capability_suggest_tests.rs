@@ -354,10 +354,10 @@ fn inventory_phrase_detection_is_case_insensitive() {
 fn native_cognee_search_suppresses_mcp_memory_route() {
     let native = descriptor(
         "builtin:cognee_search",
-        CapabilityKind::McpTool,
+        CapabilityKind::NativeTool,
         "cognee_search",
         "Search memory",
-        "builtin",
+        "native",
         true,
         true,
     );

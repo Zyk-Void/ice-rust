@@ -152,11 +152,7 @@ pub fn prefer_native<'a>(candidates: &[&'a CapabilityDescriptor]) -> Vec<&'a Cap
     let native_search: Vec<_> = candidates
         .iter()
         .copied()
-        .filter(|entry| {
-            entry.kind == CapabilityKind::McpTool
-                && entry.name == "cognee_search"
-                && !entry.source.starts_with("mcp:")
-        })
+        .filter(|entry| entry.kind == CapabilityKind::NativeTool && entry.name == "cognee_search")
         .take(1)
         .collect();
     let has_mcp_memory = candidates.iter().any(|entry| {
@@ -183,6 +179,8 @@ pub fn is_inventory_question(query: &str) -> bool {
         "which tools",
         "list tools",
         "available tools",
+        "inventory",
+        "capabilities",
     ];
     let query = query.to_lowercase();
     PHRASES.iter().any(|phrase| query.contains(phrase))
@@ -247,7 +245,7 @@ fn inventory(catalog: &CapabilityCatalog) -> Suggestion {
         }
         let target = match entry.kind {
             CapabilityKind::Skill => &mut skills,
-            CapabilityKind::McpTool => &mut tools,
+            CapabilityKind::NativeTool | CapabilityKind::McpTool => &mut tools,
         };
         if target.len() < 12 {
             let description = truncate_utf16(entry.description.trim(), 80);
@@ -272,10 +270,19 @@ fn inventory_entry(entry: &str) -> String {
 fn tool_handles(candidates: &[&CapabilityDescriptor]) -> Vec<ToolHandle> {
     candidates
         .iter()
-        .filter(|entry| entry.kind == CapabilityKind::McpTool)
+        .filter(|entry| {
+            matches!(
+                entry.kind,
+                CapabilityKind::McpTool | CapabilityKind::NativeTool
+            )
+        })
         .take(2)
         .filter_map(|entry| {
-            let server = entry.source.strip_prefix("mcp:").unwrap_or(&entry.source);
+            let server = if entry.kind == CapabilityKind::NativeTool {
+                "native"
+            } else {
+                entry.source.strip_prefix("mcp:").unwrap_or(&entry.source)
+            };
             Some(ToolHandle {
                 id: entry.id.clone(),
                 server: server.to_owned(),

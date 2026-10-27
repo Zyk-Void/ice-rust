@@ -49,6 +49,7 @@ impl SkillSourceDirs {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CapabilityKind {
     Skill,
+    NativeTool,
     McpTool,
 }
 
@@ -70,6 +71,9 @@ pub struct CapabilityCatalog {
 }
 
 impl CapabilityCatalog {
+    /// Hard ceiling for resident descriptors; ordering makes truncation stable.
+    pub const MAX_ENTRIES: usize = 4096;
+
     /// Skills must be supplied in loader precedence order, before name deduplication.
     /// Each source label identifies the registry that supplied the skill.
     pub fn build(skills: &[(&str, Skill)], servers: &[ServerView]) -> Self {
@@ -120,16 +124,23 @@ impl CapabilityCatalog {
                     &tool.description,
                     &source,
                     available,
-                    true,
+                    tool.direct,
                 ));
                 if let Some(entry) = entries.last_mut() {
                     let mut hash = Sha256::new();
                     hash.update(tool.name.as_bytes());
                     hash.update(tool.description.as_bytes());
-                    entry.content_hash = format!("{:x}", hash.finalize());
+                    if let Some(schema_hash) = &tool.schema_hash {
+                        hash.update(schema_hash.as_bytes());
+                        entry.content_hash = format!("{:x}", hash.finalize());
+                    } else {
+                        entry.content_hash.clear();
+                    }
                 }
             }
         }
+        // Preserve loader/server registry precedence; both inputs are deterministic.
+        entries.truncate(Self::MAX_ENTRIES);
         Self { entries }
     }
 
@@ -175,6 +186,33 @@ impl CapabilityCatalog {
     }
 
     /// Rebuild after the caller refreshes the independent registries.
+    /// Add descriptors from the active harness tool registry. Schema fingerprints
+    /// are computed from the exact registered tool definition.
+    pub fn with_native_tools(mut self, tools: &[ice_harness::types::HarnessTool]) -> Self {
+        for harness_tool in tools {
+            let tool = harness_tool.tool.schema();
+            let id = format!("native:{}", tool.name);
+            let mut entry = descriptor(
+                id,
+                CapabilityKind::NativeTool,
+                &tool.name,
+                &tool.description,
+                "native",
+                true,
+                true,
+            );
+            entry.content_hash = format!(
+                "{:x}",
+                Sha256::digest(serde_json::to_vec(tool).unwrap_or_default())
+            );
+            self.entries.retain(|existing| existing.id != entry.id);
+            self.entries.push(entry);
+        }
+        self.entries.sort_by(|a, b| a.id.cmp(&b.id));
+        self.entries.truncate(Self::MAX_ENTRIES);
+        self
+    }
+
     pub fn refresh_live(
         &mut self,
         result: &LoadSkillsResult,
@@ -321,6 +359,7 @@ mod tests {
                 description: "search".into(),
                 tokens: 0,
                 direct: false,
+                schema_hash: None,
             }]),
         };
         let mut skills: Vec<_> = (0..10)
