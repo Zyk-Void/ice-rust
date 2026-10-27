@@ -889,6 +889,19 @@ impl CogneeRuntime {
                 state.shutting_down,
             )
         };
+        if shutting_down || !eligible {
+            return;
+        }
+        let Some(helper) = helper else {
+            if let Some(error) = self.state().helper_error.clone() {
+                self.notify(
+                    NoticeLevel::Warning,
+                    format!("Cognee helper binding failed: {error}"),
+                );
+                self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+            }
+            return;
+        };
         let candidates_dir = self.candidates_dir();
         let now = self.now();
         let mut pending = Vec::new();
@@ -906,19 +919,6 @@ impl CogneeRuntime {
                 pending.push(candidate);
             }
         }
-        if shutting_down || !eligible {
-            return;
-        }
-        let Some(helper) = helper else {
-            if let Some(error) = self.state().helper_error.clone() {
-                self.notify(
-                    NoticeLevel::Warning,
-                    format!("Cognee helper binding failed: {error}"),
-                );
-                self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
-            }
-            return;
-        };
         let (helper, cancel, generation, dataset, provider, now) =
             (helper, cancel, generation, dataset, provider, now);
         let pending = pending
@@ -1057,7 +1057,7 @@ impl CogneeRuntime {
                                 );
                                 rejected += 1;
                             } else if judgment.durable == Verdict::Yes
-                                && judgment.applicable != Verdict::No
+                                && judgment.applicable == Verdict::Yes
                             {
                                 if super::propose::accept_candidate(&this, &candidate)
                                     .unwrap_or(false)
@@ -1179,7 +1179,7 @@ impl CogneeRuntime {
                         CandidateState::Rejected("helper_not_durable".into()),
                     );
                     rejected += 1;
-                } else if judgment.durable == Verdict::Yes && judgment.applicable != Verdict::No {
+                } else if judgment.durable == Verdict::Yes && judgment.applicable == Verdict::Yes {
                     match super::propose::accept_candidate(&this, &candidate) {
                         Ok(true) => {
                             if super::candidates::set_state(
@@ -3908,6 +3908,7 @@ mod tests {
         Durable,
         NotDurable,
         Uncertain,
+        ApplicableUnknown,
     }
 
     struct RuntimeDecider {
@@ -3934,11 +3935,17 @@ mod tests {
                 .map(|(id, question)| {
                     let value = match question {
                         Question::Noul { .. } if id.ends_with(".applicable") => {
-                            json!({"type":"noul", "noul":0.9})
+                            let probability =
+                                if matches!(self.verdict, TestVerdict::ApplicableUnknown) {
+                                    0.5
+                                } else {
+                                    0.9
+                                };
+                            json!({"type":"noul", "noul":probability})
                         }
                         Question::Noul { .. } => {
                             let probability = match self.verdict {
-                                TestVerdict::Durable => 0.9,
+                                TestVerdict::Durable | TestVerdict::ApplicableUnknown => 0.9,
                                 TestVerdict::NotDurable => 0.1,
                                 TestVerdict::Uncertain => 0.5,
                             };
@@ -4594,6 +4601,7 @@ mod tests {
                 0,
             ),
             (TestVerdict::Uncertain, CandidateState::Pending, 0),
+            (TestVerdict::ApplicableUnknown, CandidateState::Pending, 0),
         ] {
             let dir = tempfile::tempdir().unwrap();
             let transport = Arc::new(FakeTransport::default());
@@ -4743,7 +4751,8 @@ mod tests {
         rt.on_run_settled();
         assert_eq!(
             super::super::candidates::read_candidates(&rt.candidates_dir())[0].state,
-            CandidateState::Expired
+            CandidateState::Pending,
+            "disabled helper scheduling must not mutate candidate storage"
         );
     }
 
@@ -4754,7 +4763,7 @@ mod tests {
         let rt = runtime(
             dir.path(),
             &transport,
-            Some(json!({"writePolicy":"selective"})),
+            Some(json!({"writePolicy":"selective", "helperProvider":"fake"})),
             false,
         );
         let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
