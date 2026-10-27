@@ -25,3 +25,5 @@ pub mod runtime;
 pub mod suppress;
 pub mod task;
 pub mod text;
+
+pub mod source_validation;
