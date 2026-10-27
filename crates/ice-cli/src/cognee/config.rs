@@ -30,6 +30,7 @@ pub const ENV_COMPACTION_SUMMARY: &str = "ICERS_COGNEE_COMPACTION_SUMMARY";
 pub const ENV_CHECKPOINT_RECALL: &str = "ICERS_COGNEE_CHECKPOINT_RECALL";
 pub const ENV_READ_POLICY: &str = "ICERS_COGNEE_READ_POLICY";
 pub const ENV_WRITE_POLICY: &str = "ICERS_COGNEE_WRITE_POLICY";
+pub const ENV_HELPER_PROVIDER: &str = "ICERS_COGNEE_HELPER_PROVIDER";
 const ICERS_PREFIX: &str = "ICERS_COGNEE_";
 
 /// A snapshot of the variables Cognee reads.
@@ -139,6 +140,7 @@ pub struct CogneeConfig {
     pub auto_recall: bool,
     pub read_policy: ReadPolicy,
     pub write_policy: WritePolicy,
+    pub helper_provider: Option<String>,
     pub auto_remember: AutoRememberMode,
     /// Continuous session capture (prompts/answers/traces into the cache).
     pub capture_session: bool,
@@ -167,6 +169,7 @@ impl Default for CogneeConfig {
             auto_recall: true,
             read_policy: ReadPolicy::Legacy,
             write_policy: WritePolicy::Legacy,
+            helper_provider: None,
             auto_remember: AutoRememberMode::Compaction,
             capture_session: true,
             capture_tools: true,
@@ -335,6 +338,22 @@ fn parse_dataset(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, S
     Ok(Some(text.into()))
 }
 
+fn parse_helper_provider(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, String> {
+    let error =
+        || format!("{name} must contain 1-128 letters, numbers, dots, underscores, or hyphens");
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let text = value.text().ok_or_else(error)?.trim();
+    if text.is_empty() {
+        return Ok(None);
+    }
+    if !regex!(r"^[A-Za-z0-9._-]{1,128}$").is_match(text) {
+        return Err(error());
+    }
+    Ok(Some(text.to_string()))
+}
+
 fn raw_string(value: &Option<Raw<'_>>) -> Option<String> {
     match value {
         Some(Raw::Env(text)) => Some(text.to_string()),
@@ -359,6 +378,10 @@ pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeC
     if let Some(value) = parse_boolean(pick(env, ENV_RECALL, source, "autoRecall"), ENV_RECALL)? {
         config.auto_recall = value;
     }
+    config.helper_provider = parse_helper_provider(
+        pick(env, ENV_HELPER_PROVIDER, source, "helperProvider"),
+        ENV_HELPER_PROVIDER,
+    )?;
     let read_policy = pick(env, ENV_READ_POLICY, source, "readPolicy");
     if read_policy.is_some() {
         config.read_policy = raw_string(&read_policy)
@@ -773,6 +796,7 @@ pub fn config_json(config: &CogneeConfig) -> Value {
         "autoRecall": config.auto_recall,
         "readPolicy": config.read_policy.as_str(),
         "writePolicy": config.write_policy.as_str(),
+        "helperProvider": config.helper_provider,
         "autoRemember": config.auto_remember.as_str(),
         "captureSession": config.capture_session,
         "captureTools": config.capture_tools,
@@ -863,6 +887,37 @@ mod tests {
         assert_eq!(config.base_url, "http://127.0.0.1:8211");
         assert_eq!(config.compaction_summary_mode, CompactionSummaryMode::Auto);
         assert!(!config.checkpoint_recall);
+    }
+
+    #[test]
+    fn helper_provider_round_trips_and_validates_environment_override() {
+        let stored = json!({"helperProvider": "typesafe", "legacyUnknown": "ignored"});
+        let config = resolve_config(Some(&stored), &env(&[])).unwrap();
+        assert_eq!(config.helper_provider.as_deref(), Some("typesafe"));
+        assert_eq!(config_json(&config)["helperProvider"], "typesafe");
+
+        let overridden =
+            resolve_config(Some(&stored), &env(&[(ENV_HELPER_PROVIDER, "decision-1")])).unwrap();
+        assert_eq!(overridden.helper_provider.as_deref(), Some("decision-1"));
+        assert_eq!(
+            resolve_config(Some(&json!({"helperProvider": "  "})), &env(&[]))
+                .unwrap()
+                .helper_provider,
+            None
+        );
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_PROVIDER, "bad provider")])).is_err());
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_PROVIDER, &"x".repeat(129))])).is_err());
+        assert_eq!(
+            resolve_config(Some(&json!({"unknownLegacyKey": true})), &env(&[])).unwrap(),
+            CogneeConfig::default()
+        );
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+        let mut configured = CogneeConfig::default();
+        configured.helper_provider = Some("typesafe".into());
+        save_config(&path, &configured).unwrap();
+        assert_eq!(load_config(&path, &env(&[])).unwrap(), configured);
     }
 
     #[test]

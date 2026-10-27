@@ -12,6 +12,7 @@ pub mod command;
 pub mod config;
 pub mod dream;
 pub mod evidence;
+pub mod helper;
 pub mod observer;
 pub mod policy;
 pub mod queue;
