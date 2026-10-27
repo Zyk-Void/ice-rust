@@ -973,7 +973,11 @@ fn pasted_images_accept_multiple_quoted_paths_without_consuming_normal_text() {
         &format!("\"{}\"", first.display())
     ));
     assert_eq!(state.take_pending_images().len(), 1);
-    assert_eq!(state.editor.get_text(), "existing draft");
+    assert_eq!(state.editor.get_text(), "[Image #1]existing draft");
+    state.editor.set_text("");
+    assert!(attach_pasted_images(&state, &quoted));
+    assert_eq!(state.editor.get_text(), "[Image #1][Image #2]");
+    assert_eq!(state.take_pending_images().len(), 2);
     assert!(!attach_pasted_images(&state, "normal clipboard text"));
     assert!(state.take_pending_images().is_empty());
 }

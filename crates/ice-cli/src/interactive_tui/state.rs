@@ -1407,8 +1407,10 @@ impl TuiState {
         }
     }
 
-    pub(super) fn queue_image(&self, image: ice_ai::types::ImageContent) {
-        self.pending_images.lock().unwrap().push(image);
+    pub(super) fn queue_image(&self, image: ice_ai::types::ImageContent) -> usize {
+        let mut pending = self.pending_images.lock().unwrap();
+        pending.push(image);
+        pending.len()
     }
 
     pub(super) fn take_pending_images(&self) -> Vec<ice_ai::types::ImageContent> {

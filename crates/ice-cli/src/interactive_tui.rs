@@ -2327,13 +2327,7 @@ pub async fn interactive_tui(
                         continue;
                     }
                     if let Some(images) = images_from_pasted_paths(&text) {
-                        for image in images {
-                            state_for_key.queue_image(image);
-                        }
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Dropped images attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, images);
                         tui_for_key.request_render(false);
                         continue;
                     }
@@ -2944,8 +2938,7 @@ pub async fn interactive_tui(
             // which yanks from the internal KILL RING — not the system
             // clipboard. On platforms without bracketed-paste `Event::Paste`
             // (Windows console, some remote clients) that meant Ctrl+V pasted
-            // stale/other content instead of the user's real clipboard
-            // ("不是系统的粘贴的内容").
+            // stale content instead of the user's system clipboard.
             if keybinding_matches(
                 &keybindings_for_key,
                 &key,
@@ -2954,13 +2947,7 @@ pub async fn interactive_tui(
                 if let Some(paths) = read_clipboard_file_paths() {
                     let text = paths.join("\n");
                     if let Some(images) = images_from_pasted_paths(&text) {
-                        for image in images {
-                            state_for_key.queue_image(image);
-                        }
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Clipboard images attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, images);
                     } else {
                         editor_for_key.handle_paste(&text);
                     }
@@ -2969,11 +2956,7 @@ pub async fn interactive_tui(
                 }
                 match read_clipboard_image() {
                     Ok(Some(image)) => {
-                        state_for_key.queue_image(image);
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Clipboard image attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, vec![image]);
                         tui_for_key.request_render(false);
                         continue;
                     }

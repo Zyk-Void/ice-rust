@@ -1089,6 +1089,10 @@ pub(super) fn read_clipboard_text() -> Option<String> {
 /// builds free of platform clipboard dependencies.
 #[cfg(all(feature = "clipboard", not(target_os = "android")))]
 pub(super) fn read_clipboard_image() -> Result<Option<ice_ai::types::ImageContent>, String> {
+    #[cfg(target_os = "linux")]
+    if let Some(image) = read_linux_clipboard_image() {
+        return Ok(Some(image));
+    }
     let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
     let image = match clipboard.get_image() {
         Ok(image) => image,
@@ -1116,6 +1120,31 @@ pub(super) fn read_clipboard_image() -> Result<Option<ice_ai::types::ImageConten
         data: base64::engine::general_purpose::STANDARD.encode(bytes),
         mime_type: "image/png".into(),
     }))
+}
+
+/// Prefer native Wayland clipboard access, with X11 as a fallback.
+#[cfg(all(feature = "clipboard", target_os = "linux"))]
+fn read_linux_clipboard_image() -> Option<ice_ai::types::ImageContent> {
+    let mut commands: Vec<(&str, &[&str])> = Vec::new();
+    if std::env::var_os("WAYLAND_DISPLAY").is_some() {
+        commands.push(("wl-paste", &["--no-newline", "--type", "image/png"]));
+    }
+    commands.push((
+        "xclip",
+        &["-selection", "clipboard", "-o", "-t", "image/png"],
+    ));
+    for (command, args) in commands {
+        if let Ok(output) = std::process::Command::new(command).args(args).output() {
+            if output.status.success() && output.stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
+                return Some(ice_ai::types::ImageContent {
+                    kind: ice_ai::types::ImageContentType,
+                    data: base64::engine::general_purpose::STANDARD.encode(output.stdout),
+                    mime_type: "image/png".into(),
+                });
+            }
+        }
+    }
+    None
 }
 
 /// Finder copied files arrive as aliases, rather than clipboard bitmaps.
@@ -1205,15 +1234,18 @@ pub(super) fn attach_pasted_images(state: &Arc<TuiState>, text: &str) -> bool {
     let Some(images) = images_from_pasted_paths(text) else {
         return false;
     };
-    let count = images.len();
-    for image in images {
-        state.queue_image(image);
-    }
-    add_note_message(
-        &state.chat_container,
-        &format!("Attached {count} image(s) to the next prompt."),
-    );
+    attach_images_to_draft(state, images);
     true
+}
+
+pub(super) fn attach_images_to_draft(
+    state: &Arc<TuiState>,
+    images: Vec<ice_ai::types::ImageContent>,
+) {
+    for image in images {
+        let number = state.queue_image(image);
+        state.editor.insert(&format!("[Image #{number}]"));
+    }
 }
 
 /// Consume a paste as attachments only when every path is an actual image.
