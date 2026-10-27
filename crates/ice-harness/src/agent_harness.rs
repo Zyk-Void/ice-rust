@@ -41,9 +41,9 @@ use tokio_util::sync::CancellationToken;
 
 use ice_agent::message::AgentMessage;
 use ice_agent::{
-    run_agent_loop, run_agent_loop_from_assistant, AfterToolCall, AfterToolResults, AgentContext,
-    AgentEmitter, AgentEvent, AgentLoopConfig, AgentTool, BeforeToolCall, ConvertToLlm, QueueMode,
-    ShouldStopAfterTurnContext, StreamFn, TransformContext,
+    AfterToolCall, AfterToolResults, AgentContext, AgentEmitter, AgentEvent, AgentLoopConfig,
+    AgentTool, BeforeToolCall, ConvertToLlm, QueueMode, ShouldStopAfterTurnContext, StreamFn,
+    TransformContext, run_agent_loop, run_agent_loop_from_assistant,
 };
 use ice_ai::types::{
     AssistantMessage, Content, DeferredHandle, StopReason, ThinkingLevel, Usage, UserContent,
@@ -53,7 +53,7 @@ use ice_ai::{CacheRetention, Model, Provider as AiProvider};
 
 use crate::compaction::settings::{CodingAgentCompactionPolicy, MidRunCompactionMode};
 use crate::compaction::{
-    compact, estimate_context_tokens, prepare_compaction, should_compact, CompactionLlmOptions,
+    CompactionLlmOptions, compact, estimate_context_tokens, prepare_compaction, should_compact,
 };
 use crate::error::{SessionError, SessionErrorCode};
 use crate::events::{HarnessEvent, HarnessEventBus, RunEndEvent, RunEndOutcome, RunStartEvent};
@@ -63,8 +63,8 @@ use crate::messages::{
 use crate::prompt_templates::format_prompt_template_invocation;
 use crate::result::{HarnessError, HarnessResult, OperationKind};
 use crate::session::context::{
-    build_session_context, ContextEntryTransform, CustomEntryContextMessageProjector,
-    SessionContextBuildOptions,
+    ContextEntryTransform, CustomEntryContextMessageProjector, SessionContextBuildOptions,
+    build_session_context,
 };
 use crate::session::session::Session;
 use crate::session::types::{
@@ -82,7 +82,7 @@ use crate::types::{
     DrivingMode, HarnessTool, HarnessToolExecution, MessageDelivery, PromptTemplate, RetryPolicy,
     SendMessageOptions, Skill,
 };
-use crate::watcher::{watch_listener, HarnessWatcher};
+use crate::watcher::{HarnessWatcher, watch_listener};
 
 mod navigation;
 
@@ -705,7 +705,9 @@ impl HarnessInner {
             .supported_thinking_levels()
             .contains(&self.thinking_level)
         {
-            return Err(HarnessError::agent("Selected model does not support the current thinking level; select a supported level first"));
+            return Err(HarnessError::agent(
+                "Selected model does not support the current thinking level; select a supported level first",
+            ));
         }
         self.model = model;
         Ok(())
@@ -713,7 +715,9 @@ impl HarnessInner {
 
     fn apply_thinking_level(&mut self, level: ThinkingLevel) -> HarnessResult<()> {
         if self.active_run.is_some() {
-            return Err(HarnessError::agent("Cannot change thinking level during an active operation; cancel or wait for idle first"));
+            return Err(HarnessError::agent(
+                "Cannot change thinking level during an active operation; cancel or wait for idle first",
+            ));
         }
         if !self.model.supported_thinking_levels().contains(&level) {
             return Err(HarnessError::agent(
@@ -989,7 +993,7 @@ impl AgentHarness {
                 Some(QueueKind::Context) => continue,
                 _ => {
                     return matches!(message.message, AgentMessage::ToolResult(_))
-                        && message.terminate != Some(true)
+                        && message.terminate != Some(true);
                 }
             }
         }
@@ -4186,7 +4190,7 @@ impl AgentHarness {
                 Some(crate::extension::BeforeCompactDecision::Cancel) => {
                     return Some(Err(crate::compaction::CompactionError::cancelled(
                         "Compaction cancelled by an extension",
-                    )))
+                    )));
                 }
                 Some(crate::extension::BeforeCompactDecision::Replace(checkpoint)) => {
                     return Some(Ok(crate::compaction::CompactResult {
@@ -4199,7 +4203,7 @@ impl AgentHarness {
                         details: None,
                         details_json: checkpoint.details,
                         from_extension: true,
-                    }))
+                    }));
                 }
             }
         }
@@ -4649,47 +4653,6 @@ impl AgentHarness {
                         agent_context.system_prompt = next;
                     }
                 }
-                for extension in &snap.extensions {
-                    let event = crate::extension::BeforeRunEvent {
-                        prompt: &prompt,
-                        system_prompt: Some(agent_context.system_prompt.as_str()),
-                        session_id: &session_id,
-                        signal: signal.clone(),
-                    };
-                    let Some(context) = extension.prompt_context(&event).await else {
-                        continue;
-                    };
-                    if context.text.trim().is_empty() {
-                        continue;
-                    }
-                    let message = crate::messages::create_custom_message(
-                        &context.custom_type,
-                        UserContent::Text(context.text.clone()),
-                        false,
-                        None,
-                        now_ms(),
-                    );
-                    // Only context that is in the history is sent: unpersisted
-                    // text would vanish from the next request and break the
-                    // cached prefix this hook exists to keep.
-                    let persisted = match self.view().append_message(message.clone()).await {
-                        Ok(_) => {
-                            agent_context.messages.push(message);
-                            true
-                        }
-                        Err(error) => {
-                            tracing::warn!(
-                                custom_type = %context.custom_type,
-                                %error,
-                                "could not persist extension prompt context; skipping it"
-                            );
-                            false
-                        }
-                    };
-                    extension
-                        .prompt_context_persisted(&context, persisted)
-                        .await;
-                }
             }
         }
 
@@ -4767,8 +4730,175 @@ impl AgentHarness {
                 .collect(),
         ));
         let context_write_error = Arc::new(Mutex::new(None));
+        let request_prompt = prompts
+            .iter()
+            .rev()
+            .find_map(user_prompt_text)
+            .unwrap_or_default();
+        let request_extensions = snap.extensions.clone();
+        // Pin the branch view and operation identity before any extension await.
+        // Session replacement and navigation acquire the active-run gate, so
+        // they cannot change this owner until this operation releases its lease.
+        let request_view = self.view();
+        let request_lane = self.lane.clone();
+        let request_inner = Arc::clone(&self.inner);
+        let request_run_id = run_id.clone();
+        let request_session_id = self.session_id();
+        let request_latest_compaction_at = self.latest_compaction_at().await.ok().flatten();
+        let request_system_prompt = agent_context.system_prompt.clone();
+        let request_index = Arc::new(AtomicUsize::new(0));
+        let mut persisted_correlations = std::collections::BTreeSet::new();
+        for message in agent_context.messages.iter().rev().take(4096) {
+            if let AgentMessage::Custom(custom) = message {
+                if custom
+                    .data
+                    .get("source")
+                    .and_then(serde_json::Value::as_str)
+                    == Some("request_context")
+                {
+                    if let (Some(extension), Some(correlation)) = (
+                        custom
+                            .data
+                            .get("extension")
+                            .and_then(serde_json::Value::as_str),
+                        custom
+                            .data
+                            .get("correlation_id")
+                            .and_then(serde_json::Value::as_str),
+                    ) {
+                        persisted_correlations.insert(format!("{extension}\0{correlation}"));
+                    }
+                }
+            }
+        }
+        let persisted_correlations = Arc::new(Mutex::new(persisted_correlations));
+        let request_window = snap.model.context_window;
+        let request_budget = if request_window == 0 {
+            800
+        } else {
+            (request_window as usize / 100).min(800)
+        };
         let mut config = AgentLoopConfig {
-            before_request: None,
+            before_request: if request_extensions.is_empty() {
+                None
+            } else {
+                Some(Arc::new(move |messages, hook_signal| {
+                    let extensions = request_extensions.clone();
+                    let view = Arc::clone(&request_view);
+                    let lane = request_lane.clone();
+                    let inner = Arc::clone(&request_inner);
+                    let run_id = request_run_id.clone();
+                    let session_id = request_session_id.clone();
+                    let system_prompt = request_system_prompt.clone();
+                    let prompt = request_prompt.clone();
+                    let latest_compaction_at = request_latest_compaction_at;
+                    let seen = Arc::clone(&persisted_correlations);
+                    let index = request_index.fetch_add(1, Ordering::Relaxed) as u64;
+                    let budget = request_budget;
+                    let window = request_window;
+                    Box::pin(async move {
+                        let mut additions = Vec::new();
+                        let mut remaining = budget;
+                        for (extension_index, extension) in extensions.iter().enumerate() {
+                            if hook_signal.is_cancelled() {
+                                break;
+                            }
+                            let event = crate::extension::RequestContextEvent {
+                                prompt: &prompt,
+                                original_prompt: Some(&prompt),
+                                messages: &messages,
+                                system_prompt: &system_prompt,
+                                session_id: &session_id,
+                                run_id: &run_id,
+                                lane_id: &lane,
+                                // Navigation and session replacement both acquire
+                                // the exclusive active-run admission gate. Thus a
+                                // branch cannot change during this run; generation
+                                // zero is the stable run-local epoch, not a fake
+                                // mutable counter.
+                                branch_generation: 0,
+                                request_index: index,
+                                context_window: window,
+                                remaining_context_tokens: remaining,
+                                latest_compaction_at,
+                                signal: hook_signal.clone(),
+                            };
+                            let Some(packet) = extension.request_context(&event).await else {
+                                continue;
+                            };
+                            let extension_id = format!("extension-{extension_index}");
+                            let correlation_key = packet
+                                .correlation_id
+                                .as_ref()
+                                .map(|id| format!("{extension_id}\0{id}"));
+                            let is_duplicate = correlation_key
+                                .as_ref()
+                                .is_some_and(|key| seen.lock().unwrap().contains(key));
+                            if is_duplicate {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            let envelope = format!("{}\n{}", packet.custom_type, packet.text);
+                            let token_cost = (envelope.encode_utf16().count() + 3) / 4;
+                            if packet.text.trim().is_empty()
+                                || token_cost > remaining
+                                || hook_signal.is_cancelled()
+                            {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            let details = serde_json::json!({"source": "request_context", "correlation_id": packet.correlation_id, "extension": extension_id, "run_id": &run_id, "lane_id": &lane, "session_id": &session_id});
+                            let message = crate::messages::create_custom_message(
+                                &packet.custom_type,
+                                UserContent::Text(packet.text.clone()),
+                                false,
+                                Some(details),
+                                now_ms(),
+                            );
+                            if hook_signal.is_cancelled() {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            let owner_is_current = {
+                                let state = inner.lock().unwrap();
+                                state.active_run.as_ref().is_some_and(|active| {
+                                    active.run_id == run_id && active.lane == lane
+                                })
+                            };
+                            if !owner_is_current || hook_signal.is_cancelled() {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            match view.append_message(message.clone()).await {
+                                Ok(_) => {
+                                    if hook_signal.is_cancelled() {
+                                        extension.prompt_context_persisted(&packet, false).await;
+                                        continue;
+                                    }
+                                    remaining = remaining.saturating_sub(token_cost);
+                                    if let Some(key) = correlation_key {
+                                        let mut seen = seen.lock().unwrap();
+                                        if seen.len() >= 4096 {
+                                            if let Some(oldest) = seen.iter().next().cloned() {
+                                                seen.remove(&oldest);
+                                            }
+                                        }
+                                        seen.insert(key);
+                                    }
+                                    additions.push(message);
+                                    extension.prompt_context_persisted(&packet, true).await;
+                                }
+                                Err(error) => {
+                                    tracing::warn!(custom_type = %packet.custom_type, %error, "could not persist request context; skipping it");
+                                    extension.prompt_context_persisted(&packet, false).await;
+                                }
+                            }
+                        }
+                        additions
+                    }) as BoxFuture<'static, Vec<AgentMessage>>
+                }))
+            },
+
             model: snap.model.clone(),
             convert_to_llm: convert,
             transform_context: self
@@ -7163,12 +7293,14 @@ mod session_switch_tests {
         for _ in 0..2 {
             let result = harness.compact(None).await.unwrap();
             assert!(matches!(result.outcome, CompactionOutcome::Declined { .. }));
-            assert!(harness
-                .session()
-                .find_open_operations("main", None)
-                .await
-                .unwrap()
-                .is_empty());
+            assert!(
+                harness
+                    .session()
+                    .find_open_operations("main", None)
+                    .await
+                    .unwrap()
+                    .is_empty()
+            );
             assert!(harness.snapshot().await.unwrap().active.is_none());
         }
     }
@@ -7193,11 +7325,21 @@ mod session_switch_tests {
             tokio::task::yield_now().await;
         }
         assert!(harness.set_model(current.clone()).await.is_err());
-        assert!(harness
-            .lane("main")
-            .set_thinking_level(ThinkingLevel::Low)
-            .await
-            .is_err());
+        assert!(
+            harness
+                .lane("main")
+                .set_thinking_level(ThinkingLevel::Low)
+                .await
+                .is_err()
+        );
+        // Tree/session navigation shares the active-run admission barrier, so
+        // the branch owner captured by request hooks cannot change mid-run.
+        assert!(
+            harness
+                .set_session(harness.session().clone())
+                .await
+                .is_err()
+        );
         assert_eq!(harness.get_model().await.unwrap().id, current.id);
         harness.abort().await.unwrap();
         harness.wait_for_idle().await.unwrap();
@@ -7225,10 +7367,12 @@ mod session_switch_tests {
     async fn unsupported_thinking_selection_preserves_effective_configuration() {
         let harness = AgentHarness::create(opts()).await.unwrap();
         let before = harness.get_thinking_level().await.unwrap();
-        assert!(harness
-            .set_thinking_level(ThinkingLevel::Max)
-            .await
-            .is_err());
+        assert!(
+            harness
+                .set_thinking_level(ThinkingLevel::Max)
+                .await
+                .is_err()
+        );
         assert_eq!(harness.get_thinking_level().await.unwrap(), before);
         let lane = harness.lane("main");
         assert!(lane.set_thinking_level(ThinkingLevel::Max).await.is_err());
@@ -7316,12 +7460,14 @@ mod session_switch_tests {
 
         let harness = AgentHarness::create(options).await.unwrap();
 
-        assert!(harness
-            .session()
-            .find_open_operations("main", Some(1))
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            harness
+                .session()
+                .find_open_operations("main", Some(1))
+                .await
+                .unwrap()
+                .is_empty()
+        );
         let records = harness
             .session()
             .find_records(&RecordQuery {

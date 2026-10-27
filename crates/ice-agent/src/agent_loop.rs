@@ -275,14 +275,38 @@ async fn run_loop(
             let message = match pending_assistant.take() {
                 Some(message) => message,
                 None => {
-                    if let Some(before_request) = &config.before_request {
-                        let additions =
-                            before_request(current_context.messages.clone(), config.signal.clone())
+                    // Build a request-local view. The transform is evaluated
+                    // once and the hook sees the exact messages sent to provider;
+                    // neither transform changes nor optional packets become part
+                    // of loop new_messages or durable history implicitly.
+                    let mut request_context = current_context.clone();
+                    if let Some(transform) = &config.transform_context {
+                        request_context.messages =
+                            transform(request_context.messages.clone(), config.signal.clone())
                                 .await;
-                        current_context.messages.extend(additions);
                     }
-                    let message =
-                        stream_assistant_response(current_context, config, emit, stream_fn).await?;
+                    let additions = if let Some(before_request) = &config.before_request {
+                        before_request(request_context.messages.clone(), config.signal.clone())
+                            .await
+                    } else {
+                        Vec::new()
+                    };
+                    request_context.messages.extend(additions.clone());
+                    let message = stream_assistant_response(
+                        &mut request_context,
+                        config,
+                        emit,
+                        stream_fn,
+                        true,
+                    )
+                    .await?;
+                    // Persisted request packets belong in subsequent request
+                    // contexts (including the next tool turn), but not in
+                    // `new_messages`: the harness already durably appended them.
+                    current_context.messages.extend(additions);
+                    current_context
+                        .messages
+                        .push(AgentMessage::Assistant(Box::new(message.clone())));
                     new_messages.push(AgentMessage::Assistant(Box::new(message.clone())));
                     message
                 }
@@ -449,9 +473,13 @@ async fn stream_assistant_response(
     config: &AgentLoopConfig,
     emit: &Arc<dyn AgentEmitter>,
     stream_fn: &StreamFn,
+    context_is_transformed: bool,
 ) -> Result<AssistantMessage, AgentError> {
-    // Apply optional transform_context (AgentMessage[] → AgentMessage[]).
-    let messages = if let Some(transform) = &config.transform_context {
+    // The main loop transforms before before_request so that hook sees the
+    // exact active context. Do not invoke arbitrary transforms a second time.
+    let messages = if context_is_transformed {
+        context.messages.clone()
+    } else if let Some(transform) = &config.transform_context {
         transform(context.messages.clone(), config.signal.clone()).await
     } else {
         context.messages.clone()
