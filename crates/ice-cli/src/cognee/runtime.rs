@@ -3165,6 +3165,13 @@ mod tests {
         let report = rt.collect_doctor().await;
         assert!(report.recall_circuit_open);
         assert_eq!(report.last_error.as_deref(), Some("unreachable"));
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(observations.iter().any(|event| {
+            event.operation == "recall"
+                && event.meta.as_ref().and_then(|m| m.get("reason")) == Some(&json!("circuit_open"))
+        }));
     }
 
     /// Traces record actions, not contents: a successful read keeps its path
