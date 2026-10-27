@@ -2389,6 +2389,20 @@ impl CogneeRuntime {
             )
             .await;
         let remote_wait_ms = network_started.elapsed().as_millis() as u64;
+        let still_current = {
+            let state = self.state();
+            state.session_id.as_deref() == Some(session_id.as_str())
+                && state.host_session_id.as_deref() == Some(event.session_id)
+                && state.active_dataset() == dataset
+        };
+        if !still_current {
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(json!({"skipped": true, "reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
+            );
+            return None;
+        }
         match result {
             Ok(results) => {
                 {
@@ -2968,6 +2982,39 @@ mod tests {
         assert_eq!(metadata["hostSessionId"], "host1");
         assert_eq!(metadata["sourceDataset"], rt.active_dataset());
         assert!(metadata["remoteWaitMs"].as_u64().is_some());
+    }
+
+    #[tokio::test]
+    async fn late_recall_does_not_enter_a_new_session() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![json!({"results": [{"text": "old session fact"}]})
+                .to_string()
+                .into_bytes()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let pending_rt = rt.clone();
+        let task = tokio::spawn(async move {
+            memory(&pending_rt, "find the previous cache decision", None).await
+        });
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        rt.ensure_session_id("host2");
+        assert_eq!(task.await.unwrap(), None);
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(observations.iter().any(|event| event
+            .meta
+            .as_ref()
+            .and_then(|m| m.get("outcome"))
+            .and_then(Value::as_str)
+            == Some("stale")));
     }
 
     #[tokio::test]
