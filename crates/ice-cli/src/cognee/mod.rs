@@ -7,6 +7,7 @@
 //! run: every failure degrades to no memory.
 
 pub mod browse;
+pub mod candidates;
 pub mod client;
 pub mod command;
 pub mod config;
@@ -15,6 +16,7 @@ pub mod evidence;
 pub mod helper;
 pub mod observer;
 pub mod policy;
+pub mod propose;
 pub mod queue;
 pub mod runtime;
 pub mod text;

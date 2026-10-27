@@ -115,6 +115,8 @@ pub enum WritePolicy {
     /// Only `/cognee remember` and explicit tools write; every automatic
     /// capture and promotion path is off whatever its own switch says.
     Manual,
+    /// Broad automatic writes are off; attributable candidates require review.
+    Selective,
 }
 
 impl WritePolicy {
@@ -122,12 +124,14 @@ impl WritePolicy {
         match self {
             Self::Legacy => "legacy",
             Self::Manual => "manual",
+            Self::Selective => "selective",
         }
     }
     pub fn parse(value: &str) -> Option<Self> {
         match value {
             "legacy" => Some(Self::Legacy),
             "manual" => Some(Self::Manual),
+            "selective" => Some(Self::Selective),
             _ => None,
         }
     }
@@ -212,6 +216,11 @@ impl CogneeConfig {
     /// Compaction summaries are queued as permanent memory.
     pub fn remembers_compaction(&self) -> bool {
         self.automatic_writes() && self.auto_remember == AutoRememberMode::Compaction
+    }
+
+    /// Attributable memory candidates are admitted instead of broad captures.
+    pub fn selective_writes(&self) -> bool {
+        self.write_policy == WritePolicy::Selective
     }
 }
 
@@ -394,7 +403,7 @@ pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeC
         config.write_policy = raw_string(&write_policy)
             .as_deref()
             .and_then(WritePolicy::parse)
-            .ok_or_else(|| format!("{ENV_WRITE_POLICY} must be legacy or manual"))?;
+            .ok_or_else(|| format!("{ENV_WRITE_POLICY} must be legacy, manual, or selective"))?;
     }
     let remember = pick(env, ENV_REMEMBER, source, "autoRemember");
     if remember.is_some() {
@@ -966,12 +975,16 @@ mod tests {
         .unwrap();
         assert_eq!(config.read_policy, ReadPolicy::Event);
         assert_eq!(config.write_policy, WritePolicy::Manual);
-        // Manual overrides the individual capture and promotion switches.
+        // Both non-legacy policies override capture and promotion switches.
         assert!(config.capture_session && config.auto_improve);
         assert!(!config.captures_session() && !config.captures_tools());
         assert!(!config.improves() && !config.remembers_compaction());
+        let selective =
+            resolve_config(Some(&json!({"writePolicy": "selective"})), &env(&[])).unwrap();
+        assert!(selective.selective_writes());
+        assert!(!selective.automatic_writes());
+        assert_eq!(config_json(&selective)["writePolicy"], "selective");
         assert!(resolve_config(Some(&json!({"readPolicy": "always"})), &env(&[])).is_err());
-        assert!(resolve_config(Some(&json!({"writePolicy": "selective"})), &env(&[])).is_err());
         let saved = config_json(&config);
         assert_eq!(saved["readPolicy"], "event");
         assert_eq!(saved["writePolicy"], "manual");

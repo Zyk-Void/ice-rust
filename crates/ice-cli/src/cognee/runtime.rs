@@ -29,6 +29,7 @@ use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+use super::candidates::{Candidate, CandidateState, Category, Role};
 use super::client::{
     CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport,
     OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
@@ -64,6 +65,7 @@ use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
 pub const STATUS_KEY: &str = "ice-cognee";
 pub const SESSION_ENTRY_TYPE: &str = "ice-cognee";
 pub const SEARCH_TOOL_NAME: &str = "cognee_search";
+pub const PROPOSE_TOOL_NAME: &str = "cognee_propose_memory";
 const RECALL_MIN_WORDS: usize = 4;
 /// Non-legacy automatic memory is capped at 800 estimated tokens. BeforeRunEvent
 /// has no model-window information, so a model-window-relative cap is unavailable.
@@ -355,8 +357,8 @@ fn meta(value: Value) -> Option<Map<String, Value>> {
     }
 }
 
-struct State {
-    config: CogneeConfig,
+pub(crate) struct State {
+    pub(crate) config: CogneeConfig,
     installed: bool,
     api_key: Option<String>,
     client: Option<CogneeClient>,
@@ -460,7 +462,7 @@ impl State {
             .flatten()
     }
 
-    fn active_dataset(&self) -> String {
+    pub(crate) fn active_dataset(&self) -> String {
         if self.resolved_dataset.is_empty() {
             self.config.dataset.clone()
         } else {
@@ -523,6 +525,7 @@ pub struct CogneeRuntime {
     background: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
     tool_args: Mutex<HashMap<String, Value>>,
+    tools_allowed: Mutex<Option<bool>>,
     /// Dream ledger writes run one at a time.
     dream_writes: tokio::sync::Mutex<()>,
     /// Single-flight pending drain.
@@ -553,6 +556,7 @@ impl CogneeRuntime {
             background: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
             tool_args: Mutex::new(HashMap::new()),
+            tools_allowed: Mutex::new(None),
             dream_writes: tokio::sync::Mutex::new(()),
             drain: tokio::sync::Mutex::new(()),
             warmup_drain: tokio::sync::Mutex::new(()),
@@ -563,11 +567,11 @@ impl CogneeRuntime {
         self.me.upgrade().expect("Cognee runtime is alive")
     }
 
-    fn now(&self) -> u64 {
+    pub(crate) fn now(&self) -> u64 {
         (self.now)()
     }
 
-    fn state(&self) -> std::sync::MutexGuard<'_, State> {
+    pub(crate) fn state(&self) -> std::sync::MutexGuard<'_, State> {
         self.state.lock().unwrap_or_else(|error| error.into_inner())
     }
 
@@ -579,8 +583,12 @@ impl CogneeRuntime {
         self.storage_dir.join("config.json")
     }
 
-    fn pending_dir(&self) -> PathBuf {
+    pub(crate) fn pending_dir(&self) -> PathBuf {
         self.storage_dir.join("pending")
+    }
+
+    pub(crate) fn candidates_dir(&self) -> PathBuf {
+        self.storage_dir.join("candidates")
     }
 
     fn warmup_dir(&self) -> PathBuf {
@@ -608,7 +616,7 @@ impl CogneeRuntime {
         *self.cwd.lock().unwrap() = Some(cwd);
     }
 
-    fn harness(&self) -> Option<ice_harness::agent_harness::AgentHarness> {
+    pub(crate) fn harness(&self) -> Option<ice_harness::agent_harness::AgentHarness> {
         self.harness.lock().unwrap().as_ref()?.upgrade()
     }
 
@@ -689,7 +697,7 @@ impl CogneeRuntime {
     }
 
     /// The client when Cognee may contact the server.
-    fn live_client(&self) -> Option<CogneeClient> {
+    pub(crate) fn live_client(&self) -> Option<CogneeClient> {
         let state = self.state();
         if Self::enabled(&state, self.offline) {
             state.client.clone()
@@ -747,6 +755,33 @@ impl CogneeRuntime {
 
     fn notify(&self, level: NoticeLevel, text: impl Into<String>) {
         self.notices.notify(level, text);
+    }
+
+    pub(crate) fn observe_candidate(&self, candidate: &Candidate, outcome: &str) {
+        let reason = match &candidate.state {
+            CandidateState::Rejected(reason) => Some(reason.clone()),
+            _ => None,
+        };
+        self.observe(
+            "candidate",
+            outcome,
+            ObserveFields {
+                preview: Some(Value::String(candidate.text.clone())),
+                meta: meta(json!({
+                    "category": candidate.category.as_str(),
+                    "outcome": outcome,
+                    "reason": reason,
+                    "sourceRole": match candidate.source.role {
+                        Role::User => "user",
+                        Role::Assistant => "assistant",
+                        Role::Tool => "tool",
+                    },
+                    "supersedes": candidate.supersedes,
+                    "outcomeVersion": 1
+                })),
+                ..ObserveFields::default()
+            },
+        );
     }
 
     fn observe(&self, operation: &str, phase: &str, fields: ObserveFields) {
@@ -1132,7 +1167,7 @@ impl CogneeRuntime {
         }
     }
 
-    fn spawn_drain_pending(&self) {
+    pub(crate) fn spawn_drain_pending(&self) {
         let this = self.arc();
         self.track(async move { this.drain_pending(false).await });
     }
@@ -1667,8 +1702,9 @@ impl CogneeRuntime {
 
     // ── tools and config ──
 
-    /// Register `cognee_search` once (when the tool policy allows it).
+    /// Register Cognee tools under their respective read/write policies.
     pub async fn register_search_tool(&self, allowed: bool) {
+        *self.tools_allowed.lock().unwrap() = Some(allowed);
         if !allowed {
             return;
         }
@@ -1678,49 +1714,85 @@ impl CogneeRuntime {
         let Ok(mut tools) = harness.get_tools().await else {
             return;
         };
-        if tools
+        let config = self.config();
+        let enabled = self.is_enabled();
+        let has_search = tools
             .iter()
-            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME)
-        {
-            return;
+            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME);
+        let has_propose = tools
+            .iter()
+            .any(|tool| tool.tool.schema().name == PROPOSE_TOOL_NAME);
+        let mut changed = false;
+        if !has_search {
+            tools.push(ice_harness::types::HarnessTool::new(Arc::new(
+                super::command::CogneeSearchTool::new(self.me.clone()),
+            )));
+            changed = true;
         }
-        let Ok(active) = harness.lane("main").get_active_tools().await else {
-            return;
-        };
-        tools.push(ice_harness::types::HarnessTool::new(Arc::new(
-            super::command::CogneeSearchTool::new(self.me.clone()),
-        )));
-        let _ = harness.set_tools(tools, Some(active)).await;
+        if config.selective_writes() && enabled && !has_propose {
+            tools.push(ice_harness::types::HarnessTool::new(Arc::new(
+                super::propose::CogneeProposeMemoryTool::new(self.me.clone()),
+            )));
+            changed = true;
+        }
+        if changed {
+            let Ok(active) = harness.lane("main").get_active_tools().await else {
+                return;
+            };
+            let _ = harness.set_tools(tools, Some(active)).await;
+        }
     }
 
-    /// `applyToolState`: toggle only `cognee_search` in the active set.
+    /// Toggle Cognee tools according to availability and the active write policy.
     pub async fn apply_tool_state(&self) {
+        if self.tools_allowed.lock().unwrap().unwrap_or(false) {
+            self.register_search_tool(true).await;
+        }
         let Some(harness) = self.harness() else {
             return;
         };
-        let enabled = Self::enabled(&self.state(), self.offline);
-        let Ok(tools) = harness.get_tools().await else {
+        let (enabled, selective) = {
+            let state = self.state();
+            (
+                Self::enabled(&state, self.offline),
+                state.config.selective_writes(),
+            )
+        };
+        let Ok(mut tools) = harness.get_tools().await else {
             return;
         };
-        if !tools
-            .iter()
-            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME)
-        {
-            return;
-        }
         let lane = harness.lane("main");
         let Ok(mut active) = lane.get_active_tools().await else {
             return;
         };
-        let present = active.iter().any(|name| name == SEARCH_TOOL_NAME);
-        if enabled && !present {
-            active.push(SEARCH_TOOL_NAME.into());
-        } else if !enabled && present {
-            active.retain(|name| name != SEARCH_TOOL_NAME);
-        } else {
-            return;
+        let mut changed = false;
+        if !enabled || !selective {
+            let before = tools.len();
+            tools.retain(|tool| tool.tool.schema().name != PROPOSE_TOOL_NAME);
+            changed |= tools.len() != before;
+            let active_before = active.len();
+            active.retain(|name| name != PROPOSE_TOOL_NAME);
+            changed |= active.len() != active_before;
         }
-        let _ = lane.set_active_tools(active).await;
+        for (name, should_enable) in [
+            (SEARCH_TOOL_NAME, enabled),
+            (PROPOSE_TOOL_NAME, enabled && selective),
+        ] {
+            if !tools.iter().any(|tool| tool.tool.schema().name == name) {
+                continue;
+            }
+            let present = active.iter().any(|current| current == name);
+            if should_enable && !present {
+                active.push(name.into());
+                changed = true;
+            } else if !should_enable && present {
+                active.retain(|current| current != name);
+                changed = true;
+            }
+        }
+        if changed {
+            let _ = harness.set_tools(tools, Some(active)).await;
+        }
     }
 
     /// `persistConfig`: save, adopt, rebuild the client and re-apply the
@@ -1751,7 +1823,7 @@ impl CogneeRuntime {
         Ok(())
     }
 
-    fn save_and_adopt(&self, next: CogneeConfig) -> bool {
+    pub(crate) fn save_and_adopt(&self, next: CogneeConfig) -> bool {
         self.ensure_loaded();
         if save_config(&self.config_path(), &next).is_err() {
             return false;
@@ -1919,6 +1991,26 @@ impl CogneeRuntime {
         } else {
             "Cognee is disabled"
         }
+    }
+
+    /// Admit and queue one model-proposed memory against current branch evidence.
+    pub(crate) async fn propose_memory(
+        &self,
+        text: &str,
+        category: Category,
+        source_entry_id: &str,
+        verified_by: Option<&str>,
+        supersedes: Option<&str>,
+    ) -> Result<String, String> {
+        super::propose::propose_memory(
+            self,
+            text,
+            category,
+            source_entry_id,
+            verified_by,
+            supersedes,
+        )
+        .await
     }
 
     /// `/cognee remember`: persist intent before sending.
@@ -3242,12 +3334,14 @@ mod tests {
     use super::*;
     use crate::blackhole::live_state::tests::base;
     use ice_agent::types::AgentToolResult;
+    use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
     use ice_ai::types::{
         Api, AssistantMessage, Content, TextContent, TextContentType, UserMessage,
     };
+    use ice_harness::agent_harness::{AgentHarness, AgentLane};
     use ice_harness::compaction::{CompactionPreparation, FileOperations};
-    use ice_harness::session::types::CompactionEntry;
-    use ice_harness::types::CompactionSettings;
+    use ice_harness::session::types::{CompactionEntry, Entry};
+    use ice_harness::types::{AgentHarnessOptions, CompactionSettings};
 
     const NOW: u64 = 1_800_000_000_000;
 
@@ -3289,6 +3383,16 @@ mod tests {
         )
     }
 
+    async fn harness_with_messages(messages: Vec<AgentMessage>) -> AgentHarness {
+        let mut options = AgentHarnessOptions::default();
+        options.allow_existing_session = true;
+        let harness = AgentHarness::create(options).await.unwrap();
+        for message in messages {
+            harness.append_message(message).await.unwrap();
+        }
+        harness
+    }
+
     fn clock_runtime(
         dir: &Path,
         transport: &Arc<FakeTransport>,
@@ -3314,6 +3418,377 @@ mod tests {
         );
         rt.ensure_loaded();
         rt
+    }
+
+    #[tokio::test]
+    async fn selective_proposals_are_attributed_queued_and_category_deduplicated() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let source_text =
+            "Please always keep generated files out of source control token=shhsecret.";
+        let candidate_text = "keep generated files out of source control token=shhsecret";
+        let harness =
+            harness_with_messages(vec![AgentMessage::User(UserMessage::new(source_text, 1))]).await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory(candidate_text, Category::Constraint, &source_id, None, None)
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        let request = &transport.sent()[0];
+        let Body::Multipart(parts) = &request.body else {
+            panic!("remember is multipart")
+        };
+        assert_eq!(parts[1].value, "user_context");
+        assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+
+        rt.propose_memory(candidate_text, Category::Constraint, &source_id, None, None)
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.propose_memory(
+            "keep generated files out of source control",
+            Category::Preference,
+            &source_id,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 2);
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|event| {
+            event.operation == "candidate"
+                && event.preview.as_deref().is_some_and(|preview| {
+                    preview.contains("token=[REDACTED]") && !preview.contains("shhsecret")
+                })
+        }));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn selective_proposal_runs_in_a_full_prompt_tool_answer_turn() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "Use the agreed local constraint"}]}),
+        ));
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"legacy", "autoRecall":true})),
+            false,
+        );
+        let candidate_text = "keep generated files out of source control";
+        let script = FauxScript::new()
+            .with_tool_call(
+                PROPOSE_TOOL_NAME,
+                json!({
+                    "text": candidate_text,
+                    "category": "constraint",
+                    "source_entry_id": "source-entry"
+                }),
+            )
+            .with_text("I recorded the verified constraint.");
+        let provider = FauxProvider::new(script.clone());
+        let mut options = AgentHarnessOptions::default();
+        options.allow_existing_session = true;
+        options.model = provider.default_model().clone();
+        options.models.push(provider.clone());
+        let harness = AgentHarness::create(options).await.unwrap();
+        let source_id = harness
+            .append_message(AgentMessage::User(UserMessage::new(
+                "Please always keep generated files out of source control.",
+                1,
+            )))
+            .await
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.register_search_tool(true).await;
+        rt.apply_tool_state().await;
+        let mut proposal = json!({
+            "text": candidate_text,
+            "category": "constraint",
+            "source_entry_id": source_id
+        });
+        script.set_responses(vec![
+            FauxStep::tool_call(PROPOSE_TOOL_NAME, proposal.take()),
+            FauxStep::text("I recorded the verified constraint."),
+        ]);
+        harness.set_extensions(vec![rt.clone()]);
+
+        harness
+            .prompt_text("Record the durable constraint from earlier.", Vec::new())
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        assert!(
+            entries.iter().any(|entry| matches!(entry,
+                Entry::Message(message)
+                    if matches!(&message.message, AgentMessage::Custom(custom)
+                        if custom.data["customType"] == MEMORY_CUSTOM_TYPE)
+            )),
+            "entries={entries:#?}"
+        );
+        assert!(entries.iter().any(|entry| matches!(entry,
+            Entry::Message(message)
+                if matches!(&message.message, AgentMessage::ToolResult(result) if !result.is_error)
+        )));
+        assert!(entries.iter().any(|entry| matches!(entry,
+            Entry::Message(message)
+                if matches!(&message.message, AgentMessage::Assistant(assistant)
+                    if assistant.content.iter().any(|block| matches!(block,
+                        Content::Text(text) if text.text == "I recorded the verified constraint.")))
+        )));
+        assert_eq!(transport.sent().len(), 2);
+        let requests = transport.sent();
+        let request = requests
+            .iter()
+            .find(|request| request.url.ends_with("/api/v1/remember"))
+            .unwrap();
+        let Body::Multipart(parts) = &request.body else {
+            panic!("remember is multipart")
+        };
+        assert_eq!(parts[1].value, "user_context");
+        assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations
+            .iter()
+            .any(|event| event.operation == "injection" && event.phase == "succeeded"));
+        assert!(observations.iter().any(|event| event.operation == "recall"
+            && event.phase == "succeeded"
+            && event.meta.as_ref().is_some_and(|meta| {
+                meta["hits"] == 1 && meta["outcome"] == "retrieved_nonempty"
+            })));
+        let active = harness.lane("main").get_active_tools().await.unwrap();
+        assert!(active.contains(&PROPOSE_TOOL_NAME.to_string()));
+    }
+
+    #[tokio::test]
+    async fn manual_remember_still_sends_under_selective_policy() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+
+        rt.manual_remember("user_context", "explicitly remember this")
+            .await;
+        rt.wait_for_background().await;
+
+        let requests = transport.sent();
+        assert_eq!(requests.len(), 1);
+        assert!(requests[0].url.ends_with("/api/v1/remember"));
+        let records = read_pending_remember(&rt.pending_dir());
+        assert!(records.is_empty());
+    }
+
+    #[tokio::test]
+    async fn selective_candidate_tool_is_only_registered_when_available_and_selective() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"manual"})),
+            false,
+        );
+        let harness = harness_with_messages(Vec::new()).await;
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.register_search_tool(true).await;
+        assert!(!harness
+            .get_tools()
+            .await
+            .unwrap()
+            .iter()
+            .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME }));
+        let mut config = rt.config();
+        config.write_policy = WritePolicy::Selective;
+        assert!(rt.save_and_adopt(config));
+        rt.apply_tool_state().await;
+        let proposal = harness
+            .get_tools()
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|tool| tool.tool.schema().name == PROPOSE_TOOL_NAME)
+            .unwrap();
+        let error = proposal
+            .tool
+            .execute(
+                "invalid",
+                json!({"text": "candidate", "category": "unknown", "source_entry_id": "missing"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(error, ice_agent::AgentError::Validation(_)));
+
+        let mut config = rt.config();
+        config.enabled = false;
+        assert!(rt.save_and_adopt(config));
+        let unavailable = proposal
+            .tool
+            .execute(
+                "unavailable",
+                json!({
+                    "text": "candidate",
+                    "category": "constraint",
+                    "source_entry_id": "missing"
+                }),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(unavailable, ice_agent::AgentError::Tool(message)
+            if message == "Cognee is unavailable"));
+    }
+
+    #[tokio::test]
+    async fn selective_policy_disables_all_legacy_writes_even_with_switches_on() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({
+                "writePolicy":"selective", "readPolicy":"on_demand", "captureSession":true,
+                "captureTools":true, "autoImprove":true, "autoRemember":"compaction"
+            })),
+            false,
+        );
+        rt.on_agent_event(&AgentEvent::ToolExecutionEnd {
+            tool_call_id: "c1".into(),
+            tool_name: "bash".into(),
+            result: AgentToolResult::text("bash succeeded"),
+            is_error: false,
+        });
+        rt.on_agent_event(&AgentEvent::AgentEnd {
+            messages: vec![assistant("Done.")],
+        });
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        let entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "not retained".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 1,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert!(rt.run_improve("idle").is_none());
+        assert!(rt.run_dream().is_none());
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn rejected_selective_candidate_is_recorded_without_network_promotion() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "That is the only requested detail.",
+            1,
+        ))])
+        .await;
+        let entry = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|entry| matches!(entry, Entry::Message(message) if matches!(message.message, AgentMessage::User(_))))
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let status = rt
+            .propose_memory(
+                "not present in the user source",
+                Category::Constraint,
+                entry.id(),
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        assert_eq!(status, "rejected:not_in_source");
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(observations.iter().any(|event| {
+            event.operation == "candidate"
+                && event.meta.as_ref().is_some_and(|meta| {
+                    meta["category"] == "constraint"
+                        && meta["outcome"] == "rejected"
+                        && meta["reason"] == "not_in_source"
+                        && meta["outcomeVersion"] == 1
+                })
+        }));
     }
 
     #[tokio::test]
@@ -5103,6 +5578,9 @@ mod tests {
             rt.config().compaction_summary_mode,
             CompactionSummaryMode::Own
         );
+        super::super::command::run_command(&rt, "write selective").await;
+        assert_eq!(rt.config().write_policy, WritePolicy::Selective);
+        assert!(!rt.config().automatic_writes());
         super::super::command::run_command(&rt, "remember on extra").await;
         // `remember on extra` is literal text, so it was sent (and failed).
         let sent = transport.sent();

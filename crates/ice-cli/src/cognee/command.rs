@@ -1,4 +1,4 @@
-//! `/cognee`, the `cognee_search` tool, the Cognee settings section and
+//! `/cognee`, the Cognee tools, settings section and
 //! the bundled skills. Ports `ice-cognee.ts` (COG-055..058, COG-063..068).
 
 use std::path::{Path, PathBuf};
@@ -18,7 +18,7 @@ use super::config::{
 use super::runtime::{CogneeRuntime, SEARCH_TOOL_NAME};
 use crate::builtin_extensions::{NoticeLevel, SettingRow};
 
-pub const USAGE: &str = "Usage: /cognee status|doctor|on|off|recall on|off|read legacy|on_demand|event|write legacy|manual|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
+pub const USAGE: &str = "Usage: /cognee status|doctor|on|off|recall on|off|read legacy|on_demand|event|write legacy|manual|selective|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
 
 const NODE_SETS: [&str; 3] = ["user_context", "project_docs", "agent_actions"];
 
@@ -271,9 +271,9 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
         SettingRow::new(
             "cognee.writePolicy",
             "Cognee write policy",
-            "manual turns off every automatic capture, trace, improve and compaction write; /cognee remember still works",
+            "manual turns off every automatic capture, trace, improve and compaction write; selective admits attributed proposals; /cognee remember still works",
             config.write_policy.as_str(),
-            &["legacy", "manual"],
+            &["legacy", "manual", "selective"],
         ),
         SettingRow::new(
             "cognee.autoRemember",
@@ -411,6 +411,9 @@ mod tests {
         assert_eq!(next.read_policy, ReadPolicy::Event);
         let next = apply_setting(&next, "cognee.writePolicy", "manual").unwrap();
         assert_eq!(next.write_policy, WritePolicy::Manual);
+        let selective = apply_setting(&next, "cognee.writePolicy", "selective").unwrap();
+        assert_eq!(selective.write_policy, WritePolicy::Selective);
+        assert_eq!(settings_rows(&selective)[3].current, "selective");
         assert!(apply_setting(&config, "cognee.readPolicy", "bogus").is_none());
         assert!(apply_setting(&config, "cognee.unknown", "on").is_none());
         assert!(apply_setting(&config, "blackhole.refine", "true").is_none());
