@@ -2990,6 +2990,26 @@ mod tests {
         transport.push(FakeResponse::json(200, json!({"results": []})));
         assert!(execute().await.is_ok());
 
+        transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
+        assert!(execute()
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("not_found"));
+        let cancelled = CancellationToken::new();
+        cancelled.cancel();
+        let error = tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                cancelled,
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("aborted"));
+
+        let requests_before_offline = transport.sent().len();
         let offline_dir = tempfile::tempdir().unwrap();
         let offline = runtime(offline_dir.path(), &transport, Some(json!({})), true);
         let offline_tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&offline));
@@ -3003,7 +3023,7 @@ mod tests {
             .await
             .unwrap_err();
         assert!(error.to_string().contains("disabled"));
-        assert_eq!(transport.sent().len(), 2);
+        assert_eq!(transport.sent().len(), requests_before_offline);
     }
 
     #[tokio::test]
