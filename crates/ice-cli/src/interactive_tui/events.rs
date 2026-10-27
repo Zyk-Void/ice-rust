@@ -143,8 +143,9 @@ pub(super) fn transcript_has_live_panel(
 /// Prepend restored queued messages to the draft the user may already have
 /// typed (upstream's `restoreQueuedMessagesToEditor` places them first).
 pub(super) fn merge_queued_into_draft(queued_text: &str, current: &str) -> String {
+    let queued_text = collapse_skill_invocations(queued_text);
     if current.trim().is_empty() {
-        queued_text.to_string()
+        queued_text
     } else {
         format!("{queued_text}\n\n{current}")
     }

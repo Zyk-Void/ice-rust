@@ -2,6 +2,8 @@
 
 use super::*;
 
+/// `$name` completion for discovered skills; the reference is expanded into
+/// the skill's instructions when the prompt is sent (`expand_skill_references`).
 struct SkillAutocomplete {
     skills: Vec<ice_harness::types::Skill>,
 }
@@ -18,11 +20,15 @@ impl ice_tui::AutocompleteProvider for SkillAutocomplete {
     ) -> Option<ice_tui::AutocompleteSuggestions> {
         let before = input.get(..cursor)?;
         let start = before.rfind('$')?;
-        if start > 0 && !before[..start].chars().next_back()?.is_whitespace() {
+        if before[..start]
+            .chars()
+            .next_back()
+            .is_some_and(|c| !c.is_whitespace())
+        {
             return None;
         }
         let query = &before[start + 1..];
-        if query.chars().any(char::is_whitespace) {
+        if !query.chars().all(is_skill_name_char) {
             return None;
         }
         let query = query.to_lowercase();
@@ -31,9 +37,8 @@ impl ice_tui::AutocompleteProvider for SkillAutocomplete {
             .iter()
             .filter(|s| s.name.to_lowercase().contains(&query))
             .map(|s| {
-                ice_tui::AutocompleteItem::new(&format!("⟦skill:{}⟧", s.name))
-                    .with_label(&s.name)
-                    .with_description(&format!("Skill: {}", s.description))
+                ice_tui::AutocompleteItem::new(&format!("${}", s.name))
+                    .with_description(&s.description)
             })
             .collect();
         (!items.is_empty()).then_some(ice_tui::AutocompleteSuggestions {
@@ -42,42 +47,6 @@ impl ice_tui::AutocompleteProvider for SkillAutocomplete {
             end: cursor,
             is_path: false,
         })
-    }
-}
-
-#[cfg(test)]
-mod skill_tests {
-    use super::*;
-    use ice_tui::AutocompleteProvider;
-
-    fn skill() -> ice_harness::types::Skill {
-        ice_harness::types::Skill {
-            name: "review".into(),
-            description: "Review code".into(),
-            content: "Instructions".into(),
-            file_path: "/skills/review/SKILL.md".into(),
-            disable_model_invocation: None,
-        }
-    }
-
-    #[test]
-    fn dollar_suggests_and_expands_skills() {
-        let skill = skill();
-        let provider = SkillAutocomplete {
-            skills: vec![skill.clone()],
-        };
-        let suggestions = provider.get_suggestions("use $rev", 8).unwrap();
-        assert_eq!(suggestions.items[0].text, "⟦skill:review⟧");
-        assert!(provider.get_suggestions("use review", 10).is_none());
-        let resources = ice_harness::types::AgentHarnessResources {
-            skills: Some(vec![skill]),
-            ..Default::default()
-        };
-        let expanded =
-            expand_skill_references(&resources, "use ⟦skill:review⟧ now ⟦skill:missing⟧");
-        assert!(expanded.contains("<skill name=\"review\""));
-        assert!(expanded.contains("Instructions"));
-        assert!(expanded.ends_with(" now ⟦skill:missing⟧"));
     }
 }
 
@@ -186,11 +155,11 @@ pub(super) fn build_autocomplete_with_mcp(
             .filter(|entry| !taken.contains(&entry.name)),
     );
     let mut combined = CombinedAutocompleteProvider::new();
+    combined.add_provider(Arc::new(McpAutocomplete { manager }));
+    combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
     combined.add_provider(Arc::new(SkillAutocomplete {
         skills: resources.skills.clone().unwrap_or_default(),
     }));
-    combined.add_provider(Arc::new(McpAutocomplete { manager }));
-    combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
     // Reinstall recursive completion on reload as well as startup. Its callback
     // wakes the same TUI queue after a background search finishes.
     if let Some(on_ready) = on_ready {
@@ -294,22 +263,24 @@ pub(super) fn render_autocomplete(
     {
         let prefix = if i == selection { "→ " } else { "  " };
         let label = item.display_text();
-        let line = if i == selection {
-            format!(
-                "{prefix}{} {}",
-                accent.fg(label),
-                muted.fg(item.description.as_deref().unwrap_or(""))
-            )
+        // Multi-line descriptions (skills) collapse to one row; the row is
+        // truncated to the dock width below.
+        let description = item
+            .description
+            .as_deref()
+            .unwrap_or("")
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
+        let label = if i == selection {
+            accent.fg(label)
         } else {
-            format!(
-                "{prefix}{} {}",
-                muted.fg(label),
-                muted.fg(item.description.as_deref().unwrap_or(""))
-            )
+            muted.fg(label)
         };
+        let line = format!("{prefix}{label} {}", muted.fg(&description));
         state
             .autocomplete_container
-            .add_child(Arc::new(Text::new(line, 1, 0)));
+            .add_child(Arc::new(ice_tui::TruncatedText::new(&line, 1, 0)));
     }
 }
 

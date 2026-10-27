@@ -324,37 +324,61 @@ pub(super) async fn run_initial_prompts(
     }
 }
 
-/// Expand explicit skill references without changing the visible draft.
+/// Characters a `$name` skill reference may contain.
+pub(super) fn is_skill_name_char(c: char) -> bool {
+    c.is_alphanumeric() || matches!(c, '-' | '_' | '.' | ':')
+}
+
+/// Expand `$name` references to known skills into their full invocation
+/// blocks. A reference starts a word; trailing `.`/`:` is read as
+/// punctuation. Unknown names (`$PATH`, `$5`) are left as typed.
 pub(super) fn expand_skill_references(
     resources: &ice_harness::types::AgentHarnessResources,
     prompt: &str,
 ) -> String {
+    let skills = resources.skills.as_deref().unwrap_or_default();
     let mut expanded = String::new();
-    let mut rest = prompt;
-    while let Some(start) = rest.find("⟦skill:") {
-        expanded.push_str(&rest[..start]);
-        let tagged = &rest[start..];
-        let Some(end) = tagged.find('⟧') else {
-            expanded.push_str(tagged);
-            return expanded;
-        };
-        let name = &tagged["⟦skill:".len()..end];
-        let end = end + '⟧'.len_utf8();
-        if let Some(skill) = resources
-            .skills
-            .as_deref()
-            .unwrap_or_default()
-            .iter()
-            .find(|s| s.name == name)
+    let mut copied = 0;
+    for (start, _) in prompt.match_indices('$') {
+        if start < copied
+            || prompt[..start]
+                .chars()
+                .next_back()
+                .is_some_and(|c| !c.is_whitespace())
         {
-            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
-        } else {
-            expanded.push_str(&tagged[..end]);
+            continue;
         }
-        rest = &tagged[end..];
+        let rest = &prompt[start + 1..];
+        let len = rest.find(|c| !is_skill_name_char(c)).unwrap_or(rest.len());
+        let name = rest[..len].trim_end_matches(['.', ':']);
+        if let Some(skill) = skills.iter().find(|s| s.name == name) {
+            expanded.push_str(&prompt[copied..start]);
+            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
+            copied = start + 1 + name.len();
+        }
     }
-    expanded.push_str(rest);
+    expanded.push_str(&prompt[copied..]);
     expanded
+}
+
+/// Inverse of [`expand_skill_references`] for display and draft restoration:
+/// each skill invocation block becomes its `$name` reference again.
+pub(super) fn collapse_skill_invocations(text: &str) -> String {
+    static BLOCK: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r#"<skill name="([^"]+)" location="[^"]*">\n(?s:.)*?\n</skill>"#).unwrap()
+    });
+    BLOCK.replace_all(text, "$$$1").into_owned()
+}
+
+/// The message and images to queue for a prompt submitted mid-run.
+pub(super) fn queued_user_message(
+    state: &TuiState,
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> (AgentMessage, Vec<ice_ai::types::ImageContent>) {
+    let images = state.take_prompt_images(prompt);
+    let expanded = expand_skill_references(resources, prompt);
+    (user_message_with_images(&expanded, images.clone()), images)
 }
 
 /// Drive one prompt, reconcile its final response, and settle buffered writes.
@@ -1169,17 +1193,47 @@ fn read_linux_clipboard_image() -> Option<ice_ai::types::ImageContent> {
         &["-selection", "clipboard", "-o", "-t", "image/png"],
     ));
     for (command, args) in commands {
-        if let Ok(output) = std::process::Command::new(command).args(args).output() {
-            if output.status.success() && output.stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
+        if let Some(stdout) = clipboard_command_output(command, args) {
+            if stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
                 return Some(ice_ai::types::ImageContent {
                     kind: ice_ai::types::ImageContentType,
-                    data: base64::engine::general_purpose::STANDARD.encode(output.stdout),
+                    data: base64::engine::general_purpose::STANDARD.encode(stdout),
                     mime_type: "image/png".into(),
                 });
             }
         }
     }
     None
+}
+
+/// Stdout of a successful clipboard tool run, or `None` on failure or after
+/// 2 s. Runs on the key worker, so an unresponsive clipboard owner must not
+/// freeze input. Stdout is drained on a thread: an image larger than the pipe
+/// buffer would otherwise block the child before it exits.
+#[cfg(all(feature = "clipboard", target_os = "linux"))]
+fn clipboard_command_output(command: &str, args: &[&str]) -> Option<Vec<u8>> {
+    let mut child = std::process::Command::new(command)
+        .args(args)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .ok()?;
+    let mut stdout = child.stdout.take()?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = tx.send(std::io::Read::read_to_end(&mut stdout, &mut bytes).map(|_| bytes));
+    });
+    match rx.recv_timeout(std::time::Duration::from_secs(2)) {
+        Ok(Ok(bytes)) if child.wait().is_ok_and(|status| status.success()) => Some(bytes),
+        Ok(_) => None,
+        Err(_) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            None
+        }
+    }
 }
 
 /// Finder copied files arrive as aliases, rather than clipboard bitmaps.
@@ -1279,8 +1333,13 @@ pub(super) fn attach_images_to_draft(
 ) {
     for image in images {
         let number = state.queue_image(image);
-        state.editor.insert(&format!("[Image #{number}]"));
+        state.editor.insert(&format!("{} ", image_marker(number)));
     }
+}
+
+/// Draft marker for the `number`th (1-based) pending image.
+pub(super) fn image_marker(number: usize) -> String {
+    format!("[Image #{number}]")
 }
 
 /// Consume a paste as attachments only when every path is an actual image.

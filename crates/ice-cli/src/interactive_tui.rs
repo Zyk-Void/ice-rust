@@ -294,9 +294,8 @@ struct CommandContext {
 fn submit_user_prompt(ctx: &CommandContext, text: &str) {
     let run_status = *ctx.state.status.lock().unwrap();
     if run_status != RunStatus::Idle {
-        let images = ctx.state.take_pending_images();
-        let expanded = expand_skill_references(&ctx.resources.lock().unwrap(), text);
-        let message = user_message_with_images(&expanded, images.clone());
+        let (message, images) =
+            queued_user_message(&ctx.state, &ctx.resources.lock().unwrap(), text);
         let lane = ctx.lane.clone();
         let chat = ctx.chat.clone();
         let tui = ctx.tui.clone();
@@ -359,7 +358,7 @@ fn submit_user_prompt(ctx: &CommandContext, text: &str) {
         .tx
         .send(TuiMessage::UserInput(
             text.to_string(),
-            ctx.state.take_pending_images(),
+            ctx.state.take_prompt_images(text),
         ))
         .is_err()
     {
@@ -1112,8 +1111,10 @@ fn tool_result_message_text(msg: &ice_ai::types::ToolResultMessage) -> String {
         .join("\n")
 }
 
+/// Display text of a user message. Expanded `$skill` blocks collapse back to
+/// their reference, so transcripts and restored drafts show what was typed.
 fn user_message_text(msg: &ice_ai::types::UserMessage) -> String {
-    match &msg.content {
+    let text = match &msg.content {
         ice_ai::types::UserContent::Text(s) => s.clone(),
         ice_ai::types::UserContent::Blocks(blocks) => blocks
             .iter()
@@ -1122,7 +1123,8 @@ fn user_message_text(msg: &ice_ai::types::UserMessage) -> String {
                 _ => None,
             })
             .collect(),
-    }
+    };
+    collapse_skill_invocations(&text)
 }
 
 /// The catalog allowed in the Ctrl+P cycle: the `/scoped-models` set from
@@ -3183,19 +3185,18 @@ pub async fn interactive_tui(
                         state_for_key.new_message_count.other_message();
                         add_user_message(&state_for_key.chat_container, &prompt);
                         push_history(&state_for_key, &prompt);
-                        let _ = tx_for_key.send(TuiMessage::UserInput(
-                            prompt,
-                            state_for_key.take_pending_images(),
-                        ));
+                        let images = state_for_key.take_prompt_images(&prompt);
+                        let _ = tx_for_key.send(TuiMessage::UserInput(prompt, images));
                     }
                 } else {
                     // Follow-ups are echoed by the loop's
                     // `AgentEvent::MessageStart` once they are consumed; while
                     // they wait, the pending-messages display shows them.
-                    let images = state_for_key.take_pending_images();
-                    let expanded =
-                        expand_skill_references(&ctx_for_key.resources.lock().unwrap(), &prompt);
-                    let message = user_message_with_images(&expanded, images.clone());
+                    let (message, images) = queued_user_message(
+                        &state_for_key,
+                        &ctx_for_key.resources.lock().unwrap(),
+                        &prompt,
+                    );
                     let lane = lane_for_key.clone();
                     let chat = state_for_key.chat_container.clone();
                     let tui = tui_for_key.clone();

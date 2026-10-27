@@ -973,13 +973,107 @@ fn pasted_images_accept_multiple_quoted_paths_without_consuming_normal_text() {
         &format!("\"{}\"", first.display())
     ));
     assert_eq!(state.take_pending_images().len(), 1);
-    assert_eq!(state.editor.get_text(), "[Image #1]existing draft");
+    assert_eq!(state.editor.get_text(), "[Image #1] existing draft");
     state.editor.set_text("");
     assert!(attach_pasted_images(&state, &quoted));
-    assert_eq!(state.editor.get_text(), "[Image #1][Image #2]");
+    assert_eq!(state.editor.get_text(), "[Image #1] [Image #2] ");
     assert_eq!(state.take_pending_images().len(), 2);
     assert!(!attach_pasted_images(&state, "normal clipboard text"));
     assert!(state.take_pending_images().is_empty());
+}
+
+#[test]
+fn submitted_prompt_drops_images_whose_marker_was_deleted() {
+    let state = test_tui_state();
+    let image = |data: &str| ice_ai::types::ImageContent {
+        kind: ice_ai::types::ImageContentType,
+        data: data.into(),
+        mime_type: "image/png".into(),
+    };
+    attach_images_to_draft(&state, vec![image("one"), image("two"), image("three")]);
+    let sent = state.take_prompt_images("look at [Image #3] and [Image #1]");
+    assert_eq!(
+        sent.iter().map(|i| i.data.as_str()).collect::<Vec<_>>(),
+        ["one", "three"]
+    );
+    assert!(state.take_pending_images().is_empty());
+}
+
+fn review_skill() -> ice_harness::types::Skill {
+    ice_harness::types::Skill {
+        name: "review".into(),
+        description: "Review code\nTriggers: review".into(),
+        content: "Instructions".into(),
+        file_path: "/skills/review/SKILL.md".into(),
+        disable_model_invocation: None,
+    }
+}
+
+#[test]
+fn dollar_skill_references_expand_only_known_word_starts() {
+    let resources = ice_harness::types::AgentHarnessResources {
+        skills: Some(vec![review_skill()]),
+        ..Default::default()
+    };
+    let expanded = expand_skill_references(
+        &resources,
+        "use $review. not a$review, $missing, $PATH or $5",
+    );
+    let block = ice_harness::skills::format_skill_invocation(&review_skill(), None);
+    assert_eq!(
+        expanded,
+        format!("use {block}. not a$review, $missing, $PATH or $5")
+    );
+    // Display and draft restoration show the reference, not the skill body.
+    assert_eq!(
+        collapse_skill_invocations(&expanded),
+        "use $review. not a$review, $missing, $PATH or $5"
+    );
+    assert_eq!(expand_skill_references(&resources, "plain"), "plain");
+}
+
+#[test]
+fn queued_prompt_expands_skills_and_keeps_referenced_images() {
+    let state = test_tui_state();
+    let resources = ice_harness::types::AgentHarnessResources {
+        skills: Some(vec![review_skill()]),
+        ..Default::default()
+    };
+    attach_images_to_draft(
+        &state,
+        vec![ice_ai::types::ImageContent {
+            kind: ice_ai::types::ImageContentType,
+            data: "img".into(),
+            mime_type: "image/png".into(),
+        }],
+    );
+    let (message, images) = queued_user_message(&state, &resources, "$review [Image #1]");
+    assert_eq!(images.len(), 1);
+    let AgentMessage::User(user) = message else {
+        panic!("expected a user message");
+    };
+    assert!(crate::interactive_tui::user_message_text(&user).starts_with("$review [Image #1]"));
+}
+
+#[test]
+fn dollar_suggests_skills_at_word_starts() {
+    let registry = CommandRegistry::new();
+    let resources = ice_harness::types::AgentHarnessResources {
+        skills: Some(vec![review_skill()]),
+        ..Default::default()
+    };
+    let provider = build_autocomplete_with_mcp(
+        &registry,
+        &resources,
+        std::path::Path::new("/nonexistent"),
+        None,
+        None,
+    );
+    let suggestions = provider.get_suggestions("use $rev", 8).unwrap();
+    assert_eq!(suggestions.items[0].text, "$review");
+    assert_eq!(suggestions.start, 4);
+    assert!(provider.get_suggestions("cost a$rev", 10).is_none());
+    assert!(provider.get_suggestions("use $rev/x", 10).is_none());
 }
 
 #[test]
@@ -4190,6 +4284,36 @@ fn test_autocomplete_slash_suggestions_render() {
     editor.set_cursor(0, 5);
     refresh_autocomplete(&state, &editor);
     assert!(state.autocomplete_container.render(80).is_empty());
+}
+
+#[test]
+fn autocomplete_long_descriptions_stay_on_one_row() {
+    let state = test_tui_state();
+    let items = (0..5)
+        .map(|i| {
+            ice_tui::AutocompleteItem::new(&format!("skill-{i}")).with_description(&format!(
+                "\nTriggers:\n{}",
+                "A long description ".repeat(30)
+            ))
+        })
+        .collect();
+    render_autocomplete(
+        &state,
+        Some(AutocompleteSuggestions {
+            items,
+            start: 0,
+            end: 1,
+            is_path: false,
+        }),
+    );
+    let lines = state.autocomplete_container.render(40);
+    assert_eq!(lines.len(), 5);
+    assert!(lines
+        .iter()
+        .all(|line| ice_tui::utils::visible_width(line) <= 40));
+    assert!(lines.iter().all(|line| line.contains("...")));
+    // Leading/embedded newlines must not hide the description.
+    assert!(lines.iter().all(|line| line.contains("Triggers:")));
 }
 
 #[test]
