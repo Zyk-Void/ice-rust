@@ -526,10 +526,13 @@ pub fn condense_graph_context(text: &str) -> String {
     }
 }
 
+/// Preserve complete graph records and their supplied metadata. The backend's
+/// result-object count and normalized record count are separate quantities.
+/// Labels are untrusted source labels, not verified IDs or applicability.
 pub fn normalize_recall(payload: &Value) -> Result<Vec<RecallResult>, CogneeError> {
     let values = match payload {
         Value::Array(items) => Some(items),
-        Value::Object(map) => match map.get("results").filter(|v| !v.is_null()) {
+        Value::Object(map) => match map.get("results").filter(|value| !value.is_null()) {
             Some(Value::Array(items)) => Some(items),
             Some(_) => None,
             None => map.get("data").and_then(Value::as_array),
@@ -542,36 +545,138 @@ pub fn normalize_recall(payload: &Value) -> Result<Vec<RecallResult>, CogneeErro
             "Cognee recall returned an unexpected shape",
         )
     })?;
-    Ok(values
-        .iter()
-        .filter_map(|value| match value {
-            Value::String(text) => Some(RecallResult {
-                text: text.clone(),
-                score: None,
-                metadata: None,
-            }),
+    let mut normalized = Vec::new();
+    for (object_index, value) in values.iter().take(128).enumerate() {
+        let (raw, score, mut metadata) = match value {
+            Value::String(text) => (text.as_str(), None, serde_json::Map::new()),
             Value::Object(item) => {
-                let raw = item
+                let Some(text) = item
                     .get("text")
                     .and_then(Value::as_str)
-                    .or_else(|| item.get("content").and_then(Value::as_str))?;
-                let text = condense_graph_context(raw);
-                if text.is_empty() {
-                    return None;
+                    .or_else(|| item.get("content").and_then(Value::as_str))
+                else {
+                    continue;
+                };
+                let mut metadata = match item.get("metadata") {
+                    Some(Value::Object(metadata)) => metadata.clone(),
+                    None | Some(Value::Null) => serde_json::Map::new(),
+                    Some(_) => {
+                        let mut metadata = serde_json::Map::new();
+                        metadata.insert("invalid_applicability_metadata".into(), json!(true));
+                        metadata
+                    }
+                };
+                for key in [
+                    "id",
+                    "source_id",
+                    "source_entry_id",
+                    "sourceEntryId",
+                    "source_uri",
+                    "dataset",
+                    "dataset_name",
+                    "datasetName",
+                    "branch",
+                    "git_branch",
+                    "revision",
+                    "git_revision",
+                    "commit_sha",
+                    "worktree_id",
+                    "worktreeId",
+                    "expires_at",
+                    "expiresAt",
+                    "valid_until_ms",
+                    "validUntilMs",
+                    "expires_at_ms",
+                    "superseded",
+                    "superseded_by",
+                    "deleted",
+                    "source_truncated",
+                ] {
+                    if let Some(value) = item.get(key) {
+                        if metadata.get(key).is_some_and(|old| old != value) {
+                            metadata.insert("invalid_applicability_metadata".into(), json!(true));
+                        } else {
+                            metadata.insert(key.into(), value.clone());
+                        }
+                    }
                 }
-                Some(RecallResult {
-                    text,
-                    score: item.get("score").and_then(Value::as_f64),
-                    metadata: item
-                        .get("metadata")
-                        .filter(|metadata| metadata.is_object() || metadata.is_array())
-                        .cloned(),
-                })
+                (text, item.get("score").and_then(Value::as_f64), metadata)
             }
-            Value::Array(_) => None,
-            _ => None,
+            _ => continue,
+        };
+        if raw.trim().is_empty() {
+            continue;
+        }
+        metadata.insert("backend_result_objects".into(), json!(values.len()));
+        metadata.insert("backend_object_index".into(), json!(object_index));
+        if raw.contains("__node_content_start__") {
+            if raw.matches("__node_content_start__").count()
+                != raw.matches("__node_content_end__").count()
+            {
+                return Err(CogneeError::new(
+                    CogneeErrorKind::Malformed,
+                    "Cognee graph record is incomplete",
+                ));
+            }
+            let nodes =
+                regex!(r"Node: ([^\n]*)\n__node_content_start__\n((?s:.)*?)\n__node_content_end__");
+            let mut found = false;
+            for (node_index, node) in nodes.captures_iter(raw).take(64).enumerate() {
+                found = true;
+                let title = node[1].trim();
+                let body = node[2].trim();
+                if body.is_empty() || body == title {
+                    continue;
+                }
+                let mut node_metadata = metadata.clone();
+                node_metadata.insert(
+                    "graph_node_label".into(),
+                    json!(title.chars().take(256).collect::<String>()),
+                );
+                node_metadata.insert("graph_node_index".into(), json!(node_index));
+                normalized.push(RecallResult {
+                    text: body.into(),
+                    score,
+                    metadata: Some(Value::Object(node_metadata)),
+                });
+                if normalized.len() >= 128 {
+                    break;
+                }
+            }
+            if !found {
+                return Err(CogneeError::new(
+                    CogneeErrorKind::Malformed,
+                    "Cognee graph record has an unsupported envelope",
+                ));
+            }
+        } else {
+            normalized.push(RecallResult {
+                text: raw.into(),
+                score,
+                metadata: Some(Value::Object(metadata)),
+            });
+        }
+        if normalized.len() >= 128 {
+            break;
+        }
+    }
+    Ok(normalized)
+}
+
+/// Unknown for synthetic/legacy empty results; do not equate graph snippets
+/// with backend result objects or imply relevant facts from this count.
+pub fn backend_object_count(results: &[RecallResult]) -> Option<usize> {
+    results
+        .iter()
+        .filter_map(|result| {
+            result
+                .metadata
+                .as_ref()?
+                .get("backend_result_objects")?
+                .as_u64()
         })
-        .collect())
+        .max()
+        .and_then(|count| usize::try_from(count).ok())
 }
 
 /// Client configuration (`CogneeClientConfig`).
@@ -730,8 +835,8 @@ impl CogneeClient {
     }
 
     /// Context-only recall for one dataset, optionally including the session
-    /// cache. Text is capped cumulatively at `max_response_chars`; metadata
-    /// is not.
+    /// cache. Complete records are fitted cumulatively; oversized facts are
+    /// dropped intact rather than stripped of conditions. Metadata is bounded.
     pub async fn recall(
         &self,
         query: &str,
@@ -780,19 +885,32 @@ impl CogneeClient {
             let mut remaining = self.config.max_response_chars;
             Ok(results
                 .into_iter()
-                .take(top_k as usize)
                 .filter_map(|mut result| {
                     if remaining == 0 {
                         return None;
                     }
-                    let text = prefix16(&drop_null_lines(&result.text), remaining).to_string();
-                    remaining = remaining.saturating_sub(len16(&text));
-                    if text.is_empty() {
+                    let text = drop_null_lines(&result.text);
+                    if text.is_empty()
+                        || len16(&text) > remaining
+                        || result
+                            .metadata
+                            .as_ref()
+                            .is_some_and(|metadata| metadata.to_string().len() > 4096)
+                    {
                         return None;
                     }
+                    remaining = remaining.saturating_sub(len16(&text));
                     result.text = text;
+                    if let Some(metadata) = result.metadata.as_mut().and_then(Value::as_object_mut)
+                    {
+                        metadata.insert(
+                            "retrieved_dataset".into(),
+                            json!(options.dataset.as_deref().unwrap_or(&self.config.dataset)),
+                        );
+                    }
                     Some(result)
                 })
+                .take(top_k as usize)
                 .collect())
         }
         .await;
@@ -1168,6 +1286,8 @@ pub(crate) mod tests {
         }
     }
 
+    include!("record_tests.rs");
+
     pub(crate) fn client(transport: Arc<FakeTransport>) -> CogneeClient {
         CogneeClient::new(
             ClientConfig {
@@ -1405,9 +1525,13 @@ pub(crate) mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(results.len(), 2);
+        assert_eq!(
+            results.len(),
+            1,
+            "a partial fact must not be presented as complete"
+        );
         assert_eq!(results[0].score, Some(0.5));
-        assert_eq!(results[1].text, "pl");
+        assert_eq!(results[0].text, "x".repeat(10));
         let sent = transport.sent();
         assert_eq!(sent[0].url, "http://cognee.test/base/api/v1/recall");
         assert!(sent[0]

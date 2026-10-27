@@ -100,7 +100,15 @@ pub fn provenance(result: &RecallResult) -> Provenance {
         })
     };
     Provenance {
-        source_id: field(&["id", "source_id", "entry_id"]),
+        source_id: field(&[
+            "source_id",
+            "source_entry_id",
+            "sourceEntryId",
+            "id",
+            "entry_id",
+            "candidate_id",
+            "candidateId",
+        ]),
         session_id: field(&["session_id", "sessionId"]),
         created_at: field(&["created_at", "createdAt", "timestamp"]),
         dataset: field(&["dataset", "dataset_name", "datasetName"]),
@@ -118,6 +126,18 @@ pub fn provenance_tag(result: &RecallResult) -> Option<String> {
         ("source", provenance.source_id),
         ("session", provenance.session_id),
         ("at", provenance.created_at),
+        ("dataset", provenance.dataset),
+        ("branch", provenance.branch),
+        ("revision", provenance.revision),
+        (
+            "node",
+            result
+                .metadata
+                .as_ref()
+                .and_then(|metadata| metadata.get("graph_node_label"))
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned),
+        ),
     ]
     .into_iter()
     .filter_map(|(key, value)| {
@@ -206,6 +226,116 @@ pub fn select_atomic_with_context(
     select_results(results, seen, Some(context), true)
 }
 
+/// Validate every supplied alias, not just the first one. A backend cannot
+/// make a stale record applicable by providing both a current and old branch.
+fn metadata_rejection(
+    metadata: Option<&serde_json::Value>,
+    ctx: &FilterContext<'_>,
+) -> Option<&'static str> {
+    let Some(metadata) = metadata else {
+        return None;
+    };
+    if metadata.is_null() {
+        return None;
+    }
+    let Some(metadata) = metadata.as_object() else {
+        return Some("unknown_validity");
+    };
+    for key in [
+        "invalid_applicability_metadata",
+        "source_truncated",
+        "truncated",
+    ] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            if value.as_bool() != Some(false) {
+                return Some("unknown_validity");
+            }
+        }
+    }
+    for key in ["superseded", "deleted"] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            match value.as_bool() {
+                Some(true) => return Some("superseded"),
+                Some(false) => {}
+                None => return Some("unknown_validity"),
+            }
+        }
+    }
+    for key in ["superseded_by", "supersededBy"] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            return Some(if value.as_str().is_some_and(|value| !value.is_empty()) {
+                "superseded"
+            } else {
+                "unknown_validity"
+            });
+        }
+    }
+    for (keys, current, rejection) in [
+        (
+            &["branch", "git_branch"][..],
+            ctx.branch.as_deref(),
+            "wrong_branch",
+        ),
+        (
+            &["revision", "git_revision", "commit_sha"][..],
+            ctx.revision.as_deref(),
+            "wrong_revision",
+        ),
+        (
+            &["worktree_id", "worktreeId"][..],
+            ctx.worktree_id.as_deref(),
+            "wrong_worktree",
+        ),
+    ] {
+        for key in keys {
+            if let Some(value) = metadata.get(*key).filter(|value| !value.is_null()) {
+                let Some(value) = value.as_str().filter(|value| !value.trim().is_empty()) else {
+                    return Some("unknown_validity");
+                };
+                if current != Some(value) {
+                    return Some(rejection);
+                }
+            }
+        }
+    }
+    for key in [
+        "dataset",
+        "dataset_name",
+        "datasetName",
+        "retrieved_dataset",
+    ] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            let Some(value) = value.as_str().filter(|value| !value.trim().is_empty()) else {
+                return Some("unknown_validity");
+            };
+            if value != ctx.dataset && ctx.legacy_dataset.as_deref() != Some(value) {
+                return Some("wrong_scope");
+            }
+        }
+    }
+    for key in ["expires_at", "expiresAt", "valid_until", "validUntil"] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            let Some(expiry) = value.as_str().and_then(parse_rfc3339_ms) else {
+                return Some("unknown_validity");
+            };
+            if expiry <= ctx.now_ms.min(i64::MAX as u64) as i64 {
+                return Some("expired");
+            }
+        }
+    }
+    for key in ["valid_until_ms", "validUntilMs", "expires_at_ms"] {
+        if let Some(value) = metadata.get(key).filter(|value| !value.is_null()) {
+            let Some(expiry) = value.as_u64() else {
+                return Some("unknown_validity");
+            };
+            if expiry <= ctx.now_ms {
+                return Some("expired");
+            }
+        }
+    }
+    None
+}
+
 fn select_results(
     results: &[RecallResult],
     seen: &mut SeenEvidence,
@@ -214,7 +344,6 @@ fn select_results(
 ) -> Selection {
     let mut selection = Selection::default();
     for result in results {
-        let provenance = provenance(result);
         let line_count = if atomic {
             u32::from(!result.text.trim().is_empty())
         } else {
@@ -225,96 +354,17 @@ fn select_results(
                 .count() as u32
         };
         if let Some(ctx) = context {
-            if let Some(expires_at) = provenance.expires_at.as_deref() {
-                match parse_rfc3339_ms(expires_at) {
-                    Some(expires_at) if expires_at <= ctx.now_ms.min(i64::MAX as u64) as i64 => {
-                        selection.rejected.expired += line_count;
-                        continue;
-                    }
-                    None => {
-                        selection.rejected.unknown_validity += line_count;
-                        continue;
-                    }
-                    _ => {}
+            if let Some(reason) = metadata_rejection(result.metadata.as_ref(), ctx) {
+                match reason {
+                    "expired" => selection.rejected.expired += line_count,
+                    "superseded" => selection.rejected.superseded += line_count,
+                    "wrong_scope" => selection.rejected.wrong_scope += line_count,
+                    "wrong_branch" => selection.rejected.wrong_branch += line_count,
+                    "wrong_revision" => selection.rejected.wrong_revision += line_count,
+                    "wrong_worktree" => selection.rejected.wrong_worktree += line_count,
+                    _ => selection.rejected.unknown_validity += line_count,
                 }
-            }
-            if provenance.superseded_by.is_some() {
-                selection.rejected.superseded += line_count;
                 continue;
-            }
-            if provenance.dataset.as_deref().is_some_and(|dataset| {
-                dataset != ctx.dataset && ctx.legacy_dataset.as_deref() != Some(dataset)
-            }) {
-                selection.rejected.wrong_scope += line_count;
-                continue;
-            }
-            if provenance
-                .branch
-                .as_deref()
-                .is_some_and(|branch| ctx.branch.as_deref() != Some(branch))
-            {
-                selection.rejected.wrong_branch += line_count;
-                continue;
-            }
-            if provenance
-                .revision
-                .as_deref()
-                .is_some_and(|revision| ctx.revision.as_deref() != Some(revision))
-            {
-                selection.rejected.wrong_revision += line_count;
-                continue;
-            }
-            if provenance
-                .worktree_id
-                .as_deref()
-                .is_some_and(|worktree| ctx.worktree_id.as_deref() != Some(worktree))
-            {
-                selection.rejected.wrong_worktree += line_count;
-                continue;
-            }
-            if let Some(metadata) = result.metadata.as_ref() {
-                // Explicitly malformed restrictions must not become unscoped
-                // facts merely because a string accessor returned None.
-                let malformed = [
-                    "branch",
-                    "git_branch",
-                    "revision",
-                    "git_revision",
-                    "commit_sha",
-                    "worktree_id",
-                    "worktreeId",
-                    "dataset",
-                    "dataset_name",
-                    "datasetName",
-                ]
-                .iter()
-                .any(|key| {
-                    metadata.get(*key).is_some_and(|value| {
-                        !value.is_null() && value.as_str().is_none_or(|text| text.trim().is_empty())
-                    })
-                });
-                if malformed {
-                    selection.rejected.unknown_validity += line_count;
-                    continue;
-                }
-                if let Some(expiry) = metadata
-                    .get("valid_until_ms")
-                    .or_else(|| metadata.get("expires_at_ms"))
-                {
-                    if !expiry.is_null() {
-                        match expiry.as_u64() {
-                            Some(expiry) if expiry > ctx.now_ms => {}
-                            Some(_) => {
-                                selection.rejected.expired += line_count;
-                                continue;
-                            }
-                            None => {
-                                selection.rejected.unknown_validity += line_count;
-                                continue;
-                            }
-                        }
-                    }
-                }
             }
         }
         let mut kept = Vec::new();

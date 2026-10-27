@@ -280,6 +280,7 @@ impl CogneeRuntime {
                 },
                 result = work => result,
             };
+            let backend_count = result.as_ref().ok().and_then(|results| crate::cognee::client::backend_object_count(results));
             let elapsed = started.elapsed().as_millis() as u64;
             let current = this.operation_context();
             let stale_generation = current.generation != context.generation;
@@ -311,7 +312,7 @@ impl CogneeRuntime {
             drop(state);
             this.observe_for("recall", phase, ObserveFields {
                 request_id: Some(request_id), latency_ms: Some(elapsed), error,
-                meta: super::meta(json!({"source":"prefetch", "outcomeVersion":2, "outcome":outcome, "remoteWaitMs":elapsed, "foregroundWaitMs":0, "hits":if stale {0} else {hits}, "backendResultObjects":if stale {0} else {hits}, "reason":reason})),
+                meta: super::meta(json!({"source":"prefetch", "outcomeVersion":2, "outcome":outcome, "remoteWaitMs":elapsed, "foregroundWaitMs":0, "hits":if stale {0} else {hits}, "backendResultObjects":if stale {None} else {backend_count}, "normalizedRecords":if stale {0} else {hits}, "reason":reason})),
                 ..ObserveFields::default()
             }, Some((&session_id, &dataset)));
         });

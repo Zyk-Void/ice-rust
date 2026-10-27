@@ -203,7 +203,7 @@ pub fn prepare_selection(
         if normalized.is_empty() {
             return false;
         }
-        if active.contains(&normalized) {
+        if active.contains(&normalized) || active.contains(&normalize(&escape(&line.text))) {
             selection.rejected.active_context += 1;
             return false;
         }

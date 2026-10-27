@@ -73,6 +73,35 @@ fn body_hash(text: &str) -> String {
 impl CogneeRuntime {
     /// Current applicability snapshot for shared candidate admission. It is
     /// initialized by a host lifecycle/request event, never by a remote judge.
+    /// Refresh bounded Git metadata for an explicit operation. Changes fence
+    /// in-flight optional work before returning the new applicability snapshot.
+    pub(crate) fn refresh_repository_identity(&self) -> Option<RepositoryIdentity> {
+        let cwd = self.cwd.lock().unwrap().clone();
+        let (changed, identity) = {
+            let mut coordinator = self.read_coordinator.lock().unwrap();
+            let changed = coordinator
+                .repository
+                .refresh(cwd.as_deref().unwrap_or_else(|| Path::new(".")), false);
+            let identity = coordinator.repository.snapshot().cloned();
+            if changed {
+                coordinator.pending.clear();
+                coordinator.resident.clear();
+                coordinator.resident_dirty = true;
+                coordinator.resident_revision = coordinator.resident_revision.wrapping_add(1);
+            }
+            (changed, identity)
+        };
+        if changed {
+            let mut state = self.state();
+            state.context_generation = state.context_generation.saturating_add(1);
+            state.evidence_cache.clear();
+            state.seen_evidence.clear();
+            state.helper_cancel.cancel();
+            state.helper_cancel = CancellationToken::new();
+        }
+        identity
+    }
+
     pub(crate) fn repository_identity(&self) -> Option<RepositoryIdentity> {
         self.read_coordinator
             .lock()
@@ -330,6 +359,10 @@ impl CogneeRuntime {
                     budget_ms,
                 )
                 .await;
+                let backend_count = result
+                    .as_ref()
+                    .ok()
+                    .and_then(|results| crate::cognee::client::backend_object_count(results));
                 let stale = self.operation_context() != operation || event.signal.is_cancelled();
                 let (phase, outcome, count, error) = match result {
                     Ok(results) if !stale => {
@@ -361,7 +394,7 @@ impl CogneeRuntime {
                 };
                 self.observe_for("recall", phase, ObserveFields {
                     request_id: Some(request_id), latency_ms: Some(started.elapsed().as_millis() as u64), error,
-                    meta: meta(json!({"outcomeVersion":2,"outcome":outcome,"backendResultObjects":count,"hits":count,"foregroundWaitMs":started.elapsed().as_millis() as u64,"taskId":task_id,"runId":event.run_id})),
+                    meta: meta(json!({"outcomeVersion":2,"outcome":outcome,"backendResultObjects":backend_count,"normalizedRecords":count,"hits":count,"foregroundWaitMs":started.elapsed().as_millis() as u64,"taskId":task_id,"runId":event.run_id})),
                     ..ObserveFields::default()
                 }, Some((&session_id, &operation.dataset)));
                 if stale {
@@ -445,7 +478,7 @@ impl CogneeRuntime {
         }
         self.observe_for("selection", "succeeded", ObserveFields {
             request_id: Some(id.clone()),
-            meta: meta(json!({"outcomeVersion":2,"outcome":"prepared","backendResultObjects":results,"retainedRecords":retained,"rejected":selection.rejected,"taskId":task_id,"runId":event.run_id,"foregroundWaitMs":0})),
+            meta: meta(json!({"outcomeVersion":2,"outcome":"prepared","candidateRecords":results,"retainedRecords":retained,"rejected":selection.rejected,"taskId":task_id,"runId":event.run_id,"foregroundWaitMs":0})),
             ..ObserveFields::default()
         }, Some((&session_id, &operation.dataset)));
         Some(PromptContext {

@@ -14,6 +14,8 @@
 
 #[path = "coordinator.rs"]
 mod coordinator;
+#[path = "lookup.rs"]
+mod lookup;
 #[path = "request.rs"]
 mod request;
 
@@ -2438,119 +2440,14 @@ impl CogneeRuntime {
 
     // ── recall paths shared by the tool and commands ──
 
-    /// Model-facing search: no session scope, no circuit admission check.
+    /// Explicit searches share one scoped, context-only contract with the UI.
     pub async fn search_for_tool(&self, query: &str, signal: CancellationToken) -> (String, Value) {
-        self.ensure_loaded();
-        let dataset = self.active_dataset();
-        let (client, top_k, max_chars, legacy_dataset, budget_ms) = {
-            let state = self.state();
-            (
-                state.client.clone(),
-                state.config.top_k,
-                state.config.recall_max_chars,
-                state.fallback_dataset(),
-                state.config.recall_budget_ms,
-            )
-        };
-        let Some(client) = client.filter(|_| self.is_enabled()) else {
-            return (
-                "Cognee is disabled.".into(),
-                json!({"enabled": false, "count": 0, "dataset": dataset}),
-            );
-        };
-        let (result, legacy_attempted) = recall_with_fallback(
-            &client,
-            query,
-            RecallOptions {
-                top_k: Some(top_k),
-                dataset: Some(dataset.clone()),
-                signal: Some(signal),
-                ..RecallOptions::default()
-            },
-            legacy_dataset,
-            budget_ms,
-        )
-        .await;
-        match result {
-            Ok(results) => {
-                self.state().recall_circuit.reset();
-                let lines = self.recall_evidence(&results).lines;
-                let text = if lines.is_empty() {
-                    "No Cognee memory found.".to_string()
-                } else {
-                    format_recall(&lines, max_chars)
-                };
-                let mut details =
-                    json!({"enabled": true, "count": results.len(), "dataset": dataset});
-                if legacy_attempted.is_some() {
-                    details["legacyHits"] = json!(results.len());
-                }
-                (text, details)
-            }
-            Err(error) => {
-                let kind = error_kind(&error);
-                {
-                    let mut state = self.state();
-                    state.last_error = Some(kind.clone());
-                    state.recall_circuit.note_failure(&kind, wall_ms());
-                }
-                (
-                    format!("Cognee search failed: {kind}"),
-                    json!({"enabled": true, "count": 0, "dataset": dataset, "error": kind}),
-                )
-            }
-        }
+        self.explicit_lookup(query, signal).await
     }
 
-    /// `/cognee search`.
+    /// `/cognee search` uses the same deadline, aliases and source filters.
     pub async fn manual_search(&self, query: &str) {
-        self.ensure_loaded();
-        let Some(client) = self.live_client() else {
-            self.notify(NoticeLevel::Warning, self.disabled_message());
-            return;
-        };
-        let (top_k, max_chars, dataset) = {
-            let state = self.state();
-            (
-                state.config.top_k,
-                state.config.recall_max_chars,
-                state.active_dataset(),
-            )
-        };
-        let result = client
-            .recall(
-                query,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
-        match result {
-            Ok(results) => {
-                {
-                    let mut state = self.state();
-                    state.recall_circuit.reset();
-                    state.last_error = None;
-                }
-                let text = if results.is_empty() {
-                    "No Cognee memory found".to_string()
-                } else {
-                    format_recall(&recall_lines(&results), max_chars)
-                };
-                self.notify(NoticeLevel::Info, text);
-            }
-            Err(error) => {
-                let kind = error_kind(&error);
-                {
-                    let mut state = self.state();
-                    state.last_error = Some(kind.clone());
-                    state.recall_circuit.note_failure(&kind, wall_ms());
-                }
-                self.notify(NoticeLevel::Error, format!("Cognee search failed: {kind}"));
-            }
-        }
+        self.explicit_search_notice(query).await;
     }
 
     fn disabled_message(&self) -> &'static str {
@@ -4003,6 +3900,7 @@ mod tests {
     const NOW: u64 = 1_800_000_000_000;
 
     include!("request_tests.rs");
+    include!("lookup_tests.rs");
 
     #[derive(Clone, Copy)]
     enum TestVerdict {
