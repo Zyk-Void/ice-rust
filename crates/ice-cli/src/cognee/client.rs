@@ -7,7 +7,7 @@
 //! responses without a network, as the TypeScript client injects `fetch`.
 
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use futures::{Stream, StreamExt};
@@ -607,16 +607,117 @@ pub struct ServerModel {
     pub model: Option<String>,
 }
 
+/// Last completed outcome and bounded counters for one operation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OperationOutcome {
+    pub class: &'static str,
+    pub attempts: u64,
+    pub consecutive_failures: u64,
+}
+
+impl Default for OperationOutcome {
+    fn default() -> Self {
+        Self {
+            class: "never_called",
+            attempts: 0,
+            consecutive_failures: 0,
+        }
+    }
+}
+
+impl OperationOutcome {
+    fn record<T>(&mut self, result: &Result<T, CogneeError>, not_found: bool) {
+        self.class = if not_found
+            && (result.is_ok()
+                || result
+                    .as_ref()
+                    .is_err_and(|error| error.kind == CogneeErrorKind::NotFound))
+        {
+            "not_found"
+        } else {
+            match result {
+                Ok(_) => "ok",
+                Err(error) if error.status == Some(422) => "invalid_request",
+                Err(error) if error.kind == CogneeErrorKind::ResponseTooLarge => "too_large",
+                Err(error) => error.kind.as_str(),
+            }
+        };
+        self.attempts = self.attempts.saturating_add(1);
+        self.consecutive_failures = if self.class == "ok" {
+            0
+        } else {
+            self.consecutive_failures.saturating_add(1)
+        };
+    }
+}
+
+/// A point-in-time snapshot of the four native operations.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct OperationOutcomesSnapshot {
+    pub recall: OperationOutcome,
+    pub remember: OperationOutcome,
+    pub remember_entry: OperationOutcome,
+    pub improve: OperationOutcome,
+}
+
+impl std::fmt::Display for OperationOutcomesSnapshot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, (name, outcome)) in [
+            ("recall", &self.recall),
+            ("remember", &self.remember),
+            ("remember_entry", &self.remember_entry),
+            ("improve", &self.improve),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            if index > 0 {
+                f.write_str(",")?;
+            }
+            write!(f, "{}:{}", name, outcome.class)?;
+            if outcome.attempts > 0 {
+                write!(f, "({})", outcome.attempts)?;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// The memory client used by the extension runtime.
 #[derive(Clone)]
 pub struct CogneeClient {
     pub config: ClientConfig,
     transport: Arc<dyn CogneeTransport>,
+    outcomes: Arc<Mutex<OperationOutcomesSnapshot>>,
 }
 
 impl CogneeClient {
     pub fn new(config: ClientConfig, transport: Arc<dyn CogneeTransport>) -> Self {
-        Self { config, transport }
+        Self {
+            config,
+            transport,
+            outcomes: Arc::new(Mutex::new(OperationOutcomesSnapshot::default())),
+        }
+    }
+
+    pub fn operation_outcomes(&self) -> OperationOutcomesSnapshot {
+        self.outcomes
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+
+    fn record_outcome<T>(
+        &self,
+        select: fn(&mut OperationOutcomesSnapshot) -> &mut OperationOutcome,
+        result: &Result<T, CogneeError>,
+        not_found: bool,
+    ) {
+        let mut outcomes = self
+            .outcomes
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        select(&mut outcomes).record(result, not_found);
     }
 
     fn json_post(&self, path: &str, body: Value) -> Result<HttpRequest, CogneeError> {
@@ -636,58 +737,71 @@ impl CogneeClient {
         query: &str,
         options: RecallOptions,
     ) -> Result<Vec<RecallResult>, CogneeError> {
-        let scope = if options.scope.is_empty() {
-            vec!["session".to_string(), "trace".into(), "graph".into()]
-        } else {
-            options.scope.clone()
-        };
-        let top_k = options.top_k.unwrap_or(5);
-        let mut body = json!({
-            "query": query,
-            "topK": top_k,
-            "onlyContext": true,
-            "scope": scope,
-        });
-        if let Some(session) = options.session_id.as_ref().filter(|id| !id.is_empty()) {
-            body["sessionId"] = json!(session);
+        let not_found = std::sync::atomic::AtomicBool::new(false);
+        let result = async {
+            let scope = if options.scope.is_empty() {
+                vec!["session".to_string(), "trace".into(), "graph".into()]
+            } else {
+                options.scope.clone()
+            };
+            let top_k = options.top_k.unwrap_or(5);
+            let mut body = json!({
+                "query": query,
+                "topK": top_k,
+                "onlyContext": true,
+                "scope": scope,
+            });
+            if let Some(session) = options.session_id.as_ref().filter(|id| !id.is_empty()) {
+                body["sessionId"] = json!(session);
+            }
+            body["datasets"] = json!([options
+                .dataset
+                .clone()
+                .unwrap_or_else(|| self.config.dataset.clone())]);
+            let http = self.json_post("/api/v1/recall", body)?;
+            let observed_not_found = &not_found;
+            let payload = request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(self.config.recall_budget_ms),
+                |mut response| async move {
+                    observed_not_found
+                        .store(response.status == 404, std::sync::atomic::Ordering::Relaxed);
+                    if is_uncognified_dataset(&mut response).await {
+                        return Ok(Value::Array(Vec::new()));
+                    }
+                    assert_ok(&response, "recall")?;
+                    read_json(&mut response, MAX_RECALL_RESPONSE_BYTES).await
+                },
+            )
+            .await?;
+            let results = normalize_recall(&payload)?;
+            let mut remaining = self.config.max_response_chars;
+            Ok(results
+                .into_iter()
+                .take(top_k as usize)
+                .filter_map(|mut result| {
+                    if remaining == 0 {
+                        return None;
+                    }
+                    let text = prefix16(&drop_null_lines(&result.text), remaining).to_string();
+                    remaining = remaining.saturating_sub(len16(&text));
+                    if text.is_empty() {
+                        return None;
+                    }
+                    result.text = text;
+                    Some(result)
+                })
+                .collect())
         }
-        body["datasets"] = json!([options
-            .dataset
-            .clone()
-            .unwrap_or_else(|| self.config.dataset.clone())]);
-        let http = self.json_post("/api/v1/recall", body)?;
-        let payload = request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(self.config.recall_budget_ms),
-            |mut response| async move {
-                if is_uncognified_dataset(&mut response).await {
-                    return Ok(Value::Array(Vec::new()));
-                }
-                assert_ok(&response, "recall")?;
-                read_json(&mut response, MAX_RECALL_RESPONSE_BYTES).await
-            },
-        )
-        .await?;
-        let results = normalize_recall(&payload)?;
-        let mut remaining = self.config.max_response_chars;
-        Ok(results
-            .into_iter()
-            .take(top_k as usize)
-            .filter_map(|mut result| {
-                if remaining == 0 {
-                    return None;
-                }
-                let text = prefix16(&drop_null_lines(&result.text), remaining).to_string();
-                remaining = remaining.saturating_sub(len16(&text));
-                if text.is_empty() {
-                    return None;
-                }
-                result.text = text;
-                Some(result)
-            })
-            .collect())
+        .await;
+        self.record_outcome(
+            |outcomes| &mut outcomes.recall,
+            &result,
+            not_found.load(std::sync::atomic::Ordering::Relaxed),
+        );
+        result
     }
 
     /// Background ingestion into a dataset/node set. Success means accepted.
@@ -699,56 +813,61 @@ impl CogneeClient {
         session_id: Option<&str>,
         options: CallOptions,
     ) -> Result<(), CogneeError> {
-        let mut parts = vec![
-            FormPart {
-                name: "datasetName".into(),
-                value: dataset.unwrap_or(&self.config.dataset).into(),
-                filename: None,
-                content_type: None,
-            },
-            FormPart {
-                name: "node_set".into(),
-                value: node_set.into(),
-                filename: None,
-                content_type: None,
-            },
-            FormPart {
-                name: "run_in_background".into(),
-                value: "true".into(),
-                filename: None,
-                content_type: None,
-            },
-        ];
-        if let Some(session) = session_id.filter(|id| !id.is_empty()) {
+        let result = async {
+            let mut parts = vec![
+                FormPart {
+                    name: "datasetName".into(),
+                    value: dataset.unwrap_or(&self.config.dataset).into(),
+                    filename: None,
+                    content_type: None,
+                },
+                FormPart {
+                    name: "node_set".into(),
+                    value: node_set.into(),
+                    filename: None,
+                    content_type: None,
+                },
+                FormPart {
+                    name: "run_in_background".into(),
+                    value: "true".into(),
+                    filename: None,
+                    content_type: None,
+                },
+            ];
+            if let Some(session) = session_id.filter(|id| !id.is_empty()) {
+                parts.push(FormPart {
+                    name: "session_id".into(),
+                    value: session.into(),
+                    filename: None,
+                    content_type: None,
+                });
+            }
             parts.push(FormPart {
-                name: "session_id".into(),
-                value: session.into(),
-                filename: None,
-                content_type: None,
+                name: "data".into(),
+                value: text.into(),
+                filename: Some("ice-cognee.txt".into()),
+                content_type: Some("text/plain".into()),
             });
+            let http = HttpRequest {
+                method: Method::Post,
+                url: build_url(&self.config.base_url, "/api/v1/remember")?,
+                headers: headers(self.config.api_key.as_deref(), None),
+                body: Body::Multipart(parts),
+            };
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options
+                    .timeout_ms
+                    .unwrap_or(self.config.recall_budget_ms.max(30_000)),
+                |response| async move { assert_ok(&response, "remember") },
+            )
+            .await
         }
-        parts.push(FormPart {
-            name: "data".into(),
-            value: text.into(),
-            filename: Some("ice-cognee.txt".into()),
-            content_type: Some("text/plain".into()),
-        });
-        let http = HttpRequest {
-            method: Method::Post,
-            url: build_url(&self.config.base_url, "/api/v1/remember")?,
-            headers: headers(self.config.api_key.as_deref(), None),
-            body: Body::Multipart(parts),
-        };
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options
-                .timeout_ms
-                .unwrap_or(self.config.recall_budget_ms.max(30_000)),
-            |response| async move { assert_ok(&response, "remember") },
-        )
-        .await
+        .await;
+        self.record_outcome(|outcomes| &mut outcomes.remember, &result, false);
+        result
     }
 
     /// Store a QA/trace entry in the session cache. A malformed or oversized
@@ -761,40 +880,45 @@ impl CogneeClient {
         session_id: &str,
         options: CallOptions,
     ) -> Result<Option<String>, CogneeError> {
-        let http = self.json_post(
-            "/api/v1/remember/entry",
-            json!({
-                "entry": entry,
-                "dataset_name": dataset.unwrap_or(&self.config.dataset),
-                "session_id": session_id,
-            }),
-        )?;
-        let cap = self.config.max_response_chars;
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(30_000),
-            |mut response| async move {
-                assert_ok(&response, "remember/entry")?;
-                match read_json(&mut response, cap).await {
-                    Ok(payload) => Ok(payload
-                        .get("entry_id")
-                        .and_then(Value::as_str)
-                        .map(str::to_string)),
-                    Err(error)
-                        if matches!(
-                            error.kind,
-                            CogneeErrorKind::Malformed | CogneeErrorKind::ResponseTooLarge
-                        ) =>
-                    {
-                        Ok(None)
+        let result = async {
+            let http = self.json_post(
+                "/api/v1/remember/entry",
+                json!({
+                    "entry": entry,
+                    "dataset_name": dataset.unwrap_or(&self.config.dataset),
+                    "session_id": session_id,
+                }),
+            )?;
+            let cap = self.config.max_response_chars;
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(30_000),
+                |mut response| async move {
+                    assert_ok(&response, "remember/entry")?;
+                    match read_json(&mut response, cap).await {
+                        Ok(payload) => Ok(payload
+                            .get("entry_id")
+                            .and_then(Value::as_str)
+                            .map(str::to_string)),
+                        Err(error)
+                            if matches!(
+                                error.kind,
+                                CogneeErrorKind::Malformed | CogneeErrorKind::ResponseTooLarge
+                            ) =>
+                        {
+                            Ok(None)
+                        }
+                        Err(error) => Err(error),
                     }
-                    Err(error) => Err(error),
-                }
-            },
-        )
-        .await
+                },
+            )
+            .await
+        }
+        .await;
+        self.record_outcome(|outcomes| &mut outcomes.remember_entry, &result, false);
+        result
     }
 
     /// Ask Cognee to consolidate the session cache (accepted, not completed).
@@ -804,20 +928,25 @@ impl CogneeClient {
         session_ids: &[String],
         options: CallOptions,
     ) -> Result<(), CogneeError> {
-        let mut body = json!({"datasetName": dataset.unwrap_or(&self.config.dataset)});
-        if !session_ids.is_empty() {
-            body["sessionIds"] = json!(session_ids);
+        let result = async {
+            let mut body = json!({"datasetName": dataset.unwrap_or(&self.config.dataset)});
+            if !session_ids.is_empty() {
+                body["sessionIds"] = json!(session_ids);
+            }
+            body["runInBackground"] = json!(true);
+            let http = self.json_post("/api/v1/improve", body)?;
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(120_000),
+                |response| async move { assert_ok(&response, "improve") },
+            )
+            .await
         }
-        body["runInBackground"] = json!(true);
-        let http = self.json_post("/api/v1/improve", body)?;
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(120_000),
-            |response| async move { assert_ok(&response, "improve") },
-        )
-        .await
+        .await;
+        self.record_outcome(|outcomes| &mut outcomes.improve, &result, false);
+        result
     }
 
     /// Register this session as a hybrid-memory API agent; a 404 counts as
@@ -1050,6 +1179,135 @@ pub(crate) mod tests {
             },
             transport,
         )
+    }
+
+    async fn run_operation(client: &CogneeClient, operation: usize, timeout_ms: u64) {
+        let options = CallOptions {
+            timeout_ms: Some(timeout_ms),
+            ..Default::default()
+        };
+        match operation {
+            0 => {
+                let _ = client
+                    .recall(
+                        "query",
+                        RecallOptions {
+                            timeout_ms: Some(timeout_ms),
+                            ..Default::default()
+                        },
+                    )
+                    .await;
+            }
+            1 => {
+                let _ = client.remember("text", "nodes", None, None, options).await;
+            }
+            2 => {
+                let _ = client
+                    .remember_entry(&json!({}), None, "session", options)
+                    .await;
+            }
+            3 => {
+                let _ = client.improve(None, &[], options).await;
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn outcome(snapshot: &OperationOutcomesSnapshot, operation: usize) -> &OperationOutcome {
+        match operation {
+            0 => &snapshot.recall,
+            1 => &snapshot.remember,
+            2 => &snapshot.remember_entry,
+            3 => &snapshot.improve,
+            _ => unreachable!(),
+        }
+    }
+
+    #[tokio::test]
+    async fn operation_outcomes_classify_all_operations_and_share_clones() {
+        for operation in 0..4 {
+            let transport = Arc::new(FakeTransport::default());
+            let client = client(transport.clone());
+            let clone = client.clone();
+            for index in 0..4 {
+                assert_eq!(
+                    outcome(&client.operation_outcomes(), index),
+                    &OperationOutcome::default()
+                );
+            }
+            let cases = [
+                (200, "ok"),
+                (404, "not_found"),
+                (422, "invalid_request"),
+                (401, "auth_failed"),
+                (403, "auth_failed"),
+                (500, "server_error"),
+            ];
+            for (index, (status, expected)) in cases.into_iter().enumerate() {
+                transport.push(FakeResponse::json(status, json!({"results": []})));
+                let before = transport.sent().len();
+                run_operation(&clone, operation, 1000).await;
+                assert_eq!(
+                    transport.sent().len(),
+                    before + 1,
+                    "operation {operation} status {status}"
+                );
+                let snapshot = client.operation_outcomes();
+                let observed = outcome(&snapshot, operation);
+                assert_eq!(
+                    observed.class, expected,
+                    "operation {operation} status {status}"
+                );
+                assert_eq!(observed.attempts, index as u64 + 1);
+                assert_eq!(observed.consecutive_failures, index as u64);
+            }
+            transport.push(FakeResponse::Fail);
+            run_operation(&client, operation, 1000).await;
+            assert_eq!(
+                outcome(&clone.operation_outcomes(), operation).class,
+                "unreachable"
+            );
+            transport.push(FakeResponse::Ok {
+                status: 200,
+                headers: vec![],
+                chunks: vec![],
+                delay_ms: 100,
+            });
+            run_operation(&client, operation, 1).await;
+            assert_eq!(
+                outcome(&clone.operation_outcomes(), operation).class,
+                "timeout"
+            );
+            transport.push(FakeResponse::json(200, json!({"results": []})));
+            run_operation(&clone, operation, 1000).await;
+            let snapshot = client.operation_outcomes();
+            let observed = outcome(&snapshot, operation);
+            assert_eq!(
+                (
+                    observed.class,
+                    observed.attempts,
+                    observed.consecutive_failures
+                ),
+                ("ok", 9, 0)
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn recall_uncognified_404_records_not_found_without_changing_result() {
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            404,
+            json!({"error": "Recall prerequisites not met"}),
+        ));
+        let client = client(transport.clone());
+        assert!(client
+            .recall("query", RecallOptions::default())
+            .await
+            .unwrap()
+            .is_empty());
+        assert_eq!(transport.sent().len(), 1);
+        assert_eq!(client.operation_outcomes().recall.class, "not_found");
     }
 
     fn body_json(request: &HttpRequest) -> Value {

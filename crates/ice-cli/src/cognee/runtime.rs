@@ -26,8 +26,8 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::client::{
-    CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport, RecallOptions,
-    RecallResult, ReqwestTransport,
+    CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport,
+    OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
 };
 use super::config::{
     find_git_root, load_connection, process_env, repository_root, resolve_runtime_dataset,
@@ -224,6 +224,7 @@ pub struct DoctorReport {
     pub api_key_source: KeySource,
     pub healthy: bool,
     pub health_detail: String,
+    pub operation_outcomes: OperationOutcomesSnapshot,
     pub capture_session: bool,
     pub capture_tools: bool,
     pub auto_recall: bool,
@@ -300,6 +301,7 @@ impl DoctorReport {
             "nativeRememberEntry=POST:/api/v1/remember/entry (JSON entry, dataset_name, session_id; support unverified)".to_string(),
             "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status: not exposed by this adapter)".to_string(),
             "mcpCognee=separate catalog (not probed)".to_string(),
+            format!("operations={}", self.operation_outcomes),
             format!("health={}", self.health()),
             format!("endpoint={}", sanitize_endpoint(&self.base_url)),
             format!("dataset={}", self.dataset),
@@ -1447,6 +1449,11 @@ impl CogneeRuntime {
             api_key_source: state.key_source,
             healthy,
             health_detail: detail,
+            operation_outcomes: state
+                .client
+                .as_ref()
+                .map(CogneeClient::operation_outcomes)
+                .unwrap_or_default(),
             capture_session: state.config.capture_session,
             capture_tools: state.config.capture_tools,
             auto_recall: state.config.auto_recall,
@@ -3403,6 +3410,19 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), true);
+        rt.ensure_loaded();
+        let mut client = rt.state().client.clone().unwrap();
+        client.config.api_key = Some("private-api-key".into());
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        client
+            .recall("query", RecallOptions::default())
+            .await
+            .unwrap();
+        transport.push(FakeResponse::json(404, json!({})));
+        client
+            .improve(None, &[], CallOptions::default())
+            .await
+            .unwrap_err();
         let mut report = rt.collect_doctor().await;
         report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
         let doctor = report.doctor_line();
@@ -3413,9 +3433,11 @@ mod tests {
         assert!(doctor.contains("sends datasetName, sessionIds, runInBackground"));
         assert!(doctor.contains("completion status: not exposed by this adapter"));
         assert!(doctor.contains("mcpCognee=separate catalog (not probed)"));
+        assert!(doctor.contains("operations=recall:ok(1),remember:never_called,remember_entry:never_called,improve:not_found(1)"));
         assert!(!doctor.contains("secret"));
+        assert!(!doctor.contains("private-api-key"));
         assert!(!report.status_line().contains("secret"));
-        assert!(transport.sent().is_empty());
+        assert_eq!(transport.sent().len(), 2);
     }
 
     #[tokio::test]
