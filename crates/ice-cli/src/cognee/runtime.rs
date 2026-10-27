@@ -2947,6 +2947,45 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn search_tool_propagates_unavailable_and_transport_errors() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&rt));
+        let execute = || {
+            tool.execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+        };
+        let error = execute().await.unwrap_err();
+        assert!(error.to_string().contains("Cognee search failed"));
+        assert_eq!(transport.sent().len(), 1);
+
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        assert!(execute().await.is_ok());
+
+        let offline_dir = tempfile::tempdir().unwrap();
+        let offline = runtime(offline_dir.path(), &transport, Some(json!({})), true);
+        let offline_tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&offline));
+        let error = offline_tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("disabled"));
+        assert_eq!(transport.sent().len(), 2);
+    }
+
+    #[tokio::test]
     async fn recall_failures_open_the_circuit() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());

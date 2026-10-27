@@ -78,6 +78,9 @@ impl AgentTool for CogneeSearchTool {
             .upgrade()
             .ok_or_else(|| AgentError::Tool("Cognee is unavailable".into()))?;
         let (text, details) = runtime.search_for_tool(&query, signal).await;
+        if details.get("error").is_some() || details.get("enabled") == Some(&Value::Bool(false)) {
+            return Err(AgentError::Tool(text));
+        }
         let mut result = AgentToolResult::text(text);
         result.details = details;
         Ok(result)
