@@ -365,6 +365,7 @@ struct State {
     seen_evidence: SeenEvidence,
     evidence_cache: EvidenceCache,
     resolved_dataset: String,
+    context_generation: u64,
     legacy_dataset: Option<String>,
     improve_in_flight: bool,
     improve_backoff: HashMap<(String, String), (f64, u64, u32)>,
@@ -391,6 +392,7 @@ impl State {
         let config = CogneeConfig::default();
         Self {
             resolved_dataset: config.dataset.clone(),
+            context_generation: 0,
             legacy_dataset: None,
             config,
             installed: false,
@@ -432,6 +434,7 @@ impl State {
         let previous = self.active_dataset();
         self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
         if previous != self.active_dataset() {
+            self.context_generation = self.context_generation.saturating_add(1);
             self.evidence_cache.clear();
         }
         self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
@@ -456,6 +459,15 @@ impl State {
             self.config.dataset.clone()
         } else {
             self.resolved_dataset.clone()
+        }
+    }
+
+    fn operation_context(&self) -> coordinator::OperationContext {
+        coordinator::OperationContext {
+            host_session_id: self.host_session_id.clone(),
+            session_id: self.session_id.clone(),
+            dataset: self.active_dataset(),
+            generation: self.context_generation,
         }
     }
 }
@@ -683,7 +695,10 @@ impl CogneeRuntime {
     fn ensure_session_id(&self, host_id: &str) -> String {
         let id = super::config::cognee_session_id(host_id);
         let mut state = self.state();
-        if state.session_id.as_deref() != Some(id.as_str()) {
+        if state.session_id.as_deref() != Some(id.as_str())
+            || state.host_session_id.as_deref() != Some(host_id)
+        {
+            state.context_generation = state.context_generation.saturating_add(1);
             state.dream_dirty = false;
             state.seen_evidence.clear();
         }
@@ -1741,6 +1756,7 @@ impl CogneeRuntime {
         state.installed = true;
         let cwd = self.cwd.lock().unwrap().clone();
         state.refresh_dataset(cwd.as_deref());
+        state.context_generation = state.context_generation.saturating_add(1);
         if previous_dataset != state.active_dataset() {
             state.evidence_cache.clear();
         }
@@ -1760,6 +1776,14 @@ impl CogneeRuntime {
     pub fn active_dataset(&self) -> String {
         self.ensure_loaded();
         self.state().active_dataset()
+    }
+
+    pub(super) fn generation(&self) -> u64 {
+        self.state().context_generation
+    }
+
+    fn operation_context(&self) -> coordinator::OperationContext {
+        self.state().operation_context()
     }
 
     pub fn offline(&self) -> bool {
@@ -2133,6 +2157,7 @@ impl CogneeRuntime {
 
     pub async fn session_start_for(&self, host_id: &str) {
         self.ensure_loaded();
+        let session_id = self.ensure_session_id(host_id);
         {
             let mut state = self.state();
             if state.started_host_session.as_deref() == Some(host_id) {
@@ -2143,7 +2168,6 @@ impl CogneeRuntime {
             state.refresh_dataset(cwd.as_deref());
         }
         self.apply_tool_state().await;
-        let session_id = self.ensure_session_id(host_id);
         self.schedule_prefetch(
             coordinator::PREFETCH_ORIENTATION_QUERY.into(),
             session_id.clone(),
@@ -2714,13 +2738,14 @@ impl CogneeRuntime {
             )
         };
         let mut cached = if read_policy == ReadPolicy::Event {
+            let generation = self.generation();
             let mut state = self.state();
             let State {
                 evidence_cache,
                 seen_evidence,
                 ..
             } = &mut *state;
-            evidence_cache.take(&dataset, self.now(), seen_evidence)
+            evidence_cache.take(&dataset, generation, self.now(), seen_evidence)
         } else {
             Vec::new()
         };
@@ -2762,6 +2787,7 @@ impl CogneeRuntime {
                 return self.turn_scoped_memory(Some(cached));
             }
         }
+        let operation_context = self.operation_context();
         let network_started = std::time::Instant::now();
         let (result, legacy_attempted) = recall_with_fallback(
             &client,
@@ -2782,17 +2808,12 @@ impl CogneeRuntime {
         )
         .await;
         let remote_wait_ms = network_started.elapsed().as_millis() as u64;
-        let still_current = {
-            let state = self.state();
-            state.session_id.as_deref() == Some(session_id.as_str())
-                && state.host_session_id.as_deref() == Some(event.session_id)
-                && state.active_dataset() == dataset
-        };
+        let still_current = self.generation() == operation_context.generation;
         if !still_current {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
+                succeeded(json!({"reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id, "staleGeneration": true})),
             );
             return None;
         }
@@ -3481,6 +3502,77 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn context_generation_tracks_identity_but_not_compaction_or_repeated_start() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "dataset":"old"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let initial = rt.generation();
+        rt.session_start_for("host1").await;
+        let first = rt.generation();
+        assert!(first > initial);
+        rt.session_start_for("host1").await;
+        assert_eq!(rt.generation(), first);
+        rt.ensure_session_id("host2");
+        assert!(rt.generation() > first);
+        let resumed = rt.generation();
+        rt.session_start_for("host3").await;
+        assert!(rt.generation() > resumed);
+        let before_compaction = rt.generation();
+        {
+            let mut state = rt.state();
+            let key = coordinator::EvidenceCache::key("old", "cached", before_compaction);
+            assert!(state.evidence_cache.schedule(&key, NOW));
+            state.evidence_cache.finish(
+                key,
+                vec![RecallLine {
+                    text: "cached".into(),
+                    score: None,
+                    provenance: None,
+                }],
+                NOW,
+            );
+        }
+        let entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "A compacted summary".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 10,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host3",
+        })
+        .await;
+        assert_eq!(rt.generation(), before_compaction);
+        assert_eq!(
+            rt.state()
+                .evidence_cache
+                .take("old", before_compaction, NOW, &mut SeenEvidence::default(),)
+                .len(),
+            1
+        );
+        let mut config = rt.config();
+        config.dataset = "new".into();
+        assert!(rt.persist_config(config).await);
+        assert!(rt.generation() > before_compaction);
+        let before_reload = rt.generation();
+        let config = rt.config();
+        assert!(rt.persist_config(config).await);
+        assert!(rt.generation() > before_reload);
+        rt.wait_for_background().await;
+    }
+
+    #[tokio::test]
     async fn repeated_session_start_has_one_prefetch() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
@@ -3548,14 +3640,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn dataset_change_cancels_stale_prefetch() {
+    async fn session_change_discards_stale_prefetch_generation() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         transport.push(FakeResponse::Ok {
             status: 200,
             headers: vec![],
             chunks: vec![br#"{"results":[{"text":"stale decision"}]}"#.to_vec()],
-            delay_ms: 1000,
+            delay_ms: 100,
         });
         let rt = runtime(
             dir.path(),
@@ -3568,11 +3660,28 @@ mod tests {
         while transport.sent().is_empty() {
             tokio::task::yield_now().await;
         }
-        let mut config = rt.config();
-        config.dataset = "new".into();
-        assert!(rt.persist_config(config).await);
+        let scheduled_generation = rt.generation();
+        rt.ensure_session_id("host2");
+        assert!(rt.generation() > scheduled_generation);
         rt.wait_for_background().await;
         assert!(memory(&rt, "ordinary prompt", None).await.is_none());
+        let generation = rt.generation();
+        assert_eq!(
+            rt.state()
+                .evidence_cache
+                .take("old", generation, NOW, &mut SeenEvidence::default())
+                .len(),
+            0
+        );
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations.iter().any(|observation| {
+            observation.operation == "recall"
+                && observation
+                    .meta
+                    .as_ref()
+                    .and_then(|meta| meta.get("reason"))
+                    == Some(&json!("stale_generation"))
+        }));
         assert_eq!(transport.sent().len(), 1);
     }
 
@@ -3620,28 +3729,30 @@ mod tests {
         rt.ensure_loaded();
         {
             let mut state = rt.state();
-            state.session_id = Some("original".into());
+            state.session_id = Some(super::super::config::cognee_session_id("original-host"));
+            state.host_session_id = Some("original-host".into());
             state.resolved_dataset = "original-dataset".into();
         }
         rt.store_entry(Map::new(), "answer").unwrap();
         tokio::task::yield_now().await;
-        {
-            let mut state = rt.state();
-            state.session_id = Some("new-session".into());
-            state.resolved_dataset = "new-dataset".into();
-        }
+        rt.ensure_session_id("new-host");
         rt.wait_for_background().await;
         let records = read_warmup_batch(&rt.warmup_dir());
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].session_id, "original");
         assert_eq!(records[0].dataset.as_deref(), Some("original-dataset"));
         let observations = super::super::observer::read_observations(&rt.storage_dir);
         let failed = observations
             .iter()
             .find(|o| o.operation == "remember_entry" && o.phase == "failed")
             .unwrap();
-        assert_eq!(failed.session_id.as_deref(), Some("original"));
+        let original_session = super::super::config::cognee_session_id("original-host");
+        assert_eq!(records[0].session_id, original_session);
+        assert_eq!(
+            failed.session_id.as_deref(),
+            Some(original_session.as_str())
+        );
         assert_eq!(failed.dataset.as_deref(), Some("original-dataset"));
+        assert_eq!(failed.agent_id.as_deref(), Some(original_session.as_str()));
     }
 
     #[tokio::test]
@@ -4245,6 +4356,42 @@ mod tests {
             .unwrap();
         assert!(injected.contains("Cache uses LRU eviction"), "{injected}");
         assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn recall_result_is_dropped_when_session_switches_mid_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![br#"{"results":[{"text":"old session decision"}]}"#.to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let task = {
+            let rt = rt.clone();
+            tokio::spawn(async move { memory(&rt, "What did we decide earlier?", None).await })
+        };
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        rt.ensure_session_id("host2");
+        assert!(task.await.unwrap().is_none());
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations.iter().any(|observation| {
+            observation.operation == "recall"
+                && observation.meta.as_ref().is_some_and(|meta| {
+                    meta.get("reason") == Some(&json!("stale_session"))
+                        && meta.get("staleGeneration") == Some(&json!(true))
+                })
+        }));
     }
 
     #[tokio::test]
