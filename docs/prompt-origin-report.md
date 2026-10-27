@@ -1,5 +1,7 @@
 # Prompt-origin host integration report
 
+Implementation commit: `f4e6c7e3` (`fix(harness): attach trusted request context`).
+
 Prompt origin is internal provenance for expanded user prompts. `UserMessage::with_origin` records bounded raw input, expansion kind/version, and a fingerprint of the expanded content plus timestamp. `UserMessage::original_prompt` returns the raw text only when version, size, and fingerprint validate. The host request callback validates the newest current user message, caches the result by exact `AgentMessage` for the active run, and supplies it separately as `RequestContextEvent.original_prompt`; it never substitutes expanded instructions for raw intent.
 
 Harness skill and prompt-template invocation paths attach raw invocation text before expansion reaches the provider. The TUI direct path expands skill references before calling `prompt_message` and attaches the original editor text when expansion changes it. The actual request event is tested with an origin-bearing message (`$review`) and reports that raw intent rather than expanded instructions. Plain unexpanded prompts and legacy `<skill>`/`<prompt-template>` bodies without provenance do not claim the expanded body is original. Dedicated template, direct-TUI, queued-origin, and durable-resume integration tests remain unimplemented.

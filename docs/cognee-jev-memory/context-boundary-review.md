@@ -1,6 +1,8 @@
 # Request-context host boundary review
 
-Status: **host request-context bridge integrated and covered by faux-provider tests.**
+Status: **bounded host request-context integration committed; additional requested packet/origin edge cases remain incomplete.**
+
+Implementation commit: `f4e6c7e3` (`fix(harness): attach trusted request context`).
 
 - `RequestContextEvent` runs only at an already-needed provider request boundary. The loop does not create a model turn for memory; `harness_extensions::request_context_waits_for_existing_tool_turn_and_uses_raw_origin` proves the first request is unchanged, the post-tool request receives the ready packet, and the final assistant response does not trigger an extra request.
 - Current prompt text is derived from the newest user message in the current request context, so queued steering/follow-up text is not replaced by a stale initial run prompt. `original_prompt` is separately read from validated raw-origin metadata on that message; plain messages and legacy expanded text without metadata yield `None`.
