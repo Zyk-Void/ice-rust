@@ -2516,6 +2516,24 @@ impl HarnessExtension for CogneeRuntime {
         })
     }
 
+    async fn prompt_context_persisted(&self, context: &PromptContext, persisted: bool) {
+        if context.custom_type != MEMORY_CUSTOM_TYPE {
+            return;
+        }
+        self.observe(
+            "injection",
+            if persisted { "succeeded" } else { "failed" },
+            ObserveFields {
+                meta: meta(json!({
+                    "outcomeVersion": 1,
+                    "outcome": if persisted { "persisted" } else { "append_failed" },
+                    "persistedBytes": if persisted { context.text.len() } else { 0 },
+                })),
+                ..ObserveFields::default()
+            },
+        );
+    }
+
     async fn before_compact(&self, event: &BeforeCompactEvent) -> Option<BeforeCompactDecision> {
         self.ensure_loaded();
         let host_id = event.session_id.clone();
@@ -2729,6 +2747,39 @@ mod tests {
         let context = rt.prompt_context(&run_event(prompt, system_prompt)).await?;
         assert_eq!(context.custom_type, MEMORY_CUSTOM_TYPE);
         Some(context.text)
+    }
+
+    #[tokio::test]
+    async fn injection_observation_distinguishes_persistence_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let context = PromptContext {
+            custom_type: MEMORY_CUSTOM_TYPE.into(),
+            text: "évidence".into(),
+        };
+        rt.prompt_context_persisted(&context, true).await;
+        rt.prompt_context_persisted(&context, false).await;
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        let mut outcomes: Vec<_> = observations
+            .iter()
+            .filter(|event| event.operation == "injection")
+            .map(|event| {
+                let meta = event.meta.as_ref().unwrap();
+                (
+                    meta["outcome"].as_str().unwrap().to_string(),
+                    meta["persistedBytes"].as_u64().unwrap(),
+                )
+            })
+            .collect();
+        outcomes.sort();
+        assert_eq!(
+            outcomes,
+            vec![("append_failed".into(), 0), ("persisted".into(), 9)]
+        );
     }
 
     fn run_event<'a>(prompt: &'a str, system_prompt: Option<&'a str>) -> BeforeRunEvent<'a> {

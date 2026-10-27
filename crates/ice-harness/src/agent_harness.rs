@@ -4664,7 +4664,7 @@ impl AgentHarness {
                     }
                     let message = crate::messages::create_custom_message(
                         &context.custom_type,
-                        UserContent::Text(context.text),
+                        UserContent::Text(context.text.clone()),
                         false,
                         None,
                         now_ms(),
@@ -4672,14 +4672,23 @@ impl AgentHarness {
                     // Only context that is in the history is sent: unpersisted
                     // text would vanish from the next request and break the
                     // cached prefix this hook exists to keep.
-                    match self.view().append_message(message.clone()).await {
-                        Ok(_) => agent_context.messages.push(message),
-                        Err(error) => tracing::warn!(
-                            custom_type = %context.custom_type,
-                            %error,
-                            "could not persist extension prompt context; skipping it"
-                        ),
-                    }
+                    let persisted = match self.view().append_message(message.clone()).await {
+                        Ok(_) => {
+                            agent_context.messages.push(message);
+                            true
+                        }
+                        Err(error) => {
+                            tracing::warn!(
+                                custom_type = %context.custom_type,
+                                %error,
+                                "could not persist extension prompt context; skipping it"
+                            );
+                            false
+                        }
+                    };
+                    extension
+                        .prompt_context_persisted(&context, persisted)
+                        .await;
                 }
             }
         }

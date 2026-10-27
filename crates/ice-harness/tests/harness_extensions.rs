@@ -344,7 +344,10 @@ async fn before_run_adds_transient_prompt_text_and_transform_sees_compaction_tim
     assert!(times.iter().all(|time| time.is_some()));
 }
 
-struct MemoryProbe;
+#[derive(Default)]
+struct MemoryProbe {
+    persisted: Mutex<Vec<bool>>,
+}
 
 #[async_trait]
 impl HarnessExtension for MemoryProbe {
@@ -353,6 +356,10 @@ impl HarnessExtension for MemoryProbe {
             custom_type: "test-memory".into(),
             text: format!("MEMORY for: {}", event.prompt),
         })
+    }
+
+    async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
+        self.persisted.lock().unwrap().push(persisted);
     }
 }
 
@@ -383,7 +390,8 @@ fn user_texts(context: &Context) -> Vec<String> {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stable() {
     let (harness, provider, _) = harness(vec![FauxStep::text("one"), FauxStep::text("two")]).await;
-    harness.set_extensions(vec![Arc::new(MemoryProbe) as Arc<dyn HarnessExtension>]);
+    let memory = Arc::new(MemoryProbe::default());
+    harness.set_extensions(vec![memory.clone() as Arc<dyn HarnessExtension>]);
     harness
         .prompt_text("first question", Vec::new())
         .await
@@ -393,6 +401,7 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
         .await
         .unwrap();
 
+    assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[true, true]);
     let prompts = provider.system_prompts.lock().unwrap().clone();
     assert_eq!(prompts.len(), 2);
     assert_eq!(prompts[0], prompts[1], "the system prompt is stable");

@@ -148,6 +148,11 @@ pub trait HarnessExtension: Send + Sync {
         None
     }
 
+    /// Called after the harness attempts to persist returned prompt context.
+    /// `persisted` means it was appended to session history and the initial
+    /// run context; it does not guarantee delivery to a model provider.
+    async fn prompt_context_persisted(&self, _context: &PromptContext, _persisted: bool) {}
+
     async fn before_compact(&self, _event: &BeforeCompactEvent) -> Option<BeforeCompactDecision> {
         None
     }
