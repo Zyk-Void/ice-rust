@@ -61,6 +61,8 @@ pub struct PromptContext {
     /// Custom message type the text is stored under.
     pub custom_type: String,
     pub text: String,
+    /// Opaque extension-owned correlation ID, never persisted with the text.
+    pub correlation_id: Option<String>,
 }
 
 /// Everything known before the summarizer runs (`session_before_compact`).

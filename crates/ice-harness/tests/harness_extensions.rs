@@ -355,6 +355,7 @@ impl HarnessExtension for MemoryProbe {
         Some(PromptContext {
             custom_type: "test-memory".into(),
             text: format!("MEMORY for: {}", event.prompt),
+            correlation_id: None,
         })
     }
 

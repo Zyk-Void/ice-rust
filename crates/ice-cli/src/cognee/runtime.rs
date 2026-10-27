@@ -2513,6 +2513,7 @@ impl HarnessExtension for CogneeRuntime {
         Some(PromptContext {
             custom_type: MEMORY_CUSTOM_TYPE.into(),
             text,
+            correlation_id: Some(request_id),
         })
     }
 
@@ -2524,6 +2525,7 @@ impl HarnessExtension for CogneeRuntime {
             "injection",
             if persisted { "succeeded" } else { "failed" },
             ObserveFields {
+                request_id: context.correlation_id.clone(),
                 meta: meta(json!({
                     "outcomeVersion": 1,
                     "outcome": if persisted { "persisted" } else { "append_failed" },
@@ -2758,6 +2760,7 @@ mod tests {
         let context = PromptContext {
             custom_type: MEMORY_CUSTOM_TYPE.into(),
             text: "évidence".into(),
+            correlation_id: Some("recall-id".into()),
         };
         rt.prompt_context_persisted(&context, true).await;
         rt.prompt_context_persisted(&context, false).await;
@@ -2768,6 +2771,7 @@ mod tests {
             .iter()
             .filter(|event| event.operation == "injection")
             .map(|event| {
+                assert_eq!(event.request_id.as_deref(), Some("recall-id"));
                 let meta = event.meta.as_ref().unwrap();
                 (
                     meta["outcome"].as_str().unwrap().to_string(),
