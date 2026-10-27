@@ -13,7 +13,9 @@
 //! and the inner role-specific fields survive a round-trip. `Custom` carries a
 //! free-form `data: Value` so each role's structured payload rides along.
 
-use ice_ai::types::{AssistantMessage, Content, Message, ToolResultMessage, UserMessage};
+use ice_ai::types::{
+    AssistantMessage, Content, Message, PromptOrigin, ToolResultMessage, UserMessage,
+};
 use serde::{Deserialize, Serialize};
 
 /// `AgentMessage = Message | Custom`. The open-enum port of TS
@@ -25,10 +27,62 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum AgentMessage {
+    #[serde(with = "user_with_origin")]
     User(UserMessage),
     Assistant(Box<AssistantMessage>),
     ToolResult(Box<ToolResultMessage>),
     Custom(CustomMessage),
+}
+
+mod user_with_origin {
+    use super::*;
+    use serde::ser::SerializeMap;
+
+    pub fn serialize<S: serde::Serializer>(
+        user: &UserMessage,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("role", &user.role)?;
+        map.serialize_entry("content", &user.content)?;
+        map.serialize_entry("timestamp", &user.timestamp)?;
+        if let Some(origin) = user
+            .origin
+            .as_ref()
+            .filter(|_| user.original_prompt().is_some())
+        {
+            map.serialize_entry("icersPromptOrigin", origin)?;
+        }
+        map.end()
+    }
+
+    pub fn deserialize<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<UserMessage, D::Error> {
+        let mut value = serde_json::Value::deserialize(deserializer)?;
+        let origin = value
+            .as_object_mut()
+            .and_then(|object| object.remove("icersPromptOrigin"));
+        let mut user: UserMessage =
+            serde_json::from_value(value).map_err(serde::de::Error::custom)?;
+        if let Some(origin) = origin {
+            let origin: PromptOrigin =
+                serde_json::from_value(origin).map_err(serde::de::Error::custom)?;
+            user.origin = Some(origin);
+            if user.original_prompt().is_none() {
+                user.origin = None;
+            }
+        }
+        Ok(user)
+    }
+}
+
+/// Borrow a validated raw prompt from a durable agent message.
+pub fn original_user_prompt(message: &AgentMessage) -> Option<&str> {
+    match message {
+        AgentMessage::User(user) => user.original_prompt(),
+        _ => None,
+    }
 }
 
 impl AgentMessage {
@@ -167,6 +221,36 @@ impl CustomMessage {
             data,
             timestamp,
         }
+    }
+}
+
+#[cfg(test)]
+mod prompt_origin_tests {
+    use super::*;
+
+    #[test]
+    fn serde_agent_message_preserves_validated_origin() {
+        let message = AgentMessage::User(
+            UserMessage::new("expanded", 12).with_origin("$review", "skill-expansion-v1"),
+        );
+        let encoded = serde_json::to_value(&message).unwrap();
+        assert_eq!(encoded["kind"], "user");
+        assert_eq!(encoded["icersPromptOrigin"]["rawText"], "$review");
+        let decoded: AgentMessage = serde_json::from_value(encoded).unwrap();
+        assert_eq!(original_user_prompt(&decoded), Some("$review"));
+    }
+
+    #[test]
+    fn tampered_agent_message_drops_origin_and_legacy_loads() {
+        let message =
+            AgentMessage::User(UserMessage::new("expanded", 12).with_origin("raw", "test"));
+        let mut encoded = serde_json::to_value(message).unwrap();
+        encoded["content"] = serde_json::json!("tampered");
+        let decoded: AgentMessage = serde_json::from_value(encoded).unwrap();
+        assert_eq!(original_user_prompt(&decoded), None);
+        let legacy = serde_json::json!({"kind":"user","role":"user","content":"old","timestamp":1});
+        let decoded: AgentMessage = serde_json::from_value(legacy).unwrap();
+        assert_eq!(original_user_prompt(&decoded), None);
     }
 }
 

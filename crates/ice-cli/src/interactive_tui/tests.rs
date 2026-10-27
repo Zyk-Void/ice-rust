@@ -1085,6 +1085,12 @@ fn queued_prompt_expands_skills_and_keeps_referenced_images() {
     let AgentMessage::User(user) = message else {
         panic!("expected a user message");
     };
+    assert_eq!(user.original_prompt(), Some("$review [Image #1]"));
+    assert!(matches!(
+        &user.content,
+        ice_ai::types::UserContent::Blocks(blocks)
+            if matches!(blocks.last(), Some(ice_ai::types::Content::Image(_)))
+    ));
     assert_eq!(
         crate::interactive_tui::user_message_text(&user),
         "$review [Image #1]"

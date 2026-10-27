@@ -69,6 +69,7 @@ pub fn estimate_tokens(text: &str) -> usize {
         role: Default::default(),
         content: UserContent::Text(text.to_owned()),
         timestamp: 0,
+        origin: None,
     });
     usize::try_from(ice_harness::compaction::tokens::estimate_tokens(&message))
         .unwrap_or(usize::MAX)

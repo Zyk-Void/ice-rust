@@ -421,7 +421,15 @@ pub(super) fn queued_user_message(
 ) -> (AgentMessage, Vec<ice_ai::types::ImageContent>) {
     let images = state.take_prompt_images(prompt);
     let expanded = expand_skill_references(resources, prompt);
-    (user_message_with_images(&expanded, images.clone()), images)
+    let AgentMessage::User(user) = user_message_with_images(&expanded, images.clone()) else {
+        unreachable!()
+    };
+    let user = if expanded != prompt {
+        user.with_origin(prompt, "skill-expansion-v1")
+    } else {
+        user
+    };
+    (AgentMessage::User(user), images)
 }
 
 /// Drive one prompt, reconcile its final response, and settle buffered writes.
@@ -458,7 +466,15 @@ pub(super) async fn run_prompt_streaming(
     } else {
         let resources = harness.get_resources().await.unwrap_or_default();
         let expanded = expand_skill_references(&resources, prompt);
-        lane.prompt_text(&expanded, images).await
+        let AgentMessage::User(user) = user_message_with_images(&expanded, images) else {
+            unreachable!()
+        };
+        let user = if expanded != prompt {
+            user.with_origin(prompt, "skill-expansion-v1")
+        } else {
+            user
+        };
+        lane.prompt_message(AgentMessage::User(user)).await
     };
 
     // Settle final tool/message delivery before completion reconciliation. This

@@ -280,6 +280,7 @@ async fn completed_running_and_empty_views_retire_on_parent_session_switch() {
                     role: UserRole,
                     content: "next".into(),
                     timestamp: 0,
+                    origin: None,
                 }
                 .into(),
             )

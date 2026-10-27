@@ -608,6 +608,7 @@ async fn worker(thread: Arc<Thread>, _permit: OwnedSemaphorePermit) {
                             role: UserRole,
                             content: question.into(),
                             timestamp: 0,
+                            origin: None,
                         }
                         .into(),
                     )
