@@ -30,15 +30,18 @@ use super::client::{
     RecallResult, ReqwestTransport,
 };
 use super::config::{
-    find_git_root, load_connection, process_env, resolve_runtime_dataset, save_config,
-    write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv, CompactionSummaryMode,
-    ConnectionInputs, KeySource, PROJECT_DATASET_SENTINEL,
+    find_git_root, load_connection, process_env, repository_root, resolve_runtime_dataset,
+    save_config, write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv,
+    CompactionSummaryMode, ConnectionInputs, KeySource, ReadPolicy, WritePolicy,
+    PROJECT_DATASET_SENTINEL,
 };
 use super::dream::{
     claim_dream_candidate, mark_dream_captured, mark_dream_improved, read_dream_candidates,
     read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
+use super::evidence::{select_new, SeenEvidence};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
+use super::policy::{admit_prompt, Admission};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
     read_warmup_batch, remove_pending_remember, select_drain_batch, update_pending_remember_state,
@@ -224,6 +227,8 @@ pub struct DoctorReport {
     pub capture_session: bool,
     pub capture_tools: bool,
     pub auto_recall: bool,
+    pub read_policy: ReadPolicy,
+    pub write_policy: WritePolicy,
     pub auto_remember: AutoRememberMode,
     pub auto_improve: bool,
     pub compaction_summary_mode: CompactionSummaryMode,
@@ -251,11 +256,13 @@ impl DoctorReport {
     pub fn status_line(&self) -> String {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         format!(
-            "Cognee {}; health {}; recall {}; remember {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}",
+            "Cognee {}; health {}; recall {} ({}); remember {}; write {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}",
             on_off(self.enabled),
             self.health(),
             on_off(self.auto_recall),
+            self.read_policy.as_str(),
             self.auto_remember.as_str(),
+            self.write_policy.as_str(),
             on_off(self.capture_session),
             on_off(self.capture_tools),
             on_off(self.auto_improve),
@@ -283,6 +290,11 @@ impl DoctorReport {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         [
             "mode=http".to_string(),
+            format!(
+                "readPolicy={} writePolicy={}",
+                self.read_policy.as_str(),
+                self.write_policy.as_str()
+            ),
             "nativeRecall=POST:/api/v1/recall (support unverified; sends query, topK, onlyContext, scope, sessionId, datasets)".to_string(),
             "nativeRemember=POST:/api/v1/remember (multipart datasetName, node_set, run_in_background, optional session_id, data; support unverified)".to_string(),
             "nativeRememberEntry=POST:/api/v1/remember/entry (JSON entry, dataset_name, session_id; support unverified)".to_string(),
@@ -343,7 +355,10 @@ struct State {
     last_recall_key: Option<String>,
     last_recall_at: u64,
     last_compact_summary: Option<String>,
+    /// Recall lines already in the active context (non-legacy read policies).
+    seen_evidence: SeenEvidence,
     resolved_dataset: String,
+    legacy_dataset: Option<String>,
     improve_in_flight: bool,
     pending_prompt: Option<String>,
     session_id: Option<String>,
@@ -368,6 +383,7 @@ impl State {
         let config = CogneeConfig::default();
         Self {
             resolved_dataset: config.dataset.clone(),
+            legacy_dataset: None,
             config,
             installed: false,
             api_key: None,
@@ -379,6 +395,7 @@ impl State {
             last_recall_key: None,
             last_recall_at: 0,
             last_compact_summary: None,
+            seen_evidence: SeenEvidence::default(),
             improve_in_flight: false,
             pending_prompt: None,
             session_id: None,
@@ -397,6 +414,27 @@ impl State {
             shutting_down: false,
             turn_traces: 0,
         }
+    }
+
+    /// Resolve `$project` for `cwd` and, for a linked worktree, the dataset
+    /// it used before sharing its repository's. An explicit dataset has none.
+    fn refresh_dataset(&mut self, cwd: Option<&Path>) {
+        self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
+        self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
+            .then(|| {
+                let cwd = cwd
+                    .map(Path::to_path_buf)
+                    .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                super::config::legacy_project_dataset(&cwd)
+            })
+            .filter(|legacy| *legacy != self.resolved_dataset);
+    }
+
+    /// The one extra dataset an empty automatic recall may try.
+    fn fallback_dataset(&self) -> Option<String> {
+        (self.config.read_policy != ReadPolicy::Legacy)
+            .then(|| self.legacy_dataset.clone())
+            .flatten()
     }
 
     fn active_dataset(&self) -> String {
@@ -601,7 +639,7 @@ impl CogneeRuntime {
         }
         state.config = connection.config;
         state.installed = installed;
-        state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref());
         state.api_key = connection.api_key;
         state.key_source = connection.key_source;
         state.client = Some(CogneeClient::new(
@@ -630,6 +668,7 @@ impl CogneeRuntime {
         let mut state = self.state();
         if state.session_id.as_deref() != Some(id.as_str()) {
             state.dream_dirty = false;
+            state.seen_evidence.clear();
         }
         state.session_id = Some(id.clone());
         state.host_session_id = Some(host_id.into());
@@ -1038,7 +1077,7 @@ impl CogneeRuntime {
         let (client, session_id, dataset) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.auto_improve
+                || !state.config.improves()
                 || state.improve_in_flight
             {
                 return None;
@@ -1178,7 +1217,7 @@ impl CogneeRuntime {
         let (client, dataset) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.auto_improve
+                || !state.config.improves()
                 || state.dream_in_flight
                 || state.shutting_down
             {
@@ -1380,6 +1419,8 @@ impl CogneeRuntime {
             capture_session: state.config.capture_session,
             capture_tools: state.config.capture_tools,
             auto_recall: state.config.auto_recall,
+            read_policy: state.config.read_policy,
+            write_policy: state.config.write_policy,
             auto_remember: state.config.auto_remember,
             auto_improve: state.config.auto_improve,
             compaction_summary_mode: state.config.compaction_summary_mode,
@@ -1498,7 +1539,7 @@ impl CogneeRuntime {
         state.config = next;
         state.installed = true;
         let cwd = self.cwd.lock().unwrap().clone();
-        state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref());
         Self::rebuild_client(&mut state, self.transport.clone());
         true
     }
@@ -1527,12 +1568,14 @@ impl CogneeRuntime {
     pub async fn search_for_tool(&self, query: &str, signal: CancellationToken) -> (String, Value) {
         self.ensure_loaded();
         let dataset = self.active_dataset();
-        let (client, top_k, max_chars) = {
+        let (client, top_k, max_chars, legacy_dataset, budget_ms) = {
             let state = self.state();
             (
                 state.client.clone(),
                 state.config.top_k,
                 state.config.recall_max_chars,
+                state.fallback_dataset(),
+                state.config.recall_budget_ms,
             )
         };
         let Some(client) = client.filter(|_| self.is_enabled()) else {
@@ -1541,29 +1584,34 @@ impl CogneeRuntime {
                 json!({"enabled": false, "count": 0, "dataset": dataset}),
             );
         };
-        let result = client
-            .recall(
-                query,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset.clone()),
-                    signal: Some(signal),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
+        let (result, legacy_attempted) = recall_with_fallback(
+            &client,
+            query,
+            RecallOptions {
+                top_k: Some(top_k),
+                dataset: Some(dataset.clone()),
+                signal: Some(signal),
+                ..RecallOptions::default()
+            },
+            legacy_dataset,
+            budget_ms,
+        )
+        .await;
         match result {
             Ok(results) => {
                 self.state().recall_circuit.reset();
-                let text = if results.is_empty() {
+                let lines = self.recall_evidence(&results);
+                let text = if lines.is_empty() {
                     "No Cognee memory found.".to_string()
                 } else {
-                    format_recall(&recall_lines(&results), max_chars)
+                    format_recall(&lines, max_chars)
                 };
-                (
-                    text,
-                    json!({"enabled": true, "count": results.len(), "dataset": dataset}),
-                )
+                let mut details =
+                    json!({"enabled": true, "count": results.len(), "dataset": dataset});
+                if legacy_attempted.is_some() {
+                    details["legacyHits"] = json!(results.len());
+                }
+                (text, details)
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -1687,8 +1735,18 @@ impl CogneeRuntime {
                     state.last_error = Some(kind.clone());
                     state.remember_circuit.note_failure(&kind, wall_ms());
                 }
-                let record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
+                let mut record =
+                    create_pending_remember(&safe_text, &dataset, node_set, self.now());
+                // A timeout or abort may have been accepted by the server, so
+                // the record must not be replayed without an explicit flush.
+                record.state = drain_failure_state(&kind);
                 match enqueue_pending_remember(&self.pending_dir(), &record, limit) {
+                    Ok(true) if record.state == PendingState::Uncertain => self.notify(
+                        NoticeLevel::Warning,
+                        format!(
+                            "Cognee remember {kind}; it may have been stored. Queued as uncertain; /cognee flush uncertain retries it"
+                        ),
+                    ),
                     Ok(true) => self.notify(
                         NoticeLevel::Warning,
                         format!("Cognee unavailable ({kind}); memory queued"),
@@ -1794,7 +1852,7 @@ impl CogneeRuntime {
             }
             state.started_host_session = Some(host_id.into());
             let cwd = self.cwd.lock().unwrap().clone();
-            state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+            state.refresh_dataset(cwd.as_deref());
         }
         self.apply_tool_state().await;
         let session_id = self.ensure_session_id(host_id);
@@ -1809,7 +1867,9 @@ impl CogneeRuntime {
                     .clone()
                     .or_else(|| std::env::current_dir().ok())
                     .unwrap_or_default();
-                let root = find_git_root(&cwd).to_string_lossy().into_owned();
+                let root = repository_root(&find_git_root(&cwd))
+                    .to_string_lossy()
+                    .into_owned();
                 let shown = match self.home_dir.as_ref().map(|home| home.to_string_lossy()) {
                     Some(home) if root == home || root.starts_with(&format!("{home}/")) => {
                         format!("~{}", &root[home.len()..])
@@ -1919,10 +1979,7 @@ impl CogneeRuntime {
         self.wait_for_background().await;
         let (enabled, auto_improve) = {
             let state = self.state();
-            (
-                Self::enabled(&state, self.offline),
-                state.config.auto_improve,
-            )
+            (Self::enabled(&state, self.offline), state.config.improves())
         };
         if client.is_some() && session_id.is_some() && enabled && auto_improve {
             if let Some(handle) = self.run_improve("shutdown") {
@@ -1954,8 +2011,7 @@ impl CogneeRuntime {
         let max = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.capture_session
-                || !state.config.capture_tools
+                || !state.config.captures_tools()
                 || state.session_id.is_none()
             {
                 return;
@@ -2033,7 +2089,7 @@ impl CogneeRuntime {
         self.ensure_loaded();
         let (question, host, max) = {
             let mut state = self.state();
-            if !Self::enabled(&state, self.offline) || !state.config.capture_session {
+            if !Self::enabled(&state, self.offline) || !state.config.captures_session() {
                 return;
             }
             let Some(question) = state.pending_prompt.take() else {
@@ -2070,7 +2126,7 @@ impl CogneeRuntime {
     fn on_run_settled(&self) {
         let ready = {
             let state = self.state();
-            state.loaded && Self::enabled(&state, self.offline) && state.config.auto_improve
+            state.loaded && Self::enabled(&state, self.offline) && state.config.improves()
         };
         if !ready {
             return;
@@ -2281,8 +2337,9 @@ impl CogneeRuntime {
     }
 
     /// The memory text for this prompt: a pending checkpoint summary and the
-    /// recall, if any. The harness stores it after the prompt in the history.
-    fn turn_scoped_memory(&self, extra: Option<String>) -> Option<String> {
+    /// recall, if any, within one `recallMaxChars` budget. The harness stores
+    /// it after the prompt in the history.
+    fn turn_scoped_memory(&self, recall: Option<Vec<RecallLine>>) -> Option<String> {
         let (summary, max_chars) = {
             let mut state = self.state();
             (
@@ -2290,13 +2347,34 @@ impl CogneeRuntime {
                 state.config.recall_max_chars,
             )
         };
+        let recall = recall.filter(|lines| !lines.is_empty());
+        // The checkpoint yields a third of the budget to fresh recall.
+        let summary_budget = if recall.is_some() {
+            max_chars - max_chars / 3
+        } else {
+            max_chars
+        };
+        let summary = summary
+            .map(|summary| format_last_compact_injection(&summary, summary_budget))
+            .filter(|part| !part.is_empty());
+        let used = summary.as_ref().map_or(0, |part| len16(part) + 2);
+        let recall = recall.map(|lines| format_recall(&lines, max_chars.saturating_sub(used)));
         let parts: Vec<String> = summary
-            .map(|summary| format_last_compact_injection(&summary, max_chars))
             .into_iter()
-            .chain(extra)
+            .chain(recall)
             .filter(|part| !part.is_empty())
             .collect();
         (!parts.is_empty()).then(|| parts.join("\n\n"))
+    }
+
+    /// Recall lines worth injecting. `legacy` keeps every result; other read
+    /// policies drop routine tool-success lines and lines already in context.
+    fn recall_evidence(&self, results: &[RecallResult]) -> Vec<RecallLine> {
+        let mut state = self.state();
+        if state.config.read_policy == ReadPolicy::Legacy {
+            return recall_lines(results);
+        }
+        select_new(results, &mut state.seen_evidence)
     }
 
     async fn recall_for_prompt(
@@ -2322,9 +2400,9 @@ impl CogneeRuntime {
             return None;
         };
         let session_id = self.ensure_session_id(event.session_id);
-        let (auto_recall, can_attempt, top_k, max_chars, dataset) = {
+        let (auto_recall, read_policy, can_attempt, top_k, dataset, legacy_dataset, budget_ms) = {
             let mut state = self.state();
-            if state.config.capture_session && !event.prompt.trim().is_empty() {
+            if state.config.captures_session() && !event.prompt.trim().is_empty() {
                 let max = state.config.capture_max_chars;
                 state.pending_prompt = Some(redact_memory_text(
                     &truncate_for_capture(event.prompt, max),
@@ -2333,10 +2411,12 @@ impl CogneeRuntime {
             }
             (
                 state.config.auto_recall,
+                state.config.read_policy,
                 state.recall_circuit.can_attempt(wall_ms()),
                 state.config.top_k,
-                state.config.recall_max_chars,
                 state.active_dataset(),
+                state.fallback_dataset(),
+                state.config.recall_budget_ms,
             )
         };
         if !auto_recall || !can_attempt {
@@ -2347,11 +2427,11 @@ impl CogneeRuntime {
             );
             return self.turn_scoped_memory(None);
         }
-        if is_low_signal_recall_prompt(event.prompt) {
+        if let Admission::Skip(reason) = admit_prompt(read_policy, event.prompt) {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "reason": "short_prompt", "outcomeVersion": 1, "outcome": "skipped"})),
+                succeeded(json!({"skipped": true, "reason": reason.as_str(), "outcomeVersion": 1, "outcome": "skipped"})),
             );
             return self.turn_scoped_memory(None);
         }
@@ -2374,22 +2454,24 @@ impl CogneeRuntime {
             }
         }
         let network_started = std::time::Instant::now();
-        let result = client
-            .recall(
-                event.prompt,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset.clone()),
-                    session_id: Some(session_id.clone()),
-                    scope: AUTO_RECALL_SCOPE
-                        .iter()
-                        .map(|scope| scope.to_string())
-                        .collect(),
-                    signal: Some(event.signal.clone()),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
+        let (result, legacy_attempted) = recall_with_fallback(
+            &client,
+            event.prompt,
+            RecallOptions {
+                top_k: Some(top_k),
+                dataset: Some(dataset.clone()),
+                session_id: Some(session_id.clone()),
+                scope: AUTO_RECALL_SCOPE
+                    .iter()
+                    .map(|scope| scope.to_string())
+                    .collect(),
+                signal: Some(event.signal.clone()),
+                ..RecallOptions::default()
+            },
+            legacy_dataset,
+            budget_ms,
+        )
+        .await;
         let remote_wait_ms = network_started.elapsed().as_millis() as u64;
         let still_current = {
             let state = self.state();
@@ -2414,6 +2496,12 @@ impl CogneeRuntime {
                     state.last_recall_key = Some(recall_key);
                     state.last_recall_at = now;
                 }
+                let lines = self.recall_evidence(&results);
+                let mut recall_meta = json!({"hits": results.len(), "withProvenance": results.iter().filter(|result| super::evidence::provenance_tag(result).is_some()).count(), "selected": lines.len(), "legacyFallback": legacy_attempted.is_some(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id});
+                if let Some(legacy) = &legacy_attempted {
+                    recall_meta["legacyDataset"] = json!(legacy);
+                    recall_meta["legacyHits"] = json!(results.len());
+                }
                 self.observe(
                     "recall",
                     "succeeded",
@@ -2427,13 +2515,11 @@ impl CogneeRuntime {
                                 .collect::<Vec<_>>()
                                 .join("\n"),
                         )),
-                        meta: meta(json!({"hits": results.len(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
+                        meta: meta(recall_meta),
                         ..ObserveFields::default()
                     },
                 );
-                let extra = (!results.is_empty())
-                    .then(|| format_recall(&recall_lines(&results), max_chars));
-                self.turn_scoped_memory(extra)
+                self.turn_scoped_memory(Some(lines))
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -2442,6 +2528,10 @@ impl CogneeRuntime {
                     state.last_error = Some(kind.clone());
                     state.recall_circuit.note_failure(&kind, wall_ms());
                 }
+                let mut failure_meta = json!({"outcomeVersion": 1, "outcome": kind, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id, "legacyFallback": legacy_attempted.is_some()});
+                if let Some(legacy) = &legacy_attempted {
+                    failure_meta["legacyDataset"] = json!(legacy);
+                }
                 self.observe(
                     "recall",
                     "failed",
@@ -2449,7 +2539,7 @@ impl CogneeRuntime {
                         request_id: Some(request_id.into()),
                         latency_ms: latency(),
                         error: Some(kind.clone()),
-                        meta: meta(json!({"outcomeVersion": 1, "outcome": kind, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
+                        meta: meta(failure_meta),
                         ..ObserveFields::default()
                     },
                 );
@@ -2469,12 +2559,35 @@ fn drain_failure_state(kind: &str) -> PendingState {
     }
 }
 
+async fn recall_with_fallback(
+    client: &CogneeClient,
+    query: &str,
+    options: RecallOptions,
+    legacy_dataset: Option<String>,
+    budget_ms: u64,
+) -> (Result<Vec<RecallResult>, CogneeError>, Option<String>) {
+    let started = std::time::Instant::now();
+    let result = client.recall(query, options.clone()).await;
+    let remaining =
+        budget_ms.saturating_sub(started.elapsed().as_millis().min(u64::MAX as u128) as u64);
+    if matches!(&result, Ok(results) if results.is_empty()) && remaining >= 250 {
+        if let Some(dataset) = legacy_dataset {
+            let mut fallback = options;
+            fallback.dataset = Some(dataset.clone());
+            fallback.timeout_ms = Some(remaining);
+            return (client.recall(query, fallback).await, Some(dataset));
+        }
+    }
+    (result, None)
+}
+
 fn recall_lines(results: &[RecallResult]) -> Vec<RecallLine> {
     results
         .iter()
         .map(|result| RecallLine {
             text: result.text.clone(),
             score: result.score,
+            provenance: super::evidence::provenance_tag(result),
         })
         .collect()
 }
@@ -2633,10 +2746,12 @@ impl HarnessExtension for CogneeRuntime {
             let mut state = self.state();
             state.last_compact_summary =
                 Some(redact_memory_text(summary, state.config.recall_max_chars));
+            // Compaction removed earlier injections from the context.
+            state.seen_evidence.clear();
             (
-                state.config.capture_session,
+                state.config.captures_session(),
                 state.config.capture_max_chars,
-                state.config.auto_remember,
+                state.config.remembers_compaction(),
                 state.config.remember_max_chars,
                 state.active_dataset(),
                 state.config.queue_limit,
@@ -2652,7 +2767,7 @@ impl HarnessExtension for CogneeRuntime {
                 self.store_entry(entry, "answer");
             }
         }
-        if remember != AutoRememberMode::Compaction {
+        if !remember {
             return;
         }
         let text = redact_memory_text(
@@ -2991,6 +3106,99 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn fallback_recall_keeps_provenance_and_scope() {
+        let dir = tempfile::tempdir().unwrap();
+        let main = dir.path().join("repo");
+        let linked = main.join("worktree");
+        let admin = main.join(".git/worktrees/feature");
+        std::fs::create_dir_all(&admin).unwrap();
+        std::fs::create_dir_all(&linked).unwrap();
+        std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+        std::fs::write(
+            linked.join(".git"),
+            format!("gitdir: {}\n", admin.display()),
+        )
+        .unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        transport.push(FakeResponse::json(200, json!({"results": [
+            {"text": "first fact", "metadata": {"id": "src", "sessionId": "sess", "createdAt": "now"}},
+            {"text": "second fact"}
+        ]})));
+        let rt = runtime(
+            &linked,
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        let injected = memory(&rt, "What did we decide about cache eviction?", None)
+            .await
+            .unwrap();
+        assert!(
+            injected.contains("first fact [source=src session=sess at=now]"),
+            "{injected}"
+        );
+        assert!(injected.contains("second fact"));
+        let sent = transport.sent();
+        assert_eq!(sent.len(), 2);
+        let first = json_body(&sent[0]);
+        let second = json_body(&sent[1]);
+        assert_eq!(
+            second["datasets"],
+            json!([super::super::config::legacy_project_dataset(&linked)])
+        );
+        assert_eq!(first["sessionId"], second["sessionId"]);
+        assert_eq!(first["scope"], second["scope"]);
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&linked.join("ice-cognee"));
+        let event = observations
+            .iter()
+            .find(|event| event.operation == "recall" && event.phase == "succeeded")
+            .unwrap();
+        let meta = event.meta.as_ref().unwrap();
+        assert_eq!(meta["legacyFallback"], true);
+        assert_eq!(meta["legacyHits"], 2);
+        assert_eq!(meta["withProvenance"], 1);
+        assert_eq!(meta["selected"], 2);
+    }
+
+    #[tokio::test]
+    async fn fallback_is_bypassed_for_hits_errors_explicit_dataset_and_legacy_policy() {
+        for (config, response) in [
+            (
+                json!({"readPolicy":"event"}),
+                FakeResponse::json(200, json!({"results":[{"text":"fact"}]})),
+            ),
+            (
+                json!({"readPolicy":"event"}),
+                FakeResponse::json(500, json!({"error":"failed"})),
+            ),
+            (
+                json!({"readPolicy":"event", "dataset":"explicit"}),
+                FakeResponse::json(200, json!({"results":[]})),
+            ),
+            (
+                json!({"readPolicy":"legacy"}),
+                FakeResponse::json(200, json!({"results":[]})),
+            ),
+        ] {
+            let dir = tempfile::tempdir().unwrap();
+            let main = dir.path().join("repo");
+            let linked = main.join("linked");
+            let admin = main.join(".git/worktrees/test");
+            std::fs::create_dir_all(&admin).unwrap();
+            std::fs::create_dir_all(&linked).unwrap();
+            std::fs::write(admin.join("commondir"), "../..").unwrap();
+            std::fs::write(linked.join(".git"), format!("gitdir: {}", admin.display())).unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            transport.push(response);
+            let rt = runtime(&linked, &transport, Some(config), false);
+            let _ = memory(&rt, "What did we decide about cache eviction?", None).await;
+            assert_eq!(transport.sent().len(), 1);
+        }
+    }
+
+    #[tokio::test]
     async fn prompt_recall_injects_memory_and_deduplicates() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
@@ -3202,6 +3410,154 @@ mod tests {
             .await
             .unwrap_err();
         assert!(error.to_string().contains("timeout"));
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn event_read_policy_searches_only_for_history_requests() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        for prompt in [
+            "Build the release binary and run the whole test suite",
+            "How many commits are on this branch right now?",
+            "continue",
+        ] {
+            assert_eq!(memory(&rt, prompt, None).await, None, "{prompt}");
+        }
+        assert!(transport.sent().is_empty(), "ordinary turns send nothing");
+        let injected = memory(&rt, "What did we decide about cache eviction?", None)
+            .await
+            .unwrap();
+        assert!(injected.contains("Cache uses LRU eviction"), "{injected}");
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn event_recall_injects_only_new_evidence_and_reinjects_after_compaction() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let hit = |text: &str| json!({"results": [{"text": text, "score": 0.9}]});
+        transport.push(FakeResponse::json(
+            200,
+            hit("bash succeeded\n- Cache uses LRU eviction\nread succeeded"),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            hit("- cache uses  LRU eviction\nbash succeeded"),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            hit("- Cache uses LRU eviction\n- TTL is five minutes"),
+        ));
+        transport.push(FakeResponse::json(200, hit("- Cache uses LRU eviction")));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        let first = memory(&rt, "What did we decide about eviction?", None)
+            .await
+            .unwrap();
+        assert!(first.contains("1. - Cache uses LRU eviction"), "{first}");
+        assert!(!first.contains("succeeded"), "{first}");
+        // The same fact under a different query is already in context.
+        assert_eq!(
+            memory(&rt, "Remind me what we decided on caching", None).await,
+            None
+        );
+        let third = memory(&rt, "What else did we decide about the cache?", None)
+            .await
+            .unwrap();
+        assert!(third.contains("TTL is five minutes"), "{third}");
+        assert!(!third.contains("LRU"), "{third}");
+        // After compaction the earlier injection may be gone: inject again.
+        rt.state().seen_evidence.clear();
+        let fourth = memory(&rt, "Did we choose LRU for the cache?", None)
+            .await
+            .unwrap();
+        assert!(fourth.contains("LRU"), "{fourth}");
+    }
+
+    #[tokio::test]
+    async fn checkpoint_and_recall_share_one_budget_with_a_complete_envelope() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "x".repeat(5000), "score": 0.9}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"recallMaxChars": 1000})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.state().last_compact_summary = Some("y".repeat(5000));
+        let text = memory(&rt, "How does the cache layer evict entries?", None)
+            .await
+            .unwrap();
+        assert!(len16(&text) <= 1000, "{}", len16(&text));
+        assert!(text.contains("<ice-void-last-compact>"));
+        assert!(text.ends_with("</ice-void-cognee-memory>"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn on_demand_read_policy_never_searches_automatically() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "on_demand"})),
+            false,
+        );
+        assert_eq!(
+            memory(&rt, "What did we decide about cache eviction?", None).await,
+            None
+        );
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_write_policy_disables_every_automatic_write() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy": "manual", "readPolicy": "on_demand"})),
+            false,
+        );
+        memory(&rt, "hi there", None).await;
+        rt.on_agent_event(&AgentEvent::ToolExecutionEnd {
+            tool_call_id: "c1".into(),
+            tool_name: "bash".into(),
+            result: AgentToolResult::text("out"),
+            is_error: false,
+        });
+        rt.on_agent_event(&AgentEvent::AgentEnd {
+            messages: vec![assistant("Done answer")],
+        });
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        assert!(rt.run_improve("idle").is_none());
+        assert!(rt.run_dream().is_none());
+        assert!(transport.sent().is_empty(), "{:?}", transport.sent());
+        // The explicit command still writes.
+        transport.push(FakeResponse::json(200, json!({})));
+        rt.manual_remember("user_context", "Prefer tabs").await;
         assert_eq!(transport.sent().len(), 1);
     }
 
@@ -3545,7 +3901,10 @@ mod tests {
         };
         assert_eq!(parts[1].value, "user_context");
         assert_eq!(parts.last().unwrap().value, "on extra");
-        assert_eq!(read_pending_remember(&rt.pending_dir()).len(), 1);
+        let queued = read_pending_remember(&rt.pending_dir());
+        assert_eq!(queued.len(), 1);
+        // An unreachable server never accepted the write, so replay is safe.
+        assert_eq!(queued[0].state, PendingState::Pending);
         super::super::command::run_command(&rt, "bogus").await;
         let notices = rt.notices().drain();
         assert!(notices

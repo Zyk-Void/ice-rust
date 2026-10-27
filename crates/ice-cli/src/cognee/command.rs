@@ -12,11 +12,13 @@ use ice_ai::types::Tool;
 use serde_json::{json, Value};
 use tokio_util::sync::CancellationToken;
 
-use super::config::{AutoRememberMode, CogneeConfig, CompactionSummaryMode};
+use super::config::{
+    AutoRememberMode, CogneeConfig, CompactionSummaryMode, ReadPolicy, WritePolicy,
+};
 use super::runtime::{CogneeRuntime, SEARCH_TOOL_NAME};
 use crate::builtin_extensions::{NoticeLevel, SettingRow};
 
-pub const USAGE: &str = "Usage: /cognee status|doctor|on|off|recall on|off|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
+pub const USAGE: &str = "Usage: /cognee status|doctor|on|off|recall on|off|read legacy|on_demand|event|write legacy|manual|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
 
 const NODE_SETS: [&str; 3] = ["user_context", "project_docs", "agent_actions"];
 
@@ -152,6 +154,22 @@ pub async fn run_command(runtime: &CogneeRuntime, args: &str) {
             })
             .await;
         }
+        ("read", Some(mode)) if ReadPolicy::parse(mode).is_some() => {
+            save(CogneeConfig {
+                read_policy: ReadPolicy::parse(mode).expect("matched policy"),
+                ..config
+            })
+            .await;
+            notify(NoticeLevel::Info, format!("Cognee read policy: {mode}"));
+        }
+        ("write", Some(mode)) if WritePolicy::parse(mode).is_some() => {
+            save(CogneeConfig {
+                write_policy: WritePolicy::parse(mode).expect("matched policy"),
+                ..config
+            })
+            .await;
+            notify(NoticeLevel::Info, format!("Cognee write policy: {mode}"));
+        }
         ("capture", Some(flag @ ("on" | "off"))) => {
             save(CogneeConfig {
                 capture_session: flag == "on",
@@ -226,7 +244,7 @@ fn on_off(value: bool) -> &'static str {
     }
 }
 
-/// The eight Cognee rows, read from the effective config.
+/// The Cognee rows, read from the effective config.
 pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
     vec![
         SettingRow::new(
@@ -242,6 +260,20 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
             "Search Cognee memory for relevant context on each prompt",
             on_off(config.auto_recall),
             &["off", "on"],
+        ),
+        SettingRow::new(
+            "cognee.readPolicy",
+            "Cognee read policy",
+            "legacy searches most prompts; event only when a prompt asks about earlier work; on_demand never (the cognee_search tool still works)",
+            config.read_policy.as_str(),
+            &["legacy", "event", "on_demand"],
+        ),
+        SettingRow::new(
+            "cognee.writePolicy",
+            "Cognee write policy",
+            "manual turns off every automatic capture, trace, improve and compaction write; /cognee remember still works",
+            config.write_policy.as_str(),
+            &["legacy", "manual"],
         ),
         SettingRow::new(
             "cognee.autoRemember",
@@ -297,6 +329,8 @@ pub fn apply_setting(config: &CogneeConfig, key: &str, value: &str) -> Option<Co
     match id {
         "enabled" => next.enabled = on,
         "autoRecall" => next.auto_recall = on,
+        "readPolicy" => next.read_policy = ReadPolicy::parse(value)?,
+        "writePolicy" => next.write_policy = WritePolicy::parse(value)?,
         "captureSession" => next.capture_session = on,
         "captureTools" => next.capture_tools = on,
         "autoImprove" => next.auto_improve = on,
@@ -366,13 +400,18 @@ mod tests {
     fn settings_round_trip_through_namespaced_keys() {
         let config = CogneeConfig::default();
         let rows = settings_rows(&config);
-        assert_eq!(rows.len(), 8);
+        assert_eq!(rows.len(), 10);
         assert_eq!(rows[0].key, "cognee.enabled");
         assert_eq!(rows[0].current, "on");
         let next = apply_setting(&config, "cognee.compactionSummaryMode", "own").unwrap();
         assert_eq!(next.compaction_summary_mode, CompactionSummaryMode::Own);
         let next = apply_setting(&next, "cognee.autoRemember", "nope").unwrap();
         assert_eq!(next.auto_remember, AutoRememberMode::Off);
+        let next = apply_setting(&config, "cognee.readPolicy", "event").unwrap();
+        assert_eq!(next.read_policy, ReadPolicy::Event);
+        let next = apply_setting(&next, "cognee.writePolicy", "manual").unwrap();
+        assert_eq!(next.write_policy, WritePolicy::Manual);
+        assert!(apply_setting(&config, "cognee.readPolicy", "bogus").is_none());
         assert!(apply_setting(&config, "cognee.unknown", "on").is_none());
         assert!(apply_setting(&config, "blackhole.refine", "true").is_none());
     }

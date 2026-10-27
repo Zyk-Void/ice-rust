@@ -28,6 +28,8 @@ pub const ENV_BASE_URL: &str = "ICERS_COGNEE_BASE_URL";
 pub const ENV_DATASET: &str = "ICERS_COGNEE_DATASET";
 pub const ENV_COMPACTION_SUMMARY: &str = "ICERS_COGNEE_COMPACTION_SUMMARY";
 pub const ENV_CHECKPOINT_RECALL: &str = "ICERS_COGNEE_CHECKPOINT_RECALL";
+pub const ENV_READ_POLICY: &str = "ICERS_COGNEE_READ_POLICY";
+pub const ENV_WRITE_POLICY: &str = "ICERS_COGNEE_WRITE_POLICY";
 const ICERS_PREFIX: &str = "ICERS_COGNEE_";
 
 /// A snapshot of the variables Cognee reads.
@@ -74,11 +76,69 @@ impl CompactionSummaryMode {
     }
 }
 
+/// When prompts search Cognee on their own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadPolicy {
+    /// Every prompt with enough words searches memory before the model runs.
+    Legacy,
+    /// Never automatically; the model and `/cognee search` still can.
+    OnDemand,
+    /// Only a prompt that asks about earlier work searches memory.
+    Event,
+}
+
+impl ReadPolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::OnDemand => "on_demand",
+            Self::Event => "event",
+        }
+    }
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "on_demand" => Some(Self::OnDemand),
+            "event" => Some(Self::Event),
+            _ => None,
+        }
+    }
+}
+
+/// Which automatic paths may write to Cognee.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WritePolicy {
+    /// Session capture, tool traces, improve and compaction remember follow
+    /// their own switches.
+    Legacy,
+    /// Only `/cognee remember` and explicit tools write; every automatic
+    /// capture and promotion path is off whatever its own switch says.
+    Manual,
+}
+
+impl WritePolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::Manual => "manual",
+        }
+    }
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "manual" => Some(Self::Manual),
+            _ => None,
+        }
+    }
+}
+
 /// `IceCogneeConfig`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CogneeConfig {
     pub enabled: bool,
     pub auto_recall: bool,
+    pub read_policy: ReadPolicy,
+    pub write_policy: WritePolicy,
     pub auto_remember: AutoRememberMode,
     /// Continuous session capture (prompts/answers/traces into the cache).
     pub capture_session: bool,
@@ -105,6 +165,8 @@ impl Default for CogneeConfig {
         Self {
             enabled: true,
             auto_recall: true,
+            read_policy: ReadPolicy::Legacy,
+            write_policy: WritePolicy::Legacy,
             auto_remember: AutoRememberMode::Compaction,
             capture_session: true,
             capture_tools: true,
@@ -121,6 +183,32 @@ impl Default for CogneeConfig {
             queue_limit: 64,
             max_response_chars: 12_000,
         }
+    }
+}
+
+impl CogneeConfig {
+    /// Automatic writes are allowed at all (see [`WritePolicy`]).
+    pub fn automatic_writes(&self) -> bool {
+        self.write_policy == WritePolicy::Legacy
+    }
+
+    /// Prompts, answers and compaction checkpoints go to the session cache.
+    pub fn captures_session(&self) -> bool {
+        self.automatic_writes() && self.capture_session
+    }
+
+    pub fn captures_tools(&self) -> bool {
+        self.captures_session() && self.capture_tools
+    }
+
+    /// The session cache is promoted into the permanent graph.
+    pub fn improves(&self) -> bool {
+        self.automatic_writes() && self.auto_improve
+    }
+
+    /// Compaction summaries are queued as permanent memory.
+    pub fn remembers_compaction(&self) -> bool {
+        self.automatic_writes() && self.auto_remember == AutoRememberMode::Compaction
     }
 }
 
@@ -270,6 +358,20 @@ pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeC
     }
     if let Some(value) = parse_boolean(pick(env, ENV_RECALL, source, "autoRecall"), ENV_RECALL)? {
         config.auto_recall = value;
+    }
+    let read_policy = pick(env, ENV_READ_POLICY, source, "readPolicy");
+    if read_policy.is_some() {
+        config.read_policy = raw_string(&read_policy)
+            .as_deref()
+            .and_then(ReadPolicy::parse)
+            .ok_or_else(|| format!("{ENV_READ_POLICY} must be legacy, on_demand, or event"))?;
+    }
+    let write_policy = pick(env, ENV_WRITE_POLICY, source, "writePolicy");
+    if write_policy.is_some() {
+        config.write_policy = raw_string(&write_policy)
+            .as_deref()
+            .and_then(WritePolicy::parse)
+            .ok_or_else(|| format!("{ENV_WRITE_POLICY} must be legacy or manual"))?;
     }
     let remember = pick(env, ENV_REMEMBER, source, "autoRemember");
     if remember.is_some() {
@@ -568,9 +670,44 @@ fn sha256_hex(text: &str) -> String {
     digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-/// `ice-<basename>-<8 hex of the lexical root>`.
+/// The main worktree for a linked-worktree checkout, found by reading the
+/// `.git` file and its `commondir` (no `git` subprocess); `root` itself for a
+/// main checkout, a bare layout, a non-Git directory or anything unreadable.
+/// Linked worktrees share one repository, so they share its dataset.
+pub fn repository_root(root: &Path) -> PathBuf {
+    let linked = || -> Option<PathBuf> {
+        let dot_git = root.join(".git");
+        if !dot_git.is_file() {
+            return None;
+        }
+        let text = std::fs::read_to_string(&dot_git).ok()?;
+        let gitdir = Path::new(text.trim().strip_prefix("gitdir:")?.trim());
+        let gitdir = if gitdir.is_absolute() {
+            gitdir.to_path_buf()
+        } else {
+            root.join(gitdir)
+        };
+        let commondir = std::fs::read_to_string(gitdir.join("commondir")).ok()?;
+        let common = std::fs::canonicalize(gitdir.join(commondir.trim())).ok()?;
+        if common.file_name()? != ".git" {
+            return None;
+        }
+        common.parent().map(Path::to_path_buf)
+    };
+    linked().unwrap_or_else(|| root.to_path_buf())
+}
+
+/// `ice-<basename>-<8 hex of the lexical root>`; a linked worktree uses its
+/// repository's main checkout as the root.
 pub fn resolve_project_dataset(cwd: &Path) -> String {
-    let root = find_git_root(cwd);
+    dataset_for_root(&repository_root(&find_git_root(cwd)))
+}
+
+pub fn legacy_project_dataset(cwd: &Path) -> String {
+    dataset_for_root(&find_git_root(cwd))
+}
+
+fn dataset_for_root(root: &Path) -> String {
     let name = root
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
@@ -634,6 +771,8 @@ pub fn config_json(config: &CogneeConfig) -> Value {
     serde_json::json!({
         "enabled": config.enabled,
         "autoRecall": config.auto_recall,
+        "readPolicy": config.read_policy.as_str(),
+        "writePolicy": config.write_policy.as_str(),
         "autoRemember": config.auto_remember.as_str(),
         "captureSession": config.capture_session,
         "captureTools": config.capture_tools,
@@ -724,6 +863,63 @@ mod tests {
         assert_eq!(config.base_url, "http://127.0.0.1:8211");
         assert_eq!(config.compaction_summary_mode, CompactionSummaryMode::Auto);
         assert!(!config.checkpoint_recall);
+    }
+
+    #[test]
+    fn linked_worktrees_share_the_main_checkouts_dataset() {
+        let dir = tempfile::tempdir().unwrap();
+        let main = std::fs::canonicalize(dir.path()).unwrap().join("repo");
+        let linked = main.join(".worktrees").join("feature");
+        let admin = main.join(".git").join("worktrees").join("feature");
+        std::fs::create_dir_all(&admin).unwrap();
+        std::fs::create_dir_all(&linked).unwrap();
+        std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+        std::fs::write(
+            linked.join(".git"),
+            format!("gitdir: {}\n", admin.display()),
+        )
+        .unwrap();
+        let nested = linked.join("crates").join("a");
+        std::fs::create_dir_all(&nested).unwrap();
+        let shared = resolve_project_dataset(&main);
+        assert!(shared.starts_with("ice-repo-"), "{shared}");
+        assert_eq!(resolve_project_dataset(&linked), shared);
+        assert_ne!(legacy_project_dataset(&linked), shared);
+        assert_eq!(legacy_project_dataset(&main), shared);
+        assert_eq!(resolve_project_dataset(&nested), shared);
+        // A separate repository with the same basename stays separate.
+        let other = dir.path().join("other").join("repo");
+        std::fs::create_dir_all(other.join(".git")).unwrap();
+        assert_ne!(resolve_project_dataset(&other), shared);
+        // An unreadable or non-standard .git file keeps the lexical root.
+        let broken = dir.path().join("broken");
+        std::fs::create_dir_all(&broken).unwrap();
+        std::fs::write(broken.join(".git"), "not a gitdir file").unwrap();
+        assert_eq!(repository_root(&broken), broken);
+    }
+
+    #[test]
+    fn policies_default_to_legacy_and_validate() {
+        let config = resolve_config(None, &env(&[])).unwrap();
+        assert_eq!(config.read_policy, ReadPolicy::Legacy);
+        assert_eq!(config.write_policy, WritePolicy::Legacy);
+        assert!(config.captures_tools() && config.improves());
+        let config = resolve_config(
+            Some(&json!({"readPolicy": "on_demand", "writePolicy": "legacy"})),
+            &env(&[(ENV_READ_POLICY, "event"), (ENV_WRITE_POLICY, "manual")]),
+        )
+        .unwrap();
+        assert_eq!(config.read_policy, ReadPolicy::Event);
+        assert_eq!(config.write_policy, WritePolicy::Manual);
+        // Manual overrides the individual capture and promotion switches.
+        assert!(config.capture_session && config.auto_improve);
+        assert!(!config.captures_session() && !config.captures_tools());
+        assert!(!config.improves() && !config.remembers_compaction());
+        assert!(resolve_config(Some(&json!({"readPolicy": "always"})), &env(&[])).is_err());
+        assert!(resolve_config(Some(&json!({"writePolicy": "selective"})), &env(&[])).is_err());
+        let saved = config_json(&config);
+        assert_eq!(saved["readPolicy"], "event");
+        assert_eq!(saved["writePolicy"], "manual");
     }
 
     #[test]
