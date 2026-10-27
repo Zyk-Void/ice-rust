@@ -13,7 +13,8 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 
 | Tasks | Status | Evidence / blockers |
 |---|---|---|
-| M0.1, M0.2 | Not started | Truthful telemetry and adapter contracts; both required for Stage 0. |
+| M0.1 | In progress | Versioned recall skip/nonempty/empty and improvement-acceptance metadata added in `crates/ice-cli/src/cognee/runtime.rs`; legacy phases preserved. Manual improvement is observed and the TUI labels improvement acceptance. Recorder semantics, injection and wait metrics, error outcomes, late-completion attribution, and full fixtures remain. |
+| M0.2 | Not started | Adapter contract and capability/health state remain required for Stage 0. |
 | M1.1, M1.2 | Not started | Depends on M0.1; legacy read-through also depends on M3.1. |
 | M2.1, M2.2, M2.3 | Not started | Selective recall; preserve legacy defaults. |
 | M3.1, M3.2, M3.3 | Not started | Evidence scope and context coverage. |
@@ -21,5 +22,12 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 | M5.1, M5.2, M5.3, M5.4 | Not started | Optional JEV; no live JEV evaluation under the Luna-only restriction. |
 | M6.1, M6.2, M6.3, M6.4 | Not started | Capability discovery and tool error semantics. |
 | M7.1, M7.2, M7.3 | Not started | Evaluation, rollout and release gates. |
+
+## Stage 0 verification notes
+
+- Initial runtime suite: 14 passed, 1 failed because manual improvement had no observations; after instrumenting that path, 15 passed. A broader run exposed a test race on asynchronous observation persistence; the test now waits for background writes.
+- After fixing the test race, `cargo test -p ice-cli --locked cognee --lib`: 76 passed; the focused improvement activity display test also passed. Formatting and `git diff --check` passed.
+- `cargo clippy -p ice-cli --lib --locked`: failed on the existing `clippy::not_unsafe_ptr_arg_deref` error in `crates/ice-extensions/src/actions.rs:1013`, with 168 warnings. This is outside the changed files.
+- No performance measurements have been made for these metadata changes. The historical baseline is not a candidate benchmark.
 
 No milestone is complete. No performance improvement or release gate is claimed.

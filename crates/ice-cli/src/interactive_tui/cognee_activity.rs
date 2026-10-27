@@ -616,7 +616,7 @@ impl Model {
             let detail = match (improve.status, &improve.error) {
                 (Status::Pending, _) => format!("{reason} · running"),
                 (Status::Failed, Some(error)) => format!("{reason} · failed · {error}"),
-                _ => format!("{reason}{}", seconds(improve.latency_ms)),
+                _ => format!("{reason} · accepted{}", seconds(improve.latency_ms)),
             };
             lines.extend(step_rows(improve.status, "improve", &[detail], width));
         }
@@ -1151,7 +1151,7 @@ mod tests {
         model.expanded = true;
         let lines = rows(&model);
         assert!(lines[1].contains("✗ improve") && lines[1].contains("dream · failed · timeout"));
-        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · 0.5s"));
+        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · accepted · 0.5s"));
     }
 
     fn user(chat: &Container, text: &str) -> Arc<UserMessageComponent> {

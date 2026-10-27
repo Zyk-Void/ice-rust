@@ -1127,6 +1127,7 @@ impl CogneeRuntime {
                     ObserveFields {
                         request_id: Some(request_id),
                         latency_ms: latency,
+                        meta: meta(json!({"outcomeVersion": 1, "outcome": "accepted"})),
                         ..ObserveFields::default()
                     },
                 );
@@ -1297,7 +1298,7 @@ impl CogneeRuntime {
                         ObserveFields {
                             request_id: Some(request_id),
                             latency_ms: latency,
-                            meta: meta(meta_value),
+                            meta: meta(json!({"reason": "dream", "target": record.session_id, "outcomeVersion": 1, "outcome": "accepted"})),
                             ..ObserveFields::default()
                         },
                     );
@@ -1716,17 +1717,51 @@ impl CogneeRuntime {
             return;
         };
         self.state().last_improve_at = 0;
+        let request_id = uuid::Uuid::new_v4().to_string();
+        let started = std::time::Instant::now();
+        self.observe(
+            "improve",
+            "started",
+            ObserveFields {
+                request_id: Some(request_id.clone()),
+                meta: meta(json!({"reason": "manual"})),
+                ..ObserveFields::default()
+            },
+        );
         match client
             .improve(Some(&dataset), &[session_id], CallOptions::default())
             .await
         {
             Ok(()) => {
                 self.state().last_improve_at = self.now();
+                self.observe(
+                    "improve",
+                    "succeeded",
+                    ObserveFields {
+                        request_id: Some(request_id),
+                        latency_ms: Some(started.elapsed().as_millis() as u64),
+                        meta: meta(
+                            json!({"reason": "manual", "outcomeVersion": 1, "outcome": "accepted"}),
+                        ),
+                        ..ObserveFields::default()
+                    },
+                );
                 self.notify(NoticeLevel::Info, "Cognee improve dispatched");
             }
             Err(error) => {
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
+                self.observe(
+                    "improve",
+                    "failed",
+                    ObserveFields {
+                        request_id: Some(request_id),
+                        latency_ms: Some(started.elapsed().as_millis() as u64),
+                        error: Some(kind.clone()),
+                        meta: meta(json!({"reason": "manual"})),
+                        ..ObserveFields::default()
+                    },
+                );
                 self.notify(NoticeLevel::Error, format!("Cognee improve failed: {kind}"));
             }
         }
@@ -2274,7 +2309,11 @@ impl CogneeRuntime {
         };
         self.ensure_loaded();
         let Some(client) = self.live_client() else {
-            self.observe("recall", "succeeded", succeeded(json!({"disabled": true})));
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(json!({"disabled": true, "outcomeVersion": 1, "outcome": "skipped"})),
+            );
             return None;
         };
         let session_id = self.ensure_session_id(event.session_id);
@@ -2296,14 +2335,18 @@ impl CogneeRuntime {
             )
         };
         if !auto_recall || !can_attempt {
-            self.observe("recall", "succeeded", succeeded(json!({"skipped": true})));
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(json!({"skipped": true, "outcomeVersion": 1, "outcome": "skipped"})),
+            );
             return self.turn_scoped_memory(None);
         }
         if is_low_signal_recall_prompt(event.prompt) {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "reason": "short_prompt"})),
+                succeeded(json!({"skipped": true, "reason": "short_prompt", "outcomeVersion": 1, "outcome": "skipped"})),
             );
             return self.turn_scoped_memory(None);
         }
@@ -2315,7 +2358,13 @@ impl CogneeRuntime {
                 && now.saturating_sub(state.last_recall_at) < RECALL_DEDUP_TTL_MS
             {
                 drop(state);
-                self.observe("recall", "succeeded", succeeded(json!({"duplicate": true})));
+                self.observe(
+                    "recall",
+                    "succeeded",
+                    succeeded(
+                        json!({"duplicate": true, "outcomeVersion": 1, "outcome": "skipped"}),
+                    ),
+                );
                 return self.turn_scoped_memory(None);
             }
         }
@@ -2357,7 +2406,7 @@ impl CogneeRuntime {
                                 .collect::<Vec<_>>()
                                 .join("\n"),
                         )),
-                        meta: meta(json!({"hits": results.len()})),
+                        meta: meta(json!({"hits": results.len(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }})),
                         ..ObserveFields::default()
                     },
                 );
@@ -2836,10 +2885,18 @@ mod tests {
         assert!(enabled.is_enabled());
         assert!(!enabled.config().auto_improve);
         enabled.manual_improve().await;
+        enabled.wait_for_background().await;
         let requests = enabled_transport.sent();
         assert_eq!(requests.len(), 1);
         assert!(requests[0].url.ends_with("/api/v1/improve"));
         assert_eq!(json_body(&requests[0])["sessionIds"], json!(["ice_host1"]));
+        let observations =
+            super::super::observer::read_observations(&enabled_dir.path().join("ice-cognee"));
+        let accepted = observations
+            .iter()
+            .find(|event| event.operation == "improve" && event.phase == "succeeded")
+            .unwrap();
+        assert_eq!(accepted.meta.as_ref().unwrap()["outcome"], "accepted");
     }
 
     #[tokio::test]
@@ -2879,11 +2936,14 @@ mod tests {
             json!(["session", "graph"]),
             "raw traces are not recalled"
         );
-        assert!(dir
-            .path()
-            .join("ice-cognee")
-            .join("observations.jsonl")
-            .exists());
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        let outcomes: Vec<_> = observations
+            .iter()
+            .filter(|event| event.operation == "recall" && event.phase == "succeeded")
+            .map(|event| event.meta.as_ref().unwrap()["outcome"].as_str().unwrap())
+            .collect();
+        assert_eq!(outcomes, ["retrieved_nonempty", "skipped", "skipped"]);
     }
 
     #[tokio::test]
