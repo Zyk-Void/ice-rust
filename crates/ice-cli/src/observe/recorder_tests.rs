@@ -364,6 +364,8 @@ fn memory_titles_distinguish_versioned_outcomes_without_reinterpreting_legacy() 
         ("empty", "recall", "retrieved_empty"),
         ("hit", "recall", "retrieved_nonempty"),
         ("job", "improve", "accepted"),
+        ("stored", "injection", "persisted"),
+        ("failed", "injection", "append_failed"),
     ] {
         let mut started = observation(id, "started");
         started.operation = operation.into();
@@ -397,7 +399,13 @@ fn memory_titles_distinguish_versioned_outcomes_without_reinterpreting_legacy() 
         .as_deref()
         .unwrap()
         .contains("accepted (completion unknown)"));
-    assert_eq!(items[4].text.as_deref(), Some("Cognee recall · ice"));
+    assert!(items[4]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("persisted (delivery unknown)"));
+    assert!(items[5].text.as_deref().unwrap().contains("append failed"));
+    assert_eq!(items[6].text.as_deref(), Some("Cognee recall · ice"));
 }
 
 #[test]

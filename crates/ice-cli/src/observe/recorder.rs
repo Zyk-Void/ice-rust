@@ -1088,6 +1088,8 @@ fn memory_title(observation: &Observation) -> String {
         ("recall", Some("retrieved_empty")) => " · retrieved empty",
         ("recall", Some("retrieved_nonempty")) => " · retrieved nonempty",
         ("improve", Some("accepted")) => " · accepted (completion unknown)",
+        ("injection", Some("persisted")) => " · persisted (delivery unknown)",
+        ("injection", Some("append_failed")) => " · append failed",
         _ => "",
     };
     let head = format!(
