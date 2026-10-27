@@ -22,8 +22,8 @@ use crate::queue::PendingMessageQueue;
 use crate::stream_fn::{get_default_stream_fn, StreamFn};
 use crate::types::{AgentContext, AgentState, QueueMode, ToolExecutionMode};
 
-use ice_ai::types::{AssistantMessage, UserContent, UserMessage};
 use ice_ai::Model;
+use ice_ai::types::{AssistantMessage, UserContent, UserMessage};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use tokio::sync::{broadcast, Notify};
@@ -519,6 +519,7 @@ impl Agent {
             should_stop_after_turn: None,
             prepare_next_turn: None,
             after_tool_results: None,
+            before_request: None,
             get_steering_messages: Some(Arc::new(move || {
                 let q = Arc::clone(&steering);
                 Box::pin(async move { q.lock().expect("steer lock").try_drain() })

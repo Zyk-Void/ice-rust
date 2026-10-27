@@ -16,9 +16,9 @@ use crate::types::{
     BeforeToolCallResult, ShouldStopAfterTurnContext, ToolExecutionMode,
 };
 use futures::future::BoxFuture;
+use ice_ai::Model;
 use ice_ai::provider::{CacheRetention, SimpleStreamOptions};
 use ice_ai::types::{Message, ThinkingLevel};
-use ice_ai::Model;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;
@@ -58,6 +58,15 @@ pub type PrepareNextTurn = Arc<
 /// inserting a compaction boundary).
 pub type AfterToolResults = Arc<
     dyn Fn(ShouldStopAfterTurnContext<'_>) -> BoxFuture<'static, Option<AgentLoopTurnUpdate>>
+        + Send
+        + Sync,
+>;
+
+/// Optional context added immediately before an already-needed provider request.
+/// Returned messages are request-local and are not added to the loop's durable
+/// `new_messages` batch.
+pub type BeforeRequest = Arc<
+    dyn Fn(Vec<AgentMessage>, CancellationToken) -> BoxFuture<'static, Vec<AgentMessage>>
         + Send
         + Sync,
 >;
@@ -109,6 +118,8 @@ pub struct AgentLoopConfig {
     pub should_stop_after_turn: Option<ShouldStopAfterTurn>,
     pub prepare_next_turn: Option<PrepareNextTurn>,
     pub after_tool_results: Option<AfterToolResults>,
+    /// Invoked only when the loop is about to make a provider request.
+    pub before_request: Option<BeforeRequest>,
     pub get_steering_messages: Option<GetSteeringMessages>,
     pub get_follow_up_messages: Option<GetFollowUpMessages>,
     pub before_tool_call: Option<BeforeToolCall>,
@@ -145,6 +156,7 @@ impl std::fmt::Debug for AgentLoopConfig {
             )
             .field("prepare_next_turn", &self.prepare_next_turn.is_some())
             .field("after_tool_results", &self.after_tool_results.is_some())
+            .field("before_request", &self.before_request.is_some())
             .field(
                 "get_steering_messages",
                 &self.get_steering_messages.is_some(),

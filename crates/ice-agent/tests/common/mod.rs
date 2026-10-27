@@ -205,6 +205,7 @@ pub fn loop_config_with_converter(
         should_stop_after_turn: None,
         prepare_next_turn: None,
         after_tool_results: None,
+        before_request: None,
         get_steering_messages: None,
         get_follow_up_messages: None,
         before_tool_call: None,

@@ -35,8 +35,8 @@ use ice_ai::types::{
     ToolResultMessage, ToolResultRole,
 };
 use ice_ai::validate_tool_arguments;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// The messages a single `run_agent_loop` invocation added (prompt + assistant
 /// + tool results + injected steering/follow-ups). Returned to the caller.
@@ -275,6 +275,12 @@ async fn run_loop(
             let message = match pending_assistant.take() {
                 Some(message) => message,
                 None => {
+                    if let Some(before_request) = &config.before_request {
+                        let additions =
+                            before_request(current_context.messages.clone(), config.signal.clone())
+                                .await;
+                        current_context.messages.extend(additions);
+                    }
                     let message =
                         stream_assistant_response(current_context, config, emit, stream_fn).await?;
                     new_messages.push(AgentMessage::Assistant(Box::new(message.clone())));

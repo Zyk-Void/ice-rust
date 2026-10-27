@@ -55,6 +55,23 @@ pub struct BeforeRunEvent<'a> {
     pub signal: CancellationToken,
 }
 
+/// Context at an already-needed provider request boundary.
+pub struct RequestContextEvent<'a> {
+    pub prompt: &'a str,
+    pub original_prompt: Option<&'a str>,
+    pub messages: &'a [AgentMessage],
+    pub system_prompt: &'a str,
+    pub session_id: &'a str,
+    pub run_id: &'a str,
+    pub lane_id: &'a str,
+    pub branch_generation: u64,
+    pub request_index: u64,
+    pub context_window: u64,
+    pub remaining_context_tokens: usize,
+    pub latest_compaction_at: Option<i64>,
+    pub signal: CancellationToken,
+}
+
 /// Text an extension adds to the model context for one prompt.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PromptContext {
@@ -148,6 +165,21 @@ pub trait HarnessExtension: Send + Sync {
     /// cache, which a per-run system prompt change would break every turn.
     async fn prompt_context(&self, _event: &BeforeRunEvent<'_>) -> Option<PromptContext> {
         None
+    }
+
+    /// Context for an already-needed provider request. By default, bridge only
+    /// the first request to the legacy callback.
+    async fn request_context(&self, event: &RequestContextEvent<'_>) -> Option<PromptContext> {
+        if event.request_index != 0 {
+            return None;
+        }
+        self.prompt_context(&BeforeRunEvent {
+            prompt: event.prompt,
+            system_prompt: Some(event.system_prompt),
+            session_id: event.session_id,
+            signal: event.signal.clone(),
+        })
+        .await
     }
 
     /// Called after the harness attempts to persist returned prompt context.
