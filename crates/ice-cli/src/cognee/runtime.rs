@@ -19,12 +19,16 @@ use coordinator::EvidenceCache;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};
+use std::time::Duration;
+
+use sha2::{Digest, Sha256};
 
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::extension::{
     AfterCompactEvent, BeforeCompactDecision, BeforeCompactEvent, BeforeRunEvent,
     CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
+use ice_harness::session::types::Entry;
 use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
@@ -47,6 +51,11 @@ use super::dream::{
 use super::evidence::{
     select_new_with_context, FilterContext, RejectCounts, SeenEvidence, Selection,
 };
+use super::helper::{
+    self, AbstainReason, Candidate as HelperCandidate, CandidateBatch, Helper, HelperOutcome,
+    Verdict,
+};
+use super::helper_gate::{Admission as HelperAdmission, HelperGate};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
 use super::policy::{admit_prompt, Admission};
 use super::queue::{
@@ -254,6 +263,10 @@ pub struct DoctorReport {
     pub last_recall_hits: usize,
     pub queue_pending: usize,
     pub queue_uncertain: usize,
+    pub helper_status: String,
+    pub helper_requests: u64,
+    pub helper_abstains: u64,
+    pub helper_skips: u64,
 }
 
 impl DoctorReport {
@@ -335,6 +348,7 @@ impl DoctorReport {
                 self.saves.prompt, self.saves.trace, self.saves.answer
             ),
             format!("queue={}/{}", self.queue_pending, self.queue_uncertain),
+            format!("helper={} requests={} abstains={} skips={}", self.helper_status, self.helper_requests, self.helper_abstains, self.helper_skips),
             format!("detail={}", self.health_detail),
         ]
         .join(" · ")
@@ -393,6 +407,13 @@ pub(crate) struct State {
     key_source: KeySource,
     shutting_down: bool,
     turn_traces: u32,
+    helper: Option<Arc<Helper>>,
+    helper_error: Option<String>,
+    helper_cancel: CancellationToken,
+    helper_gate: HelperGate,
+    helper_requests: u64,
+    helper_abstains: u64,
+    helper_skips: u64,
 }
 
 impl State {
@@ -433,6 +454,13 @@ impl State {
             key_source: KeySource::None,
             shutting_down: false,
             turn_traces: 0,
+            helper: None,
+            helper_error: None,
+            helper_cancel: CancellationToken::new(),
+            helper_gate: HelperGate::default(),
+            helper_requests: 0,
+            helper_abstains: 0,
+            helper_skips: 0,
         }
     }
 
@@ -443,6 +471,9 @@ impl State {
         self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
         if previous != self.active_dataset() {
             self.context_generation = self.context_generation.saturating_add(1);
+            self.helper_cancel.cancel();
+            self.helper_cancel = CancellationToken::new();
+            self.helper_gate = HelperGate::default();
             self.evidence_cache.clear();
         }
         self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
@@ -508,6 +539,40 @@ impl RuntimeOptions {
     }
 }
 
+struct HelperFlightGuard {
+    runtime: Weak<CogneeRuntime>,
+    key: String,
+    finished: bool,
+    _permit: Option<tokio::sync::OwnedSemaphorePermit>,
+}
+
+impl HelperFlightGuard {
+    fn finish(&mut self, outcome: &HelperOutcome) {
+        if let Some(runtime) = self.runtime.upgrade() {
+            runtime
+                .state()
+                .helper_gate
+                .finish(&self.key, runtime.now(), outcome);
+        }
+        self._permit.take();
+        self.finished = true;
+    }
+}
+
+impl Drop for HelperFlightGuard {
+    fn drop(&mut self) {
+        if !self.finished {
+            if let Some(runtime) = self.runtime.upgrade() {
+                runtime.state().helper_gate.finish(
+                    &self.key,
+                    runtime.now(),
+                    &HelperOutcome::Abstained(AbstainReason::Cancelled),
+                );
+            }
+        }
+    }
+}
+
 pub struct CogneeRuntime {
     me: Weak<CogneeRuntime>,
     agent_dir: PathBuf,
@@ -523,6 +588,7 @@ pub struct CogneeRuntime {
     harness: Mutex<Option<ice_harness::agent_harness::WeakAgentHarness>>,
     state: Mutex<State>,
     background: Mutex<Vec<JoinHandle<()>>>,
+    helper_tasks: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
     tool_args: Mutex<HashMap<String, Value>>,
     tools_allowed: Mutex<Option<bool>>,
@@ -554,6 +620,7 @@ impl CogneeRuntime {
             harness: Mutex::new(None),
             state: Mutex::new(State::new()),
             background: Mutex::new(Vec::new()),
+            helper_tasks: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
             tool_args: Mutex::new(HashMap::new()),
             tools_allowed: Mutex::new(None),
@@ -685,15 +752,46 @@ impl CogneeRuntime {
         state.refresh_dataset(cwd.as_deref());
         state.api_key = connection.api_key;
         state.key_source = connection.key_source;
+        Self::rebuild_helper(&mut state);
+        let helper_error = state.helper_error.clone();
         state.client = Some(CogneeClient::new(
             Self::client_config(&state),
             self.transport.clone(),
         ));
         state.loaded = true;
+        drop(state);
+        if let Some(error) = helper_error {
+            self.notify(
+                NoticeLevel::Warning,
+                format!("Cognee helper binding failed: {error}"),
+            );
+            self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+        }
     }
 
     fn rebuild_client(state: &mut State, transport: Arc<dyn CogneeTransport>) {
         state.client = Some(CogneeClient::new(Self::client_config(state), transport));
+    }
+
+    fn rebuild_helper(state: &mut State) {
+        state.helper_cancel.cancel();
+        state.helper_cancel = CancellationToken::new();
+        state.helper_error = None;
+        state.helper_gate = HelperGate::default();
+        if !state.config.enabled || !state.config.selective_writes() {
+            state.helper = None;
+            return;
+        }
+        state.helper = match Helper::bind(&state.config) {
+            Ok(helper) => helper.map(Arc::new),
+            Err(error) => {
+                state.helper_error = Some(match error {
+                    helper::HelperError::UnsupportedProtocol => "unsupported_protocol".into(),
+                    _ => "binding_failed".into(),
+                });
+                None
+            }
+        };
     }
 
     /// The client when Cognee may contact the server.
@@ -716,12 +814,413 @@ impl CogneeRuntime {
             state.dream_dirty = false;
             state.seen_evidence.clear();
         }
+        if state.session_id.as_deref() != Some(id.as_str())
+            || state.host_session_id.as_deref() != Some(host_id)
+        {
+            state.helper_cancel.cancel();
+            state.helper_cancel = CancellationToken::new();
+            state.helper_gate = HelperGate::default();
+        }
         state.session_id = Some(id.clone());
         state.host_session_id = Some(host_id.into());
         id
     }
 
     // ── background work ──
+
+    fn track_helper(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
+        let handle = tokio::spawn(work);
+        let mut tasks = self.helper_tasks.lock().unwrap();
+        tasks.retain(|task| !task.is_finished());
+        tasks.push(handle);
+    }
+
+    fn observe_helper(
+        &self,
+        outcome: &str,
+        reason: &str,
+        candidates: usize,
+        accepted: usize,
+        rejected: usize,
+        latency_ms: Option<u64>,
+    ) {
+        self.observe(
+            "helper",
+            outcome,
+            ObserveFields {
+                request_id: Some(uuid::Uuid::new_v4().to_string()),
+                latency_ms,
+                meta: meta(json!({
+                    "reason": reason,
+                    "candidates": candidates,
+                    "accepted": accepted,
+                    "rejected": rejected,
+                    "outcomeVersion": 1
+                })),
+                ..ObserveFields::default()
+            },
+        );
+    }
+
+    fn schedule_helper(&self) {
+        self.ensure_loaded();
+        let (eligible, helper, cancel, generation, dataset, provider, shutting_down) = {
+            let state = self.state();
+            (
+                state.config.selective_writes()
+                    && state.config.enabled
+                    && Self::enabled(&state, self.offline),
+                state.helper.clone(),
+                state.helper_cancel.child_token(),
+                state.context_generation,
+                state.active_dataset(),
+                state.config.helper_provider.clone().unwrap_or_default(),
+                state.shutting_down,
+            )
+        };
+        let candidates_dir = self.candidates_dir();
+        let now = self.now();
+        let mut pending = Vec::new();
+        for mut candidate in super::candidates::read_candidates(&candidates_dir) {
+            if candidate.dataset != dataset || candidate.state != CandidateState::Pending {
+                continue;
+            }
+            if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS {
+                let _ = super::candidates::set_state(
+                    &candidates_dir,
+                    &mut candidate,
+                    CandidateState::Expired,
+                );
+            } else {
+                pending.push(candidate);
+            }
+        }
+        if shutting_down || !eligible {
+            return;
+        }
+        let Some(helper) = helper else {
+            if let Some(error) = self.state().helper_error.clone() {
+                self.notify(
+                    NoticeLevel::Warning,
+                    format!("Cognee helper binding failed: {error}"),
+                );
+                self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+            }
+            return;
+        };
+        let (helper, cancel, generation, dataset, provider, now) =
+            (helper, cancel, generation, dataset, provider, now);
+        let pending = pending
+            .into_iter()
+            .filter(|candidate| candidate.dataset == dataset)
+            .collect::<Vec<_>>();
+        if pending.is_empty() {
+            self.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+            return;
+        }
+        let this = self.arc();
+        let work = async move {
+            let harness = match this.harness() {
+                Some(harness) => harness,
+                None => {
+                    this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                    return;
+                }
+            };
+            let branch_entries = match harness
+                .session()
+                .find_entries_on_branch(
+                    &ice_harness::session::types::EntryQuery::default(),
+                    &ice_harness::session::types::BranchBounds::default(),
+                )
+                .await
+            {
+                Ok(entries) => entries,
+                Err(_) => {
+                    this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                    return;
+                }
+            };
+            let branch = branch_entries
+                .iter()
+                .filter_map(|entry| match entry {
+                    Entry::Message(message) => {
+                        Some((entry.id().to_string(), message.message.clone()))
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            let last_user = branch
+                .iter()
+                .rev()
+                .find_map(|(_, message)| {
+                    matches!(message, AgentMessage::User(_)).then(|| extract_message_text(message))
+                })
+                .unwrap_or_default();
+            let mut candidates = Vec::new();
+            for mut candidate in pending {
+                if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS {
+                    let _ = super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Expired,
+                    );
+                    continue;
+                }
+                if let super::candidates::Admission::Reject(reason) =
+                    super::candidates::admit(&candidate, &branch)
+                {
+                    let _ = super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Rejected(reason.as_str().into()),
+                    );
+                    continue;
+                }
+                candidates.push(candidate);
+                if candidates.len() == 8 {
+                    break;
+                }
+            }
+            if candidates.is_empty() {
+                this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                return;
+            }
+            let helper_candidates = candidates
+                .iter()
+                .map(|candidate| HelperCandidate {
+                    id: candidate.id.clone(),
+                    text: candidate.text.clone(),
+                    kind_hint: Some(candidate.category.as_str().to_owned()),
+                })
+                .collect::<Vec<_>>();
+            let excerpt = last_user.chars().take(400).collect::<String>();
+            let batch = match CandidateBatch::new(helper_candidates, Some(excerpt)) {
+                Ok(batch) => batch,
+                Err(_) => {
+                    this.observe_helper("abstained", "malformed", candidates.len(), 0, 0, None);
+                    return;
+                }
+            };
+            let mut keys = candidates
+                .iter()
+                .map(|candidate| {
+                    let text_hash = Sha256::digest(candidate.text.as_bytes());
+                    (candidate.id.clone(), text_hash.to_vec())
+                })
+                .collect::<Vec<_>>();
+            keys.sort_by(|left, right| left.0.cmp(&right.0));
+            let mut hasher = Sha256::new();
+            hasher.update(provider.as_bytes());
+            for (id, text_hash) in keys {
+                hasher.update(id.as_bytes());
+                hasher.update(text_hash);
+            }
+            let key = hasher
+                .finalize()
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
+            let (admission, permit) = {
+                let mut state = this.state();
+                state.helper_gate.admit(&key, this.now())
+            };
+            let HelperAdmission::Start = admission else {
+                if admission.reason() == Some(super::helper_gate::SkipReason::BatchCached) {
+                    let cached = this.state().helper_gate.cached(&key, this.now());
+                    if let Some(HelperOutcome::Judged(judgments)) = cached {
+                        let mut accepted = 0;
+                        let mut rejected = 0;
+                        for mut candidate in candidates {
+                            let Some(judgment) = judgments
+                                .iter()
+                                .find(|judgment| judgment.id == candidate.id)
+                            else {
+                                continue;
+                            };
+                            if judgment.durable == Verdict::No {
+                                let _ = super::candidates::set_state(
+                                    &candidates_dir,
+                                    &mut candidate,
+                                    CandidateState::Rejected("helper_not_durable".into()),
+                                );
+                                rejected += 1;
+                            } else if judgment.durable == Verdict::Yes
+                                && judgment.applicable != Verdict::No
+                            {
+                                if super::propose::accept_candidate(&this, &candidate)
+                                    .unwrap_or(false)
+                                    && super::candidates::set_state(
+                                        &candidates_dir,
+                                        &mut candidate,
+                                        CandidateState::Accepted,
+                                    )
+                                    .is_ok()
+                                {
+                                    accepted += 1;
+                                }
+                            }
+                        }
+                        this.observe_helper(
+                            "judged",
+                            "batch_cached",
+                            accepted + rejected,
+                            accepted,
+                            rejected,
+                            None,
+                        );
+                    } else {
+                        this.observe_helper(
+                            "skipped",
+                            "batch_cached",
+                            candidates.len(),
+                            0,
+                            0,
+                            None,
+                        );
+                    }
+                } else if let Some(reason) = admission.reason() {
+                    if reason != super::helper_gate::SkipReason::BatchCached {
+                        let mut state = this.state();
+                        state.helper_skips = state.helper_skips.saturating_add(1);
+                    }
+                    this.observe_helper("skipped", reason.as_str(), candidates.len(), 0, 0, None);
+                }
+                return;
+            };
+            let mut guard = HelperFlightGuard {
+                runtime: Arc::downgrade(&this),
+                key: key.clone(),
+                finished: false,
+                _permit: permit,
+            };
+            {
+                let mut state = this.state();
+                state.helper_requests = state.helper_requests.saturating_add(1);
+            }
+            let started = std::time::Instant::now();
+            let outcome = helper.judge(&batch, cancel.clone()).await;
+            let latency = started.elapsed().as_millis() as u64;
+            let current_generation = this.state().context_generation;
+            if current_generation != generation {
+                guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
+                this.observe_helper(
+                    "skipped",
+                    "stale_generation",
+                    candidates.len(),
+                    0,
+                    0,
+                    Some(latency),
+                );
+                return;
+            }
+            let judgments = match outcome {
+                HelperOutcome::Judged(judgments) => {
+                    guard.finish(&HelperOutcome::Judged(judgments.clone()));
+                    judgments
+                }
+                HelperOutcome::Abstained(AbstainReason::Cancelled) if cancel.is_cancelled() => {
+                    guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
+                    this.observe_helper(
+                        "skipped",
+                        "cancelled",
+                        candidates.len(),
+                        0,
+                        0,
+                        Some(latency),
+                    );
+                    return;
+                }
+                HelperOutcome::Abstained(reason) => {
+                    guard.finish(&HelperOutcome::Abstained(reason));
+                    let label = match reason {
+                        AbstainReason::Timeout => "timeout",
+                        AbstainReason::Cancelled => "cancelled",
+                        AbstainReason::Unavailable => "unavailable",
+                        AbstainReason::Malformed | AbstainReason::TooLarge => "malformed",
+                        AbstainReason::UnknownCandidateId => "unknown_candidate_id",
+                        AbstainReason::Disabled => "unavailable",
+                    };
+                    {
+                        let mut state = this.state();
+                        state.helper_abstains = state.helper_abstains.saturating_add(1);
+                    }
+                    this.observe_helper("abstained", label, candidates.len(), 0, 0, Some(latency));
+                    return;
+                }
+            };
+            let mut accepted = 0;
+            let mut rejected = 0;
+            for mut candidate in candidates {
+                if candidate.state != CandidateState::Pending {
+                    continue;
+                }
+                let Some(judgment) = judgments
+                    .iter()
+                    .find(|judgment| judgment.id == candidate.id)
+                else {
+                    continue;
+                };
+                if judgment.durable == Verdict::No {
+                    let _ = super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Rejected("helper_not_durable".into()),
+                    );
+                    rejected += 1;
+                } else if judgment.durable == Verdict::Yes && judgment.applicable != Verdict::No {
+                    match super::propose::accept_candidate(&this, &candidate) {
+                        Ok(true) => {
+                            if super::candidates::set_state(
+                                &candidates_dir,
+                                &mut candidate,
+                                CandidateState::Accepted,
+                            )
+                            .is_ok()
+                            {
+                                accepted += 1;
+                            }
+                        }
+                        Ok(false) => {
+                            let _ = super::candidates::set_state(
+                                &candidates_dir,
+                                &mut candidate,
+                                CandidateState::Rejected(
+                                    super::candidates::Reason::QueueFull.as_str().into(),
+                                ),
+                            );
+                            rejected += 1;
+                        }
+                        Err(_) => {}
+                    }
+                }
+            }
+            this.observe_helper(
+                "judged",
+                "judged",
+                accepted + rejected,
+                accepted,
+                rejected,
+                Some(latency),
+            );
+        };
+        self.track_helper(work);
+    }
+
+    #[cfg(test)]
+    fn use_helper_for_test(&self, helper: Arc<Helper>) {
+        let mut state = self.state();
+        state.config.write_policy = WritePolicy::Selective;
+        state.config.enabled = true;
+        state.installed = true;
+        state.helper = Some(helper);
+        state.helper_error = None;
+    }
+
+    #[cfg(test)]
+    fn store_pending_candidate_for_test(&self, candidate: &Candidate) {
+        super::candidates::store_pending(&self.candidates_dir(), candidate, self.now()).unwrap();
+    }
 
     fn track(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
         let handle = tokio::spawn(work);
@@ -736,10 +1235,12 @@ impl CogneeRuntime {
         loop {
             let handles: Vec<JoinHandle<()>> =
                 std::mem::take(&mut *self.background.lock().unwrap());
-            if handles.is_empty() {
+            let helper_handles: Vec<JoinHandle<()>> =
+                std::mem::take(&mut *self.helper_tasks.lock().unwrap());
+            if handles.is_empty() && helper_handles.is_empty() {
                 break;
             }
-            for handle in handles {
+            for handle in handles.into_iter().chain(helper_handles) {
                 let _ = handle.await;
             }
         }
@@ -1697,6 +2198,24 @@ impl CogneeRuntime {
                     )
                 })
                 .count(),
+            helper_status: if !state.config.enabled
+                || !state.config.selective_writes()
+                || state.config.helper_provider.is_none()
+            {
+                "off".into()
+            } else if let Some(error) = &state.helper_error {
+                format!("error({error})")
+            } else if state.helper.is_some() {
+                format!(
+                    "bound({})",
+                    state.config.helper_provider.as_deref().unwrap_or("unknown")
+                )
+            } else {
+                "off".into()
+            },
+            helper_requests: state.helper_requests,
+            helper_abstains: state.helper_abstains,
+            helper_skips: state.helper_skips,
         }
     }
 
@@ -1829,9 +2348,11 @@ impl CogneeRuntime {
             return false;
         }
         let mut state = self.state();
+        state.helper_cancel.cancel();
         let previous_dataset = state.active_dataset();
         state.config = next;
         state.installed = true;
+        Self::rebuild_helper(&mut state);
         let cwd = self.cwd.lock().unwrap().clone();
         state.refresh_dataset(cwd.as_deref());
         state.context_generation = state.context_generation.saturating_add(1);
@@ -1839,6 +2360,15 @@ impl CogneeRuntime {
             state.evidence_cache.clear();
         }
         Self::rebuild_client(&mut state, self.transport.clone());
+        let helper_error = state.helper_error.clone();
+        drop(state);
+        if let Some(error) = helper_error {
+            self.notify(
+                NoticeLevel::Warning,
+                format!("Cognee helper binding failed: {error}"),
+            );
+            self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+        }
         true
     }
 
@@ -2385,9 +2915,19 @@ impl CogneeRuntime {
         let (client, session_id) = {
             let mut state = self.state();
             state.shutting_down = true;
+            state.helper_cancel.cancel();
             state.evidence_cache.clear();
             (state.client.clone(), state.session_id.clone())
         };
+        let helper_tasks = std::mem::take(&mut *self.helper_tasks.lock().unwrap());
+        for mut task in helper_tasks {
+            if tokio::time::timeout(Duration::from_secs(1), &mut task)
+                .await
+                .is_err()
+            {
+                task.abort();
+            }
+        }
         let settle = self.settle.lock().unwrap().take();
         if let Some(settle) = settle {
             let _ = settle.await;
@@ -2540,6 +3080,7 @@ impl CogneeRuntime {
     }
 
     fn on_run_settled(&self) {
+        self.schedule_helper();
         let ready = {
             let state = self.state();
             state.loaded && Self::enabled(&state, self.offline) && state.config.improves()
@@ -3221,6 +3762,8 @@ impl HarnessExtension for CogneeRuntime {
         if !Self::enabled(&self.state(), self.offline) {
             return;
         }
+        let session_id = self.ensure_session_id(event.session_id);
+        self.schedule_helper();
         let summary = event.entry.summary.trim();
         if summary.is_empty() {
             return;
@@ -3240,7 +3783,6 @@ impl HarnessExtension for CogneeRuntime {
                 }
             });
         let reason = event.trigger.reason();
-        let session_id = self.ensure_session_id(event.session_id);
         self.schedule_prefetch(prefix16(summary, 400).to_string(), session_id.clone());
         let (capture, capture_max, remember, remember_max, dataset, limit) = {
             let mut state = self.state();
@@ -3333,17 +3875,95 @@ mod tests {
     use super::super::client::{Body, HttpRequest};
     use super::*;
     use crate::blackhole::live_state::tests::base;
+    use async_trait::async_trait;
     use ice_agent::types::AgentToolResult;
+    use ice_ai::decision::client::DecisionError;
+    use ice_ai::decision::typesafe::{self, Question};
     use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
     use ice_ai::types::{
         Api, AssistantMessage, Content, TextContent, TextContentType, UserMessage,
     };
     use ice_harness::agent_harness::{AgentHarness, AgentLane};
     use ice_harness::compaction::{CompactionPreparation, FileOperations};
-    use ice_harness::session::types::{CompactionEntry, Entry};
+    use ice_harness::session::types::{CompactionEntry, Entry, EntryQuery};
     use ice_harness::types::{AgentHarnessOptions, CompactionSettings};
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     const NOW: u64 = 1_800_000_000_000;
+
+    #[derive(Clone, Copy)]
+    enum TestVerdict {
+        Durable,
+        NotDurable,
+        Uncertain,
+    }
+
+    struct RuntimeDecider {
+        calls: Arc<AtomicUsize>,
+        verdict: TestVerdict,
+        slow: bool,
+    }
+
+    #[async_trait]
+    impl helper::DecisionDecider for RuntimeDecider {
+        async fn decide(
+            &self,
+            request: &typesafe::Request,
+            _timeout: Duration,
+            _signal: &CancellationToken,
+        ) -> Result<typesafe::Response, DecisionError> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            if self.slow {
+                std::future::pending::<()>().await;
+            }
+            let answers = request
+                .questions()
+                .iter()
+                .map(|(id, question)| {
+                    let value = match question {
+                        Question::Noul { .. } if id.ends_with(".applicable") => {
+                            json!({"type":"noul", "noul":0.9})
+                        }
+                        Question::Noul { .. } => {
+                            let probability = match self.verdict {
+                                TestVerdict::Durable => 0.9,
+                                TestVerdict::NotDurable => 0.1,
+                                TestVerdict::Uncertain => 0.5,
+                            };
+                            json!({"type":"noul", "noul":probability})
+                        }
+                        Question::Choice { .. } => json!({
+                            "type":"choice", "choice":"none", "probabilities":{
+                                "decision":0.0,"constraint":0.0,"preference":0.0,
+                                "lesson":0.0,"none":1.0
+                            }, "confidence":0.9
+                        }),
+                        Question::Score { .. } => unreachable!(),
+                    };
+                    (id.clone(), value)
+                })
+                .collect::<serde_json::Map<String, Value>>();
+            let bytes = serde_json::to_vec(&json!({
+                "model": "jev-1.14.0",
+                "answers": answers,
+                "usage": {"input_tokens": 1, "output_tokens": 1}
+            }))
+            .unwrap();
+            typesafe::Response::decode_json(&bytes, request)
+                .map_err(|error| DecisionError::Codec(error))
+        }
+    }
+
+    fn fake_helper(verdict: TestVerdict, calls: Arc<AtomicUsize>, slow: bool) -> Arc<Helper> {
+        Arc::new(Helper::with_decider(
+            Arc::new(RuntimeDecider {
+                calls,
+                verdict,
+                slow,
+            }),
+            20,
+        ))
+    }
 
     fn runtime(
         dir: &Path,
@@ -3690,6 +4310,225 @@ mod tests {
             .unwrap_err();
         assert!(matches!(unavailable, ice_agent::AgentError::Tool(message)
             if message == "Cognee is unavailable"));
+    }
+
+    #[tokio::test]
+    async fn helper_judges_only_pending_candidates_offloads_acceptance_and_abstains_safely() {
+        for (verdict, expected_state, expected_requests) in [
+            (TestVerdict::Durable, CandidateState::Accepted, 1),
+            (
+                TestVerdict::NotDurable,
+                CandidateState::Rejected("helper_not_durable".into()),
+                0,
+            ),
+            (TestVerdict::Uncertain, CandidateState::Pending, 0),
+        ] {
+            let dir = tempfile::tempdir().unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            let rt = runtime(
+                dir.path(),
+                &transport,
+                Some(json!({"writePolicy":"selective", "helperProvider":"fake"})),
+                false,
+            );
+            let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+                "Please always keep generated assets outside the source repository.",
+                1,
+            ))])
+            .await;
+            let source_id = harness
+                .session()
+                .find_entries(&EntryQuery::default())
+                .await
+                .unwrap()
+                .into_iter()
+                .find_map(|entry| match &entry {
+                    Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                        Some(entry.id().to_string())
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            rt.bind(
+                harness.downgrade(),
+                ice_extensions::ExtensionStatusMailbox::new(),
+                dir.path().to_path_buf(),
+            );
+            let mut candidate = Candidate {
+                id: uuid::Uuid::new_v4().to_string(),
+                category: Category::Constraint,
+                text: "always keep generated assets outside the source repository".into(),
+                source: super::super::candidates::Source {
+                    entry_id: source_id.clone(),
+                    role: Role::User,
+                },
+                verified_by: None,
+                supersedes: None,
+                dataset: rt.active_dataset(),
+                created_at: NOW,
+                state: CandidateState::Pending,
+            };
+            rt.store_pending_candidate_for_test(&candidate);
+            let calls = Arc::new(AtomicUsize::new(0));
+            rt.use_helper_for_test(fake_helper(verdict, calls.clone(), false));
+            rt.on_run_settled();
+            rt.wait_for_background().await;
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            assert_eq!(transport.sent().len(), expected_requests);
+            let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+            candidate = records
+                .into_iter()
+                .find(|item| item.source.entry_id == source_id)
+                .unwrap();
+            assert_eq!(candidate.state, expected_state);
+            if expected_requests == 1 {
+                let Body::Multipart(parts) = &transport.sent()[0].body else {
+                    panic!("remember multipart")
+                };
+                assert_eq!(parts[1].value, "user_context");
+                assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn helper_off_leaves_pending_and_prompt_hook_never_judges() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "I prefer compact reports for status updates.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let mut candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            category: Category::Preference,
+            text: "Prefer compact reports".into(),
+            source: super::super::candidates::Source {
+                entry_id: source_id,
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        rt.store_pending_candidate_for_test(&candidate);
+        for _ in 0..20 {
+            let event = BeforeRunEvent {
+                prompt: "An ordinary prompt",
+                system_prompt: None,
+                session_id: "host1",
+                signal: CancellationToken::new(),
+            };
+            let _ = rt.prompt_context(&event).await;
+        }
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+        candidate = records
+            .into_iter()
+            .find(|item| item.id == candidate.id)
+            .unwrap();
+        assert_eq!(candidate.state, CandidateState::Pending);
+        assert!(transport.sent().is_empty());
+        candidate.created_at = NOW - super::super::candidates::CANDIDATE_TTL_MS;
+        super::super::candidates::set_state(
+            &rt.candidates_dir(),
+            &mut candidate,
+            CandidateState::Pending,
+        )
+        .unwrap();
+        rt.on_run_settled();
+        assert_eq!(
+            super::super::candidates::read_candidates(&rt.candidates_dir())[0].state,
+            CandidateState::Expired
+        );
+    }
+
+    #[tokio::test]
+    async fn slow_helper_is_background_and_shutdown_cancels_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "Always retain source provenance for generated artifacts.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            category: Category::Constraint,
+            text: "Always retain source provenance for generated artifacts".into(),
+            source: super::super::candidates::Source {
+                entry_id: source_id,
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        rt.store_pending_candidate_for_test(&candidate);
+        let calls = Arc::new(AtomicUsize::new(0));
+        rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), true));
+        let started = std::time::Instant::now();
+        rt.on_run_settled();
+        assert!(started.elapsed() < Duration::from_millis(100));
+        tokio::task::yield_now().await;
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        tokio::time::timeout(Duration::from_secs(1), rt.session_shutdown())
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -4808,6 +5647,7 @@ mod tests {
         let mut report = rt.collect_doctor().await;
         report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
         let doctor = report.doctor_line();
+        assert!(doctor.contains("helper=off requests=0 abstains=0 skips=0"));
         assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified;"));
         assert!(doctor.contains("sends query, topK, onlyContext, scope, sessionId, datasets"));
         assert!(doctor.contains("nativeRemember=POST:/api/v1/remember (multipart"));

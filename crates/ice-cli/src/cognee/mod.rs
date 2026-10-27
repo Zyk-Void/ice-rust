@@ -14,6 +14,7 @@ pub mod config;
 pub mod dream;
 pub mod evidence;
 pub mod helper;
+pub mod helper_gate;
 pub mod observer;
 pub mod policy;
 pub mod propose;

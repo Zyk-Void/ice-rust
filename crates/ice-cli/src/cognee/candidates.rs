@@ -162,6 +162,22 @@ pub fn admit(candidate: &Candidate, branch: &[(String, AgentMessage)]) -> Admiss
             let needle = normalize_whitespace(&candidate.text);
             if normalize_whitespace(&text).contains(&needle) {
                 Admission::Accept
+            } else if candidate.text.chars().count() <= 300 && {
+                use std::collections::HashSet;
+                let tokens = |value: &str| {
+                    value
+                        .to_lowercase()
+                        .split(|character: char| !character.is_alphanumeric())
+                        .filter(|token| token.chars().count() >= 3)
+                        .map(str::to_owned)
+                        .collect::<HashSet<_>>()
+                };
+                let candidate_tokens = tokens(&candidate.text);
+                !candidate_tokens.is_empty()
+                    && candidate_tokens.intersection(&tokens(&text)).count() * 100
+                        >= candidate_tokens.len() * 70
+            } {
+                Admission::Pending
             } else {
                 Admission::Reject(Reason::NotInSource)
             }
@@ -353,9 +369,16 @@ mod tests {
             admit(&fabricated, &branch),
             Admission::Reject(Reason::UnknownSource)
         );
+        let paraphrase = candidate(
+            Category::Preference,
+            "keep generated files outside source control",
+            Role::User,
+            "user-1",
+        );
+        assert_eq!(admit(&paraphrase, &branch), Admission::Pending);
         let unrelated = candidate(
             Category::Preference,
-            "Use a different language.",
+            "Use a different language for database work.",
             Role::User,
             "user-1",
         );

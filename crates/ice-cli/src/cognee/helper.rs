@@ -154,7 +154,7 @@ pub enum HelperError {
 }
 
 #[async_trait]
-trait DecisionDecider: Send + Sync {
+pub(crate) trait DecisionDecider: Send + Sync {
     async fn decide(
         &self,
         request: &typesafe::Request,
@@ -184,6 +184,14 @@ pub struct Helper {
 }
 
 impl Helper {
+    #[cfg(test)]
+    pub(crate) fn with_decider(decider: Arc<dyn DecisionDecider>, deadline_ms: u64) -> Self {
+        Self {
+            decider,
+            deadline_ms,
+        }
+    }
+
     /// Bind only the explicitly configured decision provider. No chat provider
     /// or fallback is consulted. `Ok(None)` constructs no decision client.
     pub fn bind(config: &CogneeConfig) -> Result<Option<Self>, HelperError> {

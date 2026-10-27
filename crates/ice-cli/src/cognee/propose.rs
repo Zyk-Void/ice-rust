@@ -132,6 +132,43 @@ fn optional_string(params: &Value, name: &str) -> Result<Option<String>, AgentEr
     }
 }
 
+pub(crate) fn accept_candidate(
+    runtime: &CogneeRuntime,
+    candidate: &Candidate,
+) -> Result<bool, String> {
+    let mut record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
+    let config = runtime.config();
+    if record_text.chars().count() > config.remember_max_chars {
+        record_text = record_text
+            .chars()
+            .take(config.remember_max_chars)
+            .collect();
+    }
+    let record = super::queue::create_pending_remember(
+        &record_text,
+        &candidate.dataset,
+        candidate.category.node_set(),
+        candidate.created_at,
+    );
+    let was_pending = super::queue::read_pending_remember(&runtime.pending_dir())
+        .iter()
+        .any(|item| item.operation_id == record.operation_id);
+    match super::queue::enqueue_pending_remember(
+        &runtime.pending_dir(),
+        &record,
+        config.queue_limit,
+    ) {
+        Ok(true) => {
+            if !was_pending {
+                runtime.spawn_drain_pending();
+            }
+            Ok(true)
+        }
+        Ok(false) => Ok(false),
+        Err(error) => Err(format!("Could not queue candidate: {error}")),
+    }
+}
+
 pub(crate) async fn propose_memory(
     runtime: &CogneeRuntime,
     text: &str,
@@ -141,13 +178,9 @@ pub(crate) async fn propose_memory(
     supersedes: Option<&str>,
 ) -> Result<String, String> {
     runtime.ensure_loaded();
-    let (selective, dataset, limit) = {
+    let (selective, dataset) = {
         let state = runtime.state();
-        (
-            state.config.selective_writes(),
-            state.active_dataset(),
-            state.config.queue_limit,
-        )
+        (state.config.selective_writes(), state.active_dataset())
     };
     if !selective || !runtime.is_enabled() || runtime.live_client().is_none() {
         return Err("Cognee is unavailable".into());
@@ -210,38 +243,17 @@ pub(crate) async fn propose_memory(
         return Ok("accepted_queued".into());
     }
     let outcome = match admission {
-        Admission::Accept => {
-            let mut record_text = format!("[{}] {}", category.as_str(), candidate.text);
-            if record_text.chars().count() > runtime.config().remember_max_chars {
-                record_text = record_text
-                    .chars()
-                    .take(runtime.config().remember_max_chars)
-                    .collect();
+        Admission::Accept => match accept_candidate(runtime, &candidate) {
+            Ok(true) => {
+                candidate.state = CandidateState::Accepted;
+                "accepted"
             }
-            let record = super::queue::create_pending_remember(
-                &record_text,
-                &dataset,
-                category.node_set(),
-                candidate.created_at,
-            );
-            let was_pending = super::queue::read_pending_remember(&runtime.pending_dir())
-                .iter()
-                .any(|item| item.operation_id == record.operation_id);
-            match super::queue::enqueue_pending_remember(&runtime.pending_dir(), &record, limit) {
-                Ok(true) => {
-                    if !was_pending {
-                        runtime.spawn_drain_pending();
-                    }
-                    candidate.state = CandidateState::Accepted;
-                    "accepted"
-                }
-                Ok(false) => {
-                    candidate.state = CandidateState::Rejected(Reason::QueueFull.as_str().into());
-                    "rejected"
-                }
-                Err(error) => return Err(format!("Could not queue candidate: {error}")),
+            Ok(false) => {
+                candidate.state = CandidateState::Rejected(Reason::QueueFull.as_str().into());
+                "rejected"
             }
-        }
+            Err(error) => return Err(error),
+        },
         Admission::Reject(reason) => {
             candidate.state = CandidateState::Rejected(reason.as_str().into());
             "rejected"
