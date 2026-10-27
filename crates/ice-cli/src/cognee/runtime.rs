@@ -2521,6 +2521,18 @@ impl HarnessExtension for CogneeRuntime {
         if context.custom_type != MEMORY_CUSTOM_TYPE {
             return;
         }
+        let estimated_tokens = if persisted {
+            let message = ice_harness::messages::create_custom_message(
+                &context.custom_type,
+                ice_ai::types::UserContent::Text(context.text.clone()),
+                false,
+                None,
+                0,
+            );
+            ice_harness::compaction::estimate_tokens(&message)
+        } else {
+            0
+        };
         self.observe(
             "injection",
             if persisted { "succeeded" } else { "failed" },
@@ -2530,6 +2542,7 @@ impl HarnessExtension for CogneeRuntime {
                     "outcomeVersion": 1,
                     "outcome": if persisted { "persisted" } else { "append_failed" },
                     "persistedBytes": if persisted { context.text.len() } else { 0 },
+                    "estimatedPersistedTokens": estimated_tokens,
                 })),
                 ..ObserveFields::default()
             },
@@ -2776,13 +2789,14 @@ mod tests {
                 (
                     meta["outcome"].as_str().unwrap().to_string(),
                     meta["persistedBytes"].as_u64().unwrap(),
+                    meta["estimatedPersistedTokens"].as_i64().unwrap(),
                 )
             })
             .collect();
         outcomes.sort();
         assert_eq!(
             outcomes,
-            vec![("append_failed".into(), 0), ("persisted".into(), 9)]
+            vec![("append_failed".into(), 0, 0), ("persisted".into(), 9, 2)]
         );
     }
 
