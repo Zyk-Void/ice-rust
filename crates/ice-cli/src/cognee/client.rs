@@ -1200,6 +1200,34 @@ pub(crate) mod tests {
     }
 
     #[tokio::test]
+    async fn unsupported_recall_and_invalid_contract_do_not_retry() {
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
+        transport.push(FakeResponse::json(
+            422,
+            json!({"detail": "invalid request"}),
+        ));
+        let client = client(transport.clone());
+        let missing = client
+            .recall("q", RecallOptions::default())
+            .await
+            .unwrap_err();
+        assert_eq!(missing.kind, CogneeErrorKind::NotFound);
+        assert_eq!(missing.status, Some(404));
+        let invalid = client
+            .recall("q", RecallOptions::default())
+            .await
+            .unwrap_err();
+        assert_eq!(invalid.kind, CogneeErrorKind::Malformed);
+        assert_eq!(invalid.status, Some(422));
+        let sent = transport.sent();
+        assert_eq!(sent.len(), 2);
+        assert!(sent
+            .iter()
+            .all(|request| request.url.ends_with("/api/v1/recall")));
+    }
+
+    #[tokio::test]
     async fn byte_limits_and_content_length_are_enforced() {
         let transport = Arc::new(FakeTransport::default());
         transport.push(FakeResponse::Ok {
