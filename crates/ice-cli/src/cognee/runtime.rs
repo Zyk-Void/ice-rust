@@ -33,7 +33,7 @@ use ice_harness::extension::{
     CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
 use ice_harness::session::types::Entry;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
@@ -43,25 +43,24 @@ use super::client::{
     OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
 };
 use super::config::{
-    find_git_root, load_connection, process_env, repository_root, resolve_runtime_dataset,
-    save_config, write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv,
-    CompactionSummaryMode, ConnectionInputs, KeySource, ReadPolicy, WritePolicy,
-    PROJECT_DATASET_SENTINEL,
+    AutoRememberMode, CogneeConfig, CogneeEnv, CompactionSummaryMode, ConnectionInputs, KeySource,
+    PROJECT_DATASET_SENTINEL, ReadPolicy, WritePolicy, find_git_root, load_connection, process_env,
+    repository_root, resolve_runtime_dataset, save_config, write_private_file_atomic,
 };
 use super::dream::{
-    claim_dream_candidate, mark_dream_accepted, mark_dream_captured, mark_dream_improved,
-    read_dream_candidates, read_dream_record_for_dataset, release_dream_claim, DreamClaim,
+    DreamClaim, claim_dream_candidate, mark_dream_accepted, mark_dream_captured,
+    mark_dream_improved, read_dream_candidates, read_dream_record_for_dataset, release_dream_claim,
 };
 use super::evidence::{
-    select_new_with_context, FilterContext, RejectCounts, SeenEvidence, Selection,
+    FilterContext, RejectCounts, SeenEvidence, Selection, select_new_with_context,
 };
 use super::helper::{
     self, AbstainReason, Candidate as HelperCandidate, CandidateBatch, Helper, HelperOutcome,
     Verdict,
 };
 use super::helper_gate::{Admission as HelperAdmission, HelperGate};
-use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
-use super::policy::{admit_prompt, Admission};
+use super::observer::{Observation, persist_observation, publish_observation, sanitize_endpoint};
+use super::policy::{Admission, admit_prompt};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
     read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
@@ -69,9 +68,9 @@ use super::queue::{
 };
 use super::suppress::{Suppression, SuppressionSet};
 use super::text::{
-    extract_message_text, fit_lines, format_bounded_last_compact_injection,
+    RecallLine, extract_message_text, fit_lines, format_bounded_last_compact_injection,
     format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
-    truncate_value_for_capture, RecallLine,
+    truncate_value_for_capture,
 };
 use crate::blackhole::js::{iso_from_ms, len16, prefix16};
 use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
@@ -225,11 +224,7 @@ fn error_kind(error: &CogneeError) -> String {
 }
 
 fn on_off(value: bool) -> &'static str {
-    if value {
-        "on"
-    } else {
-        "off"
-    }
+    if value { "on" } else { "off" }
 }
 
 /// Session-local capture counters.
@@ -298,8 +293,16 @@ impl DoctorReport {
             on_off(self.capture_tools),
             on_off(self.auto_improve),
             self.compaction_summary_mode.as_str(),
-            if self.blackhole_active { "+blackhole" } else { "" },
-            if self.own_compaction_summary { "(own-summary)" } else { "(defer-summary)" },
+            if self.blackhole_active {
+                "+blackhole"
+            } else {
+                ""
+            },
+            if self.own_compaction_summary {
+                "(own-summary)"
+            } else {
+                "(defer-summary)"
+            },
             sanitize_endpoint(&self.base_url),
             self.dataset,
             self.session_id.as_deref().unwrap_or("none"),
@@ -415,6 +418,7 @@ pub(crate) struct State {
     turn_traces: u32,
     helper: Option<Arc<Helper>>,
     helper_error: Option<String>,
+    helper_signature: Option<(bool, WritePolicy, bool, Option<String>, Option<String>)>,
     helper_cancel: CancellationToken,
     helper_gate: HelperGate,
     helper_requests: u64,
@@ -463,6 +467,7 @@ impl State {
             turn_traces: 0,
             helper: None,
             helper_error: None,
+            helper_signature: None,
             helper_cancel: CancellationToken::new(),
             helper_gate: HelperGate::default(),
             helper_requests: 0,
@@ -482,7 +487,6 @@ impl State {
             self.context_generation = self.context_generation.saturating_add(1);
             self.helper_cancel.cancel();
             self.helper_cancel = CancellationToken::new();
-            self.helper_gate = HelperGate::default();
             self.evidence_cache.clear();
         }
         self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
@@ -551,6 +555,7 @@ impl RuntimeOptions {
 struct HelperFlightGuard {
     runtime: Weak<CogneeRuntime>,
     key: String,
+    flight_id: u64,
     finished: bool,
     _permit: Option<tokio::sync::OwnedSemaphorePermit>,
 }
@@ -561,7 +566,7 @@ impl HelperFlightGuard {
             runtime
                 .state()
                 .helper_gate
-                .finish(&self.key, runtime.now(), outcome);
+                .finish(self.flight_id, &self.key, runtime.now(), outcome);
         }
         self._permit.take();
         self.finished = true;
@@ -573,6 +578,7 @@ impl Drop for HelperFlightGuard {
         if !self.finished {
             if let Some(runtime) = self.runtime.upgrade() {
                 runtime.state().helper_gate.finish(
+                    self.flight_id,
                     &self.key,
                     runtime.now(),
                     &HelperOutcome::Abstained(AbstainReason::Cancelled),
@@ -785,11 +791,26 @@ impl CogneeRuntime {
     }
 
     fn rebuild_helper(state: &mut State) {
+        let signature = (
+            state.config.enabled,
+            state.config.write_policy,
+            state.config.helper_enabled,
+            state.config.helper_provider.clone(),
+            state.config.helper_model.clone(),
+        );
+        if state.helper_signature.as_ref() == Some(&signature) {
+            return;
+        }
+        state.helper_signature = Some(signature);
         state.helper_cancel.cancel();
         state.helper_cancel = CancellationToken::new();
         state.helper_error = None;
-        state.helper_gate = HelperGate::default();
-        if !state.config.enabled || !state.config.selective_writes() {
+        let should_bind = state.config.enabled
+            && state.config.selective_writes()
+            && state.config.helper_enabled
+            && state.config.helper_provider.is_some()
+            && state.config.helper_model.is_some();
+        if !should_bind {
             state.helper = None;
             return;
         }
@@ -875,7 +896,7 @@ impl CogneeRuntime {
 
     fn schedule_helper(&self) {
         self.ensure_loaded();
-        let (eligible, helper, cancel, generation, dataset, provider, shutting_down) = {
+        let (eligible, helper, cancel, dataset, provider, shutting_down) = {
             let state = self.state();
             (
                 state.config.selective_writes()
@@ -883,7 +904,6 @@ impl CogneeRuntime {
                     && Self::enabled(&state, self.offline),
                 state.helper.clone(),
                 state.helper_cancel.child_token(),
-                state.context_generation,
                 state.active_dataset(),
                 state.config.helper_provider.clone().unwrap_or_default(),
                 state.shutting_down,
@@ -919,8 +939,7 @@ impl CogneeRuntime {
                 pending.push(candidate);
             }
         }
-        let (helper, cancel, generation, dataset, provider, now) =
-            (helper, cancel, generation, dataset, provider, now);
+        let (helper, cancel, dataset, provider, now) = (helper, cancel, dataset, provider, now);
         let pending = pending
             .into_iter()
             .filter(|candidate| candidate.dataset == dataset)
@@ -1032,9 +1051,10 @@ impl CogneeRuntime {
                 .iter()
                 .map(|byte| format!("{byte:02x}"))
                 .collect::<String>();
-            let (admission, permit) = {
+            let (admission, permit, flight_id) = {
                 let mut state = this.state();
-                state.helper_gate.admit(&key, this.now())
+                let (admission, permit) = state.helper_gate.admit(&key, this.now());
+                (admission, permit, state.helper_gate.flight_id())
             };
             let HelperAdmission::Start = admission else {
                 if admission.reason() == Some(super::helper_gate::SkipReason::BatchCached) {
@@ -1102,6 +1122,7 @@ impl CogneeRuntime {
             let mut guard = HelperFlightGuard {
                 runtime: Arc::downgrade(&this),
                 key: key.clone(),
+                flight_id: flight_id.expect("started helper flight has an id"),
                 finished: false,
                 _permit: permit,
             };
@@ -1112,12 +1133,11 @@ impl CogneeRuntime {
             let started = std::time::Instant::now();
             let outcome = helper.judge(&batch, cancel.clone()).await;
             let latency = started.elapsed().as_millis() as u64;
-            let current_generation = this.state().context_generation;
-            if current_generation != generation {
+            if cancel.is_cancelled() {
                 guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
                 this.observe_helper(
                     "skipped",
-                    "stale_generation",
+                    "cancelled",
                     candidates.len(),
                     0,
                     0,
@@ -2240,9 +2260,12 @@ impl CogneeRuntime {
                 .count(),
             helper_status: if !state.config.enabled
                 || !state.config.selective_writes()
-                || state.config.helper_provider.is_none()
+                || !state.config.helper_enabled
             {
                 "off".into()
+            } else if state.config.helper_provider.is_none() || state.config.helper_model.is_none()
+            {
+                "unconfigured".into()
             } else if let Some(error) = &state.helper_error {
                 format!("error({error})")
             } else if state.helper.is_some() {
@@ -2388,7 +2411,6 @@ impl CogneeRuntime {
             return false;
         }
         let mut state = self.state();
-        state.helper_cancel.cancel();
         let previous_dataset = state.active_dataset();
         state.config = next;
         state.installed = true;
@@ -4320,9 +4342,11 @@ mod tests {
 
         let candidates = super::super::candidates::read_candidates(&rt.candidates_dir());
         assert!(candidates.iter().any(|candidate| candidate.id == old.id));
-        assert!(candidates
-            .iter()
-            .any(|candidate| candidate.text == "new durable fact"));
+        assert!(
+            candidates
+                .iter()
+                .any(|candidate| candidate.text == "new durable fact")
+        );
         let correction_observation = super::super::observer::read_observations(&rt.storage_dir)
             .into_iter()
             .find(|event| {
@@ -4334,22 +4358,24 @@ mod tests {
             })
             .unwrap();
         assert_eq!(correction_observation.phase, "accepted");
-        assert!(std::fs::read_dir(rt.storage_dir.join("suppress"))
-            .unwrap()
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .filter(|path| path
-                .extension()
-                .is_some_and(|extension| extension == "json"))
-            .filter_map(|path| std::fs::read_to_string(path).ok())
-            .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
-            .any(|record| {
-                record.hash == super::super::suppress::content_hash("old durable fact")
-                    && matches!(
-                        record.kind,
-                        super::super::suppress::SuppressionKind::Superseded { .. }
-                    )
-            }));
+        assert!(
+            std::fs::read_dir(rt.storage_dir.join("suppress"))
+                .unwrap()
+                .filter_map(Result::ok)
+                .map(|entry| entry.path())
+                .filter(|path| path
+                    .extension()
+                    .is_some_and(|extension| extension == "json"))
+                .filter_map(|path| std::fs::read_to_string(path).ok())
+                .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
+                .any(|record| {
+                    record.hash == super::super::suppress::content_hash("old durable fact")
+                        && matches!(
+                            record.kind,
+                            super::super::suppress::SuppressionKind::Superseded { .. }
+                        )
+                })
+        );
 
         rt.state().seen_evidence.clear();
         let selection = rt.recall_evidence(&[RecallResult {
@@ -4467,9 +4493,11 @@ mod tests {
         assert_eq!(parts[1].value, "user_context");
         assert!(parts.last().unwrap().value.starts_with("[constraint] "));
         let observations = super::super::observer::read_observations(&rt.storage_dir);
-        assert!(observations
-            .iter()
-            .any(|event| event.operation == "injection" && event.phase == "succeeded"));
+        assert!(
+            observations
+                .iter()
+                .any(|event| event.operation == "injection" && event.phase == "succeeded")
+        );
         assert!(observations.iter().any(|event| event.operation == "recall"
             && event.phase == "succeeded"
             && event.meta.as_ref().is_some_and(|meta| {
@@ -4519,12 +4547,14 @@ mod tests {
             dir.path().to_path_buf(),
         );
         rt.register_search_tool(true).await;
-        assert!(!harness
-            .get_tools()
-            .await
-            .unwrap()
-            .iter()
-            .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME }));
+        assert!(
+            !harness
+                .get_tools()
+                .await
+                .unwrap()
+                .iter()
+                .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME })
+        );
         let mut config = rt.config();
         config.write_policy = WritePolicy::Selective;
         assert!(rt.save_and_adopt(config));
@@ -4816,6 +4846,15 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), rt.session_shutdown())
             .await
             .unwrap();
+        let after_cancel = super::super::candidates::read_candidates(&rt.candidates_dir());
+        assert_eq!(
+            after_cancel
+                .iter()
+                .find(|item| item.id == candidate.id)
+                .unwrap()
+                .state,
+            CandidateState::Pending
+        );
     }
 
     #[tokio::test]
@@ -5924,9 +5963,11 @@ mod tests {
         transport.push(FakeResponse::Ok {
             status: 200,
             headers: vec![],
-            chunks: vec![json!({"results": [{"text": "old session fact"}]})
-                .to_string()
-                .into_bytes()],
+            chunks: vec![
+                json!({"results": [{"text": "old session fact"}]})
+                    .to_string()
+                    .into_bytes(),
+            ],
             delay_ms: 50,
         });
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
@@ -5942,12 +5983,14 @@ mod tests {
         rt.wait_for_background().await;
         let observations =
             super::super::observer::read_observations(&dir.path().join("ice-cognee"));
-        assert!(observations.iter().any(|event| event
-            .meta
-            .as_ref()
-            .and_then(|m| m.get("outcome"))
-            .and_then(Value::as_str)
-            == Some("stale")));
+        assert!(observations.iter().any(|event| {
+            event
+                .meta
+                .as_ref()
+                .and_then(|m| m.get("outcome"))
+                .and_then(Value::as_str)
+                == Some("stale")
+        }));
     }
 
     #[tokio::test]
@@ -6010,11 +6053,13 @@ mod tests {
         assert!(execute().await.is_ok());
 
         transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
-        assert!(execute()
-            .await
-            .unwrap_err()
-            .to_string()
-            .contains("not_found"));
+        assert!(
+            execute()
+                .await
+                .unwrap_err()
+                .to_string()
+                .contains("not_found")
+        );
         let cancelled = CancellationToken::new();
         cancelled.cancel();
         let error = tool
@@ -6540,11 +6585,12 @@ mod tests {
         super::super::command::run_command(&rt, "flush uncertain").await;
         assert_eq!(transport.sent().len(), 1);
         assert!(read_pending_remember(&rt.pending_dir()).is_empty());
-        assert!(rt
-            .notices()
-            .drain()
-            .iter()
-            .any(|(_, text)| text == "Cognee uncertain queue flushed"));
+        assert!(
+            rt.notices()
+                .drain()
+                .iter()
+                .any(|(_, text)| text == "Cognee uncertain queue flushed")
+        );
         assert_eq!(drain_failure_state("timeout"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("aborted"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("server_error"), PendingState::Pending);
@@ -6642,11 +6688,13 @@ mod tests {
             .manual_remember("user_context", "cannot enqueue")
             .await;
         assert!(full_transport.sent().is_empty());
-        assert!(full_rt
-            .notices()
-            .drain()
-            .iter()
-            .any(|(_, text)| text.contains("queue is full")));
+        assert!(
+            full_rt
+                .notices()
+                .drain()
+                .iter()
+                .any(|(_, text)| text.contains("queue is full"))
+        );
     }
 
     #[tokio::test]
@@ -6773,10 +6821,11 @@ mod tests {
             Some(json!({"checkpointRecall": true})),
             false,
         );
-        assert!(rt
-            .before_compact(&compact_event(CompactionTrigger::Threshold))
-            .await
-            .is_none());
+        assert!(
+            rt.before_compact(&compact_event(CompactionTrigger::Threshold))
+                .await
+                .is_none()
+        );
         let written: Value =
             serde_json::from_str(&std::fs::read_to_string(rt.checkpoint_recall_path()).unwrap())
                 .unwrap();
@@ -6825,12 +6874,16 @@ mod tests {
         assert_eq!(queued[0].state, PendingState::Pending);
         super::super::command::run_command(&rt, "bogus").await;
         let notices = rt.notices().drain();
-        assert!(notices
-            .iter()
-            .any(|(_, text)| text == "Cognee session capture: off"));
-        assert!(notices
-            .iter()
-            .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued"));
+        assert!(
+            notices
+                .iter()
+                .any(|(_, text)| text == "Cognee session capture: off")
+        );
+        assert!(
+            notices
+                .iter()
+                .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued")
+        );
         assert_eq!(
             notices.last().unwrap(),
             &(

@@ -2,29 +2,26 @@
 
 ## Implemented in this worktree
 
-- Helper scheduling now exits before candidate-directory access when Cognee is offline/disabled, the write policy is not selective, shutdown has started, or no helper is bound. This avoids optional helper scans and candidate expiry mutations when helper work cannot run.
-- Candidate promotion now requires both `durable == Yes` and `applicable == Yes` for fresh and cached helper judgments. Uncertain applicability remains pending and does not invoke persistence.
-- The runtime fake-helper regression covers explicit unknown applicability and confirms no write occurs. The helper-off regression confirms an expired pending candidate is not mutated by disabled scheduling.
-- Baseline already includes commits `5459227a` (helper gate integration) and `19944017` (local expiry/correction suppression).
-
-## Configuration and behavior
-
-Helper configuration currently selects an explicit decision provider (`helperProvider` / `ICERS_COGNEE_HELPER_PROVIDER`). The helper remains absent unless that provider is configured and the runtime is in selective-write mode. No chat-model fallback is used. However, the typed request currently hardcodes the TypeSafe model ID, so explicit model selection has **not** been completed by this change. Provider/model controls, revision-sensitive binding, provenance-aware cache keys, robust per-provider shared budgets, immutable flight ownership, comprehensive host revalidation, precise effective-setting source reporting, and immediate cancellation guarantees still require integration work.
+- Helper scheduling exits before candidate-directory access when Cognee is offline/disabled, writes are not selective, shutdown has started, or no helper is bound. Candidate promotion requires both `durable == Yes` and `applicable == Yes`; uncertain verdicts do not write.
+- Helper activation is explicit and defaults off. Persisted `helperEnabled`, `helperProvider`, and `helperModel` fields are supported, along with `ICERS_COGNEE_HELPER_ENABLED`, `ICERS_COGNEE_HELPER_PROVIDER`, and `ICERS_COGNEE_HELPER_MODEL`. Existing configs without the fields remain helper-off and unconfigured; provider alone never activates or chooses a model.
+- `/cognee helper provider <id>|model <id>|on|off|status` controls and reports effective noncredential values. `/settings` exposes helper enable/provider/model rows; provider/model entry is available through the command. No credential value is displayed or persisted in these rows.
+- Model IDs are validated as explicit nonempty identifiers (slashes supported) and used unchanged in the TypeSafe request. There is no production JEV/chat fallback. Unsupported decision protocol and provider binding errors remain nonfatal, safely classified helper status errors.
+- Binding is keyed to a helper-specific signature: Cognee enabled, write policy, helper opt-in, provider, and model. Unrelated settings do not reset the helper admission gate or decision client. Helper revisions cancel old tasks; helper-off/manual/config transitions prevent canceled verdicts from writing candidate state.
+- Admission history is retained across helper/config and dataset changes. Flight IDs prevent an old guard from clearing a newer in-flight admission. Canceled flights are checked immediately after await, before any candidate mutation. Accepted manual outbox behavior is unchanged.
+- Effective helper status applies environment overrides and names overridden fields without exposing secrets. No per-prompt credential filesystem reads were added; existing explicit reload behavior remains the boundary.
 
 ## Verification
 
-- `cargo test -p ice-cli --lib --locked cognee:: --quiet`: 172 passed, 0 failed, 0 ignored; 1,253 filtered out. Tests use synthetic/fake transports and decision responses; no live model, Cognee, TypeSafe/JEV, or external inference request was made.
-- Formatting was applied only to `crates/ice-cli/src/cognee/runtime.rs`.
+- `CARGO_BUILD_JOBS=4 cargo test -p ice-cli --lib --locked cognee:: --quiet`: **174 passed, 0 failed, 0 ignored** (1,253 filtered out). Tests use temporary directories/faux transports/fake decision responses; no network/model/Cognee request or real user config access occurred.
+- Added/extended coverage includes persisted/env roundtrip, legacy-safe defaults, invalid model identifiers, exact request model, disabled/no-provider no-client construction, unsupported protocols, gate stale-flight ownership, and canceled old verdicts leaving candidate state pending.
+- Formatting was applied only to owned `config.rs`, `helper.rs`, `helper_gate.rs`, `command.rs`, and `runtime.rs` using `rustfmt --config skip_children=true`.
 
 ## Integration needs / remaining gates
 
-- Thread explicit helper model configuration from config/env and `/cognee` + `/settings` through TypeSafe request construction; retain no-fallback semantics and test invalid IDs/round trips.
-- Avoid rebuilding or resetting quotas on unrelated config saves; use explicit flight IDs across reset/cancel and do not erase shared provider request history.
-- Bound/coalesce candidate event work and cache size; add process/provider shared rolling budgets and deterministic isolated gate injection.
-- Revalidate candidate revision/source/scope/expiry and current config after await, including cache hits; tighten helper source excerpts and stable observation request ownership.
-- Validate selective-mode usability without helper provider and synchronously prevent optional writes after off/manual transitions.
-- JEV quality and latency remain **UNVERIFIED**; do not enable by default or make effectiveness claims. The permitted live model restriction prevented any inference-quality evaluation.
+- Robust process/provider-shared rolling budgets, bounded/coalesced event work, and deterministic isolated shared-gate injection remain next phase.
+- Comprehensive source/revision/scope/expiry revalidation, source excerpt tightening, and stable observation request ownership remain next phase. Existing per-session candidate and generation checks remain in place.
+- JEV quality and latency remain **UNVERIFIED**; no effectiveness claim is made and no default activation is enabled.
 
-## Commits
+## Worktree note
 
-This review and the runtime helper safety fixes are committed together as a local implementation commit; no publication or push is performed.
+`crates/ice-cli/src/cognee/coordinator.rs` had a pre-existing rustfmt-only working-tree diff when this iteration began. It was preserved and is intentionally excluded from this implementation commit.

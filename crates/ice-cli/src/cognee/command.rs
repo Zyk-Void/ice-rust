@@ -9,7 +9,7 @@ use ice_agent::agent_tool::AgentTool;
 use ice_agent::error::AgentError;
 use ice_agent::types::{AgentToolResult, ToolExecutionMode, ToolResultPartial};
 use ice_ai::types::Tool;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tokio_util::sync::CancellationToken;
 
 use super::config::{
@@ -19,7 +19,7 @@ use super::config::{
 use super::runtime::{CogneeRuntime, SEARCH_TOOL_NAME};
 use crate::builtin_extensions::{NoticeLevel, SettingRow};
 
-pub const USAGE: &str = "Usage: /cognee status|doctor|mode [legacy|manual|canary|selective|status]|on|off|recall on|off|read legacy|on_demand|event|write legacy|manual|selective|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
+pub const USAGE: &str = "Usage: /cognee status|doctor|mode [legacy|manual|canary|selective|status]|on|off|helper provider <id>|model <id>|on|off|status|recall on|off|read legacy|on_demand|event|write legacy|manual|selective|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
 
 const NODE_SETS: [&str; 3] = ["user_context", "project_docs", "agent_actions"];
 
@@ -189,6 +189,33 @@ async fn run_command_with_env(runtime: &CogneeRuntime, args: &str, env: &config:
             };
             notify(level, message);
         }
+        ("helper", Some("status")) if rest.is_empty() => {
+            let effective = effective_config(&config, env);
+            let overridden = [
+                env.contains_key(config::ENV_HELPER_ENABLED).then_some("enabled"),
+                env.contains_key(config::ENV_HELPER_PROVIDER).then_some("provider"),
+                env.contains_key(config::ENV_HELPER_MODEL).then_some("model"),
+            ].into_iter().flatten().collect::<Vec<_>>();
+            let source = if overridden.is_empty() { String::new() } else { format!("; environment override wins for {}", overridden.join(", ")) };
+            notify(NoticeLevel::Info, format!("Cognee helper: enabled={} provider={} model={}{}", on_off(effective.helper_enabled), effective.helper_provider.as_deref().unwrap_or("unconfigured"), effective.helper_model.as_deref().unwrap_or("unconfigured"), source));
+        }
+        ("helper", Some(flag @ ("on" | "off"))) if rest.is_empty() => {
+            save(CogneeConfig { helper_enabled: flag == "on", ..config }).await;
+        }
+        ("helper", Some("provider")) if rest.len() == 1 => {
+            let provider = config::parse_helper_id(rest[0], config::ENV_HELPER_PROVIDER);
+            match provider {
+                Ok(provider) => { save(CogneeConfig { helper_provider: Some(provider), ..config }).await; }
+                Err(error) => notify(NoticeLevel::Warning, error),
+            }
+        }
+        ("helper", Some("model")) if rest.len() == 1 => {
+            let model = config::parse_helper_id(rest[0], config::ENV_HELPER_MODEL);
+            match model {
+                Ok(model) => { save(CogneeConfig { helper_model: Some(model), ..config }).await; }
+                Err(error) => notify(NoticeLevel::Warning, error),
+            }
+        }
         ("doctor", _) => {
             let report = runtime.collect_doctor().await;
             let level = if report.healthy {
@@ -316,11 +343,13 @@ fn runtime_notify(runtime: &CogneeRuntime, level: NoticeLevel, text: String) {
 
 fn memory_mode_status(config: &CogneeConfig) -> String {
     format!(
-        "Cognee memory mode: {} (readPolicy={}, writePolicy={}, helperProvider={})",
+        "Cognee memory mode: {} (readPolicy={}, writePolicy={}, helperEnabled={}, helperProvider={}, helperModel={})",
         MemoryMode::detect(config).as_str(),
         config.read_policy.as_str(),
         config.write_policy.as_str(),
-        on_off(config.helper_provider.is_some())
+        on_off(config.helper_enabled),
+        config.helper_provider.as_deref().unwrap_or("unconfigured"),
+        config.helper_model.as_deref().unwrap_or("unconfigured")
     )
 }
 
@@ -333,6 +362,19 @@ fn policy_overrides(env: &config::CogneeEnv) -> (bool, bool) {
 
 fn effective_config(config: &CogneeConfig, env: &config::CogneeEnv) -> CogneeConfig {
     let mut effective = config.clone();
+    if let Ok(Some(enabled)) = config::parse_boolean_value(
+        env.get(config::ENV_HELPER_ENABLED),
+        config::ENV_HELPER_ENABLED,
+    ) {
+        effective.helper_enabled = enabled;
+    }
+    if let Some(provider) = env.get(config::ENV_HELPER_PROVIDER) {
+        effective.helper_provider =
+            config::parse_helper_id(provider, config::ENV_HELPER_PROVIDER).ok();
+    }
+    if let Some(model) = env.get(config::ENV_HELPER_MODEL) {
+        effective.helper_model = config::parse_helper_id(model, config::ENV_HELPER_MODEL).ok();
+    }
     if let Some(value) = env.get(config::ENV_READ_POLICY) {
         if let Some(policy) = ReadPolicy::parse(value) {
             effective.read_policy = policy;
@@ -347,11 +389,7 @@ fn effective_config(config: &CogneeConfig, env: &config::CogneeEnv) -> CogneeCon
 }
 
 fn on_off(value: bool) -> &'static str {
-    if value {
-        "on"
-    } else {
-        "off"
-    }
+    if value { "on" } else { "off" }
 }
 
 /// The Cognee rows, read from the effective config.
@@ -370,6 +408,27 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
             "Legacy restores broad legacy recall and writes. Manual uses on-demand reads and explicit tools/commands only, with no automatic recall or promotion. Canary uses selective event recall, manual writes, and JEV off. Selective uses event recall and selective candidate writes. ICERS_COGNEE_READ_POLICY and ICERS_COGNEE_WRITE_POLICY environment overrides win over saved values.",
             MemoryMode::detect(config).as_str(),
             &["legacy", "manual", "canary", "selective"],
+        ),
+        SettingRow::new(
+            "cognee.helperEnabled",
+            "Decision helper",
+            "Optional selective-write judgment; requires explicit provider and model",
+            on_off(config.helper_enabled),
+            &["off", "on"],
+        ),
+        SettingRow::new(
+            "cognee.helperProvider",
+            "Helper provider",
+            "Decision provider ID (never a credential)",
+            config.helper_provider.as_deref().unwrap_or("unconfigured"),
+            &[],
+        ),
+        SettingRow::new(
+            "cognee.helperModel",
+            "Helper model",
+            "Exact decision model ID",
+            config.helper_model.as_deref().unwrap_or("unconfigured"),
+            &[],
         ),
         SettingRow::new(
             "cognee.autoRecall",
@@ -446,6 +505,14 @@ pub fn apply_setting(config: &CogneeConfig, key: &str, value: &str) -> Option<Co
     match id {
         "memoryMode" => next = config.with_mode(MemoryMode::parse(value)?)?,
         "enabled" => next.enabled = on,
+        "helperEnabled" => next.helper_enabled = on,
+        "helperProvider" => {
+            next.helper_provider =
+                Some(config::parse_helper_id(value, config::ENV_HELPER_PROVIDER).ok()?)
+        }
+        "helperModel" => {
+            next.helper_model = Some(config::parse_helper_id(value, config::ENV_HELPER_MODEL).ok()?)
+        }
         "autoRecall" => next.auto_recall = on,
         "readPolicy" => next.read_policy = ReadPolicy::parse(value)?,
         "writePolicy" => next.write_policy = WritePolicy::parse(value)?,
@@ -518,7 +585,7 @@ mod tests {
     fn settings_round_trip_through_namespaced_keys() {
         let config = CogneeConfig::default();
         let rows = settings_rows(&config);
-        assert_eq!(rows.len(), 11);
+        assert_eq!(rows.len(), 14);
         assert_eq!(rows[0].key, "cognee.enabled");
         assert_eq!(rows[0].current, "on");
         assert_eq!(rows[1].key, "cognee.memoryMode");
@@ -550,7 +617,7 @@ mod tests {
         assert_eq!(next.write_policy, WritePolicy::Manual);
         let selective = apply_setting(&next, "cognee.writePolicy", "selective").unwrap();
         assert_eq!(selective.write_policy, WritePolicy::Selective);
-        assert_eq!(settings_rows(&selective)[4].current, "selective");
+        assert_eq!(settings_rows(&selective)[7].current, "selective");
         assert!(apply_setting(&config, "cognee.readPolicy", "bogus").is_none());
         assert!(apply_setting(&config, "cognee.unknown", "on").is_none());
         assert!(apply_setting(&config, "blackhole.refine", "true").is_none());
@@ -579,7 +646,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("ice-cognee/config.json");
         let initial = CogneeConfig {
+            helper_enabled: true,
             helper_provider: Some("decision-1".into()),
+            helper_model: Some("fixture-model".into()),
             ..CogneeConfig::default()
         };
         config::save_config(&path, &initial).unwrap();
@@ -615,7 +684,9 @@ mod tests {
         let initial = CogneeConfig {
             read_policy: ReadPolicy::OnDemand,
             write_policy: WritePolicy::Manual,
+            helper_enabled: true,
             helper_provider: Some("decision-1".into()),
+            helper_model: Some("fixture-model".into()),
             ..CogneeConfig::default()
         };
         config::save_config(&dir.path().join("ice-cognee/config.json"), &initial).unwrap();
@@ -628,7 +699,7 @@ mod tests {
         let notices = runtime.notices().drain();
         assert_eq!(notices.len(), 1);
         assert!(notices[0].1.contains(
-            "Cognee memory mode: canary (readPolicy=event, writePolicy=manual, helperProvider=on)"
+            "Cognee memory mode: canary (readPolicy=event, writePolicy=manual, helperEnabled=on, helperProvider=decision-1, helperModel=fixture-model)"
         ));
     }
 
@@ -650,12 +721,16 @@ mod tests {
         let notices = runtime.notices().drain();
         assert_eq!(notices.len(), 1);
         assert_eq!(notices[0].0, NoticeLevel::Warning);
-        assert!(notices[0]
-            .1
-            .contains("environment override wins over saved values"));
-        assert!(notices[0]
-            .1
-            .contains("effective readPolicy=event, writePolicy=selective"));
+        assert!(
+            notices[0]
+                .1
+                .contains("environment override wins over saved values")
+        );
+        assert!(
+            notices[0]
+                .1
+                .contains("effective readPolicy=event, writePolicy=selective")
+        );
         assert_eq!(runtime.config().read_policy, ReadPolicy::Event);
         assert_eq!(runtime.config().write_policy, WritePolicy::Selective);
         let stored: Value = serde_json::from_str(
@@ -685,9 +760,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let paths = materialize_skills(dir.path());
         assert_eq!(paths.len(), 3);
-        assert!(std::fs::read_to_string(&paths[0])
-            .unwrap()
-            .starts_with("---\nname: cognee-search\n"));
+        assert!(
+            std::fs::read_to_string(&paths[0])
+                .unwrap()
+                .starts_with("---\nname: cognee-search\n")
+        );
         assert_eq!(materialize_skills(dir.path()), paths);
     }
 }

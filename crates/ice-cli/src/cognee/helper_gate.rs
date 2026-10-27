@@ -53,7 +53,8 @@ impl Admission {
 
 #[derive(Default)]
 pub(crate) struct HelperGate {
-    in_flight: bool,
+    in_flight: Option<u64>,
+    next_flight: u64,
     requests: VecDeque<u64>,
     batches: HashMap<String, (u64, Option<HelperOutcome>)>,
     consecutive_failures: u8,
@@ -86,7 +87,7 @@ impl HelperGate {
                 None,
             );
         }
-        if self.in_flight {
+        if self.in_flight.is_some() {
             return (Admission::Skip(SkipReason::Busy), None);
         }
         if self.requests.len() >= MAX_REQUESTS_PER_WINDOW {
@@ -96,11 +97,16 @@ impl HelperGate {
             Ok(permit) => permit,
             Err(_) => return (Admission::Skip(SkipReason::Busy), None),
         };
-        self.in_flight = true;
+        self.next_flight = self.next_flight.wrapping_add(1).max(1);
+        self.in_flight = Some(self.next_flight);
         self.requests.push_back(now_ms);
         self.batches
             .insert(key.to_owned(), (now_ms.saturating_add(CACHE_TTL_MS), None));
         (Admission::Start, Some(permit))
+    }
+
+    pub(crate) fn flight_id(&self) -> Option<u64> {
+        self.in_flight
     }
 
     pub(crate) fn cached(&mut self, key: &str, now_ms: u64) -> Option<HelperOutcome> {
@@ -110,8 +116,17 @@ impl HelperGate {
             .and_then(|(_, outcome)| outcome.clone())
     }
 
-    pub(crate) fn finish(&mut self, key: &str, now_ms: u64, outcome: &HelperOutcome) {
-        self.in_flight = false;
+    pub(crate) fn finish(
+        &mut self,
+        flight_id: u64,
+        key: &str,
+        now_ms: u64,
+        outcome: &HelperOutcome,
+    ) {
+        if self.in_flight != Some(flight_id) {
+            return;
+        }
+        self.in_flight = None;
         match self.batches.get_mut(key) {
             Some((expiry, cached)) if *expiry > now_ms => *cached = Some(outcome.clone()),
             Some(_) => {
@@ -155,8 +170,9 @@ mod tests {
         for (key, time) in [("a", 0), ("b", 1)] {
             let (admission, permit) = gate.admit(key, time);
             assert_eq!(admission, Admission::Start);
+            let id = gate.flight_id().unwrap();
             drop(permit);
-            gate.finish(key, time, &HelperOutcome::Judged(Vec::new()));
+            gate.finish(id, key, time, &HelperOutcome::Judged(Vec::new()));
         }
         assert_eq!(
             gate.admit("c", 2).0,
@@ -172,8 +188,9 @@ mod tests {
         for (key, time) in [("a", 0), ("b", RATE_WINDOW_MS), ("c", 2 * RATE_WINDOW_MS)] {
             let (admission, permit) = gate.admit(key, time);
             assert_eq!(admission, Admission::Start);
+            let id = gate.flight_id().unwrap();
             drop(permit);
-            gate.finish(key, time, &timeout());
+            gate.finish(id, key, time, &timeout());
         }
         assert_eq!(gate.cached("c", 2 * RATE_WINDOW_MS), Some(timeout()));
         assert_eq!(
@@ -193,8 +210,9 @@ mod tests {
         let outcome = HelperOutcome::Judged(Vec::new());
         let (admission, permit) = gate.admit("same", 7 * RATE_WINDOW_MS);
         assert_eq!(admission, Admission::Start);
+        let id = gate.flight_id().unwrap();
         drop(permit);
-        gate.finish("same", 7 * RATE_WINDOW_MS, &outcome);
+        gate.finish(id, "same", 7 * RATE_WINDOW_MS, &outcome);
         assert_eq!(gate.cached("same", 7 * RATE_WINDOW_MS + 1), Some(outcome));
         assert_eq!(
             gate.admit("same", 7 * RATE_WINDOW_MS + 1).0,
@@ -204,6 +222,25 @@ mod tests {
             gate.admit("same", 7 * RATE_WINDOW_MS + CACHE_TTL_MS).0,
             Admission::Start
         );
+    }
+
+    #[test]
+    fn stale_flight_cannot_clear_a_newer_flight() {
+        let _lock = TEST_LOCK.lock().unwrap();
+        let mut gate = HelperGate::default();
+        let (admission, permit) = gate.admit("old", 0);
+        assert_eq!(admission, Admission::Start);
+        let old_id = gate.flight_id().unwrap();
+        drop(permit);
+        gate.in_flight = None; // simulate cancellation/rebind
+        let (admission, permit) = gate.admit("new", 1);
+        assert_eq!(admission, Admission::Start);
+        let new_id = gate.flight_id().unwrap();
+        gate.finish(old_id, "old", 2, &timeout());
+        assert_eq!(gate.flight_id(), Some(new_id));
+        drop(permit);
+        gate.finish(new_id, "new", 3, &HelperOutcome::Judged(Vec::new()));
+        assert_eq!(gate.flight_id(), None);
     }
 
     #[test]

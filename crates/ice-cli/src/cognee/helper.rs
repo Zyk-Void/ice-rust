@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use ice_ai::decision::client::{DecisionClient, DecisionError, DecisionProtocol};
 use ice_ai::decision::typesafe::{self, Answer, Question};
 use ice_ai::decision::{DecisionCodecError, DecisionValidationError, NativeContent};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
@@ -25,7 +25,7 @@ const MAX_CANDIDATES: usize = 8;
 const MAX_CANDIDATE_TEXT_UTF16: usize = 600;
 const MAX_CONTEXT_UTF16: usize = 800;
 const MAX_INPUT_TOKENS: usize = 2_000;
-const MODEL_ID: &str = "jev-1.14.0";
+const TEST_MODEL_ID: &str = "fixture/helper-model";
 const QUESTION_PREFIX: &str = "candidate.";
 
 /// A candidate fact and an optional hint for its memory category.
@@ -181,6 +181,7 @@ impl DecisionDecider for ClientDecider {
 pub struct Helper {
     decider: Arc<dyn DecisionDecider>,
     deadline_ms: u64,
+    model_id: String,
 }
 
 impl Helper {
@@ -189,6 +190,7 @@ impl Helper {
         Self {
             decider,
             deadline_ms,
+            model_id: TEST_MODEL_ID.into(),
         }
     }
 
@@ -202,7 +204,13 @@ impl Helper {
         config: &CogneeConfig,
         bind_client: impl FnOnce(&str) -> Result<DecisionClient, crate::decisions::DecisionConfigError>,
     ) -> Result<Option<Self>, HelperError> {
-        let Some(provider_id) = config.helper_provider.as_deref() else {
+        if !config.helper_enabled || !config.enabled || !config.selective_writes() {
+            return Ok(None);
+        }
+        let (Some(provider_id), Some(model_id)) = (
+            config.helper_provider.as_deref(),
+            config.helper_model.as_deref(),
+        ) else {
             return Ok(None);
         };
         let client = bind_client(provider_id).map_err(|error| match error {
@@ -217,6 +225,7 @@ impl Helper {
         Ok(Some(Self {
             decider: Arc::new(ClientDecider(client)),
             deadline_ms: DEFAULT_DEADLINE_MS,
+            model_id: model_id.to_owned(),
         }))
     }
 
@@ -227,7 +236,7 @@ impl Helper {
         if signal.is_cancelled() {
             return HelperOutcome::Abstained(AbstainReason::Cancelled);
         }
-        let request = match build_request(batch) {
+        let request = match build_request_for_model(batch, &self.model_id) {
             Ok(request) => request,
             Err(HelperError::TooLarge) => {
                 return HelperOutcome::Abstained(AbstainReason::TooLarge);
@@ -265,6 +274,13 @@ fn question_id(id: &str, field: &str) -> String {
 
 /// Build one independent set of questions for each candidate.
 pub fn build_request(batch: &CandidateBatch) -> Result<typesafe::Request, HelperError> {
+    build_request_for_model(batch, TEST_MODEL_ID)
+}
+
+fn build_request_for_model(
+    batch: &CandidateBatch,
+    model_id: &str,
+) -> Result<typesafe::Request, HelperError> {
     if batch.candidates.is_empty() {
         return Err(HelperError::EmptyBatch);
     }
@@ -328,7 +344,7 @@ pub fn build_request(batch: &CandidateBatch) -> Result<typesafe::Request, Helper
         })
         .collect::<Map<String, Value>>();
     state.insert("candidates".into(), Value::Object(candidates));
-    let request = typesafe::Request::new(MODEL_ID, NativeContent::Object(state), questions);
+    let request = typesafe::Request::new(model_id, NativeContent::Object(state), questions);
     request.validate().map_err(|_| HelperError::TooLarge)?;
     if request_estimated_tokens(&request) > MAX_INPUT_TOKENS {
         return Err(HelperError::TooLarge);
@@ -458,9 +474,9 @@ fn map_decision_error(error: DecisionError) -> AbstainReason {
 mod tests {
     use super::*;
     use crate::decisions::DecisionConfigError;
+    use ice_ai::decision::Probability;
     use ice_ai::decision::client::{DecisionEndpoint, DecisionProtocol};
     use ice_ai::decision::typesafe::Question;
-    use ice_ai::decision::Probability;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn batch(ids: &[&str]) -> CandidateBatch {
@@ -505,7 +521,7 @@ mod tests {
             })
             .collect::<Map<String, Value>>();
         let bytes = serde_json::to_vec(&json!({
-            "model": MODEL_ID,
+            "model": TEST_MODEL_ID,
             "answers": answers,
             "usage": {"input_tokens": 1, "output_tokens": 1}
         }))
@@ -631,6 +647,13 @@ mod tests {
     }
 
     #[test]
+    fn configured_model_is_used_exactly_in_the_decision_request() {
+        let batch = batch(&["alpha"]);
+        let request = build_request_for_model(&batch, "vendor/custom-model-v9").unwrap();
+        assert_eq!(request.model(), "vendor/custom-model-v9");
+    }
+
+    #[test]
     fn batch_redacts_candidate_and_context_before_building_request() {
         let batch = CandidateBatch::new(
             vec![Candidate {
@@ -682,15 +705,21 @@ mod tests {
     fn question_ids_encode_candidate_ids_and_context_is_in_state() {
         let batch = batch(&["alpha-1"]);
         let request = build_request(&batch).unwrap();
-        assert!(request
-            .questions()
-            .contains_key("candidate.alpha-1.applicable"));
-        assert!(request
-            .questions()
-            .contains_key("candidate.alpha-1.durable"));
-        assert!(request
-            .questions()
-            .contains_key("candidate.alpha-1.category"));
+        assert!(
+            request
+                .questions()
+                .contains_key("candidate.alpha-1.applicable")
+        );
+        assert!(
+            request
+                .questions()
+                .contains_key("candidate.alpha-1.durable")
+        );
+        assert!(
+            request
+                .questions()
+                .contains_key("candidate.alpha-1.category")
+        );
         let state = serde_json::to_string(request.state()).unwrap();
         assert!(state.contains("current task context"));
     }
@@ -708,9 +737,11 @@ mod tests {
         .unwrap();
         let request = build_request(&batch).unwrap();
         assert_eq!(request.questions().len(), 2);
-        assert!(!request
-            .questions()
-            .contains_key("candidate.hinted.category"));
+        assert!(
+            !request
+                .questions()
+                .contains_key("candidate.hinted.category")
+        );
     }
 
     #[test]
@@ -821,6 +852,9 @@ mod tests {
     #[test]
     fn binding_errors_are_nonfatal_and_never_include_provider_secrets() {
         let mut config = CogneeConfig::default();
+        config.write_policy = super::super::config::WritePolicy::Selective;
+        config.helper_enabled = true;
+        config.helper_model = Some("test/model".into());
         config.helper_provider = Some("decision-provider".into());
         for source in [
             DecisionConfigError::UnknownProvider("decision-provider".into()),
@@ -846,6 +880,9 @@ mod tests {
     #[test]
     fn binding_rejects_non_typesafe_protocol_without_fallback() {
         let mut config = CogneeConfig::default();
+        config.write_policy = super::super::config::WritePolicy::Selective;
+        config.helper_enabled = true;
+        config.helper_model = Some("test/model".into());
         config.helper_provider = Some("decision-provider".into());
         let result = Helper::bind_using(&config, |_| Ok(client(DecisionProtocol::OpenAiDecisions)));
         assert!(matches!(result, Err(HelperError::UnsupportedProtocol)));
@@ -900,6 +937,7 @@ mod tests {
             Helper {
                 decider: decider.clone(),
                 deadline_ms,
+                model_id: TEST_MODEL_ID.into(),
             },
             decider,
         )
