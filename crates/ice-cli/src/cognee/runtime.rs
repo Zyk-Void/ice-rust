@@ -36,8 +36,8 @@ use super::config::{
     PROJECT_DATASET_SENTINEL,
 };
 use super::dream::{
-    claim_dream_candidate, mark_dream_captured, mark_dream_improved, read_dream_candidates,
-    read_dream_record_for_dataset, release_dream_claim, DreamClaim,
+    claim_dream_candidate, mark_dream_accepted, mark_dream_captured, mark_dream_improved,
+    read_dream_candidates, read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
 use super::evidence::{select_new, SeenEvidence};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
@@ -362,6 +362,7 @@ struct State {
     resolved_dataset: String,
     legacy_dataset: Option<String>,
     improve_in_flight: bool,
+    improve_backoff: HashMap<(String, String), (f64, u64, u32)>,
     pending_prompt: Option<String>,
     session_id: Option<String>,
     host_session_id: Option<String>,
@@ -399,6 +400,7 @@ impl State {
             last_compact_summary: None,
             seen_evidence: SeenEvidence::default(),
             improve_in_flight: false,
+            improve_backoff: HashMap::new(),
             pending_prompt: None,
             session_id: None,
             host_session_id: None,
@@ -1104,6 +1106,70 @@ impl CogneeRuntime {
 
     // ── improvement ──
 
+    fn suppress_improve(
+        &self,
+        session: &str,
+        dataset: &str,
+        revision: f64,
+        accepted: Option<f64>,
+    ) -> bool {
+        let now = self.now();
+        let mut state = self.state();
+        let key = (session.to_string(), dataset.to_string());
+        if state
+            .improve_backoff
+            .get(&key)
+            .is_some_and(|entry| entry.0 != revision)
+        {
+            state.improve_backoff.remove(&key);
+        }
+        let suppression = if accepted.is_some_and(|value| value >= revision) {
+            Some(("already_accepted_revision", None))
+        } else {
+            state
+                .improve_backoff
+                .get(&key)
+                .and_then(|entry| (entry.1 > now).then_some(("backoff", Some(entry.1 - now))))
+        };
+        drop(state);
+        if let Some((reason, retry)) = suppression {
+            let mut value = json!({"reason": reason, "outcomeVersion": 1, "outcome": "skipped", "target": session});
+            if let Some(retry) = retry {
+                value["retryAfterMs"] = json!(retry);
+            }
+            self.observe(
+                "improve",
+                "skipped",
+                ObserveFields {
+                    meta: meta(value),
+                    ..ObserveFields::default()
+                },
+            );
+            true
+        } else {
+            false
+        }
+    }
+
+    fn improve_result(&self, session: &str, dataset: &str, revision: f64, accepted: bool) {
+        let now = self.now();
+        let mut state = self.state();
+        let key = (session.to_string(), dataset.to_string());
+        if accepted {
+            state.improve_backoff.remove(&key);
+        } else {
+            let failures = state
+                .improve_backoff
+                .get(&key)
+                .filter(|entry| entry.0 == revision)
+                .map_or(1, |entry| entry.2.saturating_add(1));
+            let delay = if failures == 1 { 60_000 } else { 300_000 };
+            state
+                .improve_backoff
+                .insert(key, (revision, now.saturating_add(delay), failures));
+        }
+    }
+
     /// `runImprove`: one current-session improve, claim-fenced.
     pub fn run_improve(&self, reason: &'static str) -> Option<JoinHandle<()>> {
         let now = self.now();
@@ -1148,6 +1214,20 @@ impl CogneeRuntime {
         let token = uuid::Uuid::new_v4().to_string();
         let dir = self.dream_dir();
         let claim_now = self.now() as f64;
+        let snapshot = read_dream_record_for_dataset(&dir, &session_id, &dataset);
+        let revision = snapshot
+            .as_ref()
+            .map_or(0.0, |record| record.capture_revision);
+        if self.suppress_improve(
+            &session_id,
+            &dataset,
+            revision,
+            snapshot
+                .as_ref()
+                .and_then(|record| record.accepted_revision),
+        ) {
+            return;
+        }
         let claim = {
             let (dir, session_id, dataset, token) = (
                 dir.clone(),
@@ -1173,6 +1253,21 @@ impl CogneeRuntime {
             Some(Some(record)) => Some(record),
             None => None,
         };
+        if let Some(record) = &claim {
+            if self.suppress_improve(
+                &session_id,
+                &dataset,
+                record.capture_revision,
+                record.accepted_revision,
+            ) {
+                let file = record.ledger_file.clone();
+                let _ = tokio::task::spawn_blocking(move || {
+                    release_dream_claim(&dir, &session_id, &token, file.as_deref())
+                })
+                .await;
+                return;
+            }
+        }
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
         let improved_at = self.now() as f64;
@@ -1198,13 +1293,18 @@ impl CogneeRuntime {
         let latency = Some(started.elapsed().as_millis() as u64);
         match result {
             Ok(()) => {
+                let revision = claim
+                    .as_ref()
+                    .map_or(revision, |record| record.capture_revision);
+                self.improve_result(&session_id, &dataset, revision, true);
+                let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
                 self.observe(
                     "improve",
                     "succeeded",
                     ObserveFields {
                         request_id: Some(request_id),
                         latency_ms: latency,
-                        meta: meta(json!({"outcomeVersion": 1, "outcome": "accepted"})),
+                        meta: meta(json!({"outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                         ..ObserveFields::default()
                     },
                 );
@@ -1222,6 +1322,10 @@ impl CogneeRuntime {
                 }
             }
             Err(error) => {
+                let revision = claim
+                    .as_ref()
+                    .map_or(revision, |record| record.capture_revision);
+                self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
                 self.observe(
@@ -1302,6 +1406,14 @@ impl CogneeRuntime {
                     continue;
                 }
             }
+            if self.suppress_improve(
+                &record.session_id,
+                &record.dataset,
+                record.capture_revision,
+                record.accepted_revision,
+            ) {
+                continue;
+            }
             let token = uuid::Uuid::new_v4().to_string();
             let claim_now = self.now() as f64;
             let claim = {
@@ -1323,6 +1435,21 @@ impl CogneeRuntime {
                     release_dream_claim(&dir, &session, &token, file.as_deref())
                 })
             };
+            if self.suppress_improve(
+                &claim.session_id,
+                &claim.dataset,
+                claim.capture_revision,
+                claim.accepted_revision,
+            ) {
+                let _ = release(
+                    dir.clone(),
+                    claim.session_id.clone(),
+                    token,
+                    claim.ledger_file.clone(),
+                )
+                .await;
+                continue;
+            }
             if self.state().shutting_down {
                 let _ = release(
                     dir.clone(),
@@ -1359,6 +1486,18 @@ impl CogneeRuntime {
             let latency = Some(started.elapsed().as_millis() as u64);
             let failed = match result {
                 Ok(()) => {
+                    self.improve_result(
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                        true,
+                    );
+                    let _ = mark_dream_accepted(
+                        &dir,
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                    );
                     let dream_claim = DreamClaim {
                         token: token.clone(),
                         capture_revision: claim.capture_revision,
@@ -1375,13 +1514,19 @@ impl CogneeRuntime {
                         ObserveFields {
                             request_id: Some(request_id),
                             latency_ms: latency,
-                            meta: meta(json!({"reason": "dream", "target": record.session_id, "outcomeVersion": 1, "outcome": "accepted"})),
+                            meta: meta(json!({"reason": "dream", "target": record.session_id, "outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                             ..ObserveFields::default()
                         },
                     );
                     false
                 }
                 Err(error) => {
+                    self.improve_result(
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                        false,
+                    );
                     let kind = error_kind(&error);
                     self.state().last_error = Some(kind.clone());
                     self.observe(
@@ -1818,6 +1963,9 @@ impl CogneeRuntime {
             return;
         };
         self.state().last_improve_at = 0;
+        let dir = self.dream_dir();
+        let revision = read_dream_record_for_dataset(&dir, &session_id, &dataset)
+            .map_or(0.0, |record| record.capture_revision);
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
         self.observe(
@@ -1830,11 +1978,17 @@ impl CogneeRuntime {
             },
         );
         match client
-            .improve(Some(&dataset), &[session_id], CallOptions::default())
+            .improve(
+                Some(&dataset),
+                std::slice::from_ref(&session_id),
+                CallOptions::default(),
+            )
             .await
         {
             Ok(()) => {
                 self.state().last_improve_at = self.now();
+                self.improve_result(&session_id, &dataset, revision, true);
+                let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
                 self.observe(
                     "improve",
                     "succeeded",
@@ -1842,7 +1996,7 @@ impl CogneeRuntime {
                         request_id: Some(request_id),
                         latency_ms: Some(started.elapsed().as_millis() as u64),
                         meta: meta(
-                            json!({"reason": "manual", "outcomeVersion": 1, "outcome": "accepted"}),
+                            json!({"reason": "manual", "outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"}),
                         ),
                         ..ObserveFields::default()
                     },
@@ -1850,6 +2004,7 @@ impl CogneeRuntime {
                 self.notify(NoticeLevel::Info, "Cognee improve dispatched");
             }
             Err(error) => {
+                self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
                 self.observe(
@@ -2906,6 +3061,174 @@ mod tests {
             },
             notices,
         )
+    }
+
+    fn clock_runtime(
+        dir: &Path,
+        transport: &Arc<FakeTransport>,
+        clock: Arc<std::sync::atomic::AtomicU64>,
+    ) -> Arc<CogneeRuntime> {
+        let path = dir.join("ice-cognee").join("config.json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, "{}").unwrap();
+        let notices = NoticeMailbox::new();
+        notices.attach();
+        let rt = CogneeRuntime::new(
+            RuntimeOptions {
+                agent_dir: dir.to_path_buf(),
+                storage_dir: None,
+                process_env: CogneeEnv::new(),
+                home_dir: None,
+                transport: transport.clone(),
+                now: Arc::new(move || clock.load(std::sync::atomic::Ordering::SeqCst)),
+                offline: false,
+                cwd: Some(dir.to_path_buf()),
+            },
+            notices,
+        );
+        rt.ensure_loaded();
+        rt
+    }
+
+    #[tokio::test]
+    async fn improve_acceptance_coalesces_and_manual_bypasses() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        for _ in 0..3 {
+            transport.push(FakeResponse::json(200, json!({})));
+        }
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"enabled": true})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.ensure_session_id("host1");
+        let dataset = rt.state().active_dataset();
+        let session = "ice_host1";
+        mark_dream_captured(&rt.dream_dir(), session, &dataset, NOW as f64).unwrap();
+        let client = rt.live_client().unwrap();
+        rt.improve_current(client.clone(), session.into(), dataset.clone(), "idle")
+            .await;
+        rt.improve_current(client.clone(), session.into(), dataset.clone(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.manual_improve().await;
+        assert_eq!(transport.sent().len(), 2);
+        mark_dream_captured(&rt.dream_dir(), session, &dataset, NOW as f64).unwrap();
+        rt.improve_current(client, session.into(), dataset, "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 3);
+        rt.wait_for_background().await;
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.operation == "improve"
+            && e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "already_accepted_revision"));
+        assert!(events.iter().any(|e| e.phase == "succeeded"
+            && e.operation == "improve"
+            && e.meta.as_ref().unwrap()["accepted"] == true
+            && e.meta.as_ref().unwrap()["searchable"] == "unknown"));
+    }
+
+    #[tokio::test]
+    async fn improve_failure_backoff_steps_and_new_revision_resets() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        for _ in 0..4 {
+            transport.push(FakeResponse::Fail);
+        }
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let rt = clock_runtime(dir.path(), &transport, clock.clone());
+        let dataset = "dataset";
+        let session = "session";
+        let client = super::super::client::tests::client(transport.clone());
+        mark_dream_captured(&rt.dream_dir(), session, dataset, NOW as f64).unwrap();
+        for (advance, count) in [
+            (0, 1),
+            (0, 1),
+            (60_000, 2),
+            (299_999, 2),
+            (1, 3),
+            (299_999, 3),
+        ] {
+            clock.fetch_add(advance, Ordering::SeqCst);
+            rt.improve_current(client.clone(), session.into(), dataset.into(), "idle")
+                .await;
+            assert_eq!(transport.sent().len(), count);
+        }
+        mark_dream_captured(
+            &rt.dream_dir(),
+            session,
+            dataset,
+            clock.load(Ordering::SeqCst) as f64,
+        )
+        .unwrap();
+        rt.improve_current(client, session.into(), dataset.into(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 4);
+        rt.wait_for_background().await;
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "backoff"
+            && e.meta.as_ref().unwrap()["retryAfterMs"] == 60_000));
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "backoff"
+            && e.meta.as_ref().unwrap()["retryAfterMs"] == 1));
+    }
+
+    #[tokio::test]
+    async fn manual_improve_bypasses_failure_backoff() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Fail);
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"enabled": true})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.ensure_session_id("host1");
+        let dataset = rt.state().active_dataset();
+        mark_dream_captured(&rt.dream_dir(), "ice_host1", &dataset, NOW as f64).unwrap();
+        let client = rt.live_client().unwrap();
+        rt.improve_current(client.clone(), "ice_host1".into(), dataset.clone(), "idle")
+            .await;
+        rt.improve_current(client, "ice_host1".into(), dataset.clone(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.manual_improve().await;
+        assert_eq!(transport.sent().len(), 2);
+        assert_eq!(
+            read_dream_record_for_dataset(&rt.dream_dir(), "ice_host1", &dataset)
+                .unwrap()
+                .accepted_revision,
+            Some(1.0)
+        );
+    }
+
+    #[tokio::test]
+    async fn dream_skips_previously_accepted_older_revision() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let ledger = rt.dream_dir();
+        mark_dream_captured(&ledger, "older", "dataset", (NOW - 1_000_000) as f64).unwrap();
+        mark_dream_accepted(&ledger, "older", "dataset", 1.0).unwrap();
+        rt.dream_pass(
+            super::super::client::tests::client(transport.clone()),
+            "other".into(),
+        )
+        .await;
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "already_accepted_revision"));
     }
 
     /// The memory text Cognee adds after `prompt`, checking its message type.

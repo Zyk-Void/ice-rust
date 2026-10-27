@@ -22,7 +22,7 @@ const LOCK_STALE: Duration = Duration::from_millis(10_000);
 const LOCK_RETRIES: u32 = 5;
 const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
 pub struct ImproveLease {
     pub token: String,
     pub expires_at: f64,
@@ -30,13 +30,17 @@ pub struct ImproveLease {
 
 /// `DreamRecord`. `ledger_file` is the basename it was read from and is not
 /// persisted.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DreamRecord {
     pub session_id: String,
     pub dataset: String,
     pub captured_at: f64,
     pub capture_revision: f64,
     pub improved_revision: f64,
+    /// Captured -> accepted (unverified); this adapter never establishes searchable.
+    #[serde(default)]
+    pub accepted_revision: Option<f64>,
     pub improved_at: Option<f64>,
     pub improve_lease: Option<ImproveLease>,
     pub ledger_file: Option<String>,
@@ -125,6 +129,13 @@ pub fn read_dream_record(path: &Path) -> Option<DreamRecord> {
         captured_at,
         capture_revision,
         improved_revision,
+        accepted_revision: match object.get("acceptedRevision") {
+            None | Some(Value::Null) => None,
+            value => Some(
+                safe_integer(value)
+                    .filter(|revision| *revision >= 0.0 && *revision <= capture_revision)?,
+            ),
+        },
         improved_at,
         improve_lease,
         ledger_file: basename(path),
@@ -167,6 +178,9 @@ fn write_dream_record(path: &Path, record: &DreamRecord) -> std::io::Result<()> 
     object.insert("capturedAt".into(), number(record.captured_at));
     object.insert("captureRevision".into(), number(record.capture_revision));
     object.insert("improvedRevision".into(), number(record.improved_revision));
+    if let Some(revision) = record.accepted_revision {
+        object.insert("acceptedRevision".into(), number(revision));
+    }
     if let Some(at) = record.improved_at {
         object.insert("improvedAt".into(), number(at));
     }
@@ -292,6 +306,7 @@ pub fn mark_dream_captured(
                 .map_or(captured_at, |record| record.captured_at.max(captured_at)),
             capture_revision: same.as_ref().map_or(0.0, |record| record.capture_revision) + 1.0,
             improved_revision: same.as_ref().map_or(0.0, |record| record.improved_revision),
+            accepted_revision: same.as_ref().and_then(|record| record.accepted_revision),
             improved_at: same.as_ref().and_then(|record| record.improved_at),
             improve_lease: same
                 .as_ref()
@@ -355,6 +370,40 @@ pub fn claim_dream_candidate(
     Ok(Some(claimed))
 }
 
+/// Record acceptance, not completion or searchability, under the ledger lock.
+pub fn mark_dream_accepted(
+    directory: &Path,
+    session_id: &str,
+    dataset: &str,
+    revision: f64,
+) -> std::io::Result<()> {
+    let Some(snapshot) = read_dream_record_for_dataset(directory, session_id, dataset) else {
+        return Ok(());
+    };
+    let Some(path) = dream_ledger_path(directory, session_id, snapshot.ledger_file.as_deref())
+    else {
+        return Ok(());
+    };
+    let _lock = acquire_dream_lock(&path)?;
+    let Some(record) = read_dream_record(&path) else {
+        return Ok(());
+    };
+    if record.session_id != session_id
+        || record.dataset != dataset
+        || revision > record.capture_revision
+    {
+        return Ok(());
+    }
+    let accepted_revision = Some(record.accepted_revision.unwrap_or(0.0).max(revision));
+    write_dream_record(
+        &path,
+        &DreamRecord {
+            accepted_revision,
+            ..record
+        },
+    )
+}
+
 /// `markDreamImproved`: record coverage of the claimed revision. Captures
 /// that arrived during the improve stay pending.
 pub fn mark_dream_improved(
@@ -381,7 +430,7 @@ pub fn mark_dream_improved(
     {
         return Ok(());
     }
-    if claim.capture_revision >= record.capture_revision {
+    if claim.capture_revision >= record.capture_revision && record.accepted_revision.is_none() {
         let _ = std::fs::remove_file(&path);
         return Ok(());
     }
@@ -484,6 +533,30 @@ mod tests {
     use super::*;
 
     const HOUR: f64 = 3_600_000.0;
+
+    #[test]
+    fn old_ledger_has_no_accepted_revision() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("s.json");
+        std::fs::write(&path, r#"{"sessionId":"s","dataset":"d","capturedAt":1,"captureRevision":1,"improvedRevision":0}"#).unwrap();
+        assert_eq!(read_dream_record(&path).unwrap().accepted_revision, None);
+    }
+
+    #[test]
+    fn concurrent_acceptance_and_capture_preserve_both_updates() {
+        let dir = tempfile::tempdir().unwrap();
+        mark_dream_captured(dir.path(), "s", "d", 1.0).unwrap();
+        mark_dream_captured(dir.path(), "s", "d", 2.0).unwrap();
+        std::thread::scope(|scope| {
+            for revision in [1.0, 2.0] {
+                let dir = dir.path();
+                scope.spawn(move || mark_dream_accepted(dir, "s", "d", revision).unwrap());
+            }
+        });
+        let record = read_dream_record_for_dataset(dir.path(), "s", "d").unwrap();
+        assert_eq!(record.accepted_revision, Some(2.0));
+        assert_eq!(record.capture_revision, 2.0);
+    }
 
     fn claim_of(record: &DreamRecord, token: &str) -> DreamClaim {
         DreamClaim {
