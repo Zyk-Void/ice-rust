@@ -71,6 +71,8 @@ pub struct SkillDiagnostic {
 #[derive(Debug, Clone, Default)]
 pub struct LoadSkillsResult {
     pub skills: Vec<Skill>,
+    /// Skills discarded by precedence, retained for read-only inventory.
+    pub shadowed_skills: Vec<Skill>,
     pub diagnostics: Vec<SkillDiagnostic>,
     /// Structured winner/loser collision diagnostics (native
     /// `ResourceDiagnostic`). `diagnostics` keeps the stringly-typed view for

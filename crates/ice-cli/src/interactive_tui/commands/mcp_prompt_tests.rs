@@ -36,6 +36,7 @@ async fn prompt_dispatch_submission_and_live_completion() {
     );
     manager.reconnect(None).await.unwrap();
     let reload_context = Arc::new(crate::session::ReloadContext {
+        skill_registry: Default::default(),
         mcp_tools: manager.clone(),
         shells: crate::background_shells::SessionShells::new(&Default::default()),
         extension_session: state.extension_session.clone(),

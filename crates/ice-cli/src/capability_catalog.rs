@@ -3,12 +3,47 @@
 //! Existing `skillDirs` settings can explicitly include `~/.agents/skills`;
 //! the catalog does not discover that directory automatically.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
+use ice_harness::diagnostics::{ResourceDiagnostic, ResourceType};
+use ice_harness::skills::LoadSkillsResult;
 use ice_harness::types::Skill;
 use sha2::{Digest, Sha256};
 
 use crate::mcp::{ServerStatus, ServerView};
+
+/// Roots already supplied to the skill loader. More specific paths win; ties
+/// prefer explicit settings, then builtin, package, project and global.
+#[derive(Clone, Debug, Default)]
+pub struct SkillSourceDirs {
+    pub project: Vec<PathBuf>,
+    pub global: Vec<PathBuf>,
+    pub package: Vec<PathBuf>,
+    pub builtin: Vec<PathBuf>,
+    pub settings: Vec<PathBuf>,
+}
+
+impl SkillSourceDirs {
+    pub fn classify(&self, path: &Path) -> &'static str {
+        let mut best = (0, "other");
+        for (source, roots) in [
+            ("settings", &self.settings),
+            ("builtin", &self.builtin),
+            ("package", &self.package),
+            ("project", &self.project),
+            ("global", &self.global),
+        ] {
+            for root in roots {
+                let depth = root.components().count();
+                if depth > best.0 && path.starts_with(root) {
+                    best = (depth, source);
+                }
+            }
+        }
+        best.1
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CapabilityKind {
@@ -39,10 +74,28 @@ impl CapabilityCatalog {
     pub fn build(skills: &[(&str, Skill)], servers: &[ServerView]) -> Self {
         let mut entries = Vec::new();
         let mut seen = HashSet::new();
+        let mut counts = HashMap::new();
+        let mut ids = HashSet::new();
+        for (source, skill) in skills {
+            *counts
+                .entry((*source, skill.name.as_str()))
+                .or_insert(0usize) += 1;
+        }
         for (source, skill) in skills {
             let available = seen.insert(skill.name.clone());
+            let mut id = format!("skill:{source}:{}", skill.name);
+            if counts[&(*source, skill.name.as_str())] > 1 {
+                id.push(':');
+                id.push_str(&format!("{:x}", Sha256::digest(skill.file_path.as_bytes()))[..12]);
+            }
+            let base_id = id.clone();
+            let mut suffix = 2;
+            while !ids.insert(id.clone()) {
+                id = format!("{base_id}:{suffix}");
+                suffix += 1;
+            }
             entries.push(descriptor(
-                format!("skill:{source}:{}", skill.name),
+                id,
                 CapabilityKind::Skill,
                 &skill.name,
                 &skill.description,
@@ -68,6 +121,57 @@ impl CapabilityCatalog {
             }
         }
         Self { entries }
+    }
+
+    /// Snapshot the loader's winners and diagnostic-identified losers, without
+    /// connecting MCP servers or reading any additional directories.
+    pub fn from_live(
+        result: &LoadSkillsResult,
+        dirs: &SkillSourceDirs,
+        servers: &[ServerView],
+    ) -> Self {
+        let losers: HashSet<_> = result
+            .resource_diagnostics
+            .iter()
+            .filter_map(|diagnostic| match diagnostic {
+                ResourceDiagnostic::Collision(collision)
+                    if collision.resource_type == ResourceType::Skill =>
+                {
+                    Some(collision.loser_path.as_str())
+                }
+                _ => None,
+            })
+            .collect();
+        let winner_paths: HashSet<_> = result
+            .skills
+            .iter()
+            .map(|skill| skill.file_path.as_str())
+            .collect();
+        let mut paths = winner_paths.clone();
+        let shadowed = result.shadowed_skills.iter().filter(|skill| {
+            losers.contains(skill.file_path.as_str()) && paths.insert(skill.file_path.as_str())
+        });
+        let skills: Vec<_> = result
+            .skills
+            .iter()
+            .chain(shadowed)
+            .map(|skill| (dirs.classify(Path::new(&skill.file_path)), skill.clone()))
+            .collect();
+        let mut catalog = Self::build(&skills, servers);
+        for (entry, (_, skill)) in catalog.entries.iter_mut().zip(&skills) {
+            entry.available = winner_paths.contains(skill.file_path.as_str());
+        }
+        catalog
+    }
+
+    /// Rebuild after the caller refreshes the independent registries.
+    pub fn refresh_live(
+        &mut self,
+        result: &LoadSkillsResult,
+        dirs: &SkillSourceDirs,
+        servers: &[ServerView],
+    ) {
+        *self = Self::from_live(result, dirs, servers);
     }
 
     /// Replace the snapshot after the owning registries have refreshed.
@@ -137,6 +241,10 @@ fn descriptor(
         model_invocable,
     }
 }
+
+#[cfg(test)]
+#[path = "capability_catalog_tests.rs"]
+mod live_tests;
 
 #[cfg(test)]
 mod tests {

@@ -547,6 +547,7 @@ pub async fn build_prepared(
         .map(|snap| emit_resources_discover(&cwd_str, "startup", &snap))
         .unwrap_or_default();
 
+    let mut live_skill_result = ice_harness::skills::LoadSkillsResult::default();
     let mut skills: Vec<ice_harness::types::Skill> = Vec::new();
     let mut skill_diags: Vec<ice_harness::skills::SkillDiagnostic> = Vec::new();
     let mut resource_diags: Vec<ice_harness::diagnostics::ResourceDiagnostic> = Vec::new();
@@ -562,6 +563,7 @@ pub async fn build_prepared(
         dirs.extend(discovered.skill_paths.iter().map(PathBuf::from));
         dirs.extend(builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
+        live_skill_result = result.clone();
         skills = result.skills;
         skill_diags = result.diagnostics;
         resource_diags.extend(result.resource_diagnostics);
@@ -1014,6 +1016,7 @@ pub async fn build_prepared(
     // of a harness back-reference so it can be `Clone` into the reload callback).
     shells.connect(&harness);
     let reload_context = ReloadContext {
+        skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
         mcp_tools,
         shells,
         extension_session: extension_session_cell,
@@ -1139,6 +1142,8 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 /// reload callback without borrowing the harness).
 #[derive(Clone)]
 pub struct ReloadContext {
+    /// Last skill loader result, including shadowed definitions.
+    pub skill_registry: Arc<std::sync::RwLock<ice_harness::skills::LoadSkillsResult>>,
     /// Session-local MCP tools retained across extension reloads.
     pub mcp_tools: crate::mcp::McpManager,
     /// The session's background shells and watches, kept across reloads so
@@ -1213,6 +1218,25 @@ pub struct ReloadContext {
     pub dev_extension: Option<Arc<crate::dev_extension::DevExtension>>,
     /// Built-in Cognee/Blackhole extensions installed into the harness.
     pub builtins: crate::builtin_extensions::BuiltinExtensions,
+}
+
+impl ReloadContext {
+    /// Build a read-only inventory from the last skill load and MCP discovery.
+    pub fn capability_catalog(&self) -> crate::capability_catalog::CapabilityCatalog {
+        let project = self.args.dev_local_only || self.args.project_only || self.project_trusted;
+        let global = !self.args.dev_local_only && !self.args.project_only;
+        let dirs = crate::resource_dirs::skill_source_dirs(
+            &self.cwd,
+            project,
+            global,
+            self.builtins.skill_paths(),
+        );
+        crate::capability_catalog::CapabilityCatalog::from_live(
+            &self.skill_registry.read().unwrap(),
+            &dirs,
+            &self.mcp_tools.snapshot(),
+        )
+    }
 }
 
 /// Re-read the local model configuration and replace only one provider's live
@@ -1701,6 +1725,7 @@ where
     let env = Arc::new(ice_tools::OsExecutionEnv::with_cwd(ctx.cwd.clone()));
     let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
 
+    let mut live_skill_result = ice_harness::skills::LoadSkillsResult::default();
     let mut skills: Vec<ice_harness::types::Skill> = Vec::new();
     let mut skill_diags: Vec<ice_harness::skills::SkillDiagnostic> = Vec::new();
     let mut resource_diags: Vec<ice_harness::diagnostics::ResourceDiagnostic> = Vec::new();
@@ -1719,11 +1744,13 @@ where
         );
         dirs.extend(ctx.builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
+        live_skill_result = result.clone();
         skills = result.skills;
         skill_diags = result.diagnostics;
         resource_diags.extend(result.resource_diagnostics);
     }
 
+    *ctx.skill_registry.write().unwrap() = live_skill_result;
     let mut prompt_templates: Vec<ice_harness::types::PromptTemplate> = Vec::new();
     let mut prompt_diags: Vec<ice_harness::prompt_templates::PromptTemplateDiagnostic> = Vec::new();
     if !effective_args.no_prompt_templates {
