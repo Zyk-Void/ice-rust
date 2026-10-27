@@ -1215,6 +1215,113 @@ pub struct ReloadContext {
     pub builtins: crate::builtin_extensions::BuiltinExtensions,
 }
 
+/// Re-read the local model configuration and replace only one provider's live
+/// catalog and request bindings. The active lane and extension hooks are left
+/// untouched. If its active model was removed, reject the reload rather than
+/// leaving the lane pointing at a model that can no longer be routed.
+///
+/// Discovered descriptors are merged in memory; local
+/// definitions take precedence. Returns the number of published models.
+pub async fn reload_provider_catalog(
+    ctx: &ReloadContext,
+    harness: &AgentHarness,
+    provider_id: &str,
+    discovered: Option<Vec<ice_ai::Model>>,
+) -> Result<usize, String> {
+    let active = harness
+        .lane("main")
+        .get_model()
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut args = ctx.args.clone();
+    args.provider = Some(provider_id.to_owned());
+    args.model = None;
+    if provider_id != ctx.resolved_model.provider {
+        args.api_key = None;
+        args.base_url = None;
+    }
+    let discovered = discovered.unwrap_or_default();
+    if discovered
+        .iter()
+        .any(|model| model.provider != provider_id || model.headers.is_some())
+    {
+        return Err(
+            "discovered models must belong to the selected provider and contain no headers".into(),
+        );
+    }
+    let resolved = {
+        let session = ctx.extension_session.lock().unwrap();
+        crate::provider::resolve_with_extensions_and_models(
+            &args,
+            &ctx.cwd,
+            ctx.project_trusted,
+            &session,
+            &discovered,
+        )
+        .map_err(|e| e.to_string())?
+    };
+    let selected = resolved.model.provider.as_str();
+    if !selected.eq_ignore_ascii_case(provider_id) {
+        return Err(format!(
+            "resolved provider '{selected}' does not match requested provider '{provider_id}'"
+        ));
+    }
+    let replacement: Vec<_> = resolved
+        .providers
+        .iter()
+        .filter(|provider| provider.id() == selected)
+        .cloned()
+        .collect();
+    let selected_models: Vec<_> = crate::provider::authenticated_catalog(&resolved)
+        .into_iter()
+        .filter(|model| model.provider == selected)
+        .collect();
+    if replacement.is_empty() || selected_models.is_empty() {
+        return Err(format!(
+            "no authenticated models for provider '{provider_id}'"
+        ));
+    }
+    if active.provider == selected
+        && !selected_models
+            .iter()
+            .any(|model| model.id == active.id && model.api == active.api)
+    {
+        return Err(format!(
+            "active model '{}/{}' is absent from the refreshed catalog",
+            active.provider, active.id
+        ));
+    }
+    let mut providers = ctx
+        .providers
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    providers.retain(|provider| provider.id() != selected);
+    providers.extend(replacement);
+    let mut catalog = ctx
+        .catalog
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    catalog.retain(|model| model.provider != selected);
+    let count = selected_models.len();
+    catalog.extend(selected_models);
+    let models = {
+        let session = ctx.extension_session.lock().unwrap();
+        build_models_with_extensions_for_reload(&providers, &session, ctx.runtime.clone())
+    };
+    harness
+        .set_models(models)
+        .await
+        .map_err(|e| e.to_string())?;
+    *ctx.providers.write().unwrap_or_else(|e| e.into_inner()) = providers;
+    *ctx.catalog.write().unwrap_or_else(|e| e.into_inner()) = catalog.clone();
+    if let Some(bridge) = ctx.action_bridge.lock().unwrap().as_ref() {
+        bridge.clone_host().replace_model_catalog(catalog);
+    }
+    Ok(count)
+}
+
 /// Dispatch a no-payload lifecycle event (e.g. `SessionStart`, `SessionShutdown`,
 /// the ice-specific `BeforeTuiStart`) to every extension handler subscribed to
 /// that tag, with **veto** + **timeout** semantics (P1).
@@ -1481,20 +1588,23 @@ where
     // Re-fetch the signed-in ChatGPT account's model list so newly granted
     // models appear and unavailable ones disappear. A failure keeps the cached
     // list and is reported with the reload outcome.
-    let (codex_models_changed, mut codex_models_error) = if crate::args::offline_env_enabled() {
-        (false, None)
-    } else {
-        match crate::codex_models::refresh(
-            crate::provider::OPENAI_CODEX_BASE_URL,
-            tokio_util::sync::CancellationToken::new(),
-        )
-        .await
-        {
-            Ok(changed) => (changed, None),
-            Err(error) => (false, Some(error)),
-        }
-    };
-    let refreshed = if packaged || codex_models_changed {
+    let (_codex_models_changed, mut codex_models_error) =
+        if effective_args.offline || crate::args::offline_env_enabled() {
+            (false, None)
+        } else {
+            match crate::codex_models::refresh(
+                crate::provider::OPENAI_CODEX_BASE_URL,
+                tokio_util::sync::CancellationToken::new(),
+            )
+            .await
+            {
+                Ok(changed) => (changed, None),
+                Err(error) => (false, Some(error)),
+            }
+        };
+    // Reauth can change credentials without changing the cached Codex catalog.
+    // Re-resolve on every reload rather than keeping stale execution bindings.
+    let refreshed = {
         let mut args = effective_args.clone();
         if let Ok(current) = harness.lane("main").get_model().await {
             let was_package = ctx
@@ -1549,8 +1659,6 @@ where
                 };
             }
         }
-    } else {
-        None
     };
 
     // ---- 2. Invalidate the old session + bridge BEFORE the swap ----
@@ -3218,6 +3326,68 @@ fn read_prompt_source(path: &Path, sources: &mut Vec<String>) -> Option<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn provider_catalog_reload_is_scoped_and_transactional() {
+        const CHILD: &str = "ICERS_PROVIDER_CATALOG_RELOAD_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::provider_catalog_reload_is_scoped_and_transactional",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .env("ICERS_OFFLINE", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap().block_on(async {
+            let agent = crate::config::agent_dir().unwrap();
+            std::fs::create_dir_all(&agent).unwrap();
+            let cwd = agent.join("project");
+            std::fs::create_dir_all(&cwd).unwrap();
+            let path = crate::config::models_path().unwrap();
+            let write_config = |second: &str| std::fs::write(&path, format!(r#"{{"providers":{{
+                "first":{{"api":"openai-completions","apiKey":"first-key","baseUrl":"https://first.example/v1","models":[{{"id":"one"}}]}},
+                "second":{{"api":"openai-completions","apiKey":"second-key","baseUrl":"https://second.example/v1","models":[{{"id":"{second}"}}]}}
+            }}}}"#)).unwrap();
+            write_config("old");
+            std::fs::write(agent.join("settings.json"), r#"{"defaultProvider":"first","defaultModel":"one"}"#).unwrap();
+            let args = Args { provider: Some("first".into()), model: Some("one".into()), no_extensions: true, ..Args::default() };
+            let resolved = crate::provider::resolve_with_extensions(&args, &cwd, true, &ExtensionSession::none()).unwrap();
+            let (harness, _events, ctx) = build(&resolved, &args, &cwd, true).await.unwrap();
+            let before = ctx.providers.read().unwrap().iter().find(|p| p.id() == "first").unwrap().clone();
+            let mut discovered = ctx.catalog.read().unwrap().iter().find(|m| m.provider == "second").unwrap().clone();
+            discovered.id = "remote".into();
+            write_config("new");
+            let count = reload_provider_catalog(&ctx, &harness, "second", Some(vec![discovered])).await.unwrap();
+            assert_eq!(count, 2);
+            assert_eq!(harness.lane("main").get_model().await.unwrap().id, "one");
+            let providers = ctx.providers.read().unwrap().clone();
+            assert!(Arc::ptr_eq(&before, providers.iter().find(|p| p.id() == "first").unwrap()));
+            let second = providers.iter().find(|p| p.id() == "second").unwrap();
+            assert!(second.models().iter().any(|m| m.id == "new"));
+            assert!(second.models().iter().any(|m| m.id == "remote"));
+            let catalog = ctx.catalog.read().unwrap().clone();
+            let remote = catalog.iter().find(|m| m.provider == "second" && m.id == "remote").unwrap().clone();
+            harness.lane("main").set_model(remote).await.unwrap();
+            std::fs::write(&path, "{invalid").unwrap();
+            assert!(reload_provider_catalog(&ctx, &harness, "second", None).await.is_err());
+            assert_eq!(harness.lane("main").get_model().await.unwrap().id, "remote");
+            assert!(Arc::ptr_eq(second, ctx.providers.read().unwrap().iter().find(|p| p.id() == "second").unwrap()));
+            assert_eq!(catalog.len(), ctx.catalog.read().unwrap().len());
+        });
+    }
 
     #[test]
     fn branch_summary_settings_reach_created_harness() {

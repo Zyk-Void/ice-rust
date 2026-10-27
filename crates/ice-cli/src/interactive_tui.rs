@@ -999,6 +999,8 @@ enum TuiMessage {
     /// mailbox) signal the main loop, which awaits
     /// `reload_extension_resources` on the async runtime.
     ReloadExtensions,
+    /// Refresh the selected provider's model catalog.
+    RefreshProviderModels(String),
     /// Request an OAuth action. The action itself runs off the main loop because
     /// provider callbacks are synchronous FFI calls and may wait for user
     /// interaction (for example, a browser/device-code exchange).
@@ -2614,6 +2616,7 @@ pub async fn interactive_tui(
                         .clone()
                         .expect("selector_open guaranteed Some");
                     selector.handle_key(key);
+                    tui_for_key.request_render_reusing_scroll_content();
                     continue;
                 }
                 let (selector, kind) = state_for_key
@@ -4132,6 +4135,79 @@ pub async fn interactive_tui(
                     .is_err()
                 {
                     add_error_message(&chat_container, "Could not queue credential removal.");
+                }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::RefreshProviderModels(provider)) => {
+                add_note_message(
+                    &chat_container,
+                    &format!("Refreshing models for {provider}…"),
+                );
+                tui.request_render(false);
+                let manifests = current_provider_manifests(&ctx.reload_context.extension_session);
+                let offline = crate::args::offline_env_enabled() || ctx.reload_context.args.offline;
+                let discovery = async {
+                    if provider == crate::codex_auth::PROVIDER_ID {
+                        if offline {
+                            return Err("Model discovery is unavailable offline".to_string());
+                        }
+                        crate::codex_models::refresh(
+                            crate::provider::OPENAI_CODEX_BASE_URL,
+                            tokio_util::sync::CancellationToken::new(),
+                        )
+                        .await?;
+                        return Ok(None);
+                    }
+                    let config = crate::config::load_models_config().map_err(|e| e.to_string())?;
+                    let auth = crate::config::read_auth().map_err(|e| e.to_string())?;
+                    let catalog = crate::provider::catalog_with_manifests(&manifests)
+                        .map_err(|e| e.to_string())?;
+                    let models = crate::provider_model_refresh::refresh(
+                        &provider,
+                        &catalog,
+                        config.providers.get(&provider),
+                        &auth,
+                        manifests.iter().find(|m| m.id == provider),
+                        offline,
+                    )
+                    .await?;
+                    crate::provider_model_refresh::persist(&provider, &models)?;
+                    Ok(Some(models))
+                }
+                .await;
+                let (discovered, warning) = match discovery {
+                    Ok(models) => (models, None),
+                    Err(error) => (None, Some(error)),
+                };
+                match crate::session::reload_provider_catalog(
+                    &ctx.reload_context,
+                    &harness,
+                    &provider,
+                    discovered,
+                )
+                .await
+                {
+                    Ok(count) => {
+                        add_note_message(
+                            &chat_container,
+                            &format!(
+                            "Refreshed {provider}: {count} models loaded from the local catalog{}.",
+                            if warning.is_none() { " and supported remote discovery" } else { "" },
+                        ),
+                        );
+                        if let Some(error) = warning {
+                            add_note_message(
+                                &chat_container,
+                                &format!("Remote discovery for {provider}: {error}."),
+                            );
+                        }
+                    }
+                    Err(error) => add_error_message(
+                        &chat_container,
+                        &format!(
+                            "Could not refresh {provider}; the previous catalog was kept: {error}"
+                        ),
+                    ),
                 }
                 tui.request_render(false);
             }
