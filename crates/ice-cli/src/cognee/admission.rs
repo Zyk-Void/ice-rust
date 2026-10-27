@@ -88,10 +88,17 @@ pub fn admission_lock(dir: &Path) -> std::io::Result<File> {
     Ok(lock)
 }
 pub fn commit(dir: &Path, receipt: &AdmissionReceipt) -> std::io::Result<()> {
+    commit_with(dir, receipt, write_private_file_atomic)
+}
+pub fn commit_with(
+    dir: &Path,
+    receipt: &AdmissionReceipt,
+    writer: impl FnOnce(&Path, &str) -> std::io::Result<()>,
+) -> std::io::Result<()> {
     let path = receipt_path(dir, &receipt.id)?;
     create_private_dir(dir)?;
     if !path.exists() {
-        write_private_file_atomic(
+        writer(
             &path,
             &serde_json::to_string(receipt).map_err(std::io::Error::other)?,
         )?;
@@ -205,6 +212,17 @@ mod tests {
             superseded_target: None,
             committed_at: 8,
         }
+    }
+
+    #[test]
+    fn injected_receipt_write_failure_does_not_commit() {
+        let root = tempfile::tempdir().unwrap();
+        let r = receipt();
+        let result = commit_with(&receipt_dir(root.path()), &r, |_path, _content| {
+            Err(std::io::Error::other("injected receipt failure"))
+        });
+        assert!(result.is_err());
+        assert!(read_receipts(&receipt_dir(root.path())).is_empty());
     }
 
     #[test]
