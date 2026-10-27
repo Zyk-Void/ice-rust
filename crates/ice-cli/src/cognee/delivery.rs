@@ -337,11 +337,7 @@ mod tests {
         }
     }
     fn user(text: &str) -> AgentMessage {
-        AgentMessage::User(ice_ai::types::UserMessage {
-            role: Default::default(),
-            content: UserContent::Text(text.into()),
-            timestamp: 0,
-        })
+        AgentMessage::User(ice_ai::types::UserMessage::new(text, 0))
     }
 
     #[test]
