@@ -32,6 +32,7 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 - Native tool error fix `3b91ca7`: 77 Cognee tests passed. Doctor diagnostics and credential-redaction fixture passed; after correcting a test assumption about asynchronous log ordering, 78 Cognee tests passed.
 - Persistence observations: `ad1d549` adds append outcomes, `084a4a8` correlates recall and injection, `c0e7f74` adds a storage append-failure fixture, and `5c17178` adds estimated token counts. `cargo test -p ice-harness --locked --test harness_extensions` passed 9 tests; `cargo test -p ice-cli --locked cognee --lib` passed 81 tests. Formatting and `git diff --check` passed.
 - `6e35b63` separates recorder pending keys by operation and request ID; focused tests for shared correlation and terminal updates passed. `04cba56` and `8039595` add and test skip reasons; `0c62a47` exposes request fields in doctor. These changes do not complete M0.
+- Latest regression run after `494dec4` and `7c719c8`: Cognee library 82 passed, recorder 18 passed, harness extensions 9 passed; formatting and `git diff --check` passed. No live service or model was used.
 - No performance measurements have been made for these metadata changes. The historical baseline is not a candidate benchmark.
 
 No milestone is complete. No performance improvement or release gate is claimed.
