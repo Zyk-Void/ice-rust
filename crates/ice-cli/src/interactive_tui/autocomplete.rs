@@ -2,6 +2,85 @@
 
 use super::*;
 
+struct SkillAutocomplete {
+    skills: Vec<ice_harness::types::Skill>,
+}
+
+impl ice_tui::AutocompleteProvider for SkillAutocomplete {
+    fn name(&self) -> &str {
+        "skills"
+    }
+
+    fn get_suggestions(
+        &self,
+        input: &str,
+        cursor: usize,
+    ) -> Option<ice_tui::AutocompleteSuggestions> {
+        let before = input.get(..cursor)?;
+        let start = before.rfind('$')?;
+        if start > 0 && !before[..start].chars().next_back()?.is_whitespace() {
+            return None;
+        }
+        let query = &before[start + 1..];
+        if query.chars().any(char::is_whitespace) {
+            return None;
+        }
+        let query = query.to_lowercase();
+        let items: Vec<_> = self
+            .skills
+            .iter()
+            .filter(|s| s.name.to_lowercase().contains(&query))
+            .map(|s| {
+                ice_tui::AutocompleteItem::new(&format!("⟦skill:{}⟧", s.name))
+                    .with_label(&s.name)
+                    .with_description(&format!("Skill: {}", s.description))
+            })
+            .collect();
+        (!items.is_empty()).then_some(ice_tui::AutocompleteSuggestions {
+            items,
+            start,
+            end: cursor,
+            is_path: false,
+        })
+    }
+}
+
+#[cfg(test)]
+mod skill_tests {
+    use super::*;
+    use ice_tui::AutocompleteProvider;
+
+    fn skill() -> ice_harness::types::Skill {
+        ice_harness::types::Skill {
+            name: "review".into(),
+            description: "Review code".into(),
+            content: "Instructions".into(),
+            file_path: "/skills/review/SKILL.md".into(),
+            disable_model_invocation: None,
+        }
+    }
+
+    #[test]
+    fn dollar_suggests_and_expands_skills() {
+        let skill = skill();
+        let provider = SkillAutocomplete {
+            skills: vec![skill.clone()],
+        };
+        let suggestions = provider.get_suggestions("use $rev", 8).unwrap();
+        assert_eq!(suggestions.items[0].text, "⟦skill:review⟧");
+        assert!(provider.get_suggestions("use review", 10).is_none());
+        let resources = ice_harness::types::AgentHarnessResources {
+            skills: Some(vec![skill]),
+            ..Default::default()
+        };
+        let expanded =
+            expand_skill_references(&resources, "use ⟦skill:review⟧ now ⟦skill:missing⟧");
+        assert!(expanded.contains("<skill name=\"review\""));
+        assert!(expanded.contains("Instructions"));
+        assert!(expanded.ends_with(" now ⟦skill:missing⟧"));
+    }
+}
+
 pub(super) struct McpAutocomplete {
     pub manager: Option<crate::mcp::McpManager>,
 }
@@ -107,6 +186,9 @@ pub(super) fn build_autocomplete_with_mcp(
             .filter(|entry| !taken.contains(&entry.name)),
     );
     let mut combined = CombinedAutocompleteProvider::new();
+    combined.add_provider(Arc::new(SkillAutocomplete {
+        skills: resources.skills.clone().unwrap_or_default(),
+    }));
     combined.add_provider(Arc::new(McpAutocomplete { manager }));
     combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
     // Reinstall recursive completion on reload as well as startup. Its callback

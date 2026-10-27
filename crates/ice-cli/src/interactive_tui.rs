@@ -295,7 +295,8 @@ fn submit_user_prompt(ctx: &CommandContext, text: &str) {
     let run_status = *ctx.state.status.lock().unwrap();
     if run_status != RunStatus::Idle {
         let images = ctx.state.take_pending_images();
-        let message = user_message_with_images(text, images.clone());
+        let expanded = expand_skill_references(&ctx.resources.lock().unwrap(), text);
+        let message = user_message_with_images(&expanded, images.clone());
         let lane = ctx.lane.clone();
         let chat = ctx.chat.clone();
         let tui = ctx.tui.clone();
@@ -3192,7 +3193,9 @@ pub async fn interactive_tui(
                     // `AgentEvent::MessageStart` once they are consumed; while
                     // they wait, the pending-messages display shows them.
                     let images = state_for_key.take_pending_images();
-                    let message = user_message_with_images(&prompt, images.clone());
+                    let expanded =
+                        expand_skill_references(&ctx_for_key.resources.lock().unwrap(), &prompt);
+                    let message = user_message_with_images(&expanded, images.clone());
                     let lane = lane_for_key.clone();
                     let chat = state_for_key.chat_container.clone();
                     let tui = tui_for_key.clone();

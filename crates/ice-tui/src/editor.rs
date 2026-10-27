@@ -1797,7 +1797,23 @@ impl Component for Editor {
                             String::new()
                         }
                     } else {
-                        chunk.to_string()
+                        let mut rendered = String::new();
+                        let mut rest = chunk;
+                        while let Some(start) = rest.find("⟦skill:") {
+                            rendered.push_str(&rest[..start]);
+                            let tagged = &rest[start..];
+                            let Some(end) = tagged.find('⟧') else {
+                                rendered.push_str(tagged);
+                                rest = "";
+                                break;
+                            };
+                            let end = end + '⟧'.len_utf8();
+                            rendered
+                                .push_str(&crate::theme::theme().colors.accent.fg(&tagged[..end]));
+                            rest = &tagged[end..];
+                        }
+                        rendered.push_str(rest);
+                        rendered
                     };
 
                 // Selection highlight: inverse-video the span on this row (byte

@@ -324,6 +324,39 @@ pub(super) async fn run_initial_prompts(
     }
 }
 
+/// Expand explicit skill references without changing the visible draft.
+pub(super) fn expand_skill_references(
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> String {
+    let mut expanded = String::new();
+    let mut rest = prompt;
+    while let Some(start) = rest.find("⟦skill:") {
+        expanded.push_str(&rest[..start]);
+        let tagged = &rest[start..];
+        let Some(end) = tagged.find('⟧') else {
+            expanded.push_str(tagged);
+            return expanded;
+        };
+        let name = &tagged["⟦skill:".len()..end];
+        let end = end + '⟧'.len_utf8();
+        if let Some(skill) = resources
+            .skills
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .find(|s| s.name == name)
+        {
+            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
+        } else {
+            expanded.push_str(&tagged[..end]);
+        }
+        rest = &tagged[end..];
+    }
+    expanded.push_str(rest);
+    expanded
+}
+
 /// Drive one prompt, reconcile its final response, and settle buffered writes.
 pub(super) async fn run_prompt_streaming(
     harness: &AgentHarness,
@@ -356,7 +389,9 @@ pub(super) async fn run_prompt_streaming(
             Err(error) => Err(error),
         }
     } else {
-        lane.prompt_text(prompt, images).await
+        let resources = harness.get_resources().await.unwrap_or_default();
+        let expanded = expand_skill_references(&resources, prompt);
+        lane.prompt_text(&expanded, images).await
     };
 
     // Settle final tool/message delivery before completion reconciliation. This
