@@ -98,14 +98,17 @@ pub fn suggest_capabilities(
         return inventory(catalog);
     }
 
+    // Filter loaded/excluded entries before selecting the final ranked page;
+    // otherwise four loaded top hits can hide a useful fifth candidate.
     let mut candidates: Vec<_> = catalog
-        .shortlist(context.query, 4)
+        .shortlist(context.query, 8)
         .into_iter()
         .filter(|entry| {
             !context.already_suggested.contains(&entry.id)
                 && !(entry.kind == CapabilityKind::Skill
                     && context.coverage.get(&entry.id) == Some(&SkillContextState::Loaded))
         })
+        .take(4)
         .collect();
     candidates = prefer_native(&candidates);
 

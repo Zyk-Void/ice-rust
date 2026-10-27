@@ -331,6 +331,7 @@ async fn run_child(root: &Path, phase: &str) {
     );
     let reload = crate::session::ReloadContext {
         skill_registry: Default::default(),
+        capability_service: None,
         shells: crate::background_shells::SessionShells::new(&Default::default()),
         mcp_tools: crate::mcp::McpManager::new(
             &harness,

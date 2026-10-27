@@ -999,6 +999,21 @@ pub async fn build_prepared(
     }));
 
     harness.set_extensions(builtins.harness_extensions());
+    let mut capability_service = None;
+    if !args.no_tools && tool_name_allowed("capability_search", args) {
+        let service = crate::capability_service::CapabilityService::new(
+            crate::capability_catalog::CapabilityCatalog::from_live(
+                &live_skill_result,
+                &crate::resource_dirs::skill_source_dirs(cwd, true, true, builtins.skill_paths()),
+                &mcp_tools.snapshot(),
+            ),
+        );
+        let mut tools = harness.get_tools().await.unwrap_or_default();
+        tools.push(service.tool());
+        let active = filter_active_tool_names(active_tool_names(&tools, args), args);
+        let _ = harness.set_tools(tools, Some(active)).await;
+        capability_service = Some(service);
+    }
     builtins
         .bind(
             &harness,
@@ -1017,6 +1032,7 @@ pub async fn build_prepared(
     shells.connect(&harness);
     let reload_context = ReloadContext {
         skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
+        capability_service: capability_service.clone(),
         mcp_tools,
         shells,
         extension_session: extension_session_cell,
@@ -1142,6 +1158,8 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 /// reload callback without borrowing the harness).
 #[derive(Clone)]
 pub struct ReloadContext {
+    /// Session-shared local capability registry used by the model tool and task hints.
+    pub capability_service: Option<Arc<crate::capability_service::CapabilityService>>,
     /// Last skill loader result, including shadowed definitions.
     pub skill_registry: Arc<std::sync::RwLock<ice_harness::skills::LoadSkillsResult>>,
     /// Session-local MCP tools retained across extension reloads.
@@ -1751,6 +1769,18 @@ where
     }
 
     *ctx.skill_registry.write().unwrap() = live_skill_result;
+    if let Some(service) = &ctx.capability_service {
+        service.refresh(crate::capability_catalog::CapabilityCatalog::from_live(
+            &ctx.skill_registry.read().unwrap(),
+            &crate::resource_dirs::skill_source_dirs(
+                &ctx.cwd,
+                true,
+                true,
+                ctx.builtins.skill_paths(),
+            ),
+            &ctx.mcp_tools.snapshot(),
+        ));
+    }
     let mut prompt_templates: Vec<ice_harness::types::PromptTemplate> = Vec::new();
     let mut prompt_diags: Vec<ice_harness::prompt_templates::PromptTemplateDiagnostic> = Vec::new();
     if !effective_args.no_prompt_templates {
@@ -1946,6 +1976,12 @@ where
         &effective_args,
         &ctx.tool_context,
     );
+    if let Some(service) = &ctx.capability_service {
+        service.refresh(ctx.capability_catalog());
+        if !effective_args.no_tools && tool_name_allowed("capability_search", &effective_args) {
+            tools.push(service.tool());
+        }
+    }
     tools.extend(
         ctx.mcp_tools
             .registered_tools()

@@ -447,6 +447,34 @@ fn inventory_descriptions_truncate_at_utf16_boundary() {
 }
 
 #[test]
+fn loaded_top_four_do_not_hide_the_fifth_unloaded_match() {
+    let entries = (0..5)
+        .map(|index| {
+            skill(
+                &format!("skill:project:s{index}"),
+                &format!("search{index}"),
+                "search indexing",
+            )
+        })
+        .collect();
+    let coverage = HashMap::from([
+        ("skill:project:s0".into(), SkillContextState::Loaded),
+        ("skill:project:s1".into(), SkillContextState::Loaded),
+        ("skill:project:s2".into(), SkillContextState::Loaded),
+        ("skill:project:s3".into(), SkillContextState::Loaded),
+    ]);
+    let suggestion = suggest_capabilities(
+        &CapabilityCatalog { entries },
+        &context(
+            "search indexing",
+            &coverage,
+            &HashSet::new(),
+            TaskEvent::TaskStart,
+        ),
+    );
+    assert!(matches!(suggestion, Suggestion::Skill { id, .. } if id == "skill:project:s4"));
+}
+#[test]
 fn inventory_and_tool_rendering_have_advisory_prefix() {
     let inventory = render_suggestion(&Suggestion::Inventory {
         skills: vec!["planning — Plan work".into()],

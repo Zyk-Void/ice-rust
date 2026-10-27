@@ -100,10 +100,13 @@ impl CapabilityCatalog {
                 CapabilityKind::Skill,
                 &skill.name,
                 &skill.description,
-                source,
+                &skill.file_path,
                 available,
                 !skill.disable_model_invocation.unwrap_or(false),
             ));
+            if let Some(entry) = entries.last_mut() {
+                entry.content_hash = format!("{:x}", Sha256::digest(skill.content.as_bytes()));
+            }
         }
         for server in servers {
             let source = format!("mcp:{}", server.name);
@@ -119,6 +122,12 @@ impl CapabilityCatalog {
                     available,
                     true,
                 ));
+                if let Some(entry) = entries.last_mut() {
+                    let mut hash = Sha256::new();
+                    hash.update(tool.name.as_bytes());
+                    hash.update(tool.description.as_bytes());
+                    entry.content_hash = format!("{:x}", hash.finalize());
+                }
             }
         }
         Self { entries }
