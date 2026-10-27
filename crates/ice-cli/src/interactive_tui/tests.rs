@@ -1010,32 +1010,40 @@ fn review_skill() -> ice_harness::types::Skill {
 }
 
 #[test]
-fn skill_command_expands_like_upstream() {
+fn skill_mentions_and_commands_expand_known_skills() {
     let resources = ice_harness::types::AgentHarnessResources {
         skills: Some(vec![review_skill()]),
         ..Default::default()
     };
-    let with_args = expand_skill_command(&resources, "/skill:review check the parser");
+    let block = ice_harness::skills::format_skill_invocation(&review_skill(), None);
+    // `$name` mentions expand in place at word starts only.
+    let mention = expand_skill_references(
+        &resources,
+        "use $review. not a$review, $missing, $PATH or $5",
+    );
     assert_eq!(
-        with_args,
+        mention,
+        format!("use {block}. not a$review, $missing, $PATH or $5")
+    );
+    // A leading `/skill:name args` expands like upstream.
+    let command = expand_skill_references(&resources, "/skill:review check the parser");
+    assert_eq!(
+        command,
         ice_harness::skills::format_skill_invocation(&review_skill(), Some("check the parser"))
     );
-    let bare = expand_skill_command(&resources, "/skill:review");
-    assert_eq!(
-        bare,
-        ice_harness::skills::format_skill_invocation(&review_skill(), None)
-    );
-    // Unknown skills and mid-text references pass through unchanged.
-    for text in ["/skill:missing go", "please /skill:review", "echo $PATH"] {
-        assert_eq!(expand_skill_command(&resources, text), text);
+    for text in ["/skill:missing go", "plain"] {
+        assert_eq!(expand_skill_references(&resources, text), text);
     }
-    // Display and draft restoration show the command, not the skill body.
+    // Display and draft restoration show the mention, not the skill body.
     assert_eq!(
-        collapse_skill_invocations(&with_args),
-        "/skill:review check the parser"
+        collapse_skill_invocations(&mention),
+        "use $review. not a$review, $missing, $PATH or $5"
     );
-    assert_eq!(collapse_skill_invocations(&bare), "/skill:review");
-    assert_eq!(collapse_skill_invocations("plain"), "plain");
+    assert_eq!(
+        collapse_skill_invocations(&command),
+        "$review check the parser"
+    );
+    assert_eq!(collapse_skill_invocations(&block), "$review");
 }
 
 #[test]
@@ -1053,22 +1061,24 @@ fn queued_prompt_expands_skills_and_keeps_referenced_images() {
             mime_type: "image/png".into(),
         }],
     );
-    let (message, images) = queued_user_message(&state, &resources, "/skill:review [Image #1]");
+    let (message, images) = queued_user_message(&state, &resources, "$review [Image #1]");
     assert_eq!(images.len(), 1);
     let AgentMessage::User(user) = message else {
         panic!("expected a user message");
     };
     assert_eq!(
         crate::interactive_tui::user_message_text(&user),
-        "/skill:review [Image #1]"
+        "$review [Image #1]"
     );
 }
 
 #[test]
-fn skills_complete_as_slash_commands() {
+fn skills_complete_after_dollar_and_as_slash_commands() {
     let registry = CommandRegistry::new();
+    let mut second = review_skill();
+    second.name = "release".into();
     let resources = ice_harness::types::AgentHarnessResources {
-        skills: Some(vec![review_skill()]),
+        skills: Some(vec![review_skill(), second]),
         ..Default::default()
     };
     let provider = build_autocomplete_with_mcp(
@@ -1078,10 +1088,25 @@ fn skills_complete_as_slash_commands() {
         None,
         None,
     );
-    let suggestions = provider.get_suggestions("/skill:rev", 10).unwrap();
-    assert_eq!(suggestions.items[0].text, "/skill:review");
-    // `$` no longer opens a skill list.
-    assert!(provider.get_suggestions("use $", 5).is_none());
+    let suggestions = provider.get_suggestions("use $rev", 8).unwrap();
+    assert_eq!(suggestions.items[0].text, "$review");
+    assert_eq!(suggestions.start, 4);
+    assert!(provider.get_suggestions("cost a$rev", 10).is_none());
+    assert!(provider.get_suggestions("echo $PATH", 10).is_none());
+    let commands = provider.get_suggestions("/skill:rev", 10).unwrap();
+    assert_eq!(commands.items[0].text, "/skill:review");
+
+    // ↓ moves through a `$` list and Enter picks the highlighted skill.
+    let state = test_tui_state();
+    state.autocomplete.set_provider(provider);
+    state.editor.set_text("use $");
+    state.editor.set_cursor(0, 5);
+    assert!(navigate_autocomplete(&state, &state.editor, 1));
+    assert_eq!(*state.autocomplete_selection.lock().unwrap(), 1);
+    assert!(accept_skill_mention(&state, &state.editor));
+    assert_eq!(state.editor.get_text(), "use $release ");
+    // Once accepted the list is closed, so the next Enter sends normally.
+    assert!(!accept_skill_mention(&state, &state.editor));
 }
 
 #[test]

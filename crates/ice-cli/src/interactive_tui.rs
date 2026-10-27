@@ -3097,7 +3097,7 @@ pub async fn interactive_tui(
             }
 
             // 5a-bis. ↑/↓ navigate the autocomplete list while it is open
-            //     (typed `/` or `@`), then Tab accepts the highlighted row.
+            //     (typed `/`, `@` or `$`), then Tab accepts the highlighted row.
             if key.modifiers == KeyModifiers::NONE
                 && (key.code == KeyCode::Up || key.code == KeyCode::Down)
             {
@@ -3106,6 +3106,16 @@ pub async fn interactive_tui(
                     tui_for_key.request_render_reusing_scroll_content();
                     continue;
                 }
+            }
+
+            // 5a-ter. Enter on an open `$` skill list picks the skill rather
+            //     than sending the partial mention.
+            if key.modifiers == KeyModifiers::NONE
+                && key.code == KeyCode::Enter
+                && accept_skill_mention(&state_for_key, &editor_for_key)
+            {
+                tui_for_key.request_render_reusing_scroll_content();
+                continue;
             }
 
             // 5b. ↑/↓ browse submitted-message history when the editor is

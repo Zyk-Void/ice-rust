@@ -2,6 +2,55 @@
 
 use super::*;
 
+/// `$name` completion for discovered skills; the reference is expanded into
+/// the skill's instructions when the prompt is sent (`expand_skill_references`); skills
+/// also complete as `/skill:name` commands like upstream..
+struct SkillAutocomplete {
+    skills: Vec<ice_harness::types::Skill>,
+}
+
+impl ice_tui::AutocompleteProvider for SkillAutocomplete {
+    fn name(&self) -> &str {
+        "skills"
+    }
+
+    fn get_suggestions(
+        &self,
+        input: &str,
+        cursor: usize,
+    ) -> Option<ice_tui::AutocompleteSuggestions> {
+        let before = input.get(..cursor)?;
+        let start = before.rfind('$')?;
+        if before[..start]
+            .chars()
+            .next_back()
+            .is_some_and(|c| !c.is_whitespace())
+        {
+            return None;
+        }
+        let query = &before[start + 1..];
+        if !query.chars().all(is_skill_name_char) {
+            return None;
+        }
+        let query = query.to_lowercase();
+        let items: Vec<_> = self
+            .skills
+            .iter()
+            .filter(|s| s.name.to_lowercase().contains(&query))
+            .map(|s| {
+                ice_tui::AutocompleteItem::new(&format!("${}", s.name))
+                    .with_description(&s.description)
+            })
+            .collect();
+        (!items.is_empty()).then_some(ice_tui::AutocompleteSuggestions {
+            items,
+            start,
+            end: cursor,
+            is_path: false,
+        })
+    }
+}
+
 pub(super) struct McpAutocomplete {
     pub manager: Option<crate::mcp::McpManager>,
 }
@@ -107,7 +156,7 @@ pub(super) fn build_autocomplete_with_mcp(
             .filter(|entry| !taken.contains(&entry.name)),
     );
     // Skills complete as `/skill:name` commands, expanded on send by
-    // `expand_skill_command` (upstream `interactive-mode.ts` skill commands).
+    // `expand_skill_references` (upstream `interactive-mode.ts` skill commands).
     commands.extend(
         resources
             .skills
@@ -122,6 +171,9 @@ pub(super) fn build_autocomplete_with_mcp(
     let mut combined = CombinedAutocompleteProvider::new();
     combined.add_provider(Arc::new(McpAutocomplete { manager }));
     combined.add_provider(Arc::new(SlashCommandAutocompleteProvider::new(commands)));
+    combined.add_provider(Arc::new(SkillAutocomplete {
+        skills: resources.skills.clone().unwrap_or_default(),
+    }));
     // Reinstall recursive completion on reload as well as startup. Its callback
     // wakes the same TUI queue after a background search finishes.
     if let Some(on_ready) = on_ready {
@@ -295,12 +347,26 @@ pub(super) fn accept_top_suggestion(state: &Arc<TuiState>, editor: &Arc<Editor>)
     true
 }
 
+/// Enter while a `$` skill list is open picks the highlighted skill instead
+/// of sending the half-typed mention, which would reach the model unexpanded.
+/// Returns `true` when a suggestion was accepted.
+pub(super) fn accept_skill_mention(state: &Arc<TuiState>, editor: &Arc<Editor>) -> bool {
+    let text = editor.get_text();
+    let cursor = editor_cursor_offset(editor, &text);
+    let is_mention = state
+        .autocomplete
+        .get_suggestions(&text, cursor)
+        .is_some_and(|sugg| text.get(sugg.start..).is_some_and(|t| t.starts_with('$')));
+    is_mention && accept_top_suggestion(state, editor)
+}
+
 /// Move the autocomplete highlight up (`direction < 0`) or down (`direction > 0`)
 /// and re-render the list. Returns `true` when the key was consumed.
 ///
-/// Only takes over the arrow keys in an explicit completion context (`/` or
-/// `@` prefix); a bare-word path completion (e.g. a draft containing `docs`)
-/// must NOT swallow ↑/↓, which the editor uses for cursor/history movement.
+/// Only takes over the arrow keys in an explicit completion context (`/`,
+/// `@` or `$` prefix); a bare-word path completion (e.g. a draft containing
+/// `docs`) must NOT swallow ↑/↓, which the editor uses for cursor/history
+/// movement.
 pub(super) fn navigate_autocomplete(
     state: &Arc<TuiState>,
     editor: &Arc<Editor>,
@@ -317,7 +383,7 @@ pub(super) fn navigate_autocomplete(
     let start = sugg.start.min(text.len());
     // `/` commands keep the slash at `start`; the path provider keeps `@` by
     // placing `start` *after* it, so look just before `start` for `@`.
-    let explicit = text[start..].starts_with('/') || text[..start].ends_with('@');
+    let explicit = text[start..].starts_with(['/', '$']) || text[..start].ends_with('@');
     if !explicit {
         return false;
     }
