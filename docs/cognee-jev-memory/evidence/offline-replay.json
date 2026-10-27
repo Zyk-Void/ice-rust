@@ -1,0 +1,444 @@
+{
+  "schema_version": 1,
+  "corpus_version": "m7-synthetic-1.0.0",
+  "fixture_sha256": "1308f7b58b2eb5f143a70400cfc90debf438a878616a72d410e03d969fa348fd",
+  "case_count": 56,
+  "arms": {
+    "A_memory_off": {
+      "cases": 56,
+      "by_cohort": {
+        "self_contained": {
+          "cases": 20,
+          "requests": 0,
+          "required_misses": 0
+        },
+        "historical_decision": {
+          "cases": 12,
+          "requests": 0,
+          "required_misses": 12
+        },
+        "repeated_followup": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 8
+        },
+        "boundary_metadata": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 8
+        },
+        "service_and_edge": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 5
+        }
+      },
+      "requested": 0,
+      "skipped": 56,
+      "cached": 0,
+      "retrieved": 0,
+      "retained": 0,
+      "injected": 0,
+      "persisted": 0,
+      "faux_used": 0,
+      "unknown": 28,
+      "late_error": 0,
+      "wrong_scope": 0,
+      "stale": 0,
+      "contradictory": 0,
+      "novelty_miss": 0,
+      "required_critical_miss": 33,
+      "forbidden_evidence": 0,
+      "unnecessary_requests": 0,
+      "latency_us": {
+        "n": 56,
+        "includes_failures": true,
+        "warmup_excluded": false,
+        "min": 0,
+        "p50_nearest_rank": 0,
+        "p95_nearest_rank": 0,
+        "max": 3
+      },
+      "service_latency": "simulated by local fake transport; not remote"
+    },
+    "B_legacy": {
+      "cases": 56,
+      "by_cohort": {
+        "self_contained": {
+          "cases": 20,
+          "requests": 20,
+          "required_misses": 0
+        },
+        "historical_decision": {
+          "cases": 12,
+          "requests": 12,
+          "required_misses": 0
+        },
+        "repeated_followup": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "boundary_metadata": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "service_and_edge": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 5
+        }
+      },
+      "requested": 56,
+      "skipped": 0,
+      "cached": 0,
+      "retrieved": 51,
+      "retained": 51,
+      "injected": 51,
+      "persisted": 51,
+      "faux_used": 0,
+      "unknown": 0,
+      "late_error": 4,
+      "wrong_scope": 0,
+      "stale": 1,
+      "contradictory": 0,
+      "novelty_miss": 0,
+      "required_critical_miss": 5,
+      "forbidden_evidence": 20,
+      "unnecessary_requests": 23,
+      "latency_us": {
+        "n": 56,
+        "includes_failures": true,
+        "warmup_excluded": false,
+        "min": 689,
+        "p50_nearest_rank": 1802,
+        "p95_nearest_rank": 2164,
+        "max": 1001816
+      },
+      "service_latency": "simulated by local fake transport; not remote"
+    },
+    "C_local_selective": {
+      "cases": 56,
+      "by_cohort": {
+        "self_contained": {
+          "cases": 20,
+          "requests": 20,
+          "required_misses": 0
+        },
+        "historical_decision": {
+          "cases": 12,
+          "requests": 12,
+          "required_misses": 0
+        },
+        "repeated_followup": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "boundary_metadata": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "service_and_edge": {
+          "cases": 8,
+          "requests": 5,
+          "required_misses": 5
+        }
+      },
+      "requested": 53,
+      "skipped": 3,
+      "cached": 0,
+      "retrieved": 48,
+      "retained": 48,
+      "injected": 48,
+      "persisted": 48,
+      "faux_used": 0,
+      "unknown": 0,
+      "late_error": 4,
+      "wrong_scope": 0,
+      "stale": 1,
+      "contradictory": 0,
+      "novelty_miss": 0,
+      "required_critical_miss": 5,
+      "forbidden_evidence": 20,
+      "unnecessary_requests": 20,
+      "latency_us": {
+        "n": 56,
+        "includes_failures": true,
+        "warmup_excluded": false,
+        "min": 321,
+        "p50_nearest_rank": 1660,
+        "p95_nearest_rank": 2020,
+        "max": 1001830
+      },
+      "service_latency": "simulated by local fake transport; not remote"
+    },
+    "D_selective_mock_jev": {
+      "cases": 56,
+      "by_cohort": {
+        "self_contained": {
+          "cases": 20,
+          "requests": 20,
+          "required_misses": 0
+        },
+        "historical_decision": {
+          "cases": 12,
+          "requests": 12,
+          "required_misses": 0
+        },
+        "repeated_followup": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "boundary_metadata": {
+          "cases": 8,
+          "requests": 8,
+          "required_misses": 0
+        },
+        "service_and_edge": {
+          "cases": 8,
+          "requests": 5,
+          "required_misses": 5
+        }
+      },
+      "requested": 53,
+      "skipped": 3,
+      "cached": 0,
+      "retrieved": 48,
+      "retained": 48,
+      "injected": 48,
+      "persisted": 48,
+      "faux_used": 0,
+      "unknown": 0,
+      "late_error": 4,
+      "wrong_scope": 0,
+      "stale": 1,
+      "contradictory": 0,
+      "novelty_miss": 0,
+      "required_critical_miss": 5,
+      "forbidden_evidence": 20,
+      "unnecessary_requests": 20,
+      "latency_us": {
+        "n": 56,
+        "includes_failures": true,
+        "warmup_excluded": false,
+        "min": 329,
+        "p50_nearest_rank": 1683,
+        "p95_nearest_rank": 1841,
+        "max": 1001758
+      },
+      "service_latency": "simulated by local fake transport; not remote"
+    },
+    "E_on_demand": {
+      "cases": 56,
+      "by_cohort": {
+        "self_contained": {
+          "cases": 20,
+          "requests": 0,
+          "required_misses": 0
+        },
+        "historical_decision": {
+          "cases": 12,
+          "requests": 12,
+          "required_misses": 12
+        },
+        "repeated_followup": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 8
+        },
+        "boundary_metadata": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 8
+        },
+        "service_and_edge": {
+          "cases": 8,
+          "requests": 0,
+          "required_misses": 5
+        }
+      },
+      "requested": 12,
+      "skipped": 44,
+      "cached": 0,
+      "retrieved": 12,
+      "retained": 0,
+      "injected": 0,
+      "persisted": 0,
+      "faux_used": 0,
+      "unknown": 28,
+      "late_error": 0,
+      "wrong_scope": 0,
+      "stale": 0,
+      "contradictory": 0,
+      "novelty_miss": 0,
+      "required_critical_miss": 33,
+      "forbidden_evidence": 0,
+      "unnecessary_requests": 0,
+      "latency_us": {
+        "n": 56,
+        "includes_failures": true,
+        "warmup_excluded": false,
+        "min": 255,
+        "p50_nearest_rank": 361,
+        "p95_nearest_rank": 1585,
+        "max": 1635
+      },
+      "service_latency": "simulated by local fake transport; not remote"
+    }
+  },
+  "arm_D_scope": "mock JEV integration was not run by this corpus; faux ID judgment is not implemented in this driver, recorded not eligible/unverified; no JEV quality inference",
+  "runtime": {
+    "code_commit": "403f3f882ea560c4a86cfd9ccf82e0f8c95ca2f4",
+    "worktree_dirty": true,
+    "hardware": "supplied local metadata: not provided",
+    "date_utc": 1793143346845,
+    "main_model_correctness": "unverified",
+    "TTFT": "unverified",
+    "end_to_end_benefit": "unverified",
+    "JEV_model_quality": "unknown/off",
+    "JEV_backend_searchability_lag": "unknown/off",
+    "mock_JEV_quality_claim": false
+  },
+  "fastpath_benchmark": {
+    "admissions": 1010,
+    "measured_n": 1000,
+    "warmup_excluded": 10,
+    "cache": "cold runtime; no filesystem directory scans or backend requests during admission",
+    "window_tokens": 128000,
+    "remaining_tokens": 800,
+    "prompt_bytes": "synthetic 35-38 bytes",
+    "fake_transport_requests": 0,
+    "latency_us": {
+      "n": 1000,
+      "p50_nearest_rank": 31,
+      "p95_nearest_rank": 32,
+      "max": 132
+    }
+  },
+  "paired_C_vs_B": {
+    "unnecessary_request_count": {
+      "C": 20,
+      "B": 23
+    },
+    "denominator": 56
+  },
+  "positive_traces": [
+    {
+      "case": "decision-00",
+      "prior_fact": "fact-decision-0",
+      "available_at": 1800000003000,
+      "request_at": 1800000003050,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-01",
+      "prior_fact": "fact-decision-1",
+      "available_at": 1800000003100,
+      "request_at": 1800000003150,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-02",
+      "prior_fact": "fact-decision-2",
+      "available_at": 1800000003200,
+      "request_at": 1800000003250,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-03",
+      "prior_fact": "fact-decision-3",
+      "available_at": 1800000003300,
+      "request_at": 1800000003350,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-04",
+      "prior_fact": "fact-decision-4",
+      "available_at": 1800000003400,
+      "request_at": 1800000003450,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-05",
+      "prior_fact": "fact-decision-5",
+      "available_at": 1800000003500,
+      "request_at": 1800000003550,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-06",
+      "prior_fact": "fact-decision-6",
+      "available_at": 1800000003600,
+      "request_at": 1800000003650,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-07",
+      "prior_fact": "fact-decision-7",
+      "available_at": 1800000003700,
+      "request_at": 1800000003750,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-08",
+      "prior_fact": "fact-decision-8",
+      "available_at": 1800000003800,
+      "request_at": 1800000003850,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-09",
+      "prior_fact": "fact-decision-9",
+      "available_at": 1800000003900,
+      "request_at": 1800000003950,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-10",
+      "prior_fact": "fact-decision-10",
+      "available_at": 1800000004000,
+      "request_at": 1800000004050,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    },
+    {
+      "case": "decision-11",
+      "prior_fact": "fact-decision-11",
+      "available_at": 1800000004100,
+      "request_at": 1800000004150,
+      "active_context_absent": true,
+      "delivered_before_decision": true,
+      "constraint_reused": true
+    }
+  ],
+  "failure_inclusive": {
+    "total_requests": 174,
+    "local_latency_samples_including_failures": 280
+  },
+  "generated_at_ms": 1793143346845
+}

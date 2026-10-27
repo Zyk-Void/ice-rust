@@ -4132,6 +4132,7 @@ mod tests {
 
     include!("request_tests.rs");
     include!("lookup_tests.rs");
+    include!("offline_replay_tests.rs");
 
     #[derive(Clone, Copy)]
     enum TestVerdict {
