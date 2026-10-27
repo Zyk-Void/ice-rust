@@ -12,6 +12,10 @@
 //! exists or an `ICERS_COGNEE_*` variable is set, and never contacts the
 //! server while running offline (`ICERS_OFFLINE` / `--offline`).
 
+#[path = "coordinator.rs"]
+mod coordinator;
+
+use coordinator::EvidenceCache;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};
@@ -359,6 +363,7 @@ struct State {
     last_compact_summary: Option<String>,
     /// Recall lines already in the active context (non-legacy read policies).
     seen_evidence: SeenEvidence,
+    evidence_cache: EvidenceCache,
     resolved_dataset: String,
     legacy_dataset: Option<String>,
     improve_in_flight: bool,
@@ -399,6 +404,7 @@ impl State {
             last_recall_at: 0,
             last_compact_summary: None,
             seen_evidence: SeenEvidence::default(),
+            evidence_cache: EvidenceCache::default(),
             improve_in_flight: false,
             improve_backoff: HashMap::new(),
             pending_prompt: None,
@@ -423,7 +429,11 @@ impl State {
     /// Resolve `$project` for `cwd` and, for a linked worktree, the dataset
     /// it used before sharing its repository's. An explicit dataset has none.
     fn refresh_dataset(&mut self, cwd: Option<&Path>) {
+        let previous = self.active_dataset();
         self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
+        if previous != self.active_dataset() {
+            self.evidence_cache.clear();
+        }
         self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
             .then(|| {
                 let cwd = cwd
@@ -1719,10 +1729,14 @@ impl CogneeRuntime {
             return false;
         }
         let mut state = self.state();
+        let previous_dataset = state.active_dataset();
         state.config = next;
         state.installed = true;
         let cwd = self.cwd.lock().unwrap().clone();
         state.refresh_dataset(cwd.as_deref());
+        if previous_dataset != state.active_dataset() {
+            state.evidence_cache.clear();
+        }
         Self::rebuild_client(&mut state, self.transport.clone());
         true
     }
@@ -2049,6 +2063,10 @@ impl CogneeRuntime {
         }
         self.apply_tool_state().await;
         let session_id = self.ensure_session_id(host_id);
+        self.schedule_prefetch(
+            coordinator::PREFETCH_ORIENTATION_QUERY.into(),
+            session_id.clone(),
+        );
         let (enabled, label, base_url) = {
             let mut state = self.state();
             let mut label = format!("shared memory {}", state.active_dataset());
@@ -2163,6 +2181,7 @@ impl CogneeRuntime {
         let (client, session_id) = {
             let mut state = self.state();
             state.shutting_down = true;
+            state.evidence_cache.clear();
             (state.client.clone(), state.session_id.clone())
         };
         let settle = self.settle.lock().unwrap().take();
@@ -2612,21 +2631,36 @@ impl CogneeRuntime {
                 state.config.recall_budget_ms,
             )
         };
+        let mut cached = if read_policy == ReadPolicy::Event {
+            let mut state = self.state();
+            let State {
+                evidence_cache,
+                seen_evidence,
+                ..
+            } = &mut *state;
+            evidence_cache.take(&dataset, self.now(), seen_evidence)
+        } else {
+            Vec::new()
+        };
         if !auto_recall || !can_attempt {
             self.observe(
                 "recall",
                 "succeeded",
                 succeeded(json!({"skipped": true, "reason": if !auto_recall { "auto_recall_disabled" } else { "circuit_open" }, "outcomeVersion": 1, "outcome": "skipped"})),
             );
-            return self.turn_scoped_memory(None);
+            return self.turn_scoped_memory(Some(cached));
         }
         if let Admission::Skip(reason) = admit_prompt(read_policy, event.prompt) {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "reason": reason.as_str(), "outcomeVersion": 1, "outcome": "skipped"})),
+                succeeded(if read_policy == ReadPolicy::Event {
+                    json!({"skipped": true, "reason": reason.as_str(), "cacheDelivered": cached.len(), "cacheReason": if cached.is_empty() { "cache_empty" } else { "cache_ready" }, "outcomeVersion": 1, "outcome": "skipped"})
+                } else {
+                    json!({"skipped": true, "reason": reason.as_str(), "outcomeVersion": 1, "outcome": "skipped"})
+                }),
             );
-            return self.turn_scoped_memory(None);
+            return self.turn_scoped_memory(Some(cached));
         }
         let recall_key = format!("{session_id}\n{}", event.prompt);
         let now = self.now();
@@ -2643,7 +2677,7 @@ impl CogneeRuntime {
                         json!({"duplicate": true, "reason": "duplicate", "outcomeVersion": 1, "outcome": "skipped"}),
                     ),
                 );
-                return self.turn_scoped_memory(None);
+                return self.turn_scoped_memory(Some(cached));
             }
         }
         let network_started = std::time::Instant::now();
@@ -2712,7 +2746,8 @@ impl CogneeRuntime {
                         ..ObserveFields::default()
                     },
                 );
-                self.turn_scoped_memory(Some(lines))
+                cached.extend(lines);
+                self.turn_scoped_memory(Some(cached))
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -2736,7 +2771,7 @@ impl CogneeRuntime {
                         ..ObserveFields::default()
                     },
                 );
-                self.turn_scoped_memory(None)
+                self.turn_scoped_memory(Some(cached))
             }
         }
     }
@@ -2935,6 +2970,7 @@ impl HarnessExtension for CogneeRuntime {
             });
         let reason = event.trigger.reason();
         let session_id = self.ensure_session_id(event.session_id);
+        self.schedule_prefetch(prefix16(summary, 400).to_string(), session_id.clone());
         let (capture, capture_max, remember, remember_max, dataset, limit) = {
             let mut state = self.state();
             state.last_compact_summary =
@@ -3041,6 +3077,16 @@ mod tests {
         config: Option<Value>,
         offline: bool,
     ) -> Arc<CogneeRuntime> {
+        runtime_with_clock(dir, transport, config, offline, Arc::new(|| NOW))
+    }
+
+    fn runtime_with_clock(
+        dir: &Path,
+        transport: &Arc<FakeTransport>,
+        config: Option<Value>,
+        offline: bool,
+        now: Arc<dyn Fn() -> u64 + Send + Sync>,
+    ) -> Arc<CogneeRuntime> {
         if let Some(config) = config {
             let path = dir.join("ice-cognee").join("config.json");
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -3055,7 +3101,7 @@ mod tests {
                 process_env: CogneeEnv::new(),
                 home_dir: None,
                 transport: transport.clone(),
-                now: Arc::new(|| NOW),
+                now,
                 offline,
                 cwd: Some(dir.to_path_buf()),
             },
@@ -3240,6 +3286,241 @@ mod tests {
         let context = rt.prompt_context(&run_event(prompt, system_prompt)).await?;
         assert_eq!(context.custom_type, MEMORY_CUSTOM_TYPE);
         Some(context.text)
+    }
+
+    #[tokio::test]
+    async fn event_prefetch_delivers_once_without_prompt_requests() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "Use the agreed cache design"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch(
+            coordinator::PREFETCH_ORIENTATION_QUERY.into(),
+            session.clone(),
+        );
+        rt.schedule_prefetch(coordinator::PREFETCH_ORIENTATION_QUERY.into(), session);
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        let first = memory(&rt, "hello there", None).await.unwrap();
+        assert!(first.contains("Use the agreed cache design"));
+        for i in 0..10 {
+            assert!(memory(&rt, &format!("ordinary request number {i}"), None)
+                .await
+                .is_none());
+        }
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn prefetch_respects_policy_circuit_and_shutdown() {
+        for policy in ["legacy", "on_demand", "event"] {
+            let dir = tempfile::tempdir().unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            let rt = runtime(
+                dir.path(),
+                &transport,
+                Some(json!({"readPolicy":policy, "writePolicy":"manual"})),
+                false,
+            );
+            rt.ensure_loaded();
+            if policy == "event" {
+                rt.state().recall_circuit.open_until = wall_ms() + 60_000;
+            }
+            rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+            rt.wait_for_background().await;
+            assert!(transport.sent().is_empty());
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![b"[]".to_vec()],
+            delay_ms: 30_000,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        tokio::time::timeout(std::time::Duration::from_secs(1), rt.session_shutdown())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn injected_clock_expires_cached_results_without_requests() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"expired decision"}]}),
+        ));
+        transport.push(FakeResponse::json(200, json!({"results":[]})));
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let clock_read = clock.clone();
+        let rt = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+            Arc::new(move || clock_read.load(Ordering::Relaxed)),
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch("positive".into(), session.clone());
+        rt.wait_for_background().await;
+        clock.store(NOW + 300_000, Ordering::Relaxed);
+        assert!(memory(&rt, "ordinary prompt", None).await.is_none());
+        assert_eq!(transport.sent().len(), 1);
+        rt.schedule_prefetch("negative".into(), session);
+        rt.wait_for_background().await;
+        clock.store(NOW + 360_000, Ordering::Relaxed);
+        assert!(memory(&rt, "another ordinary prompt", None).await.is_none());
+        assert_eq!(transport.sent().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn repeated_session_start_has_one_prefetch() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.session_start_for("host1").await;
+        rt.session_start_for("host1").await;
+        rt.wait_for_background().await;
+        assert_eq!(
+            transport
+                .sent()
+                .iter()
+                .filter(|request| request.url.ends_with("/api/v1/recall"))
+                .count(),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn compaction_prefetch_uses_summary_and_ignores_empty() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({"results":[]})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let mut entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "  Project constraints and decisions  ".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 10,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        assert_eq!(
+            json_body(&transport.sent()[0])["query"],
+            "Project constraints and decisions"
+        );
+        entry.summary = "  ".into();
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn dataset_change_cancels_stale_prefetch() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![br#"{"results":[{"text":"stale decision"}]}"#.to_vec()],
+            delay_ms: 1000,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "dataset":"old"})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        let mut config = rt.config();
+        config.dataset = "new".into();
+        assert!(rt.persist_config(config).await);
+        rt.wait_for_background().await;
+        assert!(memory(&rt, "ordinary prompt", None).await.is_none());
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn event_cache_and_network_share_budget() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"cached design decision"}]}),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"other historical decision"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallMaxChars":300})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        rt.wait_for_background().await;
+        let text = memory(&rt, "What did we decide earlier?", None)
+            .await
+            .unwrap();
+        assert!(text.contains("cached design decision"));
+        assert!(text.contains("other historical decision"));
+        assert!(len16(&text) <= rt.config().recall_max_chars);
+        assert!(text.contains("</ice-void-cognee-memory>"));
     }
 
     #[tokio::test]
