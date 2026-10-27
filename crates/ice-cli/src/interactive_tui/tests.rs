@@ -1010,26 +1010,32 @@ fn review_skill() -> ice_harness::types::Skill {
 }
 
 #[test]
-fn dollar_skill_references_expand_only_known_word_starts() {
+fn skill_command_expands_like_upstream() {
     let resources = ice_harness::types::AgentHarnessResources {
         skills: Some(vec![review_skill()]),
         ..Default::default()
     };
-    let expanded = expand_skill_references(
-        &resources,
-        "use $review. not a$review, $missing, $PATH or $5",
-    );
-    let block = ice_harness::skills::format_skill_invocation(&review_skill(), None);
+    let with_args = expand_skill_command(&resources, "/skill:review check the parser");
     assert_eq!(
-        expanded,
-        format!("use {block}. not a$review, $missing, $PATH or $5")
+        with_args,
+        ice_harness::skills::format_skill_invocation(&review_skill(), Some("check the parser"))
     );
-    // Display and draft restoration show the reference, not the skill body.
+    let bare = expand_skill_command(&resources, "/skill:review");
     assert_eq!(
-        collapse_skill_invocations(&expanded),
-        "use $review. not a$review, $missing, $PATH or $5"
+        bare,
+        ice_harness::skills::format_skill_invocation(&review_skill(), None)
     );
-    assert_eq!(expand_skill_references(&resources, "plain"), "plain");
+    // Unknown skills and mid-text references pass through unchanged.
+    for text in ["/skill:missing go", "please /skill:review", "echo $PATH"] {
+        assert_eq!(expand_skill_command(&resources, text), text);
+    }
+    // Display and draft restoration show the command, not the skill body.
+    assert_eq!(
+        collapse_skill_invocations(&with_args),
+        "/skill:review check the parser"
+    );
+    assert_eq!(collapse_skill_invocations(&bare), "/skill:review");
+    assert_eq!(collapse_skill_invocations("plain"), "plain");
 }
 
 #[test]
@@ -1047,16 +1053,19 @@ fn queued_prompt_expands_skills_and_keeps_referenced_images() {
             mime_type: "image/png".into(),
         }],
     );
-    let (message, images) = queued_user_message(&state, &resources, "$review [Image #1]");
+    let (message, images) = queued_user_message(&state, &resources, "/skill:review [Image #1]");
     assert_eq!(images.len(), 1);
     let AgentMessage::User(user) = message else {
         panic!("expected a user message");
     };
-    assert!(crate::interactive_tui::user_message_text(&user).starts_with("$review [Image #1]"));
+    assert_eq!(
+        crate::interactive_tui::user_message_text(&user),
+        "/skill:review [Image #1]"
+    );
 }
 
 #[test]
-fn dollar_suggests_skills_at_word_starts() {
+fn skills_complete_as_slash_commands() {
     let registry = CommandRegistry::new();
     let resources = ice_harness::types::AgentHarnessResources {
         skills: Some(vec![review_skill()]),
@@ -1069,11 +1078,10 @@ fn dollar_suggests_skills_at_word_starts() {
         None,
         None,
     );
-    let suggestions = provider.get_suggestions("use $rev", 8).unwrap();
-    assert_eq!(suggestions.items[0].text, "$review");
-    assert_eq!(suggestions.start, 4);
-    assert!(provider.get_suggestions("cost a$rev", 10).is_none());
-    assert!(provider.get_suggestions("use $rev/x", 10).is_none());
+    let suggestions = provider.get_suggestions("/skill:rev", 10).unwrap();
+    assert_eq!(suggestions.items[0].text, "/skill:review");
+    // `$` no longer opens a skill list.
+    assert!(provider.get_suggestions("use $", 5).is_none());
 }
 
 #[test]

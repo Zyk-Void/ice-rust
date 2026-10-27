@@ -324,50 +324,47 @@ pub(super) async fn run_initial_prompts(
     }
 }
 
-/// Characters a `$name` skill reference may contain.
-pub(super) fn is_skill_name_char(c: char) -> bool {
-    c.is_alphanumeric() || matches!(c, '-' | '_' | '.' | ':')
-}
-
-/// Expand `$name` references to known skills into their full invocation
-/// blocks. A reference starts a word; trailing `.`/`:` is read as
-/// punctuation. Unknown names (`$PATH`, `$5`) are left as typed.
-pub(super) fn expand_skill_references(
+/// Expand a `/skill:name args` prompt into the skill's invocation block with
+/// `args` appended. Mirrors TS `AgentSession._expandSkillCommand`: only a
+/// prompt that starts with `/skill:` and names a loaded skill is expanded;
+/// anything else, including an unknown skill, passes through unchanged.
+pub(super) fn expand_skill_command(
     resources: &ice_harness::types::AgentHarnessResources,
     prompt: &str,
 ) -> String {
-    let skills = resources.skills.as_deref().unwrap_or_default();
-    let mut expanded = String::new();
-    let mut copied = 0;
-    for (start, _) in prompt.match_indices('$') {
-        if start < copied
-            || prompt[..start]
-                .chars()
-                .next_back()
-                .is_some_and(|c| !c.is_whitespace())
-        {
-            continue;
-        }
-        let rest = &prompt[start + 1..];
-        let len = rest.find(|c| !is_skill_name_char(c)).unwrap_or(rest.len());
-        let name = rest[..len].trim_end_matches(['.', ':']);
-        if let Some(skill) = skills.iter().find(|s| s.name == name) {
-            expanded.push_str(&prompt[copied..start]);
-            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
-            copied = start + 1 + name.len();
-        }
+    let Some(rest) = prompt.strip_prefix("/skill:") else {
+        return prompt.to_string();
+    };
+    let (name, args) = rest.split_once(' ').unwrap_or((rest, ""));
+    match resources
+        .skills
+        .as_deref()
+        .unwrap_or_default()
+        .iter()
+        .find(|s| s.name == name)
+    {
+        Some(skill) => ice_harness::skills::format_skill_invocation(skill, Some(args.trim())),
+        None => prompt.to_string(),
     }
-    expanded.push_str(&prompt[copied..]);
-    expanded
 }
 
-/// Inverse of [`expand_skill_references`] for display and draft restoration:
-/// each skill invocation block becomes its `$name` reference again.
+/// Inverse of [`expand_skill_command`] for display and draft restoration: a
+/// message that is a skill invocation block (TS `parseSkillBlock`) shows as
+/// the `/skill:name args` the user typed.
 pub(super) fn collapse_skill_invocations(text: &str) -> String {
     static BLOCK: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
-        regex::Regex::new(r#"<skill name="([^"]+)" location="[^"]*">\n(?s:.)*?\n</skill>"#).unwrap()
+        regex::Regex::new(
+            r#"^<skill name="([^"]+)" location="[^"]+">\n(?s:.*?)\n</skill>(?:\n\n((?s:.+)))?$"#,
+        )
+        .unwrap()
     });
-    BLOCK.replace_all(text, "$$$1").into_owned()
+    let Some(captures) = BLOCK.captures(text) else {
+        return text.to_string();
+    };
+    match captures.get(2).map(|args| args.as_str().trim()) {
+        Some(args) if !args.is_empty() => format!("/skill:{} {args}", &captures[1]),
+        _ => format!("/skill:{}", &captures[1]),
+    }
 }
 
 /// The message and images to queue for a prompt submitted mid-run.
@@ -377,7 +374,7 @@ pub(super) fn queued_user_message(
     prompt: &str,
 ) -> (AgentMessage, Vec<ice_ai::types::ImageContent>) {
     let images = state.take_prompt_images(prompt);
-    let expanded = expand_skill_references(resources, prompt);
+    let expanded = expand_skill_command(resources, prompt);
     (user_message_with_images(&expanded, images.clone()), images)
 }
 
@@ -414,7 +411,7 @@ pub(super) async fn run_prompt_streaming(
         }
     } else {
         let resources = harness.get_resources().await.unwrap_or_default();
-        let expanded = expand_skill_references(&resources, prompt);
+        let expanded = expand_skill_command(&resources, prompt);
         lane.prompt_text(&expanded, images).await
     };
 
