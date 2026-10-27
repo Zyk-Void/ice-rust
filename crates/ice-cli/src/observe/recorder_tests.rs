@@ -342,6 +342,50 @@ fn memory_terminal_phase_updates_its_started_item() {
 }
 
 #[test]
+fn memory_titles_distinguish_versioned_outcomes_without_reinterpreting_legacy() {
+    let recorder = recorder_with(None);
+    for (id, operation, outcome) in [
+        ("skip", "recall", "skipped"),
+        ("empty", "recall", "retrieved_empty"),
+        ("hit", "recall", "retrieved_nonempty"),
+        ("job", "improve", "accepted"),
+    ] {
+        let mut started = observation(id, "started");
+        started.operation = operation.into();
+        recorder.handle_memory(&started);
+        let mut terminal = observation(id, "succeeded");
+        terminal.operation = operation.into();
+        terminal.meta = serde_json::json!({"outcomeVersion": 1, "outcome": outcome})
+            .as_object()
+            .cloned();
+        recorder.handle_memory(&terminal);
+    }
+    recorder.handle_memory(&observation("legacy", "succeeded"));
+    let items = recorder.get_state().items;
+    assert!(items[0]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("skipped (no request)"));
+    assert!(items[1]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("retrieved empty"));
+    assert!(items[2]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("retrieved nonempty"));
+    assert!(items[3]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("accepted (completion unknown)"));
+    assert_eq!(items[4].text.as_deref(), Some("Cognee recall · ice"));
+}
+
+#[test]
 fn goal_transitions_are_deduplicated_and_cleared() {
     let recorder = recorder_with(None);
     let goal = |runs: u64, input: u64| {

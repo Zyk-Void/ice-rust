@@ -1069,10 +1069,26 @@ fn memory_title(observation: &Observation) -> String {
         .and_then(|meta| meta.get("checkpoint"))
         .and_then(serde_json::Value::as_bool)
         == Some(true);
+    let outcome = observation.meta.as_ref().and_then(|meta| {
+        (meta
+            .get("outcomeVersion")
+            .and_then(serde_json::Value::as_u64)
+            == Some(1))
+        .then(|| meta.get("outcome").and_then(serde_json::Value::as_str))
+        .flatten()
+    });
+    let suffix = match (observation.operation.as_str(), outcome) {
+        ("recall", Some("skipped")) => " · skipped (no request)",
+        ("recall", Some("retrieved_empty")) => " · retrieved empty",
+        ("recall", Some("retrieved_nonempty")) => " · retrieved nonempty",
+        ("improve", Some("accepted")) => " · accepted (completion unknown)",
+        _ => "",
+    };
     let head = format!(
-        "Cognee {}{}",
+        "Cognee {}{}{}",
         observation.operation,
-        if checkpoint { " (compaction)" } else { "" }
+        if checkpoint { " (compaction)" } else { "" },
+        suffix
     );
     [
         Some(head.as_str()),
