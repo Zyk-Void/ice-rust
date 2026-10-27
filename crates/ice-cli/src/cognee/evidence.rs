@@ -8,6 +8,7 @@ use std::hash::{Hash, Hasher};
 
 use super::client::RecallResult;
 use super::text::RecallLine;
+use crate::blackhole::js::parse_iso_ms;
 use crate::blackhole::regex;
 
 /// Lines remembered per context generation; the set resets when full, which
@@ -61,6 +62,10 @@ pub struct Provenance {
     pub source_id: Option<String>,
     pub session_id: Option<String>,
     pub created_at: Option<String>,
+    pub dataset: Option<String>,
+    pub expires_at: Option<String>,
+    pub superseded_by: Option<String>,
+    pub branch: Option<String>,
 }
 
 pub fn provenance(result: &RecallResult) -> Provenance {
@@ -78,6 +83,10 @@ pub fn provenance(result: &RecallResult) -> Provenance {
         source_id: field(&["id", "source_id", "entry_id"]),
         session_id: field(&["session_id", "sessionId"]),
         created_at: field(&["created_at", "createdAt", "timestamp"]),
+        dataset: field(&["dataset", "dataset_name", "datasetName"]),
+        expires_at: field(&["expires_at", "expiresAt", "valid_until", "validUntil"]),
+        superseded_by: field(&["superseded_by", "supersededBy"]),
+        branch: field(&["branch", "git_branch"]),
     }
 }
 
@@ -96,27 +105,132 @@ pub fn provenance_tag(result: &RecallResult) -> Option<String> {
     (!parts.is_empty()).then(|| parts.join(" "))
 }
 
+/// Eligibility context for metadata-driven automatic recall filters.
+#[derive(Debug)]
+pub struct FilterContext {
+    pub now_ms: u64,
+    pub dataset: String,
+    pub legacy_dataset: Option<String>,
+    pub branch: Option<String>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct RejectCounts {
+    pub routine: u32,
+    pub duplicate: u32,
+    pub expired: u32,
+    pub superseded: u32,
+    pub wrong_scope: u32,
+    pub wrong_branch: u32,
+    pub unknown_validity: u32,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct Selection {
+    pub lines: Vec<RecallLine>,
+    pub rejected: RejectCounts,
+    pub kept: u32,
+}
+
 /// The lines of `results` worth injecting: not routine, not already in
 /// context, not repeated within this batch. A result with nothing left is
 /// dropped.
 pub fn select_new(results: &[RecallResult], seen: &mut SeenEvidence) -> Vec<RecallLine> {
-    results
-        .iter()
-        .filter_map(|result| {
-            let kept: Vec<&str> = result
-                .text
-                .lines()
-                .filter(|line| !line.trim().is_empty())
-                .filter(|line| !is_routine_success_line(line))
-                .filter(|line| seen.insert(&normalize(line)))
-                .collect();
-            (!kept.is_empty()).then(|| RecallLine {
-                text: kept.join("\n"),
-                score: result.score,
-                provenance: provenance_tag(result),
-            })
-        })
-        .collect()
+    select_results(results, seen, None).lines
+}
+
+pub fn select_new_with_context(
+    results: &[RecallResult],
+    seen: &mut SeenEvidence,
+    ctx: &FilterContext,
+) -> Selection {
+    select_results(results, seen, Some(ctx))
+}
+
+fn parse_rfc3339_ms(value: &str) -> Option<i64> {
+    let captures = regex!(r"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$")
+        .captures(value)?;
+    let number = |index| captures.get(index)?.as_str().parse::<u32>().ok();
+    let (year, month, day) = (number(1)?, number(2)?, number(3)?);
+    let (hour, minute, second) = (number(4)?, number(5)?, number(6)?);
+    let month_days = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if year % 400 == 0 || (year % 4 == 0 && year % 100 != 0) => 29,
+        2 => 28,
+        _ => return None,
+    };
+    if day == 0 || day > month_days || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+    parse_iso_ms(value)
+}
+
+fn select_results(
+    results: &[RecallResult],
+    seen: &mut SeenEvidence,
+    context: Option<&FilterContext>,
+) -> Selection {
+    let mut selection = Selection::default();
+    for result in results {
+        let provenance = provenance(result);
+        let line_count = result
+            .text
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count() as u32;
+        if let Some(ctx) = context {
+            if let Some(expires_at) = provenance.expires_at.as_deref() {
+                match parse_rfc3339_ms(expires_at) {
+                    Some(expires_at) if expires_at <= ctx.now_ms.min(i64::MAX as u64) as i64 => {
+                        selection.rejected.expired += line_count;
+                        continue;
+                    }
+                    None => selection.rejected.unknown_validity += line_count,
+                    _ => {}
+                }
+            }
+            if provenance.superseded_by.is_some() {
+                selection.rejected.superseded += line_count;
+                continue;
+            }
+            if provenance.dataset.as_deref().is_some_and(|dataset| {
+                dataset != ctx.dataset && ctx.legacy_dataset.as_deref() != Some(dataset)
+            }) {
+                selection.rejected.wrong_scope += line_count;
+                continue;
+            }
+            if provenance
+                .branch
+                .as_deref()
+                .zip(ctx.branch.as_deref())
+                .is_some_and(|(branch, current)| branch != current)
+            {
+                selection.rejected.wrong_branch += line_count;
+                continue;
+            }
+        }
+        let mut kept = Vec::new();
+        for line in result.text.lines().filter(|line| !line.trim().is_empty()) {
+            if is_routine_success_line(line) {
+                selection.rejected.routine += 1;
+            } else if !seen.insert(&normalize(line)) {
+                selection.rejected.duplicate += 1;
+            } else {
+                kept.push(line);
+            }
+        }
+        selection.kept += kept.len() as u32;
+        if kept.is_empty() {
+            continue;
+        }
+        selection.lines.push(RecallLine {
+            text: kept.join("\n"),
+            score: result.score,
+            provenance: provenance_tag(result),
+        });
+    }
+    selection
 }
 
 #[cfg(test)]
@@ -148,6 +262,29 @@ mod tests {
             hit.metadata = Some(serde_json::json!({key: "time"}));
             assert_eq!(provenance(&hit).created_at.as_deref(), Some("time"));
         }
+        for key in ["dataset", "dataset_name", "datasetName"] {
+            let mut hit = result("fact");
+            hit.metadata = Some(serde_json::json!({key: "project"}));
+            assert_eq!(provenance(&hit).dataset.as_deref(), Some("project"));
+        }
+        for key in ["expires_at", "expiresAt", "valid_until", "validUntil"] {
+            let mut hit = result("fact");
+            hit.metadata = Some(serde_json::json!({key: "2030-01-01T00:00:00Z"}));
+            assert_eq!(
+                provenance(&hit).expires_at.as_deref(),
+                Some("2030-01-01T00:00:00Z")
+            );
+        }
+        for key in ["superseded_by", "supersededBy"] {
+            let mut hit = result("fact");
+            hit.metadata = Some(serde_json::json!({key: "new-entry"}));
+            assert_eq!(provenance(&hit).superseded_by.as_deref(), Some("new-entry"));
+        }
+        for key in ["branch", "git_branch"] {
+            let mut hit = result("fact");
+            hit.metadata = Some(serde_json::json!({key: "main"}));
+            assert_eq!(provenance(&hit).branch.as_deref(), Some("main"));
+        }
         let mut hit = result("fact");
         assert_eq!(provenance(&hit), Provenance::default());
         hit.metadata = Some(
@@ -173,6 +310,84 @@ mod tests {
         ] {
             assert!(!is_routine_success_line(line), "{line}");
         }
+    }
+
+    #[test]
+    fn contextual_filters_count_metadata_and_line_rejections() {
+        let mut seen = SeenEvidence::default();
+        let context = FilterContext {
+            now_ms: 1_800_000_000_000,
+            dataset: "current".into(),
+            legacy_dataset: Some("legacy".into()),
+            branch: Some("main".into()),
+        };
+        let with_metadata = |text, metadata| {
+            let mut hit = result(text);
+            hit.metadata = Some(metadata);
+            hit
+        };
+        seen.insert(&normalize("duplicate"));
+        let results = vec![
+            with_metadata(
+                "expired",
+                serde_json::json!({"expiresAt":"2020-01-01T00:00:00Z"}),
+            ),
+            with_metadata(
+                "superseded",
+                serde_json::json!({"supersededBy":"replacement"}),
+            ),
+            with_metadata("wrong scope", serde_json::json!({"dataset":"other"})),
+            with_metadata("wrong branch", serde_json::json!({"branch":"release"})),
+            with_metadata(
+                "current scope",
+                serde_json::json!({"datasetName":"current"}),
+            ),
+            with_metadata("legacy scope", serde_json::json!({"dataset_name":"legacy"})),
+            with_metadata(
+                "unknown expiry",
+                serde_json::json!({"validUntil":"not a timestamp"}),
+            ),
+            result("bash succeeded\nnew fact"),
+            result("duplicate"),
+        ];
+        let selection = select_new_with_context(&results, &mut seen, &context);
+        assert_eq!(selection.lines.len(), 4);
+        assert_eq!(selection.kept, 4);
+        assert_eq!(selection.rejected.expired, 1);
+        assert_eq!(selection.rejected.superseded, 1);
+        assert_eq!(selection.rejected.wrong_scope, 1);
+        assert_eq!(selection.rejected.wrong_branch, 1);
+        assert_eq!(selection.rejected.unknown_validity, 1);
+        assert_eq!(selection.rejected.routine, 1);
+        assert_eq!(selection.rejected.duplicate, 1);
+        assert_eq!(
+            selection.kept
+                + selection.rejected.routine
+                + selection.rejected.duplicate
+                + selection.rejected.expired
+                + selection.rejected.superseded
+                + selection.rejected.wrong_scope
+                + selection.rejected.wrong_branch,
+            results
+                .iter()
+                .map(|result| result.text.lines().count() as u32)
+                .sum::<u32>()
+        );
+
+        let no_branch = FilterContext {
+            branch: None,
+            ..context
+        };
+        let branch_result = with_metadata(
+            "branch unknown is allowed",
+            serde_json::json!({"branch":"other"}),
+        );
+        assert_eq!(
+            select_new_with_context(&[branch_result], &mut SeenEvidence::default(), &no_branch)
+                .lines
+                .len(),
+            1
+        );
     }
 
     #[test]

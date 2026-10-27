@@ -43,7 +43,9 @@ use super::dream::{
     claim_dream_candidate, mark_dream_accepted, mark_dream_captured, mark_dream_improved,
     read_dream_candidates, read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
-use super::evidence::{select_new, SeenEvidence};
+use super::evidence::{
+    select_new_with_context, FilterContext, RejectCounts, SeenEvidence, Selection,
+};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
 use super::policy::{admit_prompt, Admission};
 use super::queue::{
@@ -52,8 +54,9 @@ use super::queue::{
     update_pending_remember_state, CircuitState, PendingState,
 };
 use super::text::{
-    extract_message_text, format_last_compact_injection, format_recall, redact_memory_text,
-    truncate_for_capture, truncate_value_for_capture, RecallLine,
+    extract_message_text, fit_lines, format_bounded_last_compact_injection,
+    format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
+    truncate_value_for_capture, RecallLine,
 };
 use crate::blackhole::js::{iso_from_ms, len16, prefix16};
 use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
@@ -62,6 +65,9 @@ pub const STATUS_KEY: &str = "ice-cognee";
 pub const SESSION_ENTRY_TYPE: &str = "ice-cognee";
 pub const SEARCH_TOOL_NAME: &str = "cognee_search";
 const RECALL_MIN_WORDS: usize = 4;
+/// Non-legacy automatic memory is capped at 800 estimated tokens. BeforeRunEvent
+/// has no model-window information, so a model-window-relative cap is unavailable.
+const AUTO_INJECT_TOKEN_CAP: usize = 800;
 const RECALL_DEDUP_TTL_MS: u64 = 15_000;
 const MAX_TRACES_PER_TURN: u32 = 24;
 const IDLE_IMPROVE_COOLDOWN_MS: u64 = 300_000;
@@ -1828,7 +1834,7 @@ impl CogneeRuntime {
         match result {
             Ok(results) => {
                 self.state().recall_circuit.reset();
-                let lines = self.recall_evidence(&results);
+                let lines = self.recall_evidence(&results).lines;
                 let text = if lines.is_empty() {
                     "No Cognee memory found.".to_string()
                 } else {
@@ -2655,44 +2661,95 @@ impl CogneeRuntime {
     }
 
     /// The memory text for this prompt: a pending checkpoint summary and the
-    /// recall, if any, within one `recallMaxChars` budget. The harness stores
-    /// it after the prompt in the history.
+    /// recall, if any, within one character and (for non-legacy policies) token
+    /// budget. The harness stores it after the prompt in the history.
     fn turn_scoped_memory(&self, recall: Option<Vec<RecallLine>>) -> Option<String> {
-        let (summary, max_chars) = {
+        let (summary, max_chars, read_policy) = {
             let mut state = self.state();
             (
                 state.last_compact_summary.take(),
                 state.config.recall_max_chars,
+                state.config.read_policy,
             )
+        };
+        let token_limited = read_policy != ReadPolicy::Legacy;
+        let budget_chars = if token_limited {
+            max_chars.min(AUTO_INJECT_TOKEN_CAP * 4)
+        } else {
+            max_chars
         };
         let recall = recall.filter(|lines| !lines.is_empty());
         // The checkpoint yields a third of the budget to fresh recall.
         let summary_budget = if recall.is_some() {
-            max_chars - max_chars / 3
+            let target = budget_chars - budget_chars / 3;
+            if token_limited
+                && budget_chars
+                    < super::text::last_compact_envelope_overhead()
+                        + super::text::recall_empty_len()
+                        + 2
+            {
+                0
+            } else {
+                target
+            }
         } else {
-            max_chars
+            budget_chars
         };
         let summary = summary
-            .map(|summary| format_last_compact_injection(&summary, summary_budget))
+            .map(|summary| {
+                if token_limited {
+                    format_bounded_last_compact_injection(&summary, summary_budget)
+                } else {
+                    format_last_compact_injection(&summary, summary_budget)
+                }
+            })
             .filter(|part| !part.is_empty());
         let used = summary.as_ref().map_or(0, |part| len16(part) + 2);
-        let recall = recall.map(|lines| format_recall(&lines, max_chars.saturating_sub(used)));
+        let recall_budget = budget_chars.saturating_sub(used);
+        let recall = recall.and_then(|lines| {
+            if token_limited {
+                let lines = fit_lines(&lines, recall_budget);
+                (!lines.is_empty()).then(|| format_recall(&lines, recall_budget))
+            } else {
+                Some(format_recall(&lines, recall_budget))
+            }
+        });
         let parts: Vec<String> = summary
             .into_iter()
             .chain(recall)
             .filter(|part| !part.is_empty())
             .collect();
-        (!parts.is_empty()).then(|| parts.join("\n\n"))
+        let memory = (!parts.is_empty()).then(|| parts.join("\n\n"))?;
+        if token_limited && len16(&memory) > budget_chars {
+            // The recall envelope is retained by format_recall; this branch is
+            // a final boundary for the combined checkpoint/header overhead.
+            Some(prefix16(&memory, budget_chars.saturating_sub(1)).to_string() + "…")
+        } else {
+            Some(memory)
+        }
     }
 
-    /// Recall lines worth injecting. `legacy` keeps every result; other read
-    /// policies drop routine tool-success lines and lines already in context.
-    fn recall_evidence(&self, results: &[RecallResult]) -> Vec<RecallLine> {
+    /// Recall lines worth injecting. Legacy preserves all results byte-for-byte;
+    /// non-legacy policies also apply metadata-based scope and freshness filters.
+    fn recall_evidence(&self, results: &[RecallResult]) -> Selection {
         let mut state = self.state();
         if state.config.read_policy == ReadPolicy::Legacy {
-            return recall_lines(results);
+            let lines = recall_lines(results);
+            let kept = lines.len() as u32;
+            return Selection {
+                lines,
+                rejected: RejectCounts::default(),
+                kept,
+            };
         }
-        select_new(results, &mut state.seen_evidence)
+        let context = FilterContext {
+            now_ms: self.now(),
+            dataset: state.active_dataset(),
+            legacy_dataset: state.fallback_dataset(),
+            // Branch restriction awaits RepositoryIdentity; do not shell out.
+            branch: None,
+        };
+        select_new_with_context(results, &mut state.seen_evidence, &context)
     }
 
     async fn recall_for_prompt(
@@ -2826,11 +2883,31 @@ impl CogneeRuntime {
                     state.last_recall_key = Some(recall_key);
                     state.last_recall_at = now;
                 }
-                let lines = self.recall_evidence(&results);
-                let mut recall_meta = json!({"hits": results.len(), "withProvenance": results.iter().filter(|result| super::evidence::provenance_tag(result).is_some()).count(), "selected": lines.len(), "legacyFallback": legacy_attempted.is_some(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id});
+                let selection = self.recall_evidence(&results);
+                let mut recall_meta = json!({"hits": results.len(), "withProvenance": results.iter().filter(|result| super::evidence::provenance_tag(result).is_some()).count(), "selected": selection.lines.len(), "legacyFallback": legacy_attempted.is_some(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id});
+                if read_policy != ReadPolicy::Legacy {
+                    recall_meta["rejected"] = json!({
+                        "routine": selection.rejected.routine,
+                        "duplicate": selection.rejected.duplicate,
+                        "expired": selection.rejected.expired,
+                        "superseded": selection.rejected.superseded,
+                        "wrong_scope": selection.rejected.wrong_scope,
+                        "wrong_branch": selection.rejected.wrong_branch,
+                        "unknown_validity": selection.rejected.unknown_validity,
+                    });
+                }
                 if let Some(legacy) = &legacy_attempted {
                     recall_meta["legacyDataset"] = json!(legacy);
                     recall_meta["legacyHits"] = json!(results.len());
+                }
+                cached.extend(selection.lines);
+                let memory = self.turn_scoped_memory(Some(cached));
+                if read_policy != ReadPolicy::Legacy {
+                    let budget_tokens =
+                        AUTO_INJECT_TOKEN_CAP.min(self.config().recall_max_chars.div_ceil(4));
+                    let injected_tokens = memory.as_deref().map_or(0, super::text::estimate_tokens);
+                    recall_meta["injectedTokens"] = json!(injected_tokens);
+                    recall_meta["budgetTokens"] = json!(budget_tokens);
                 }
                 self.observe(
                     "recall",
@@ -2849,8 +2926,7 @@ impl CogneeRuntime {
                         ..ObserveFields::default()
                     },
                 );
-                cached.extend(lines);
-                self.turn_scoped_memory(Some(cached))
+                memory
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -3716,6 +3792,30 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn automatic_budget_caps_large_checkpoint_and_recall() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"recall fact ".repeat(900)}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallMaxChars":100_000})),
+            false,
+        );
+        rt.state().last_compact_summary = Some("checkpoint ".repeat(900));
+        let text = memory(&rt, "What did we decide earlier?", None)
+            .await
+            .unwrap();
+        assert!(len16(&text) <= 3200);
+        assert!(text.ends_with("</ice-void-cognee-memory>"));
+        assert!(text.contains("</ice-void-last-compact>"));
+        assert!(text.contains("…"));
+    }
+
+    #[tokio::test]
     async fn failed_capture_keeps_original_identity() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
@@ -4107,8 +4207,13 @@ mod tests {
             200,
             json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]}),
         ));
-        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
-        let prompt = "How does the cache layer evict entries?";
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let prompt = "What did we decide earlier about cache eviction?";
         let injected = memory(&rt, prompt, Some("base")).await.unwrap();
         assert!(
             injected.starts_with("<ice-void-cognee-memory>\n"),
@@ -4151,7 +4256,7 @@ mod tests {
             .filter_map(|event| event.meta.as_ref()?.get("reason")?.as_str())
             .collect();
         reasons.sort_unstable();
-        assert_eq!(reasons, ["duplicate", "short_prompt"]);
+        assert_eq!(reasons, ["duplicate", "no_history_request"]);
         let retrieved = observations
             .iter()
             .find(|event| {
@@ -4168,6 +4273,10 @@ mod tests {
         assert_eq!(metadata["hostSessionId"], "host1");
         assert_eq!(metadata["sourceDataset"], rt.active_dataset());
         assert!(metadata["remoteWaitMs"].as_u64().is_some());
+        assert_eq!(metadata["rejected"]["routine"], 0);
+        assert_eq!(metadata["rejected"]["duplicate"], 0);
+        assert!(metadata["injectedTokens"].as_u64().is_some());
+        assert_eq!(metadata["budgetTokens"], 800);
     }
 
     #[tokio::test]
