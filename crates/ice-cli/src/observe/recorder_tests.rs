@@ -342,6 +342,21 @@ fn memory_terminal_phase_updates_its_started_item() {
 }
 
 #[test]
+fn memory_operations_with_shared_correlation_do_not_finish_each_other() {
+    let recorder = recorder_with(None);
+    recorder.handle_memory(&observation("shared", "started"));
+    let mut injection = observation("shared", "succeeded");
+    injection.operation = "injection".into();
+    recorder.handle_memory(&injection);
+    recorder.handle_memory(&observation("shared", "succeeded"));
+    let items = recorder.get_state().items;
+    assert_eq!(items.len(), 2);
+    assert_eq!(items[0].tool_name.as_deref(), Some("recall"));
+    assert_eq!(items[0].state, Some(ObserveItemState::Done));
+    assert_eq!(items[1].tool_name.as_deref(), Some("injection"));
+}
+
+#[test]
 fn memory_titles_distinguish_versioned_outcomes_without_reinterpreting_legacy() {
     let recorder = recorder_with(None);
     for (id, operation, outcome) in [
