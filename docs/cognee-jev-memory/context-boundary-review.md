@@ -1,25 +1,14 @@
-# Request-boundary implementation review
+# Request-context host boundary review
 
-Status: **host request-context bridge integrated; extension consumer/origin plumbing remains separate.**
+Status: **host request-context bridge integrated and covered by faux-provider tests.**
 
-## Implemented guarantees in this slice
+- `RequestContextEvent` runs only at an already-needed provider request boundary. The loop does not create a model turn for memory; `harness_extensions::request_context_waits_for_existing_tool_turn_and_uses_raw_origin` proves the first request is unchanged, the post-tool request receives the ready packet, and the final assistant response does not trigger an extra request.
+- Current prompt text is derived from the newest user message in the current request context, so queued steering/follow-up text is not replaced by a stale initial run prompt. `original_prompt` is separately read from validated raw-origin metadata on that message; plain messages and legacy expanded text without metadata yield `None`.
+- Prompt-origin validation is cached per exact `AgentMessage` within the run (bounded to 256 entries) to avoid repeatedly hashing image/full message bodies. Fingerprint mismatch and invalid version/length still reject the origin. Invalid serialized metadata is discarded without rejecting the otherwise-valid user message.
+- Template/skill host invocation stores raw invocation intent internally. The TUI direct prompt path expands skill references before submitting `prompt_message`, and provider-facing user/message serialization omits `icersPromptOrigin`.
+- `branch_generation` is a monotonic per-harness navigation epoch captured for the run. Successful session replacement and completed tree navigation increment it; appends, prompts, tools, and ordinary run activity do not. Request packet persistence checks the captured epoch plus run/lane owner immediately before append.
+- `latest_compaction_at` is refreshed at each request callback using an indexed newest-first query limited to one compaction entry. Existing transforms run once in their established pass; request callbacks see the actual current messages after prior transformations/compaction.
+- Optional packets are persisted before injection. The acknowledgment contract is **persisted means delivered**: once append succeeds, the same callback returns the packet for injection and acknowledges true even if cancellation races afterward. Failed, cancelled-before-append, duplicate, empty, and oversize packets acknowledge false. Packets are appended outside `new_messages`, so final-pass persistence does not append them a second time. Correlation dedup uses custom type plus correlation ID, not extension array position.
+- One shared per-request token estimate is decremented across extension packets and includes role/envelope framing. Oversize packets are rejected intact. Mandatory external queue semantics are unchanged.
 
-- `before_request` runs only for a real provider request, after the request-local context transform and before provider conversion. The transform is evaluated once for that request; the hook sees the same transformed messages the provider uses.
-- Persisted optional request packets are added to subsequent loop request contexts, including after tool results, but are not placed in `new_messages` and therefore are not appended again by final-pass persistence.
-- Request hooks capture the lane, session/run identity, and a pinned `SessionTree` at operation start. Before each append they require the same active run and lane and a non-cancelled signal. They never resolve a mutable current global view after an extension await.
-- `set_session` and branch navigation use exclusive active-run admission. They cannot replace the active branch during a run; `branch_generation = 0` is the stable run-local epoch under that enforced invariant, not a fabricated mutable counter. Navigation after the operation starts is rejected by admission.
-- Persisted custom packet details contain source, correlation ID, extension registration ordinal, run, lane, and session. A bounded run-local set is initialized from the active context and updated only after successful append. Duplicate correlation packets are not appended again. Failed writes do not consume the key.
-- The context-token budget is shared in extension order; oversized packets are rejected intact. Optional append failures fail open and acknowledge false; successful append/insertion acknowledges true. No mandatory external queued delivery path was changed.
-- `original_prompt` is currently the run prompt where known; raw origin/expansion provenance remains with the separate worker/lead work.
-
-## Verification in this slice
-
-- Implementation commit: `cb8aa3c11afab44e4f2f39543e94c712ea2b08ab`.
-- `cargo test -p ice-agent --locked --quiet`: passed.
-- `cargo test -p ice-harness --locked --quiet`: passed (latest run).
-- `cargo test -p ice-cli --lib --locked cognee:: --quiet`: passed (172 passed, 1,253 filtered out).
-- Faux/local tests only; no live provider, Cognee, JEV, or network calls.
-
-## Remaining limitations
-
-This slice adds one faux-host regression to the existing active-run fixture proving session replacement is rejected while the run is active. It does not add dedicated tests for all five requested scenarios (request-index-1 provider capture, final-response no-extra-request, two-extension over-budget rejection, cancellation/stale-navigation awaits, and cross-request/retry correlation persistence). Existing agent/harness suites pass but do not establish those new guarantees. The context-transform behavior is changed and covered only by existing tests so far. Original-prompt provenance and Cognee/JEV consumers remain separate work. Do not treat this review as sign-off for the full consumer implementation.
+Tests added/updated: `crates/ice-harness/tests/harness_extensions.rs` covers the post-tool request boundary/raw origin and same-session tree-navigation epoch; `crates/ice-agent/src/message.rs` covers malformed metadata discard, valid fingerprint rejection and legacy data. Dedicated packet-failure/budget/duplicate, queued-origin/durable-resume/provider-wire, and mid-run compaction event cases remain unimplemented and unverified. `cargo test -p ice-agent --locked` and `cargo test -p ice-harness --locked` pass. `cargo test -p ice-cli --locked cognee::` has one consistently failing Cognee-owned test (`cognee::runtime::tests::selective_proposal_runs_in_a_full_prompt_tool_answer_turn`, expecting a persisted custom memory entry); Cognee code was not changed.

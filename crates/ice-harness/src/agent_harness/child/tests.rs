@@ -283,11 +283,13 @@ fn side_reference_is_utf8_bounded_and_excludes_non_text_blocks() {
             role: ice_ai::types::UserRole,
             content: UserContent::Text("old-secret-marker".into()),
             timestamp: 0,
+            origin: None,
         }),
         AgentMessage::User(UserMessage {
             role: ice_ai::types::UserRole,
             content: UserContent::Text("中".repeat(30_000)),
             timestamp: 0,
+            origin: None,
         }),
     ];
     let reference = side_question_reference(&messages);

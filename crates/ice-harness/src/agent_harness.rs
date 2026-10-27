@@ -685,6 +685,8 @@ struct HarnessInner {
     /// B4: per-call provider hooks fired inside the `StreamFn` closure.
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     closed: bool,
+    /// Changes only when the active session/tree view is successfully replaced.
+    navigation_epoch: u64,
     active_run: Option<ActiveRun>,
     steering_queue: SharedMessageQueue,
     follow_up_queue: SharedMessageQueue,
@@ -866,6 +868,7 @@ impl AgentHarness {
             extensions: Vec::new(),
             provider_hooks: options.provider_hooks,
             closed: false,
+            navigation_epoch: 0,
             active_run: None,
             steering_queue: Arc::new(Mutex::new(MessageQueue::new(options.steering_mode))),
             follow_up_queue: Arc::new(Mutex::new(MessageQueue::new(options.follow_up_mode))),
@@ -2231,6 +2234,7 @@ impl AgentHarness {
             };
             queue.lock().unwrap().pending.push_back(item);
         }
+        inner.navigation_epoch = inner.navigation_epoch.wrapping_add(1);
         // Retire children of the old session, but permit new children after the swap.
         {
             let mut scope = self.child_scope.lock().unwrap();
@@ -4730,11 +4734,6 @@ impl AgentHarness {
                 .collect(),
         ));
         let context_write_error = Arc::new(Mutex::new(None));
-        let request_prompt = prompts
-            .iter()
-            .rev()
-            .find_map(user_prompt_text)
-            .unwrap_or_default();
         let request_extensions = snap.extensions.clone();
         // Pin the branch view and operation identity before any extension await.
         // Session replacement and navigation acquire the active-run gate, so
@@ -4744,9 +4743,11 @@ impl AgentHarness {
         let request_inner = Arc::clone(&self.inner);
         let request_run_id = run_id.clone();
         let request_session_id = self.session_id();
-        let request_latest_compaction_at = self.latest_compaction_at().await.ok().flatten();
+        let request_navigation_epoch = self.inner.lock().unwrap().navigation_epoch;
         let request_system_prompt = agent_context.system_prompt.clone();
+        let request_harness = self.clone();
         let request_index = Arc::new(AtomicUsize::new(0));
+        let validated_origins = Arc::new(Mutex::new(Vec::<(AgentMessage, Option<String>)>::new()));
         let mut persisted_correlations = std::collections::BTreeSet::new();
         for message in agent_context.messages.iter().rev().take(4096) {
             if let AgentMessage::Custom(custom) = message {
@@ -4790,33 +4791,54 @@ impl AgentHarness {
                     let run_id = request_run_id.clone();
                     let session_id = request_session_id.clone();
                     let system_prompt = request_system_prompt.clone();
-                    let prompt = request_prompt.clone();
-                    let latest_compaction_at = request_latest_compaction_at;
                     let seen = Arc::clone(&persisted_correlations);
+                    let harness = request_harness.clone();
+                    let navigation_epoch = request_navigation_epoch;
+                    let validated_origins = Arc::clone(&validated_origins);
                     let index = request_index.fetch_add(1, Ordering::Relaxed) as u64;
                     let budget = request_budget;
                     let window = request_window;
                     Box::pin(async move {
                         let mut additions = Vec::new();
                         let mut remaining = budget;
-                        for (extension_index, extension) in extensions.iter().enumerate() {
+                        for extension in &extensions {
                             if hook_signal.is_cancelled() {
                                 break;
                             }
+                            let prompt = messages
+                                .iter()
+                                .rev()
+                                .find_map(user_prompt_text)
+                                .unwrap_or_default();
+                            let original_prompt = messages.iter().rev().find_map(|message| {
+                                let AgentMessage::User(_) = message else {
+                                    return None;
+                                };
+                                let mut cache = validated_origins.lock().unwrap();
+                                if let Some((_, raw)) =
+                                    cache.iter().find(|(cached, _)| cached == message)
+                                {
+                                    return raw.clone();
+                                }
+                                let raw = ice_agent::message::original_user_prompt(message)
+                                    .map(str::to_string);
+                                if cache.len() >= 256 {
+                                    cache.remove(0);
+                                }
+                                cache.push((message.clone(), raw.clone()));
+                                raw
+                            });
+                            let latest_compaction_at =
+                                harness.latest_compaction_at().await.ok().flatten();
                             let event = crate::extension::RequestContextEvent {
                                 prompt: &prompt,
-                                original_prompt: Some(&prompt),
+                                original_prompt: original_prompt.as_deref(),
                                 messages: &messages,
                                 system_prompt: &system_prompt,
                                 session_id: &session_id,
                                 run_id: &run_id,
                                 lane_id: &lane,
-                                // Navigation and session replacement both acquire
-                                // the exclusive active-run admission gate. Thus a
-                                // branch cannot change during this run; generation
-                                // zero is the stable run-local epoch, not a fake
-                                // mutable counter.
-                                branch_generation: 0,
+                                branch_generation: navigation_epoch,
                                 request_index: index,
                                 context_window: window,
                                 remaining_context_tokens: remaining,
@@ -4826,7 +4848,7 @@ impl AgentHarness {
                             let Some(packet) = extension.request_context(&event).await else {
                                 continue;
                             };
-                            let extension_id = format!("extension-{extension_index}");
+                            let extension_id = packet.custom_type.clone();
                             let correlation_key = packet
                                 .correlation_id
                                 .as_ref()
@@ -4838,7 +4860,11 @@ impl AgentHarness {
                                 extension.prompt_context_persisted(&packet, false).await;
                                 continue;
                             }
-                            let envelope = format!("{}\n{}", packet.custom_type, packet.text);
+                            // Count role and envelope framing as part of the one shared budget.
+                            let envelope = format!(
+                                "custom\n{}\n{}\n{}",
+                                packet.custom_type, packet.text, "request_context"
+                            );
                             let token_cost = (envelope.encode_utf16().count() + 3) / 4;
                             if packet.text.trim().is_empty()
                                 || token_cost > remaining
@@ -4861,9 +4887,10 @@ impl AgentHarness {
                             }
                             let owner_is_current = {
                                 let state = inner.lock().unwrap();
-                                state.active_run.as_ref().is_some_and(|active| {
-                                    active.run_id == run_id && active.lane == lane
-                                })
+                                state.navigation_epoch == navigation_epoch
+                                    && state.active_run.as_ref().is_some_and(|active| {
+                                        active.run_id == run_id && active.lane == lane
+                                    })
                             };
                             if !owner_is_current || hook_signal.is_cancelled() {
                                 extension.prompt_context_persisted(&packet, false).await;
@@ -4871,10 +4898,9 @@ impl AgentHarness {
                             }
                             match view.append_message(message.clone()).await {
                                 Ok(_) => {
-                                    if hook_signal.is_cancelled() {
-                                        extension.prompt_context_persisted(&packet, false).await;
-                                        continue;
-                                    }
+                                    // Persistence is the delivery acknowledgment contract: once
+                                    // appended, the packet is durable and is returned for injection
+                                    // even if cancellation races the append.
                                     remaining = remaining.saturating_sub(token_cost);
                                     if let Some(key) = correlation_key {
                                         let mut seen = seen.lock().unwrap();
@@ -4887,6 +4913,9 @@ impl AgentHarness {
                                     }
                                     additions.push(message);
                                     extension.prompt_context_persisted(&packet, true).await;
+                                    if hook_signal.is_cancelled() {
+                                        break;
+                                    }
                                 }
                                 Err(error) => {
                                     tracing::warn!(custom_type = %packet.custom_type, %error, "could not persist request context; skipping it");
@@ -6199,7 +6228,9 @@ impl AgentLane for AgentHarness {
                 HarnessError::unknown_skill(name, format!("No skill named '{name}'"))
             })?;
             let invocation = format_skill_invocation(skill, additional_instructions);
-            AgentMessage::User(UserMessage::new(invocation, now_ms()))
+            AgentMessage::User(
+                UserMessage::new(invocation, now_ms()).with_origin(name, "skill-expansion-v1"),
+            )
         };
         self.run_core(vec![message]).await
     }
@@ -6213,7 +6244,14 @@ impl AgentLane for AgentHarness {
                 HarnessError::unknown_template(name, format!("No prompt template named '{name}'"))
             })?;
             let invocation = format_prompt_template_invocation(template, args);
-            AgentMessage::User(UserMessage::new(invocation, now_ms()))
+            let raw = std::iter::once(name.to_string())
+                .chain(args.iter().cloned())
+                .collect::<Vec<_>>()
+                .join(" ");
+            AgentMessage::User(
+                UserMessage::new(invocation, now_ms())
+                    .with_origin(raw, "prompt-template-expansion-v1"),
+            )
         };
         self.run_core(vec![message]).await
     }

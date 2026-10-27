@@ -3,8 +3,8 @@
 
 use super::*;
 use crate::compaction::branch_summary::{
-    collect_entries_for_branch_summary, generate_branch_summary, BranchSummaryDetails,
-    GenerateBranchSummaryOptions,
+    BranchSummaryDetails, GenerateBranchSummaryOptions, collect_entries_for_branch_summary,
+    generate_branch_summary,
 };
 
 fn navigation_error(message: impl ToString) -> OperationError {
@@ -246,6 +246,10 @@ impl AgentHarness {
                 }
             })?;
         self.finish_context_writes(&run_id, None).await?;
+        if matches!(outcome, NavigationOutcome::Completed { .. }) {
+            let mut inner = self.inner.lock().unwrap();
+            inner.navigation_epoch = inner.navigation_epoch.wrapping_add(1);
+        }
         Ok(NavigationResult { run_id, outcome })
     }
 

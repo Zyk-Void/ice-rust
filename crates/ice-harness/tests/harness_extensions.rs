@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use ice_agent::message::AgentMessage;
-use ice_ai::providers::faux::{faux_assistant_message, FauxProvider, FauxScript, FauxStep};
+use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep, faux_assistant_message};
 use ice_ai::types::{AssistantMessage, Context, StopReason, UserContent, UserMessage};
 use ice_ai::{AssistantMessageEventStream, Model, Provider, SimpleStreamOptions};
 use ice_harness::agent_harness::{AgentHarness, AgentLane, CompactionOutcome};
@@ -453,6 +453,54 @@ struct MemoryProbe {
     persisted: Mutex<Vec<bool>>,
 }
 
+#[derive(Default)]
+struct RequestProbe {
+    events: Mutex<Vec<(String, Option<String>, u64, u64, Option<i64>, usize)>>,
+    acknowledgments: Mutex<Vec<bool>>,
+}
+
+#[async_trait]
+impl HarnessExtension for RequestProbe {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        let texts = event
+            .messages
+            .iter()
+            .filter_map(|message| match message {
+                AgentMessage::Custom(custom)
+                    if custom
+                        .data
+                        .get("customType")
+                        .and_then(serde_json::Value::as_str)
+                        == Some("test-memory") =>
+                {
+                    Some(())
+                }
+                _ => None,
+            })
+            .count();
+        self.events.lock().unwrap().push((
+            event.prompt.to_string(),
+            event.original_prompt.map(str::to_string),
+            event.request_index,
+            event.branch_generation,
+            event.latest_compaction_at,
+            texts,
+        ));
+        (event.request_index == 1).then(|| PromptContext {
+            custom_type: "test-memory".into(),
+            text: "READY MEMORY".into(),
+            correlation_id: Some("stable-correlation".into()),
+        })
+    }
+
+    async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
+        self.acknowledgments.lock().unwrap().push(persisted);
+    }
+}
+
 #[async_trait]
 impl HarnessExtension for MemoryProbe {
     async fn prompt_context(&self, event: &BeforeRunEvent<'_>) -> Option<PromptContext> {
@@ -466,6 +514,88 @@ impl HarnessExtension for MemoryProbe {
     async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
         self.persisted.lock().unwrap().push(persisted);
     }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn same_session_tree_navigation_increments_request_epoch() {
+    let (harness, _provider, _) = harness(vec![FauxStep::text("one"), FauxStep::text("two")]).await;
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    let session_id = harness.session().storage().metadata().id;
+    harness.prompt_text("first", Vec::new()).await.unwrap();
+    let before = probe.events.lock().unwrap()[0].3;
+    let view = harness.session().view("main");
+    let path = view
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            },
+            &BranchBounds::default(),
+        )
+        .await
+        .unwrap();
+    let target = path.first().unwrap().id().to_string();
+    let navigation = harness
+        .navigate_tree(Some(&target), false, None, None)
+        .await
+        .unwrap();
+    assert!(matches!(
+        navigation.outcome,
+        ice_harness::agent_harness::NavigationOutcome::Completed { .. }
+    ));
+    harness.prompt_text("second", Vec::new()).await.unwrap();
+    let events = probe.events.lock().unwrap();
+    assert_eq!(harness.session().storage().metadata().id, session_id);
+    assert!(events[1].3 > before);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn request_context_waits_for_existing_tool_turn_and_uses_raw_origin() {
+    let steps = vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "missing.txt"})),
+        FauxStep::text("done"),
+    ];
+    let (harness, provider, _) = harness(steps).await;
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    let tool_context = ExecutionToolContext::new(env, Some(mut_env));
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &tool_context,
+                None,
+            ))],
+            Some(vec!["read".into()]),
+        )
+        .await
+        .unwrap();
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    let prompt = AgentMessage::User(
+        UserMessage::new("expanded skill instructions", 123)
+            .with_origin("$review", "skill-expansion-v1"),
+    );
+    harness.prompt_message(prompt).await.unwrap();
+    let events = probe.events.lock().unwrap();
+    assert_eq!(events.len(), 2);
+    assert_eq!(events[0].1.as_deref(), Some("$review"));
+    assert_eq!(events[1].1.as_deref(), Some("$review"));
+    assert_eq!(events[1].5, 0);
+    assert_eq!(events[0].3, events[1].3);
+    assert_eq!(provider.contexts.lock().unwrap().len(), 2);
+    assert!(
+        user_texts(&provider.contexts.lock().unwrap()[0])
+            .iter()
+            .all(|text| !text.contains("READY MEMORY"))
+    );
+    assert!(
+        user_texts(&provider.contexts.lock().unwrap()[1])
+            .iter()
+            .any(|text| text.contains("READY MEMORY"))
+    );
+    assert_eq!(probe.acknowledgments.lock().unwrap().as_slice(), &[true]);
 }
 
 fn user_texts(context: &Context) -> Vec<String> {
@@ -545,9 +675,11 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
         })
         .collect();
     assert_eq!(hidden.len(), 2);
-    assert!(hidden
-        .iter()
-        .all(|data| data.custom_type == "test-memory" && !data.display));
+    assert!(
+        hidden
+            .iter()
+            .all(|data| data.custom_type == "test-memory" && !data.display)
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -585,9 +717,11 @@ async fn failed_prompt_context_append_is_not_sent_to_provider() {
     assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[false]);
     let contexts = provider.contexts.lock().unwrap();
     assert_eq!(contexts.len(), 1);
-    assert!(!user_texts(&contexts[0])
-        .iter()
-        .any(|text| text.contains("MEMORY for:")));
+    assert!(
+        !user_texts(&contexts[0])
+            .iter()
+            .any(|text| text.contains("MEMORY for:"))
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -624,13 +758,15 @@ async fn boundary_request_compacts_mid_run_and_pauses() {
         "paused after checkpoint"
     );
     let triggers = probe.seen_triggers.lock().unwrap().clone();
-    assert!(triggers
-        .iter()
-        .any(
-            |(trigger, from_extension, summary)| *trigger == CompactionTrigger::MidRun
-                && *from_extension
-                && summary == "MIDRUN CHECKPOINT"
-        ));
+    assert!(
+        triggers
+            .iter()
+            .any(
+                |(trigger, from_extension, summary)| *trigger == CompactionTrigger::MidRun
+                    && *from_extension
+                    && summary == "MIDRUN CHECKPOINT"
+            )
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

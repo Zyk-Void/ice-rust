@@ -65,9 +65,9 @@ mod user_with_origin {
             .and_then(|object| object.remove("icersPromptOrigin"));
         let mut user: UserMessage =
             serde_json::from_value(value).map_err(serde::de::Error::custom)?;
-        if let Some(origin) = origin {
-            let origin: PromptOrigin =
-                serde_json::from_value(origin).map_err(serde::de::Error::custom)?;
+        if let Some(origin) =
+            origin.and_then(|value| serde_json::from_value::<PromptOrigin>(value).ok())
+        {
             user.origin = Some(origin);
             if user.original_prompt().is_none() {
                 user.origin = None;
@@ -238,6 +238,17 @@ mod prompt_origin_tests {
         assert_eq!(encoded["icersPromptOrigin"]["rawText"], "$review");
         let decoded: AgentMessage = serde_json::from_value(encoded).unwrap();
         assert_eq!(original_user_prompt(&decoded), Some("$review"));
+    }
+
+    #[test]
+    fn invalid_origin_metadata_is_discarded_without_rejecting_message() {
+        let valid = serde_json::json!({
+            "kind":"user", "role":"user", "content":"old", "timestamp":1,
+            "icersPromptOrigin": {"rawText": 7, "fingerprint": "broken"}
+        });
+        let decoded: AgentMessage = serde_json::from_value(valid).unwrap();
+        assert_eq!(original_user_prompt(&decoded), None);
+        assert_eq!(serde_json::to_value(decoded).unwrap()["content"], "old");
     }
 
     #[test]
