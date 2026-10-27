@@ -33,6 +33,7 @@ impl DispatchLease {
             .read(true)
             .write(true)
             .create(true)
+            .truncate(false)
             .open(directory.join(".dispatch.lock"))?;
         match file.try_lock_exclusive() {
             Ok(()) => Ok(Some(Self(file))),
@@ -44,7 +45,7 @@ impl DispatchLease {
 
 impl Drop for DispatchLease {
     fn drop(&mut self) {
-        let _ = self.0.unlock();
+        let _ = FileExt::unlock(&self.0);
     }
 }
 
@@ -177,6 +178,7 @@ pub fn enqueue_pending_remember(
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(directory.join(".enqueue.lock"))?;
     lock.lock_exclusive()?;
     let result = (|| {
@@ -197,7 +199,7 @@ pub fn enqueue_pending_remember(
         write_private_file_atomic(&directory.join(filename), &record_line(record))?;
         Ok(true)
     })();
-    let _ = lock.unlock();
+    let _ = FileExt::unlock(&lock);
     result
 }
 

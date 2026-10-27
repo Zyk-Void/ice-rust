@@ -335,6 +335,30 @@ pub fn query_accepted(
     let records = read_candidates(directory);
     let superseded = records
         .iter()
+        .filter(|correction| {
+            correction.state == CandidateState::Accepted
+                && correction.dataset == dataset
+                && correction
+                    .valid_until_ms
+                    .is_none_or(|expiry| expiry > now_ms)
+                && correction
+                    .branch
+                    .as_deref()
+                    .is_none_or(|scope| Some(scope) == branch)
+                && correction.source.role == Role::User
+                && correction.category == Category::Constraint
+                && correction.supersedes.as_ref().is_some_and(|target_id| {
+                    records.iter().any(|target| {
+                        target.id == *target_id
+                            && target.state == CandidateState::Accepted
+                            && target.dataset == correction.dataset
+                            && target.branch == correction.branch
+                            && target.valid_until_ms.is_none_or(|expiry| expiry > now_ms)
+                            && target.source.role == Role::User
+                            && target.category == Category::Constraint
+                    })
+                })
+        })
         .filter_map(|candidate| candidate.supersedes.clone())
         .collect::<std::collections::HashSet<_>>();
     records
@@ -359,14 +383,20 @@ pub fn query_accepted(
             metadata: Some(serde_json::json!({
                 "source": "local_curated_candidate",
                 "candidateId": candidate.id,
+                "candidate_id": candidate.id,
                 "sourceEntryId": candidate.source.entry_id,
+                "source_entry_id": candidate.source.entry_id,
+                "source_id": candidate.source.entry_id,
                 "sourceRole": candidate.source.role,
+                "source_role": candidate.source.role,
                 "category": candidate.category,
                 "dataset": candidate.dataset,
                 "branch": candidate.branch,
                 "validUntilMs": candidate.valid_until_ms,
+                "valid_until_ms": candidate.valid_until_ms,
                 "supersedes": candidate.supersedes,
                 "createdAt": candidate.created_at,
+                "created_at": candidate.created_at,
             })),
         })
         .collect()
@@ -559,17 +589,39 @@ mod tests {
         current.supersedes = Some(old.id.clone());
         current.dataset = "repo".into();
         current.valid_until_ms = Some(500);
-        let mut expired = candidate(
-            Category::Lesson,
-            "Expired detail",
-            Role::Assistant,
-            "assistant",
+        let mut pending_correction = candidate(
+            Category::Constraint,
+            "pending correction",
+            Role::User,
+            "user-3",
         );
-        expired.id = "00000000-0000-4000-8000-000000000003".into();
-        expired.state = CandidateState::Accepted;
-        expired.dataset = "repo".into();
-        expired.valid_until_ms = Some(99);
-        for item in [&old, &current, &expired] {
+        pending_correction.id = "00000000-0000-4000-8000-000000000003".into();
+        pending_correction.dataset = "repo".into();
+        pending_correction.supersedes = Some(old.id.clone());
+        let mut rejected_correction = pending_correction.clone();
+        rejected_correction.id = "00000000-0000-4000-8000-000000000004".into();
+        rejected_correction.state = CandidateState::Rejected("reviewed".into());
+        let mut foreign_correction = pending_correction.clone();
+        foreign_correction.id = "00000000-0000-4000-8000-000000000005".into();
+        foreign_correction.state = CandidateState::Accepted;
+        foreign_correction.dataset = "other".into();
+        let mut expired_correction = pending_correction.clone();
+        expired_correction.id = "00000000-0000-4000-8000-000000000006".into();
+        expired_correction.state = CandidateState::Accepted;
+        expired_correction.valid_until_ms = Some(99);
+        let mut assistant_correction = pending_correction.clone();
+        assistant_correction.id = "00000000-0000-4000-8000-000000000007".into();
+        assistant_correction.state = CandidateState::Accepted;
+        assistant_correction.source.role = Role::Assistant;
+        for item in [
+            &old,
+            &current,
+            &pending_correction,
+            &rejected_correction,
+            &foreign_correction,
+            &expired_correction,
+            &assistant_correction,
+        ] {
             assert!(store_pending(directory.path(), item, 10).unwrap());
         }
         let results = query_accepted(directory.path(), "repo", None, "revised", 100, 10);
@@ -577,12 +629,18 @@ mod tests {
         assert_eq!(results[0].text, "Use the revised cache");
         let metadata = results[0].metadata.as_ref().unwrap();
         assert_eq!(metadata["sourceEntryId"], "user-2");
+        assert_eq!(metadata["source_entry_id"], "user-2");
+        assert_eq!(metadata["source_id"], "user-2");
+        assert_eq!(metadata["valid_until_ms"], 500);
         assert_eq!(metadata["dataset"], "repo");
         assert_eq!(
             metadata["supersedes"],
             "00000000-0000-4000-8000-000000000001"
         );
-        assert!(query_accepted(directory.path(), "other", None, "", 100, 10).is_empty());
+        assert!(query_accepted(directory.path(), "repo", None, "stable", 100, 10).is_empty());
+        let other_dataset = query_accepted(directory.path(), "other", None, "", 100, 10);
+        assert_eq!(other_dataset.len(), 1);
+        assert_eq!(other_dataset[0].text, "pending correction");
     }
 
     #[test]

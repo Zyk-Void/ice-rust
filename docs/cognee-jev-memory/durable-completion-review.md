@@ -2,6 +2,21 @@
 
 ## Implemented in this worktree
 
+### Reviewed follow-up fixes (uncommitted at report edit time)
+
+- The manual remember path no longer resets a durable operation to `Pending` when it failed to acquire the dispatch lease. Regression: two independent runtimes share the queue; one owns the lease with an `InFlight` operation while the other enqueues manual intent. The live operation remains `InFlight` and neither runtime sends.
+- Local accepted-evidence suppression now considers only accepted, unexpired same-dataset/current-branch user `Constraint` corrections whose referenced target is itself an accepted, unexpired same-scope user `Constraint`. Pending, rejected, expired, foreign-dataset/branch, and assistant-origin corrections do not suppress user constraints. Metadata includes `source_id`, `source_entry_id`, and `valid_until_ms` aliases in addition to existing camelCase keys; branch is preserved. Revision/worktree are not candidate fields and are not fabricated as authoritative scope.
+- Candidate acceptance now writes a `Pending` attribution, reserves its outbox operation as `InFlight` (non-dispatchable), commits the candidate as `Accepted`, and only then activates the operation as `Pending` and schedules drain. Queue capacity/write failure cannot leave a newly accepted local fact. A crash after reservation but before activation leaves `InFlight`; existing orphan recovery changes it to `Uncertain`, which is not automatically dispatched. This is ordered multi-file persistence, not a cross-file atomic transaction; no admission journal/lock or failure-injection coverage is provided by this follow-up.
+- Dispatch/enqueue lock files use `.truncate(false)` and `FileExt::unlock` explicitly for MSRV compatibility.
+- Verification for this follow-up: one full run of `cargo test -p ice-cli --lib --locked cognee:: --quiet` passed 175 tests. After a metadata-only removal of absent/null revision and worktree keys, the final run passed 173 and failed the unrelated existing `context_generation_tracks_identity_but_not_compaction_or_repeated_start` test; that test also failed alone on rerun. The new busy-lease regression and candidate saturation regression passed independently.
+
+### Explicitly not fixed by this follow-up
+
+- Fresh asynchronous source validation is not yet enforced by the shared helper `accept_candidate` path; helper-provided snapshots can still be promoted without reloading current branch/source/generation/cancellation.
+- Accepted duplicate acceptance does not yet return canonical existing candidate/operation identity; admission deduplication and shared admission locking/capacity serialization remain incomplete.
+- The acceptance flow does not commit required suppression before candidate acceptance and operation dispatchability as a single receipt-gated admission. Storage failure after accepted attribution but before activation can leave an accepted local fact with an `InFlight` operation; recovery prevents dispatch, but the local fact is still visible. Failure-point tests for these stages are absent.
+- Explicit proposal/helper shared validation, scope input surface, and classifier paraphrase resistance are not completed here.
+
 - Added a process-wide, nonblocking advisory dispatch lease at the queue directory (`.dispatch.lock`) using the already-declared workspace `fs2` 0.4 dependency. Automatic drain holds the lease from before scanning through durable outcome processing; immediate manual remember uses the same lease discipline. A second owner returns without sending. Manual intent is enqueued first and remains `Pending` when dispatch is busy.
 - Split the short enqueue/capacity critical section into `.enqueue.lock`; it is independent of the HTTP dispatch lease, so producers can enqueue while a sender waits on Cognee. Queue capacity counts durable JSON operation records, excludes lock files, and does not evict existing records.
 - Startup inflight recovery now acquires the dispatch lease nonblocking. A live owner’s `InFlight` records are not changed; once the owner disappears, recovery changes orphaned inflight operations to `Uncertain`, which is never auto-selected. Explicit uncertain flush remains deliberate. There is no exactly-once claim.

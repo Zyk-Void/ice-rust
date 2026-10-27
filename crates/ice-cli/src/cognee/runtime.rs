@@ -2579,8 +2579,9 @@ impl CogneeRuntime {
                 .await
                 .unwrap_or(Ok(None))
         else {
-            let _ =
-                update_pending_remember_state(&dir, &record.operation_id, PendingState::Pending);
+            // The operation may belong to the process holding the lease. Do
+            // not mutate its durable state when this runtime did not acquire
+            // dispatch ownership.
             self.notify(
                 NoticeLevel::Warning,
                 "Cognee remember queued: another process owns dispatch",
@@ -6637,6 +6638,38 @@ mod tests {
             .drain()
             .iter()
             .any(|(_, text)| text.contains("queue is full")));
+    }
+
+    #[tokio::test]
+    async fn busy_manual_duplicate_does_not_rewrite_live_inflight_record() {
+        let dir = tempfile::tempdir().unwrap();
+        let holder_transport = Arc::new(FakeTransport::default());
+        let busy_transport = Arc::new(FakeTransport::default());
+        let holder = runtime(dir.path(), &holder_transport, Some(json!({})), false);
+        let busy = runtime(dir.path(), &busy_transport, Some(json!({})), false);
+        holder.ensure_loaded();
+        let mut record = create_pending_remember("active work", "ice", "user_context", 1);
+        record.state = PendingState::InFlight;
+        enqueue_pending_remember(&holder.pending_dir(), &record, 64).unwrap();
+        let _lease = DispatchLease::try_acquire(&holder.pending_dir())
+            .unwrap()
+            .expect("holder owns dispatch");
+
+        busy.manual_remember("user_context", "new manual intent")
+            .await;
+
+        let records = read_pending_remember(&holder.pending_dir());
+        assert_eq!(records.len(), 2);
+        assert_eq!(
+            records
+                .iter()
+                .find(|item| item.text == "active work")
+                .unwrap()
+                .state,
+            PendingState::InFlight
+        );
+        assert!(holder_transport.sent().is_empty());
+        assert!(busy_transport.sent().is_empty());
     }
 
     #[tokio::test]

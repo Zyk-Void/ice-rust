@@ -315,19 +315,25 @@ pub(crate) fn accept_candidate(
     if record_text.chars().count() > config.remember_max_chars {
         return Ok(false);
     }
+    // Persist attribution as pending before reserving any dispatchable work.
+    // The outbox reservation is InFlight (blocked from automatic drains) until
+    // the accepted attribution is durable. A crash during this sequence is
+    // recovered as uncertain, never automatically sent.
     let mut attributed = candidate.clone();
-    attributed.state = CandidateState::Accepted;
-    if !candidates::store_pending(&runtime.candidates_dir(), &attributed, runtime.now())
+    attributed.state = CandidateState::Pending;
+    let candidate_dir = runtime.candidates_dir();
+    if !candidates::store_pending(&candidate_dir, &attributed, runtime.now())
         .map_err(|error| format!("Could not store candidate attribution: {error}"))?
     {
         return Ok(false);
     }
-    let record = super::queue::create_pending_remember(
+    let mut record = super::queue::create_pending_remember(
         &record_text,
         &candidate.dataset,
         candidate.category.node_set(),
         candidate.created_at,
     );
+    record.state = super::queue::PendingState::InFlight;
     let was_pending = super::queue::read_pending_remember(&runtime.pending_dir())
         .iter()
         .any(|item| item.operation_id == record.operation_id);
@@ -337,6 +343,20 @@ pub(crate) fn accept_candidate(
         config.queue_limit,
     ) {
         Ok(true) => {
+            let mut attributed = candidate.clone();
+            attributed.state = CandidateState::Accepted;
+            candidates::set_state(&candidate_dir, &mut attributed, CandidateState::Accepted)
+                .map_err(|error| format!("Could not commit candidate attribution: {error}"))?;
+            let operation = super::queue::read_pending_remember(&runtime.pending_dir())
+                .into_iter()
+                .find(|item| item.operation_id == record.operation_id)
+                .ok_or_else(|| "Reserved candidate operation disappeared".to_string())?;
+            super::queue::update_pending_remember_state(
+                &runtime.pending_dir(),
+                &operation.operation_id,
+                super::queue::PendingState::Pending,
+            )
+            .map_err(|error| format!("Could not activate candidate operation: {error}"))?;
             if !was_pending {
                 runtime.spawn_drain_pending();
             }
