@@ -52,6 +52,7 @@ impl CircuitState {
 pub enum PendingState {
     Pending,
     Uncertain,
+    InFlight,
 }
 
 /// One replayable permanent-memory write (`PendingRemember`).
@@ -97,7 +98,7 @@ fn pending_record_path(directory: &Path, operation_id: &str) -> std::io::Result<
 }
 
 /// `createPendingRemember`. The operation id is `<createdAt>-<hash16>`;
-/// dataset and node set are not part of it.
+/// the hash includes the original dataset and node set.
 pub fn create_pending_remember(
     text: &str,
     dataset: &str,
@@ -105,8 +106,9 @@ pub fn create_pending_remember(
     created_at_ms: u64,
 ) -> PendingRemember {
     let content_hash = sha256_hex(text);
+    let semantic_hash = sha256_hex(&format!("{dataset}\0{node_set}\0{text}"));
     PendingRemember {
-        operation_id: format!("{created_at_ms}-{}", &content_hash[..16]),
+        operation_id: format!("{created_at_ms}-{}", &semantic_hash[..16]),
         content_hash,
         dataset: dataset.into(),
         node_set: node_set.into(),
@@ -145,7 +147,13 @@ pub fn enqueue_pending_remember(
     create_private_dir(directory)?;
     let files = json_files(directory)?;
     let filename = format!("{}.json", record.operation_id);
-    if path.exists() {
+    if path.exists()
+        || read_pending_remember(directory).iter().any(|existing| {
+            existing.dataset == record.dataset
+                && existing.node_set == record.node_set
+                && existing.text == record.text
+        })
+    {
         return Ok(true);
     }
     if files.len() >= limit {
@@ -213,6 +221,25 @@ pub fn remove_pending_remember(directory: &Path, operation_id: &str) -> std::io:
     }
 }
 
+/// Mark interrupted writes as uncertain so they are never replayed automatically.
+pub fn recover_inflight(directory: &Path) -> usize {
+    let records = read_pending_remember(directory);
+    let mut recovered = 0;
+    for record in records {
+        if record.state == PendingState::InFlight
+            && update_pending_remember_state(
+                directory,
+                &record.operation_id,
+                PendingState::Uncertain,
+            )
+            .is_ok()
+        {
+            recovered += 1;
+        }
+    }
+    recovered
+}
+
 /// The records a drain would send: pending ones (and uncertain ones when
 /// allowed), first `PENDING_DRAIN_BATCH` in filename order.
 pub fn select_drain_batch(directory: &Path, allow_uncertain: bool) -> Vec<PendingRemember> {
@@ -220,7 +247,11 @@ pub fn select_drain_batch(directory: &Path, allow_uncertain: bool) -> Vec<Pendin
         .into_iter()
         .filter(|record| {
             record.state == PendingState::Pending
-                || (allow_uncertain && record.state == PendingState::Uncertain)
+                || (allow_uncertain
+                    && matches!(
+                        record.state,
+                        PendingState::Uncertain | PendingState::InFlight
+                    ))
         })
         .take(PENDING_DRAIN_BATCH)
         .collect()
@@ -325,24 +356,72 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let pending = dir.path().join("pending");
         let first = create_pending_remember("fact", "ice", "user_context", 42);
-        assert_eq!(
-            first.operation_id,
-            format!("42-{}", &sha256_hex("fact")[..16])
-        );
+        let semantic_hash = sha256_hex("ice\0user_context\0fact");
+        assert_eq!(first.content_hash, sha256_hex("fact"));
+        assert_eq!(first.operation_id, format!("42-{}", &semantic_hash[..16]));
         assert!(enqueue_pending_remember(&pending, &first, 1).unwrap());
         assert!(enqueue_pending_remember(&pending, &first, 1).unwrap());
+        update_pending_remember_state(&pending, &first.operation_id, PendingState::Uncertain)
+            .unwrap();
         let second = create_pending_remember("other", "ice", "user_context", 43);
         assert!(!enqueue_pending_remember(&pending, &second, 1).unwrap());
+        let same_scope_new_time = create_pending_remember("fact", "ice", "user_context", 43);
+        assert!(enqueue_pending_remember(&pending, &same_scope_new_time, 1).unwrap());
+        assert_eq!(read_pending_remember(&pending).len(), 1);
+        let other_dataset = create_pending_remember("fact", "other", "user_context", 43);
+        assert!(enqueue_pending_remember(&pending, &other_dataset, 2).unwrap());
+        let other_node_set = create_pending_remember("fact", "ice", "project_docs", 43);
+        assert!(enqueue_pending_remember(&pending, &other_node_set, 3).unwrap());
+        assert_eq!(read_pending_remember(&pending).len(), 3);
         let text =
             std::fs::read_to_string(pending.join(format!("{}.json", first.operation_id))).unwrap();
         assert!(text.starts_with("{\"operationId\":\"42-"));
-        assert!(text.ends_with("\"state\":\"pending\",\"text\":\"fact\"}\n"));
+        assert!(text.ends_with("\"state\":\"uncertain\",\"text\":\"fact\"}\n"));
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             let mode = std::fs::metadata(&pending).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o700);
         }
+    }
+
+    #[test]
+    fn old_pending_and_uncertain_records_still_load() {
+        let dir = tempfile::tempdir().unwrap();
+        let pending = dir.path();
+        let legacy_pending = r#"{"operationId":"1-2d711642b726b044","contentHash":"2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881","dataset":"ice","nodeSet":"user_context","createdAt":1,"state":"pending","text":"x"}"#;
+        let legacy_uncertain = r#"{"operationId":"2-2d711642b726b044","contentHash":"2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881","dataset":"ice","nodeSet":"user_context","createdAt":2,"state":"uncertain","text":"x"}"#;
+        std::fs::write(pending.join("1-2d711642b726b044.json"), legacy_pending).unwrap();
+        std::fs::write(pending.join("2-2d711642b726b044.json"), legacy_uncertain).unwrap();
+
+        let records = read_pending_remember(pending);
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0].state, PendingState::Pending);
+        assert_eq!(records[1].state, PendingState::Uncertain);
+        assert_eq!(select_drain_batch(pending, false).len(), 1);
+        assert_eq!(select_drain_batch(pending, true).len(), 2);
+    }
+
+    #[test]
+    fn inflight_recovery_and_flush_selection() {
+        let dir = tempfile::tempdir().unwrap();
+        let record = create_pending_remember("fact", "ice", "user_context", 1);
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        assert!(enqueue_pending_remember(dir.path(), &inflight, 4).unwrap());
+        assert!(select_drain_batch(dir.path(), false).is_empty());
+        assert_eq!(recover_inflight(dir.path()), 1);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::Uncertain
+        );
+        assert!(select_drain_batch(dir.path(), false).is_empty());
+
+        update_pending_remember_state(dir.path(), &record.operation_id, PendingState::InFlight)
+            .unwrap();
+        assert!(select_drain_batch(dir.path(), true)
+            .iter()
+            .any(|entry| entry.state == PendingState::InFlight));
     }
 
     #[test]

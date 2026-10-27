@@ -48,8 +48,8 @@ use super::observer::{persist_observation, publish_observation, sanitize_endpoin
 use super::policy::{admit_prompt, Admission};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
-    read_warmup_batch, remove_pending_remember, select_drain_batch, update_pending_remember_state,
-    CircuitState, PendingState,
+    read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
+    update_pending_remember_state, CircuitState, PendingState,
 };
 use super::text::{
     extract_message_text, format_last_compact_injection, format_recall, redact_memory_text,
@@ -1013,7 +1013,13 @@ impl CogneeRuntime {
             let state_name = match record.state {
                 PendingState::Pending => "pending",
                 PendingState::Uncertain => "uncertain",
+                PendingState::InFlight => "inflight",
             };
+            if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
+                .is_err()
+            {
+                continue;
+            }
             self.observe(
                 "remember",
                 "started",
@@ -1081,14 +1087,10 @@ impl CogneeRuntime {
                         state.remember_circuit.note_failure(&kind, wall_ms());
                         !state.remember_circuit.can_attempt(wall_ms())
                     };
-                    let ambiguous = drain_failure_state(&kind) == PendingState::Uncertain;
-                    if ambiguous {
-                        let _ = update_pending_remember_state(
-                            &dir,
-                            &record.operation_id,
-                            PendingState::Uncertain,
-                        );
-                    }
+                    let failure_state = drain_failure_state(&kind);
+                    let ambiguous = failure_state == PendingState::Uncertain;
+                    let _ =
+                        update_pending_remember_state(&dir, &record.operation_id, failure_state);
                     self.append_operation(json!({
                         "action": "remember",
                         "operationId": record.operation_id,
@@ -1632,7 +1634,12 @@ impl CogneeRuntime {
                 .count(),
             queue_uncertain: records
                 .iter()
-                .filter(|record| record.state == PendingState::Uncertain)
+                .filter(|record| {
+                    matches!(
+                        record.state,
+                        PendingState::Uncertain | PendingState::InFlight
+                    )
+                })
                 .count(),
         }
     }
@@ -1884,8 +1891,13 @@ impl CogneeRuntime {
         }
     }
 
-    /// `/cognee remember`: send now; queue as pending on any failure.
+    /// `/cognee remember`: persist intent before sending.
     pub async fn manual_remember(&self, node_set: &str, text: &str) {
+        self.manual_remember_with(node_set, text, CallOptions::default())
+            .await;
+    }
+
+    async fn manual_remember_with(&self, node_set: &str, text: &str, options: CallOptions) {
         self.ensure_loaded();
         let Some(client) = self.live_client() else {
             self.notify(NoticeLevel::Warning, self.disabled_message());
@@ -1907,55 +1919,124 @@ impl CogneeRuntime {
             );
             return;
         }
+
+        let dir = self.pending_dir();
+        if read_pending_remember(&dir).iter().any(|existing| {
+            existing.dataset == dataset
+                && existing.node_set == node_set
+                && existing.text == safe_text
+        }) {
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee remember already exists in the durable queue",
+            );
+            return;
+        }
+        let mut record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
+        record.state = PendingState::InFlight;
+        match enqueue_pending_remember(&dir, &record, limit) {
+            Ok(true) => {}
+            Ok(false) => {
+                self.state().last_error = Some("queue_full".into());
+                self.notify(
+                    NoticeLevel::Error,
+                    "Cognee remember queue is full; no memory was sent",
+                );
+                return;
+            }
+            Err(error) => {
+                self.notify(
+                    NoticeLevel::Error,
+                    format!("Cognee remember was not sent; queue error: {error}"),
+                );
+                return;
+            }
+        }
+        // Dedupe may have returned a prior record with a different timestamp.
+        let Some(record) = read_pending_remember(&dir).into_iter().find(|existing| {
+            existing.dataset == dataset
+                && existing.node_set == node_set
+                && existing.text == safe_text
+        }) else {
+            self.notify(
+                NoticeLevel::Error,
+                "Cognee remember was not sent; queued record disappeared",
+            );
+            return;
+        };
+        if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
+            .is_err()
+        {
+            self.notify(
+                NoticeLevel::Error,
+                "Cognee remember was not sent; queue update failed",
+            );
+            return;
+        }
+
+        self.append_operation(json!({
+            "action": "remember",
+            "operationId": record.operation_id,
+            "contentHash": record.content_hash,
+            "dataset": record.dataset,
+            "nodeSet": record.node_set,
+            "state": "inflight",
+        }));
         match client
             .remember(
-                &safe_text,
-                node_set,
-                Some(&dataset),
+                &record.text,
+                &record.node_set,
+                Some(&record.dataset),
                 None,
-                CallOptions::default(),
+                options,
             )
             .await
         {
             Ok(()) => {
+                let _ = remove_pending_remember(&dir, &record.operation_id);
                 {
                     let mut state = self.state();
                     state.remember_circuit.reset();
                     state.last_error = None;
                 }
                 self.notify(NoticeLevel::Info, "Cognee memory stored");
+                self.append_operation(json!({
+                    "action": "remember",
+                    "operationId": record.operation_id,
+                    "contentHash": record.content_hash,
+                    "dataset": record.dataset,
+                    "nodeSet": record.node_set,
+                    "state": "confirmed",
+                }));
             }
             Err(error) => {
                 let kind = error_kind(&error);
+                let failure_state = drain_failure_state(&kind);
+                let _ = update_pending_remember_state(&dir, &record.operation_id, failure_state);
                 {
                     let mut state = self.state();
                     state.last_error = Some(kind.clone());
                     state.remember_circuit.note_failure(&kind, wall_ms());
                 }
-                let mut record =
-                    create_pending_remember(&safe_text, &dataset, node_set, self.now());
-                // A timeout or abort may have been accepted by the server, so
-                // the record must not be replayed without an explicit flush.
-                record.state = drain_failure_state(&kind);
-                match enqueue_pending_remember(&self.pending_dir(), &record, limit) {
-                    Ok(true) if record.state == PendingState::Uncertain => self.notify(
+                self.append_operation(json!({
+                    "action": "remember",
+                    "operationId": record.operation_id,
+                    "contentHash": record.content_hash,
+                    "dataset": record.dataset,
+                    "nodeSet": record.node_set,
+                    "state": if failure_state == PendingState::Uncertain { "uncertain" } else { "pending" },
+                    "error": kind,
+                }));
+                if failure_state == PendingState::Uncertain {
+                    self.notify(
                         NoticeLevel::Warning,
-                        format!(
-                            "Cognee remember {kind}; it may have been stored. Queued as uncertain; /cognee flush uncertain retries it"
-                        ),
-                    ),
-                    Ok(true) => self.notify(
+                        format!("Cognee remember {kind}; it may have been stored. Queued as uncertain; /cognee flush uncertain retries it"),
+                    );
+                } else {
+                    self.notify(
                         NoticeLevel::Warning,
                         format!("Cognee unavailable ({kind}); memory queued"),
-                    ),
-                    Ok(false) => self.notify(
-                        NoticeLevel::Error,
-                        format!("Cognee remember failed: {kind}"),
-                    ),
-                    Err(error) => self.notify(
-                        NoticeLevel::Error,
-                        format!("Cognee remember failed: {kind}; queue error: {error}"),
-                    ),
+                    );
                 }
             }
         }
@@ -2099,6 +2180,7 @@ impl CogneeRuntime {
             )
         };
         self.update_status_line();
+        recover_inflight(&self.pending_dir());
         if !enabled {
             return;
         }
@@ -3011,7 +3093,8 @@ impl HarnessExtension for CogneeRuntime {
             .join("\n"),
             remember_max,
         );
-        let record = create_pending_remember(&text, &dataset, "agent_actions", self.now());
+        let mut record = create_pending_remember(&text, &dataset, "agent_actions", self.now());
+        record.state = PendingState::Pending;
         let accepted = enqueue_pending_remember(&self.pending_dir(), &record, limit);
         if !matches!(accepted, Ok(true)) {
             self.state().last_error = Some("queue_full".into());
@@ -4507,20 +4590,22 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn uncertain_records_need_an_explicit_flush() {
+    async fn inflight_records_recover_to_uncertain_and_require_explicit_flush() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         rt.ensure_loaded();
         let record = create_pending_remember("fact", "ice", "user_context", 1);
-        enqueue_pending_remember(&rt.pending_dir(), &record, 64).unwrap();
-        update_pending_remember_state(
-            &rt.pending_dir(),
-            &record.operation_id,
-            PendingState::Uncertain,
-        )
-        .unwrap();
-        // Normal drains skip uncertain records; `flush uncertain` sends them.
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        enqueue_pending_remember(&rt.pending_dir(), &inflight, 64).unwrap();
+
+        // Simulate a previous process stopping after writing the intent.
+        assert_eq!(recover_inflight(&rt.pending_dir()), 1);
+        assert_eq!(
+            read_pending_remember(&rt.pending_dir())[0].state,
+            PendingState::Uncertain
+        );
         rt.drain_pending(false).await;
         assert!(transport.sent().is_empty());
         transport.push(FakeResponse::json(200, json!({})));
@@ -4535,6 +4620,154 @@ mod tests {
         assert_eq!(drain_failure_state("timeout"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("aborted"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("server_error"), PendingState::Pending);
+    }
+
+    #[tokio::test]
+    async fn manual_remember_persists_inflight_before_request_and_removes_on_success() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let request = {
+            let rt = rt.clone();
+            tokio::spawn(async move {
+                rt.manual_remember_with("user_context", "persist first", CallOptions::default())
+                    .await;
+            })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(1), async {
+            while transport.sent().is_empty() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("transport observed the request");
+        let records = read_pending_remember(&rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::InFlight);
+        request.await.unwrap();
+        assert!(read_pending_remember(&rt.pending_dir()).is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_remember_failure_states_and_queue_full_are_safe() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Fail);
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.manual_remember("user_context", "connection failure")
+            .await;
+        let records = read_pending_remember(&rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::Pending);
+
+        let timeout_dir = tempfile::tempdir().unwrap();
+        let timeout_transport = Arc::new(FakeTransport::default());
+        timeout_transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let timeout_rt = runtime(
+            timeout_dir.path(),
+            &timeout_transport,
+            Some(json!({})),
+            false,
+        );
+        timeout_rt
+            .manual_remember_with(
+                "user_context",
+                "slow response",
+                CallOptions {
+                    timeout_ms: Some(10),
+                    ..CallOptions::default()
+                },
+            )
+            .await;
+        let records = read_pending_remember(&timeout_rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::Uncertain);
+        timeout_rt.drain_pending(false).await;
+        assert_eq!(timeout_transport.sent().len(), 1);
+
+        let full_dir = tempfile::tempdir().unwrap();
+        let full_transport = Arc::new(FakeTransport::default());
+        let full_rt = runtime(
+            full_dir.path(),
+            &full_transport,
+            Some(json!({"queueLimit": 1})),
+            false,
+        );
+        enqueue_pending_remember(
+            &full_rt.pending_dir(),
+            &create_pending_remember("existing", "ice", "user_context", 1),
+            1,
+        )
+        .unwrap();
+        full_rt
+            .manual_remember("user_context", "cannot enqueue")
+            .await;
+        assert!(full_transport.sent().is_empty());
+        assert!(full_rt
+            .notices()
+            .drain()
+            .iter()
+            .any(|(_, text)| text.contains("queue is full")));
+    }
+
+    #[tokio::test]
+    async fn pending_drain_is_single_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        enqueue_pending_remember(
+            &rt.pending_dir(),
+            &create_pending_remember("single drain", "ice", "user_context", 1),
+            64,
+        )
+        .unwrap();
+        let first = {
+            let rt = rt.clone();
+            tokio::spawn(async move { rt.drain_pending(false).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(1), async {
+            while transport.sent().is_empty() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("first drain reached transport");
+        rt.drain_pending(false).await;
+        first.await.unwrap();
+        assert_eq!(transport.sent().len(), 1);
+        assert!(read_pending_remember(&rt.pending_dir()).is_empty());
+    }
+
+    #[tokio::test]
+    async fn doctor_counts_inflight_with_uncertain_queue_records() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let mut inflight = create_pending_remember("inflight", "ice", "user_context", 1);
+        inflight.state = PendingState::InFlight;
+        let mut uncertain = create_pending_remember("uncertain", "ice", "user_context", 2);
+        uncertain.state = PendingState::Uncertain;
+        enqueue_pending_remember(&rt.pending_dir(), &inflight, 64).unwrap();
+        enqueue_pending_remember(&rt.pending_dir(), &uncertain, 64).unwrap();
+        assert_eq!(rt.collect_doctor().await.queue_uncertain, 2);
     }
 
     #[tokio::test]
