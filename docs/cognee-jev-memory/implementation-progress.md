@@ -25,7 +25,8 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 | M4.1 | In progress | `manual_remember` now queues a timeout or abort as `uncertain` (never auto-replayed) instead of `pending`. The uncertain path is covered only through the shared `drain_failure_state` unit test: the 30 s remember timeout cannot be shortened in tests. Remaining: persist intent before sending, scope in the dedupe key, warmup ownership. |
 | M4.2, M4.3, M4.4 | Not started | Candidates, supersession and accepted-versus-searchable reconciliation. `writePolicy=manual` is only the off switch, not the selective outbox. |
 | M5.1, M5.2, M5.3, M5.4 | Not started | Optional JEV; no live JEV evaluation under the Luna-only restriction. |
-| M6.1, M6.2, M6.3 | Not started | Capability discovery and skill suggestions. |
+| M6.1 | In progress | Local catalog prototype ranks supplied skill and MCP snapshots. Remaining: connect pre-deduplication skill registry and source classification, rebuild on resource/MCP refresh, and complete acceptance tests. Existing `skillDirs` setting supports explicit extra paths. |
+| M6.2, M6.3 | Not started | Capability discovery and skill suggestions. |
 | M6.4 | In progress | Native search propagates disabled and transport failures as tool errors; fake transport verifies failure, empty success, 404, cancellation and offline paths. MCP proxy fixtures cover an isError HTTP 404 result, JSON-RPC error and request timeout; the existing MCP mapper propagates them as tool errors. |
 | M7.1, M7.2, M7.3 | Not started | Evaluation, rollout and release gates. |
 

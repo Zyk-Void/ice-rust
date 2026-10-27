@@ -36,6 +36,7 @@ pub mod background_shells;
 pub mod blackhole;
 pub mod brand;
 pub mod builtin_extensions;
+pub mod capability_catalog;
 pub mod changelog;
 mod child_agents;
 mod codex_auth;
