@@ -20,4 +20,5 @@ pub mod policy;
 pub mod propose;
 pub mod queue;
 pub mod runtime;
+pub mod suppress;
 pub mod text;

@@ -89,6 +89,10 @@ pub struct Candidate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub supersedes: Option<String>,
     pub dataset: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub valid_until_ms: Option<u64>,
     pub created_at: u64,
     pub state: CandidateState,
 }
@@ -345,6 +349,8 @@ mod tests {
             verified_by: None,
             supersedes: None,
             dataset: "test".into(),
+            branch: None,
+            valid_until_ms: None,
             created_at: 1,
             state: CandidateState::Pending,
         }

@@ -63,6 +63,7 @@ use super::queue::{
     read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
     update_pending_remember_state, CircuitState, PendingState,
 };
+use super::suppress::{Suppression, SuppressionSet};
 use super::text::{
     extract_message_text, fit_lines, format_bounded_last_compact_injection,
     format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
@@ -385,6 +386,7 @@ pub(crate) struct State {
     last_compact_summary: Option<String>,
     /// Recall lines already in the active context (non-legacy read policies).
     seen_evidence: SeenEvidence,
+    suppressions: SuppressionSet,
     evidence_cache: EvidenceCache,
     resolved_dataset: String,
     context_generation: u64,
@@ -435,6 +437,7 @@ impl State {
             last_recall_at: 0,
             last_compact_summary: None,
             seen_evidence: SeenEvidence::default(),
+            suppressions: SuppressionSet::default(),
             evidence_cache: EvidenceCache::default(),
             improve_in_flight: false,
             improve_backoff: HashMap::new(),
@@ -466,9 +469,11 @@ impl State {
 
     /// Resolve `$project` for `cwd` and, for a linked worktree, the dataset
     /// it used before sharing its repository's. An explicit dataset has none.
-    fn refresh_dataset(&mut self, cwd: Option<&Path>) {
+    fn refresh_dataset(&mut self, cwd: Option<&Path>, storage_dir: &Path) {
         let previous = self.active_dataset();
         self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
+        self.suppressions =
+            SuppressionSet::load(&storage_dir.join("suppress"), &self.active_dataset());
         if previous != self.active_dataset() {
             self.context_generation = self.context_generation.saturating_add(1);
             self.helper_cancel.cancel();
@@ -749,7 +754,7 @@ impl CogneeRuntime {
         }
         state.config = connection.config;
         state.installed = installed;
-        state.refresh_dataset(cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         state.api_key = connection.api_key;
         state.key_source = connection.key_source;
         Self::rebuild_helper(&mut state);
@@ -1258,31 +1263,52 @@ impl CogneeRuntime {
         self.notices.notify(level, text);
     }
 
-    pub(crate) fn observe_candidate(&self, candidate: &Candidate, outcome: &str) {
+    pub(crate) fn observe_candidate_with_supersession(
+        &self,
+        candidate: &Candidate,
+        outcome: &str,
+        supersession: Option<&str>,
+        supersession_reason: Option<&str>,
+    ) {
         let reason = match &candidate.state {
             CandidateState::Rejected(reason) => Some(reason.clone()),
             _ => None,
         };
+        let mut metadata = json!({
+            "category": candidate.category.as_str(),
+            "outcome": outcome,
+            "reason": reason,
+            "sourceRole": match candidate.source.role {
+                Role::User => "user",
+                Role::Assistant => "assistant",
+                Role::Tool => "tool",
+            },
+            "supersedes": candidate.supersedes,
+            "outcomeVersion": 1
+        });
+        if let Some(status) = supersession {
+            metadata["supersession"] = json!(status);
+            if let Some(reason) = supersession_reason {
+                metadata["supersessionReason"] = json!(reason);
+            }
+        }
         self.observe(
             "candidate",
             outcome,
             ObserveFields {
                 preview: Some(Value::String(candidate.text.clone())),
-                meta: meta(json!({
-                    "category": candidate.category.as_str(),
-                    "outcome": outcome,
-                    "reason": reason,
-                    "sourceRole": match candidate.source.role {
-                        Role::User => "user",
-                        Role::Assistant => "assistant",
-                        Role::Tool => "tool",
-                    },
-                    "supersedes": candidate.supersedes,
-                    "outcomeVersion": 1
-                })),
+                meta: meta(metadata),
                 ..ObserveFields::default()
             },
         );
+    }
+
+    pub(crate) fn record_suppression(&self, suppression: Suppression) -> Result<(), String> {
+        let directory = self.storage_dir.join("suppress");
+        super::suppress::record(&directory, &suppression)
+            .map_err(|error| format!("Could not record Cognee suppression: {error}"))?;
+        self.state().suppressions.insert(suppression);
+        Ok(())
     }
 
     fn observe(&self, operation: &str, phase: &str, fields: ObserveFields) {
@@ -2354,7 +2380,7 @@ impl CogneeRuntime {
         state.installed = true;
         Self::rebuild_helper(&mut state);
         let cwd = self.cwd.lock().unwrap().clone();
-        state.refresh_dataset(cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         state.context_generation = state.context_generation.saturating_add(1);
         if previous_dataset != state.active_dataset() {
             state.evidence_cache.clear();
@@ -2524,6 +2550,7 @@ impl CogneeRuntime {
     }
 
     /// Admit and queue one model-proposed memory against current branch evidence.
+    #[cfg(test)]
     pub(crate) async fn propose_memory(
         &self,
         text: &str,
@@ -2532,6 +2559,26 @@ impl CogneeRuntime {
         verified_by: Option<&str>,
         supersedes: Option<&str>,
     ) -> Result<String, String> {
+        self.propose_memory_with_expiry(
+            text,
+            category,
+            source_entry_id,
+            verified_by,
+            supersedes,
+            None,
+        )
+        .await
+    }
+
+    pub(crate) async fn propose_memory_with_expiry(
+        &self,
+        text: &str,
+        category: Category,
+        source_entry_id: &str,
+        verified_by: Option<&str>,
+        supersedes: Option<&str>,
+        valid_hours: Option<u64>,
+    ) -> Result<String, String> {
         super::propose::propose_memory(
             self,
             text,
@@ -2539,6 +2586,7 @@ impl CogneeRuntime {
             source_entry_id,
             verified_by,
             supersedes,
+            valid_hours,
         )
         .await
     }
@@ -2793,7 +2841,7 @@ impl CogneeRuntime {
             }
             state.started_host_session = Some(host_id.into());
             let cwd = self.cwd.lock().unwrap().clone();
-            state.refresh_dataset(cwd.as_deref());
+            state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         }
         self.apply_tool_state().await;
         self.schedule_prefetch(
@@ -3375,14 +3423,22 @@ impl CogneeRuntime {
                 kept,
             };
         }
+        let dataset = state.active_dataset();
+        let legacy_dataset = state.fallback_dataset();
+        let State {
+            seen_evidence,
+            suppressions,
+            ..
+        } = &mut *state;
         let context = FilterContext {
             now_ms: self.now(),
-            dataset: state.active_dataset(),
-            legacy_dataset: state.fallback_dataset(),
+            dataset,
+            legacy_dataset,
             // Branch restriction awaits RepositoryIdentity; do not shell out.
             branch: None,
+            suppressions: Some(suppressions),
         };
-        select_new_with_context(results, &mut state.seen_evidence, &context)
+        select_new_with_context(results, seen_evidence, &context)
     }
 
     async fn recall_for_prompt(
@@ -3433,9 +3489,20 @@ impl CogneeRuntime {
             let State {
                 evidence_cache,
                 seen_evidence,
+                suppressions,
                 ..
             } = &mut *state;
-            evidence_cache.take(&dataset, generation, self.now(), seen_evidence)
+            let mut entries = evidence_cache.take(&dataset, generation, self.now(), seen_evidence);
+            for entry in &mut entries {
+                entry.text = entry
+                    .text
+                    .lines()
+                    .filter(|line| suppressions.is_suppressed(line, self.now(), None).is_none())
+                    .collect::<Vec<_>>()
+                    .join("\n");
+            }
+            entries.retain(|entry| !entry.text.is_empty());
+            entries
         } else {
             Vec::new()
         };
@@ -4103,6 +4170,17 @@ mod tests {
         .unwrap();
         rt.wait_for_background().await;
         assert_eq!(transport.sent().len(), 2);
+        transport.push(FakeResponse::json(200, json!({})));
+        rt.propose_memory(
+            "always keep generated files out of source control",
+            Category::Lesson,
+            &source_id,
+            None,
+            Some("missing-target"),
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
         let events = super::super::observer::read_observations(&rt.storage_dir);
         assert!(events.iter().any(|event| {
             event.operation == "candidate"
@@ -4110,6 +4188,233 @@ mod tests {
                     preview.contains("token=[REDACTED]") && !preview.contains("shhsecret")
                 })
         }));
+        assert!(events.iter().any(|event| {
+            event.operation == "candidate"
+                && event.meta.as_ref().is_some_and(|meta| {
+                    meta.get("supersession").and_then(Value::as_str) == Some("unresolved")
+                        && meta.get("supersessionReason").and_then(Value::as_str)
+                            == Some("unknown_target")
+                })
+        }));
+    }
+
+    #[tokio::test]
+    async fn accepted_valid_hours_expires_at_injected_time_and_legacy_is_unchanged() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let clock_read = clock.clone();
+        let rt = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+            Arc::new(move || clock_read.load(Ordering::Relaxed)),
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "The volatile environment state is current.",
+            1,
+        ))])
+        .await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory_with_expiry(
+            "volatile environment state",
+            Category::Preference,
+            &source_id,
+            None,
+            None,
+            Some(1),
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        let candidate = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.text == "volatile environment state")
+            .unwrap();
+        assert_eq!(candidate.valid_until_ms, Some(NOW + 60 * 60 * 1000));
+        let before_expiry = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(before_expiry.lines.len(), 1);
+        clock.store(NOW + 60 * 60 * 1000, Ordering::Relaxed);
+        let after_expiry = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert!(after_expiry.lines.is_empty());
+        assert_eq!(after_expiry.rejected.expired, 1);
+        let expired_record = std::fs::read_dir(rt.storage_dir.join("suppress"))
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .find(|path| {
+                path.extension()
+                    .is_some_and(|extension| extension == "json")
+                    && std::fs::read_to_string(path)
+                        .ok()
+                        .and_then(|text| serde_json::from_str::<Suppression>(&text).ok())
+                        .is_some_and(|record| {
+                            record.hash
+                                == super::super::suppress::content_hash(
+                                    "volatile environment state",
+                                )
+                        })
+            })
+            .unwrap();
+        assert!(expired_record.exists());
+        let reloaded = super::super::suppress::SuppressionSet::load(
+            &rt.storage_dir.join("suppress"),
+            &candidate.dataset,
+        );
+        assert_eq!(
+            reloaded.is_suppressed("volatile environment state", NOW + 60 * 60 * 1000, None),
+            Some(super::super::suppress::Reason::Expired)
+        );
+
+        rt.state().config.read_policy = ReadPolicy::Legacy;
+        let legacy = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(legacy.lines.len(), 1);
+        assert_eq!(legacy.lines[0].text, "volatile environment state");
+    }
+
+    #[tokio::test]
+    async fn accepted_user_correction_persists_and_filters_old_fact_after_seen_clear() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "The old durable fact changed; the new durable fact is authoritative.",
+            1,
+        ))])
+        .await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory(
+            "old durable fact",
+            Category::Decision,
+            &source_id,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        let old = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.text == "old durable fact")
+            .unwrap();
+        rt.propose_memory(
+            "new durable fact",
+            Category::Decision,
+            &source_id,
+            None,
+            Some(&old.id),
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+
+        let candidates = super::super::candidates::read_candidates(&rt.candidates_dir());
+        assert!(candidates.iter().any(|candidate| candidate.id == old.id));
+        assert!(candidates
+            .iter()
+            .any(|candidate| candidate.text == "new durable fact"));
+        let correction_observation = super::super::observer::read_observations(&rt.storage_dir)
+            .into_iter()
+            .find(|event| {
+                event.operation == "candidate"
+                    && event.meta.as_ref().is_some_and(|meta| {
+                        meta.get("supersession").and_then(Value::as_str) == Some("recorded")
+                            && !meta.contains_key("supersessionReason")
+                    })
+            })
+            .unwrap();
+        assert_eq!(correction_observation.phase, "accepted");
+        assert!(std::fs::read_dir(rt.storage_dir.join("suppress"))
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path
+                .extension()
+                .is_some_and(|extension| extension == "json"))
+            .filter_map(|path| std::fs::read_to_string(path).ok())
+            .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
+            .any(|record| {
+                record.hash == super::super::suppress::content_hash("old durable fact")
+                    && matches!(
+                        record.kind,
+                        super::super::suppress::SuppressionKind::Superseded { .. }
+                    )
+            }));
+
+        rt.state().seen_evidence.clear();
+        let selection = rt.recall_evidence(&[RecallResult {
+            text: "old durable fact\nnew durable fact".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(selection.lines.len(), 1);
+        assert_eq!(selection.lines[0].text, "new durable fact");
+        assert_eq!(selection.rejected.superseded, 1);
+        let same_fact_under_another_query = rt.recall_evidence(&[RecallResult {
+            text: "old durable fact".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert!(same_fact_under_another_query.lines.is_empty());
+        assert_eq!(same_fact_under_another_query.rejected.superseded, 1);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -4291,6 +4596,28 @@ mod tests {
             .unwrap_err();
         assert!(matches!(error, ice_agent::AgentError::Validation(_)));
 
+        for valid_hours in [json!(0), json!(8761), json!(-1), json!(1.5), json!("2")] {
+            let invalid_validity = proposal
+                .tool
+                .execute(
+                    "invalid-validity",
+                    json!({
+                        "text": "candidate",
+                        "category": "constraint",
+                        "source_entry_id": "missing",
+                        "valid_hours": valid_hours
+                    }),
+                    CancellationToken::new(),
+                    Arc::new(|_| {}),
+                )
+                .await
+                .unwrap_err();
+            assert!(matches!(
+                invalid_validity,
+                ice_agent::AgentError::Validation(_)
+            ));
+        }
+
         let mut config = rt.config();
         config.enabled = false;
         assert!(rt.save_and_adopt(config));
@@ -4358,6 +4685,8 @@ mod tests {
                 id: uuid::Uuid::new_v4().to_string(),
                 category: Category::Constraint,
                 text: "always keep generated assets outside the source repository".into(),
+                branch: None,
+                valid_until_ms: None,
                 source: super::super::candidates::Source {
                     entry_id: source_id.clone(),
                     role: Role::User,
@@ -4428,6 +4757,8 @@ mod tests {
             id: uuid::Uuid::new_v4().to_string(),
             category: Category::Preference,
             text: "Prefer compact reports".into(),
+            branch: None,
+            valid_until_ms: None,
             source: super::super::candidates::Source {
                 entry_id: source_id,
                 role: Role::User,
@@ -4508,6 +4839,8 @@ mod tests {
             id: uuid::Uuid::new_v4().to_string(),
             category: Category::Constraint,
             text: "Always retain source provenance for generated artifacts".into(),
+            branch: None,
+            valid_until_ms: None,
             source: super::super::candidates::Source {
                 entry_id: source_id,
                 role: Role::User,
@@ -4813,6 +5146,38 @@ mod tests {
                 .is_none());
         }
         assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn suppression_recorded_after_prefetch_filters_cached_delivery() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"Use the old cache design"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch("cache design".into(), session);
+        rt.wait_for_background().await;
+        rt.record_suppression(Suppression {
+            id: uuid::Uuid::new_v4().to_string(),
+            hash: super::super::suppress::content_hash("Use the old cache design"),
+            kind: super::super::suppress::SuppressionKind::Superseded {
+                by: "replacement".into(),
+            },
+            dataset: rt.active_dataset(),
+            branch: None,
+            recorded_at_ms: NOW,
+        })
+        .unwrap();
+        assert!(memory(&rt, "hello there", None).await.is_none());
     }
 
     #[tokio::test]
@@ -5719,6 +6084,39 @@ mod tests {
             .unwrap_err();
         assert!(error.to_string().contains("disabled"));
         assert_eq!(transport.sent().len(), requests_before_offline);
+    }
+
+    #[tokio::test]
+    async fn proposal_tool_rejects_invalid_valid_hours() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            false,
+        );
+        let tool = super::super::propose::CogneeProposeMemoryTool::new(Arc::downgrade(&rt));
+        for valid_hours in [json!(0), json!(8761), json!(-1), json!(1.5), json!("2")] {
+            let error = tool
+                .execute(
+                    "call",
+                    json!({
+                        "text": "temporary fact",
+                        "category": "preference",
+                        "source_entry_id": "source",
+                        "valid_hours": valid_hours
+                    }),
+                    CancellationToken::new(),
+                    Arc::new(|_| {}),
+                )
+                .await
+                .unwrap_err();
+            assert!(matches!(error, ice_agent::AgentError::Validation(_)));
+        }
+        assert!(transport.sent().is_empty());
     }
 
     #[tokio::test]

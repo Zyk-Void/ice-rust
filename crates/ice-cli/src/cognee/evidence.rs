@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
 use super::client::RecallResult;
+use super::suppress::{Reason as SuppressionReason, SuppressionSet};
 use super::text::RecallLine;
 use crate::blackhole::js::parse_iso_ms;
 use crate::blackhole::regex;
@@ -107,11 +108,12 @@ pub fn provenance_tag(result: &RecallResult) -> Option<String> {
 
 /// Eligibility context for metadata-driven automatic recall filters.
 #[derive(Debug)]
-pub struct FilterContext {
+pub struct FilterContext<'a> {
     pub now_ms: u64,
     pub dataset: String,
     pub legacy_dataset: Option<String>,
     pub branch: Option<String>,
+    pub suppressions: Option<&'a SuppressionSet>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -142,7 +144,7 @@ pub fn select_new(results: &[RecallResult], seen: &mut SeenEvidence) -> Vec<Reca
 pub fn select_new_with_context(
     results: &[RecallResult],
     seen: &mut SeenEvidence,
-    ctx: &FilterContext,
+    ctx: &FilterContext<'_>,
 ) -> Selection {
     select_results(results, seen, Some(ctx))
 }
@@ -169,7 +171,7 @@ fn parse_rfc3339_ms(value: &str) -> Option<i64> {
 fn select_results(
     results: &[RecallResult],
     seen: &mut SeenEvidence,
-    context: Option<&FilterContext>,
+    context: Option<&FilterContext<'_>>,
 ) -> Selection {
     let mut selection = Selection::default();
     for result in results {
@@ -212,7 +214,15 @@ fn select_results(
         }
         let mut kept = Vec::new();
         for line in result.text.lines().filter(|line| !line.trim().is_empty()) {
-            if is_routine_success_line(line) {
+            if let Some(reason) = context.and_then(|ctx| {
+                ctx.suppressions
+                    .and_then(|set| set.is_suppressed(line, ctx.now_ms, ctx.branch.as_deref()))
+            }) {
+                match reason {
+                    SuppressionReason::Superseded => selection.rejected.superseded += 1,
+                    SuppressionReason::Expired => selection.rejected.expired += 1,
+                }
+            } else if is_routine_success_line(line) {
                 selection.rejected.routine += 1;
             } else if !seen.insert(&normalize(line)) {
                 selection.rejected.duplicate += 1;
@@ -313,6 +323,49 @@ mod tests {
     }
 
     #[test]
+    fn local_suppressions_filter_lines_without_changing_legacy_selection() {
+        use super::super::suppress::{content_hash, Suppression, SuppressionKind, SuppressionSet};
+
+        let mut suppressions = SuppressionSet::default();
+        suppressions.insert(Suppression {
+            id: uuid::Uuid::new_v4().to_string(),
+            hash: content_hash("old decision"),
+            kind: SuppressionKind::Superseded {
+                by: "new-id".into(),
+            },
+            dataset: "current".into(),
+            branch: None,
+            recorded_at_ms: 1,
+        });
+        suppressions.insert(Suppression {
+            id: uuid::Uuid::new_v4().to_string(),
+            hash: content_hash("temporary state"),
+            kind: SuppressionKind::Expires { at_ms: 100 },
+            dataset: "current".into(),
+            branch: None,
+            recorded_at_ms: 1,
+        });
+        let context = FilterContext {
+            now_ms: 100,
+            dataset: "current".into(),
+            legacy_dataset: None,
+            branch: None,
+            suppressions: Some(&suppressions),
+        };
+        let results = [result(
+            "[decision] Old decision\n- Temporary   state\nKeep this decision",
+        )];
+        let selection = select_new_with_context(&results, &mut SeenEvidence::default(), &context);
+        assert_eq!(selection.lines.len(), 1);
+        assert_eq!(selection.lines[0].text, "Keep this decision");
+        assert_eq!(selection.rejected.superseded, 1);
+        assert_eq!(selection.rejected.expired, 1);
+
+        let legacy = select_new(&results, &mut SeenEvidence::default());
+        assert_eq!(legacy[0].text, results[0].text);
+    }
+
+    #[test]
     fn contextual_filters_count_metadata_and_line_rejections() {
         let mut seen = SeenEvidence::default();
         let context = FilterContext {
@@ -320,6 +373,7 @@ mod tests {
             dataset: "current".into(),
             legacy_dataset: Some("legacy".into()),
             branch: Some("main".into()),
+            suppressions: None,
         };
         let with_metadata = |text, metadata| {
             let mut hit = result(text);
