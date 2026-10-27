@@ -4820,8 +4820,17 @@ impl AgentHarness {
                                 {
                                     return raw.clone();
                                 }
-                                let raw = ice_agent::message::original_user_prompt(message)
-                                    .map(str::to_string);
+                                let raw = match message {
+                                    AgentMessage::User(user) => {
+                                        match ice_agent::message::original_user_prompt(message) {
+                                            Some(raw) => Some(raw.to_string()),
+                                            None if user.origin.is_some() => None,
+                                            None => user_prompt_text(message)
+                                                .filter(|text| !contains_expansion_markup(text)),
+                                        }
+                                    }
+                                    _ => None,
+                                };
                                 if cache.len() >= 256 {
                                     cache.remove(0);
                                 }
@@ -6121,6 +6130,10 @@ struct ConfigSnapshot {
 // ===========================================================================
 
 /// Text of a user prompt: the string, or its text blocks joined by newlines.
+fn contains_expansion_markup(text: &str) -> bool {
+    text.contains("<skill ") || text.contains("<prompt-template ")
+}
+
 fn user_prompt_text(message: &AgentMessage) -> Option<String> {
     let AgentMessage::User(user) = message else {
         return None;
