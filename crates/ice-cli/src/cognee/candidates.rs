@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use ice_agent::AgentMessage;
 use serde::{Deserialize, Serialize};
 
+use super::client::RecallResult;
 use super::config::{create_private_dir, write_private_file_atomic};
 use super::evidence::is_routine_success_line;
 
@@ -320,6 +321,57 @@ pub fn store_pending(
     Ok(true)
 }
 
+/// Read accepted local curated evidence without a network request. Call at
+/// admission/lifecycle boundaries and retain the returned results in a cache.
+pub fn query_accepted(
+    directory: &Path,
+    dataset: &str,
+    branch: Option<&str>,
+    query: &str,
+    now_ms: u64,
+    limit: usize,
+) -> Vec<RecallResult> {
+    let needle = query.to_lowercase();
+    let records = read_candidates(directory);
+    let superseded = records
+        .iter()
+        .filter_map(|candidate| candidate.supersedes.clone())
+        .collect::<std::collections::HashSet<_>>();
+    records
+        .into_iter()
+        .filter(|candidate| {
+            candidate.state == CandidateState::Accepted
+                && candidate.dataset == dataset
+                && candidate
+                    .valid_until_ms
+                    .is_none_or(|expiry| expiry > now_ms)
+                && !superseded.contains(&candidate.id)
+                && candidate
+                    .branch
+                    .as_deref()
+                    .is_none_or(|scope| Some(scope) == branch)
+                && (needle.is_empty() || candidate.text.to_lowercase().contains(&needle))
+        })
+        .take(limit.min(MAX_PENDING_CANDIDATES * 4))
+        .map(|candidate| RecallResult {
+            text: candidate.text,
+            score: None,
+            metadata: Some(serde_json::json!({
+                "source": "local_curated_candidate",
+                "candidateId": candidate.id,
+                "sourceEntryId": candidate.source.entry_id,
+                "sourceRole": candidate.source.role,
+                "category": candidate.category,
+                "dataset": candidate.dataset,
+                "branch": candidate.branch,
+                "validUntilMs": candidate.valid_until_ms,
+                "supersedes": candidate.supersedes,
+                "createdAt": candidate.created_at,
+            })),
+        })
+        .collect()
+}
+
 pub fn set_state(
     directory: &Path,
     candidate: &mut Candidate,
@@ -482,6 +534,55 @@ mod tests {
         assert_eq!(admit(&empty, &branch), Admission::Reject(Reason::Invalid));
         let long = candidate(Category::Constraint, &"x".repeat(601), Role::User, "user-1");
         assert_eq!(admit(&long, &branch), Admission::Reject(Reason::Invalid));
+    }
+
+    #[test]
+    fn accepted_curated_evidence_is_locally_queryable_with_provenance() {
+        let directory = tempfile::tempdir().unwrap();
+        let mut old = candidate(
+            Category::Constraint,
+            "Use the stable cache",
+            Role::User,
+            "user-1",
+        );
+        old.id = "00000000-0000-4000-8000-000000000001".into();
+        old.state = CandidateState::Accepted;
+        old.dataset = "repo".into();
+        let mut current = candidate(
+            Category::Constraint,
+            "Use the revised cache",
+            Role::User,
+            "user-2",
+        );
+        current.id = "00000000-0000-4000-8000-000000000002".into();
+        current.state = CandidateState::Accepted;
+        current.supersedes = Some(old.id.clone());
+        current.dataset = "repo".into();
+        current.valid_until_ms = Some(500);
+        let mut expired = candidate(
+            Category::Lesson,
+            "Expired detail",
+            Role::Assistant,
+            "assistant",
+        );
+        expired.id = "00000000-0000-4000-8000-000000000003".into();
+        expired.state = CandidateState::Accepted;
+        expired.dataset = "repo".into();
+        expired.valid_until_ms = Some(99);
+        for item in [&old, &current, &expired] {
+            assert!(store_pending(directory.path(), item, 10).unwrap());
+        }
+        let results = query_accepted(directory.path(), "repo", None, "revised", 100, 10);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].text, "Use the revised cache");
+        let metadata = results[0].metadata.as_ref().unwrap();
+        assert_eq!(metadata["sourceEntryId"], "user-2");
+        assert_eq!(metadata["dataset"], "repo");
+        assert_eq!(
+            metadata["supersedes"],
+            "00000000-0000-4000-8000-000000000001"
+        );
+        assert!(query_accepted(directory.path(), "other", None, "", 100, 10).is_empty());
     }
 
     #[test]
