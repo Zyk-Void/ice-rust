@@ -14,6 +14,7 @@ Status: **host request-context bridge integrated; extension consumer/origin plum
 
 ## Verification in this slice
 
+- Implementation commit: `cb8aa3c11afab44e4f2f39543e94c712ea2b08ab`.
 - `cargo test -p ice-agent --locked --quiet`: passed.
 - `cargo test -p ice-harness --locked --quiet`: passed (latest run).
 - `cargo test -p ice-cli --lib --locked cognee:: --quiet`: passed (172 passed, 1,253 filtered out).
