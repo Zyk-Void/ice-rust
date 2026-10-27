@@ -13,7 +13,7 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 
 | Tasks | Status | Evidence / blockers |
 |---|---|---|
-| M0.1 | In progress | Versioned recall skip/nonempty/empty and improvement-acceptance metadata added in `crates/ice-cli/src/cognee/runtime.rs`; legacy phases preserved. Manual improvement is observed and the TUI labels improvement acceptance. Recorder titles now distinguish versioned skips, retrievals and accepted jobs while preserving legacy titles. Injection and wait metrics, error outcomes, late-completion attribution, and full fixtures remain. |
+| M0.1 | In progress | Versioned recall skip/nonempty/empty and improvement-acceptance metadata added in `crates/ice-cli/src/cognee/runtime.rs`; legacy phases preserved. Manual improvement is observed and the TUI labels improvement acceptance. Recorder titles now distinguish versioned skips, retrievals and accepted jobs while preserving legacy titles. Recall terminal metadata records actual remote wait and original source/session context, including errors. Actual persisted injection metrics, complete late-completion attribution and full fixtures remain. |
 | M0.2 | In progress | Doctor distinguishes the native recall endpoint, unverified support, background improvement acceptance and unprobed MCP catalog; endpoint credentials are stripped. Existing wire-shape fixtures cover recall and writes; new 404/422 fixtures verify no fallback retries. Capability discovery and unsupported completion-status fixtures remain. |
 | M1.1, M1.2 | Not started | Depends on M0.1; legacy read-through also depends on M3.1. |
 | M2.1, M2.2, M2.3 | Not started | Selective recall; preserve legacy defaults. |

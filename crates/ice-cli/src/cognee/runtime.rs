@@ -2371,13 +2371,14 @@ impl CogneeRuntime {
                 return self.turn_scoped_memory(None);
             }
         }
+        let network_started = std::time::Instant::now();
         let result = client
             .recall(
                 event.prompt,
                 RecallOptions {
                     top_k: Some(top_k),
-                    dataset: Some(dataset),
-                    session_id: Some(session_id),
+                    dataset: Some(dataset.clone()),
+                    session_id: Some(session_id.clone()),
                     scope: AUTO_RECALL_SCOPE
                         .iter()
                         .map(|scope| scope.to_string())
@@ -2387,6 +2388,7 @@ impl CogneeRuntime {
                 },
             )
             .await;
+        let remote_wait_ms = network_started.elapsed().as_millis() as u64;
         match result {
             Ok(results) => {
                 {
@@ -2409,7 +2411,7 @@ impl CogneeRuntime {
                                 .collect::<Vec<_>>()
                                 .join("\n"),
                         )),
-                        meta: meta(json!({"hits": results.len(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }})),
+                        meta: meta(json!({"hits": results.len(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
                         ..ObserveFields::default()
                     },
                 );
@@ -2430,7 +2432,8 @@ impl CogneeRuntime {
                     ObserveFields {
                         request_id: Some(request_id.into()),
                         latency_ms: latency(),
-                        error: Some(kind),
+                        error: Some(kind.clone()),
+                        meta: meta(json!({"outcomeVersion": 1, "outcome": kind, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
                         ..ObserveFields::default()
                     },
                 );
@@ -2949,6 +2952,22 @@ mod tests {
         // Persistence runs on blocking threads and need not preserve emission order.
         outcomes.sort_unstable();
         assert_eq!(outcomes, ["retrieved_nonempty", "skipped", "skipped"]);
+        let retrieved = observations
+            .iter()
+            .find(|event| {
+                event
+                    .meta
+                    .as_ref()
+                    .and_then(|m| m.get("outcome"))
+                    .and_then(Value::as_str)
+                    == Some("retrieved_nonempty")
+            })
+            .unwrap();
+        let metadata = retrieved.meta.as_ref().unwrap();
+        assert_eq!(metadata["sourceSessionId"], "ice_host1");
+        assert_eq!(metadata["hostSessionId"], "host1");
+        assert_eq!(metadata["sourceDataset"], rt.active_dataset());
+        assert!(metadata["remoteWaitMs"].as_u64().is_some());
     }
 
     #[tokio::test]
