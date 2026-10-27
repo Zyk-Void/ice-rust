@@ -3170,6 +3170,38 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn search_tool_reports_timeout_as_error() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![json!({"results": []}).to_string().into_bytes()],
+            delay_ms: 500,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"recallBudgetMs": 100})),
+            false,
+        );
+        let tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&rt));
+        let error = tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("timeout"));
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
     async fn recall_failures_open_the_circuit() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
