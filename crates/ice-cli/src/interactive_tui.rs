@@ -344,7 +344,10 @@ fn submit_user_prompt(ctx: &CommandContext, text: &str) {
     // `crates/ice-harness/tests/harness_run_e2e.rs`. Queued steering /
     // follow-up prompts DO get a `message_start` (the loop drains those
     // itself), so those are deliberately rendered from the event instead.
-    add_user_message(&ctx.chat, text);
+    add_user_message(
+        &ctx.chat,
+        &display_user_prompt(&ctx.resources.lock().unwrap(), text),
+    );
     // A new prompt starts a fresh interaction at the tail even when the
     // user had scrolled up to inspect older output.
     if let Some(scroll) = ctx.tui.get_primary_scroll_view() {
@@ -1111,10 +1114,19 @@ fn tool_result_message_text(msg: &ice_ai::types::ToolResultMessage) -> String {
         .join("\n")
 }
 
-/// Display text of a user message. Expanded `$skill` blocks collapse back to
-/// their reference, so transcripts and restored drafts show what was typed.
+/// Text of a user message for drafts and listings. Expanded skill blocks
+/// collapse back to the `$name` mention that was typed.
 fn user_message_text(msg: &ice_ai::types::UserMessage) -> String {
-    let text = match &msg.content {
+    collapse_skill_invocations(&user_message_raw_text(msg))
+}
+
+/// Transcript bubble text of a user message (skills as highlighted names).
+fn user_message_display(msg: &ice_ai::types::UserMessage) -> String {
+    skill_display_text(&user_message_raw_text(msg))
+}
+
+fn user_message_raw_text(msg: &ice_ai::types::UserMessage) -> String {
+    match &msg.content {
         ice_ai::types::UserContent::Text(s) => s.clone(),
         ice_ai::types::UserContent::Blocks(blocks) => blocks
             .iter()
@@ -1123,8 +1135,7 @@ fn user_message_text(msg: &ice_ai::types::UserMessage) -> String {
                 _ => None,
             })
             .collect(),
-    };
-    collapse_skill_invocations(&text)
+    }
 }
 
 /// The catalog allowed in the Ctrl+P cycle: the `/scoped-models` set from
@@ -3193,7 +3204,10 @@ pub async fn interactive_tui(
                         // for it, so render the bubble here (see the submit
                         // handler in `interactive_tui`).
                         state_for_key.new_message_count.other_message();
-                        add_user_message(&state_for_key.chat_container, &prompt);
+                        add_user_message(
+                            &state_for_key.chat_container,
+                            &display_user_prompt(&ctx_for_key.resources.lock().unwrap(), &prompt),
+                        );
                         push_history(&state_for_key, &prompt);
                         let images = state_for_key.take_prompt_images(&prompt);
                         let _ = tx_for_key.send(TuiMessage::UserInput(prompt, images));

@@ -1047,6 +1047,25 @@ fn skill_mentions_and_commands_expand_known_skills() {
 }
 
 #[test]
+fn user_bubble_shows_invoked_skill_as_highlighted_name() {
+    let resources = ice_harness::types::AgentHarnessResources {
+        skills: Some(vec![review_skill()]),
+        ..Default::default()
+    };
+    let display = display_user_prompt(&resources, "$review list memories for $PATH");
+    let accent = current_theme().colors.accent;
+    assert!(display.contains(&accent.fg("review")));
+    let chat = Arc::new(Container::new());
+    add_user_message(&chat, &display);
+    let plain = strip_ansi(&collect_transcript_lines(&chat).join("\n"));
+    assert!(plain.contains("review list memories for $PATH"), "{plain}");
+    assert!(
+        !plain.contains("$review") && !plain.contains("Instructions"),
+        "{plain}"
+    );
+}
+
+#[test]
 fn queued_prompt_expands_skills_and_keeps_referenced_images() {
     let state = test_tui_state();
     let resources = ice_harness::types::AgentHarnessResources {

@@ -300,12 +300,16 @@ pub(super) async fn run_initial_prompts(
     streaming: bool,
     running: &Arc<Mutex<bool>>,
 ) {
+    let resources = harness.get_resources().await.unwrap_or_default();
     for prompt in prompts {
         if !*running.lock().unwrap() {
             break;
         }
         // Direct prompts do not receive a user MessageStart event.
-        add_user_message(&state.chat_container, &prompt);
+        add_user_message(
+            &state.chat_container,
+            &display_user_prompt(&resources, &prompt),
+        );
         add_image_previews(&state.chat_container, &images, state.images_visible());
         tui.request_render(false);
         if !run_prompt_streaming(
@@ -373,10 +377,9 @@ pub(super) fn expand_skill_references(
     expanded
 }
 
-/// Inverse of [`expand_skill_references`] for display and draft restoration:
-/// each skill invocation block shows as its `$name` mention, so transcripts
-/// and restored drafts never carry the skill body.
-pub(super) fn collapse_skill_invocations(text: &str) -> String {
+/// Replace each skill invocation block (and the blank line before any text
+/// that follows it) with `render(name)` plus a space separator.
+fn replace_skill_blocks(text: &str, render: impl Fn(&str) -> String) -> String {
     static BLOCK: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
         regex::Regex::new(r#"<skill name="([^"]+)" location="[^"]*">\n(?s:.*?)\n</skill>(\n\n)?"#)
             .unwrap()
@@ -384,9 +387,30 @@ pub(super) fn collapse_skill_invocations(text: &str) -> String {
     BLOCK
         .replace_all(text, |captures: &regex::Captures<'_>| {
             let separator = if captures.get(2).is_some() { " " } else { "" };
-            format!("${}{separator}", &captures[1])
+            format!("{}{separator}", render(&captures[1]))
         })
         .into_owned()
+}
+
+/// Inverse of [`expand_skill_references`] for draft restoration and plain
+/// listings: each skill invocation block becomes its `$name` mention again.
+pub(super) fn collapse_skill_invocations(text: &str) -> String {
+    replace_skill_blocks(text, |name| format!("${name}"))
+}
+
+/// Transcript text for a user prompt: each invoked skill shows as its bare
+/// name in the accent color instead of the skill body or the `$` marker.
+pub(super) fn skill_display_text(text: &str) -> String {
+    let accent = current_theme().colors.accent;
+    replace_skill_blocks(text, |name| accent.fg(name))
+}
+
+/// Transcript text for a prompt the user is sending directly.
+pub(super) fn display_user_prompt(
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> String {
+    skill_display_text(&expand_skill_references(resources, prompt))
 }
 
 /// The message and images to queue for a prompt submitted mid-run.

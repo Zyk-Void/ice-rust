@@ -599,7 +599,9 @@ pub(super) async fn handle_agent_event(
             // renders that bubble instead.
             AgentMessage::User(user) => {
                 state.new_message_count.other_message();
-                state.transcript_view().add_user(&user_message_text(&user));
+                state
+                    .transcript_view()
+                    .add_user(&user_message_display(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, &harness.lane("main")).await;

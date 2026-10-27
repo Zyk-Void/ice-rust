@@ -985,7 +985,7 @@ impl TuiState {
         let colors = current_theme().colors;
         container.add_child(Arc::new(Spacer::new(1)));
         for text in &messages.steering {
-            let text = collapse_skill_invocations(text);
+            let text = skill_display_text(text);
             container.add_child(Arc::new(Text::new(
                 colors.muted.fg(&format!("Steering: {text}")),
                 1,
@@ -993,7 +993,7 @@ impl TuiState {
             )));
         }
         for text in &messages.follow_up {
-            let text = collapse_skill_invocations(text);
+            let text = skill_display_text(text);
             container.add_child(Arc::new(Text::new(
                 colors.muted.fg(&format!("Follow-up: {text}")),
                 1,
