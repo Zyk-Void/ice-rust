@@ -1,12 +1,15 @@
 //! Circuit breakers, the durable pending-remember queue and the session
 //! cache warmup buffer. Ports `ice-cognee.ts` (COG-031..036).
 //!
-//! The queue is not exactly-once: there is no cross-process lock, so two
-//! icers processes can replay the same record. Records marked `uncertain`
-//! (a timed-out or aborted write that may have been accepted) are only
-//! replayed by an explicit `/cognee flush`.
+//! The queue is not exactly-once. A kernel advisory dispatch lease prevents
+//! simultaneous processes from sending the same durable intent. Records marked
+//! `uncertain` (a timed-out or aborted write that may have been accepted) are
+//! only replayed by an explicit `/cognee flush`.
 
+use std::fs::{File, OpenOptions};
 use std::path::{Path, PathBuf};
+
+use fs2::FileExt;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -19,6 +22,31 @@ pub const CIRCUIT_COOLDOWN_MS: u64 = 30_000;
 pub const MAX_WARMUP_ENTRIES: usize = 256;
 pub const WARMUP_DRAIN_BATCH: usize = 16;
 pub const PENDING_DRAIN_BATCH: usize = 4;
+
+/// Exclusive process-wide ownership for dispatch and stale inflight recovery.
+pub struct DispatchLease(File);
+
+impl DispatchLease {
+    pub fn try_acquire(directory: &Path) -> std::io::Result<Option<Self>> {
+        create_private_dir(directory)?;
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(directory.join(".dispatch.lock"))?;
+        match file.try_lock_exclusive() {
+            Ok(()) => Ok(Some(Self(file))),
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+}
+
+impl Drop for DispatchLease {
+    fn drop(&mut self) {
+        let _ = self.0.unlock();
+    }
+}
 
 /// `CircuitState`. No half-open state: after the cooldown every eligible
 /// request may proceed.
@@ -145,22 +173,32 @@ pub fn enqueue_pending_remember(
 ) -> std::io::Result<bool> {
     let path = pending_record_path(directory, &record.operation_id)?;
     create_private_dir(directory)?;
-    let files = json_files(directory)?;
-    let filename = format!("{}.json", record.operation_id);
-    if path.exists()
-        || read_pending_remember(directory).iter().any(|existing| {
-            existing.dataset == record.dataset
-                && existing.node_set == record.node_set
-                && existing.text == record.text
-        })
-    {
-        return Ok(true);
-    }
-    if files.len() >= limit {
-        return Ok(false);
-    }
-    write_private_file_atomic(&directory.join(filename), &record_line(record))?;
-    Ok(true)
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(directory.join(".enqueue.lock"))?;
+    lock.lock_exclusive()?;
+    let result = (|| {
+        let files = json_files(directory)?;
+        let filename = format!("{}.json", record.operation_id);
+        if path.exists()
+            || read_pending_remember(directory).iter().any(|existing| {
+                existing.dataset == record.dataset
+                    && existing.node_set == record.node_set
+                    && existing.text == record.text
+            })
+        {
+            return Ok(true);
+        }
+        if files.iter().filter(|name| !name.starts_with('.')).count() >= limit {
+            return Ok(false);
+        }
+        write_private_file_atomic(&directory.join(filename), &record_line(record))?;
+        Ok(true)
+    })();
+    let _ = lock.unlock();
+    result
 }
 
 /// Valid records in filename order; unreadable or malformed files are
@@ -223,6 +261,9 @@ pub fn remove_pending_remember(directory: &Path, operation_id: &str) -> std::io:
 
 /// Mark interrupted writes as uncertain so they are never replayed automatically.
 pub fn recover_inflight(directory: &Path) -> usize {
+    let Ok(Some(_lease)) = DispatchLease::try_acquire(directory) else {
+        return 0;
+    };
     let records = read_pending_remember(directory);
     let mut recovered = 0;
     for record in records {
@@ -400,6 +441,28 @@ mod tests {
         assert_eq!(records[1].state, PendingState::Uncertain);
         assert_eq!(select_drain_batch(pending, false).len(), 1);
         assert_eq!(select_drain_batch(pending, true).len(), 2);
+    }
+
+    #[test]
+    fn live_dispatch_owner_blocks_second_owner_and_recovery() {
+        let dir = tempfile::tempdir().unwrap();
+        let record = create_pending_remember("fact", "ice", "user_context", 1);
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        assert!(enqueue_pending_remember(dir.path(), &inflight, 4).unwrap());
+        let owner = DispatchLease::try_acquire(dir.path()).unwrap().unwrap();
+        assert!(DispatchLease::try_acquire(dir.path()).unwrap().is_none());
+        assert_eq!(recover_inflight(dir.path()), 0);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::InFlight
+        );
+        drop(owner);
+        assert_eq!(recover_inflight(dir.path()), 1);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::Uncertain
+        );
     }
 
     #[test]

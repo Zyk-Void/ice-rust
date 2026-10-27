@@ -202,7 +202,13 @@ pub fn admit(candidate: &Candidate, branch: &[(String, AgentMessage)]) -> Admiss
                 return Admission::Reject(Reason::Unverified);
             }
             let needle = normalize_whitespace(&candidate.text);
-            if normalize_whitespace(&message_text(source)).contains(&needle) {
+            // A successful tool call is not evidence for an arbitrary claim.
+            // Require both the assistant source and this verifier output to
+            // contain the exact normalized claim.
+            let verifier_text = message_text(&AgentMessage::ToolResult(result.clone()));
+            if normalize_whitespace(&message_text(source)).contains(&needle)
+                && normalize_whitespace(&verifier_text).contains(&needle)
+            {
                 Admission::Accept
             } else {
                 Admission::Reject(Reason::NotInSource)
@@ -296,11 +302,12 @@ pub fn store_pending(
             )?;
         }
     }
-    if candidates
-        .iter()
-        .filter(|item| item.state == CandidateState::Pending)
-        .count()
-        >= MAX_PENDING_CANDIDATES
+    if candidate.state == CandidateState::Pending
+        && candidates
+            .iter()
+            .filter(|item| item.state == CandidateState::Pending)
+            .count()
+            >= MAX_PENDING_CANDIDATES
     {
         return Ok(false);
     }
@@ -414,7 +421,7 @@ mod tests {
             role: Default::default(),
             tool_call_id: "call-1".into(),
             tool_name: "bash".into(),
-            content: vec![ice_ai::types::Content::text("done")],
+            content: vec![ice_ai::types::Content::text("export completed")],
             details: None,
             usage: None,
             added_tool_names: Vec::new(),
@@ -437,6 +444,11 @@ mod tests {
         );
         outcome.verified_by = Some("tool-1".into());
         assert_eq!(admit(&outcome, &branch), Admission::Accept);
+        outcome.text = "unrelated claim".into();
+        assert_eq!(
+            admit(&outcome, &branch),
+            Admission::Reject(Reason::NotInSource)
+        );
         outcome.text = "made up outcome".into();
         assert_eq!(
             admit(&outcome, &branch),

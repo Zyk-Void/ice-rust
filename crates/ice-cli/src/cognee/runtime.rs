@@ -61,7 +61,7 @@ use super::policy::{admit_prompt, Admission};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
     read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
-    update_pending_remember_state, CircuitState, PendingState,
+    update_pending_remember_state, CircuitState, DispatchLease, PendingState,
 };
 use super::suppress::{Suppression, SuppressionSet};
 use super::text::{
@@ -1582,6 +1582,14 @@ impl CogneeRuntime {
             }
         };
         let dir = self.pending_dir();
+        let lease_dir = dir.clone();
+        let Ok(Some(_dispatch_lease)) =
+            tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                .await
+                .unwrap_or(Ok(None))
+        else {
+            return;
+        };
         let scan_dir = dir.clone();
         let records =
             tokio::task::spawn_blocking(move || select_drain_batch(&scan_dir, allow_uncertain))
@@ -2661,6 +2669,20 @@ impl CogneeRuntime {
             self.notify(
                 NoticeLevel::Error,
                 "Cognee remember was not sent; queued record disappeared",
+            );
+            return;
+        };
+        let lease_dir = dir.clone();
+        let Ok(Some(_dispatch_lease)) =
+            tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                .await
+                .unwrap_or(Ok(None))
+        else {
+            let _ =
+                update_pending_remember_state(&dir, &record.operation_id, PendingState::Pending);
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee remember queued: another process owns dispatch",
             );
             return;
         };

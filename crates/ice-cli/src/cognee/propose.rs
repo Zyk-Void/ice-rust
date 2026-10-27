@@ -64,7 +64,7 @@ impl AgentTool for CogneeProposeMemoryTool {
         &self,
         _tool_call_id: &str,
         params: Value,
-        _signal: CancellationToken,
+        signal: CancellationToken,
         _on_update: Arc<dyn Fn(ToolResultPartial) + Send + Sync>,
     ) -> Result<AgentToolResult, AgentError> {
         let text = params
@@ -96,6 +96,9 @@ impl AgentTool for CogneeProposeMemoryTool {
         let verified_by = optional_string(&params, "verified_by")?;
         let supersedes = optional_string(&params, "supersedes")?;
         let valid_hours = optional_valid_hours(&params)?;
+        if signal.is_cancelled() {
+            return Err(AgentError::Tool("Cognee proposal cancelled".into()));
+        }
         let runtime = self
             .runtime
             .upgrade()
@@ -307,13 +310,17 @@ pub(crate) fn accept_candidate(
     runtime: &CogneeRuntime,
     candidate: &Candidate,
 ) -> Result<bool, String> {
-    let mut record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
+    let record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
     let config = runtime.config();
     if record_text.chars().count() > config.remember_max_chars {
-        record_text = record_text
-            .chars()
-            .take(config.remember_max_chars)
-            .collect();
+        return Ok(false);
+    }
+    let mut attributed = candidate.clone();
+    attributed.state = CandidateState::Accepted;
+    if !candidates::store_pending(&runtime.candidates_dir(), &attributed, runtime.now())
+        .map_err(|error| format!("Could not store candidate attribution: {error}"))?
+    {
+        return Ok(false);
     }
     let record = super::queue::create_pending_remember(
         &record_text,
@@ -402,6 +409,25 @@ pub(crate) async fn propose_memory(
     let admission = candidates::admit(&candidate, &branch);
     candidate.text =
         super::text::redact_memory_text(&candidate.text, candidates::MAX_CANDIDATE_CHARS);
+    if candidate
+        .valid_until_ms
+        .is_some_and(|expiry| expiry <= created_at)
+    {
+        candidate.state = CandidateState::Rejected("expired".into());
+    }
+    if let Some(target) = candidate.supersedes.as_deref() {
+        let stored = candidates::read_candidates(&runtime.candidates_dir());
+        let valid = stored.iter().any(|old| {
+            old.id == target
+                && old.state == CandidateState::Accepted
+                && old.dataset == candidate.dataset
+                && old.branch == candidate.branch
+                && candidate.source.role == Role::User
+        });
+        if !valid {
+            candidate.state = CandidateState::Rejected("invalid_supersedes".into());
+        }
+    }
     if admission == Admission::Accept
         && candidates::read_candidates(&runtime.candidates_dir())
             .iter()
@@ -425,8 +451,12 @@ pub(crate) async fn propose_memory(
         );
         return Ok("accepted_queued".into());
     }
-    let outcome = match admission {
-        Admission::Accept => match accept_candidate(runtime, &candidate) {
+    let outcome = match (admission, &candidate.state) {
+        (_, CandidateState::Rejected(reason)) => {
+            candidate.state = CandidateState::Rejected(reason.clone());
+            "rejected"
+        }
+        (Admission::Accept, _) => match accept_candidate(runtime, &candidate) {
             Ok(true) => {
                 candidate.state = CandidateState::Accepted;
                 "accepted"
@@ -437,11 +467,11 @@ pub(crate) async fn propose_memory(
             }
             Err(error) => return Err(error),
         },
-        Admission::Reject(reason) => {
+        (Admission::Reject(reason), _) => {
             candidate.state = CandidateState::Rejected(reason.as_str().into());
             "rejected"
         }
-        Admission::Pending => "pending",
+        (Admission::Pending, _) => "pending",
     };
     let candidate_dir = runtime.candidates_dir();
     if let Err(error) = candidates::store_pending(&candidate_dir, &candidate, runtime.now()) {
