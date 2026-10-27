@@ -82,6 +82,7 @@ pub enum PendingState {
     Pending,
     Uncertain,
     InFlight,
+    Prepared,
 }
 
 /// One replayable permanent-memory write (`PendingRemember`).
@@ -89,6 +90,8 @@ pub enum PendingState {
 #[serde(rename_all = "camelCase")]
 pub struct PendingRemember {
     pub operation_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub admission_id: Option<String>,
     pub content_hash: String,
     pub dataset: String,
     pub node_set: String,
@@ -138,6 +141,7 @@ pub fn create_pending_remember(
     let semantic_hash = sha256_hex(&format!("{dataset}\0{node_set}\0{text}"));
     PendingRemember {
         operation_id: format!("{created_at_ms}-{}", &semantic_hash[..16]),
+        admission_id: None,
         content_hash,
         dataset: dataset.into(),
         node_set: node_set.into(),
@@ -203,6 +207,37 @@ pub fn enqueue_pending_remember(
     result
 }
 
+/// Reserve a non-dispatchable admission operation under the queue capacity lock.
+pub fn reserve_prepared(
+    directory: &Path,
+    record: &PendingRemember,
+    limit: usize,
+) -> std::io::Result<bool> {
+    let path = pending_record_path(directory, &record.operation_id)?;
+    create_private_dir(directory)?;
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(directory.join(".enqueue.lock"))?;
+    lock.lock_exclusive()?;
+    let result = (|| {
+        if path.exists() {
+            return Ok(true);
+        }
+        let files = json_files(directory)?;
+        if files.iter().filter(|name| !name.starts_with('.')).count() >= limit {
+            return Ok(false);
+        }
+        let mut prepared = record.clone();
+        prepared.state = PendingState::Prepared;
+        write_private_file_atomic(&path, &record_line(&prepared))?;
+        Ok(true)
+    })();
+    let _ = FileExt::unlock(&lock);
+    result
+}
 /// Valid records in filename order; unreadable or malformed files are
 /// skipped and left in place.
 pub fn read_pending_remember(directory: &Path) -> Vec<PendingRemember> {

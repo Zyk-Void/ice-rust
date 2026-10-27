@@ -77,11 +77,25 @@ pub struct Source {
     pub entry_id: String,
     pub role: Role,
 }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceScope {
+    pub session_id: Option<String>,
+    pub conversation_branch: Option<Vec<String>>,
+    pub git_branch: Option<String>,
+    pub git_revision: Option<String>,
+    pub worktree_id: Option<String>,
+    pub source_text_hash: String,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Candidate {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub admission_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_scope: Option<SourceScope>,
     pub category: Category,
     pub text: String,
     pub source: Source,
@@ -332,11 +346,18 @@ pub fn query_accepted(
     limit: usize,
 ) -> Vec<RecallResult> {
     let needle = query.to_lowercase();
-    let records = read_candidates(directory);
-    let superseded = records
+    let mut records = read_candidates(directory)
+        .into_iter()
+        .filter(|candidate| {
+            candidate.state == CandidateState::Accepted && candidate.admission_id.is_none()
+        })
+        .collect::<Vec<_>>();
+    let receipts = super::admission::read_receipts(&super::admission::receipt_dir(directory));
+    records.extend(receipts.iter().map(|receipt| receipt.candidate.clone()));
+    let mut superseded = records
         .iter()
         .filter(|correction| {
-            correction.state == CandidateState::Accepted
+            correction.admission_id.is_none()
                 && correction.dataset == dataset
                 && correction
                     .valid_until_ms
@@ -347,25 +368,31 @@ pub fn query_accepted(
                     .is_none_or(|scope| Some(scope) == branch)
                 && correction.source.role == Role::User
                 && correction.category == Category::Constraint
-                && correction.supersedes.as_ref().is_some_and(|target_id| {
-                    records.iter().any(|target| {
-                        target.id == *target_id
-                            && target.state == CandidateState::Accepted
-                            && target.dataset == correction.dataset
-                            && target.branch == correction.branch
-                            && target.valid_until_ms.is_none_or(|expiry| expiry > now_ms)
-                            && target.source.role == Role::User
-                            && target.category == Category::Constraint
-                    })
-                })
+                && correction.supersedes.is_some()
         })
-        .filter_map(|candidate| candidate.supersedes.clone())
+        .filter_map(|correction| correction.supersedes.clone())
         .collect::<std::collections::HashSet<_>>();
+    superseded.extend(receipts.iter().filter_map(|receipt| {
+        let correction = &receipt.candidate;
+        let target = receipt.superseded_target.as_ref()?;
+        (correction.dataset == dataset
+            && correction
+                .valid_until_ms
+                .is_none_or(|expiry| expiry > now_ms)
+            && correction
+                .branch
+                .as_deref()
+                .is_none_or(|scope| Some(scope) == branch)
+            && correction.source.role == Role::User
+            && correction.category == Category::Constraint)
+            .then(|| correction.supersedes.clone())
+            .flatten()
+            .filter(|_| target.hash.len() == 64)
+    }));
     records
         .into_iter()
         .filter(|candidate| {
-            candidate.state == CandidateState::Accepted
-                && candidate.dataset == dataset
+            candidate.dataset == dataset
                 && candidate
                     .valid_until_ms
                     .is_none_or(|expiry| expiry > now_ms)
@@ -429,6 +456,8 @@ mod tests {
     fn candidate(category: Category, text: &str, role: Role, source: &str) -> Candidate {
         Candidate {
             id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
             category,
             text: text.into(),
             source: Source {

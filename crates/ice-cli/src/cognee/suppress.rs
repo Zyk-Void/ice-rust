@@ -47,6 +47,39 @@ pub struct SuppressionSet {
 }
 
 impl SuppressionSet {
+    /// Adds correction and expiry effects from authoritative admission receipts.
+    pub fn include_receipts(&mut self, candidates_dir: &Path, dataset: &str) {
+        for receipt in
+            super::admission::read_receipts(&super::admission::receipt_dir(candidates_dir))
+        {
+            let candidate = receipt.candidate;
+            if candidate.dataset != dataset {
+                continue;
+            }
+            if let Some(target) = receipt.superseded_target {
+                self.insert(Suppression {
+                    id: format!("receipt-{}", receipt.id),
+                    hash: target.hash,
+                    kind: SuppressionKind::Superseded {
+                        by: candidate.id.clone(),
+                    },
+                    dataset: candidate.dataset.clone(),
+                    branch: target.scope,
+                    recorded_at_ms: receipt.committed_at,
+                });
+            }
+            if let Some(at_ms) = candidate.valid_until_ms {
+                self.insert(Suppression {
+                    id: format!("receipt-expiry-{}", receipt.id),
+                    hash: content_hash(&candidate.text),
+                    kind: SuppressionKind::Expires { at_ms },
+                    dataset: candidate.dataset,
+                    branch: candidate.branch,
+                    recorded_at_ms: receipt.committed_at,
+                });
+            }
+        }
+    }
     /// Loads the 2,000 newest records for one dataset.
     pub fn load(directory: &Path, dataset: &str) -> Self {
         let Ok(entries) = std::fs::read_dir(directory) else {

@@ -6,6 +6,7 @@
 //! improve the cache while idle. Nothing here is required for a session to
 //! run: every failure degrades to no memory.
 
+pub mod admission;
 pub mod browse;
 pub mod candidates;
 pub mod client;

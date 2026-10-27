@@ -147,53 +147,23 @@ fn resolve_supersession<'a>(
 }
 
 fn record_accepted_suppressions(
-    runtime: &CogneeRuntime,
+    _runtime: &CogneeRuntime,
     candidate: &Candidate,
     candidate_dir: &std::path::Path,
     accepted: bool,
 ) -> Result<(Option<String>, Option<String>), String> {
-    use super::suppress::{content_hash, Suppression, SuppressionKind};
-
+    // Accepted correction/expiry effects are persisted in the admission receipt.
+    // This helper now only reports whether a requested correction target resolves.
     let supersession = if candidate.supersedes.is_some() {
         let stored = candidates::read_candidates(candidate_dir);
         match resolve_supersession(candidate, &stored) {
-            Ok(old) if accepted => {
-                runtime.record_suppression(Suppression {
-                    id: uuid::Uuid::new_v4().to_string(),
-                    hash: content_hash(&old.text),
-                    kind: SuppressionKind::Superseded {
-                        by: candidate.id.clone(),
-                    },
-                    dataset: old.dataset.clone(),
-                    branch: old.branch.clone(),
-                    recorded_at_ms: candidate.created_at,
-                })?;
-                Some(("recorded".to_string(), None))
-            }
+            Ok(_) if accepted => Some(("recorded".to_string(), None)),
             Ok(_) => Some(("unresolved".to_string(), Some("not_accepted".into()))),
             Err(reason) => Some(("unresolved".to_string(), Some(reason.into()))),
         }
     } else {
         None
     };
-    if !accepted {
-        return Ok(match supersession {
-            Some((status, reason)) => (Some(status), reason),
-            None => (None, None),
-        });
-    }
-
-    if let Some(at_ms) = candidate.valid_until_ms {
-        runtime.record_suppression(Suppression {
-            id: uuid::Uuid::new_v4().to_string(),
-            hash: content_hash(&candidate.text),
-            kind: SuppressionKind::Expires { at_ms },
-            dataset: candidate.dataset.clone(),
-            branch: candidate.branch.clone(),
-            recorded_at_ms: candidate.created_at,
-        })?;
-    }
-
     Ok(match supersession {
         Some((status, reason)) => (Some(status), reason),
         None => (None, None),
@@ -223,6 +193,8 @@ mod tests {
     fn candidate(id: &str, state: CandidateState, dataset: &str, role: Role) -> Candidate {
         Candidate {
             id: id.into(),
+            admission_id: None,
+            source_scope: None,
             category: Category::Decision,
             text: id.into(),
             source: Source {
@@ -316,40 +288,38 @@ pub(crate) fn accept_candidate(
     runtime: &CogneeRuntime,
     candidate: &Candidate,
 ) -> Result<bool, String> {
-    let existing = candidates::read_candidates(&runtime.candidates_dir());
-    if existing.iter().any(|record| {
-        record.state == CandidateState::Accepted
-            && record.dataset == candidate.dataset
-            && record.category == candidate.category
-            && record.branch == candidate.branch
-            && record.text == candidate.text
-            && record
-                .valid_until_ms
-                .is_none_or(|expiry| expiry > runtime.now())
-            && !existing.iter().any(|correction| {
-                correction.state == CandidateState::Accepted
-                    && correction.dataset == record.dataset
-                    && correction.branch == record.branch
-                    && correction.supersedes.as_deref() == Some(record.id.as_str())
-            })
-    }) {
-        return Ok(true);
-    }
+    use super::admission::{self, AdmissionReceipt, SupersededTarget, RECEIPT_VERSION};
+    use super::queue::PendingState;
     let record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
     let config = runtime.config();
     if record_text.chars().count() > config.remember_max_chars {
         return Ok(false);
     }
-    // Persist attribution as pending before reserving any dispatchable work.
-    // The outbox reservation is InFlight (blocked from automatic drains) until
-    // the accepted attribution is durable. A crash during this sequence is
-    // recovered as uncertain, never automatically sent.
-    let mut attributed = candidate.clone();
-    attributed.state = CandidateState::Pending;
     let candidate_dir = runtime.candidates_dir();
-    if !candidates::store_pending(&candidate_dir, &attributed, runtime.now())
-        .map_err(|error| format!("Could not store candidate attribution: {error}"))?
-    {
+    let receipt_dir = admission::receipt_dir(&candidate_dir);
+    let _admission_lock = admission::admission_lock(&receipt_dir)
+        .map_err(|e| format!("Could not lock Cognee admission: {e}"))?;
+    let mut committed = admission::read_receipts(&receipt_dir)
+        .into_iter()
+        .map(|receipt| receipt.candidate)
+        .collect::<Vec<_>>();
+    committed.extend(
+        candidates::read_candidates(&candidate_dir)
+            .into_iter()
+            .filter(|stored| {
+                stored.state == CandidateState::Accepted && stored.admission_id.is_none()
+            }),
+    );
+    if committed.into_iter().any(|stored| {
+        stored.dataset == candidate.dataset
+            && stored.category == candidate.category
+            && stored.branch == candidate.branch
+            && stored.text == candidate.text
+            && stored
+                .valid_until_ms
+                .is_none_or(|expiry| expiry > runtime.now())
+    }) {
+        // Existing durable intent is canonical; do not manufacture a new write.
         return Ok(false);
     }
     let mut record = super::queue::create_pending_remember(
@@ -358,46 +328,58 @@ pub(crate) fn accept_candidate(
         candidate.category.node_set(),
         candidate.created_at,
     );
-    record.state = super::queue::PendingState::InFlight;
-    let was_pending = super::queue::read_pending_remember(&runtime.pending_dir())
-        .iter()
-        .any(|item| item.operation_id == record.operation_id);
-    match super::queue::enqueue_pending_remember(
-        &runtime.pending_dir(),
-        &record,
-        config.queue_limit,
-    ) {
-        Ok(true) => {
-            let mut attributed = candidate.clone();
-            attributed.state = CandidateState::Accepted;
-            candidates::set_state(&candidate_dir, &mut attributed, CandidateState::Accepted)
-                .map_err(|error| format!("Could not commit candidate attribution: {error}"))?;
-            let operation = super::queue::read_pending_remember(&runtime.pending_dir())
-                .into_iter()
-                .find(|item| item.operation_id == record.operation_id)
-                .ok_or_else(|| "Reserved candidate operation disappeared".to_string())?;
-            super::queue::update_pending_remember_state(
-                &runtime.pending_dir(),
-                &operation.operation_id,
-                super::queue::PendingState::Pending,
-            )
-            .map_err(|error| format!("Could not activate candidate operation: {error}"))?;
-            if !was_pending {
-                runtime.spawn_drain_pending();
-            }
-            let (status, reason) =
-                record_accepted_suppressions(runtime, &attributed, &candidate_dir, true)?;
-            runtime.observe_candidate_with_supersession(
-                &attributed,
-                "accepted",
-                status.as_deref(),
-                reason.as_deref(),
-            );
-            Ok(true)
-        }
-        Ok(false) => Ok(false),
-        Err(error) => Err(format!("Could not queue candidate: {error}")),
+    let id = uuid::Uuid::new_v4().to_string();
+    record.admission_id = Some(id.clone());
+    record.state = PendingState::Prepared;
+    let mut attributed = candidate.clone();
+    attributed.id = candidate.id.clone();
+    attributed.admission_id = Some(id.clone());
+    attributed.state = CandidateState::Accepted;
+    let target = candidate.supersedes.as_ref().and_then(|target_id| {
+        candidates::read_candidates(&candidate_dir)
+            .into_iter()
+            .find(|c| &c.id == target_id)
+    });
+    let superseded_target = target.map(|old| SupersededTarget {
+        source: old.source.entry_id,
+        scope: old.branch,
+        hash: super::suppress::content_hash(&old.text),
+    });
+    let receipt = AdmissionReceipt {
+        version: RECEIPT_VERSION,
+        id: id.clone(),
+        candidate: attributed.clone(),
+        operation: record.clone(),
+        superseded_target,
+        committed_at: runtime.now(),
+    };
+    // A full queue is a hard failure; do not evict durable intent.
+    match super::queue::reserve_prepared(&runtime.pending_dir(), &record, config.queue_limit) {
+        Ok(true) => {}
+        Ok(false) => return Ok(false),
+        Err(error) => return Err(format!("Could not reserve Cognee operation: {error}")),
     }
+    admission::commit(&receipt_dir, &receipt)
+        .map_err(|e| format!("Admission receipt not committed: {e}"))?;
+    runtime.refresh_receipt_suppressions();
+    // Everything after the atomic receipt commit is a recoverable projection.
+    let _ = candidates::store_pending(&candidate_dir, &attributed, runtime.now());
+    if super::queue::update_pending_remember_state(
+        &runtime.pending_dir(),
+        &record.operation_id,
+        PendingState::Pending,
+    )
+    .is_err()
+    {
+        let _ = admission::reconcile(
+            &candidate_dir,
+            &runtime.pending_dir(),
+            config.queue_limit,
+            runtime.now(),
+        );
+    }
+    runtime.spawn_drain_pending();
+    Ok(true)
 }
 
 #[derive(Default)]
@@ -462,6 +444,8 @@ pub(crate) async fn propose_memory(
     }
     let mut candidate = Candidate {
         id: uuid::Uuid::new_v4().to_string(),
+        admission_id: None,
+        source_scope: None,
         category,
         text: text.trim().into(),
         source: Source {

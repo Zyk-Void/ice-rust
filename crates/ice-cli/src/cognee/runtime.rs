@@ -490,6 +490,8 @@ impl State {
         self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
         self.suppressions =
             SuppressionSet::load(&storage_dir.join("suppress"), &self.active_dataset());
+        self.suppressions
+            .include_receipts(&storage_dir.join("candidates"), &self.active_dataset());
         if previous != self.active_dataset() {
             self.context_generation = self.context_generation.saturating_add(1);
             self.helper_cancel.cancel();
@@ -1345,6 +1347,12 @@ impl CogneeRuntime {
         );
     }
 
+    pub(crate) fn refresh_receipt_suppressions(&self) {
+        let dataset = self.active_dataset();
+        let mut suppressions = SuppressionSet::load(&self.storage_dir.join("suppress"), &dataset);
+        suppressions.include_receipts(&self.candidates_dir(), &dataset);
+        self.state().suppressions = suppressions;
+    }
     pub(crate) fn record_suppression(&self, suppression: Suppression) -> Result<(), String> {
         let directory = self.storage_dir.join("suppress");
         super::suppress::record(&directory, &suppression)
@@ -1647,6 +1655,7 @@ impl CogneeRuntime {
                 PendingState::Pending => "pending",
                 PendingState::Uncertain => "uncertain",
                 PendingState::InFlight => "inflight",
+                PendingState::Prepared => continue,
             };
             if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
                 .is_err()
@@ -1674,8 +1683,22 @@ impl CogneeRuntime {
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
             let outcome = match sent {
-                Ok(()) => remove_pending_remember(&dir, &record.operation_id)
-                    .map_err(|_| "unknown".to_string()),
+                Ok(()) => {
+                    if record.admission_id.is_some()
+                        && super::admission::mark_completed(
+                            &super::admission::receipt_dir(&self.candidates_dir()),
+                            &record.operation_id,
+                        )
+                        .is_err()
+                    {
+                        // The remote accepted the write, but local acknowledgement
+                        // could not be made durable. Keep it ambiguous; never resend.
+                        Err("unknown".to_string())
+                    } else {
+                        remove_pending_remember(&dir, &record.operation_id)
+                            .map_err(|_| "unknown".to_string())
+                    }
+                }
                 Err(error) => Err(error_kind(&error)),
             };
             match outcome {
@@ -2841,6 +2864,12 @@ impl CogneeRuntime {
             )
         };
         self.update_status_line();
+        let _ = super::admission::reconcile(
+            &self.candidates_dir(),
+            &self.pending_dir(),
+            self.config().queue_limit,
+            self.now(),
+        );
         recover_inflight(&self.pending_dir());
         if !enabled {
             return;
@@ -4137,6 +4166,29 @@ mod tests {
             .unwrap();
         rt.wait_for_background().await;
         assert_eq!(transport.sent().len(), 1);
+        let receipts_dir = super::super::admission::receipt_dir(&rt.candidates_dir());
+        assert_eq!(
+            super::super::admission::read_receipts(&receipts_dir).len(),
+            1
+        );
+        let accepted = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.state == CandidateState::Accepted)
+            .unwrap();
+        std::fs::remove_file(rt.candidates_dir().join(format!("{}.json", accepted.id))).unwrap();
+        super::super::admission::reconcile(
+            &rt.candidates_dir(),
+            &rt.pending_dir(),
+            rt.config().queue_limit,
+            NOW,
+        )
+        .unwrap();
+        assert!(
+            super::super::candidates::read_candidates(&rt.candidates_dir())
+                .iter()
+                .any(|candidate| candidate.id == accepted.id
+                    && candidate.state == CandidateState::Accepted)
+        );
         let request = &transport.sent()[0];
         let Body::Multipart(parts) = &request.body else {
             panic!("remember is multipart")
@@ -4254,29 +4306,18 @@ mod tests {
         }]);
         assert!(after_expiry.lines.is_empty());
         assert_eq!(after_expiry.rejected.expired, 1);
-        let expired_record = std::fs::read_dir(rt.storage_dir.join("suppress"))
-            .unwrap()
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .find(|path| {
-                path.extension()
-                    .is_some_and(|extension| extension == "json")
-                    && std::fs::read_to_string(path)
-                        .ok()
-                        .and_then(|text| serde_json::from_str::<Suppression>(&text).ok())
-                        .is_some_and(|record| {
-                            record.hash
-                                == super::super::suppress::content_hash(
-                                    "volatile environment state",
-                                )
-                        })
-            })
-            .unwrap();
-        assert!(expired_record.exists());
-        let reloaded = super::super::suppress::SuppressionSet::load(
+        let receipt = super::super::admission::read_receipts(
+            &super::super::admission::receipt_dir(&rt.candidates_dir()),
+        )
+        .into_iter()
+        .find(|receipt| receipt.candidate.id == candidate.id)
+        .unwrap();
+        assert_eq!(receipt.candidate.valid_until_ms, Some(NOW + 60 * 60 * 1000));
+        let mut reloaded = super::super::suppress::SuppressionSet::load(
             &rt.storage_dir.join("suppress"),
             &candidate.dataset,
         );
+        reloaded.include_receipts(&rt.candidates_dir(), &candidate.dataset);
         assert_eq!(
             reloaded.is_suppressed("volatile environment state", NOW + 60 * 60 * 1000, None),
             Some(super::super::suppress::Reason::Expired)
@@ -4370,22 +4411,19 @@ mod tests {
             })
             .unwrap();
         assert_eq!(correction_observation.phase, "accepted");
-        assert!(std::fs::read_dir(rt.storage_dir.join("suppress"))
-            .unwrap()
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .filter(|path| path
-                .extension()
-                .is_some_and(|extension| extension == "json"))
-            .filter_map(|path| std::fs::read_to_string(path).ok())
-            .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
-            .any(|record| {
-                record.hash == super::super::suppress::content_hash("old durable fact")
-                    && matches!(
-                        record.kind,
-                        super::super::suppress::SuppressionKind::Superseded { .. }
-                    )
-            }));
+        let correction_receipt = super::super::admission::read_receipts(
+            &super::super::admission::receipt_dir(&rt.candidates_dir()),
+        )
+        .into_iter()
+        .find(|receipt| receipt.candidate.text == "new durable fact")
+        .unwrap();
+        assert_eq!(
+            correction_receipt
+                .superseded_target
+                .as_ref()
+                .map(|target| target.hash.as_str()),
+            Some(super::super::suppress::content_hash("old durable fact").as_str())
+        );
 
         rt.state().seen_evidence.clear();
         let selection = rt.recall_evidence(&[RecallResult {
@@ -4672,6 +4710,8 @@ mod tests {
             );
             let mut candidate = Candidate {
                 id: uuid::Uuid::new_v4().to_string(),
+                admission_id: None,
+                source_scope: None,
                 category: Category::Constraint,
                 text: "always keep generated assets outside the source repository".into(),
                 branch: None,
@@ -4744,6 +4784,8 @@ mod tests {
         );
         let mut candidate = Candidate {
             id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
             category: Category::Preference,
             text: "Prefer compact reports".into(),
             branch: None,
@@ -4827,6 +4869,8 @@ mod tests {
         );
         let candidate = Candidate {
             id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
             category: Category::Constraint,
             text: "Always retain source provenance for generated artifacts".into(),
             branch: None,
