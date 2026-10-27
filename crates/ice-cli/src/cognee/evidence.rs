@@ -139,7 +139,8 @@ pub struct FilterContext<'a> {
     pub suppressions: Option<&'a SuppressionSet>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RejectCounts {
     pub routine: u32,
     pub duplicate: u32,

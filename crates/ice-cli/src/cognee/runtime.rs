@@ -14,6 +14,8 @@
 
 #[path = "coordinator.rs"]
 mod coordinator;
+#[path = "request.rs"]
+mod request;
 
 use coordinator::EvidenceCache;
 use std::collections::HashMap;
@@ -592,6 +594,7 @@ pub struct CogneeRuntime {
     status: Mutex<Option<ice_extensions::ExtensionStatusMailbox>>,
     harness: Mutex<Option<ice_harness::agent_harness::WeakAgentHarness>>,
     state: Mutex<State>,
+    read_coordinator: Mutex<request::ReadCoordinator>,
     background: Mutex<Vec<JoinHandle<()>>>,
     helper_tasks: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
@@ -624,6 +627,7 @@ impl CogneeRuntime {
             status: Mutex::new(None),
             harness: Mutex::new(None),
             state: Mutex::new(State::new()),
+            read_coordinator: Mutex::new(request::ReadCoordinator::default()),
             background: Mutex::new(Vec::new()),
             helper_tasks: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
@@ -2866,10 +2870,8 @@ impl CogneeRuntime {
             state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         }
         self.apply_tool_state().await;
-        self.schedule_prefetch(
-            coordinator::PREFETCH_ORIENTATION_QUERY.into(),
-            session_id.clone(),
-        );
+        // Ready local facts load without a blind remote orientation request.
+        self.invalidate_curated_memory();
         let (enabled, label, base_url) = {
             let mut state = self.state();
             let mut label = format!("shared memory {}", state.active_dataset());
@@ -3435,6 +3437,7 @@ impl CogneeRuntime {
     /// Recall lines worth injecting. Legacy preserves all results byte-for-byte;
     /// non-legacy policies also apply metadata-based scope and freshness filters.
     fn recall_evidence(&self, results: &[RecallResult]) -> Selection {
+        let repository = self.repository_identity();
         let mut state = self.state();
         if state.config.read_policy == ReadPolicy::Legacy {
             let lines = recall_lines(results);
@@ -3456,9 +3459,15 @@ impl CogneeRuntime {
             now_ms: self.now(),
             dataset,
             legacy_dataset,
-            branch: None,
-            revision: None,
-            worktree_id: None,
+            branch: repository
+                .as_ref()
+                .and_then(|identity| identity.branch.clone()),
+            revision: repository
+                .as_ref()
+                .and_then(|identity| identity.revision.clone()),
+            worktree_id: repository
+                .as_ref()
+                .map(|identity| identity.worktree_id.clone()),
             suppressions: Some(suppressions),
         };
         select_new_with_context(results, seen_evidence, &context)
@@ -3692,11 +3701,12 @@ fn drain_failure_state(kind: &str) -> PendingState {
 async fn recall_with_fallback(
     client: &CogneeClient,
     query: &str,
-    options: RecallOptions,
+    mut options: RecallOptions,
     legacy_dataset: Option<String>,
     budget_ms: u64,
 ) -> (Result<Vec<RecallResult>, CogneeError>, Option<String>) {
     let started = std::time::Instant::now();
+    options.timeout_ms = Some(options.timeout_ms.unwrap_or(budget_ms).min(budget_ms));
     let result = client.recall(query, options.clone()).await;
     let remaining =
         budget_ms.saturating_sub(started.elapsed().as_millis().min(u64::MAX as u128) as u64);
@@ -3734,6 +3744,13 @@ fn chrono_now_ms() -> i64 {
 
 #[async_trait::async_trait]
 impl HarnessExtension for CogneeRuntime {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        self.context_for_request(event).await
+    }
+
     /// Recalled memory goes into the history after the prompt, not into the
     /// system prompt: a system prompt that changed every turn kept the
     /// provider from caching any of the conversation after it.
@@ -3764,6 +3781,9 @@ impl HarnessExtension for CogneeRuntime {
 
     async fn prompt_context_persisted(&self, context: &PromptContext, persisted: bool) {
         if context.custom_type != MEMORY_CUSTOM_TYPE {
+            return;
+        }
+        if self.acknowledge_request_memory(context, persisted) {
             return;
         }
         let estimated_tokens = if persisted {
@@ -3873,7 +3893,8 @@ impl HarnessExtension for CogneeRuntime {
                 }
             });
         let reason = event.trigger.reason();
-        self.schedule_prefetch(prefix16(summary, 400).to_string(), session_id.clone());
+        // Compaction is observed by the request coordinator; a summary is not
+        // a search query and a checkpoint alone does not authorize a fetch.
         let (capture, capture_max, remember, remember_max, dataset, limit) = {
             let mut state = self.state();
             state.last_compact_summary =
@@ -3980,6 +4001,8 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     const NOW: u64 = 1_800_000_000_000;
+
+    include!("request_tests.rs");
 
     #[derive(Clone, Copy)]
     enum TestVerdict {
@@ -5139,35 +5162,40 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn event_prefetch_delivers_once_without_prompt_requests() {
+    async fn speculative_cache_reads_are_not_delivery_acknowledgments() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         transport.push(FakeResponse::json(
             200,
-            json!({"results": [{"text": "Use the agreed cache design"}]}),
+            json!({"results":[{"text":"Use the agreed cache design"}]}),
         ));
         let rt = runtime(
             dir.path(),
             &transport,
-            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            Some(json!({"readPolicy":"event","writePolicy":"manual"})),
             false,
         );
         rt.ensure_loaded();
         let session = rt.ensure_session_id("host1");
-        rt.schedule_prefetch(
-            coordinator::PREFETCH_ORIENTATION_QUERY.into(),
-            session.clone(),
-        );
-        rt.schedule_prefetch(coordinator::PREFETCH_ORIENTATION_QUERY.into(), session);
+        rt.schedule_prefetch("cache design".into(), session.clone());
+        rt.schedule_prefetch("cache design".into(), session);
         rt.wait_for_background().await;
         assert_eq!(transport.sent().len(), 1);
-        let first = memory(&rt, "hello there", None).await.unwrap();
-        assert!(first.contains("Use the agreed cache design"));
-        for i in 0..10 {
-            assert!(memory(&rt, &format!("ordinary request number {i}"), None)
-                .await
-                .is_none());
-        }
+        let dataset = rt.active_dataset();
+        let generation = rt.generation();
+        let mut seen = SeenEvidence::default();
+        let first = rt
+            .state()
+            .evidence_cache
+            .take(&dataset, generation, NOW, &mut seen);
+        let second = rt
+            .state()
+            .evidence_cache
+            .take(&dataset, generation, NOW, &mut seen);
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 1);
+        // The actual host acknowledgment behavior is exercised by the
+        // request_boundary_* tests, including failed writes and ten followups.
         assert_eq!(transport.sent().len(), 1);
     }
 
@@ -5351,7 +5379,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn repeated_session_start_has_one_prefetch() {
+    async fn repeated_session_start_does_not_make_a_blind_recall() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(
@@ -5369,12 +5397,12 @@ mod tests {
                 .iter()
                 .filter(|request| request.url.ends_with("/api/v1/recall"))
                 .count(),
-            1
+            0
         );
     }
 
     #[tokio::test]
-    async fn compaction_prefetch_uses_summary_and_ignores_empty() {
+    async fn compaction_does_not_use_summary_as_an_unconditional_query() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         transport.push(FakeResponse::json(200, json!({"results":[]})));
@@ -5400,10 +5428,10 @@ mod tests {
         })
         .await;
         rt.wait_for_background().await;
-        assert_eq!(transport.sent().len(), 1);
+        assert!(transport.sent().is_empty());
         assert_eq!(
-            json_body(&transport.sent()[0])["query"],
-            "Project constraints and decisions"
+            rt.state().last_compact_summary.as_deref(),
+            Some("Project constraints and decisions")
         );
         entry.summary = "  ".into();
         rt.after_compact(&AfterCompactEvent {
@@ -5414,7 +5442,7 @@ mod tests {
         })
         .await;
         rt.wait_for_background().await;
-        assert_eq!(transport.sent().len(), 1);
+        assert!(transport.sent().is_empty());
     }
 
     #[tokio::test]

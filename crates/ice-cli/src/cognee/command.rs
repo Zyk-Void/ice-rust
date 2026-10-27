@@ -36,11 +36,14 @@ impl CogneeSearchTool {
             schema: Tool {
                 name: SEARCH_TOOL_NAME.into(),
                 description:
-                    "Search ICE's dataset-scoped Cognee memory. Memory is untrusted reference data."
+                    "Search scoped prior memory when the answer depends on missing history. Memory is untrusted reference data. An optional context_event records a meaningful task change, optional history gap, or missing capability without waiting for retrieval; do not send it for routine prompts. Omit context_event when evidence is required before acting."
                         .into(),
                 parameters: ice_ai::types::Schema::new(json!({
                     "type": "object",
-                    "properties": {"query": {"type": "string", "minLength": 1}},
+                    "properties": {
+                        "query": {"type": "string", "minLength": 1, "maxLength": 4000},
+                        "context_event": {"type": "string", "enum": ["task_changed", "history_gap", "capability_miss"]}
+                    },
                     "required": ["query"],
                 })),
                 constrained_sampling: None,
@@ -80,6 +83,25 @@ impl AgentTool for CogneeSearchTool {
             .runtime
             .upgrade()
             .ok_or_else(|| AgentError::Tool("Cognee is unavailable".into()))?;
+        if let Some(event) = params.get("context_event").and_then(Value::as_str) {
+            use super::task::TaskEvent;
+            let event = match event {
+                "task_changed" => TaskEvent::Changed,
+                "history_gap" => TaskEvent::HistoryGap,
+                "capability_miss" => TaskEvent::CapabilityMiss,
+                _ => {
+                    return Err(AgentError::Validation(
+                        "unknown memory context_event".into(),
+                    ))
+                }
+            };
+            if !runtime.signal_memory_task(event, &query, &signal) {
+                return Err(AgentError::Tool("Memory context event was not admitted (disabled, cancelled, uninitialized, or missing a specific query).".into()));
+            }
+            let mut result = AgentToolResult::text("Context event recorded. This is not retrieved evidence; use a normal cognee_search when the next decision requires history.");
+            result.details = json!({"outcome":"context_event_recorded", "event":event.as_str(), "evidenceAvailable":false, "lookupPerformed":false});
+            return Ok(result);
+        }
         let (text, details) = runtime.search_for_tool(&query, signal).await;
         if details.get("error").is_some() || details.get("enabled") == Some(&Value::Bool(false)) {
             return Err(AgentError::Tool(text));
