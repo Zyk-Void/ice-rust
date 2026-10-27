@@ -22,4 +22,4 @@
 - No Cognee configuration, persistence, capability, or helper behavior was changed.
 - This focused patch does not modify the harness prompt-template expansion implementation.
 
-Commit SHA: to be filled after commit.
+Feature commit SHA: `73e8ee83b47bba18b7b23db244cecca292655c38`.
