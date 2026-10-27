@@ -34,7 +34,8 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 | M6.2 | In progress | Added pure branch-message skill coverage and skill-only catalog state access. Nothing consumes coverage yet. |
 | M6.3 | In progress | Added a pure, bounded advisory suggestion API with inventory answers from the current catalog, loaded-skill/repeat suppression, deterministic ambiguous shortlists, native Cognee routing preference, rendering limits, and local tests. Nothing calls this yet; delivery/wiring and JEV ranking are not done. |
 | M6.4 | In progress | Native search propagates disabled and transport failures as tool errors; fake transport verifies failure, empty success, 404, cancellation and offline paths. MCP proxy fixtures cover an isError HTTP 404 result, JSON-RPC error and request timeout; the existing MCP mapper propagates them as tool errors. |
-| M7.1, M7.2, M7.3 | Not started | Evaluation, rollout and release gates. |
+| M7.1 | In progress | Added `MemoryMode` presets, detection and preservation-safe config helpers; `/cognee mode` persistence/status, environment-override warning, and a first settings row while keeping explicit policy rows. Unit tests cover the four pairs, custom pairs, helper/other field preservation, settings application, persisted mode reload, canary/legacy commands, status, invalid input and injected env overrides. Verification: `cargo fmt --all -- --check`, `git diff --check`, focused Cognee tests (169 passed), workspace all-targets check with `-D warnings`, and full `ice-cli` tests (1426 passed, 3 ignored). Remaining: TUI cycling from a custom value has not been exercised in a real TUI (the selector's out-of-choice fallback advances to the first preset); no live run. |
+| M7.2, M7.3 | Not started | Rollout and release gates. |
 
 ## Stage 0 verification notes
 

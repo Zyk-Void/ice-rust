@@ -137,6 +137,48 @@ impl WritePolicy {
     }
 }
 
+/// A named read/write policy preset for Cognee memory.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MemoryMode {
+    Legacy,
+    Manual,
+    Canary,
+    Selective,
+    Custom,
+}
+
+impl MemoryMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::Manual => "manual",
+            Self::Canary => "canary",
+            Self::Selective => "selective",
+            Self::Custom => "custom",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "manual" => Some(Self::Manual),
+            "canary" => Some(Self::Canary),
+            "selective" => Some(Self::Selective),
+            _ => None,
+        }
+    }
+
+    pub fn detect(config: &CogneeConfig) -> Self {
+        match (config.read_policy, config.write_policy) {
+            (ReadPolicy::Legacy, WritePolicy::Legacy) => Self::Legacy,
+            (ReadPolicy::OnDemand, WritePolicy::Manual) => Self::Manual,
+            (ReadPolicy::Event, WritePolicy::Manual) => Self::Canary,
+            (ReadPolicy::Event, WritePolicy::Selective) => Self::Selective,
+            _ => Self::Custom,
+        }
+    }
+}
+
 /// `IceCogneeConfig`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CogneeConfig {
@@ -194,6 +236,22 @@ impl Default for CogneeConfig {
 }
 
 impl CogneeConfig {
+    /// Apply one named read/write preset without changing other settings.
+    pub fn with_mode(&self, mode: MemoryMode) -> Option<Self> {
+        let (read_policy, write_policy) = match mode {
+            MemoryMode::Legacy => (ReadPolicy::Legacy, WritePolicy::Legacy),
+            MemoryMode::Manual => (ReadPolicy::OnDemand, WritePolicy::Manual),
+            MemoryMode::Canary => (ReadPolicy::Event, WritePolicy::Manual),
+            MemoryMode::Selective => (ReadPolicy::Event, WritePolicy::Selective),
+            MemoryMode::Custom => return None,
+        };
+        Some(Self {
+            read_policy,
+            write_policy,
+            ..self.clone()
+        })
+    }
+
     /// Automatic writes are allowed at all (see [`WritePolicy`]).
     pub fn automatic_writes(&self) -> bool {
         self.write_policy == WritePolicy::Legacy
@@ -886,6 +944,83 @@ mod tests {
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect()
+    }
+
+    #[test]
+    fn memory_modes_detect_only_the_four_presets() {
+        for (read_policy, write_policy, mode) in [
+            (ReadPolicy::Legacy, WritePolicy::Legacy, MemoryMode::Legacy),
+            (
+                ReadPolicy::OnDemand,
+                WritePolicy::Manual,
+                MemoryMode::Manual,
+            ),
+            (ReadPolicy::Event, WritePolicy::Manual, MemoryMode::Canary),
+            (
+                ReadPolicy::Event,
+                WritePolicy::Selective,
+                MemoryMode::Selective,
+            ),
+        ] {
+            let config = CogneeConfig {
+                read_policy,
+                write_policy,
+                ..CogneeConfig::default()
+            };
+            assert_eq!(MemoryMode::detect(&config), mode);
+            let restored = config.with_mode(mode).unwrap();
+            assert_eq!(restored.read_policy, read_policy);
+            assert_eq!(restored.write_policy, write_policy);
+        }
+
+        for (read_policy, write_policy) in [
+            (ReadPolicy::Event, WritePolicy::Legacy),
+            (ReadPolicy::OnDemand, WritePolicy::Selective),
+        ] {
+            let config = CogneeConfig {
+                read_policy,
+                write_policy,
+                ..CogneeConfig::default()
+            };
+            assert_eq!(MemoryMode::detect(&config), MemoryMode::Custom);
+            assert!(config.with_mode(MemoryMode::Custom).is_none());
+        }
+    }
+
+    #[test]
+    fn memory_mode_presets_preserve_every_other_field_and_round_trip() {
+        let config = CogneeConfig {
+            helper_provider: Some("typesafe".into()),
+            capture_session: false,
+            capture_tools: false,
+            auto_improve: false,
+            auto_remember: AutoRememberMode::Off,
+            ..CogneeConfig::default()
+        };
+        for mode in [
+            MemoryMode::Legacy,
+            MemoryMode::Manual,
+            MemoryMode::Canary,
+            MemoryMode::Selective,
+        ] {
+            let preset = config.with_mode(mode).unwrap();
+            assert_eq!(preset.helper_provider, config.helper_provider);
+            assert_eq!(preset.capture_session, config.capture_session);
+            assert_eq!(preset.capture_tools, config.capture_tools);
+            assert_eq!(preset.auto_improve, config.auto_improve);
+            assert_eq!(preset.auto_remember, config.auto_remember);
+            let mut restored = preset.clone();
+            restored.read_policy = config.read_policy;
+            restored.write_policy = config.write_policy;
+            assert_eq!(restored, config);
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("config.json");
+            save_config(&path, &preset).unwrap();
+            let loaded = load_config(&path, &env(&[])).unwrap();
+            assert_eq!(loaded.read_policy, preset.read_policy);
+            assert_eq!(loaded.write_policy, preset.write_policy);
+            assert_eq!(MemoryMode::detect(&loaded), mode);
+        }
     }
 
     #[test]
