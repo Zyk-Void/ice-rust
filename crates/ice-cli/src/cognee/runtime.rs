@@ -298,7 +298,7 @@ impl DoctorReport {
             "nativeRecall=POST:/api/v1/recall (support unverified; sends query, topK, onlyContext, scope, sessionId, datasets)".to_string(),
             "nativeRemember=POST:/api/v1/remember (multipart datasetName, node_set, run_in_background, optional session_id, data; support unverified)".to_string(),
             "nativeRememberEntry=POST:/api/v1/remember/entry (JSON entry, dataset_name, session_id; support unverified)".to_string(),
-            "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status unsupported)".to_string(),
+            "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status: not exposed by this adapter)".to_string(),
             "mcpCognee=separate catalog (not probed)".to_string(),
             format!("health={}", self.health()),
             format!("endpoint={}", sanitize_endpoint(&self.base_url)),
@@ -3411,7 +3411,7 @@ mod tests {
         assert!(doctor.contains("nativeRemember=POST:/api/v1/remember (multipart"));
         assert!(doctor.contains("nativeRememberEntry=POST:/api/v1/remember/entry"));
         assert!(doctor.contains("sends datasetName, sessionIds, runInBackground"));
-        assert!(doctor.contains("completion status unsupported"));
+        assert!(doctor.contains("completion status: not exposed by this adapter"));
         assert!(doctor.contains("mcpCognee=separate catalog (not probed)"));
         assert!(!doctor.contains("secret"));
         assert!(!report.status_line().contains("secret"));

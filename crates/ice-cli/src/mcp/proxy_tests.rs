@@ -186,6 +186,27 @@ async fn run(harness: &AgentHarness, params: Value) -> Result<AgentToolResult, A
 }
 
 #[tokio::test]
+async fn proxy_surfaces_remote_errors_and_timeouts() {
+    let dir = tempfile::tempdir().unwrap();
+    let command = mcp_fixture::server_executable();
+    let (harness, _manager) = proxy_manager(
+        dir.path(),
+        json!({"command":command,"env":{"ICERS_MCP_TEST_CHILD":"1"},"directTools":false,"requestTimeoutMs":50}),
+    )
+    .await;
+    for (mode, expected) in [
+        ("cognee_404", "HTTP 404"),
+        ("json_rpc_error", "fixture error"),
+        ("timeout", "timed out"),
+    ] {
+        let error = run(&harness, json!({"tool":"echo","args":{"mode":mode}}))
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains(expected), "{mode}: {error}");
+    }
+}
+
+#[tokio::test]
 async fn the_proxy_calls_tools_that_are_not_registered_directly() {
     let dir = tempfile::tempdir().unwrap();
     let command = mcp_fixture::server_executable();

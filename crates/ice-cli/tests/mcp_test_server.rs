@@ -258,6 +258,19 @@ fn main() {
                 Some("error") => {
                     json!({"isError":true,"content":[{"type":"text","text":"failure"}]})
                 }
+                Some("cognee_404") => {
+                    json!({"isError":true,"content":[{"type":"text","text":"Cognee recall failed: HTTP 404"}]})
+                }
+                Some("timeout") => {
+                    std::thread::sleep(std::time::Duration::from_millis(250));
+                    json!({"content":[{"type":"text","text":"late"}]})
+                }
+                Some("json_rpc_error") => {
+                    send(
+                        json!({"jsonrpc":"2.0","id":value["id"],"error":{"code":-32603,"message":"fixture error"}}),
+                    );
+                    continue;
+                }
                 // Larger than the default output guard (2,000 lines) and details limit.
                 Some("big") => {
                     let text = (0..3000).map(|i| format!("row {i}\n")).collect::<String>();
