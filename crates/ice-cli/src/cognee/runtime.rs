@@ -2399,7 +2399,7 @@ impl CogneeRuntime {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
+                succeeded(json!({"reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id})),
             );
             return None;
         }

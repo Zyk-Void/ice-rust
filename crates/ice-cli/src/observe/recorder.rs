@@ -1079,6 +1079,7 @@ fn memory_title(observation: &Observation) -> String {
     });
     let suffix = match (observation.operation.as_str(), outcome) {
         ("recall", Some("skipped")) => " · skipped (no request)",
+        ("recall", Some("stale")) => " · discarded (session changed)",
         ("recall", Some("retrieved_empty")) => " · retrieved empty",
         ("recall", Some("retrieved_nonempty")) => " · retrieved nonempty",
         ("improve", Some("accepted")) => " · accepted (completion unknown)",

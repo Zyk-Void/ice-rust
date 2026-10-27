@@ -369,9 +369,14 @@ impl Model {
         let recall = &mut self.recalls[index];
         recall.latency_ms = obs.latency_ms;
         match phase {
-            "succeeded" if flag("skipped") || flag("duplicate") => {
+            "succeeded"
+                if flag("skipped")
+                    || flag("duplicate")
+                    || meta("outcome").and_then(|value| value.as_str()) == Some("stale") =>
+            {
                 recall.status = Status::Skipped;
                 recall.note = match meta("reason").and_then(|value| value.as_str()) {
+                    Some("stale_session") => "discarded · session changed".into(),
                     Some("short_prompt") => "skipped · prompt too short".into(),
                     _ if flag("duplicate") => "skipped · same prompt as last time".into(),
                     _ => "skipped".into(),
