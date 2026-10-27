@@ -3,7 +3,7 @@
 //! are ranking signals, not probabilities, so nothing here thresholds on them.
 
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 
 use super::client::RecallResult;
@@ -12,31 +12,48 @@ use super::text::RecallLine;
 use crate::blackhole::js::parse_iso_ms;
 use crate::blackhole::regex;
 
-/// Lines remembered per context generation; the set resets when full, which
-/// at worst re-injects a line.
+/// Bounded FIFO of persisted evidence identities. Selection never commits them.
 const MAX_SEEN_LINES: usize = 512;
 /// A "successful tool operations" summary is only routine when short.
 const ROUTINE_SUMMARY_MAX_CHARS: usize = 200;
 
 /// Content hashes of the lines already placed in the active context.
-#[derive(Debug, Default)]
-pub struct SeenEvidence(HashSet<u64>);
+#[derive(Clone, Debug, Default)]
+pub struct SeenEvidence {
+    keys: HashSet<u64>,
+    order: VecDeque<u64>,
+}
 
 impl SeenEvidence {
     /// The context no longer holds earlier injections (compaction, another
     /// session), so they may be injected again.
     pub fn clear(&mut self) {
-        self.0.clear();
+        self.keys.clear();
+        self.order.clear();
     }
 
     /// True when `key` is new; records it.
     fn insert(&mut self, key: &str) -> bool {
-        if self.0.len() >= MAX_SEEN_LINES {
-            self.0.clear();
-        }
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
-        self.0.insert(hasher.finish())
+        let key = hasher.finish();
+        if self.keys.contains(&key) {
+            return false;
+        }
+        if self.keys.len() >= MAX_SEEN_LINES {
+            if let Some(oldest) = self.order.pop_front() {
+                self.keys.remove(&oldest);
+            }
+        }
+        self.order.push_back(key);
+        self.keys.insert(key)
+    }
+
+    /// Commit only complete facts actually persisted in a context packet.
+    pub fn remember_lines(&mut self, lines: &[RecallLine]) {
+        for line in lines {
+            self.insert(&normalize(&line.text));
+        }
     }
 }
 
@@ -67,6 +84,8 @@ pub struct Provenance {
     pub expires_at: Option<String>,
     pub superseded_by: Option<String>,
     pub branch: Option<String>,
+    pub revision: Option<String>,
+    pub worktree_id: Option<String>,
 }
 
 pub fn provenance(result: &RecallResult) -> Provenance {
@@ -88,6 +107,8 @@ pub fn provenance(result: &RecallResult) -> Provenance {
         expires_at: field(&["expires_at", "expiresAt", "valid_until", "validUntil"]),
         superseded_by: field(&["superseded_by", "supersededBy"]),
         branch: field(&["branch", "git_branch"]),
+        revision: field(&["revision", "git_revision", "commit_sha"]),
+        worktree_id: field(&["worktree_id", "worktreeId"]),
     }
 }
 
@@ -113,6 +134,8 @@ pub struct FilterContext<'a> {
     pub dataset: String,
     pub legacy_dataset: Option<String>,
     pub branch: Option<String>,
+    pub revision: Option<String>,
+    pub worktree_id: Option<String>,
     pub suppressions: Option<&'a SuppressionSet>,
 }
 
@@ -125,6 +148,10 @@ pub struct RejectCounts {
     pub wrong_scope: u32,
     pub wrong_branch: u32,
     pub unknown_validity: u32,
+    pub wrong_revision: u32,
+    pub wrong_worktree: u32,
+    pub active_context: u32,
+    pub irrelevant: u32,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -138,7 +165,7 @@ pub struct Selection {
 /// context, not repeated within this batch. A result with nothing left is
 /// dropped.
 pub fn select_new(results: &[RecallResult], seen: &mut SeenEvidence) -> Vec<RecallLine> {
-    select_results(results, seen, None).lines
+    select_results(results, seen, None, false).lines
 }
 
 pub fn select_new_with_context(
@@ -146,7 +173,7 @@ pub fn select_new_with_context(
     seen: &mut SeenEvidence,
     ctx: &FilterContext<'_>,
 ) -> Selection {
-    select_results(results, seen, Some(ctx))
+    select_results(results, seen, Some(ctx), false)
 }
 
 fn parse_rfc3339_ms(value: &str) -> Option<i64> {
@@ -168,19 +195,34 @@ fn parse_rfc3339_ms(value: &str) -> Option<i64> {
     parse_iso_ms(value)
 }
 
+/// Apply validity and novelty to whole source records, preserving conditions
+/// spanning multiple lines. This is the selective-delivery path.
+pub fn select_atomic_with_context(
+    results: &[RecallResult],
+    seen: &mut SeenEvidence,
+    context: &FilterContext<'_>,
+) -> Selection {
+    select_results(results, seen, Some(context), true)
+}
+
 fn select_results(
     results: &[RecallResult],
     seen: &mut SeenEvidence,
     context: Option<&FilterContext<'_>>,
+    atomic: bool,
 ) -> Selection {
     let mut selection = Selection::default();
     for result in results {
         let provenance = provenance(result);
-        let line_count = result
-            .text
-            .lines()
-            .filter(|line| !line.trim().is_empty())
-            .count() as u32;
+        let line_count = if atomic {
+            u32::from(!result.text.trim().is_empty())
+        } else {
+            result
+                .text
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .count() as u32
+        };
         if let Some(ctx) = context {
             if let Some(expires_at) = provenance.expires_at.as_deref() {
                 match parse_rfc3339_ms(expires_at) {
@@ -188,7 +230,10 @@ fn select_results(
                         selection.rejected.expired += line_count;
                         continue;
                     }
-                    None => selection.rejected.unknown_validity += line_count,
+                    None => {
+                        selection.rejected.unknown_validity += line_count;
+                        continue;
+                    }
                     _ => {}
                 }
             }
@@ -205,15 +250,79 @@ fn select_results(
             if provenance
                 .branch
                 .as_deref()
-                .zip(ctx.branch.as_deref())
-                .is_some_and(|(branch, current)| branch != current)
+                .is_some_and(|branch| ctx.branch.as_deref() != Some(branch))
             {
                 selection.rejected.wrong_branch += line_count;
                 continue;
             }
+            if provenance
+                .revision
+                .as_deref()
+                .is_some_and(|revision| ctx.revision.as_deref() != Some(revision))
+            {
+                selection.rejected.wrong_revision += line_count;
+                continue;
+            }
+            if provenance
+                .worktree_id
+                .as_deref()
+                .is_some_and(|worktree| ctx.worktree_id.as_deref() != Some(worktree))
+            {
+                selection.rejected.wrong_worktree += line_count;
+                continue;
+            }
+            if let Some(metadata) = result.metadata.as_ref() {
+                // Explicitly malformed restrictions must not become unscoped
+                // facts merely because a string accessor returned None.
+                let malformed = [
+                    "branch",
+                    "git_branch",
+                    "revision",
+                    "git_revision",
+                    "commit_sha",
+                    "worktree_id",
+                    "worktreeId",
+                    "dataset",
+                    "dataset_name",
+                    "datasetName",
+                ]
+                .iter()
+                .any(|key| {
+                    metadata.get(*key).is_some_and(|value| {
+                        !value.is_null() && value.as_str().is_none_or(|text| text.trim().is_empty())
+                    })
+                });
+                if malformed {
+                    selection.rejected.unknown_validity += line_count;
+                    continue;
+                }
+                if let Some(expiry) = metadata
+                    .get("valid_until_ms")
+                    .or_else(|| metadata.get("expires_at_ms"))
+                {
+                    if !expiry.is_null() {
+                        match expiry.as_u64() {
+                            Some(expiry) if expiry > ctx.now_ms => {}
+                            Some(_) => {
+                                selection.rejected.expired += line_count;
+                                continue;
+                            }
+                            None => {
+                                selection.rejected.unknown_validity += line_count;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
         }
         let mut kept = Vec::new();
-        for line in result.text.lines().filter(|line| !line.trim().is_empty()) {
+        let facts: Vec<&str> = if atomic {
+            vec![result.text.as_str()]
+        } else {
+            result.text.lines().collect()
+        };
+        for line in facts.into_iter().filter(|line| !line.trim().is_empty()) {
             if let Some(reason) = context.and_then(|ctx| {
                 ctx.suppressions
                     .and_then(|set| set.is_suppressed(line, ctx.now_ms, ctx.branch.as_deref()))
@@ -350,6 +459,8 @@ mod tests {
             dataset: "current".into(),
             legacy_dataset: None,
             branch: None,
+            revision: None,
+            worktree_id: None,
             suppressions: Some(&suppressions),
         };
         let results = [result(
@@ -373,6 +484,8 @@ mod tests {
             dataset: "current".into(),
             legacy_dataset: Some("legacy".into()),
             branch: Some("main".into()),
+            revision: None,
+            worktree_id: None,
             suppressions: None,
         };
         let with_metadata = |text, metadata| {
@@ -405,8 +518,8 @@ mod tests {
             result("duplicate"),
         ];
         let selection = select_new_with_context(&results, &mut seen, &context);
-        assert_eq!(selection.lines.len(), 4);
-        assert_eq!(selection.kept, 4);
+        assert_eq!(selection.lines.len(), 3);
+        assert_eq!(selection.kept, 3);
         assert_eq!(selection.rejected.expired, 1);
         assert_eq!(selection.rejected.superseded, 1);
         assert_eq!(selection.rejected.wrong_scope, 1);
@@ -421,7 +534,8 @@ mod tests {
                 + selection.rejected.expired
                 + selection.rejected.superseded
                 + selection.rejected.wrong_scope
-                + selection.rejected.wrong_branch,
+                + selection.rejected.wrong_branch
+                + selection.rejected.unknown_validity,
             results
                 .iter()
                 .map(|result| result.text.lines().count() as u32)
@@ -433,14 +547,14 @@ mod tests {
             ..context
         };
         let branch_result = with_metadata(
-            "branch unknown is allowed",
+            "branch restriction requires known current branch",
             serde_json::json!({"branch":"other"}),
         );
         assert_eq!(
             select_new_with_context(&[branch_result], &mut SeenEvidence::default(), &no_branch)
                 .lines
                 .len(),
-            1
+            0
         );
     }
 

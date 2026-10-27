@@ -3434,8 +3434,9 @@ impl CogneeRuntime {
             now_ms: self.now(),
             dataset,
             legacy_dataset,
-            // Branch restriction awaits RepositoryIdentity; do not shell out.
             branch: None,
+            revision: None,
+            worktree_id: None,
             suppressions: Some(suppressions),
         };
         select_new_with_context(results, seen_evidence, &context)
