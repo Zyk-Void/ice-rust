@@ -16,8 +16,9 @@ use ice_harness::extension::{
 };
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
 use ice_harness::session::types::{
-    BranchBounds, Entry, EntryOrder, EntryQuery, LaneRecord, OperationOutcome, RecordQuery,
-    SessionMetadata,
+    BranchBounds, Entry, EntryOrder, EntryQuery, LanePointer, LaneRecord, LogItem, LogOptions,
+    OperationOutcome, OperationStartedRecord, ProvisionedEntry, ProvisionedKind, RecordQuery,
+    SessionMetadata, SessionStats, SessionStorage,
 };
 use ice_harness::session::{DefaultIdGenerator, Session};
 use ice_harness::types::{AgentHarnessOptions, CompactionSettings, HarnessTool};
@@ -106,6 +107,109 @@ impl HarnessExtension for Probe {
             .unwrap()
             .push(latest_compaction_at);
         None
+    }
+}
+
+struct RejectMemoryStorage(Arc<dyn SessionStorage>);
+
+#[async_trait]
+impl SessionStorage for RejectMemoryStorage {
+    fn metadata(&self) -> SessionMetadata {
+        self.0.metadata()
+    }
+    async fn get_lanes(&self) -> ice_harness::error::SessionResult<Vec<LanePointer>> {
+        self.0.get_lanes().await
+    }
+    async fn create_lane(
+        &self,
+        lane: &str,
+        at: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.create_lane(lane, at).await
+    }
+    async fn move_lane(
+        &self,
+        lane: &str,
+        to: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.move_lane(lane, to).await
+    }
+    async fn append_entry(
+        &self,
+        entry: ProvisionedEntry,
+        lane: &str,
+    ) -> ice_harness::error::SessionResult<Entry> {
+        if let ProvisionedKind::Message { message, .. } = &entry.kind {
+            if ice_harness::messages::custom_data(message)
+                .is_some_and(|data| data.custom_type == "test-memory")
+            {
+                return Err(ice_harness::error::SessionError::storage(
+                    "injected failure",
+                ));
+            }
+        }
+        self.0.append_entry(entry, lane).await
+    }
+    async fn append_record(
+        &self,
+        record: LaneRecord,
+    ) -> ice_harness::error::SessionResult<LaneRecord> {
+        self.0.append_record(record).await
+    }
+    async fn get_entry(&self, id: &str) -> ice_harness::error::SessionResult<Option<Entry>> {
+        self.0.get_entry(id).await
+    }
+    async fn find_entries(
+        &self,
+        query: &EntryQuery,
+    ) -> ice_harness::error::SessionResult<Vec<Entry>> {
+        self.0.find_entries(query).await
+    }
+    async fn find_entries_on_branch(
+        &self,
+        query: &EntryQuery,
+        bounds: &BranchBounds,
+        start: &str,
+    ) -> ice_harness::error::SessionResult<Vec<Entry>> {
+        self.0.find_entries_on_branch(query, bounds, start).await
+    }
+    async fn find_records(
+        &self,
+        query: &RecordQuery,
+    ) -> ice_harness::error::SessionResult<Vec<LaneRecord>> {
+        self.0.find_records(query).await
+    }
+    async fn find_open_operations(
+        &self,
+        lane: &str,
+        limit: Option<usize>,
+    ) -> ice_harness::error::SessionResult<Vec<OperationStartedRecord>> {
+        self.0.find_open_operations(lane, limit).await
+    }
+    async fn get_log(
+        &self,
+        options: &LogOptions,
+    ) -> ice_harness::error::SessionResult<Vec<LogItem>> {
+        self.0.get_log(options).await
+    }
+    async fn get_name(&self) -> ice_harness::error::SessionResult<Option<String>> {
+        self.0.get_name().await
+    }
+    async fn set_name(&self, name: Option<&str>) -> ice_harness::error::SessionResult<()> {
+        self.0.set_name(name).await
+    }
+    async fn get_label(&self, id: &str) -> ice_harness::error::SessionResult<Option<String>> {
+        self.0.get_label(id).await
+    }
+    async fn set_label(
+        &self,
+        id: &str,
+        label: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.set_label(id, label).await
+    }
+    async fn get_stats(&self) -> ice_harness::error::SessionResult<SessionStats> {
+        self.0.get_stats().await
     }
 }
 
@@ -444,6 +548,46 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
     assert!(hidden
         .iter()
         .all(|data| data.custom_type == "test-memory" && !data.display));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn failed_prompt_context_append_is_not_sent_to_provider() {
+    let storage = Arc::new(InMemorySessionStorage::new(
+        SessionMetadata {
+            id: "failed-memory".into(),
+            created_at: 0,
+            parent_session_id: None,
+        },
+        Arc::new(SystemClock),
+        Arc::new(DefaultIdGenerator::new()),
+    ));
+    let session = Session::new(Arc::new(RejectMemoryStorage(storage)), None);
+    let script = FauxScript::new();
+    script.set_responses(vec![FauxStep::text("done")]);
+    let faux = FauxProvider::new(script);
+    let provider = Arc::new(RecordingProvider {
+        inner: faux.clone(),
+        system_prompts: Mutex::new(Vec::new()),
+        contexts: Mutex::new(Vec::new()),
+    });
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: faux.default_model().clone(),
+        session,
+        models: vec![provider.clone() as Arc<dyn Provider>],
+        system_prompt: Some("BASE".into()),
+        ..AgentHarnessOptions::default()
+    })
+    .await
+    .unwrap();
+    let memory = Arc::new(MemoryProbe::default());
+    harness.set_extensions(vec![memory.clone() as Arc<dyn HarnessExtension>]);
+    harness.prompt_text("question", Vec::new()).await.unwrap();
+    assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[false]);
+    let contexts = provider.contexts.lock().unwrap();
+    assert_eq!(contexts.len(), 1);
+    assert!(!user_texts(&contexts[0])
+        .iter()
+        .any(|text| text.contains("MEMORY for:")));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
