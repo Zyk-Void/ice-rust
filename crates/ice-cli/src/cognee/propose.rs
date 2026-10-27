@@ -2,18 +2,17 @@
 
 use std::sync::{Arc, Weak};
 
+use super::text::extract_message_text;
 use async_trait::async_trait;
 use ice_agent::agent_tool::AgentTool;
 use ice_agent::error::AgentError;
 use ice_agent::types::{AgentToolResult, ToolExecutionMode, ToolResultPartial};
+use ice_agent::AgentMessage;
 use ice_ai::types::Tool;
-use ice_harness::session::types::{BranchBounds, Entry, EntryQuery};
 use serde_json::{json, Value};
 use tokio_util::sync::CancellationToken;
 
-use super::candidates::{
-    self, Admission, Candidate, CandidateState, Category, Reason, Role, Source,
-};
+use super::candidates::{self, Candidate, CandidateState, Category, Role, Source};
 use super::runtime::{CogneeRuntime, PROPOSE_TOOL_NAME};
 
 pub struct CogneeProposeMemoryTool {
@@ -103,18 +102,25 @@ impl AgentTool for CogneeProposeMemoryTool {
             .runtime
             .upgrade()
             .ok_or_else(|| AgentError::Tool("Cognee is unavailable".into()))?;
-        runtime
-            .propose_memory_with_expiry(
-                text,
-                category,
-                source_entry_id,
-                verified_by.as_deref(),
-                supersedes.as_deref(),
-                valid_hours,
-            )
-            .await
-            .map(AgentToolResult::text)
-            .map_err(AgentError::Tool)
+        propose_memory(
+            &runtime,
+            text,
+            category,
+            source_entry_id,
+            verified_by.as_deref(),
+            supersedes.as_deref(),
+            valid_hours,
+            ProposalControl {
+                signal,
+                defer_review: params
+                    .get("review")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false),
+            },
+        )
+        .await
+        .map(AgentToolResult::text)
+        .map_err(AgentError::Tool)
     }
 }
 
@@ -310,6 +316,25 @@ pub(crate) fn accept_candidate(
     runtime: &CogneeRuntime,
     candidate: &Candidate,
 ) -> Result<bool, String> {
+    let existing = candidates::read_candidates(&runtime.candidates_dir());
+    if existing.iter().any(|record| {
+        record.state == CandidateState::Accepted
+            && record.dataset == candidate.dataset
+            && record.category == candidate.category
+            && record.branch == candidate.branch
+            && record.text == candidate.text
+            && record
+                .valid_until_ms
+                .is_none_or(|expiry| expiry > runtime.now())
+            && !existing.iter().any(|correction| {
+                correction.state == CandidateState::Accepted
+                    && correction.dataset == record.dataset
+                    && correction.branch == record.branch
+                    && correction.supersedes.as_deref() == Some(record.id.as_str())
+            })
+    }) {
+        return Ok(true);
+    }
     let record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
     let config = runtime.config();
     if record_text.chars().count() > config.remember_max_chars {
@@ -360,11 +385,25 @@ pub(crate) fn accept_candidate(
             if !was_pending {
                 runtime.spawn_drain_pending();
             }
+            let (status, reason) =
+                record_accepted_suppressions(runtime, &attributed, &candidate_dir, true)?;
+            runtime.observe_candidate_with_supersession(
+                &attributed,
+                "accepted",
+                status.as_deref(),
+                reason.as_deref(),
+            );
             Ok(true)
         }
         Ok(false) => Ok(false),
         Err(error) => Err(format!("Could not queue candidate: {error}")),
     }
+}
+
+#[derive(Default)]
+pub(crate) struct ProposalControl {
+    pub(crate) signal: CancellationToken,
+    pub(crate) defer_review: bool,
 }
 
 pub(crate) async fn propose_memory(
@@ -375,150 +414,106 @@ pub(crate) async fn propose_memory(
     verified_by: Option<&str>,
     supersedes: Option<&str>,
     valid_hours: Option<u64>,
+    control: ProposalControl,
 ) -> Result<String, String> {
     runtime.ensure_loaded();
-    let (selective, dataset) = {
-        let state = runtime.state();
-        (state.config.selective_writes(), state.active_dataset())
-    };
-    if !selective || !runtime.is_enabled() || runtime.live_client().is_none() {
+    if control.signal.is_cancelled() {
+        return Err("Candidate operation was cancelled".into());
+    }
+    if text.trim().is_empty() || text.chars().count() > super::candidates::MAX_CANDIDATE_CHARS {
+        return Err("Candidate fact is empty or exceeds the complete-record budget".into());
+    }
+    if super::text::redact_credential_text(text) != text {
+        return Err("Sensitive candidate rejected without persistence".into());
+    }
+    let config = runtime.config();
+    if !runtime.is_enabled() {
         return Err("Cognee is unavailable".into());
     }
-    let harness = runtime
-        .harness()
-        .ok_or_else(|| "Cognee is unavailable".to_string())?;
-    let entries = harness
-        .session()
-        .find_entries_on_branch(&EntryQuery::default(), &BranchBounds::default())
-        .await
-        .map_err(|_| "Could not read the current conversation".to_string())?;
-    let branch = entries
+    if !config.selective_writes() {
+        return Err("Selective memory admission is unavailable".into());
+    }
+    let sources = runtime.candidate_source_messages(&control.signal).await?;
+    let source = sources
         .iter()
-        .filter_map(|entry| match entry {
-            Entry::Message(message) => Some((entry.id().to_string(), message.message.clone())),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-    let created_at = runtime.now();
+        .find(|(id, _)| id == source_entry_id)
+        .map(|(_, message)| message)
+        .ok_or_else(|| {
+            "Source entry is not on the current bounded conversation branch".to_string()
+        })?;
+    let source_role = match source {
+        AgentMessage::User(_) => Role::User,
+        AgentMessage::Assistant(_) => Role::Assistant,
+        AgentMessage::ToolResult(_) => Role::Tool,
+        AgentMessage::Custom(_) => {
+            return Err("Custom context is not an attributable source".into())
+        }
+    };
+    let dataset = runtime.active_dataset();
+    let now = runtime.now();
+    let repository = runtime.repository_identity();
+    let volatile = matches!(category, Category::Outcome | Category::Lesson);
+    let expiry = valid_hours
+        .filter(|hours| (1..=720).contains(hours))
+        .map(|hours| now.saturating_add(hours.saturating_mul(3_600_000)))
+        .or_else(|| volatile.then(|| now.saturating_add(86_400_000)));
+    if valid_hours.is_some_and(|hours| !(1..=720).contains(&hours)) {
+        return Err("Candidate expiry must be 1..720 hours".into());
+    }
     let mut candidate = Candidate {
         id: uuid::Uuid::new_v4().to_string(),
         category,
-        text: text.trim().to_string(),
+        text: text.trim().into(),
         source: Source {
             entry_id: source_entry_id.into(),
-            role: branch
-                .iter()
-                .find(|(entry_id, _)| entry_id == source_entry_id)
-                .map(|(_, message)| match message {
-                    ice_agent::AgentMessage::User(_) => Role::User,
-                    ice_agent::AgentMessage::Assistant(_) => Role::Assistant,
-                    ice_agent::AgentMessage::ToolResult(_) => Role::Tool,
-                    ice_agent::AgentMessage::Custom(_) => Role::Assistant,
-                })
-                .unwrap_or(Role::User),
+            role: source_role,
         },
         verified_by: verified_by.map(str::to_owned),
         supersedes: supersedes.map(str::to_owned),
-        dataset: dataset.clone(),
-        branch: None,
-        valid_until_ms: valid_hours
-            .map(|hours| created_at.saturating_add(hours.saturating_mul(60 * 60 * 1000))),
-        created_at,
+        dataset,
+        branch: if volatile {
+            repository
+                .as_ref()
+                .and_then(|identity| identity.branch.clone())
+        } else {
+            None
+        },
+        valid_until_ms: expiry,
+        created_at: now,
         state: CandidateState::Pending,
     };
-    let admission = candidates::admit(&candidate, &branch);
-    candidate.text =
-        super::text::redact_memory_text(&candidate.text, candidates::MAX_CANDIDATE_CHARS);
-    if candidate
-        .valid_until_ms
-        .is_some_and(|expiry| expiry <= created_at)
-    {
-        candidate.state = CandidateState::Rejected("expired".into());
+    if let Err(reason) = super::source_validation::validate_source(&candidate, &sources) {
+        candidate.state = CandidateState::Rejected(reason.as_str().into());
+        runtime.observe_candidate_with_supersession(&candidate, "rejected", None, None);
+        return Err(format!("Candidate rejected: {}", reason.as_str()));
     }
-    if let Some(target) = candidate.supersedes.as_deref() {
-        let stored = candidates::read_candidates(&runtime.candidates_dir());
-        let valid = stored.iter().any(|old| {
-            old.id == target
-                && old.state == CandidateState::Accepted
-                && old.dataset == candidate.dataset
-                && old.branch == candidate.branch
-                && candidate.source.role == Role::User
-        });
-        if !valid {
-            candidate.state = CandidateState::Rejected("invalid_supersedes".into());
+    let original = ice_agent::message::original_user_prompt(source)
+        .map(str::to_owned)
+        .unwrap_or_else(|| extract_message_text(source));
+    let explicit = original
+        .trim_start()
+        .to_ascii_lowercase()
+        .starts_with("remember")
+        || original
+            .trim_start()
+            .to_ascii_lowercase()
+            .starts_with("please remember");
+    if control.defer_review && !explicit {
+        if !super::candidates::store_pending(&runtime.candidates_dir(), &candidate, now)
+            .map_err(|_| "Candidate review storage unavailable".to_string())?
+        {
+            return Err("Candidate review queue is full; no fact was accepted".into());
         }
+        runtime.observe_candidate_with_supersession(&candidate, "pending", None, None);
+        return Ok(format!("pending:{}", candidate.id));
     }
-    if admission == Admission::Accept
-        && candidates::read_candidates(&runtime.candidates_dir())
-            .iter()
-            .any(|existing| {
-                existing.state == CandidateState::Accepted
-                    && existing.dataset == candidate.dataset
-                    && existing.category == candidate.category
-                    && existing.text == candidate.text
-            })
-    {
-        candidate.state = CandidateState::Accepted;
-        candidates::store_pending(&runtime.candidates_dir(), &candidate, runtime.now())
-            .map_err(|error| format!("Could not store candidate: {error}"))?;
-        let (supersession, supersession_reason) =
-            record_accepted_suppressions(runtime, &candidate, &runtime.candidates_dir(), true)?;
-        runtime.observe_candidate_with_supersession(
-            &candidate,
-            "accepted",
-            supersession.as_deref(),
-            supersession_reason.as_deref(),
-        );
-        return Ok("accepted_queued".into());
+    let admitted = runtime
+        .accept_validated_candidate(&candidate, &control.signal, false)
+        .await?;
+    if !admitted {
+        return Err("Durable memory queue is full; no fact was accepted".into());
     }
-    let outcome = match (admission, &candidate.state) {
-        (_, CandidateState::Rejected(reason)) => {
-            candidate.state = CandidateState::Rejected(reason.clone());
-            "rejected"
-        }
-        (Admission::Accept, _) => match accept_candidate(runtime, &candidate) {
-            Ok(true) => {
-                candidate.state = CandidateState::Accepted;
-                "accepted"
-            }
-            Ok(false) => {
-                candidate.state = CandidateState::Rejected(Reason::QueueFull.as_str().into());
-                "rejected"
-            }
-            Err(error) => return Err(error),
-        },
-        (Admission::Reject(reason), _) => {
-            candidate.state = CandidateState::Rejected(reason.as_str().into());
-            "rejected"
-        }
-        (Admission::Pending, _) => "pending",
-    };
-    let candidate_dir = runtime.candidates_dir();
-    if let Err(error) = candidates::store_pending(&candidate_dir, &candidate, runtime.now()) {
-        if outcome == "accepted" {
-            return Err(format!(
-                "Candidate queued, but candidate audit record failed: {error}"
-            ));
-        }
-        return Err(format!("Could not store candidate: {error}"));
-    }
-    let (supersession, supersession_reason) =
-        record_accepted_suppressions(runtime, &candidate, &candidate_dir, outcome == "accepted")?;
-    runtime.observe_candidate_with_supersession(
-        &candidate,
-        outcome,
-        supersession.as_deref(),
-        supersession_reason.as_deref(),
-    );
-    Ok(match outcome {
-        "accepted" => "accepted_queued".into(),
-        "rejected" => format!(
-            "rejected:{}",
-            match &candidate.state {
-                CandidateState::Rejected(reason) => reason.as_str(),
-                _ => "invalid",
-            }
-        ),
-        _ => "pending".into(),
-    })
+    candidate.state = CandidateState::Accepted;
+
+    Ok("accepted_queued".into())
 }

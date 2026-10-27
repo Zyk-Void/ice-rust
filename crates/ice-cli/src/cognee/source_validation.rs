@@ -88,6 +88,14 @@ pub fn is_complete_source_fact(source: &str, candidate: &str) -> bool {
         if same(line) {
             return true;
         }
+        if let Some(polite) = line
+            .strip_prefix("Please ")
+            .or_else(|| line.strip_prefix("please "))
+        {
+            if same(polite) {
+                return true;
+            }
+        }
         let lower = line.to_ascii_lowercase();
         for prefix in [
             "remember: ",

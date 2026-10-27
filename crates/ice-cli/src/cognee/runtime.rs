@@ -18,6 +18,8 @@ mod coordinator;
 mod lookup;
 #[path = "request.rs"]
 mod request;
+#[path = "validation.rs"]
+mod validation;
 
 use coordinator::EvidenceCache;
 use std::collections::HashMap;
@@ -33,7 +35,7 @@ use ice_harness::extension::{
     CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
 use ice_harness::session::types::Entry;
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
@@ -43,24 +45,25 @@ use super::client::{
     OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
 };
 use super::config::{
-    AutoRememberMode, CogneeConfig, CogneeEnv, CompactionSummaryMode, ConnectionInputs, KeySource,
-    PROJECT_DATASET_SENTINEL, ReadPolicy, WritePolicy, find_git_root, load_connection, process_env,
-    repository_root, resolve_runtime_dataset, save_config, write_private_file_atomic,
+    find_git_root, load_connection, process_env, repository_root, resolve_runtime_dataset,
+    save_config, write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv,
+    CompactionSummaryMode, ConnectionInputs, KeySource, ReadPolicy, WritePolicy,
+    PROJECT_DATASET_SENTINEL,
 };
 use super::dream::{
-    DreamClaim, claim_dream_candidate, mark_dream_accepted, mark_dream_captured,
-    mark_dream_improved, read_dream_candidates, read_dream_record_for_dataset, release_dream_claim,
+    claim_dream_candidate, mark_dream_accepted, mark_dream_captured, mark_dream_improved,
+    read_dream_candidates, read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
 use super::evidence::{
-    FilterContext, RejectCounts, SeenEvidence, Selection, select_new_with_context,
+    select_new_with_context, FilterContext, RejectCounts, SeenEvidence, Selection,
 };
 use super::helper::{
     self, AbstainReason, Candidate as HelperCandidate, CandidateBatch, Helper, HelperOutcome,
     Verdict,
 };
 use super::helper_gate::{Admission as HelperAdmission, HelperGate};
-use super::observer::{Observation, persist_observation, publish_observation, sanitize_endpoint};
-use super::policy::{Admission, admit_prompt};
+use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
+use super::policy::{admit_prompt, Admission};
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
     read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
@@ -68,9 +71,9 @@ use super::queue::{
 };
 use super::suppress::{Suppression, SuppressionSet};
 use super::text::{
-    RecallLine, extract_message_text, fit_lines, format_bounded_last_compact_injection,
+    extract_message_text, fit_lines, format_bounded_last_compact_injection,
     format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
-    truncate_value_for_capture,
+    truncate_value_for_capture, RecallLine,
 };
 use crate::blackhole::js::{iso_from_ms, len16, prefix16};
 use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
@@ -224,7 +227,11 @@ fn error_kind(error: &CogneeError) -> String {
 }
 
 fn on_off(value: bool) -> &'static str {
-    if value { "on" } else { "off" }
+    if value {
+        "on"
+    } else {
+        "off"
+    }
 }
 
 /// Session-local capture counters.
@@ -695,9 +702,13 @@ impl CogneeRuntime {
         status: ice_extensions::ExtensionStatusMailbox,
         cwd: PathBuf,
     ) {
+        if let Some(live) = harness.upgrade() {
+            self.ensure_session_id(&live.session().storage().metadata().id);
+        }
         *self.harness.lock().unwrap() = Some(harness);
         *self.status.lock().unwrap() = Some(status);
         *self.cwd.lock().unwrap() = Some(cwd);
+        self.refresh_repository_identity();
     }
 
     pub(crate) fn harness(&self) -> Option<ice_harness::agent_harness::AgentHarness> {
@@ -1079,7 +1090,9 @@ impl CogneeRuntime {
                             } else if judgment.durable == Verdict::Yes
                                 && judgment.applicable == Verdict::Yes
                             {
-                                if super::propose::accept_candidate(&this, &candidate)
+                                if this
+                                    .accept_validated_candidate(&candidate, &cancel, true)
+                                    .await
                                     .unwrap_or(false)
                                     && super::candidates::set_state(
                                         &candidates_dir,
@@ -1200,7 +1213,10 @@ impl CogneeRuntime {
                     );
                     rejected += 1;
                 } else if judgment.durable == Verdict::Yes && judgment.applicable == Verdict::Yes {
-                    match super::propose::accept_candidate(&this, &candidate) {
+                    match this
+                        .accept_validated_candidate(&candidate, &cancel, true)
+                        .await
+                    {
                         Ok(true) => {
                             if super::candidates::set_state(
                                 &candidates_dir,
@@ -1322,7 +1338,7 @@ impl CogneeRuntime {
             "candidate",
             outcome,
             ObserveFields {
-                preview: Some(Value::String(candidate.text.clone())),
+                request_id: Some(candidate.id.clone()),
                 meta: meta(metadata),
                 ..ObserveFields::default()
             },
@@ -2518,6 +2534,7 @@ impl CogneeRuntime {
             verified_by,
             supersedes,
             valid_hours,
+            super::propose::ProposalControl::default(),
         )
         .await
     }
@@ -4092,9 +4109,8 @@ mod tests {
             Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
             false,
         );
-        let source_text =
-            "Please always keep generated files out of source control token=shhsecret.";
-        let candidate_text = "keep generated files out of source control token=shhsecret";
+        let source_text = "Always keep generated files out of source control.";
+        let candidate_text = "Always keep generated files out of source control";
         let harness =
             harness_with_messages(vec![AgentMessage::User(UserMessage::new(source_text, 1))]).await;
         let entries = harness
@@ -4134,7 +4150,7 @@ mod tests {
         rt.wait_for_background().await;
         assert_eq!(transport.sent().len(), 1);
         rt.propose_memory(
-            "keep generated files out of source control",
+            "Always keep generated files out of source control",
             Category::Preference,
             &source_id,
             None,
@@ -4144,32 +4160,29 @@ mod tests {
         .unwrap();
         rt.wait_for_background().await;
         assert_eq!(transport.sent().len(), 2);
-        transport.push(FakeResponse::json(200, json!({})));
-        rt.propose_memory(
-            "always keep generated files out of source control",
-            Category::Lesson,
-            &source_id,
-            None,
-            Some("missing-target"),
-        )
-        .await
-        .unwrap();
+        let invalid = rt
+            .propose_memory(
+                "Always keep generated files out of source control",
+                Category::Lesson,
+                &source_id,
+                None,
+                Some("missing-target"),
+            )
+            .await;
+        assert!(
+            invalid.is_err(),
+            "a user source is not a verified assistant lesson"
+        );
         rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 2);
         let events = super::super::observer::read_observations(&rt.storage_dir);
-        assert!(events.iter().any(|event| {
-            event.operation == "candidate"
-                && event.preview.as_deref().is_some_and(|preview| {
-                    preview.contains("token=[REDACTED]") && !preview.contains("shhsecret")
-                })
-        }));
-        assert!(events.iter().any(|event| {
-            event.operation == "candidate"
-                && event.meta.as_ref().is_some_and(|meta| {
-                    meta.get("supersession").and_then(Value::as_str) == Some("unresolved")
-                        && meta.get("supersessionReason").and_then(Value::as_str)
-                            == Some("unknown_target")
-                })
-        }));
+        assert!(
+            events
+                .iter()
+                .filter(|event| event.operation == "candidate")
+                .all(|event| event.preview.is_none()),
+            "candidate observations do not dump source text"
+        );
     }
 
     #[tokio::test]
@@ -4188,7 +4201,7 @@ mod tests {
             Arc::new(move || clock_read.load(Ordering::Relaxed)),
         );
         let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
-            "The volatile environment state is current.",
+            "volatile environment state",
             1,
         ))])
         .await;
@@ -4292,7 +4305,8 @@ mod tests {
             false,
         );
         let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
-            "The old durable fact changed; the new durable fact is authoritative.",
+            "- old durable fact
+- new durable fact",
             1,
         ))])
         .await;
@@ -4342,11 +4356,9 @@ mod tests {
 
         let candidates = super::super::candidates::read_candidates(&rt.candidates_dir());
         assert!(candidates.iter().any(|candidate| candidate.id == old.id));
-        assert!(
-            candidates
-                .iter()
-                .any(|candidate| candidate.text == "new durable fact")
-        );
+        assert!(candidates
+            .iter()
+            .any(|candidate| candidate.text == "new durable fact"));
         let correction_observation = super::super::observer::read_observations(&rt.storage_dir)
             .into_iter()
             .find(|event| {
@@ -4358,24 +4370,22 @@ mod tests {
             })
             .unwrap();
         assert_eq!(correction_observation.phase, "accepted");
-        assert!(
-            std::fs::read_dir(rt.storage_dir.join("suppress"))
-                .unwrap()
-                .filter_map(Result::ok)
-                .map(|entry| entry.path())
-                .filter(|path| path
-                    .extension()
-                    .is_some_and(|extension| extension == "json"))
-                .filter_map(|path| std::fs::read_to_string(path).ok())
-                .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
-                .any(|record| {
-                    record.hash == super::super::suppress::content_hash("old durable fact")
-                        && matches!(
-                            record.kind,
-                            super::super::suppress::SuppressionKind::Superseded { .. }
-                        )
-                })
-        );
+        assert!(std::fs::read_dir(rt.storage_dir.join("suppress"))
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path
+                .extension()
+                .is_some_and(|extension| extension == "json"))
+            .filter_map(|path| std::fs::read_to_string(path).ok())
+            .filter_map(|text| serde_json::from_str::<Suppression>(&text).ok())
+            .any(|record| {
+                record.hash == super::super::suppress::content_hash("old durable fact")
+                    && matches!(
+                        record.kind,
+                        super::super::suppress::SuppressionKind::Superseded { .. }
+                    )
+            }));
 
         rt.state().seen_evidence.clear();
         let selection = rt.recall_evidence(&[RecallResult {
@@ -4410,7 +4420,7 @@ mod tests {
             Some(json!({"writePolicy":"selective", "readPolicy":"legacy", "autoRecall":true})),
             false,
         );
-        let candidate_text = "keep generated files out of source control";
+        let candidate_text = "always keep generated files out of source control";
         let script = FauxScript::new()
             .with_tool_call(
                 PROPOSE_TOOL_NAME,
@@ -4493,11 +4503,9 @@ mod tests {
         assert_eq!(parts[1].value, "user_context");
         assert!(parts.last().unwrap().value.starts_with("[constraint] "));
         let observations = super::super::observer::read_observations(&rt.storage_dir);
-        assert!(
-            observations
-                .iter()
-                .any(|event| event.operation == "injection" && event.phase == "succeeded")
-        );
+        assert!(observations
+            .iter()
+            .any(|event| event.operation == "injection" && event.phase == "succeeded"));
         assert!(observations.iter().any(|event| event.operation == "recall"
             && event.phase == "succeeded"
             && event.meta.as_ref().is_some_and(|meta| {
@@ -4547,14 +4555,12 @@ mod tests {
             dir.path().to_path_buf(),
         );
         rt.register_search_tool(true).await;
-        assert!(
-            !harness
-                .get_tools()
-                .await
-                .unwrap()
-                .iter()
-                .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME })
-        );
+        assert!(!harness
+            .get_tools()
+            .await
+            .unwrap()
+            .iter()
+            .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME }));
         let mut config = rt.config();
         config.write_policy = WritePolicy::Selective;
         assert!(rt.save_and_adopt(config));
@@ -4938,22 +4944,27 @@ mod tests {
                 None,
                 None,
             )
-            .await
-            .unwrap();
-        assert_eq!(status, "rejected:not_in_source");
+            .await;
+        assert!(status.is_err());
         rt.wait_for_background().await;
         assert!(transport.sent().is_empty());
         let observations =
             super::super::observer::read_observations(&dir.path().join("ice-cognee"));
-        assert!(observations.iter().any(|event| {
-            event.operation == "candidate"
-                && event.meta.as_ref().is_some_and(|meta| {
-                    meta["category"] == "constraint"
-                        && meta["outcome"] == "rejected"
-                        && meta["reason"] == "not_in_source"
-                        && meta["outcomeVersion"] == 1
-                })
-        }));
+        assert!(
+            observations.iter().any(|event| {
+                event.operation == "candidate"
+                    && event.meta.as_ref().is_some_and(|meta| {
+                        meta["category"] == "constraint"
+                            && meta["outcome"] == "rejected"
+                            && matches!(
+                                meta["reason"].as_str(),
+                                Some("unsupported_source_span" | "routine_activity")
+                            )
+                            && meta["outcomeVersion"] == 1
+                    })
+            }),
+            "status={status:?}; observations={observations:?}"
+        );
     }
 
     #[tokio::test]
@@ -5963,11 +5974,9 @@ mod tests {
         transport.push(FakeResponse::Ok {
             status: 200,
             headers: vec![],
-            chunks: vec![
-                json!({"results": [{"text": "old session fact"}]})
-                    .to_string()
-                    .into_bytes(),
-            ],
+            chunks: vec![json!({"results": [{"text": "old session fact"}]})
+                .to_string()
+                .into_bytes()],
             delay_ms: 50,
         });
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
@@ -6053,13 +6062,11 @@ mod tests {
         assert!(execute().await.is_ok());
 
         transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
-        assert!(
-            execute()
-                .await
-                .unwrap_err()
-                .to_string()
-                .contains("not_found")
-        );
+        assert!(execute()
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("not_found"));
         let cancelled = CancellationToken::new();
         cancelled.cancel();
         let error = tool
@@ -6585,12 +6592,11 @@ mod tests {
         super::super::command::run_command(&rt, "flush uncertain").await;
         assert_eq!(transport.sent().len(), 1);
         assert!(read_pending_remember(&rt.pending_dir()).is_empty());
-        assert!(
-            rt.notices()
-                .drain()
-                .iter()
-                .any(|(_, text)| text == "Cognee uncertain queue flushed")
-        );
+        assert!(rt
+            .notices()
+            .drain()
+            .iter()
+            .any(|(_, text)| text == "Cognee uncertain queue flushed"));
         assert_eq!(drain_failure_state("timeout"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("aborted"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("server_error"), PendingState::Pending);
@@ -6688,13 +6694,11 @@ mod tests {
             .manual_remember("user_context", "cannot enqueue")
             .await;
         assert!(full_transport.sent().is_empty());
-        assert!(
-            full_rt
-                .notices()
-                .drain()
-                .iter()
-                .any(|(_, text)| text.contains("queue is full"))
-        );
+        assert!(full_rt
+            .notices()
+            .drain()
+            .iter()
+            .any(|(_, text)| text.contains("queue is full")));
     }
 
     #[tokio::test]
@@ -6821,11 +6825,10 @@ mod tests {
             Some(json!({"checkpointRecall": true})),
             false,
         );
-        assert!(
-            rt.before_compact(&compact_event(CompactionTrigger::Threshold))
-                .await
-                .is_none()
-        );
+        assert!(rt
+            .before_compact(&compact_event(CompactionTrigger::Threshold))
+            .await
+            .is_none());
         let written: Value =
             serde_json::from_str(&std::fs::read_to_string(rt.checkpoint_recall_path()).unwrap())
                 .unwrap();
@@ -6874,16 +6877,12 @@ mod tests {
         assert_eq!(queued[0].state, PendingState::Pending);
         super::super::command::run_command(&rt, "bogus").await;
         let notices = rt.notices().drain();
-        assert!(
-            notices
-                .iter()
-                .any(|(_, text)| text == "Cognee session capture: off")
-        );
-        assert!(
-            notices
-                .iter()
-                .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued")
-        );
+        assert!(notices
+            .iter()
+            .any(|(_, text)| text == "Cognee session capture: off"));
+        assert!(notices
+            .iter()
+            .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued"));
         assert_eq!(
             notices.last().unwrap(),
             &(
