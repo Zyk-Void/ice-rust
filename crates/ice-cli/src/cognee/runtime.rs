@@ -495,6 +495,8 @@ pub struct CogneeRuntime {
     dream_writes: tokio::sync::Mutex<()>,
     /// Single-flight pending drain.
     drain: tokio::sync::Mutex<()>,
+    /// Single-flight warmup replay.
+    warmup_drain: tokio::sync::Mutex<()>,
 }
 
 impl CogneeRuntime {
@@ -521,6 +523,7 @@ impl CogneeRuntime {
             tool_args: Mutex::new(HashMap::new()),
             dream_writes: tokio::sync::Mutex::new(()),
             drain: tokio::sync::Mutex::new(()),
+            warmup_drain: tokio::sync::Mutex::new(()),
         })
     }
 
@@ -712,14 +715,28 @@ impl CogneeRuntime {
     }
 
     fn observe(&self, operation: &str, phase: &str, fields: ObserveFields) {
+        self.observe_for(operation, phase, fields, None);
+    }
+
+    fn observe_for(
+        &self,
+        operation: &str,
+        phase: &str,
+        fields: ObserveFields,
+        identity: Option<(&str, &str)>,
+    ) {
         let (session_id, dataset, base_url, model) = {
             let state = self.state();
             if !state.installed {
                 return;
             }
             (
-                state.session_id.clone(),
-                state.active_dataset(),
+                identity
+                    .map(|(session, _)| session.to_owned())
+                    .or_else(|| state.session_id.clone()),
+                identity
+                    .map(|(_, dataset)| dataset.to_owned())
+                    .unwrap_or_else(|| state.active_dataset()),
                 state.config.base_url.clone(),
                 state.server_model.clone(),
             )
@@ -861,7 +878,7 @@ impl CogneeRuntime {
                             }
                         }
                     });
-                    this.observe(
+                    this.observe_for(
                         operation,
                         "succeeded",
                         ObserveFields {
@@ -870,12 +887,13 @@ impl CogneeRuntime {
                             meta: meta(json!({"kind": kind})),
                             ..ObserveFields::default()
                         },
+                        Some((&session_id, &dataset)),
                     );
                 }
                 Err(error) => {
                     let kind_name = error_kind(&error);
                     this.state().last_error = Some(kind_name.clone());
-                    this.observe(
+                    this.observe_for(
                         operation,
                         "failed",
                         ObserveFields {
@@ -885,23 +903,17 @@ impl CogneeRuntime {
                             meta: meta(json!({"kind": kind})),
                             ..ObserveFields::default()
                         },
+                        Some((&session_id, &dataset)),
                     );
-                    this.buffer_warmup(&entry);
+                    this.buffer_warmup_for(&session_id, &dataset, &entry);
                 }
             }
         });
         Some(())
     }
 
-    /// Buffer under the current session identity (as the TypeScript does).
-    fn buffer_warmup(&self, entry: &Map<String, Value>) {
-        let (session_id, dataset) = {
-            let state = self.state();
-            (state.session_id.clone(), state.active_dataset())
-        };
-        if let Some(session_id) = session_id {
-            buffer_warmup_entry(&self.warmup_dir(), &session_id, &dataset, entry, self.now());
-        }
+    fn buffer_warmup_for(&self, session_id: &str, dataset: &str, entry: &Map<String, Value>) {
+        buffer_warmup_entry(&self.warmup_dir(), session_id, dataset, entry, self.now());
     }
 
     /// Replay up to 16 buffered cache writes.
@@ -910,10 +922,15 @@ impl CogneeRuntime {
             return;
         };
         let (dir, dataset) = (self.warmup_dir(), self.state().active_dataset());
+        let this = self.arc();
         self.track(async move {
+            let Ok(_guard) = this.warmup_drain.try_lock() else {
+                return;
+            };
             let batch = tokio::task::spawn_blocking(move || read_warmup_batch(&dir))
                 .await
                 .unwrap_or_default();
+            let (mut replayed, mut failed) = (0, 0);
             for record in batch {
                 let entry = Value::Object(record.entry.clone());
                 let dataset = record.dataset.clone().unwrap_or_else(|| dataset.clone());
@@ -927,9 +944,23 @@ impl CogneeRuntime {
                     .await
                     .is_ok()
                 {
-                    let _ = std::fs::remove_file(&record.path);
+                    if std::fs::remove_file(&record.path).is_ok() {
+                        replayed += 1;
+                    } else {
+                        failed += 1;
+                    }
+                } else {
+                    failed += 1;
                 }
             }
+            this.observe(
+                "warmup_replay",
+                "completed",
+                ObserveFields {
+                    meta: meta(json!({"replayed": replayed, "failed": failed})),
+                    ..ObserveFields::default()
+                },
+            );
         });
     }
 
@@ -2879,6 +2910,71 @@ mod tests {
         let context = rt.prompt_context(&run_event(prompt, system_prompt)).await?;
         assert_eq!(context.custom_type, MEMORY_CUSTOM_TYPE);
         Some(context.text)
+    }
+
+    #[tokio::test]
+    async fn failed_capture_keeps_original_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 500,
+            headers: Default::default(),
+            chunks: vec![b"failure".to_vec()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        {
+            let mut state = rt.state();
+            state.session_id = Some("original".into());
+            state.resolved_dataset = "original-dataset".into();
+        }
+        rt.store_entry(Map::new(), "answer").unwrap();
+        tokio::task::yield_now().await;
+        {
+            let mut state = rt.state();
+            state.session_id = Some("new-session".into());
+            state.resolved_dataset = "new-dataset".into();
+        }
+        rt.wait_for_background().await;
+        let records = read_warmup_batch(&rt.warmup_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].session_id, "original");
+        assert_eq!(records[0].dataset.as_deref(), Some("original-dataset"));
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let failed = observations
+            .iter()
+            .find(|o| o.operation == "remember_entry" && o.phase == "failed")
+            .unwrap();
+        assert_eq!(failed.session_id.as_deref(), Some("original"));
+        assert_eq!(failed.dataset.as_deref(), Some("original-dataset"));
+    }
+
+    #[tokio::test]
+    async fn warmup_drain_is_single_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        rt.buffer_warmup_for("original", "dataset", &Map::new());
+        rt.drain_warmup();
+        rt.drain_warmup();
+        rt.wait_for_background().await;
+        assert_eq!(transport.requests.lock().unwrap().len(), 1);
+        assert!(read_warmup_batch(&rt.warmup_dir()).is_empty());
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let replay = observations
+            .iter()
+            .find(|o| o.operation == "warmup_replay")
+            .unwrap();
+        assert_eq!(replay.meta.as_ref().unwrap()["replayed"], 1);
+        assert_eq!(replay.meta.as_ref().unwrap()["failed"], 0);
     }
 
     #[tokio::test]
