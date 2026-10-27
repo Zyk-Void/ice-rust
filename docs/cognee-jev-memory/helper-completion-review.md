@@ -1,27 +1,25 @@
 # Helper completion review
 
-## Implemented in this worktree
+## Implemented controls
 
-- Helper scheduling exits before candidate-directory access when Cognee is offline/disabled, writes are not selective, shutdown has started, or no helper is bound. Candidate promotion requires both `durable == Yes` and `applicable == Yes`; uncertain verdicts do not write.
-- Helper activation is explicit and defaults off. Persisted `helperEnabled`, `helperProvider`, and `helperModel` fields are supported, along with `ICERS_COGNEE_HELPER_ENABLED`, `ICERS_COGNEE_HELPER_PROVIDER`, and `ICERS_COGNEE_HELPER_MODEL`. Existing configs without the fields remain helper-off and unconfigured; provider alone never activates or chooses a model.
-- `/cognee helper provider <id>|model <id>|on|off|status` controls and reports effective noncredential values. `/settings` exposes helper enable/provider/model rows; provider/model entry is available through the command. No credential value is displayed or persisted in these rows.
-- Model IDs are validated as explicit nonempty identifiers (slashes supported) and used unchanged in the TypeSafe request. There is no production JEV/chat fallback. Unsupported decision protocol and provider binding errors remain nonfatal, safely classified helper status errors.
-- Binding is keyed to a helper-specific signature: Cognee enabled, write policy, helper opt-in, provider, and model. Unrelated settings do not reset the helper admission gate or decision client. Helper revisions cancel old tasks; helper-off/manual/config transitions prevent canceled verdicts from writing candidate state.
-- Admission history is retained across helper/config and dataset changes. Flight IDs prevent an old guard from clearing a newer in-flight admission. Canceled flights are checked immediately after await, before any candidate mutation. Accepted manual outbox behavior is unchanged.
-- Effective helper status applies environment overrides and names overridden fields without exposing secrets. No per-prompt credential filesystem reads were added; existing explicit reload behavior remains the boundary.
+- Helper activation remains opt-in and defaults off. Persisted/environment provider and model binding remain unchanged; unsupported protocols and missing bindings are nonfatal and do not fall back to chat or network retries.
+- Production admission uses one process-wide `SharedHelperBudget`, keyed by a SHA-256 digest of the configured provider identity (never credentials). Defaults are process concurrency 2, provider concurrency 1, 6 requests/provider/minute, 12 requests/process/minute, with the existing per-session 2/minute gate. All admission is try-only. Provider history is capped at 32 identities; eviction only removes identities with no active permit and no rolling-window requests. Canceled/panicked flights release owned permits by RAII. Session/rebind cancellation does not reset budget history.
+- The in-memory batch cache is capped at 128 FIFO entries, with 10-minute judged and 1-minute abstention TTLs. Cache identity includes provider/model, active dataset and context generation, sorted candidate ID/text hash/source entry/category/scope/branch/supersedes/expiry. Cached verdicts do not consume quota. Source/config/task changes naturally produce new keys.
+- Helper work is candidate-revision driven. Successful proposal-tool completion marks a revision; run-settled events only dispatch an unseen revision and perform no candidate-directory scan on unchanged revisions. Reads are capped at 32 records and source context comes only from bounded current-branch excerpts named by candidates, never the latest prompt. Outbound candidate/context text passes the existing redactor.
+- Application requires explicit durable `Yes` and applicable `Yes`; `Uncertain`, unknown IDs, and explicit `Category::None` do not apply. Existing `super::propose::accept_candidate` is retained as the application-call hook pending integration of the separate fresh shared-acceptance validation owner; this slice does not claim that hook is itself the full fresh-acceptance gate.
+- Helper observations use one UUID captured for the scheduled logical operation, retain elapsed request latency, and report separate requested/judged/abstained/cached/busy/rate-limited/stale/application-failed/persisted fields. Candidate text and prompts are not included in helper observation metadata.
 
 ## Verification
 
-- `CARGO_BUILD_JOBS=4 cargo test -p ice-cli --lib --locked cognee:: --quiet`: **174 passed, 0 failed, 0 ignored** (1,253 filtered out). Tests use temporary directories/faux transports/fake decision responses; no network/model/Cognee request or real user config access occurred.
-- Added/extended coverage includes persisted/env roundtrip, legacy-safe defaults, invalid model identifiers, exact request model, disabled/no-provider no-client construction, unsupported protocols, gate stale-flight ownership, and canceled old verdicts leaving candidate state pending.
-- Formatting was applied only to owned `config.rs`, `helper.rs`, `helper_gate.rs`, `command.rs`, and `runtime.rs` using `rustfmt --config skip_children=true`.
+- `CARGO_BUILD_JOBS=4 cargo test -p ice-cli --lib --locked cognee:: --no-fail-fast --quiet`: **173 passed, 0 failed, 0 ignored** (1,253 filtered out at the time of this run).
+- Admission tests inject isolated `Arc<SharedHelperBudget>` instances and cover provider/global rolling quotas, bounded FIFO cache, negative TTL, and stale-flight ownership. No network/model/Cognee request or real user configuration access was used.
+- Formatting was applied only to owned `helper_gate.rs`, `helper.rs`, and `runtime.rs` using `rustfmt --config skip_children=true`.
 
-## Integration needs / remaining gates
+## Remaining independent gates
 
-- Robust process/provider-shared rolling budgets, bounded/coalesced event work, and deterministic isolated shared-gate injection remain next phase.
-- Comprehensive source/revision/scope/expiry revalidation, source excerpt tightening, and stable observation request ownership remain next phase. Existing per-session candidate and generation checks remain in place.
-- JEV quality and latency remain **UNVERIFIED**; no effectiveness claim is made and no default activation is enabled.
+- The separate owner is completing fresh shared-acceptance validation; integrate that implementation at the marked `accept_candidate` application-call hook when available.
+- JEV quality/effectiveness and latency remain **UNVERIFIED**. No quality or performance claim is made; default activation remains off.
 
 ## Worktree note
 
-`crates/ice-cli/src/cognee/coordinator.rs` had a pre-existing rustfmt-only working-tree diff when this iteration began. It was preserved and is intentionally excluded from this implementation commit.
+`crates/ice-cli/src/cognee/coordinator.rs` had a pre-existing rustfmt-only working-tree diff before this slice and is intentionally excluded from staging/commit.

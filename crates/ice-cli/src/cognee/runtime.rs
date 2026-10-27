@@ -222,6 +222,19 @@ pub fn build_owned_compaction_summary(
     redact_memory_text(&parts.join("\n"), max_chars)
 }
 
+fn read_helper_candidates_bounded(directory: &Path, limit: usize) -> Vec<Candidate> {
+    let Ok(entries) = std::fs::read_dir(directory) else {
+        return Vec::new();
+    };
+    entries
+        .filter_map(Result::ok)
+        .take(limit)
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "json"))
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .filter_map(|text| serde_json::from_str::<Candidate>(&text).ok())
+        .collect()
+}
+
 fn error_kind(error: &CogneeError) -> String {
     error.kind.as_str().to_string()
 }
@@ -431,6 +444,8 @@ pub(crate) struct State {
     helper_requests: u64,
     helper_abstains: u64,
     helper_skips: u64,
+    candidate_revision: u64,
+    helper_scheduled_revision: u64,
 }
 
 impl State {
@@ -480,6 +495,8 @@ impl State {
             helper_requests: 0,
             helper_abstains: 0,
             helper_skips: 0,
+            candidate_revision: 0,
+            helper_scheduled_revision: 0,
         }
     }
 
@@ -566,7 +583,7 @@ struct HelperFlightGuard {
     key: String,
     flight_id: u64,
     finished: bool,
-    _permit: Option<tokio::sync::OwnedSemaphorePermit>,
+    _permit: Option<super::helper_gate::BudgetPermit>,
 }
 
 impl HelperFlightGuard {
@@ -795,7 +812,7 @@ impl CogneeRuntime {
                 NoticeLevel::Warning,
                 format!("Cognee helper binding failed: {error}"),
             );
-            self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+            self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
         }
     }
 
@@ -864,7 +881,6 @@ impl CogneeRuntime {
         {
             state.helper_cancel.cancel();
             state.helper_cancel = CancellationToken::new();
-            state.helper_gate = HelperGate::default();
         }
         state.session_id = Some(id.clone());
         state.host_session_id = Some(host_id.into());
@@ -882,6 +898,7 @@ impl CogneeRuntime {
 
     fn observe_helper(
         &self,
+        request_id: Option<&str>,
         outcome: &str,
         reason: &str,
         candidates: usize,
@@ -893,23 +910,44 @@ impl CogneeRuntime {
             "helper",
             outcome,
             ObserveFields {
-                request_id: Some(uuid::Uuid::new_v4().to_string()),
+                request_id: Some(
+                    request_id
+                        .map(str::to_owned)
+                        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+                ),
                 latency_ms,
                 meta: meta(json!({
                     "reason": reason,
                     "candidates": candidates,
                     "accepted": accepted,
                     "rejected": rejected,
-                    "outcomeVersion": 1
+                    "requested": candidates,
+                    "judged": if outcome == "judged" { candidates } else { 0 },
+                    "abstained": if outcome == "abstained" { candidates } else { 0 },
+                    "cached": reason == "batch_cached",
+                    "busy": reason == "busy",
+                    "rateLimited": reason == "rate_limited",
+                    "stale": reason == "stale",
+                    "applicationFailed": reason == "application_failed",
+                    "persisted": accepted,
+                    "outcomeVersion": 2
                 })),
                 ..ObserveFields::default()
             },
         );
     }
 
+    fn notify_helper_candidates_changed(&self) {
+        {
+            let mut state = self.state();
+            state.candidate_revision = state.candidate_revision.saturating_add(1);
+        }
+        self.schedule_helper();
+    }
+
     fn schedule_helper(&self) {
         self.ensure_loaded();
-        let (eligible, helper, cancel, dataset, provider, shutting_down) = {
+        let (eligible, helper, cancel, dataset, provider, endpoint, shutting_down) = {
             let state = self.state();
             (
                 state.config.selective_writes()
@@ -919,6 +957,7 @@ impl CogneeRuntime {
                 state.helper_cancel.child_token(),
                 state.active_dataset(),
                 state.config.helper_provider.clone().unwrap_or_default(),
+                state.config.base_url.clone(),
                 state.shutting_down,
             )
         };
@@ -931,18 +970,29 @@ impl CogneeRuntime {
                     NoticeLevel::Warning,
                     format!("Cognee helper binding failed: {error}"),
                 );
-                self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+                self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
             }
             return;
+        };
+        {
+            let mut state = self.state();
+            if state.helper_gate.flight_id().is_some()
+                || state.candidate_revision == state.helper_scheduled_revision
+            {
+                return;
+            }
+            state.helper_scheduled_revision = state.candidate_revision;
         };
         let candidates_dir = self.candidates_dir();
         let now = self.now();
         let mut pending = Vec::new();
-        for mut candidate in super::candidates::read_candidates(&candidates_dir) {
+        for mut candidate in read_helper_candidates_bounded(&candidates_dir, 32) {
             if candidate.dataset != dataset || candidate.state != CandidateState::Pending {
                 continue;
             }
-            if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS {
+            if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS
+                || candidate.valid_until_ms.is_some_and(|expiry| expiry <= now)
+            {
                 let _ = super::candidates::set_state(
                     &candidates_dir,
                     &mut candidate,
@@ -952,21 +1002,32 @@ impl CogneeRuntime {
                 pending.push(candidate);
             }
         }
-        let (helper, cancel, dataset, provider, now) = (helper, cancel, dataset, provider, now);
+        let (helper, cancel, dataset, provider, endpoint) =
+            (helper, cancel, dataset, provider, endpoint);
         let pending = pending
             .into_iter()
             .filter(|candidate| candidate.dataset == dataset)
             .collect::<Vec<_>>();
         if pending.is_empty() {
-            self.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+            self.observe_helper(None, "skipped", "no_pending", 0, 0, 0, None);
             return;
         }
         let this = self.arc();
+        let operation_id = uuid::Uuid::new_v4().to_string();
+        let work_operation_id = operation_id.clone();
         let work = async move {
             let harness = match this.harness() {
                 Some(harness) => harness,
                 None => {
-                    this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                    this.observe_helper(
+                        Some(&work_operation_id),
+                        "skipped",
+                        "no_pending",
+                        0,
+                        0,
+                        0,
+                        None,
+                    );
                     return;
                 }
             };
@@ -980,12 +1041,22 @@ impl CogneeRuntime {
             {
                 Ok(entries) => entries,
                 Err(_) => {
-                    this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                    this.observe_helper(
+                        Some(&work_operation_id),
+                        "skipped",
+                        "no_pending",
+                        0,
+                        0,
+                        0,
+                        None,
+                    );
                     return;
                 }
             };
             let branch = branch_entries
                 .iter()
+                .rev()
+                .take(256)
                 .filter_map(|entry| match entry {
                     Entry::Message(message) => {
                         Some((entry.id().to_string(), message.message.clone()))
@@ -993,16 +1064,14 @@ impl CogneeRuntime {
                     _ => None,
                 })
                 .collect::<Vec<_>>();
-            let last_user = branch
-                .iter()
-                .rev()
-                .find_map(|(_, message)| {
-                    matches!(message, AgentMessage::User(_)).then(|| extract_message_text(message))
-                })
-                .unwrap_or_default();
             let mut candidates = Vec::new();
             for mut candidate in pending {
-                if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS {
+                if this.now().saturating_sub(candidate.created_at)
+                    >= super::candidates::CANDIDATE_TTL_MS
+                    || candidate
+                        .valid_until_ms
+                        .is_some_and(|expiry| expiry <= this.now())
+                {
                     let _ = super::candidates::set_state(
                         &candidates_dir,
                         &mut candidate,
@@ -1026,7 +1095,15 @@ impl CogneeRuntime {
                 }
             }
             if candidates.is_empty() {
-                this.observe_helper("skipped", "no_pending", 0, 0, 0, None);
+                this.observe_helper(
+                    Some(&work_operation_id),
+                    "skipped",
+                    "no_pending",
+                    0,
+                    0,
+                    0,
+                    None,
+                );
                 return;
             }
             let helper_candidates = candidates
@@ -1037,27 +1114,69 @@ impl CogneeRuntime {
                     kind_hint: Some(candidate.category.as_str().to_owned()),
                 })
                 .collect::<Vec<_>>();
-            let excerpt = last_user.chars().take(400).collect::<String>();
+            let source_excerpt = candidates
+                .iter()
+                .filter_map(|candidate| {
+                    branch
+                        .iter()
+                        .find(|(id, _)| id == &candidate.source.entry_id)
+                        .map(|(_, message)| extract_message_text(message))
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            let excerpt = source_excerpt.chars().take(800).collect::<String>();
             let batch = match CandidateBatch::new(helper_candidates, Some(excerpt)) {
                 Ok(batch) => batch,
                 Err(_) => {
-                    this.observe_helper("abstained", "malformed", candidates.len(), 0, 0, None);
+                    this.observe_helper(
+                        Some(&work_operation_id),
+                        "abstained",
+                        "malformed",
+                        candidates.len(),
+                        0,
+                        0,
+                        None,
+                    );
                     return;
                 }
             };
-            let mut keys = candidates
-                .iter()
-                .map(|candidate| {
-                    let text_hash = Sha256::digest(candidate.text.as_bytes());
-                    (candidate.id.clone(), text_hash.to_vec())
-                })
-                .collect::<Vec<_>>();
-            keys.sort_by(|left, right| left.0.cmp(&right.0));
+            let mut ordered_candidates = candidates.iter().collect::<Vec<_>>();
+            ordered_candidates.sort_by(|left, right| left.id.cmp(&right.id));
             let mut hasher = Sha256::new();
             hasher.update(provider.as_bytes());
-            for (id, text_hash) in keys {
-                hasher.update(id.as_bytes());
-                hasher.update(text_hash);
+            let origin = super::observer::sanitize_endpoint(&endpoint);
+            hasher.update(Sha256::digest(origin.as_bytes()));
+            let (model, dataset, generation) = {
+                let state = this.state();
+                (
+                    state
+                        .config
+                        .helper_model
+                        .as_deref()
+                        .unwrap_or_default()
+                        .to_owned(),
+                    state.active_dataset(),
+                    state.context_generation,
+                )
+            };
+            hasher.update(model.as_bytes());
+            hasher.update(dataset.as_bytes());
+            hasher.update(generation.to_le_bytes());
+            for candidate in ordered_candidates {
+                hasher.update(candidate.id.as_bytes());
+                hasher.update(Sha256::digest(candidate.text.as_bytes()));
+                hasher.update(candidate.source.entry_id.as_bytes());
+                hasher.update(candidate.category.as_str().as_bytes());
+                hasher.update(candidate.dataset.as_bytes());
+                hasher.update(candidate.branch.as_deref().unwrap_or_default().as_bytes());
+                hasher.update(
+                    candidate
+                        .supersedes
+                        .as_deref()
+                        .unwrap_or_default()
+                        .as_bytes(),
+                );
+                hasher.update(candidate.valid_until_ms.unwrap_or_default().to_le_bytes());
             }
             let key = hasher
                 .finalize()
@@ -1066,7 +1185,13 @@ impl CogneeRuntime {
                 .collect::<String>();
             let (admission, permit, flight_id) = {
                 let mut state = this.state();
-                let (admission, permit) = state.helper_gate.admit(&key, this.now());
+                let origin = super::observer::sanitize_endpoint(&endpoint);
+                let provider_key =
+                    Sha256::digest([provider.as_bytes(), origin.as_bytes()].concat())
+                        .iter()
+                        .map(|byte| format!("{byte:02x}"))
+                        .collect::<String>();
+                let (admission, permit) = state.helper_gate.admit(&key, &provider_key, this.now());
                 (admission, permit, state.helper_gate.flight_id())
             };
             let HelperAdmission::Start = admission else {
@@ -1091,6 +1216,7 @@ impl CogneeRuntime {
                                 rejected += 1;
                             } else if judgment.durable == Verdict::Yes
                                 && judgment.applicable == Verdict::Yes
+                                && judgment.category != Some(helper::Category::None)
                             {
                                 if this
                                     .accept_validated_candidate(&candidate, &cancel, true)
@@ -1108,6 +1234,7 @@ impl CogneeRuntime {
                             }
                         }
                         this.observe_helper(
+                            Some(&work_operation_id),
                             "judged",
                             "batch_cached",
                             accepted + rejected,
@@ -1117,6 +1244,7 @@ impl CogneeRuntime {
                         );
                     } else {
                         this.observe_helper(
+                            Some(&work_operation_id),
                             "skipped",
                             "batch_cached",
                             candidates.len(),
@@ -1130,7 +1258,15 @@ impl CogneeRuntime {
                         let mut state = this.state();
                         state.helper_skips = state.helper_skips.saturating_add(1);
                     }
-                    this.observe_helper("skipped", reason.as_str(), candidates.len(), 0, 0, None);
+                    this.observe_helper(
+                        Some(&work_operation_id),
+                        "skipped",
+                        reason.as_str(),
+                        candidates.len(),
+                        0,
+                        0,
+                        None,
+                    );
                 }
                 return;
             };
@@ -1151,6 +1287,7 @@ impl CogneeRuntime {
             if cancel.is_cancelled() {
                 guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
                 this.observe_helper(
+                    Some(&work_operation_id),
                     "skipped",
                     "cancelled",
                     candidates.len(),
@@ -1168,6 +1305,7 @@ impl CogneeRuntime {
                 HelperOutcome::Abstained(AbstainReason::Cancelled) if cancel.is_cancelled() => {
                     guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
                     this.observe_helper(
+                        Some(&work_operation_id),
                         "skipped",
                         "cancelled",
                         candidates.len(),
@@ -1191,7 +1329,15 @@ impl CogneeRuntime {
                         let mut state = this.state();
                         state.helper_abstains = state.helper_abstains.saturating_add(1);
                     }
-                    this.observe_helper("abstained", label, candidates.len(), 0, 0, Some(latency));
+                    this.observe_helper(
+                        Some(&work_operation_id),
+                        "abstained",
+                        label,
+                        candidates.len(),
+                        0,
+                        0,
+                        Some(latency),
+                    );
                     return;
                 }
             };
@@ -1214,11 +1360,11 @@ impl CogneeRuntime {
                         CandidateState::Rejected("helper_not_durable".into()),
                     );
                     rejected += 1;
-                } else if judgment.durable == Verdict::Yes && judgment.applicable == Verdict::Yes {
-                    match this
-                        .accept_validated_candidate(&candidate, &cancel, true)
-                        .await
-                    {
+                } else if judgment.durable == Verdict::Yes
+                    && judgment.applicable == Verdict::Yes
+                    && judgment.category != Some(helper::Category::None)
+                {
+                    match this.accept_validated_candidate(&candidate, &cancel, true).await {
                         Ok(true) => {
                             if super::candidates::set_state(
                                 &candidates_dir,
@@ -1245,6 +1391,7 @@ impl CogneeRuntime {
                 }
             }
             this.observe_helper(
+                Some(&work_operation_id),
                 "judged",
                 "judged",
                 accepted + rejected,
@@ -2468,7 +2615,7 @@ impl CogneeRuntime {
                 NoticeLevel::Warning,
                 format!("Cognee helper binding failed: {error}"),
             );
-            self.observe_helper("skipped", "bind_failed", 0, 0, 0, None);
+            self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
         }
         true
     }
@@ -2549,7 +2696,7 @@ impl CogneeRuntime {
         supersedes: Option<&str>,
         valid_hours: Option<u64>,
     ) -> Result<String, String> {
-        super::propose::propose_memory(
+        let result = super::propose::propose_memory(
             self,
             text,
             category,
@@ -2559,7 +2706,8 @@ impl CogneeRuntime {
             valid_hours,
             super::propose::ProposalControl::default(),
         )
-        .await
+        .await;
+        result
     }
 
     /// `/cognee remember`: persist intent before sending.
@@ -3164,7 +3312,11 @@ impl CogneeRuntime {
                     .unwrap()
                     .remove(tool_call_id)
                     .unwrap_or(Value::Object(Map::new()));
+                let proposal = tool_name == PROPOSE_TOOL_NAME && !*is_error;
                 self.on_tool_result(tool_name, input, &result.content, *is_error);
+                if proposal {
+                    self.notify_helper_candidates_changed();
+                }
             }
             AgentEvent::AgentEnd { messages } => {
                 // Calls aborted before their result never report an end.
@@ -4020,9 +4172,9 @@ mod tests {
                             json!({"type":"noul", "noul":probability})
                         }
                         Question::Choice { .. } => json!({
-                            "type":"choice", "choice":"none", "probabilities":{
-                                "decision":0.0,"constraint":0.0,"preference":0.0,
-                                "lesson":0.0,"none":1.0
+                            "type":"choice", "choice":"constraint", "probabilities":{
+                                "decision":0.0,"constraint":1.0,"preference":0.0,
+                                "lesson":0.0,"none":0.0
                             }, "confidence":0.9
                         }),
                         Question::Score { .. } => unreachable!(),
@@ -4729,7 +4881,7 @@ mod tests {
             rt.store_pending_candidate_for_test(&candidate);
             let calls = Arc::new(AtomicUsize::new(0));
             rt.use_helper_for_test(fake_helper(verdict, calls.clone(), false));
-            rt.on_run_settled();
+            rt.notify_helper_candidates_changed();
             rt.wait_for_background().await;
             assert_eq!(calls.load(Ordering::SeqCst), 1);
             assert_eq!(transport.sent().len(), expected_requests);
@@ -4747,6 +4899,24 @@ mod tests {
                 assert!(parts.last().unwrap().value.starts_with("[constraint] "));
             }
         }
+    }
+
+    #[tokio::test]
+    async fn repeated_settles_without_candidate_revision_do_no_helper_io_or_jobs() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            true,
+        );
+        for _ in 0..100 {
+            rt.on_run_settled();
+        }
+        assert!(rt.helper_tasks.lock().unwrap().is_empty());
+        assert!(!rt.candidates_dir().exists());
+        assert!(transport.sent().is_empty());
     }
 
     #[tokio::test]
@@ -4889,7 +5059,7 @@ mod tests {
         let calls = Arc::new(AtomicUsize::new(0));
         rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), true));
         let started = std::time::Instant::now();
-        rt.on_run_settled();
+        rt.notify_helper_candidates_changed();
         assert!(started.elapsed() < Duration::from_millis(100));
         tokio::task::yield_now().await;
         assert_eq!(calls.load(Ordering::SeqCst), 1);

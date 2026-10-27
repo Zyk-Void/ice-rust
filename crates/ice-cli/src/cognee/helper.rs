@@ -44,8 +44,8 @@ pub struct CandidateBatch {
 }
 
 impl CandidateBatch {
-    /// Validate IDs, redact text, truncate long fields on UTF-16 boundaries,
-    /// and enforce the approximate request token limit.
+    /// Validate IDs, reject oversized facts, redact bounded text, and enforce
+    /// the approximate request token limit.
     pub fn new(
         mut candidates: Vec<Candidate>,
         context_excerpt: Option<String>,
@@ -65,11 +65,25 @@ impl CandidateBatch {
             if !ids.insert(candidate.id.clone()) {
                 return Err(HelperError::DuplicateCandidateId);
             }
+            if candidate.text.encode_utf16().count() > MAX_CANDIDATE_TEXT_UTF16
+                || candidate
+                    .kind_hint
+                    .as_ref()
+                    .is_some_and(|hint| hint.encode_utf16().count() > MAX_CANDIDATE_TEXT_UTF16)
+            {
+                return Err(HelperError::TooLarge);
+            }
             candidate.text = redact_memory_text(&candidate.text, MAX_CANDIDATE_TEXT_UTF16);
             candidate.kind_hint = candidate
                 .kind_hint
                 .as_deref()
                 .map(|hint| redact_memory_text(hint, MAX_CANDIDATE_TEXT_UTF16));
+        }
+        if context_excerpt
+            .as_ref()
+            .is_some_and(|excerpt| excerpt.encode_utf16().count() > MAX_CONTEXT_UTF16)
+        {
+            return Err(HelperError::TooLarge);
         }
         let context_excerpt = context_excerpt
             .as_deref()
@@ -599,35 +613,44 @@ mod tests {
     }
 
     #[test]
-    fn batch_caps_candidate_text_at_utf16_boundary() {
+    fn batch_rejects_oversized_candidate_instead_of_judging_truncation() {
+        assert_eq!(
+            CandidateBatch::new(
+                vec![Candidate {
+                    id: "unicode".into(),
+                    text: format!("{}tail", "😀".repeat(400)),
+                    kind_hint: None
+                }],
+                None
+            )
+            .unwrap_err(),
+            HelperError::TooLarge
+        );
         let batch = CandidateBatch::new(
             vec![Candidate {
-                id: "unicode".into(),
-                text: format!("{}tail", "😀".repeat(400)),
+                id: "within".into(),
+                text: "😀".repeat(200),
                 kind_hint: None,
             }],
             None,
         )
         .unwrap();
-        let text = &batch.candidates()[0].text;
-        assert_eq!(utf16_len(text), MAX_CANDIDATE_TEXT_UTF16);
-        assert!(!text.ends_with('\u{FFFD}'));
+        assert_eq!(utf16_len(&batch.candidates()[0].text), 400);
     }
 
     #[test]
-    fn batch_caps_context_excerpt() {
-        let batch = CandidateBatch::new(
-            vec![Candidate {
-                id: "one".into(),
-                text: "text".into(),
-                kind_hint: None,
-            }],
-            Some("context".repeat(200)),
-        )
-        .unwrap();
+    fn batch_rejects_oversized_context_excerpt() {
         assert_eq!(
-            utf16_len(batch.context_excerpt().unwrap()),
-            MAX_CONTEXT_UTF16
+            CandidateBatch::new(
+                vec![Candidate {
+                    id: "one".into(),
+                    text: "text".into(),
+                    kind_hint: None
+                }],
+                Some("context".repeat(200))
+            )
+            .unwrap_err(),
+            HelperError::TooLarge
         );
     }
 
