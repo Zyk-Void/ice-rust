@@ -2315,7 +2315,7 @@ impl CogneeRuntime {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"disabled": true, "outcomeVersion": 1, "outcome": "skipped"})),
+                succeeded(json!({"disabled": true, "reason": "unavailable", "outcomeVersion": 1, "outcome": "skipped"})),
             );
             return None;
         };
@@ -2341,7 +2341,7 @@ impl CogneeRuntime {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "outcomeVersion": 1, "outcome": "skipped"})),
+                succeeded(json!({"skipped": true, "reason": if !auto_recall { "auto_recall_disabled" } else { "circuit_open" }, "outcomeVersion": 1, "outcome": "skipped"})),
             );
             return self.turn_scoped_memory(None);
         }
@@ -2365,7 +2365,7 @@ impl CogneeRuntime {
                     "recall",
                     "succeeded",
                     succeeded(
-                        json!({"duplicate": true, "outcomeVersion": 1, "outcome": "skipped"}),
+                        json!({"duplicate": true, "reason": "duplicate", "outcomeVersion": 1, "outcome": "skipped"}),
                     ),
                 );
                 return self.turn_scoped_memory(None);
@@ -3017,6 +3017,12 @@ mod tests {
         // Persistence runs on blocking threads and need not preserve emission order.
         outcomes.sort_unstable();
         assert_eq!(outcomes, ["retrieved_nonempty", "skipped", "skipped"]);
+        let mut reasons: Vec<_> = observations
+            .iter()
+            .filter_map(|event| event.meta.as_ref()?.get("reason")?.as_str())
+            .collect();
+        reasons.sort_unstable();
+        assert_eq!(reasons, ["duplicate", "short_prompt"]);
         let retrieved = observations
             .iter()
             .find(|event| {
