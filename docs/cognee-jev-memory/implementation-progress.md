@@ -14,7 +14,7 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 | Tasks | Status | Evidence / blockers |
 |---|---|---|
 | M0.1 | In progress | Versioned recall skip/nonempty/empty and improvement-acceptance metadata added in `crates/ice-cli/src/cognee/runtime.rs`; legacy phases preserved. Manual improvement is observed and the TUI labels improvement acceptance. Recorder semantics, injection and wait metrics, error outcomes, late-completion attribution, and full fixtures remain. |
-| M0.2 | Not started | Adapter contract and capability/health state remain required for Stage 0. |
+| M0.2 | In progress | Doctor distinguishes the native recall endpoint, unverified support, background improvement acceptance and unprobed MCP catalog; endpoint credentials are stripped. Capability discovery and contract/404/422/status fixtures remain. |
 | M1.1, M1.2 | Not started | Depends on M0.1; legacy read-through also depends on M3.1. |
 | M2.1, M2.2, M2.3 | Not started | Selective recall; preserve legacy defaults. |
 | M3.1, M3.2, M3.3 | Not started | Evidence scope and context coverage. |
@@ -29,6 +29,7 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 - Initial runtime suite: 14 passed, 1 failed because manual improvement had no observations; after instrumenting that path, 15 passed. A broader run exposed a test race on asynchronous observation persistence; the test now waits for background writes.
 - After fixing the test race, `cargo test -p ice-cli --locked cognee --lib`: 76 passed; the focused improvement activity display test also passed. Formatting and `git diff --check` passed.
 - `cargo clippy -p ice-cli --lib --locked`: failed on the existing `clippy::not_unsafe_ptr_arg_deref` error in `crates/ice-extensions/src/actions.rs:1013`, with 168 warnings. This is outside the changed files.
+- Native tool error fix `3b91ca7`: 77 Cognee tests passed. Doctor diagnostics and credential-redaction fixture passed; after correcting a test assumption about asynchronous log ordering, 78 Cognee tests passed.
 - No performance measurements have been made for these metadata changes. The historical baseline is not a candidate benchmark.
 
 No milestone is complete. No performance improvement or release gate is claimed.

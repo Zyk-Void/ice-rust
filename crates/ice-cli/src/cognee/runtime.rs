@@ -262,7 +262,7 @@ impl DoctorReport {
             self.compaction_summary_mode.as_str(),
             if self.blackhole_active { "+blackhole" } else { "" },
             if self.own_compaction_summary { "(own-summary)" } else { "(defer-summary)" },
-            self.base_url,
+            sanitize_endpoint(&self.base_url),
             self.dataset,
             self.session_id.as_deref().unwrap_or("none"),
             self.api_key_source.as_str(),
@@ -283,8 +283,11 @@ impl DoctorReport {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         [
             "mode=http".to_string(),
+            "nativeRecall=POST:/api/v1/recall (support unverified)".to_string(),
+            "nativeImprove=POST:/api/v1/improve (background acceptance only; completion status unsupported)".to_string(),
+            "mcpCognee=separate catalog (not probed)".to_string(),
             format!("health={}", self.health()),
-            format!("endpoint={}", self.base_url),
+            format!("endpoint={}", sanitize_endpoint(&self.base_url)),
             format!("dataset={}", self.dataset),
             format!("session={}", self.session_id.as_deref().unwrap_or("none")),
             format!("apiKey={}", self.api_key_source.as_str()),
@@ -2938,12 +2941,30 @@ mod tests {
         );
         let observations =
             super::super::observer::read_observations(&dir.path().join("ice-cognee"));
-        let outcomes: Vec<_> = observations
+        let mut outcomes: Vec<_> = observations
             .iter()
             .filter(|event| event.operation == "recall" && event.phase == "succeeded")
             .map(|event| event.meta.as_ref().unwrap()["outcome"].as_str().unwrap())
             .collect();
+        // Persistence runs on blocking threads and need not preserve emission order.
+        outcomes.sort_unstable();
         assert_eq!(outcomes, ["retrieved_nonempty", "skipped", "skipped"]);
+    }
+
+    #[tokio::test]
+    async fn doctor_reports_unverified_contract_without_endpoint_credentials() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), true);
+        let mut report = rt.collect_doctor().await;
+        report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
+        let doctor = report.doctor_line();
+        assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified)"));
+        assert!(doctor.contains("completion status unsupported"));
+        assert!(doctor.contains("mcpCognee=separate catalog (not probed)"));
+        assert!(!doctor.contains("secret"));
+        assert!(!report.status_line().contains("secret"));
+        assert!(transport.sent().is_empty());
     }
 
     #[tokio::test]
