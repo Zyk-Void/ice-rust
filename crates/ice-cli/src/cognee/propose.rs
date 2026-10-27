@@ -320,7 +320,7 @@ pub(crate) fn accept_candidate(
                 .is_none_or(|expiry| expiry > runtime.now())
     }) {
         // Existing durable intent is canonical; do not manufacture a new write.
-        return Ok(false);
+        return Ok(true);
     }
     let mut record = super::queue::create_pending_remember(
         &record_text,
