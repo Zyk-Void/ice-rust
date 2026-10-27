@@ -1789,6 +1789,15 @@ impl CogneeRuntime {
                 .await
                 .unwrap_or_default();
         for record in records {
+            if record.admission_id.is_some()
+                && super::admission::is_completed(
+                    &super::admission::receipt_dir(&self.candidates_dir()),
+                    &record.operation_id,
+                )
+            {
+                let _ = remove_pending_remember(&dir, &record.operation_id);
+                continue;
+            }
             if !self.state().remember_circuit.can_attempt(wall_ms()) {
                 return;
             }
@@ -1886,7 +1895,11 @@ impl CogneeRuntime {
                         state.remember_circuit.note_failure(&kind, wall_ms());
                         !state.remember_circuit.can_attempt(wall_ms())
                     };
-                    let failure_state = drain_failure_state(&kind);
+                    let failure_state = if record.admission_id.is_some() && kind == "unknown" {
+                        PendingState::Uncertain
+                    } else {
+                        drain_failure_state(&kind)
+                    };
                     let ambiguous = failure_state == PendingState::Uncertain;
                     let _ =
                         update_pending_remember_state(&dir, &record.operation_id, failure_state);

@@ -13,6 +13,9 @@ use std::{
 };
 
 pub const RECEIPT_VERSION: u32 = 1;
+/// Bound untrusted receipt reads and directory scans.
+const MAX_RECEIPT_BYTES: u64 = 64 * 1024;
+const MAX_RECEIPTS: usize = 4096;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AdmissionReceipt {
@@ -62,16 +65,31 @@ pub fn read_receipts(dir: &Path) -> Vec<AdmissionReceipt> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return out;
     };
-    for entry in entries.flatten() {
+    for entry in entries.flatten().take(MAX_RECEIPTS) {
         let path = entry.path();
-        if path.extension().is_some_and(|e| e == "json") {
-            if let Ok(text) = std::fs::read_to_string(path) {
-                if let Ok(r) = serde_json::from_str::<AdmissionReceipt>(&text) {
-                    if r.version == RECEIPT_VERSION && receipt_path(dir, &r.id).is_ok() {
-                        out.push(r);
-                    }
-                }
-            }
+        if !path
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy().ends_with(".json"))
+        {
+            continue;
+        }
+        let Ok(metadata) = std::fs::symlink_metadata(&path) else {
+            continue;
+        };
+        if !metadata.file_type().is_file() || metadata.len() > MAX_RECEIPT_BYTES {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Ok(r) = serde_json::from_str::<AdmissionReceipt>(&text) else {
+            continue;
+        };
+        if r.version == RECEIPT_VERSION
+            && receipt_path(dir, &r.id).ok().as_deref() == Some(path.as_path())
+            && valid_receipt(&r)
+        {
+            out.push(r);
         }
     }
     out
@@ -96,14 +114,24 @@ pub fn commit_with(
     writer: impl FnOnce(&Path, &str) -> std::io::Result<()>,
 ) -> std::io::Result<()> {
     let path = receipt_path(dir, &receipt.id)?;
-    create_private_dir(dir)?;
-    if !path.exists() {
-        writer(
-            &path,
-            &serde_json::to_string(receipt).map_err(std::io::Error::other)?,
-        )?;
+    if !valid_receipt(receipt) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "invalid admission receipt",
+        ));
     }
-    Ok(())
+    create_private_dir(dir)?;
+    let serialized = serde_json::to_string(receipt).map_err(std::io::Error::other)?;
+    if path.exists() {
+        if std::fs::read(&path)? == serialized.as_bytes() {
+            return Ok(());
+        }
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            "conflicting admission receipt",
+        ));
+    }
+    writer(&path, &serialized)
 }
 pub fn mark_completed(dir: &Path, operation_id: &str) -> std::io::Result<()> {
     let Some((created, hash)) = operation_id.split_once('-') else {
@@ -123,7 +151,58 @@ pub fn mark_completed(dir: &Path, operation_id: &str) -> std::io::Result<()> {
     )
 }
 pub fn is_completed(dir: &Path, operation_id: &str) -> bool {
-    dir.join(format!("completed-{operation_id}.json")).is_file()
+    if !valid_operation_id(operation_id) {
+        return false;
+    }
+    let path = dir.join(format!("completed-{operation_id}.json"));
+    let Ok(meta) = std::fs::symlink_metadata(&path) else {
+        return false;
+    };
+    meta.file_type().is_file()
+        && meta.len() <= 1024
+        && std::fs::read(&path)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+            .is_some_and(|value| value == serde_json::json!({"completed": true}))
+}
+fn valid_operation_id(id: &str) -> bool {
+    let Some((created, hash)) = id.split_once('-') else {
+        return false;
+    };
+    !created.is_empty()
+        && created.bytes().all(|b| b.is_ascii_digit())
+        && hash.len() == 16
+        && hash.bytes().all(|b| b.is_ascii_hexdigit())
+}
+fn valid_receipt(r: &AdmissionReceipt) -> bool {
+    let c = &r.candidate;
+    let o = &r.operation;
+    r.version == RECEIPT_VERSION
+        && !r.id.is_empty()
+        && r.id.len() <= 64
+        && r.id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+        && c.id.len() == 36
+        && uuid::Uuid::parse_str(&c.id).is_ok()
+        && c.admission_id.as_deref() == Some(r.id.as_str())
+        && o.admission_id.as_deref() == Some(r.id.as_str())
+        && c.dataset == o.dataset
+        && !c.dataset.is_empty()
+        && c.category.node_set() == o.node_set
+        && !c.text.trim().is_empty()
+        && c.text.chars().count() <= super::candidates::MAX_CANDIDATE_CHARS
+        && o.content_hash == queue::sha256_hex(&o.text)
+        && valid_operation_id(&o.operation_id)
+        && o.state == PendingState::Prepared
+        && c.state == CandidateState::Accepted
+        && c.source_scope.as_ref().is_none_or(|s| {
+            s.source_text_hash.len() == 64
+                && s.source_text_hash.bytes().all(|b| b.is_ascii_hexdigit())
+        })
+        && r.superseded_target.as_ref().is_none_or(|t| {
+            t.hash.len() == 64
+                && t.hash.bytes().all(|b| b.is_ascii_hexdigit())
+                && t.scope == c.branch
+        })
 }
 /// Restore the candidate/outbox projections from committed receipts. Prepared
 /// operations with no valid receipt are deliberately left blocked.
@@ -133,8 +212,14 @@ pub fn reconcile(
     queue_limit: usize,
     now: u64,
 ) -> std::io::Result<usize> {
-    let mut projected = 0;
     let receipts_dir = receipt_dir(candidates_dir);
+    // Lock order is dispatch lease, then admission lock, then queue file operations.
+    // The lease is held only during local reconciliation; no HTTP is performed here.
+    let Some(_dispatch_lease) = queue::DispatchLease::try_acquire(pending_dir)? else {
+        return Ok(0);
+    };
+    let _admission_guard = admission_lock(&receipts_dir)?;
+    let mut projected = 0;
     for receipt in read_receipts(&receipts_dir) {
         let mut candidate = receipt.candidate.clone();
         candidate.state = CandidateState::Accepted;
@@ -157,6 +242,11 @@ pub fn reconcile(
                     "queue full while recovering committed admission",
                 ));
             }
+            queue::update_pending_remember_state(
+                pending_dir,
+                &operation.operation_id,
+                PendingState::Pending,
+            )?;
             projected += 1;
         } else if let Some(existing) = queue::read_pending_remember(pending_dir)
             .into_iter()
@@ -223,6 +313,28 @@ mod tests {
         });
         assert!(result.is_err());
         assert!(read_receipts(&receipt_dir(root.path())).is_empty());
+    }
+
+    #[test]
+    fn receipt_commit_rejects_conflicts_and_traversal_ids() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = receipt_dir(root.path());
+        let receipt = receipt();
+        commit(&dir, &receipt).unwrap();
+        let mut conflict = receipt.clone();
+        conflict.committed_at += 1;
+        assert!(commit(&dir, &conflict).is_err());
+        assert!(receipt_path(&dir, "../victim").is_err());
+        assert_eq!(read_receipts(&dir), vec![receipt]);
+    }
+
+    #[test]
+    fn empty_completion_marker_is_not_authoritative() {
+        let root = tempfile::tempdir().unwrap();
+        let operation = "7-0123456789abcdef";
+        std::fs::write(root.path().join(format!("completed-{operation}.json")), "").unwrap();
+        assert!(!is_completed(root.path(), operation));
+        assert!(!is_completed(root.path(), "../victim"));
     }
 
     #[test]
