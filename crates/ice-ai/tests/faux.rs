@@ -18,6 +18,7 @@ fn user(text: &str) -> Message {
         role: ice_ai::types::UserRole,
         content: UserContent::Text(text.to_string()),
         timestamp: 0,
+        origin: None,
     })
 }
 

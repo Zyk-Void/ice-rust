@@ -1,0 +1,839 @@
+{
+  "version": "m7-synthetic-1.0.0",
+  "cases": [
+    {
+      "id": "self-00",
+      "cohort": "self_contained",
+      "task": "self-task-0",
+      "request_ms": 1800000000050,
+      "prompt": "Implement standalone synthetic component number 0 with no earlier decisions",
+      "fact_id": "fact-self-0",
+      "fact_text": "Prior preference 0: use synthetic isolated fixture",
+      "available_at": 1800000000000,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-0"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-01",
+      "cohort": "self_contained",
+      "task": "self-task-0",
+      "request_ms": 1800000000150,
+      "prompt": "Implement standalone synthetic component number 1 with no earlier decisions",
+      "fact_id": "fact-self-1",
+      "fact_text": "Prior preference 1: use synthetic isolated fixture",
+      "available_at": 1800000000100,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-1"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-02",
+      "cohort": "self_contained",
+      "task": "self-task-1",
+      "request_ms": 1800000000250,
+      "prompt": "Implement standalone synthetic component number 2 with no earlier decisions",
+      "fact_id": "fact-self-2",
+      "fact_text": "Prior preference 2: use synthetic isolated fixture",
+      "available_at": 1800000000200,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-2"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-03",
+      "cohort": "self_contained",
+      "task": "self-task-1",
+      "request_ms": 1800000000350,
+      "prompt": "Implement standalone synthetic component number 3 with no earlier decisions",
+      "fact_id": "fact-self-3",
+      "fact_text": "Prior preference 3: use synthetic isolated fixture",
+      "available_at": 1800000000300,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-3"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-04",
+      "cohort": "self_contained",
+      "task": "self-task-2",
+      "request_ms": 1800000000450,
+      "prompt": "Implement standalone synthetic component number 4 with no earlier decisions",
+      "fact_id": "fact-self-4",
+      "fact_text": "Prior preference 4: use synthetic isolated fixture",
+      "available_at": 1800000000400,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-4"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-05",
+      "cohort": "self_contained",
+      "task": "self-task-2",
+      "request_ms": 1800000000550,
+      "prompt": "Implement standalone synthetic component number 5 with no earlier decisions",
+      "fact_id": "fact-self-5",
+      "fact_text": "Prior preference 5: use synthetic isolated fixture",
+      "available_at": 1800000000500,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-5"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-06",
+      "cohort": "self_contained",
+      "task": "self-task-3",
+      "request_ms": 1800000000650,
+      "prompt": "Implement standalone synthetic component number 6 with no earlier decisions",
+      "fact_id": "fact-self-6",
+      "fact_text": "Prior preference 6: use synthetic isolated fixture",
+      "available_at": 1800000000600,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-6"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-07",
+      "cohort": "self_contained",
+      "task": "self-task-3",
+      "request_ms": 1800000000750,
+      "prompt": "Implement standalone synthetic component number 7 with no earlier decisions",
+      "fact_id": "fact-self-7",
+      "fact_text": "Prior preference 7: use synthetic isolated fixture",
+      "available_at": 1800000000700,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-7"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-08",
+      "cohort": "self_contained",
+      "task": "self-task-4",
+      "request_ms": 1800000000850,
+      "prompt": "Implement standalone synthetic component number 8 with no earlier decisions",
+      "fact_id": "fact-self-8",
+      "fact_text": "Prior preference 8: use synthetic isolated fixture",
+      "available_at": 1800000000800,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-8"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-09",
+      "cohort": "self_contained",
+      "task": "self-task-4",
+      "request_ms": 1800000000950,
+      "prompt": "Implement standalone synthetic component number 9 with no earlier decisions",
+      "fact_id": "fact-self-9",
+      "fact_text": "Prior preference 9: use synthetic isolated fixture",
+      "available_at": 1800000000900,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-9"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-10",
+      "cohort": "self_contained",
+      "task": "self-task-5",
+      "request_ms": 1800000001050,
+      "prompt": "Implement standalone synthetic component number 10 with no earlier decisions",
+      "fact_id": "fact-self-10",
+      "fact_text": "Prior preference 10: use synthetic isolated fixture",
+      "available_at": 1800000001000,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-10"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-11",
+      "cohort": "self_contained",
+      "task": "self-task-5",
+      "request_ms": 1800000001150,
+      "prompt": "Implement standalone synthetic component number 11 with no earlier decisions",
+      "fact_id": "fact-self-11",
+      "fact_text": "Prior preference 11: use synthetic isolated fixture",
+      "available_at": 1800000001100,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-11"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-12",
+      "cohort": "self_contained",
+      "task": "self-task-6",
+      "request_ms": 1800000001250,
+      "prompt": "Implement standalone synthetic component number 12 with no earlier decisions",
+      "fact_id": "fact-self-12",
+      "fact_text": "Prior preference 12: use synthetic isolated fixture",
+      "available_at": 1800000001200,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-12"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-13",
+      "cohort": "self_contained",
+      "task": "self-task-6",
+      "request_ms": 1800000001350,
+      "prompt": "Implement standalone synthetic component number 13 with no earlier decisions",
+      "fact_id": "fact-self-13",
+      "fact_text": "Prior preference 13: use synthetic isolated fixture",
+      "available_at": 1800000001300,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-13"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-14",
+      "cohort": "self_contained",
+      "task": "self-task-7",
+      "request_ms": 1800000001450,
+      "prompt": "Implement standalone synthetic component number 14 with no earlier decisions",
+      "fact_id": "fact-self-14",
+      "fact_text": "Prior preference 14: use synthetic isolated fixture",
+      "available_at": 1800000001400,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-14"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-15",
+      "cohort": "self_contained",
+      "task": "self-task-7",
+      "request_ms": 1800000001550,
+      "prompt": "Implement standalone synthetic component number 15 with no earlier decisions",
+      "fact_id": "fact-self-15",
+      "fact_text": "Prior preference 15: use synthetic isolated fixture",
+      "available_at": 1800000001500,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-15"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-16",
+      "cohort": "self_contained",
+      "task": "self-task-8",
+      "request_ms": 1800000001650,
+      "prompt": "Implement standalone synthetic component number 16 with no earlier decisions",
+      "fact_id": "fact-self-16",
+      "fact_text": "Prior preference 16: use synthetic isolated fixture",
+      "available_at": 1800000001600,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-16"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-17",
+      "cohort": "self_contained",
+      "task": "self-task-8",
+      "request_ms": 1800000001750,
+      "prompt": "Implement standalone synthetic component number 17 with no earlier decisions",
+      "fact_id": "fact-self-17",
+      "fact_text": "Prior preference 17: use synthetic isolated fixture",
+      "available_at": 1800000001700,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-17"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-18",
+      "cohort": "self_contained",
+      "task": "self-task-9",
+      "request_ms": 1800000001850,
+      "prompt": "Implement standalone synthetic component number 18 with no earlier decisions",
+      "fact_id": "fact-self-18",
+      "fact_text": "Prior preference 18: use synthetic isolated fixture",
+      "available_at": 1800000001800,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-18"
+      ],
+      "failure": null
+    },
+    {
+      "id": "self-19",
+      "cohort": "self_contained",
+      "task": "self-task-9",
+      "request_ms": 1800000001950,
+      "prompt": "Implement standalone synthetic component number 19 with no earlier decisions",
+      "fact_id": "fact-self-19",
+      "fact_text": "Prior preference 19: use synthetic isolated fixture",
+      "available_at": 1800000001900,
+      "expected_required": [],
+      "expected_forbidden": [
+        "fact-self-19"
+      ],
+      "failure": null
+    },
+    {
+      "id": "decision-00",
+      "cohort": "historical_decision",
+      "task": "decision-session-0",
+      "request_ms": 1800000003050,
+      "prompt": "What did we decide earlier about historical constraint 0?",
+      "fact_id": "fact-decision-0",
+      "fact_text": "Decision 0: retain API compatibility and never alter the schema",
+      "available_at": 1800000003000,
+      "expected_required": [
+        "fact-decision-0"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-01",
+      "cohort": "historical_decision",
+      "task": "decision-session-0",
+      "request_ms": 1800000003150,
+      "prompt": "What did we decide earlier about historical constraint 1?",
+      "fact_id": "fact-decision-1",
+      "fact_text": "Decision 1: retain API compatibility and never alter the schema",
+      "available_at": 1800000003100,
+      "expected_required": [
+        "fact-decision-1"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-02",
+      "cohort": "historical_decision",
+      "task": "decision-session-1",
+      "request_ms": 1800000003250,
+      "prompt": "What did we decide earlier about historical constraint 2?",
+      "fact_id": "fact-decision-2",
+      "fact_text": "Decision 2: retain API compatibility and never alter the schema",
+      "available_at": 1800000003200,
+      "expected_required": [
+        "fact-decision-2"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-03",
+      "cohort": "historical_decision",
+      "task": "decision-session-1",
+      "request_ms": 1800000003350,
+      "prompt": "What did we decide earlier about historical constraint 3?",
+      "fact_id": "fact-decision-3",
+      "fact_text": "Decision 3: retain API compatibility and never alter the schema",
+      "available_at": 1800000003300,
+      "expected_required": [
+        "fact-decision-3"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-04",
+      "cohort": "historical_decision",
+      "task": "decision-session-2",
+      "request_ms": 1800000003450,
+      "prompt": "What did we decide earlier about historical constraint 4?",
+      "fact_id": "fact-decision-4",
+      "fact_text": "Decision 4: retain API compatibility and never alter the schema",
+      "available_at": 1800000003400,
+      "expected_required": [
+        "fact-decision-4"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-05",
+      "cohort": "historical_decision",
+      "task": "decision-session-2",
+      "request_ms": 1800000003550,
+      "prompt": "What did we decide earlier about historical constraint 5?",
+      "fact_id": "fact-decision-5",
+      "fact_text": "Decision 5: retain API compatibility and never alter the schema",
+      "available_at": 1800000003500,
+      "expected_required": [
+        "fact-decision-5"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-06",
+      "cohort": "historical_decision",
+      "task": "decision-session-3",
+      "request_ms": 1800000003650,
+      "prompt": "What did we decide earlier about historical constraint 6?",
+      "fact_id": "fact-decision-6",
+      "fact_text": "Decision 6: retain API compatibility and never alter the schema",
+      "available_at": 1800000003600,
+      "expected_required": [
+        "fact-decision-6"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-07",
+      "cohort": "historical_decision",
+      "task": "decision-session-3",
+      "request_ms": 1800000003750,
+      "prompt": "What did we decide earlier about historical constraint 7?",
+      "fact_id": "fact-decision-7",
+      "fact_text": "Decision 7: retain API compatibility and never alter the schema",
+      "available_at": 1800000003700,
+      "expected_required": [
+        "fact-decision-7"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-08",
+      "cohort": "historical_decision",
+      "task": "decision-session-4",
+      "request_ms": 1800000003850,
+      "prompt": "What did we decide earlier about historical constraint 8?",
+      "fact_id": "fact-decision-8",
+      "fact_text": "Decision 8: retain API compatibility and never alter the schema",
+      "available_at": 1800000003800,
+      "expected_required": [
+        "fact-decision-8"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-09",
+      "cohort": "historical_decision",
+      "task": "decision-session-4",
+      "request_ms": 1800000003950,
+      "prompt": "What did we decide earlier about historical constraint 9?",
+      "fact_id": "fact-decision-9",
+      "fact_text": "Decision 9: retain API compatibility and never alter the schema",
+      "available_at": 1800000003900,
+      "expected_required": [
+        "fact-decision-9"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-10",
+      "cohort": "historical_decision",
+      "task": "decision-session-5",
+      "request_ms": 1800000004050,
+      "prompt": "What did we decide earlier about historical constraint 10?",
+      "fact_id": "fact-decision-10",
+      "fact_text": "Decision 10: retain API compatibility and never alter the schema",
+      "available_at": 1800000004000,
+      "expected_required": [
+        "fact-decision-10"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "decision-11",
+      "cohort": "historical_decision",
+      "task": "decision-session-5",
+      "request_ms": 1800000004150,
+      "prompt": "What did we decide earlier about historical constraint 11?",
+      "fact_id": "fact-decision-11",
+      "fact_text": "Decision 11: retain API compatibility and never alter the schema",
+      "available_at": 1800000004100,
+      "expected_required": [
+        "fact-decision-11"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-00",
+      "cohort": "repeated_followup",
+      "task": "followup-session-0",
+      "request_ms": 1800000005050,
+      "prompt": "Continue that earlier work on followup 0",
+      "fact_id": "fact-followup-0",
+      "fact_text": "Followup 0: maintain the frozen invariant",
+      "available_at": 1800000005000,
+      "expected_required": [
+        "fact-followup-0"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-01",
+      "cohort": "repeated_followup",
+      "task": "followup-session-0",
+      "request_ms": 1800000005150,
+      "prompt": "Continue that earlier work on followup 1",
+      "fact_id": "fact-followup-1",
+      "fact_text": "Followup 1: maintain the frozen invariant",
+      "available_at": 1800000005100,
+      "expected_required": [
+        "fact-followup-1"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-02",
+      "cohort": "repeated_followup",
+      "task": "followup-session-1",
+      "request_ms": 1800000005250,
+      "prompt": "Continue that earlier work on followup 2",
+      "fact_id": "fact-followup-2",
+      "fact_text": "Followup 2: maintain the frozen invariant",
+      "available_at": 1800000005200,
+      "expected_required": [
+        "fact-followup-2"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-03",
+      "cohort": "repeated_followup",
+      "task": "followup-session-1",
+      "request_ms": 1800000005350,
+      "prompt": "Continue that earlier work on followup 3",
+      "fact_id": "fact-followup-3",
+      "fact_text": "Followup 3: maintain the frozen invariant",
+      "available_at": 1800000005300,
+      "expected_required": [
+        "fact-followup-3"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-04",
+      "cohort": "repeated_followup",
+      "task": "followup-session-2",
+      "request_ms": 1800000005450,
+      "prompt": "Continue that earlier work on followup 4",
+      "fact_id": "fact-followup-4",
+      "fact_text": "Followup 4: maintain the frozen invariant",
+      "available_at": 1800000005400,
+      "expected_required": [
+        "fact-followup-4"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-05",
+      "cohort": "repeated_followup",
+      "task": "followup-session-2",
+      "request_ms": 1800000005550,
+      "prompt": "Continue that earlier work on followup 5",
+      "fact_id": "fact-followup-5",
+      "fact_text": "Followup 5: maintain the frozen invariant",
+      "available_at": 1800000005500,
+      "expected_required": [
+        "fact-followup-5"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-06",
+      "cohort": "repeated_followup",
+      "task": "followup-session-3",
+      "request_ms": 1800000005650,
+      "prompt": "Continue that earlier work on followup 6",
+      "fact_id": "fact-followup-6",
+      "fact_text": "Followup 6: maintain the frozen invariant",
+      "available_at": 1800000005600,
+      "expected_required": [
+        "fact-followup-6"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "followup-07",
+      "cohort": "repeated_followup",
+      "task": "followup-session-3",
+      "request_ms": 1800000005750,
+      "prompt": "Continue that earlier work on followup 7",
+      "fact_id": "fact-followup-7",
+      "fact_text": "Followup 7: maintain the frozen invariant",
+      "available_at": 1800000005700,
+      "expected_required": [
+        "fact-followup-7"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-wrongrepo",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-0",
+      "request_ms": 1800000007050,
+      "prompt": "What did we decide earlier about wrongrepo?",
+      "fact_id": "fact-wrongrepo",
+      "fact_text": "Boundary fact for wrongrepo",
+      "available_at": 1800000007000,
+      "expected_required": [
+        "fact-wrongrepo"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-wrongbranch",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-1",
+      "request_ms": 1800000007150,
+      "prompt": "What did we decide earlier about wrongbranch?",
+      "fact_id": "fact-wrongbranch",
+      "fact_text": "Boundary fact for wrongbranch",
+      "available_at": 1800000007100,
+      "expected_required": [
+        "fact-wrongbranch"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-wrongrevision",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-2",
+      "request_ms": 1800000007250,
+      "prompt": "What did we decide earlier about wrongrevision?",
+      "fact_id": "fact-wrongrevision",
+      "fact_text": "Boundary fact for wrongrevision",
+      "available_at": 1800000007200,
+      "expected_required": [
+        "fact-wrongrevision"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-expired",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-3",
+      "request_ms": 1800000007350,
+      "prompt": "What did we decide earlier about expired?",
+      "fact_id": "fact-expired",
+      "fact_text": "Boundary fact for expired",
+      "available_at": 1800000007300,
+      "expected_required": [
+        "fact-expired"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-superseded",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-4",
+      "request_ms": 1800000007450,
+      "prompt": "What did we decide earlier about superseded?",
+      "fact_id": "fact-superseded",
+      "fact_text": "Boundary fact for superseded",
+      "available_at": 1800000007400,
+      "expected_required": [
+        "fact-superseded"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-unknown_metadata",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-5",
+      "request_ms": 1800000007550,
+      "prompt": "What did we decide earlier about unknown_metadata?",
+      "fact_id": "fact-unknown_metadata",
+      "fact_text": "Boundary fact for unknown_metadata",
+      "available_at": 1800000007500,
+      "expected_required": [
+        "fact-unknown_metadata"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-malformed_metadata",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-6",
+      "request_ms": 1800000007650,
+      "prompt": "What did we decide earlier about malformed_metadata?",
+      "fact_id": "fact-malformed_metadata",
+      "fact_text": "Boundary fact for malformed_metadata",
+      "available_at": 1800000007600,
+      "expected_required": [
+        "fact-malformed_metadata"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "boundary-active_context_duplicate",
+      "cohort": "boundary_metadata",
+      "task": "boundary-task-7",
+      "request_ms": 1800000007750,
+      "prompt": "What did we decide earlier about active_context_duplicate?",
+      "fact_id": "fact-active_context_duplicate",
+      "fact_text": "Boundary fact for active_context_duplicate",
+      "available_at": 1800000007700,
+      "expected_required": [
+        "fact-active_context_duplicate"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "edge-skill_expanded_query",
+      "cohort": "service_and_edge",
+      "task": "edge-session-0",
+      "request_ms": 1800000008050,
+      "prompt": "Self-contained synthetic edge case skill_expanded_query",
+      "fact_id": "fact-skill_expanded_query",
+      "fact_text": "Edge synthetic evidence for skill_expanded_query",
+      "available_at": 1800000008000,
+      "expected_required": [],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "edge-raw_origin_query",
+      "cohort": "service_and_edge",
+      "task": "edge-session-0",
+      "request_ms": 1800000008150,
+      "prompt": "Self-contained synthetic edge case raw_origin_query",
+      "fact_id": "fact-raw_origin_query",
+      "fact_text": "Edge synthetic evidence for raw_origin_query",
+      "available_at": 1800000008100,
+      "expected_required": [],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "edge-unavailable_backend",
+      "cohort": "service_and_edge",
+      "task": "edge-session-1",
+      "request_ms": 1800000008250,
+      "prompt": "What did we decide earlier about unavailable_backend?",
+      "fact_id": "fact-unavailable_backend",
+      "fact_text": "Edge synthetic evidence for unavailable_backend",
+      "available_at": 1800000008200,
+      "expected_required": [
+        "fact-unavailable_backend"
+      ],
+      "expected_forbidden": [],
+      "failure": "unavailable_backend"
+    },
+    {
+      "id": "edge-timeout",
+      "cohort": "service_and_edge",
+      "task": "edge-session-1",
+      "request_ms": 1800000008350,
+      "prompt": "What did we decide earlier about timeout?",
+      "fact_id": "fact-timeout",
+      "fact_text": "Edge synthetic evidence for timeout",
+      "available_at": 1800000008300,
+      "expected_required": [
+        "fact-timeout"
+      ],
+      "expected_forbidden": [],
+      "failure": "timeout"
+    },
+    {
+      "id": "edge-cancelled",
+      "cohort": "service_and_edge",
+      "task": "edge-session-2",
+      "request_ms": 1800000008450,
+      "prompt": "What did we decide earlier about cancelled?",
+      "fact_id": "fact-cancelled",
+      "fact_text": "Edge synthetic evidence for cancelled",
+      "available_at": 1800000008400,
+      "expected_required": [
+        "fact-cancelled"
+      ],
+      "expected_forbidden": [],
+      "failure": "cancelled"
+    },
+    {
+      "id": "edge-late_prefetch_after_task_finish",
+      "cohort": "service_and_edge",
+      "task": "edge-session-2",
+      "request_ms": 1800000008550,
+      "prompt": "What did we decide earlier about late_prefetch_after_task_finish?",
+      "fact_id": "fact-late_prefetch_after_task_finish",
+      "fact_text": "Edge synthetic evidence for late_prefetch_after_task_finish",
+      "available_at": 1800000008500,
+      "expected_required": [
+        "fact-late_prefetch_after_task_finish"
+      ],
+      "expected_forbidden": [],
+      "failure": "late_prefetch_after_task_finish"
+    },
+    {
+      "id": "edge-unanswerable",
+      "cohort": "service_and_edge",
+      "task": "edge-session-3",
+      "request_ms": 1800000008650,
+      "prompt": "Self-contained synthetic edge case unanswerable",
+      "fact_id": "fact-unanswerable",
+      "fact_text": "Edge synthetic evidence for unanswerable",
+      "available_at": 1800000008600,
+      "expected_required": [],
+      "expected_forbidden": [],
+      "failure": null
+    },
+    {
+      "id": "edge-future_not_searchable",
+      "cohort": "service_and_edge",
+      "task": "edge-session-3",
+      "request_ms": 1800000008750,
+      "prompt": "What did we decide earlier about future_not_searchable?",
+      "fact_id": "fact-future_not_searchable",
+      "fact_text": "Edge synthetic evidence for future_not_searchable",
+      "available_at": 1800000008800,
+      "expected_required": [
+        "fact-future_not_searchable"
+      ],
+      "expected_forbidden": [],
+      "failure": null
+    }
+  ]
+}

@@ -85,6 +85,10 @@ icers auth logout
 
 Never commit API keys to the repository, `.icers` resources, or documentation.
 
+### Refresh a provider
+
+Open `/provider`, highlight a provider, and press `r` to reload its local model catalog and try remote discovery. Press `a` to reauthenticate. Press `/` to filter the list; Esc leaves filter mode. Newly discovered models are appended to the provider's entry in `models.json` (existing definitions are never changed; a backup is written first). Refresh keeps the current model and reports failures without changing the file. Remote discovery depends on the provider protocol and credentials; unsupported or offline providers still reload their local catalog.
+
 ### Configure a custom provider
 
 The default model catalog is `~/.icers/agent/models.json`. Set `ICERS_CODING_AGENT_DIR` to relocate the whole agent configuration directory:

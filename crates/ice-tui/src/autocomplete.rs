@@ -286,7 +286,7 @@ impl Default for FilePathAutocompleteProvider {
 impl AutocompleteProvider for FilePathAutocompleteProvider {
     fn get_suggestions(&self, input: &str, cursor: usize) -> Option<AutocompleteSuggestions> {
         let token = path_token(input, cursor);
-        if token.query.is_empty() && !token.at && !token.quoted {
+        if !token.at {
             return None;
         }
 
@@ -1123,7 +1123,10 @@ mod tests {
         std::fs::write(dir.join("zebra.rs"), "").unwrap();
         let provider = FilePathAutocompleteProvider::with_root(dir.clone());
 
-        let found = provider.get_suggestions("open zz", 7).unwrap();
+        assert!(provider.get_suggestions("open zz", 7).is_none());
+        assert!(provider.get_suggestions("open z", 6).is_none());
+        assert!(provider.get_suggestions("open \"zz\"", 9).is_none());
+        let found = provider.get_suggestions("open @zz", 8).unwrap();
         let texts: Vec<_> = found.items.iter().map(|i| i.text.as_str()).collect();
         assert_eq!(texts, vec!["zz-target.rs"]);
 

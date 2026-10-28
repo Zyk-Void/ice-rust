@@ -539,6 +539,7 @@ mod tests {
                 role: Default::default(),
                 content: UserContent::Text(text.to_string()),
                 timestamp: 0,
+                origin: None,
             }),
             terminate: None,
         })

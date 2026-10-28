@@ -369,9 +369,14 @@ impl Model {
         let recall = &mut self.recalls[index];
         recall.latency_ms = obs.latency_ms;
         match phase {
-            "succeeded" if flag("skipped") || flag("duplicate") => {
+            "succeeded"
+                if flag("skipped")
+                    || flag("duplicate")
+                    || meta("outcome").and_then(|value| value.as_str()) == Some("stale") =>
+            {
                 recall.status = Status::Skipped;
                 recall.note = match meta("reason").and_then(|value| value.as_str()) {
+                    Some("stale_session") => "discarded · session changed".into(),
                     Some("short_prompt") => "skipped · prompt too short".into(),
                     _ if flag("duplicate") => "skipped · same prompt as last time".into(),
                     _ => "skipped".into(),
@@ -616,7 +621,7 @@ impl Model {
             let detail = match (improve.status, &improve.error) {
                 (Status::Pending, _) => format!("{reason} · running"),
                 (Status::Failed, Some(error)) => format!("{reason} · failed · {error}"),
-                _ => format!("{reason}{}", seconds(improve.latency_ms)),
+                _ => format!("{reason} · accepted{}", seconds(improve.latency_ms)),
             };
             lines.extend(step_rows(improve.status, "improve", &[detail], width));
         }
@@ -1151,7 +1156,7 @@ mod tests {
         model.expanded = true;
         let lines = rows(&model);
         assert!(lines[1].contains("✗ improve") && lines[1].contains("dream · failed · timeout"));
-        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · 0.5s"));
+        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · accepted · 0.5s"));
     }
 
     fn user(chat: &Container, text: &str) -> Arc<UserMessageComponent> {

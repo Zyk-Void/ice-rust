@@ -143,8 +143,9 @@ pub(super) fn transcript_has_live_panel(
 /// Prepend restored queued messages to the draft the user may already have
 /// typed (upstream's `restoreQueuedMessagesToEditor` places them first).
 pub(super) fn merge_queued_into_draft(queued_text: &str, current: &str) -> String {
+    let queued_text = collapse_skill_invocations(queued_text);
     if current.trim().is_empty() {
-        queued_text.to_string()
+        queued_text
     } else {
         format!("{queued_text}\n\n{current}")
     }
@@ -598,7 +599,9 @@ pub(super) async fn handle_agent_event(
             // renders that bubble instead.
             AgentMessage::User(user) => {
                 state.new_message_count.other_message();
-                state.transcript_view().add_user(&user_message_text(&user));
+                state
+                    .transcript_view()
+                    .add_user(&user_message_display(&user));
                 add_user_images(&state.chat_container, &user, state.images_visible());
                 // A consumed entry must drop out of the pending display.
                 refresh_pending_messages(state, &harness.lane("main")).await;

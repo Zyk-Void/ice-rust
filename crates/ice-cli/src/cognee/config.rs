@@ -28,6 +28,11 @@ pub const ENV_BASE_URL: &str = "ICERS_COGNEE_BASE_URL";
 pub const ENV_DATASET: &str = "ICERS_COGNEE_DATASET";
 pub const ENV_COMPACTION_SUMMARY: &str = "ICERS_COGNEE_COMPACTION_SUMMARY";
 pub const ENV_CHECKPOINT_RECALL: &str = "ICERS_COGNEE_CHECKPOINT_RECALL";
+pub const ENV_READ_POLICY: &str = "ICERS_COGNEE_READ_POLICY";
+pub const ENV_WRITE_POLICY: &str = "ICERS_COGNEE_WRITE_POLICY";
+pub const ENV_HELPER_PROVIDER: &str = "ICERS_COGNEE_HELPER_PROVIDER";
+pub const ENV_HELPER_MODEL: &str = "ICERS_COGNEE_HELPER_MODEL";
+pub const ENV_HELPER_ENABLED: &str = "ICERS_COGNEE_HELPER_ENABLED";
 const ICERS_PREFIX: &str = "ICERS_COGNEE_";
 
 /// A snapshot of the variables Cognee reads.
@@ -74,11 +79,118 @@ impl CompactionSummaryMode {
     }
 }
 
+/// When prompts search Cognee on their own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadPolicy {
+    /// Every prompt with enough words searches memory before the model runs.
+    Legacy,
+    /// Never automatically; the model and `/cognee search` still can.
+    OnDemand,
+    /// Only a prompt that asks about earlier work searches memory.
+    Event,
+}
+
+impl ReadPolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::OnDemand => "on_demand",
+            Self::Event => "event",
+        }
+    }
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "on_demand" => Some(Self::OnDemand),
+            "event" => Some(Self::Event),
+            _ => None,
+        }
+    }
+}
+
+/// Which automatic paths may write to Cognee.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WritePolicy {
+    /// Session capture, tool traces, improve and compaction remember follow
+    /// their own switches.
+    Legacy,
+    /// Only `/cognee remember` and explicit tools write; every automatic
+    /// capture and promotion path is off whatever its own switch says.
+    Manual,
+    /// Broad automatic writes are off; attributable candidates require review.
+    Selective,
+}
+
+impl WritePolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::Manual => "manual",
+            Self::Selective => "selective",
+        }
+    }
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "manual" => Some(Self::Manual),
+            "selective" => Some(Self::Selective),
+            _ => None,
+        }
+    }
+}
+
+/// A named read/write policy preset for Cognee memory.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MemoryMode {
+    Legacy,
+    Manual,
+    Canary,
+    Selective,
+    Custom,
+}
+
+impl MemoryMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Legacy => "legacy",
+            Self::Manual => "manual",
+            Self::Canary => "canary",
+            Self::Selective => "selective",
+            Self::Custom => "custom",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "legacy" => Some(Self::Legacy),
+            "manual" => Some(Self::Manual),
+            "canary" => Some(Self::Canary),
+            "selective" => Some(Self::Selective),
+            _ => None,
+        }
+    }
+
+    pub fn detect(config: &CogneeConfig) -> Self {
+        match (config.read_policy, config.write_policy) {
+            (ReadPolicy::Legacy, WritePolicy::Legacy) => Self::Legacy,
+            (ReadPolicy::OnDemand, WritePolicy::Manual) => Self::Manual,
+            (ReadPolicy::Event, WritePolicy::Manual) => Self::Canary,
+            (ReadPolicy::Event, WritePolicy::Selective) => Self::Selective,
+            _ => Self::Custom,
+        }
+    }
+}
+
 /// `IceCogneeConfig`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CogneeConfig {
     pub enabled: bool,
     pub auto_recall: bool,
+    pub read_policy: ReadPolicy,
+    pub write_policy: WritePolicy,
+    pub helper_provider: Option<String>,
+    pub helper_model: Option<String>,
+    pub helper_enabled: bool,
     pub auto_remember: AutoRememberMode,
     /// Continuous session capture (prompts/answers/traces into the cache).
     pub capture_session: bool,
@@ -105,6 +217,11 @@ impl Default for CogneeConfig {
         Self {
             enabled: true,
             auto_recall: true,
+            read_policy: ReadPolicy::Legacy,
+            write_policy: WritePolicy::Legacy,
+            helper_provider: None,
+            helper_model: None,
+            helper_enabled: false,
             auto_remember: AutoRememberMode::Compaction,
             capture_session: true,
             capture_tools: true,
@@ -121,6 +238,53 @@ impl Default for CogneeConfig {
             queue_limit: 64,
             max_response_chars: 12_000,
         }
+    }
+}
+
+impl CogneeConfig {
+    /// Apply one named read/write preset without changing other settings.
+    pub fn with_mode(&self, mode: MemoryMode) -> Option<Self> {
+        let (read_policy, write_policy) = match mode {
+            MemoryMode::Legacy => (ReadPolicy::Legacy, WritePolicy::Legacy),
+            MemoryMode::Manual => (ReadPolicy::OnDemand, WritePolicy::Manual),
+            MemoryMode::Canary => (ReadPolicy::Event, WritePolicy::Manual),
+            MemoryMode::Selective => (ReadPolicy::Event, WritePolicy::Selective),
+            MemoryMode::Custom => return None,
+        };
+        Some(Self {
+            read_policy,
+            write_policy,
+            ..self.clone()
+        })
+    }
+
+    /// Automatic writes are allowed at all (see [`WritePolicy`]).
+    pub fn automatic_writes(&self) -> bool {
+        self.write_policy == WritePolicy::Legacy
+    }
+
+    /// Prompts, answers and compaction checkpoints go to the session cache.
+    pub fn captures_session(&self) -> bool {
+        self.automatic_writes() && self.capture_session
+    }
+
+    pub fn captures_tools(&self) -> bool {
+        self.captures_session() && self.capture_tools
+    }
+
+    /// The session cache is promoted into the permanent graph.
+    pub fn improves(&self) -> bool {
+        self.automatic_writes() && self.auto_improve
+    }
+
+    /// Compaction summaries are queued as permanent memory.
+    pub fn remembers_compaction(&self) -> bool {
+        self.automatic_writes() && self.auto_remember == AutoRememberMode::Compaction
+    }
+
+    /// Attributable memory candidates are admitted instead of broad captures.
+    pub fn selective_writes(&self) -> bool {
+        self.write_policy == WritePolicy::Selective
     }
 }
 
@@ -151,6 +315,10 @@ impl<'a> Raw<'a> {
             Raw::Json(_) => None,
         }
     }
+}
+
+pub fn parse_boolean_value(value: Option<&String>, name: &str) -> Result<Option<bool>, String> {
+    parse_boolean(value.map(|text| Raw::Env(text)), name)
 }
 
 fn parse_boolean(value: Option<Raw<'_>>, name: &str) -> Result<Option<bool>, String> {
@@ -247,6 +415,48 @@ fn parse_dataset(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, S
     Ok(Some(text.into()))
 }
 
+fn parse_helper_provider(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, String> {
+    let error =
+        || format!("{name} must contain 1-128 letters, numbers, dots, underscores, or hyphens");
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let text = value.text().ok_or_else(error)?.trim();
+    if text.is_empty() {
+        return Ok(None);
+    }
+    if !regex!(r"^[A-Za-z0-9._-]{1,128}$").is_match(text) {
+        return Err(error());
+    }
+    Ok(Some(text.to_string()))
+}
+
+pub fn parse_helper_id(value: &str, name: &str) -> Result<String, String> {
+    let parsed = if name == ENV_HELPER_MODEL {
+        parse_helper_model(Some(Raw::Env(value)), name)?
+    } else {
+        parse_helper_provider(Some(Raw::Env(value)), name)?
+    };
+    parsed.ok_or_else(|| format!("{name} must be configured"))
+}
+
+fn parse_helper_model(value: Option<Raw<'_>>, name: &str) -> Result<Option<String>, String> {
+    let error = || {
+        format!(
+            "{name} must contain 1-128 letters, numbers, dots, underscores, hyphens, or slashes"
+        )
+    };
+    let Some(value) = value else { return Ok(None) };
+    let text = value.text().ok_or_else(error)?.trim();
+    if text.is_empty() {
+        return Ok(None);
+    }
+    if !regex!(r"^[A-Za-z0-9._/-]{1,128}$").is_match(text) {
+        return Err(error());
+    }
+    Ok(Some(text.to_owned()))
+}
+
 fn raw_string(value: &Option<Raw<'_>>) -> Option<String> {
     match value {
         Some(Raw::Env(text)) => Some(text.to_string()),
@@ -270,6 +480,34 @@ pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeC
     }
     if let Some(value) = parse_boolean(pick(env, ENV_RECALL, source, "autoRecall"), ENV_RECALL)? {
         config.auto_recall = value;
+    }
+    config.helper_provider = parse_helper_provider(
+        pick(env, ENV_HELPER_PROVIDER, source, "helperProvider"),
+        ENV_HELPER_PROVIDER,
+    )?;
+    config.helper_model = parse_helper_model(
+        pick(env, ENV_HELPER_MODEL, source, "helperModel"),
+        ENV_HELPER_MODEL,
+    )?;
+    if let Some(enabled) = parse_boolean(
+        pick(env, ENV_HELPER_ENABLED, source, "helperEnabled"),
+        ENV_HELPER_ENABLED,
+    )? {
+        config.helper_enabled = enabled;
+    }
+    let read_policy = pick(env, ENV_READ_POLICY, source, "readPolicy");
+    if read_policy.is_some() {
+        config.read_policy = raw_string(&read_policy)
+            .as_deref()
+            .and_then(ReadPolicy::parse)
+            .ok_or_else(|| format!("{ENV_READ_POLICY} must be legacy, on_demand, or event"))?;
+    }
+    let write_policy = pick(env, ENV_WRITE_POLICY, source, "writePolicy");
+    if write_policy.is_some() {
+        config.write_policy = raw_string(&write_policy)
+            .as_deref()
+            .and_then(WritePolicy::parse)
+            .ok_or_else(|| format!("{ENV_WRITE_POLICY} must be legacy, manual, or selective"))?;
     }
     let remember = pick(env, ENV_REMEMBER, source, "autoRemember");
     if remember.is_some() {
@@ -568,9 +806,44 @@ fn sha256_hex(text: &str) -> String {
     digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-/// `ice-<basename>-<8 hex of the lexical root>`.
+/// The main worktree for a linked-worktree checkout, found by reading the
+/// `.git` file and its `commondir` (no `git` subprocess); `root` itself for a
+/// main checkout, a bare layout, a non-Git directory or anything unreadable.
+/// Linked worktrees share one repository, so they share its dataset.
+pub fn repository_root(root: &Path) -> PathBuf {
+    let linked = || -> Option<PathBuf> {
+        let dot_git = root.join(".git");
+        if !dot_git.is_file() {
+            return None;
+        }
+        let text = std::fs::read_to_string(&dot_git).ok()?;
+        let gitdir = Path::new(text.trim().strip_prefix("gitdir:")?.trim());
+        let gitdir = if gitdir.is_absolute() {
+            gitdir.to_path_buf()
+        } else {
+            root.join(gitdir)
+        };
+        let commondir = std::fs::read_to_string(gitdir.join("commondir")).ok()?;
+        let common = std::fs::canonicalize(gitdir.join(commondir.trim())).ok()?;
+        if common.file_name()? != ".git" {
+            return None;
+        }
+        common.parent().map(Path::to_path_buf)
+    };
+    linked().unwrap_or_else(|| root.to_path_buf())
+}
+
+/// `ice-<basename>-<8 hex of the lexical root>`; a linked worktree uses its
+/// repository's main checkout as the root.
 pub fn resolve_project_dataset(cwd: &Path) -> String {
-    let root = find_git_root(cwd);
+    dataset_for_root(&repository_root(&find_git_root(cwd)))
+}
+
+pub fn legacy_project_dataset(cwd: &Path) -> String {
+    dataset_for_root(&find_git_root(cwd))
+}
+
+fn dataset_for_root(root: &Path) -> String {
     let name = root
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
@@ -634,6 +907,11 @@ pub fn config_json(config: &CogneeConfig) -> Value {
     serde_json::json!({
         "enabled": config.enabled,
         "autoRecall": config.auto_recall,
+        "readPolicy": config.read_policy.as_str(),
+        "writePolicy": config.write_policy.as_str(),
+        "helperProvider": config.helper_provider,
+        "helperModel": config.helper_model,
+        "helperEnabled": config.helper_enabled,
         "autoRemember": config.auto_remember.as_str(),
         "captureSession": config.capture_session,
         "captureTools": config.capture_tools,
@@ -717,6 +995,85 @@ mod tests {
     }
 
     #[test]
+    fn memory_modes_detect_only_the_four_presets() {
+        for (read_policy, write_policy, mode) in [
+            (ReadPolicy::Legacy, WritePolicy::Legacy, MemoryMode::Legacy),
+            (
+                ReadPolicy::OnDemand,
+                WritePolicy::Manual,
+                MemoryMode::Manual,
+            ),
+            (ReadPolicy::Event, WritePolicy::Manual, MemoryMode::Canary),
+            (
+                ReadPolicy::Event,
+                WritePolicy::Selective,
+                MemoryMode::Selective,
+            ),
+        ] {
+            let config = CogneeConfig {
+                read_policy,
+                write_policy,
+                ..CogneeConfig::default()
+            };
+            assert_eq!(MemoryMode::detect(&config), mode);
+            let restored = config.with_mode(mode).unwrap();
+            assert_eq!(restored.read_policy, read_policy);
+            assert_eq!(restored.write_policy, write_policy);
+        }
+
+        for (read_policy, write_policy) in [
+            (ReadPolicy::Event, WritePolicy::Legacy),
+            (ReadPolicy::OnDemand, WritePolicy::Selective),
+        ] {
+            let config = CogneeConfig {
+                read_policy,
+                write_policy,
+                ..CogneeConfig::default()
+            };
+            assert_eq!(MemoryMode::detect(&config), MemoryMode::Custom);
+            assert!(config.with_mode(MemoryMode::Custom).is_none());
+        }
+    }
+
+    #[test]
+    fn memory_mode_presets_preserve_every_other_field_and_round_trip() {
+        let config = CogneeConfig {
+            helper_enabled: true,
+            helper_provider: Some("typesafe".into()),
+            helper_model: Some("model-x".into()),
+            capture_session: false,
+            capture_tools: false,
+            auto_improve: false,
+            auto_remember: AutoRememberMode::Off,
+            ..CogneeConfig::default()
+        };
+        for mode in [
+            MemoryMode::Legacy,
+            MemoryMode::Manual,
+            MemoryMode::Canary,
+            MemoryMode::Selective,
+        ] {
+            let preset = config.with_mode(mode).unwrap();
+            assert_eq!(preset.helper_provider, config.helper_provider);
+            assert_eq!(preset.capture_session, config.capture_session);
+            assert_eq!(preset.capture_tools, config.capture_tools);
+            assert_eq!(preset.auto_improve, config.auto_improve);
+            assert_eq!(preset.auto_remember, config.auto_remember);
+            let mut restored = preset.clone();
+            restored.read_policy = config.read_policy;
+            restored.write_policy = config.write_policy;
+            assert_eq!(restored, config);
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("config.json");
+            save_config(&path, &preset).unwrap();
+            let loaded = load_config(&path, &env(&[])).unwrap();
+            assert_eq!(loaded.read_policy, preset.read_policy);
+            assert_eq!(loaded.write_policy, preset.write_policy);
+            assert_eq!(MemoryMode::detect(&loaded), mode);
+        }
+    }
+
+    #[test]
     fn defaults_match_ice() {
         let config = resolve_config(None, &env(&[])).unwrap();
         assert_eq!(config, CogneeConfig::default());
@@ -724,6 +1081,118 @@ mod tests {
         assert_eq!(config.base_url, "http://127.0.0.1:8211");
         assert_eq!(config.compaction_summary_mode, CompactionSummaryMode::Auto);
         assert!(!config.checkpoint_recall);
+    }
+
+    #[test]
+    fn helper_provider_round_trips_and_validates_environment_override() {
+        let stored = json!({"helperProvider": "typesafe", "helperModel": "model-v2", "helperEnabled": true, "legacyUnknown": "ignored"});
+        let config = resolve_config(Some(&stored), &env(&[])).unwrap();
+        assert_eq!(config.helper_provider.as_deref(), Some("typesafe"));
+        assert_eq!(config.helper_model.as_deref(), Some("model-v2"));
+        assert!(config.helper_enabled);
+        assert_eq!(config_json(&config)["helperProvider"], "typesafe");
+        assert_eq!(config_json(&config)["helperModel"], "model-v2");
+        assert_eq!(config_json(&config)["helperEnabled"], true);
+
+        let overridden = resolve_config(
+            Some(&stored),
+            &env(&[
+                (ENV_HELPER_PROVIDER, "decision-1"),
+                (ENV_HELPER_MODEL, "env/model"),
+                (ENV_HELPER_ENABLED, "false"),
+            ]),
+        )
+        .unwrap();
+        assert_eq!(overridden.helper_provider.as_deref(), Some("decision-1"));
+        assert_eq!(overridden.helper_model.as_deref(), Some("env/model"));
+        assert!(!overridden.helper_enabled);
+        assert_eq!(
+            resolve_config(Some(&json!({"helperProvider": "  "})), &env(&[]))
+                .unwrap()
+                .helper_provider,
+            None
+        );
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_PROVIDER, "bad provider")])).is_err());
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_MODEL, "bad/model id")])).is_err());
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_MODEL, &"m".repeat(129))])).is_err());
+        assert!(resolve_config(None, &env(&[(ENV_HELPER_PROVIDER, &"x".repeat(129))])).is_err());
+        assert_eq!(
+            resolve_config(Some(&json!({"unknownLegacyKey": true})), &env(&[])).unwrap(),
+            CogneeConfig::default()
+        );
+        let old = resolve_config(Some(&json!({"helperProvider":"typesafe"})), &env(&[])).unwrap();
+        assert!(!old.helper_enabled);
+        assert_eq!(old.helper_model, None);
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+        let mut configured = CogneeConfig::default();
+        configured.helper_enabled = true;
+        configured.helper_provider = Some("typesafe".into());
+        configured.helper_model = Some("exact-model".into());
+        save_config(&path, &configured).unwrap();
+        assert_eq!(load_config(&path, &env(&[])).unwrap(), configured);
+    }
+
+    #[test]
+    fn linked_worktrees_share_the_main_checkouts_dataset() {
+        let dir = tempfile::tempdir().unwrap();
+        let main = std::fs::canonicalize(dir.path()).unwrap().join("repo");
+        let linked = main.join(".worktrees").join("feature");
+        let admin = main.join(".git").join("worktrees").join("feature");
+        std::fs::create_dir_all(&admin).unwrap();
+        std::fs::create_dir_all(&linked).unwrap();
+        std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+        std::fs::write(
+            linked.join(".git"),
+            format!("gitdir: {}\n", admin.display()),
+        )
+        .unwrap();
+        let nested = linked.join("crates").join("a");
+        std::fs::create_dir_all(&nested).unwrap();
+        let shared = resolve_project_dataset(&main);
+        assert!(shared.starts_with("ice-repo-"), "{shared}");
+        assert_eq!(resolve_project_dataset(&linked), shared);
+        assert_ne!(legacy_project_dataset(&linked), shared);
+        assert_eq!(legacy_project_dataset(&main), shared);
+        assert_eq!(resolve_project_dataset(&nested), shared);
+        // A separate repository with the same basename stays separate.
+        let other = dir.path().join("other").join("repo");
+        std::fs::create_dir_all(other.join(".git")).unwrap();
+        assert_ne!(resolve_project_dataset(&other), shared);
+        // An unreadable or non-standard .git file keeps the lexical root.
+        let broken = dir.path().join("broken");
+        std::fs::create_dir_all(&broken).unwrap();
+        std::fs::write(broken.join(".git"), "not a gitdir file").unwrap();
+        assert_eq!(repository_root(&broken), broken);
+    }
+
+    #[test]
+    fn policies_default_to_legacy_and_validate() {
+        let config = resolve_config(None, &env(&[])).unwrap();
+        assert_eq!(config.read_policy, ReadPolicy::Legacy);
+        assert_eq!(config.write_policy, WritePolicy::Legacy);
+        assert!(config.captures_tools() && config.improves());
+        let config = resolve_config(
+            Some(&json!({"readPolicy": "on_demand", "writePolicy": "legacy"})),
+            &env(&[(ENV_READ_POLICY, "event"), (ENV_WRITE_POLICY, "manual")]),
+        )
+        .unwrap();
+        assert_eq!(config.read_policy, ReadPolicy::Event);
+        assert_eq!(config.write_policy, WritePolicy::Manual);
+        // Both non-legacy policies override capture and promotion switches.
+        assert!(config.capture_session && config.auto_improve);
+        assert!(!config.captures_session() && !config.captures_tools());
+        assert!(!config.improves() && !config.remembers_compaction());
+        let selective =
+            resolve_config(Some(&json!({"writePolicy": "selective"})), &env(&[])).unwrap();
+        assert!(selective.selective_writes());
+        assert!(!selective.automatic_writes());
+        assert_eq!(config_json(&selective)["writePolicy"], "selective");
+        assert!(resolve_config(Some(&json!({"readPolicy": "always"})), &env(&[])).is_err());
+        let saved = config_json(&config);
+        assert_eq!(saved["readPolicy"], "event");
+        assert_eq!(saved["writePolicy"], "manual");
     }
 
     #[test]

@@ -519,6 +519,7 @@ impl Agent {
             should_stop_after_turn: None,
             prepare_next_turn: None,
             after_tool_results: None,
+            before_request: None,
             get_steering_messages: Some(Arc::new(move || {
                 let q = Arc::clone(&steering);
                 Box::pin(async move { q.lock().expect("steer lock").try_drain() })

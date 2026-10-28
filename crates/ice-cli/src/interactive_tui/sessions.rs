@@ -620,7 +620,7 @@ pub(super) async fn render_session_history(
         match e {
             Entry::Message(me) => match &me.message {
                 AgentMessage::User(u) => {
-                    add_user_message(chat, &user_message_text(u));
+                    add_user_message(chat, &user_message_display(u));
                     add_user_images(chat, u, show_images);
                     rendered_any = true;
                 }

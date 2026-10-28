@@ -271,10 +271,14 @@ impl Keybindings {
                 default_keys: if cfg!(windows) {
                     vec![
                         KeyCombo::new(Char('v'), M::CONTROL),
+                        KeyCombo::new(Char('v'), M::CONTROL | M::SHIFT),
                         KeyCombo::new(Char('v'), M::ALT),
                     ]
                 } else {
-                    vec![KeyCombo::new(Char('v'), M::CONTROL)]
+                    vec![
+                        KeyCombo::new(Char('v'), M::CONTROL),
+                        KeyCombo::new(Char('v'), M::CONTROL | M::SHIFT),
+                    ]
                 },
                 description: Some("Paste image from clipboard"),
             },
@@ -1131,6 +1135,16 @@ mod tests {
         let kb = Keybindings::new();
         let event = crossterm::event::KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE);
         assert!(kb.matches(&event, keys::INPUT_SUBMIT));
+    }
+
+    #[test]
+    fn paste_image_accepts_ctrl_shift_v() {
+        let kb = Keybindings::new();
+        let event = crossterm::event::KeyEvent::new(
+            KeyCode::Char('V'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+        );
+        assert!(kb.matches(&event, keys::PASTE_IMAGE));
     }
 
     #[test]
