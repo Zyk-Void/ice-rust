@@ -28,6 +28,8 @@ pub mod providers;
 pub mod retry;
 pub mod schema;
 pub mod simple_options;
+// Strict wire-schema conversion is used only by the HTTP provider adapters.
+#[cfg(feature = "providers")]
 pub(crate) mod strict_schema;
 pub mod types;
 
