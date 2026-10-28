@@ -409,14 +409,14 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
         SettingRow::new(
             "cognee.memoryMode",
             "Cognee memory mode",
-            "Legacy restores broad legacy recall and writes. Manual uses on-demand reads and explicit tools/commands only, with no automatic recall or promotion. Canary uses selective event recall, manual writes, and JEV off. Selective uses event recall and selective candidate writes. ICERS_COGNEE_READ_POLICY and ICERS_COGNEE_WRITE_POLICY environment overrides win over saved values.",
+            "Legacy restores broad legacy recall and writes. Manual uses on-demand reads and explicit tools/commands only, with no automatic recall or promotion. Canary uses selective event recall and manual writes; helper dispatch is off while its saved enable flag is preserved. Selective uses event recall and selective candidate writes. ICERS_COGNEE_READ_POLICY and ICERS_COGNEE_WRITE_POLICY environment overrides win over saved values.",
             MemoryMode::detect(config).as_str(),
             &["legacy", "manual", "canary", "selective"],
         ),
         SettingRow::new(
             "cognee.helperEnabled",
             "Decision helper",
-            "Optional selective-write judgment; requires explicit provider and model",
+            "Optional selective-write judgment; requires explicit provider/model, at most 8 candidates, 1.5 s background deadline, and shared quotas; no routine prompt call",
             on_off(config.helper_enabled),
             &["off", "on"],
         ),
@@ -437,14 +437,14 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
         SettingRow::new(
             "cognee.autoRecall",
             "Cognee recall",
-            "Search Cognee memory for relevant context on each prompt",
+            "Enable automatic recall under the selected read policy; event mode keeps self-contained prompts local",
             on_off(config.auto_recall),
             &["off", "on"],
         ),
         SettingRow::new(
             "cognee.readPolicy",
             "Cognee read policy",
-            "legacy searches most prompts; event only when a prompt asks about earlier work; on_demand never (the cognee_search tool still works)",
+            "legacy searches most prompts; event uses explicit history or admitted task events; on_demand never searches automatically (cognee_search remains available)",
             config.read_policy.as_str(),
             &["legacy", "event", "on_demand"],
         ),

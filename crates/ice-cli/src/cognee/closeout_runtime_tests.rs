@@ -413,3 +413,23 @@ async fn helper_late_observation_preserves_source_scope_instead_of_current_sessi
         Value::Null
     );
 }
+
+#[tokio::test]
+async fn queued_improve_cannot_revive_after_disable_and_reenable_before_first_poll() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+    rt.ensure_loaded();
+    let session = rt.ensure_session_id("original");
+    mark_dream_captured(&rt.dream_dir(), &session, &rt.active_dataset(), NOW as f64).unwrap();
+    let work = rt.run_improve("queued_policy_epoch").unwrap();
+    // Current-thread test: do not poll the scheduled future between switches.
+    let original = rt.config();
+    let mut disabled = original.clone();
+    disabled.enabled = false;
+    assert!(rt.save_and_adopt(disabled));
+    assert!(rt.save_and_adopt(original));
+    work.await.unwrap();
+    rt.wait_for_background().await;
+    assert!(transport.sent().is_empty());
+}

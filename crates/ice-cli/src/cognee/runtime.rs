@@ -2186,7 +2186,7 @@ impl CogneeRuntime {
     /// `runImprove`: one current-session improve, claim-fenced.
     pub fn run_improve(&self, reason: &'static str) -> Option<JoinHandle<()>> {
         let now = self.now();
-        let (client, session_id, dataset) = {
+        let (client, session_id, dataset, signal) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
                 || !state.config.improves()
@@ -2203,11 +2203,16 @@ impl CogneeRuntime {
             }
             state.improve_in_flight = true;
             state.dream_dirty = false;
-            (client, session_id, state.active_dataset())
+            (
+                client,
+                session_id,
+                state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
+            )
         };
         let this = self.arc();
         let handle = tokio::spawn(async move {
-            this.improve_current(client, session_id, dataset, reason)
+            this.improve_current_guarded(client, session_id, dataset, reason, signal)
                 .await;
             let mut state = this.state();
             state.improve_in_flight = false;
@@ -2216,6 +2221,7 @@ impl CogneeRuntime {
         Some(handle)
     }
 
+    #[cfg(test)]
     async fn improve_current(
         &self,
         client: CogneeClient,
@@ -2224,6 +2230,18 @@ impl CogneeRuntime {
         reason: &'static str,
     ) {
         let signal = self.state().automatic_write_cancel.child_token();
+        self.improve_current_guarded(client, session_id, dataset, reason, signal)
+            .await;
+    }
+
+    async fn improve_current_guarded(
+        &self,
+        client: CogneeClient,
+        session_id: String,
+        dataset: String,
+        reason: &'static str,
+        signal: CancellationToken,
+    ) {
         drop(self.dream_writes.lock().await);
         let token = uuid::Uuid::new_v4().to_string();
         let dir = self.dream_dir();
@@ -2387,7 +2405,7 @@ impl CogneeRuntime {
     /// `runDream`: improve up to two older sessions.
     pub fn run_dream(&self) -> Option<JoinHandle<()>> {
         let now = self.now();
-        let (client, dataset) = {
+        let (client, dataset, signal) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
                 || !state.config.improves()
@@ -2402,17 +2420,20 @@ impl CogneeRuntime {
             }
             state.dream_in_flight = true;
             state.last_dream_at = now;
-            (client, state.active_dataset())
+            (
+                client,
+                state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
+            )
         };
         let this = self.arc();
         Some(tokio::spawn(async move {
-            this.dream_pass(client, dataset).await;
+            this.dream_pass(client, dataset, signal).await;
             this.state().dream_in_flight = false;
         }))
     }
 
-    async fn dream_pass(&self, client: CogneeClient, dataset: String) {
-        let signal = self.state().automatic_write_cancel.child_token();
+    async fn dream_pass(&self, client: CogneeClient, dataset: String, signal: CancellationToken) {
         drop(self.dream_writes.lock().await);
         let dir = self.dream_dir();
         let scan_now = self.now() as f64;
@@ -5833,6 +5854,7 @@ mod tests {
         rt.dream_pass(
             super::super::client::tests::client(transport.clone()),
             "other".into(),
+            CancellationToken::new(),
         )
         .await;
         rt.wait_for_background().await;
