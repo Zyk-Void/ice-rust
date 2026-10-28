@@ -65,10 +65,12 @@ use super::helper::{
 use super::helper_gate::{Admission as HelperAdmission, HelperGate};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
 use super::policy::{admit_prompt, Admission};
+#[cfg(test)]
+use super::queue::read_warmup_batch;
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
-    read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
-    update_pending_remember_state, CircuitState, DispatchLease, PendingState,
+    recover_inflight, remove_pending_remember, select_drain_batch, update_pending_remember_state,
+    CircuitState, DispatchLease, PendingState,
 };
 #[cfg(test)]
 use super::suppress::Suppression;
@@ -269,6 +271,7 @@ pub struct DoctorReport {
     pub healthy: bool,
     pub health_detail: String,
     pub operation_outcomes: OperationOutcomesSnapshot,
+    pub capability_inventory: Value,
     pub capture_session: bool,
     pub capture_tools: bool,
     pub auto_recall: bool,
@@ -356,7 +359,7 @@ impl DoctorReport {
             "nativeRemember=POST:/api/v1/remember (multipart datasetName, node_set, run_in_background, optional session_id, data; support unverified)".to_string(),
             "nativeRememberEntry=POST:/api/v1/remember/entry (JSON entry, dataset_name, session_id; support unverified)".to_string(),
             "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status: not exposed by this adapter)".to_string(),
-            "mcpCognee=separate catalog (not probed)".to_string(),
+            format!("mcpCognee=separate catalog (not probed); inventory={}", self.capability_inventory),
             format!("operations={}", self.operation_outcomes),
             format!("health={}", self.health()),
             format!("endpoint={}", sanitize_endpoint(&self.base_url)),
@@ -443,6 +446,7 @@ pub(crate) struct State {
     helper_error: Option<String>,
     helper_signature: Option<(bool, WritePolicy, bool, Option<String>, Option<String>)>,
     helper_cancel: CancellationToken,
+    automatic_write_cancel: CancellationToken,
     helper_gate: HelperGate,
     helper_requests: u64,
     helper_abstains: u64,
@@ -494,6 +498,7 @@ impl State {
             helper_error: None,
             helper_signature: None,
             helper_cancel: CancellationToken::new(),
+            automatic_write_cancel: CancellationToken::new(),
             helper_gate: HelperGate::default(),
             helper_requests: 0,
             helper_abstains: 0,
@@ -630,6 +635,7 @@ pub struct CogneeRuntime {
     notices: NoticeMailbox,
     status: Mutex<Option<ice_extensions::ExtensionStatusMailbox>>,
     harness: Mutex<Option<ice_harness::agent_harness::WeakAgentHarness>>,
+    capability_service: Mutex<Weak<crate::capability_service::CapabilityService>>,
     state: Mutex<State>,
     read_coordinator: Mutex<request::ReadCoordinator>,
     background: Mutex<Vec<JoinHandle<()>>>,
@@ -663,6 +669,7 @@ impl CogneeRuntime {
             notices,
             status: Mutex::new(None),
             harness: Mutex::new(None),
+            capability_service: Mutex::new(Weak::new()),
             state: Mutex::new(State::new()),
             read_coordinator: Mutex::new(request::ReadCoordinator::default()),
             background: Mutex::new(Vec::new()),
@@ -674,6 +681,22 @@ impl CogneeRuntime {
             drain: tokio::sync::Mutex::new(()),
             warmup_drain: tokio::sync::Mutex::new(()),
         })
+    }
+
+    /// Share the host's resident catalog without probing MCP or retaining a cycle.
+    pub fn bind_capability_service(
+        &self,
+        service: &Arc<crate::capability_service::CapabilityService>,
+    ) {
+        *self.capability_service.lock().unwrap() = Arc::downgrade(service);
+    }
+
+    fn capability_inventory(&self) -> Value {
+        let service = self.capability_service.lock().unwrap().upgrade();
+        service.map_or_else(
+            || json!({"tools":[], "probed":false, "status":"catalog_unavailable"}),
+            |service| service.doctor_cognee_contract(),
+        )
     }
 
     fn arc(&self) -> Arc<Self> {
@@ -867,6 +890,49 @@ impl CogneeRuntime {
         } else {
             None
         }
+    }
+
+    fn persist_backend_acceptance(
+        &self,
+        id: &str,
+        operation: &str,
+        session: Option<&str>,
+        dataset: &str,
+        receipt: &super::client::AcceptedReceipt,
+    ) -> bool {
+        let record = super::accepted_jobs::AcceptedJob {
+            version: 1,
+            operation_id: id.to_owned(),
+            operation: operation.to_owned(),
+            dataset: dataset.to_owned(),
+            session_id: session.map(str::to_owned),
+            accepted_at_ms: self.now(),
+            receipt: receipt.clone(),
+            searchability: super::accepted_jobs::Searchability::Unverified,
+        };
+        if super::accepted_jobs::persist(&self.storage_dir.join("accepted-jobs"), &record).is_err()
+        {
+            self.notify(NoticeLevel::Warning, "Cognee accepted the request but its local acknowledgment could not be retained; searchability remains unverified");
+            false
+        } else {
+            true
+        }
+    }
+
+    fn automatic_capture_allowed(&self, kind: &str) -> bool {
+        let state = self.state();
+        !state.shutting_down
+            && Self::enabled(&state, self.offline)
+            && if kind == "trace" {
+                state.config.captures_tools()
+            } else {
+                state.config.captures_session()
+            }
+    }
+
+    fn automatic_improve_allowed(&self) -> bool {
+        let state = self.state();
+        Self::enabled(&state, self.offline) && state.config.improves()
     }
 
     fn ensure_session_id(&self, host_id: &str) -> String {
@@ -1213,12 +1279,15 @@ impl CogneeRuntime {
                                 continue;
                             };
                             if judgment.durable == Verdict::No {
-                                let _ = super::candidates::set_state(
+                                if super::candidates::set_state(
                                     &candidates_dir,
                                     &mut candidate,
                                     CandidateState::Rejected("helper_not_durable".into()),
-                                );
-                                rejected += 1;
+                                )
+                                .is_ok()
+                                {
+                                    rejected += 1;
+                                }
                             } else if judgment.durable == Verdict::Yes
                                 && judgment.applicable == Verdict::Yes
                                 && judgment.category != Some(helper::Category::None)
@@ -1354,12 +1423,15 @@ impl CogneeRuntime {
                     continue;
                 };
                 if judgment.durable == Verdict::No {
-                    let _ = super::candidates::set_state(
+                    if super::candidates::set_state(
                         &candidates_dir,
                         &mut candidate,
                         CandidateState::Rejected("helper_not_durable".into()),
-                    );
-                    rejected += 1;
+                    )
+                    .is_ok()
+                    {
+                        rejected += 1;
+                    }
                 } else if judgment.durable == Verdict::Yes
                     && judgment.applicable == Verdict::Yes
                     && judgment.category != Some(helper::Category::None)
@@ -1372,14 +1444,17 @@ impl CogneeRuntime {
                             accepted += 1;
                         }
                         Ok(None) => {
-                            let _ = super::candidates::set_state(
+                            if super::candidates::set_state(
                                 &candidates_dir,
                                 &mut candidate,
                                 CandidateState::Rejected(
                                     super::candidates::Reason::QueueFull.as_str().into(),
                                 ),
-                            );
-                            rejected += 1;
+                            )
+                            .is_ok()
+                            {
+                                rejected += 1;
+                            }
                         }
                         Err(_) => {}
                     }
@@ -1521,9 +1596,10 @@ impl CogneeRuntime {
                 return;
             }
             (
-                identity
-                    .map(|(session, _)| session.to_owned())
-                    .or_else(|| state.session_id.clone()),
+                match identity {
+                    Some((session, _)) => (!session.is_empty()).then(|| session.to_owned()),
+                    None => state.session_id.clone(),
+                },
                 identity
                     .map(|(_, dataset)| dataset.to_owned())
                     .unwrap_or_else(|| state.active_dataset()),
@@ -1601,15 +1677,23 @@ impl CogneeRuntime {
 
     /// `storeEntry`: send one cache entry in the background.
     fn store_entry(&self, entry: Map<String, Value>, kind: &'static str) -> Option<()> {
-        let (client, session_id, dataset) = {
+        let (client, session_id, dataset, signal) = {
             let state = self.state();
-            if state.shutting_down || !Self::enabled(&state, self.offline) {
+            if state.shutting_down
+                || !Self::enabled(&state, self.offline)
+                || !(if kind == "trace" {
+                    state.config.captures_tools()
+                } else {
+                    state.config.captures_session()
+                })
+            {
                 return None;
             }
             (
                 state.client.clone()?,
                 state.session_id.clone()?,
                 state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
             )
         };
         let request_id = uuid::Uuid::new_v4().to_string();
@@ -1619,25 +1703,32 @@ impl CogneeRuntime {
         } else {
             "remember_entry"
         };
-        self.observe(
-            operation,
-            "started",
-            ObserveFields {
-                request_id: Some(request_id.clone()),
-                preview: Some(Value::Object(entry.clone())),
-                meta: meta(json!({"kind": kind})),
-                ..ObserveFields::default()
-            },
-        );
         let this = self.arc();
         self.track(async move {
+            if signal.is_cancelled() || !this.automatic_capture_allowed(kind) {
+                return;
+            }
+            this.observe_for(
+                operation,
+                "started",
+                ObserveFields {
+                    request_id: Some(request_id.clone()),
+                    preview: Some(Value::Object(entry.clone())),
+                    meta: meta(json!({"kind": kind})),
+                    ..ObserveFields::default()
+                },
+                Some((&session_id, &dataset)),
+            );
             let entry_value = Value::Object(entry.clone());
             let result = client
                 .remember_entry(
                     &entry_value,
                     Some(&dataset),
                     &session_id,
-                    CallOptions::default(),
+                    CallOptions {
+                        signal: Some(signal),
+                        ..CallOptions::default()
+                    },
                 )
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
@@ -1695,7 +1786,18 @@ impl CogneeRuntime {
                         },
                         Some((&session_id, &dataset)),
                     );
-                    this.buffer_warmup_for(&session_id, &dataset, &entry);
+                    if drain_failure_state(&error_kind(&error)) == PendingState::Uncertain {
+                        super::queue::buffer_warmup_entry_with_state(
+                            &this.warmup_dir(),
+                            &session_id,
+                            &dataset,
+                            &entry,
+                            this.now(),
+                            PendingState::Uncertain,
+                        );
+                    } else {
+                        this.buffer_warmup_for(&session_id, &dataset, &entry);
+                    }
                 }
             }
         });
@@ -1712,35 +1814,67 @@ impl CogneeRuntime {
             return;
         };
         let (dir, dataset) = (self.warmup_dir(), self.state().active_dataset());
+        let signal = self.state().automatic_write_cancel.child_token();
         let this = self.arc();
         self.track(async move {
             let Ok(_guard) = this.warmup_drain.try_lock() else {
                 return;
             };
-            let batch = tokio::task::spawn_blocking(move || read_warmup_batch(&dir))
-                .await
-                .unwrap_or_default();
+            let lease_dir = dir.clone();
+            let Ok(Some(_lease)) =
+                tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                    .await
+                    .unwrap_or(Ok(None))
+            else {
+                return;
+            };
+            let batch = tokio::task::spawn_blocking(move || {
+                super::queue::read_replayable_warmup_batch(&dir)
+            })
+            .await
+            .unwrap_or_default();
             let (mut replayed, mut failed) = (0, 0);
             for record in batch {
+                if signal.is_cancelled() || !this.automatic_capture_allowed("answer") {
+                    break;
+                }
+                if record.entry.get("type").and_then(Value::as_str) == Some("trace")
+                    && !this.automatic_capture_allowed("trace")
+                {
+                    // Preserve traces that their original capture policy no
+                    // longer authorizes; other eligible answers may proceed.
+                    continue;
+                }
                 let entry = Value::Object(record.entry.clone());
                 let dataset = record.dataset.clone().unwrap_or_else(|| dataset.clone());
-                if client
+                if super::queue::set_warmup_state(&record, PendingState::InFlight).is_err() {
+                    failed += 1;
+                    continue;
+                }
+                let result = client
                     .remember_entry(
                         &entry,
                         Some(&dataset),
                         &record.session_id,
-                        CallOptions::default(),
+                        CallOptions {
+                            signal: Some(signal.clone()),
+                            ..CallOptions::default()
+                        },
                     )
-                    .await
-                    .is_ok()
-                {
-                    if std::fs::remove_file(&record.path).is_ok() {
-                        replayed += 1;
-                    } else {
+                    .await;
+                match result {
+                    Ok(_) => {
+                        if std::fs::remove_file(&record.path).is_ok() {
+                            replayed += 1;
+                        } else {
+                            failed += 1;
+                        } // keep InFlight if local acknowledgment fails
+                    }
+                    Err(error) => {
+                        let state = drain_failure_state(&error_kind(&error));
+                        let _ = super::queue::set_warmup_state(&record, state);
                         failed += 1;
                     }
-                } else {
-                    failed += 1;
                 }
             }
             this.observe(
@@ -1774,6 +1908,7 @@ impl CogneeRuntime {
                 None => return,
             }
         };
+        let dispatch_session = self.state().session_id.clone().unwrap_or_default();
         let dir = self.pending_dir();
         let lease_dir = dir.clone();
         let Ok(Some(_dispatch_lease)) =
@@ -1789,6 +1924,11 @@ impl CogneeRuntime {
                 .await
                 .unwrap_or_default();
         for record in records {
+            // Preserve durable authorized intents while disabled, but do not
+            // dispatch them until Cognee is enabled again.
+            if self.live_client().is_none() {
+                return;
+            }
             if record.admission_id.is_some()
                 && super::admission::is_completed(
                     &super::admission::receipt_dir(&self.candidates_dir()),
@@ -1814,7 +1954,7 @@ impl CogneeRuntime {
             {
                 continue;
             }
-            self.observe(
+            self.observe_for(
                 "remember",
                 "started",
                 ObserveFields {
@@ -1823,9 +1963,10 @@ impl CogneeRuntime {
                     meta: meta(json!({"operationId": record.operation_id, "state": state_name})),
                     ..ObserveFields::default()
                 },
+                Some((&dispatch_session, &record.dataset)),
             );
             let sent = client
-                .remember(
+                .remember_with_receipt(
                     &record.text,
                     &record.node_set,
                     Some(&record.dataset),
@@ -1835,8 +1976,16 @@ impl CogneeRuntime {
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
             let outcome = match sent {
-                Ok(()) => {
-                    if record.admission_id.is_some()
+                Ok(receipt) => {
+                    if !self.persist_backend_acceptance(
+                        &request_id,
+                        "remember",
+                        (!dispatch_session.is_empty()).then_some(dispatch_session.as_str()),
+                        &record.dataset,
+                        &receipt,
+                    ) {
+                        Err("unknown".to_string())
+                    } else if record.admission_id.is_some()
                         && super::admission::mark_completed(
                             &super::admission::receipt_dir(&self.candidates_dir()),
                             &record.operation_id,
@@ -1856,7 +2005,7 @@ impl CogneeRuntime {
             match outcome {
                 Ok(()) => {
                     self.state().remember_circuit.reset();
-                    self.observe(
+                    self.observe_for(
                         "remember",
                         "succeeded",
                         ObserveFields {
@@ -1865,6 +2014,7 @@ impl CogneeRuntime {
                             meta: meta(json!({"operationId": record.operation_id})),
                             ..ObserveFields::default()
                         },
+                        Some((&dispatch_session, &record.dataset)),
                     );
                     self.append_operation(json!({
                         "action": "remember",
@@ -1876,7 +2026,7 @@ impl CogneeRuntime {
                     }));
                 }
                 Err(kind) => {
-                    self.observe(
+                    self.observe_for(
                         "remember",
                         "failed",
                         ObserveFields {
@@ -1888,6 +2038,7 @@ impl CogneeRuntime {
                             ),
                             ..ObserveFields::default()
                         },
+                        Some((&dispatch_session, &record.dataset)),
                     );
                     let open = {
                         let mut state = self.state();
@@ -2034,6 +2185,7 @@ impl CogneeRuntime {
         dataset: String,
         reason: &'static str,
     ) {
+        let signal = self.state().automatic_write_cancel.child_token();
         drop(self.dream_writes.lock().await);
         let token = uuid::Uuid::new_v4().to_string();
         let dir = self.dream_dir();
@@ -2092,10 +2244,21 @@ impl CogneeRuntime {
                 return;
             }
         }
+        if signal.is_cancelled() || !self.automatic_improve_allowed() {
+            if let Some(claim) = &claim {
+                let file = claim.ledger_file.clone();
+                let (dir, session) = (dir.clone(), session_id.clone());
+                let _ = tokio::task::spawn_blocking(move || {
+                    release_dream_claim(&dir, &session, &token, file.as_deref())
+                })
+                .await;
+            }
+            return;
+        }
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
         let improved_at = self.now() as f64;
-        self.observe(
+        self.observe_for(
             "improve",
             "started",
             ObserveFields {
@@ -2103,26 +2266,35 @@ impl CogneeRuntime {
                 meta: meta(json!({"reason": reason})),
                 ..ObserveFields::default()
             },
+            Some((&session_id, &dataset)),
         );
         let result = client
-            .improve(
+            .improve_with_receipt(
                 Some(&dataset),
                 std::slice::from_ref(&session_id),
                 CallOptions {
                     timeout_ms: Some(DREAM_IMPROVE_TIMEOUT_MS),
+                    signal: Some(signal.clone()),
                     ..CallOptions::default()
                 },
             )
             .await;
         let latency = Some(started.elapsed().as_millis() as u64);
         match result {
-            Ok(()) => {
+            Ok(receipt) => {
+                self.persist_backend_acceptance(
+                    &request_id,
+                    "improve",
+                    Some(&session_id),
+                    &dataset,
+                    &receipt,
+                );
                 let revision = claim
                     .as_ref()
                     .map_or(revision, |record| record.capture_revision);
                 self.improve_result(&session_id, &dataset, revision, true);
                 let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
-                self.observe(
+                self.observe_for(
                     "improve",
                     "succeeded",
                     ObserveFields {
@@ -2131,6 +2303,7 @@ impl CogneeRuntime {
                         meta: meta(json!({"outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
                 if let Some(claim) = &claim {
                     let dream_claim = DreamClaim {
@@ -2152,7 +2325,7 @@ impl CogneeRuntime {
                 self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
-                self.observe(
+                self.observe_for(
                     "improve",
                     "failed",
                     ObserveFields {
@@ -2161,6 +2334,7 @@ impl CogneeRuntime {
                         error: Some(kind),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
             }
         }
@@ -2200,6 +2374,7 @@ impl CogneeRuntime {
     }
 
     async fn dream_pass(&self, client: CogneeClient, dataset: String) {
+        let signal = self.state().automatic_write_cancel.child_token();
         drop(self.dream_writes.lock().await);
         let dir = self.dream_dir();
         let scan_now = self.now() as f64;
@@ -2221,7 +2396,10 @@ impl CogneeRuntime {
         for record in candidates {
             {
                 let state = self.state();
-                if state.shutting_down {
+                if state.shutting_down
+                    || !Self::enabled(&state, self.offline)
+                    || !state.config.improves()
+                {
                     return;
                 }
                 if state.improve_in_flight
@@ -2274,6 +2452,16 @@ impl CogneeRuntime {
                 .await;
                 continue;
             }
+            if signal.is_cancelled() || !self.automatic_improve_allowed() {
+                let _ = release(
+                    dir.clone(),
+                    record.session_id.clone(),
+                    token,
+                    claim.ledger_file.clone(),
+                )
+                .await;
+                return;
+            }
             if self.state().shutting_down {
                 let _ = release(
                     dir.clone(),
@@ -2288,7 +2476,7 @@ impl CogneeRuntime {
             let started = std::time::Instant::now();
             let improved_at = self.now() as f64;
             let meta_value = json!({"reason": "dream", "target": record.session_id});
-            self.observe(
+            self.observe_for(
                 "improve",
                 "started",
                 ObserveFields {
@@ -2296,20 +2484,29 @@ impl CogneeRuntime {
                     meta: meta(meta_value.clone()),
                     ..ObserveFields::default()
                 },
+                Some((&record.session_id, &record.dataset)),
             );
             let result = client
-                .improve(
+                .improve_with_receipt(
                     Some(&claim.dataset),
                     std::slice::from_ref(&claim.session_id),
                     CallOptions {
                         timeout_ms: Some(DREAM_IMPROVE_TIMEOUT_MS),
+                        signal: Some(signal.clone()),
                         ..CallOptions::default()
                     },
                 )
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
             let failed = match result {
-                Ok(()) => {
+                Ok(receipt) => {
+                    self.persist_backend_acceptance(
+                        &request_id,
+                        "improve",
+                        Some(&claim.session_id),
+                        &claim.dataset,
+                        &receipt,
+                    );
                     self.improve_result(
                         &claim.session_id,
                         &claim.dataset,
@@ -2332,7 +2529,7 @@ impl CogneeRuntime {
                         mark_dream_improved(&dir, &session, improved_at, &dream_claim)
                     })
                     .await;
-                    self.observe(
+                    self.observe_for(
                         "improve",
                         "succeeded",
                         ObserveFields {
@@ -2341,6 +2538,7 @@ impl CogneeRuntime {
                             meta: meta(json!({"reason": "dream", "target": record.session_id, "outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                             ..ObserveFields::default()
                         },
+                        Some((&record.session_id, &record.dataset)),
                     );
                     false
                 }
@@ -2353,7 +2551,7 @@ impl CogneeRuntime {
                     );
                     let kind = error_kind(&error);
                     self.state().last_error = Some(kind.clone());
-                    self.observe(
+                    self.observe_for(
                         "improve",
                         "failed",
                         ObserveFields {
@@ -2363,6 +2561,7 @@ impl CogneeRuntime {
                             meta: meta(meta_value),
                             ..ObserveFields::default()
                         },
+                        Some((&record.session_id, &record.dataset)),
                     );
                     true
                 }
@@ -2418,6 +2617,7 @@ impl CogneeRuntime {
             api_key_source: state.key_source,
             healthy,
             health_detail: detail,
+            capability_inventory: self.capability_inventory(),
             operation_outcomes: state
                 .client
                 .as_ref()
@@ -2567,8 +2767,23 @@ impl CogneeRuntime {
                 changed = true;
             }
         }
-        if changed {
-            let _ = harness.set_tools(tools, Some(active)).await;
+        if changed && harness.set_tools(tools, Some(active)).await.is_err() {
+            return;
+        }
+        // Tool availability may change without a resource reload. Publish the
+        // actual active host registry, not names inferred from settings.
+        let service = self.capability_service.lock().unwrap().upgrade();
+        if let Some(service) = service {
+            if let (Ok(tools), Ok(active)) = (
+                harness.get_tools().await,
+                harness.lane("main").get_active_tools().await,
+            ) {
+                let active_tools: Vec<_> = tools
+                    .into_iter()
+                    .filter(|tool| active.contains(&tool.tool.schema().name))
+                    .collect();
+                service.refresh_native_tools(&active_tools);
+            }
         }
     }
 
@@ -2607,6 +2822,16 @@ impl CogneeRuntime {
         }
         let mut state = self.state();
         let previous_dataset = state.active_dataset();
+        if state.config.enabled != next.enabled
+            || state.config.write_policy != next.write_policy
+            || state.config.capture_session != next.capture_session
+            || state.config.capture_tools != next.capture_tools
+            || state.config.auto_improve != next.auto_improve
+            || state.config.base_url != next.base_url
+        {
+            state.automatic_write_cancel.cancel();
+            state.automatic_write_cancel = CancellationToken::new();
+        }
         state.config = next;
         state.installed = true;
         Self::rebuild_helper(&mut state);
@@ -2793,6 +3018,8 @@ impl CogneeRuntime {
             );
             return;
         };
+        let dispatch_session = self.state().session_id.clone();
+        let acceptance_id = uuid::Uuid::new_v4().to_string();
         let lease_dir = dir.clone();
         let Ok(Some(_dispatch_lease)) =
             tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
@@ -2808,6 +3035,13 @@ impl CogneeRuntime {
             );
             return;
         };
+        if self.live_client().is_none() {
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee disabled before dispatch; durable intent retained",
+            );
+            return;
+        }
         if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
             .is_err()
         {
@@ -2827,7 +3061,7 @@ impl CogneeRuntime {
             "state": "inflight",
         }));
         match client
-            .remember(
+            .remember_with_receipt(
                 &record.text,
                 &record.node_set,
                 Some(&record.dataset),
@@ -2836,14 +3070,32 @@ impl CogneeRuntime {
             )
             .await
         {
-            Ok(()) => {
-                let _ = remove_pending_remember(&dir, &record.operation_id);
+            Ok(receipt) => {
+                if !self.persist_backend_acceptance(
+                    &acceptance_id,
+                    "remember",
+                    dispatch_session.as_deref(),
+                    &record.dataset,
+                    &receipt,
+                ) || remove_pending_remember(&dir, &record.operation_id).is_err()
+                {
+                    let _ = update_pending_remember_state(
+                        &dir,
+                        &record.operation_id,
+                        PendingState::Uncertain,
+                    );
+                    self.notify(NoticeLevel::Warning, "Cognee accepted the write but local completion is uncertain; it will not be replayed automatically");
+                    return;
+                }
                 {
                     let mut state = self.state();
                     state.remember_circuit.reset();
                     state.last_error = None;
                 }
-                self.notify(NoticeLevel::Info, "Cognee memory stored");
+                self.notify(
+                    NoticeLevel::Info,
+                    "Cognee memory accepted; searchability unverified",
+                );
                 self.append_operation(json!({
                     "action": "remember",
                     "operationId": record.operation_id,
@@ -2851,6 +3103,9 @@ impl CogneeRuntime {
                     "dataset": record.dataset,
                     "nodeSet": record.node_set,
                     "state": "confirmed",
+                    "outcomeVersion": 2,
+                    "outcome": "accepted",
+                    "searchable": "unknown",
                 }));
             }
             Err(error) => {
@@ -2907,7 +3162,7 @@ impl CogneeRuntime {
             .map_or(0.0, |record| record.capture_revision);
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
-        self.observe(
+        self.observe_for(
             "improve",
             "started",
             ObserveFields {
@@ -2915,20 +3170,28 @@ impl CogneeRuntime {
                 meta: meta(json!({"reason": "manual"})),
                 ..ObserveFields::default()
             },
+            Some((&session_id, &dataset)),
         );
         match client
-            .improve(
+            .improve_with_receipt(
                 Some(&dataset),
                 std::slice::from_ref(&session_id),
                 CallOptions::default(),
             )
             .await
         {
-            Ok(()) => {
+            Ok(receipt) => {
+                self.persist_backend_acceptance(
+                    &request_id,
+                    "improve",
+                    Some(&session_id),
+                    &dataset,
+                    &receipt,
+                );
                 self.state().last_improve_at = self.now();
                 self.improve_result(&session_id, &dataset, revision, true);
                 let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
-                self.observe(
+                self.observe_for(
                     "improve",
                     "succeeded",
                     ObserveFields {
@@ -2939,6 +3202,7 @@ impl CogneeRuntime {
                         ),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
                 self.notify(NoticeLevel::Info, "Cognee improve dispatched");
             }
@@ -2946,7 +3210,7 @@ impl CogneeRuntime {
                 self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
-                self.observe(
+                self.observe_for(
                     "improve",
                     "failed",
                     ObserveFields {
@@ -2956,6 +3220,7 @@ impl CogneeRuntime {
                         meta: meta(json!({"reason": "manual"})),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
                 self.notify(NoticeLevel::Error, format!("Cognee improve failed: {kind}"));
             }
@@ -3816,13 +4081,12 @@ impl CogneeRuntime {
     }
 }
 
-/// A timed-out or aborted write may have been accepted, so it is not
-/// replayed automatically.
+/// Only an explicit rejection is safe to retry automatically. A generic
+/// transport error may occur after the server accepted the non-idempotent write.
 fn drain_failure_state(kind: &str) -> PendingState {
-    if kind == "timeout" || kind == "aborted" {
-        PendingState::Uncertain
-    } else {
-        PendingState::Pending
+    match kind {
+        "auth_failed" | "not_found" | "invalid_request" => PendingState::Pending,
+        _ => PendingState::Uncertain,
     }
 }
 
@@ -4132,6 +4396,7 @@ mod tests {
 
     include!("request_tests.rs");
     include!("lookup_tests.rs");
+    include!("closeout_runtime_tests.rs");
     include!("offline_replay_tests.rs");
 
     #[derive(Clone, Copy)]
@@ -6941,11 +7206,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn failed_capture_is_buffered_and_replayed() {
+    async fn explicitly_rejected_capture_is_buffered_and_replayed() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         memory(&rt, "hi there", None).await;
+        // Explicit rejection can be replayed; ambiguous failures stay uncertain.
+        transport.push(FakeResponse::json(401, json!({})));
         rt.on_agent_event(&AgentEvent::AgentEnd {
             messages: vec![assistant("Answer")],
         });
@@ -7030,7 +7297,10 @@ mod tests {
             .any(|(_, text)| text == "Cognee uncertain queue flushed"));
         assert_eq!(drain_failure_state("timeout"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("aborted"), PendingState::Uncertain);
-        assert_eq!(drain_failure_state("server_error"), PendingState::Pending);
+        assert_eq!(drain_failure_state("server_error"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("unreachable"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("unknown"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("auth_failed"), PendingState::Pending);
     }
 
     #[tokio::test]
@@ -7075,7 +7345,7 @@ mod tests {
             .await;
         let records = read_pending_remember(&rt.pending_dir());
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].state, PendingState::Pending);
+        assert_eq!(records[0].state, PendingState::Uncertain);
 
         let timeout_dir = tempfile::tempdir().unwrap();
         let timeout_transport = Arc::new(FakeTransport::default());
@@ -7304,8 +7574,8 @@ mod tests {
         assert_eq!(parts.last().unwrap().value, "on extra");
         let queued = read_pending_remember(&rt.pending_dir());
         assert_eq!(queued.len(), 1);
-        // An unreachable server never accepted the write, so replay is safe.
-        assert_eq!(queued[0].state, PendingState::Pending);
+        // A generic transport error does not prove the server rejected the write.
+        assert_eq!(queued[0].state, PendingState::Uncertain);
         super::super::command::run_command(&rt, "bogus").await;
         let notices = rt.notices().drain();
         assert!(notices
@@ -7313,7 +7583,8 @@ mod tests {
             .any(|(_, text)| text == "Cognee session capture: off"));
         assert!(notices
             .iter()
-            .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued"));
+            .any(|(_, text)| text.contains("Cognee remember unreachable")
+                && text.contains("uncertain")));
         assert_eq!(
             notices.last().unwrap(),
             &(

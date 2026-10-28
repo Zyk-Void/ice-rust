@@ -1012,6 +1012,9 @@ pub async fn build_prepared(
         tools.push(service.tool());
         let active = filter_active_tool_names(active_tool_names(&tools, args), args);
         let _ = harness.set_tools(tools, Some(active)).await;
+        if let Some(cognee) = &builtins.cognee {
+            cognee.bind_capability_service(&service);
+        }
         capability_service = Some(service.clone());
         let mut extensions = harness.extensions();
         extensions.push(service as Arc<dyn ice_harness::extension::HarnessExtension>);

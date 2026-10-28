@@ -342,6 +342,7 @@ pub struct WarmupRecord {
     pub session_id: String,
     pub dataset: Option<String>,
     pub entry: Map<String, Value>,
+    pub state: PendingState,
 }
 
 /// Buffer a failed cache write; silently dropped past `MAX_WARMUP_ENTRIES`
@@ -353,58 +354,108 @@ pub fn buffer_warmup_entry(
     entry: &Map<String, Value>,
     now_ms: u64,
 ) {
+    buffer_warmup_entry_with_state(
+        directory,
+        session_id,
+        dataset,
+        entry,
+        now_ms,
+        PendingState::Pending,
+    );
+}
+
+/// Keep an ambiguous cache write locally without making it automatically replayable.
+pub fn buffer_warmup_entry_with_state(
+    directory: &Path,
+    session_id: &str,
+    dataset: &str,
+    entry: &Map<String, Value>,
+    now_ms: u64,
+    state: PendingState,
+) {
     let write = || -> std::io::Result<()> {
-        std::fs::create_dir_all(directory)?;
+        create_private_dir(directory)?;
+        let lock = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(directory.join(".warmup.lock"))?;
+        lock.lock_exclusive()?;
         if json_files(directory)?.len() >= MAX_WARMUP_ENTRIES {
             return Ok(());
         }
-        let id = uuid::Uuid::new_v4().to_string();
-        let path = directory.join(format!("{now_ms}-{}.json", &id[..8]));
-        let line = format!(
-            "{}\n",
-            serde_json::json!({"sessionId": session_id, "dataset": dataset, "entry": entry})
-        );
-        let mut options = std::fs::OpenOptions::new();
-        options.write(true).create(true).truncate(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        use std::io::Write;
-        options.open(path)?.write_all(line.as_bytes())
+        let path = directory.join(format!("{now_ms}-{}.json", uuid::Uuid::new_v4()));
+        write_private_file_atomic(
+            &path,
+            &serde_json::json!({
+                "sessionId":session_id,"dataset":dataset,"entry":entry,"state":state,
+            })
+            .to_string(),
+        )
     };
     let _ = write();
+}
+
+/// Caller must hold the directory's dispatch lease when mutating replay state.
+pub fn set_warmup_state(record: &WarmupRecord, state: PendingState) -> std::io::Result<()> {
+    write_private_file_atomic(&record.path, &serde_json::json!({
+        "sessionId":record.session_id,"dataset":record.dataset,"entry":record.entry,"state":state,
+    }).to_string())
 }
 
 /// Up to `WARMUP_DRAIN_BATCH` buffered records in directory order. Files
 /// that do not parse or lack a session id or entry are skipped and kept.
 pub fn read_warmup_batch(directory: &Path) -> Vec<WarmupRecord> {
+    read_warmup_records(directory, false)
+}
+
+/// A bounded scan skips uncertain/inflight records without starving later pending work.
+pub fn read_replayable_warmup_batch(directory: &Path) -> Vec<WarmupRecord> {
+    read_warmup_records(directory, true)
+}
+
+fn read_warmup_records(directory: &Path, pending_only: bool) -> Vec<WarmupRecord> {
     let Ok(files) = json_files(directory) else {
         return Vec::new();
     };
     files
         .into_iter()
-        .take(WARMUP_DRAIN_BATCH)
+        .take(MAX_WARMUP_ENTRIES)
         .filter_map(|file| {
             let path = directory.join(file);
+            let metadata = std::fs::symlink_metadata(&path).ok()?;
+            if !metadata.file_type().is_file() || metadata.len() > 1024 * 1024 {
+                return None;
+            }
             let value: Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
             let session_id = value
                 .get("sessionId")
                 .and_then(Value::as_str)
-                .filter(|id| !id.is_empty())?
-                .to_string();
+                .filter(|s| !s.is_empty())?
+                .to_owned();
             let entry = value.get("entry").and_then(Value::as_object)?.clone();
+            let state = match value.get("state") {
+                None => PendingState::Uncertain, // legacy outcomes were not recorded; preserve, never blindly replay
+                Some(value) => {
+                    serde_json::from_value(value.clone()).unwrap_or(PendingState::Uncertain)
+                }
+            };
+            if pending_only && state != PendingState::Pending {
+                return None;
+            }
             Some(WarmupRecord {
                 path,
                 session_id,
                 dataset: value
                     .get("dataset")
                     .and_then(Value::as_str)
-                    .map(str::to_string),
+                    .map(str::to_owned),
                 entry,
+                state,
             })
         })
+        .take(WARMUP_DRAIN_BATCH)
         .collect()
 }
 
