@@ -132,7 +132,15 @@ async fn live_isolated_canary_and_rollback() {
     assert!(runtime.save_and_adopt(config.clone()));
     runtime.drain_pending(false).await;
     runtime.wait_for_background().await;
-    let delivered = texts().await;
+    // Accepted writes complete in the background on the service.
+    let mut delivered = texts().await;
+    for _ in 0..90 {
+        if !delivered.is_empty() {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        delivered = texts().await;
+    }
     assert_eq!(delivered.len(), 1, "{delivered:?}");
     assert!(delivered[0].contains(&marker("pending")), "{delivered:?}");
     let remaining = crate::cognee::queue::select_drain_batch(&pending, true);
@@ -144,7 +152,14 @@ async fn live_isolated_canary_and_rollback() {
     // 3. Explicit native remember still writes.
     runtime.manual_remember("canary", &marker("manual")).await;
     runtime.wait_for_background().await;
-    let after_manual = texts().await;
+    let mut after_manual = texts().await;
+    for _ in 0..90 {
+        if after_manual.len() >= 2 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        after_manual = texts().await;
+    }
     assert_eq!(after_manual.len(), 2, "{after_manual:?}");
     assert!(after_manual.iter().any(|t| t.contains(&marker("manual"))));
     eprintln!("canary step 3 (explicit remember): delivered");
@@ -157,6 +172,8 @@ async fn live_isolated_canary_and_rollback() {
     runtime.drain_pending(false).await;
     runtime.wait_for_background().await;
     assert_eq!(queue_snapshot(&pending), before);
+    // Leave time for any background write to land before asserting none did.
+    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
     assert_eq!(texts().await, after_manual, "rolled-back runtime wrote");
     eprintln!("canary step 4 (rolled back): no new service items, queue hash unchanged");
 }

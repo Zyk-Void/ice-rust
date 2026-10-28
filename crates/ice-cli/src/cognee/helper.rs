@@ -494,6 +494,7 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
+    include!("live_jev_tests.rs");
 
     fn batch(ids: &[&str]) -> CandidateBatch {
         CandidateBatch::new(
