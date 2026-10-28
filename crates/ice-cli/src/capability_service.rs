@@ -81,6 +81,25 @@ impl CapabilityService {
             state.pending.clear();
         }
     }
+    /// Refresh only active native tools after a host policy change. Skills and
+    /// MCP snapshots are retained; no discovery or network probe is performed.
+    pub fn refresh_native_tools(&self, tools: &[ice_harness::types::HarnessTool]) {
+        let mut state = self.state.lock().unwrap();
+        let mut catalog = state.catalog.clone();
+        catalog
+            .entries
+            .retain(|entry| entry.kind != CapabilityKind::NativeTool);
+        let catalog = catalog.with_native_tools(tools);
+        if state.catalog != catalog {
+            state.catalog = catalog;
+            state.registry_revision = state.registry_revision.wrapping_add(1);
+            state.coverage.clear();
+            state.coverage_fingerprint.clear();
+            state.delivered.clear();
+            state.pending.clear();
+        }
+    }
+
     pub fn snapshot(&self) -> CapabilityCatalog {
         self.state.lock().unwrap().catalog.clone()
     }
@@ -371,12 +390,32 @@ impl CapabilityService {
             schema: tool_schema(),
         }))
     }
+    /// Bounded last-observed Cognee capability metadata, never a health probe.
     pub fn doctor_cognee_contract(&self) -> Value {
-        let catalog = self.snapshot();
-        let tools: Vec<_> = catalog.entries.iter().filter(|e| e.kind != CapabilityKind::Skill && (e.name.contains("cognee") || e.source.contains("cognee"))).map(|e| {
-            json!({"name":e.name,"id":e.id,"schema_fingerprint":e.content_hash,"status":if e.available {"last_known_available_unprobed"} else {"offline_or_disabled"},"methods":[]})
+        let state = self.state.lock().unwrap();
+        let matches: Vec<_> = state
+            .catalog
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry.kind != CapabilityKind::Skill
+                    && (entry.name.to_lowercase().contains("cognee")
+                        || entry.source.to_lowercase().contains("cognee"))
+            })
+            .collect();
+        let tools: Vec<_> = matches.iter().take(32).map(|entry| {
+            json!({
+                "name": entry.name,
+                "id": entry.id,
+                "transport": if entry.kind == CapabilityKind::McpTool { "mcp" } else { "native" },
+                "schema_fingerprint": if entry.content_hash.is_empty() { None } else { Some(&entry.content_hash) },
+                "status": if entry.available { "last_known_available_unprobed" } else { "offline_or_disabled" },
+                "model_invocable": entry.model_invocable,
+                "method_fields": "not_loaded_from_schema",
+            })
         }).collect();
-        json!({"tools":tools,"probed":false})
+        json!({"tools":tools,"probed":false,"registry_revision":state.registry_revision,
+            "total":matches.len(),"truncated":matches.len()>32})
     }
 }
 
@@ -611,6 +650,60 @@ mod tests {
             .collect();
         CapabilityCatalog::build(&skills, &[])
     }
+    #[test]
+    fn native_policy_refresh_removes_disabled_tools_without_losing_skills() {
+        let service = CapabilityService::new(catalog(&["planning"]));
+        let tool = service.tool();
+        service.refresh_native_tools(&[tool]);
+        let revision = service.registry_revision();
+        assert!(service
+            .snapshot()
+            .entries
+            .iter()
+            .any(|entry| entry.id == "native:capability_search"));
+        service.refresh_native_tools(&[]);
+        assert!(service.registry_revision() > revision);
+        assert!(!service
+            .snapshot()
+            .entries
+            .iter()
+            .any(|entry| entry.kind == CapabilityKind::NativeTool));
+        assert!(service
+            .snapshot()
+            .entries
+            .iter()
+            .any(|entry| entry.name == "planning"));
+        let revision = service.registry_revision();
+        service.refresh_native_tools(&[]);
+        assert_eq!(service.registry_revision(), revision);
+    }
+
+    #[test]
+    fn doctor_inventory_is_bounded_and_never_claims_a_probe() {
+        let mut catalog = catalog(&["cognee-skill"]);
+        for i in 0..36 {
+            catalog.entries.push(CapabilityDescriptor {
+                id: format!("mcp:cognee:tool{i}"),
+                kind: CapabilityKind::McpTool,
+                name: format!("cognee_tool{i}"),
+                description: String::new(),
+                source: "cognee".into(),
+                content_hash: String::new(),
+                available: i != 0,
+                model_invocable: i != 0,
+            });
+        }
+        let service = CapabilityService::new(catalog);
+        let report = service.doctor_cognee_contract();
+        assert_eq!(report["probed"], false);
+        assert_eq!(report["total"], 36);
+        assert_eq!(report["tools"].as_array().unwrap().len(), 32);
+        assert_eq!(report["truncated"], true);
+        assert_eq!(report["tools"][0]["transport"], "mcp");
+        assert_eq!(report["tools"][0]["status"], "offline_or_disabled");
+        assert_eq!(report["tools"][0]["schema_fingerprint"], Value::Null);
+    }
+
     #[test]
     fn search_pages_inventory_without_claiming_unreachable_results() {
         let service = CapabilityService::new(catalog(&[
