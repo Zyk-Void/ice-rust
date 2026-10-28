@@ -359,3 +359,30 @@ async fn grep_missing_path_is_path_not_found() {
         .expect_err("missing");
     assert!(format!("{err:?}").contains("Path not found"), "{err:?}");
 }
+
+#[tokio::test]
+async fn grep_searches_several_paths_with_asymmetric_context() {
+    let (env, ctx) = fresh_context();
+    seed_tree(&env, "src/a.txt", b"a0\nneedle a\na2\na3\n").await;
+    seed(&env, "b.txt", b"b0\nneedle b\nb2\n".to_vec()).await;
+    seed(&env, "skipped.txt", b"needle c\n".to_vec()).await;
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let result = run_grep(
+        tool,
+        serde_json::json!({ "pattern": "needle", "path": ["src", "b.txt"], "before": 0, "after": 2 }),
+    )
+    .await
+    .expect("grep ok");
+    let out = text_output(&result);
+    assert!(out.contains("src/a.txt:2: needle a"), "got: {out}");
+    assert!(out.contains("src/a.txt-4- a3"), "got: {out}");
+    assert!(!out.contains("a0"), "got: {out}");
+    assert!(out.contains("b.txt:2: needle b"), "got: {out}");
+    assert!(!out.contains("needle c"), "got: {out}");
+
+    let tool = ice_tools::create_grep_tool(&ctx, None);
+    let err = run_grep(tool, serde_json::json!({ "pattern": "x", "path": [] }))
+        .await
+        .unwrap_err();
+    assert!(err.to_string().contains("must not be empty"), "{err}");
+}

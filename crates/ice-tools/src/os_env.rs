@@ -1400,6 +1400,29 @@ impl Shell for OsExecutionEnv {
         })
     }
 
+    fn supports_exec_program(&self) -> bool {
+        true
+    }
+
+    async fn exec_program<'a>(
+        &'a self,
+        program: &str,
+        args: &[String],
+        mut options: ShellExecOptions<'a>,
+    ) -> Result<ShellOutput, ExecutionError> {
+        let Some((last, prefix)) = args.split_last() else {
+            return Err(ExecutionError::new(
+                ExecutionErrorCode::SpawnError,
+                "direct program execution requires at least one argument",
+            ));
+        };
+        options.shell = Some(crate::env::ShellOverride {
+            program: PathBuf::from(program),
+            args: prefix.to_vec(),
+        });
+        self.exec(last, options).await
+    }
+
     async fn cleanup(&self) {
         FileSystem::cleanup(self).await
     }

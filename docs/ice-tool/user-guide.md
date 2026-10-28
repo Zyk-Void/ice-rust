@@ -330,7 +330,7 @@ to move between rows, and `Esc` to close the inspector. See
 
 ## 4. Built-in tools
 
-The default tools are Pi’s `read`, `bash`, `edit`, and `write`, plus icers’ built-in read-only `docs` documentation lookup tool. `powershell` is also registered by default on Windows. `docs` can search the user guide, extension development material, Agent project structure, Rust debugging, and architecture notes. `grep`, `find`, and `ls` remain available as library implementations but are not registered by the CLI by default.
+The default tools are Pi’s `read`, `bash`, `edit`, and `write`, plus icers’ built-in read-only `grep` search tool and `docs` documentation lookup tool. `powershell` is also registered by default on Windows. `grep` searches text with ripgrep, archives with ugrep (`mode: archive`), or code structure with ast-grep (`mode: ast`). `docs` can search the user guide, extension development material, Agent project structure, Rust debugging, and architecture notes. `find` and `ls` remain available as library implementations but are not registered by the CLI by default.
 
 You can use the `defaultTools` field (or its shorthand `default_tools`) in `.icers/settings.json` to limit the initial tool set when `--tools` is not specified:
 

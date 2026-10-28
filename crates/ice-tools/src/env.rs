@@ -349,6 +349,24 @@ pub trait Shell: Send + Sync {
         options: ShellExecOptions<'a>,
     ) -> Result<ShellOutput, ExecutionError>;
 
+    /// Whether this environment can execute a program with separate arguments.
+    fn supports_exec_program(&self) -> bool {
+        false
+    }
+
+    /// Execute a program without interpreting its arguments as shell source.
+    async fn exec_program<'a>(
+        &'a self,
+        _program: &str,
+        _args: &[String],
+        _options: ShellExecOptions<'a>,
+    ) -> Result<ShellOutput, ExecutionError> {
+        Err(ExecutionError::new(
+            crate::error::ExecutionErrorCode::ShellUnavailable,
+            "direct program execution is not supported by this environment",
+        ))
+    }
+
     /// Best-effort, never returns `Err`. Mirrors TS `Shell.cleanup`.
     async fn cleanup(&self);
 }
