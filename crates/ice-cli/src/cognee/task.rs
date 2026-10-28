@@ -139,8 +139,12 @@ impl TaskCursor {
         }
         let ownership_changed = event == TaskEvent::Changed;
         if ownership_changed {
+            let key = format!("{:x}", Sha256::digest(query.as_bytes()));
+            if self.last_explicit_switch.as_deref() == Some(key.as_str()) {
+                return false;
+            }
             self.epoch = self.epoch.saturating_add(1);
-            self.last_explicit_switch = None;
+            self.last_explicit_switch = Some(key);
         }
         self.query = query;
         self.pending = Some(event);
@@ -212,6 +216,23 @@ mod tests {
         assert!(cursor.observe(branch, Some("cache repair"), None, true));
         assert_ne!(cursor.id(), second);
         assert_eq!(cursor.pending_event(), Some(TaskEvent::Resumed));
+    }
+
+    #[test]
+    fn repeated_main_agent_task_signal_does_not_create_new_work() {
+        let mut cursor = TaskCursor::default();
+        cursor.observe(scope(), Some("cache repair"), None, false);
+        cursor.take_event();
+        assert!(cursor.signal(TaskEvent::Changed, "schema migration"));
+        let id = cursor.id();
+        assert_eq!(cursor.take_event(), Some(TaskEvent::Changed));
+        for _ in 0..10 {
+            assert!(!cursor.signal(TaskEvent::Changed, "schema migration"));
+            assert_eq!(cursor.id(), id);
+            assert_eq!(cursor.take_event(), None);
+        }
+        assert!(cursor.signal(TaskEvent::Changed, "cache repair"));
+        assert_ne!(cursor.id(), id);
     }
 
     #[test]

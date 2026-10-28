@@ -30,6 +30,7 @@ use crate::cognee::text::redact_memory_text;
 const MAX_PENDING_PACKETS: usize = 8;
 const PACKET_TTL_MS: u64 = 60_000;
 const MAX_RESIDENT_FACTS: usize = 128;
+const RESIDENT_REFRESH_MS: u64 = 60_000;
 
 struct PendingPacket {
     id: String,
@@ -53,6 +54,7 @@ pub(super) struct ReadCoordinator {
     resident_dirty: bool,
     resident_loading: bool,
     resident_revision: u64,
+    resident_refreshed_at: Option<u64>,
 }
 
 impl ReadCoordinator {
@@ -168,6 +170,7 @@ impl CogneeRuntime {
                 if current == operation && revision == coordinator.resident_revision {
                     coordinator.resident = results;
                     coordinator.resident_dirty = false;
+                    coordinator.resident_refreshed_at = Some(this.now());
                 }
                 coordinator.resident_dirty
             };
@@ -271,6 +274,19 @@ impl CogneeRuntime {
             coordinator.last_run_id = Some(event.run_id.into());
             if owner_changed || repository_changed {
                 coordinator.pending.clear();
+                coordinator.resident.clear();
+                coordinator.resident_dirty = true;
+                coordinator.resident_revision = coordinator.resident_revision.wrapping_add(1);
+            }
+            // Another process may have committed a curated fact. Refresh the
+            // bounded local snapshot at a later run boundary, never await disk
+            // or authorize network work merely because its age expired.
+            if new_run
+                && coordinator
+                    .resident_refreshed_at
+                    .is_some_and(|at| now.saturating_sub(at) >= RESIDENT_REFRESH_MS)
+                && !coordinator.resident_dirty
+            {
                 coordinator.resident.clear();
                 coordinator.resident_dirty = true;
                 coordinator.resident_revision = coordinator.resident_revision.wrapping_add(1);

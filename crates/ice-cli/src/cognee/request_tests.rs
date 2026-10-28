@@ -343,3 +343,64 @@ async fn request_boundary_cancellation_keeps_evidence_unconsumed() {
         .is_some());
     rt.wait_for_background().await;
 }
+
+#[tokio::test]
+async fn resident_snapshot_observes_another_writer_at_a_bounded_local_boundary() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    let clock = Arc::new(std::sync::atomic::AtomicU64::new(NOW));
+    let read_clock = clock.clone();
+    let rt = runtime_with_clock(
+        dir.path(),
+        &transport,
+        Some(json!({"readPolicy":"event","writePolicy":"manual"})),
+        false,
+        Arc::new(move || read_clock.load(Ordering::Relaxed)),
+    );
+    let prompt = "Repair cache eviction";
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "r1", 0))
+        .await
+        .is_none());
+    rt.wait_for_background().await;
+    // An independently persisted accepted record arrives after the first local
+    // snapshot. The reader is deliberately not notified/invalidation-called.
+    let candidate = Candidate {
+        id: uuid::Uuid::new_v4().to_string(),
+        admission_id: None,
+        source_scope: None,
+        category: Category::Constraint,
+        text: "cache eviction must preserve bounded allocation".into(),
+        source: crate::cognee::candidates::Source {
+            entry_id: "other-writer-source".into(),
+            role: Role::User,
+        },
+        verified_by: None,
+        supersedes: None,
+        dataset: rt.active_dataset(),
+        branch: None,
+        valid_until_ms: None,
+        created_at: NOW,
+        state: CandidateState::Accepted,
+    };
+    assert!(
+        crate::cognee::candidates::store_pending(&rt.candidates_dir(), &candidate, NOW).unwrap()
+    );
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "r2", 0))
+        .await
+        .is_none());
+    clock.store(NOW + 60_000, Ordering::Relaxed);
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "r3", 0))
+        .await
+        .is_none());
+    rt.wait_for_background().await;
+    let ready = rt
+        .request_context(&request_event(prompt, &[], "r3", 1))
+        .await
+        .unwrap();
+    assert!(ready.text.contains("bounded allocation"));
+    assert!(transport.sent().is_empty());
+    assert_eq!(rt.state().helper_requests, 0);
+}
