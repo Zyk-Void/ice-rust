@@ -4458,6 +4458,7 @@ mod tests {
     include!("closeout_runtime_tests.rs");
     include!("offline_replay_tests.rs");
     include!("rollback_tests.rs");
+    include!("live_service_tests.rs");
 
     #[derive(Clone, Copy)]
     enum TestVerdict {
