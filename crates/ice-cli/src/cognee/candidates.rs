@@ -1,6 +1,9 @@
 //! Durable, attributable memory candidates for selective writes.
 
+use std::fs::{File, OpenOptions};
 use std::path::{Path, PathBuf};
+
+use fs2::FileExt;
 
 use ice_agent::AgentMessage;
 use serde::{Deserialize, Serialize};
@@ -273,6 +276,18 @@ fn message_text(message: &AgentMessage) -> String {
     }
 }
 
+fn candidate_lock(directory: &Path) -> std::io::Result<File> {
+    create_private_dir(directory)?;
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(directory.join(".candidates.lock"))?;
+    lock.lock_exclusive()?;
+    Ok(lock)
+}
+
 fn candidate_path(directory: &Path, id: &str) -> std::io::Result<PathBuf> {
     if id.is_empty()
         || !id
@@ -306,6 +321,8 @@ pub fn store_pending(
     candidate: &Candidate,
     now_ms: u64,
 ) -> std::io::Result<bool> {
+    create_private_dir(directory)?;
+    let lock = candidate_lock(directory)?;
     let mut candidates = read_candidates(directory);
     for existing in candidates.iter_mut() {
         if existing.state == CandidateState::Pending
@@ -330,11 +347,36 @@ pub fn store_pending(
     }
     create_private_dir(directory)?;
     let path = candidate_path(directory, &candidate.id)?;
-    write_private_file_atomic(
-        &path,
-        &serde_json::to_string(candidate).expect("candidate serializes"),
-    )?;
-    Ok(true)
+    let result = if path.exists() {
+        let stored = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|text| serde_json::from_str::<Candidate>(&text).ok());
+        if stored.is_none() {
+            let _ = FileExt::unlock(&lock);
+            return Ok(false);
+        }
+        match stored {
+            // A proposal/helper may not replace the admitted record with the
+            // stale Pending snapshot it carried across an await.
+            Some(stored) if stored.admission_id.is_some() && candidate.admission_id.is_none() => {
+                Ok(false)
+            }
+            Some(stored) if stored.state != CandidateState::Pending => Ok(false),
+            _ => write_private_file_atomic(
+                &path,
+                &serde_json::to_string(candidate).expect("candidate serializes"),
+            )
+            .map(|()| true),
+        }
+    } else {
+        write_private_file_atomic(
+            &path,
+            &serde_json::to_string(candidate).expect("candidate serializes"),
+        )
+        .map(|()| true)
+    };
+    let _ = FileExt::unlock(&lock);
+    result
 }
 
 /// Read accepted local curated evidence without a network request. Call at
@@ -445,12 +487,30 @@ pub fn set_state(
     candidate: &mut Candidate,
     state: CandidateState,
 ) -> std::io::Result<()> {
-    candidate.state = state;
+    let lock = candidate_lock(directory)?;
     let path = candidate_path(directory, &candidate.id)?;
-    write_private_file_atomic(
+    let mut stored: Candidate =
+        serde_json::from_str(&std::fs::read_to_string(&path)?).map_err(std::io::Error::other)?;
+    if stored.id != candidate.id {
+        let _ = FileExt::unlock(&lock);
+        return Err(std::io::Error::other("candidate identity mismatch"));
+    }
+    // A delayed helper result or stale proposal cannot reopen a terminal
+    // record. The caller's source/text snapshot is never written back.
+    if stored.state != CandidateState::Pending {
+        let _ = FileExt::unlock(&lock);
+        return Ok(());
+    }
+    stored.state = state.clone();
+    let result = write_private_file_atomic(
         &path,
-        &serde_json::to_string(candidate).expect("candidate serializes"),
-    )
+        &serde_json::to_string(&stored).expect("candidate serializes"),
+    );
+    if result.is_ok() {
+        candidate.state = state;
+    }
+    let _ = FileExt::unlock(&lock);
+    result
 }
 
 #[cfg(test)]
@@ -604,6 +664,47 @@ mod tests {
         assert_eq!(admit(&empty, &branch), Admission::Reject(Reason::Invalid));
         let long = candidate(Category::Constraint, &"x".repeat(601), Role::User, "user-1");
         assert_eq!(admit(&long, &branch), Admission::Reject(Reason::Invalid));
+    }
+
+    #[test]
+    fn stale_helper_result_cannot_overwrite_admitted_candidate() {
+        let directory = tempfile::tempdir().unwrap();
+        let mut candidate = candidate(Category::Lesson, "fact", Role::Assistant, "assistant");
+        candidate.id = "00000000-0000-4000-8000-000000000001".into();
+        store_pending(directory.path(), &candidate, 1).unwrap();
+        let mut admitted = candidate.clone();
+        admitted.admission_id = Some("admission-1".into());
+        admitted.state = CandidateState::Accepted;
+        write_private_file_atomic(
+            &candidate_path(directory.path(), &candidate.id).unwrap(),
+            &serde_json::to_string(&admitted).unwrap(),
+        )
+        .unwrap();
+
+        assert!(!store_pending(directory.path(), &candidate, 2).unwrap());
+        let mut stale = candidate;
+        set_state(
+            directory.path(),
+            &mut stale,
+            CandidateState::Rejected("late_helper_result".into()),
+        )
+        .unwrap();
+        let stored = read_candidates(directory.path()).pop().unwrap();
+        assert_eq!(stored.state, CandidateState::Accepted);
+        assert_eq!(stored.admission_id.as_deref(), Some("admission-1"));
+    }
+
+    #[test]
+    fn malformed_candidate_file_is_not_overwritten() {
+        let directory = tempfile::tempdir().unwrap();
+        let candidate = candidate(Category::Lesson, "fact", Role::Assistant, "assistant");
+        let path = candidate_path(directory.path(), &candidate.id).unwrap();
+        std::fs::write(&path, "{ malformed user data").unwrap();
+        assert!(!store_pending(directory.path(), &candidate, 1).unwrap());
+        assert_eq!(
+            std::fs::read_to_string(path).unwrap(),
+            "{ malformed user data"
+        );
     }
 
     #[test]
