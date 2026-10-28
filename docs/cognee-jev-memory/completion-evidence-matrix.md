@@ -30,6 +30,12 @@ Denominator: exactly 25 task IDs from the original plan (SHA-256 in `completion-
 | M7.2 | Focused failure tests and chronological evaluation with denominators/harm/unknown/latency; isolated state; final CI checks | Missing | fresh baseline only; candidate evaluation and final gates not run |
 | M7.3 | Local-only shadow/canary rollout; separate write/JEV gates; nondestructive data; instant rollback/cancel; docs | Missing | mode primitives exist; release/rollback proof and runbook missing |
 
+## Integration update (2026-10-28; provisional pending final full gates)
+
+The integrated implementation adds request-boundary persistence acknowledgment, durable admission receipts and recovery, fresh source/task/session checks before helper IO and admission, capability miss/compaction coverage, and a synthetic chronological replay. Selected regression evidence: 12 helper tests, 46 capability tests, 1 chronological replay regression, and the ignored synthetic replay report generator passed. The report covers 56 authored cases and five arms; it is not held-out user-quality evidence, does not evaluate a real JEV model, and does not establish production latency or usefulness. Embedded docs sync/diff and four prebuilt release tests passed.
+
+A pre-final workspace run passed with 3,386 tests and 6 ignored after correcting a stale tool-list expectation. Capability/replay integration followed that run, so the final format, `-D warnings` workspace check, full workspace tests, diff check, and docs/prebuilt gates must be rerun and recorded in `merge-readiness-report.md` before review readiness. No live Cognee/JEV/provider requests or user data were used. The 25-task denominator remains frozen; this update does not mark all remaining partial/missing tasks complete.
+
 ## Final evidence
 
-Not yet evaluated. Record exact final commit, commands with nonzero selected test counts, failed and skipped checks, fixture provenance, latency measurement scope, and remaining deployment-only gates here before claiming readiness.
+Record the final commit, exact commands and selected test counts, failed and skipped checks, fixture provenance, latency measurement scope, and remaining deployment-only gates before claiming readiness.

@@ -23,6 +23,14 @@ Other related milestone branch work is already represented in the integration hi
 
 `cargo test -p ice-cli --lib --locked cognee::` selected 154 tests, all passed, 0 ignored, 1,253 filtered out; test execution 1.25 s. Build plus test command 48.9 s. This is a fresh fake-transport test result, not real backend latency or effectiveness. No live model, Cognee, or JEV request was made.
 
+## Integration update (2026-10-28)
+
+The completion branch now integrates request-boundary packet persistence/acknowledgment, receipt-backed admission/recovery, optional helper admission limits and fresh source ownership checks, capability catalog event/compaction coverage, and synthetic chronological replay. The current-source admission regression validates strict source attribution and task ownership before helper IO and again before receipt-backed acceptance. The offline replay uses 56 authored synthetic cases across five deterministic arms; it is not a held-out user-quality study and its mock-JEV arm does not test model judgments.
+
+Validation observed during integration: helper tests 12 passed; capability tests 46 passed; chronological replay regression 1 passed; ignored replay-report generator passed; embedded-doc synchronization and prebuilt release tests (4) passed. A workspace test gate before the last capability/replay integrations completed with 3,386 passed and 6 ignored after correcting an unrelated stale Codex tool-list expectation. The final integrated workspace format/check/test rerun is tracked in `merge-readiness-report.md` and must pass before review readiness. No live service/model was contacted. No production usefulness, latency, searchability, or release claim is made.
+
+See `merge-readiness-report.md` for integration scope, exact remaining gates and conditional review-only decision. The frozen 25-task denominator and baseline score above are unchanged; do not infer completion of every task from merged code or broad test counts.
+
 ## Principal gaps confirmed in source
 
 1. `BeforeRunEvent` has only expanded prompt/system/session/cancellation fields. It cannot convey original intent, active messages, model window, task identity, conversation branch or request-boundary identity.
