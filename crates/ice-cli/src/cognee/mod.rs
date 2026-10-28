@@ -32,3 +32,6 @@ pub mod source_validation;
 
 #[cfg(test)]
 mod heldout_tests;
+
+#[cfg(test)]
+mod judged_eval_tests;
