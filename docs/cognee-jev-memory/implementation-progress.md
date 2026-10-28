@@ -45,8 +45,8 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 - `cargo test -p ice-cli --lib capability --locked`: 46 passed.
 - `cargo test -p ice-cli --lib chronological_replay --locked`: 1 passed.
 - Ignored synthetic replay report generator `chronological_offline_replay_report`: passed; generated report covers 56 synthetic cases and five arms.
-- Before capability/replay branch integration, full workspace run with `RUSTFLAGS="-D warnings" RUSTDOCFLAGS="-D warnings"` passed 3,386 tests, 6 ignored. That run caught and fixed a stale expected Codex tool list. The latest integrated full workspace rerun is tracked in `merge-readiness-report.md`; do not mark final verification complete until its result is recorded.
-- `sh scripts/sync-embedded-docs.sh`, embedded-doc diff check, and `python3 scripts/test_prebuilt_release.py`: passed; prebuilt tests 4 passed. `git diff --check` passed before the final integrated docs update and must be rerun.
+- Final integrated `RUSTFLAGS="-D warnings" RUSTDOCFLAGS="-D warnings" cargo test --workspace --locked`: 3,395 passed, 7 ignored (92 suites); workspace all-target check and format check passed. An earlier run caught a stale expected Codex tool list; the expectation was updated before the final pass.
+- `sh scripts/sync-embedded-docs.sh`, embedded-doc diff check, `python3 scripts/test_prebuilt_release.py` (4 passed), and `git diff --check`: passed.
 - No live Cognee/JEV/provider calls, model inference, real agent configuration, or user data were used. Fake-transport timings are not backend measurements.
 
 ## Remaining gates

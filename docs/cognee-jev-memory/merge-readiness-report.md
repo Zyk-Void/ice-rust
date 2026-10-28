@@ -17,29 +17,31 @@ The immutable plan denominator remains 25 task IDs. The pre-change baseline reco
 - Capability catalog current-registry refresh, capability-miss signaling, and compaction-aware coverage are integrated.
 - Synthetic chronological replay artifacts and report are included. The replay fixture is authored synthetic data, not blind or held-out user-quality evidence; the mock-JEV arm is explicitly not eligible to support a quality claim.
 
-## Verification
+## Verification (2026-10-28)
 
-Latest successful verification before the current integrated full rerun:
+Final integrated gates passed on the committed source snapshot:
 
-- `cargo fmt --all -- --check` — passed before the capability branch landed; subsequent formatting was applied with `cargo fmt --all`.
-- `RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked` — passed before capability and replay integration; integrated rerun is pending.
-- `RUSTFLAGS="-D warnings" RUSTDOCFLAGS="-D warnings" cargo test --workspace --locked` — 3,386 passed, 6 ignored, 4,440 filtered out before capability and replay integration. That run initially exposed a stale Codex tool-list test expectation; the expectation was updated, and the rerun passed at that snapshot. The final integrated rerun is pending.
+- `cargo fmt --all -- --check` — passed.
+- `RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked` — passed.
+- `RUSTFLAGS="-D warnings" RUSTDOCFLAGS="-D warnings" cargo test --workspace --locked` — 3,395 passed, 7 ignored, 4,470 filtered out (92 suites).
 - `cargo test -p ice-cli 'helper_' --locked` — 12 passed, including strict invalid-source rejection, valid durable acceptance and stale task scope rejection before helper/network calls.
 - `cargo test -p ice-cli --lib capability --locked` — 46 passed.
 - `cargo test -p ice-cli --lib chronological_replay --locked` — 1 passed.
-- The ignored report generator `chronological_offline_replay_report` was run successfully against the integrated tree. The JSON records the synthetic fixture hash, five arms, denominators and local fake-transport latency; no real-service result is claimed.
+- The ignored report generator `chronological_offline_replay_report` passed against the integrated tree. The JSON records the synthetic fixture hash, five arms, denominators and local fake-transport latency; no real-service result is claimed.
 - `sh scripts/sync-embedded-docs.sh` and `git diff --exit-code -- crates/ice-cli/embedded-docs` — passed.
 - `python3 scripts/test_prebuilt_release.py` — 4 tests passed.
-- `git diff --check` — passed before the last integrated branches; rerun before merge.
+- `git diff --check` — passed.
+
+An earlier full workspace run exposed a stale expected Codex tool list after capability integration; that test expectation was corrected before the final successful run. A prior fmt check exposed formatting in the newly integrated capability files; `cargo fmt --all` was applied and the final format check passed.
 
 ## Remaining blockers and limitations
 
-1. Complete final integrated verification: formatting check, workspace all-target check and full workspace tests with warnings denied, embedded-doc sync/diff, prebuilt release tests, and `git diff --check`; preserve exit statuses and logs.
-2. Review the 25-task evidence matrix against the frozen plan, and update progress/audit/evidence docs without promoting partial or deployment-only criteria to complete.
-3. Confirm helper model binding and shared admission changes are present and tested in the final branch; do not call any live model or provider under the cx/gpt-6-luna-only restriction.
-4. Audit every diff for unrelated or formatting-only changes, privacy-sensitive replay content, and generated build output. Keep `.target-completion/` out of version control.
-5. No PR has been created or linked. Do not claim production or release readiness based on synthetic replay or fake transports.
+1. The frozen 25-task matrix remains a baseline plus provisional integration evidence; not every acceptance criterion has independent proof. Do not mark all milestones complete from broad test counts.
+2. Audit remaining production ownership, context-budget and writer-policy edge cases in the matrix before claiming complete task coverage.
+3. JEV quality, real provider latency, backend indexing/searchability, production retrieval utility, and rollout/rollback safety remain unverified. No live model or provider was invoked; do not enable JEV based on the synthetic replay.
+4. `.target-completion/` contains untracked local build output and is intentionally not committed. All tracked source/document changes are committed; do not clean or remove the target as part of this handoff.
+5. No PR has been created or linked. This branch is ready for code review, not production release approval.
 
 ## Decision
 
-**Merge readiness: conditional for code review only after all integrated gates pass and the final diff/doc audit is complete.** Production enablement and live JEV evaluation are explicitly out of scope and remain off/unverified.
+**Merge readiness: ready for code review after the recorded gates pass; not production-ready and not a release approval.** Production enablement and live JEV evaluation are explicitly out of scope and remain off/unverified.
