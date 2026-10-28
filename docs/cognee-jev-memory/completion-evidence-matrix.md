@@ -1,6 +1,8 @@
 # Current Cognee + JEV acceptance matrix
 
-Date: 2026-10-28. Verified source: `1df122d4febc8abd0d578d4c20a2191d58c7043a`. Frozen denominator: 25 tasks from the original plan. **88.0% = (21 + 2*0.5)/25**; 2 blocked. This supersedes the earlier 48% matrix for this local branch only. Historical audits remain in Git and the round-2 report. No live-effectiveness or deployment claim.
+Date: 2026-10-28. Follow-up verified source: `6276ab001aaef45b52576650bd21000e2d48cf91`; original closeout source: `1df122d4febc8abd0d578d4c20a2191d58c7043a`. Frozen denominator: 25 tasks from the original plan. **88.0% = 100 × (21 + 2*0.5)/25**; 2 blocked. All original statuses remain unchanged after the fresh workspace gates. Historical audits remain in Git. No live-effectiveness or deployment claim.
+
+Follow-up evidence: [contracts](remaining-contract-evidence.md), [writer policy](remaining-writer-evidence.md), [JEV protocol](remaining-jev-evaluation.md), [executed isolated mixed-version rollback](remaining-canary-rollback.md). M7.3's isolated compatibility drill is now executed, superseding the older row's statement that no mixed-version drill occurred; real user-facing rollout remains blocked. Final gates and corrected test-count accounting are in [merge readiness](merge-readiness-report.md). The existing source/test references below retain their original closeout line numbers.
 
 | ID | Requirement | Status | Points | Source / verification | Remaining scope or caveat |
 |---|---|---|---:|---|---|

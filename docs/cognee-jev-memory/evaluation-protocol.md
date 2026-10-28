@@ -26,8 +26,9 @@ Use the same repository snapshot, initial session context, generation model, gen
 | B — Current policy | Current four-word/duplicate gate and capture/recall behavior | Reproduce the incumbent cost and quality |
 | C — Local selective | Task/event gate, scoped resident facts, provenance/novelty filters, direct search escape hatch; JEV off | Measure benefit of fixing integration without another model |
 | D — Local selective + JEV | Same C behavior plus bounded JEV decisions on ambiguous candidates | Isolate JEV's incremental contribution |
+| E — On demand | Automatic recall off; the same explicit search tool is available under the same permissions | Measure explicit-history baseline |
 
-Include an **on-demand-only ablation**: automatic recall off, existing `cognee_search` available to the main agent. It may be sufficient for many tasks. Compare it with C before committing to complex automatic prefetch.
+Pair the same frozen task, repository snapshot, initial context, primary model/settings and permission set across arms. Randomize or counterbalance arm order by task/session cluster; give each arm an isolated store and prohibit cross-arm reads/writes. Keep the evaluator blind to arm outputs during labeling. Compare D directly with C for incremental JEV value. A–E are not run until their service/model prerequisites are authorized.
 
 Additional small ablations can isolate scope sharing, source-quality filtering, and loaded-skill tracking. Do not run all combinations unless a concrete unresolved question requires them.
 
@@ -70,7 +71,11 @@ A Luna-only run can compare A/B/C and tool-only behavior against recorded or inf
 
 ## 4. Case construction and temporal hygiene
 
-Start with approximately 60 explicitly labeled cases across task/session clusters. This is an engineering screening set, not enough to claim a universal accuracy rate. Expand held-out coverage when confidence intervals or rare failures remain too wide.
+Before any effectiveness run, freeze the corpus bytes and SHA-256 manifest and split by whole project/task/session clusters into development and held-out partitions. Do not split adjacent turns, paraphrases, or shared evidence across partitions. The held-out labels remain unavailable to implementers until the run, prompts, thresholds, and analysis are locked. Any post-unblinding change requires a new protocol version and fresh held-out set.
+
+Labels must be independently assigned by authorized reviewers from source evidence and adjudicated without arm-output access. Preserve disagreement, missing evidence, exclusions, and unknown outcomes. Synthetic fixture expectations are not independent labels; if independent review is unavailable, do not score effectiveness or claim a held-out result.
+
+Start with approximately 60 explicitly labeled development cases across task/session clusters. This is an engineering screening set, not enough to claim a universal accuracy rate. Freeze the held-out sample size and maximum run duration before unblinding; do not continue sampling until a favorable threshold is reached. Expand only under a separately predeclared protocol when confidence intervals or rare failures remain too wide.
 
 Suggested mix:
 
@@ -187,7 +192,7 @@ Compare D directly with C. If JEV does not improve the held-out quality/effort t
 
 ## 8. Proposed engineering release gates
 
-These are targets, not measured results:
+These are prospective screening targets, not measured results, power guarantees, or post-hoc stopping rules. Approve them and freeze the sample size before held-out access. D may be considered only if its paired improvement over C has a 95% cluster-bootstrap lower bound above zero on a predeclared primary correctness outcome, with no safety/control gate violation; report uncertainty when the set cannot support a stable interval. Do not promote D on cost alone. Stop immediately for wrong-project/forbidden/stale critical evidence, selective-policy bypass, ambiguous-write replay, unauthorized inference/data destination, budget breach, credential exposure, unexpected foreground blocking, uncontrolled jobs, or rollback failure. A null/unstable interval, missing labels, or incomplete denominators means retain helper-off, not continue until a win.
 
 | Gate | Initial criterion |
 |---|---|
