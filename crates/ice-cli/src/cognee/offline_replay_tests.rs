@@ -48,11 +48,12 @@ async fn chronological_offline_replay_report() {
     let corpus: ReplayCorpus = serde_json::from_slice(corpus_bytes).unwrap();
     assert!(corpus.cases.len() >= 48);
     let fixture_hash = format!("{:x}", Sha256::digest(corpus_bytes));
+    // D is intentionally not run: this driver has no typed helper transport and
+    // must not present C's results as a JEV control-flow exercise.
     let arms = [
         "A_memory_off",
         "B_legacy",
         "C_local_selective",
-        "D_selective_mock_jev",
         "E_on_demand",
     ];
     let mut arm_reports = serde_json::Map::new();
@@ -63,7 +64,6 @@ async fn chronological_offline_replay_report() {
         let mut requested = 0usize;
         let mut skipped = 0usize;
         let mut retrieved = 0usize;
-        let mut retained = 0usize;
         let mut injected = 0usize;
         let mut persisted = 0usize;
         let mut unknown = 0usize;
@@ -99,7 +99,7 @@ async fn chronological_offline_replay_report() {
             let policy = match arm {
                 "A_memory_off" => None,
                 "B_legacy" => Some("legacy"),
-                "C_local_selective" | "D_selective_mock_jev" => Some("event"),
+                "C_local_selective" => Some("event"),
                 _ => Some("on_demand"),
             };
             let config=policy.map(|read|serde_json::json!({"enabled":true,"baseUrl":"http://cognee.test/","dataset":"offline-replay","readPolicy":read,"writePolicy":"manual","autoRecall":true,"recallBudgetMs":1000,"helperEnabled":false}));
@@ -120,10 +120,8 @@ async fn chronological_offline_replay_report() {
                 // simulates an explicit user tool request only for explicit history cases.
                 if arm == "E_on_demand" && case.cohort == "historical_decision" {
                     let query = &case.prompt;
-                    let (text, details) =
-                        rt.search_for_tool(query, CancellationToken::new()).await;
-                    if details["count"].as_u64().unwrap_or(0) > 0
-                        && details.get("error").is_none()
+                    let (text, details) = rt.search_for_tool(query, CancellationToken::new()).await;
+                    if details["count"].as_u64().unwrap_or(0) > 0 && details.get("error").is_none()
                     {
                         tool_evidence = Some(text);
                     }
@@ -148,20 +146,21 @@ async fn chronological_offline_replay_report() {
             if eligible_response && sent > 0 {
                 retrieved += 1;
             }
-            let injected_fact = packet.as_ref().is_some_and(|p| {
-                replay_contains_fact(&p.text, case)
-            });
-            let tool_fact = tool_evidence.as_ref().is_some_and(|text| {
-                replay_contains_fact(text, case)
-            });
+            let injected_fact = packet
+                .as_ref()
+                .is_some_and(|p| replay_contains_fact(&p.text, case));
+            let tool_fact = tool_evidence
+                .as_ref()
+                .is_some_and(|text| replay_contains_fact(text, case));
             let delivered = injected_fact || tool_fact;
-            retained += usize::from(delivered);
             injected += usize::from(injected_fact);
+            // The harness persistence callback only acknowledges context delivery;
+            // it does not establish remote persistence or downstream use.
             persisted += usize::from(injected_fact);
             tool_results += usize::from(tool_fact);
-            context_tokens += packet.as_ref().map_or(0, |p| {
-                super::super::text::estimate_tokens(&p.text)
-            });
+            context_tokens += packet
+                .as_ref()
+                .map_or(0, |p| super::super::text::estimate_tokens(&p.text));
             future_evidence += usize::from(delivered && !available);
             let miss = case.expected_required.iter().any(|id| id == &case.fact_id) && !delivered;
             required_miss += usize::from(miss);
@@ -185,7 +184,7 @@ async fn chronological_offline_replay_report() {
                 cohort["required_misses"].as_u64().unwrap_or(0) + u64::from(miss)
             );
             if arm == "C_local_selective" && case.cohort == "historical_decision" && delivered {
-                traces.push(serde_json::json!({"case":case.id,"prior_fact":case.fact_id,"available_at":case.available_at,"request_at":case.request_ms,"active_context_absent":true,"delivered_before_decision":true,"constraint_reused":true}));
+                traces.push(serde_json::json!({"case":case.id,"prior_fact":case.fact_id,"available_at":case.available_at,"request_at":case.request_ms,"active_context_absent":true,"prepared":true,"persist_acknowledged":false,"delivered":true,"downstream_observation":false,"constraint_reused":null,"benefit":null}));
             }
         }
         let count = latencies.len();
@@ -193,14 +192,21 @@ async fn chronological_offline_replay_report() {
         let p95 = nearest_rank(&mut latencies, 95);
         let max = latencies.iter().copied().max().unwrap_or(0);
         let min = latencies.iter().copied().min().unwrap_or(0);
-        arm_reports.insert(arm.into(),serde_json::json!({"cases":count,"by_cohort":per_cohort,"requested":requested,"skipped":skipped,"cached":0,"retrieved":retrieved,"retained":retained,"injected":injected,"persisted":persisted,"faux_used":0,"unknown":unknown,"late_error":failures,"wrong_scope":null,"stale":null,"contradictory":null,"novelty_miss":null,"false_positive_admission":null,"future_evidence_delivered":future_evidence,"tool_evidence_results":tool_results,"injected_context_tokens_estimated":context_tokens,"required_critical_miss":required_miss,"forbidden_evidence":forbidden,"unnecessary_requests":unnecessary,"latency_us":{"n":count,"includes_failures":true,"warmup_excluded":false,"min":min,"p50_nearest_rank":p50,"p95_nearest_rank":p95,"max":max},"service_latency":"simulated by local fake transport; not remote"}));
+        arm_reports.insert(arm.into(),serde_json::json!({"cases":count,"failure_denominator":count,"by_cohort":per_cohort,"requested":requested,"skipped":skipped,"cached":0,"retrieved":retrieved,"packet_prepared":injected,"harness_persist_callback":persisted,"cognee_persist_acknowledged":0,"tool_delivered":tool_results,"delivered_to_model":null,"downstream_observed_use":null,"benefit":null,"unknown":unknown,"failed_requests":failures,"wrong_scope":"not_measured_no_source_scope_fixture_in_selector","stale":"not_measured_no_expiry_fixture_in_selector","contradictory":"not_measured_no_supersession_fixture_in_selector","novelty_miss":"not_measured_no_active_context_fixture_in_selector","false_positive_admission":"not_measured_no_action_observation","future_evidence_delivered":future_evidence,"packet_context_tokens_estimated":context_tokens,"required_critical_miss":required_miss,"forbidden_evidence":forbidden,"unnecessary_requests":unnecessary,"latency_us":{"n":count,"includes_failures":true,"warmup_excluded":false,"min":min,"p50_nearest_rank":p50,"p95_nearest_rank":p95,"max":max},"local_driver_latency":"includes runtime/fake transport; not remote service latency"}));
     }
-    assert_eq!(arm_reports["C_local_selective"]["by_cohort"]["self_contained"]["requests"], 0);
+    assert_eq!(
+        arm_reports["C_local_selective"]["by_cohort"]["self_contained"]["requests"],
+        0
+    );
     assert_eq!(arm_reports["C_local_selective"]["forbidden_evidence"], 0);
-    assert!(arm_reports["E_on_demand"]["tool_evidence_results"].as_u64().unwrap() > 0);
-    assert_eq!(arm_reports["E_on_demand"]["persisted"], 0);
-    assert_eq!(arm_reports["E_on_demand"]["by_cohort"]["historical_decision"]["required_misses"], 0);
-    assert!(arm_reports.values().all(|arm| arm["future_evidence_delivered"] == 0));
+    assert!(arm_reports["C_local_selective"]["cognee_persist_acknowledged"].as_u64() == Some(0));
+    assert_eq!(arm_reports["E_on_demand"]["harness_persist_callback"], 0);
+    assert!(arm_reports["E_on_demand"]["tool_delivered"]
+        .as_u64()
+        .is_some());
+    assert!(arm_reports
+        .values()
+        .all(|arm| arm["future_evidence_delivered"] == 0));
     let dir = tempfile::tempdir().unwrap();
     let transport = Arc::new(FakeTransport::default());
     let fast_rt = runtime(
@@ -231,8 +237,166 @@ async fn chronological_offline_replay_report() {
     let fast_p50 = nearest_rank(&mut fast_latencies, 50);
     let fast_p95 = nearest_rank(&mut fast_latencies, 95);
     let fast_max = fast_latencies.iter().copied().max().unwrap_or(0);
-    let report = serde_json::json!({"schema_version":1,"corpus_version":corpus.version,"fixture_sha256":fixture_hash,"case_count":corpus.cases.len(),"arms":arm_reports,"arm_D_scope":"mock JEV integration was not run by this corpus; faux ID judgment is not implemented in this driver, recorded not eligible/unverified; no JEV quality inference","runtime":{"code_commit":std::process::Command::new("git").args(["rev-parse","HEAD"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()),"worktree_dirty":std::process::Command::new("git").args(["status","--porcelain"]).output().ok().is_some_and(|o|!o.stdout.is_empty()),"hardware":"supplied local metadata: not provided","date_utc":chrono_now_ms(),"main_model_correctness":"unverified","TTFT":"unverified","end_to_end_benefit":"unverified","JEV_model_quality":"unknown/off","JEV_backend_searchability_lag":"unknown/off","mock_JEV_quality_claim":false},"fastpath_benchmark":{"admissions":1010,"measured_n":fast_n,"warmup_excluded":10,"cache":"cold runtime; no filesystem directory scans or backend requests during admission","window_tokens":128000,"remaining_tokens":800,"prompt_bytes":"synthetic 35-38 bytes","fake_transport_requests":transport.sent().len(),"latency_us":{"n":fast_n,"p50_nearest_rank":fast_p50,"p95_nearest_rank":fast_p95,"max":fast_max}},"paired_C_vs_B":{"unnecessary_request_count":{"C":arm_reports["C_local_selective"]["unnecessary_requests"],"B":arm_reports["B_legacy"]["unnecessary_requests"]},"denominator":corpus.cases.len()},"positive_traces":traces,"failure_inclusive":{"total_requests":all_requests,"local_latency_samples_including_failures":all_latencies.len()},"generated_at_ms":chrono_now_ms()});
+    let report = serde_json::json!({"schema_version":2,"corpus_version":corpus.version,"fixture_sha256":fixture_hash,"case_count":corpus.cases.len(),"arms":arm_reports,"arm_D":{"status":"not_executed","eligible":false,"reason":"no typed fake helper judgment is wired into this chronological driver","quality":"not_evaluated","results":null},"runtime":{"code_commit":std::process::Command::new("git").args(["rev-parse","HEAD"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()),"worktree_dirty":std::process::Command::new("git").args(["status","--porcelain"]).output().ok().is_some_and(|o|!o.stdout.is_empty()),"hardware":"supplied local metadata: not provided","date_utc":chrono_now_ms(),"main_model_correctness":"unverified","TTFT":"unverified","end_to_end_benefit":"unverified","JEV_model_quality":"unknown/off","JEV_backend_searchability_lag":"unknown/off","mock_JEV_quality_claim":false},"fastpath_benchmark":{"admissions":1010,"measured_n":fast_n,"warmup_excluded":10,"cache":"cold runtime; no filesystem directory scans or backend requests during admission","window_tokens":128000,"remaining_tokens":800,"prompt_bytes":"synthetic 35-38 bytes","fake_transport_requests":transport.sent().len(),"latency_us":{"n":fast_n,"p50_nearest_rank":fast_p50,"p95_nearest_rank":fast_p95,"max":fast_max}},"paired_C_vs_B":{"unnecessary_request_count":{"C":arm_reports["C_local_selective"]["unnecessary_requests"],"B":arm_reports["B_legacy"]["unnecessary_requests"]},"denominator":corpus.cases.len(),"comparison":"synthetic policy replay only; no answer/action benefit claim"},"positive_traces":traces,"failure_inclusive":{"total_requests":all_requests,"local_latency_samples_including_failures":all_latencies.len()},"generated_at_ms":chrono_now_ms()});
     std::fs::write(report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+}
+
+#[tokio::test]
+async fn isolated_mode_disable_and_rollback_preserve_uncertain_records() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    let rt = runtime(
+        dir.path(),
+        &transport,
+        Some(
+            serde_json::json!({"enabled":true,"readPolicy":"event","writePolicy":"manual","helperEnabled":false,"dataset":"offline-closeout"}),
+        ),
+        false,
+    );
+    rt.ensure_session_id("offline-closeout-session");
+
+    let uncertain = super::super::queue::create_pending_remember(
+        "synthetic durable uncertainty must survive rollback",
+        "offline-closeout",
+        "user_context",
+        NOW,
+    );
+    let mut uncertain = uncertain;
+    uncertain.state = super::super::queue::PendingState::Uncertain;
+    super::super::queue::enqueue_pending_remember(&rt.pending_dir(), &uncertain, 64).unwrap();
+
+    let canary = rt
+        .config()
+        .with_mode(super::super::config::MemoryMode::Canary)
+        .unwrap();
+    assert_eq!(canary.read_policy, super::super::config::ReadPolicy::Event);
+    assert_eq!(
+        canary.write_policy,
+        super::super::config::WritePolicy::Manual
+    );
+    rt.persist_config_now(canary).unwrap();
+    let disabled = rt
+        .config()
+        .with_mode(super::super::config::MemoryMode::Manual)
+        .unwrap();
+    rt.persist_config_now(disabled).unwrap();
+    let mut off = rt.config();
+    off.enabled = false;
+    off.helper_enabled = false;
+    rt.persist_config_now(off).unwrap();
+    assert!(rt
+        .request_context(&request_event(
+            "What earlier constraint applies to this task?",
+            &[],
+            "offline",
+            0
+        ))
+        .await
+        .is_none());
+    assert!(
+        transport.sent().is_empty(),
+        "disabled/offline fixture must send no helper or Cognee requests"
+    );
+
+    let rollback = rt
+        .config()
+        .with_mode(super::super::config::MemoryMode::Legacy)
+        .unwrap();
+    rt.persist_config_now(rollback).unwrap();
+    let records = super::super::queue::read_pending_remember(&rt.pending_dir());
+    assert_eq!(records.len(), 1);
+    assert_eq!(
+        records[0].state,
+        super::super::queue::PendingState::Uncertain
+    );
+    assert!(
+        transport.sent().is_empty(),
+        "rollback must not drain uncertain writes implicitly"
+    );
+}
+
+#[tokio::test]
+async fn frozen_selector_fixture_exercises_production_provenance_filters() {
+    #[derive(serde::Deserialize)]
+    struct Fixture {
+        cases: Vec<Case>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Case {
+        id: String,
+        now_ms: u64,
+        dataset: String,
+        branch: Option<String>,
+        revision: Option<String>,
+        worktree_id: Option<String>,
+        active_text: Vec<String>,
+        fact_text: String,
+        metadata: serde_json::Value,
+        expected: String,
+    }
+    let bytes =
+        include_bytes!("../../../../docs/cognee-jev-memory/evidence/closeout-selector-cases.json");
+    let fixture: Fixture = serde_json::from_slice(bytes).unwrap();
+    let mut measured = serde_json::Map::new();
+    for case in fixture.cases {
+        if case.expected == "fixture_not_queried" {
+            measured.insert(case.id, serde_json::json!({"status":"not_exercised","reason":"query admission is outside the evidence selector"}));
+            continue;
+        }
+        let result = super::super::client::RecallResult {
+            text: case.fact_text.clone(),
+            score: Some(0.5),
+            metadata: Some(case.metadata),
+        };
+        let mut seen = super::super::evidence::SeenEvidence::default();
+        let active = case
+            .active_text
+            .into_iter()
+            .map(|text| super::super::text::RecallLine {
+                text,
+                score: None,
+                provenance: None,
+            })
+            .collect::<Vec<_>>();
+        seen.remember_lines(&active);
+        let context = super::super::evidence::FilterContext {
+            now_ms: case.now_ms,
+            dataset: case.dataset,
+            legacy_dataset: None,
+            branch: case.branch,
+            revision: case.revision,
+            worktree_id: case.worktree_id,
+            suppressions: None,
+        };
+        let selected =
+            super::super::evidence::select_new_with_context(&[result], &mut seen, &context);
+        let observed = if !selected.lines.is_empty() {
+            "keep"
+        } else if selected.rejected.wrong_scope > 0 {
+            "wrong_scope"
+        } else if selected.rejected.wrong_revision > 0 {
+            "wrong_revision"
+        } else if selected.rejected.superseded > 0 {
+            "superseded"
+        } else if selected.rejected.expired > 0 {
+            "expired"
+        } else if selected.rejected.duplicate > 0 {
+            "active_context_duplicate"
+        } else {
+            "other_rejection"
+        };
+        measured.insert(case.id, serde_json::json!({"expected":case.expected,"observed":observed,"match":case.expected == observed,"kept":selected.kept,"rejected":selected.rejected}));
+    }
+    for (case_id, entry) in &measured {
+        assert!(
+            entry["match"] == true || entry["status"] == "not_exercised",
+            "frozen selector label mismatch for {case_id}: {entry}"
+        );
+    }
+    assert_eq!(measured["wrong-scope"]["observed"], "wrong_scope");
+    assert_eq!(measured["stale-revision"]["observed"], "wrong_revision");
+    assert_eq!(measured["superseded"]["observed"], "superseded");
+    assert_eq!(measured["expired-before-boundary"]["observed"], "expired");
 }
 
 #[tokio::test]
