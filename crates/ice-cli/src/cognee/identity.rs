@@ -399,4 +399,22 @@ mod tests {
         .unwrap();
         assert!(RepositoryIdentity::read(dir.path()).revision.is_none());
     }
+
+    #[cfg(unix)]
+    #[test]
+    fn nested_path_and_symlink_resolve_to_the_same_canonical_repository() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("repository");
+        let nested = root.join("src/nested");
+        fs::create_dir_all(&nested).unwrap();
+        main_repo(&root);
+        let alias = dir.path().join("repository-link");
+        std::os::unix::fs::symlink(&root, &alias).unwrap();
+
+        let from_nested = RepositoryIdentity::read(&nested);
+        let from_symlink = RepositoryIdentity::read(&alias.join("src"));
+        assert_eq!(from_nested.root, root.canonicalize().unwrap());
+        assert_eq!(from_nested.repository_id, from_symlink.repository_id);
+        assert_eq!(from_nested.worktree_id, from_symlink.worktree_id);
+    }
 }
