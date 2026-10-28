@@ -402,6 +402,8 @@ Project-level `.icers/settings.json` can add resource directories:
 
 Paths are relative to the project root; `skills`, `prompts`, and `extensions` are shorthand for the corresponding `*Dirs` fields. Custom directories are loaded along with `.icers`, `.pi`, and the conventional global directories; `.icers` takes precedence. The global `~/.icers/agent/settings.json` supports these fields too, with relative paths resolved against the agent directory.
 
+A leading `~` or `~/` expands to your home directory. `.agents/skills` directories from other tools are not discovered automatically; to use them, list them explicitly, for example `"skillDirs": ["~/.agents/skills"]`.
+
 To load only the current project’s packages/resources and exclude global resources, use either of these equivalent options:
 
 ```bash

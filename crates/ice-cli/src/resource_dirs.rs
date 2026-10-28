@@ -23,8 +23,10 @@
 //! directory drops in and works (the documented intent). Full trust gating is
 //! deferred.
 //!
-//! **Deferred (documented):** `.agents/skills` + `~/.agents/skills`;
-//! shadowed-context-file dedup (`findShadowedContextFile`); full structured
+//! **Not auto-discovered by design:** `.agents/skills` + `~/.agents/skills`.
+//! Importing another tool's skill directory is opt-in: list it in `skillDirs`
+//! (for example `"~/.agents/skills"`; a leading `~` expands to the home
+//! directory). **Deferred (documented):** shadowed-context-file dedup (`findShadowedContextFile`); full structured
 //! winner/loser collision diagnostics (icers v1 encodes collisions as a
 //! `SkillDiagnostic`/`PromptTemplateDiagnostic` with a descriptive message).
 
