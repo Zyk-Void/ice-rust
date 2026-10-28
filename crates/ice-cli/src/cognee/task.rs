@@ -156,6 +156,10 @@ impl TaskCursor {
     pub fn clear(&mut self) {
         *self = Self::default();
     }
+
+    pub fn current_id(&self) -> Option<String> {
+        self.scope.as_ref().map(|_| self.id())
+    }
 }
 
 #[cfg(test)]

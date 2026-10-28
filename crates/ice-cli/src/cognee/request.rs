@@ -45,7 +45,7 @@ struct PendingPacket {
 #[derive(Default)]
 pub(super) struct ReadCoordinator {
     repository: IdentityTracker,
-    task: TaskCursor,
+    pub(in crate::cognee) task: TaskCursor,
     pending: VecDeque<PendingPacket>,
     last_run_id: Option<String>,
     last_compaction_at: Option<i64>,

@@ -21,11 +21,11 @@ const NEGATIVE_TTL_MS: u64 = 60_000;
 type Key = (String, String, u64);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct OperationContext {
-    pub(super) host_session_id: Option<String>,
-    pub(super) session_id: Option<String>,
-    pub(super) dataset: String,
-    pub(super) generation: u64,
+pub(in crate::cognee) struct OperationContext {
+    pub(in crate::cognee) host_session_id: Option<String>,
+    pub(in crate::cognee) session_id: Option<String>,
+    pub(in crate::cognee) dataset: String,
+    pub(in crate::cognee) generation: u64,
 }
 
 struct Entry {

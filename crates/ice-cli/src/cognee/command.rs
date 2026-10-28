@@ -9,7 +9,7 @@ use ice_agent::agent_tool::AgentTool;
 use ice_agent::error::AgentError;
 use ice_agent::types::{AgentToolResult, ToolExecutionMode, ToolResultPartial};
 use ice_ai::types::Tool;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use tokio_util::sync::CancellationToken;
 
 use super::config::{
@@ -389,7 +389,11 @@ fn effective_config(config: &CogneeConfig, env: &config::CogneeEnv) -> CogneeCon
 }
 
 fn on_off(value: bool) -> &'static str {
-    if value { "on" } else { "off" }
+    if value {
+        "on"
+    } else {
+        "off"
+    }
 }
 
 /// The Cognee rows, read from the effective config.
@@ -721,16 +725,12 @@ mod tests {
         let notices = runtime.notices().drain();
         assert_eq!(notices.len(), 1);
         assert_eq!(notices[0].0, NoticeLevel::Warning);
-        assert!(
-            notices[0]
-                .1
-                .contains("environment override wins over saved values")
-        );
-        assert!(
-            notices[0]
-                .1
-                .contains("effective readPolicy=event, writePolicy=selective")
-        );
+        assert!(notices[0]
+            .1
+            .contains("environment override wins over saved values"));
+        assert!(notices[0]
+            .1
+            .contains("effective readPolicy=event, writePolicy=selective"));
         assert_eq!(runtime.config().read_policy, ReadPolicy::Event);
         assert_eq!(runtime.config().write_policy, WritePolicy::Selective);
         let stored: Value = serde_json::from_str(
@@ -760,11 +760,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let paths = materialize_skills(dir.path());
         assert_eq!(paths.len(), 3);
-        assert!(
-            std::fs::read_to_string(&paths[0])
-                .unwrap()
-                .starts_with("---\nname: cognee-search\n")
-        );
+        assert!(std::fs::read_to_string(&paths[0])
+            .unwrap()
+            .starts_with("---\nname: cognee-search\n"));
         assert_eq!(materialize_skills(dir.path()), paths);
     }
 }

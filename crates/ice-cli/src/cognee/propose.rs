@@ -124,176 +124,24 @@ impl AgentTool for CogneeProposeMemoryTool {
     }
 }
 
-fn resolve_supersession<'a>(
-    candidate: &Candidate,
-    stored: &'a [Candidate],
-) -> Result<&'a Candidate, &'static str> {
-    let old_id = candidate.supersedes.as_deref().ok_or("unknown_target")?;
-    let old = stored
-        .iter()
-        .find(|existing| existing.id == old_id)
-        .ok_or("unknown_target")?;
-    if old.state != CandidateState::Accepted {
-        return Err("not_accepted");
-    }
-    if old.id == candidate.id || old.dataset != candidate.dataset || old.branch != candidate.branch
-    {
-        return Err("scope_mismatch");
-    }
-    if candidate.source.role != Role::User {
-        return Err("role_not_allowed");
-    }
-    Ok(old)
-}
-
-fn record_accepted_suppressions(
-    _runtime: &CogneeRuntime,
-    candidate: &Candidate,
-    candidate_dir: &std::path::Path,
-    accepted: bool,
-) -> Result<(Option<String>, Option<String>), String> {
-    // Accepted correction/expiry effects are persisted in the admission receipt.
-    // This helper now only reports whether a requested correction target resolves.
-    let supersession = if candidate.supersedes.is_some() {
-        let stored = candidates::read_candidates(candidate_dir);
-        match resolve_supersession(candidate, &stored) {
-            Ok(_) if accepted => Some(("recorded".to_string(), None)),
-            Ok(_) => Some(("unresolved".to_string(), Some("not_accepted".into()))),
-            Err(reason) => Some(("unresolved".to_string(), Some(reason.into()))),
-        }
-    } else {
-        None
-    };
-    Ok(match supersession {
-        Some((status, reason)) => (Some(status), reason),
-        None => (None, None),
-    })
-}
-
-fn optional_valid_hours(params: &Value) -> Result<Option<u64>, AgentError> {
-    match params.get("valid_hours") {
-        None | Some(Value::Null) => Ok(None),
-        Some(Value::Number(value)) => value
-            .as_u64()
-            .filter(|hours| (1..=8760).contains(hours))
-            .map(Some)
-            .ok_or_else(|| {
-                AgentError::Validation("valid_hours must be an integer from 1 to 8760".into())
-            }),
-        Some(_) => Err(AgentError::Validation(
-            "valid_hours must be an integer from 1 to 8760".into(),
-        )),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn candidate(id: &str, state: CandidateState, dataset: &str, role: Role) -> Candidate {
-        Candidate {
-            id: id.into(),
-            admission_id: None,
-            source_scope: None,
-            category: Category::Decision,
-            text: id.into(),
-            source: Source {
-                entry_id: "source".into(),
-                role,
-            },
-            verified_by: None,
-            supersedes: None,
-            dataset: dataset.into(),
-            branch: None,
-            valid_until_ms: None,
-            created_at: 1,
-            state,
-        }
-    }
-
-    #[test]
-    fn supersession_requires_accepted_same_scope_target_and_user_source() {
-        let old = candidate("old", CandidateState::Accepted, "project-a", Role::User);
-        let mut new = candidate("new", CandidateState::Accepted, "project-a", Role::User);
-        new.supersedes = Some("old".into());
-        assert!(resolve_supersession(&new, std::slice::from_ref(&old)).is_ok());
-        assert_eq!(resolve_supersession(&new, &[]), Err("unknown_target"));
-
-        let pending = candidate("old", CandidateState::Pending, "project-a", Role::User);
-        assert_eq!(resolve_supersession(&new, &[pending]), Err("not_accepted"));
-        let wrong_dataset = candidate("old", CandidateState::Accepted, "project-b", Role::User);
-        assert_eq!(
-            resolve_supersession(&new, &[wrong_dataset]),
-            Err("scope_mismatch")
-        );
-        let mut wrong_branch = old.clone();
-        wrong_branch.branch = Some("release".into());
-        assert_eq!(
-            resolve_supersession(&new, &[wrong_branch]),
-            Err("scope_mismatch")
-        );
-        let rejected = candidate(
-            "old",
-            CandidateState::Rejected("wrong_role".into()),
-            "project-a",
-            Role::User,
-        );
-        assert_eq!(resolve_supersession(&new, &[rejected]), Err("not_accepted"));
-
-        let mut old_constraint = old.clone();
-        old_constraint.category = Category::Constraint;
-        let mut assistant_outcome = new;
-        assistant_outcome.category = Category::Outcome;
-        assistant_outcome.source.role = Role::Assistant;
-        assert_eq!(
-            resolve_supersession(&assistant_outcome, std::slice::from_ref(&old_constraint)),
-            Err("role_not_allowed")
-        );
-    }
-
-    #[test]
-    fn valid_hours_requires_an_integer_in_the_supported_range() {
-        for value in [json!(0), json!(8761), json!(-1), json!(1.5), json!("2")] {
-            assert!(optional_valid_hours(&json!({"valid_hours": value})).is_err());
-        }
-        assert_eq!(
-            optional_valid_hours(&json!({"valid_hours": 1})).unwrap(),
-            Some(1)
-        );
-        assert_eq!(optional_valid_hours(&json!({})).unwrap(), None);
-    }
-}
-
-fn optional_string(params: &Value, name: &str) -> Result<Option<String>, AgentError> {
-    match params.get(name) {
-        None | Some(Value::Null) => Ok(None),
-        Some(Value::String(value))
-            if !value.trim().is_empty()
-                && value.chars().count() <= 160
-                && !value.chars().any(char::is_control)
-                && (name != "supersedes"
-                    || value
-                        .bytes()
-                        .all(|byte| byte.is_ascii_alphanumeric() || b"-_.:".contains(&byte))) =>
-        {
-            Ok(Some(value.clone()))
-        }
-        _ => Err(AgentError::Validation(format!(
-            "{name} must be a valid nonempty string"
-        ))),
-    }
+#[derive(Clone, Debug, serde::Serialize)]
+pub(crate) struct AdmissionOutcome {
+    pub(crate) candidate_id: String,
+    pub(crate) operation_id: String,
+    pub(crate) receipt_id: Option<String>,
+    pub(crate) duplicate: bool,
 }
 
 pub(crate) fn accept_candidate(
     runtime: &CogneeRuntime,
     candidate: &Candidate,
-) -> Result<bool, String> {
+) -> Result<Option<AdmissionOutcome>, String> {
     use super::admission::{self, AdmissionReceipt, SupersededTarget, RECEIPT_VERSION};
     use super::queue::PendingState;
     let record_text = format!("[{}] {}", candidate.category.as_str(), candidate.text);
     let config = runtime.config();
     if record_text.chars().count() > config.remember_max_chars {
-        return Ok(false);
+        return Ok(None);
     }
     let candidate_dir = runtime.candidates_dir();
     let receipt_dir = admission::receipt_dir(&candidate_dir);
@@ -310,18 +158,79 @@ pub(crate) fn accept_candidate(
                 stored.state == CandidateState::Accepted && stored.admission_id.is_none()
             }),
     );
-    if committed.into_iter().any(|stored| {
+    let superseded: std::collections::HashSet<_> = committed
+        .iter()
+        .filter(|record| {
+            record.dataset == candidate.dataset
+                && record.branch == candidate.branch
+                && record
+                    .valid_until_ms
+                    .is_none_or(|expiry| expiry > runtime.now())
+        })
+        .filter_map(|record| record.supersedes.as_deref())
+        .collect();
+    let applicability = |record: &Candidate| {
+        record.source_scope.as_ref().map(|scope| {
+            (
+                scope.git_branch.clone(),
+                scope.git_revision.clone(),
+                scope.worktree_id.clone(),
+            )
+        })
+    };
+    if let Some(stored) = committed.iter().find(|stored| {
         stored.dataset == candidate.dataset
             && stored.category == candidate.category
             && stored.branch == candidate.branch
             && stored.text == candidate.text
+            && applicability(stored) == applicability(candidate)
             && stored
                 .valid_until_ms
                 .is_none_or(|expiry| expiry > runtime.now())
+            && !superseded.contains(stored.id.as_str())
     }) {
-        // Existing durable intent is canonical; do not manufacture a new write.
-        return Ok(true);
+        let operation_id = admission::read_receipts(&receipt_dir)
+            .into_iter()
+            .find(|receipt| receipt.candidate.id == stored.id)
+            .map(|receipt| receipt.operation.operation_id)
+            .unwrap_or_else(|| {
+                super::queue::create_pending_remember(
+                    &record_text,
+                    &stored.dataset,
+                    stored.category.node_set(),
+                    stored.created_at,
+                )
+                .operation_id
+            });
+        return Ok(Some(AdmissionOutcome {
+            candidate_id: stored.id.clone(),
+            operation_id,
+            receipt_id: stored.admission_id.clone(),
+            duplicate: true,
+        }));
     }
+    let target = match candidate.supersedes.as_deref() {
+        None => None,
+        Some(id) => {
+            let old = committed
+                .iter()
+                .find(|record| record.id == id)
+                .ok_or("Supersession target is not committed")?;
+            if old.state != CandidateState::Accepted
+                || old.dataset != candidate.dataset
+                || old.category != candidate.category
+                || old.branch != candidate.branch
+                || applicability(old) != applicability(candidate)
+                || candidate.created_at < old.created_at
+                || superseded.contains(id)
+                || old.source.role != Role::User
+                || candidate.source.role != Role::User
+            {
+                return Err("Supersession is not a newer user correction in the same scope".into());
+            }
+            Some(old.clone())
+        }
+    };
     let mut record = super::queue::create_pending_remember(
         &record_text,
         &candidate.dataset,
@@ -335,11 +244,6 @@ pub(crate) fn accept_candidate(
     attributed.id = candidate.id.clone();
     attributed.admission_id = Some(id.clone());
     attributed.state = CandidateState::Accepted;
-    let target = candidate.supersedes.as_ref().and_then(|target_id| {
-        candidates::read_candidates(&candidate_dir)
-            .into_iter()
-            .find(|c| &c.id == target_id)
-    });
     let superseded_target = target.map(|old| SupersededTarget {
         source: old.source.entry_id,
         scope: old.branch,
@@ -356,7 +260,7 @@ pub(crate) fn accept_candidate(
     // A full queue is a hard failure; do not evict durable intent.
     match super::queue::reserve_prepared(&runtime.pending_dir(), &record, config.queue_limit) {
         Ok(true) => {}
-        Ok(false) => return Ok(false),
+        Ok(false) => return Ok(None),
         Err(error) => return Err(format!("Could not reserve Cognee operation: {error}")),
     }
     admission::commit(&receipt_dir, &receipt)
@@ -378,8 +282,19 @@ pub(crate) fn accept_candidate(
             runtime.now(),
         );
     }
+    runtime.observe_candidate_with_supersession(
+        &attributed,
+        "accepted",
+        candidate.supersedes.as_ref().map(|_| "recorded"),
+        None,
+    );
     runtime.spawn_drain_pending();
-    Ok(true)
+    Ok(Some(AdmissionOutcome {
+        candidate_id: attributed.id,
+        operation_id: record.operation_id,
+        receipt_id: Some(id),
+        duplicate: false,
+    }))
 }
 
 #[derive(Default)]
@@ -415,8 +330,9 @@ pub(crate) async fn propose_memory(
     if !config.selective_writes() {
         return Err("Selective memory admission is unavailable".into());
     }
-    let sources = runtime.candidate_source_messages(&control.signal).await?;
+    let sources = runtime.candidate_source_snapshot(&control.signal).await?;
     let source = sources
+        .messages
         .iter()
         .find(|(id, _)| id == source_entry_id)
         .map(|(_, message)| message)
@@ -433,7 +349,7 @@ pub(crate) async fn propose_memory(
     };
     let dataset = runtime.active_dataset();
     let now = runtime.now();
-    let repository = runtime.repository_identity();
+    let repository = sources.repository.clone();
     let volatile = matches!(category, Category::Outcome | Category::Lesson);
     let expiry = valid_hours
         .filter(|hours| (1..=720).contains(hours))
@@ -466,11 +382,41 @@ pub(crate) async fn propose_memory(
         created_at: now,
         state: CandidateState::Pending,
     };
-    if let Err(reason) = super::source_validation::validate_source(&candidate, &sources) {
-        candidate.state = CandidateState::Rejected(reason.as_str().into());
-        runtime.observe_candidate_with_supersession(&candidate, "rejected", None, None);
-        return Err(format!("Candidate rejected: {}", reason.as_str()));
-    }
+    let evidence = match super::source_validation::validate_source(&candidate, &sources.messages) {
+        Ok(evidence) => evidence,
+        Err(reason) => {
+            candidate.state = CandidateState::Rejected(reason.as_str().into());
+            runtime.observe_candidate_with_supersession(&candidate, "rejected", None, None);
+            return Err(format!("Candidate rejected: {}", reason.as_str()));
+        }
+    };
+    candidate.source_scope = Some(super::candidates::SourceScope {
+        session_id: sources.operation.host_session_id.clone(),
+        task_id: sources.task_id.clone(),
+        conversation_branch: Some(sources.messages.iter().map(|(id, _)| id.clone()).collect()),
+        git_branch: if volatile {
+            repository
+                .as_ref()
+                .and_then(|identity| identity.branch.clone())
+        } else {
+            None
+        },
+        git_revision: if volatile {
+            repository
+                .as_ref()
+                .and_then(|identity| identity.revision.clone())
+        } else {
+            None
+        },
+        worktree_id: if volatile {
+            repository
+                .as_ref()
+                .map(|identity| identity.worktree_id.clone())
+        } else {
+            None
+        },
+        source_text_hash: evidence.source_text_hash,
+    });
     let original = ice_agent::message::original_user_prompt(source)
         .map(str::to_owned)
         .unwrap_or_else(|| extract_message_text(source));
@@ -491,13 +437,53 @@ pub(crate) async fn propose_memory(
         runtime.observe_candidate_with_supersession(&candidate, "pending", None, None);
         return Ok(format!("pending:{}", candidate.id));
     }
-    let admitted = runtime
+    let outcome = runtime
         .accept_validated_candidate(&candidate, &control.signal, false)
-        .await?;
-    if !admitted {
-        return Err("Durable memory queue is full; no fact was accepted".into());
-    }
-    candidate.state = CandidateState::Accepted;
+        .await?
+        .ok_or("Durable memory queue is full; no fact was accepted")?;
+    Ok(format!(
+        "accepted_queued:{}:{}",
+        outcome.candidate_id,
+        if outcome.duplicate {
+            "duplicate"
+        } else {
+            "new"
+        }
+    ))
+}
 
-    Ok("accepted_queued".into())
+fn optional_string(params: &Value, name: &str) -> Result<Option<String>, AgentError> {
+    match params.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(value))
+            if !value.trim().is_empty()
+                && value.chars().count() <= 160
+                && !value.chars().any(char::is_control)
+                && (name != "supersedes"
+                    || value
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || b"-_.:".contains(&byte))) =>
+        {
+            Ok(Some(value.clone()))
+        }
+        _ => Err(AgentError::Validation(format!(
+            "{name} must be a valid nonempty string"
+        ))),
+    }
+}
+
+fn optional_valid_hours(params: &Value) -> Result<Option<u64>, AgentError> {
+    match params.get("valid_hours") {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::Number(value)) => value
+            .as_u64()
+            .filter(|hours| (1..=8760).contains(hours))
+            .map(Some)
+            .ok_or_else(|| {
+                AgentError::Validation("valid_hours must be an integer from 1 to 8760".into())
+            }),
+        Some(_) => Err(AgentError::Validation(
+            "valid_hours must be an integer from 1 to 8760".into(),
+        )),
+    }
 }

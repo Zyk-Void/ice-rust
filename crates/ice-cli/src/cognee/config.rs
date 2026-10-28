@@ -1229,20 +1229,16 @@ mod tests {
 
     #[test]
     fn base_url_rejects_embedded_credentials() {
-        assert!(
-            resolve_config(
-                None,
-                &env(&[(ENV_BASE_URL, "http://user:password@127.0.0.1:8211")])
-            )
-            .is_err()
-        );
-        assert!(
-            resolve_config(
-                None,
-                &env(&[(ENV_BASE_URL, "https://:password@example.test")])
-            )
-            .is_err()
-        );
+        assert!(resolve_config(
+            None,
+            &env(&[(ENV_BASE_URL, "http://user:password@127.0.0.1:8211")])
+        )
+        .is_err());
+        assert!(resolve_config(
+            None,
+            &env(&[(ENV_BASE_URL, "https://:password@example.test")])
+        )
+        .is_err());
     }
 
     #[test]

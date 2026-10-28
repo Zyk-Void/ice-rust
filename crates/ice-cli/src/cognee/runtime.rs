@@ -34,12 +34,13 @@ use ice_harness::extension::{
     AfterCompactEvent, BeforeCompactDecision, BeforeCompactEvent, BeforeRunEvent,
     CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
 };
-use ice_harness::session::types::Entry;
 use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
-use super::candidates::{Candidate, CandidateState, Category, Role};
+#[cfg(test)]
+use super::candidates::Category;
+use super::candidates::{Candidate, CandidateState, Role};
 use super::client::{
     CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport,
     OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
@@ -69,7 +70,9 @@ use super::queue::{
     read_warmup_batch, recover_inflight, remove_pending_remember, select_drain_batch,
     update_pending_remember_state, CircuitState, DispatchLease, PendingState,
 };
-use super::suppress::{Suppression, SuppressionSet};
+#[cfg(test)]
+use super::suppress::Suppression;
+use super::suppress::SuppressionSet;
 use super::text::{
     extract_message_text, fit_lines, format_bounded_last_compact_injection,
     format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
@@ -984,10 +987,18 @@ impl CogneeRuntime {
             state.helper_scheduled_revision = state.candidate_revision;
         };
         let candidates_dir = self.candidates_dir();
+        let receipt_candidates: std::collections::HashSet<_> =
+            super::admission::read_receipts(&super::admission::receipt_dir(&candidates_dir))
+                .into_iter()
+                .map(|receipt| receipt.candidate.id)
+                .collect();
         let now = self.now();
         let mut pending = Vec::new();
         for mut candidate in read_helper_candidates_bounded(&candidates_dir, 32) {
-            if candidate.dataset != dataset || candidate.state != CandidateState::Pending {
+            if receipt_candidates.contains(&candidate.id)
+                || candidate.dataset != dataset
+                || candidate.state != CandidateState::Pending
+            {
                 continue;
             }
             if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS
@@ -1016,30 +1027,8 @@ impl CogneeRuntime {
         let operation_id = uuid::Uuid::new_v4().to_string();
         let work_operation_id = operation_id.clone();
         let work = async move {
-            let harness = match this.harness() {
-                Some(harness) => harness,
-                None => {
-                    this.observe_helper(
-                        Some(&work_operation_id),
-                        "skipped",
-                        "no_pending",
-                        0,
-                        0,
-                        0,
-                        None,
-                    );
-                    return;
-                }
-            };
-            let branch_entries = match harness
-                .session()
-                .find_entries_on_branch(
-                    &ice_harness::session::types::EntryQuery::default(),
-                    &ice_harness::session::types::BranchBounds::default(),
-                )
-                .await
-            {
-                Ok(entries) => entries,
+            let sources = match this.candidate_source_snapshot(&cancel).await {
+                Ok(sources) => sources,
                 Err(_) => {
                     this.observe_helper(
                         Some(&work_operation_id),
@@ -1053,17 +1042,18 @@ impl CogneeRuntime {
                     return;
                 }
             };
-            let branch = branch_entries
-                .iter()
-                .rev()
-                .take(256)
-                .filter_map(|entry| match entry {
-                    Entry::Message(message) => {
-                        Some((entry.id().to_string(), message.message.clone()))
-                    }
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
+            if sources.task_id.is_none() {
+                this.observe_helper(
+                    Some(&work_operation_id),
+                    "skipped",
+                    "no_pending",
+                    0,
+                    0,
+                    0,
+                    None,
+                );
+                return;
+            }
             let mut candidates = Vec::new();
             for mut candidate in pending {
                 if this.now().saturating_sub(candidate.created_at)
@@ -1079,13 +1069,27 @@ impl CogneeRuntime {
                     );
                     continue;
                 }
-                if let super::candidates::Admission::Reject(reason) =
-                    super::candidates::admit(&candidate, &branch)
+                let evidence = match super::source_validation::validate_source(
+                    &candidate,
+                    &sources.messages,
+                ) {
+                    Ok(evidence) => evidence,
+                    Err(reason) => {
+                        let _ = super::candidates::set_state(
+                            &candidates_dir,
+                            &mut candidate,
+                            CandidateState::Rejected(reason.as_str().into()),
+                        );
+                        continue;
+                    }
+                };
+                if validation::validate_candidate_scope(&candidate, &sources, &evidence, true)
+                    .is_err()
                 {
                     let _ = super::candidates::set_state(
                         &candidates_dir,
                         &mut candidate,
-                        CandidateState::Rejected(reason.as_str().into()),
+                        CandidateState::Rejected("stale_source_scope".into()),
                     );
                     continue;
                 }
@@ -1117,7 +1121,8 @@ impl CogneeRuntime {
             let source_excerpt = candidates
                 .iter()
                 .filter_map(|candidate| {
-                    branch
+                    sources
+                        .messages
                         .iter()
                         .find(|(id, _)| id == &candidate.source.entry_id)
                         .map(|(_, message)| extract_message_text(message))
@@ -1221,13 +1226,8 @@ impl CogneeRuntime {
                                 if this
                                     .accept_validated_candidate(&candidate, &cancel, true)
                                     .await
+                                    .map(|outcome| outcome.is_some())
                                     .unwrap_or(false)
-                                    && super::candidates::set_state(
-                                        &candidates_dir,
-                                        &mut candidate,
-                                        CandidateState::Accepted,
-                                    )
-                                    .is_ok()
                                 {
                                     accepted += 1;
                                 }
@@ -1364,19 +1364,14 @@ impl CogneeRuntime {
                     && judgment.applicable == Verdict::Yes
                     && judgment.category != Some(helper::Category::None)
                 {
-                    match this.accept_validated_candidate(&candidate, &cancel, true).await {
-                        Ok(true) => {
-                            if super::candidates::set_state(
-                                &candidates_dir,
-                                &mut candidate,
-                                CandidateState::Accepted,
-                            )
-                            .is_ok()
-                            {
-                                accepted += 1;
-                            }
+                    match this
+                        .accept_validated_candidate(&candidate, &cancel, true)
+                        .await
+                    {
+                        Ok(Some(_)) => {
+                            accepted += 1;
                         }
-                        Ok(false) => {
+                        Ok(None) => {
                             let _ = super::candidates::set_state(
                                 &candidates_dir,
                                 &mut candidate,
@@ -1500,6 +1495,7 @@ impl CogneeRuntime {
         suppressions.include_receipts(&self.candidates_dir(), &dataset);
         self.state().suppressions = suppressions;
     }
+    #[cfg(test)]
     pub(crate) fn record_suppression(&self, suppression: Suppression) -> Result<(), String> {
         let directory = self.storage_dir.join("suppress");
         super::suppress::record(&directory, &suppression)
@@ -2687,6 +2683,7 @@ impl CogneeRuntime {
         .await
     }
 
+    #[cfg(test)]
     pub(crate) async fn propose_memory_with_expiry(
         &self,
         text: &str,
@@ -4834,7 +4831,9 @@ mod tests {
             let rt = runtime(
                 dir.path(),
                 &transport,
-                Some(json!({"writePolicy":"selective", "helperProvider":"fake"})),
+                Some(
+                    json!({"readPolicy":"event", "writePolicy":"selective", "helperProvider":"fake"}),
+                ),
                 false,
             );
             let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
@@ -4860,6 +4859,29 @@ mod tests {
                 ice_extensions::ExtensionStatusMailbox::new(),
                 dir.path().to_path_buf(),
             );
+            let host_session_id = harness.session().storage().metadata().id.clone();
+            rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+                prompt: "Please always keep generated assets outside the source repository.",
+                original_prompt: Some(
+                    "Please always keep generated assets outside the source repository.",
+                ),
+                messages: &[],
+                system_prompt: "test system",
+                session_id: &host_session_id,
+                run_id: "helper-task",
+                lane_id: "main",
+                branch_generation: 0,
+                request_index: 0,
+                context_window: 128_000,
+                remaining_context_tokens: 800,
+                latest_compaction_at: None,
+                signal: CancellationToken::new(),
+            })
+            .await;
+            let sources = rt
+                .candidate_source_snapshot(&CancellationToken::new())
+                .await
+                .unwrap();
             let mut candidate = Candidate {
                 id: uuid::Uuid::new_v4().to_string(),
                 admission_id: None,
@@ -4878,14 +4900,32 @@ mod tests {
                 created_at: NOW,
                 state: CandidateState::Pending,
             };
+            let evidence =
+                super::super::source_validation::validate_source(&candidate, &sources.messages)
+                    .unwrap();
+            candidate.source_scope = Some(super::super::candidates::SourceScope {
+                session_id: sources.operation.host_session_id.clone(),
+                task_id: sources.task_id.clone(),
+                conversation_branch: Some(
+                    sources.messages.iter().map(|(id, _)| id.clone()).collect(),
+                ),
+                git_branch: None,
+                git_revision: None,
+                worktree_id: None,
+                source_text_hash: evidence.source_text_hash,
+            });
             rt.store_pending_candidate_for_test(&candidate);
             let calls = Arc::new(AtomicUsize::new(0));
             rt.use_helper_for_test(fake_helper(verdict, calls.clone(), false));
             rt.notify_helper_candidates_changed();
             rt.wait_for_background().await;
-            assert_eq!(calls.load(Ordering::SeqCst), 1);
-            assert_eq!(transport.sent().len(), expected_requests);
             let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+            assert_eq!(
+                calls.load(Ordering::SeqCst),
+                1,
+                "helper calls with candidate records {records:?}"
+            );
+            assert_eq!(transport.sent().len(), expected_requests);
             candidate = records
                 .into_iter()
                 .find(|item| item.source.entry_id == source_id)
@@ -4899,6 +4939,136 @@ mod tests {
                 assert!(parts.last().unwrap().value.starts_with("[constraint] "));
             }
         }
+    }
+
+    #[tokio::test]
+    async fn helper_rejects_unsupported_source_before_remote_judgment() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({
+                "readPolicy":"event",
+                "writePolicy":"selective",
+                "helperProvider":"fake"
+            })),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "Never enable automatic deployment without review.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let host_session_id = harness.session().storage().metadata().id.clone();
+        rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+            prompt: "Never enable automatic deployment without review.",
+            original_prompt: Some("Never enable automatic deployment without review."),
+            messages: &[],
+            system_prompt: "test system",
+            session_id: &host_session_id,
+            run_id: "invalid-source-task",
+            lane_id: "main",
+            branch_generation: 0,
+            request_index: 0,
+            context_window: 128_000,
+            remaining_context_tokens: 800,
+            latest_compaction_at: None,
+            signal: CancellationToken::new(),
+        })
+        .await;
+        let sources = rt
+            .candidate_source_snapshot(&CancellationToken::new())
+            .await
+            .unwrap();
+        let mut candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
+            category: Category::Constraint,
+            text: "Enable automatic deployment without review".into(),
+            source: super::super::candidates::Source {
+                entry_id: source_id.clone(),
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            branch: None,
+            valid_until_ms: None,
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        let evidence =
+            super::super::source_validation::validate_source(&candidate, &sources.messages)
+                .unwrap_err();
+        assert_eq!(
+            evidence,
+            super::super::source_validation::SourceRejection::UnsupportedSpan
+        );
+        candidate.source_scope = Some(super::super::candidates::SourceScope {
+            session_id: sources.operation.host_session_id.clone(),
+            task_id: sources.task_id.clone(),
+            conversation_branch: Some(sources.messages.iter().map(|(id, _)| id.clone()).collect()),
+            git_branch: None,
+            git_revision: None,
+            worktree_id: None,
+            source_text_hash: String::new(),
+        });
+        rt.store_pending_candidate_for_test(&candidate);
+        let mut stale_candidate = candidate.clone();
+        stale_candidate.id = uuid::Uuid::new_v4().to_string();
+        stale_candidate.text = "Never enable automatic deployment without review".into();
+        let evidence =
+            super::super::source_validation::validate_source(&stale_candidate, &sources.messages)
+                .unwrap();
+        let scope = stale_candidate.source_scope.as_mut().unwrap();
+        scope.task_id = Some("different-task".into());
+        scope.source_text_hash = evidence.source_text_hash;
+        rt.store_pending_candidate_for_test(&stale_candidate);
+        let calls = Arc::new(AtomicUsize::new(0));
+        rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), false));
+        rt.notify_helper_candidates_changed();
+        rt.wait_for_background().await;
+
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        assert!(transport.sent().is_empty());
+        let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+        candidate = records
+            .iter()
+            .find(|stored| stored.id == candidate.id)
+            .unwrap()
+            .clone();
+        assert_eq!(
+            candidate.state,
+            CandidateState::Rejected("unsupported_source_span".into())
+        );
+        assert_eq!(
+            records
+                .iter()
+                .find(|stored| stored.id == stale_candidate.id)
+                .unwrap()
+                .state,
+            CandidateState::Rejected("stale_source_scope".into())
+        );
     }
 
     #[tokio::test]
@@ -5011,7 +5181,7 @@ mod tests {
         let rt = runtime(
             dir.path(),
             &transport,
-            Some(json!({"writePolicy":"selective", "helperProvider":"fake"})),
+            Some(json!({"readPolicy":"event", "writePolicy":"selective", "helperProvider":"fake"})),
             false,
         );
         let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
@@ -5037,7 +5207,28 @@ mod tests {
             ice_extensions::ExtensionStatusMailbox::new(),
             dir.path().to_path_buf(),
         );
-        let candidate = Candidate {
+        let host_session_id = harness.session().storage().metadata().id.clone();
+        rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+            prompt: "Always retain source provenance for generated artifacts.",
+            original_prompt: Some("Always retain source provenance for generated artifacts."),
+            messages: &[],
+            system_prompt: "test system",
+            session_id: &host_session_id,
+            run_id: "slow-helper-task",
+            lane_id: "main",
+            branch_generation: 0,
+            request_index: 0,
+            context_window: 128_000,
+            remaining_context_tokens: 800,
+            latest_compaction_at: None,
+            signal: CancellationToken::new(),
+        })
+        .await;
+        let sources = rt
+            .candidate_source_snapshot(&CancellationToken::new())
+            .await
+            .unwrap();
+        let mut candidate = Candidate {
             id: uuid::Uuid::new_v4().to_string(),
             admission_id: None,
             source_scope: None,
@@ -5055,6 +5246,18 @@ mod tests {
             created_at: NOW,
             state: CandidateState::Pending,
         };
+        let evidence =
+            super::super::source_validation::validate_source(&candidate, &sources.messages)
+                .unwrap();
+        candidate.source_scope = Some(super::super::candidates::SourceScope {
+            session_id: sources.operation.host_session_id.clone(),
+            task_id: sources.task_id,
+            conversation_branch: Some(sources.messages.iter().map(|(id, _)| id.clone()).collect()),
+            git_branch: None,
+            git_revision: None,
+            worktree_id: None,
+            source_text_hash: evidence.source_text_hash,
+        });
         rt.store_pending_candidate_for_test(&candidate);
         let calls = Arc::new(AtomicUsize::new(0));
         rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), true));

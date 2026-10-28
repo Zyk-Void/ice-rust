@@ -81,6 +81,8 @@ pub struct Source {
 #[serde(rename_all = "camelCase")]
 pub struct SourceScope {
     pub session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub task_id: Option<String>,
     pub conversation_branch: Option<Vec<String>>,
     pub git_branch: Option<String>,
     pub git_revision: Option<String>,

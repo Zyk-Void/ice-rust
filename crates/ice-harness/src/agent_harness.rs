@@ -41,9 +41,9 @@ use tokio_util::sync::CancellationToken;
 
 use ice_agent::message::AgentMessage;
 use ice_agent::{
-    AfterToolCall, AfterToolResults, AgentContext, AgentEmitter, AgentEvent, AgentLoopConfig,
-    AgentTool, BeforeToolCall, ConvertToLlm, QueueMode, ShouldStopAfterTurnContext, StreamFn,
-    TransformContext, run_agent_loop, run_agent_loop_from_assistant,
+    run_agent_loop, run_agent_loop_from_assistant, AfterToolCall, AfterToolResults, AgentContext,
+    AgentEmitter, AgentEvent, AgentLoopConfig, AgentTool, BeforeToolCall, ConvertToLlm, QueueMode,
+    ShouldStopAfterTurnContext, StreamFn, TransformContext,
 };
 use ice_ai::types::{
     AssistantMessage, Content, DeferredHandle, StopReason, ThinkingLevel, Usage, UserContent,
@@ -53,7 +53,7 @@ use ice_ai::{CacheRetention, Model, Provider as AiProvider};
 
 use crate::compaction::settings::{CodingAgentCompactionPolicy, MidRunCompactionMode};
 use crate::compaction::{
-    CompactionLlmOptions, compact, estimate_context_tokens, prepare_compaction, should_compact,
+    compact, estimate_context_tokens, prepare_compaction, should_compact, CompactionLlmOptions,
 };
 use crate::error::{SessionError, SessionErrorCode};
 use crate::events::{HarnessEvent, HarnessEventBus, RunEndEvent, RunEndOutcome, RunStartEvent};
@@ -63,8 +63,8 @@ use crate::messages::{
 use crate::prompt_templates::format_prompt_template_invocation;
 use crate::result::{HarnessError, HarnessResult, OperationKind};
 use crate::session::context::{
-    ContextEntryTransform, CustomEntryContextMessageProjector, SessionContextBuildOptions,
-    build_session_context,
+    build_session_context, ContextEntryTransform, CustomEntryContextMessageProjector,
+    SessionContextBuildOptions,
 };
 use crate::session::session::Session;
 use crate::session::types::{
@@ -82,7 +82,7 @@ use crate::types::{
     DrivingMode, HarnessTool, HarnessToolExecution, MessageDelivery, PromptTemplate, RetryPolicy,
     SendMessageOptions, Skill,
 };
-use crate::watcher::{HarnessWatcher, watch_listener};
+use crate::watcher::{watch_listener, HarnessWatcher};
 
 mod navigation;
 
@@ -7344,14 +7344,12 @@ mod session_switch_tests {
         for _ in 0..2 {
             let result = harness.compact(None).await.unwrap();
             assert!(matches!(result.outcome, CompactionOutcome::Declined { .. }));
-            assert!(
-                harness
-                    .session()
-                    .find_open_operations("main", None)
-                    .await
-                    .unwrap()
-                    .is_empty()
-            );
+            assert!(harness
+                .session()
+                .find_open_operations("main", None)
+                .await
+                .unwrap()
+                .is_empty());
             assert!(harness.snapshot().await.unwrap().active.is_none());
         }
     }
@@ -7376,21 +7374,17 @@ mod session_switch_tests {
             tokio::task::yield_now().await;
         }
         assert!(harness.set_model(current.clone()).await.is_err());
-        assert!(
-            harness
-                .lane("main")
-                .set_thinking_level(ThinkingLevel::Low)
-                .await
-                .is_err()
-        );
+        assert!(harness
+            .lane("main")
+            .set_thinking_level(ThinkingLevel::Low)
+            .await
+            .is_err());
         // Tree/session navigation shares the active-run admission barrier, so
         // the branch owner captured by request hooks cannot change mid-run.
-        assert!(
-            harness
-                .set_session(harness.session().clone())
-                .await
-                .is_err()
-        );
+        assert!(harness
+            .set_session(harness.session().clone())
+            .await
+            .is_err());
         assert_eq!(harness.get_model().await.unwrap().id, current.id);
         harness.abort().await.unwrap();
         harness.wait_for_idle().await.unwrap();
@@ -7418,12 +7412,10 @@ mod session_switch_tests {
     async fn unsupported_thinking_selection_preserves_effective_configuration() {
         let harness = AgentHarness::create(opts()).await.unwrap();
         let before = harness.get_thinking_level().await.unwrap();
-        assert!(
-            harness
-                .set_thinking_level(ThinkingLevel::Max)
-                .await
-                .is_err()
-        );
+        assert!(harness
+            .set_thinking_level(ThinkingLevel::Max)
+            .await
+            .is_err());
         assert_eq!(harness.get_thinking_level().await.unwrap(), before);
         let lane = harness.lane("main");
         assert!(lane.set_thinking_level(ThinkingLevel::Max).await.is_err());
@@ -7511,14 +7503,12 @@ mod session_switch_tests {
 
         let harness = AgentHarness::create(options).await.unwrap();
 
-        assert!(
-            harness
-                .session()
-                .find_open_operations("main", Some(1))
-                .await
-                .unwrap()
-                .is_empty()
-        );
+        assert!(harness
+            .session()
+            .find_open_operations("main", Some(1))
+            .await
+            .unwrap()
+            .is_empty());
         let records = harness
             .session()
             .find_records(&RecordQuery {

@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use ice_ai::decision::client::{DecisionClient, DecisionError, DecisionProtocol};
 use ice_ai::decision::typesafe::{self, Answer, Question};
 use ice_ai::decision::{DecisionCodecError, DecisionValidationError, NativeContent};
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
@@ -488,9 +488,9 @@ fn map_decision_error(error: DecisionError) -> AbstainReason {
 mod tests {
     use super::*;
     use crate::decisions::DecisionConfigError;
-    use ice_ai::decision::Probability;
     use ice_ai::decision::client::{DecisionEndpoint, DecisionProtocol};
     use ice_ai::decision::typesafe::Question;
+    use ice_ai::decision::Probability;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn batch(ids: &[&str]) -> CandidateBatch {
@@ -728,21 +728,15 @@ mod tests {
     fn question_ids_encode_candidate_ids_and_context_is_in_state() {
         let batch = batch(&["alpha-1"]);
         let request = build_request(&batch).unwrap();
-        assert!(
-            request
-                .questions()
-                .contains_key("candidate.alpha-1.applicable")
-        );
-        assert!(
-            request
-                .questions()
-                .contains_key("candidate.alpha-1.durable")
-        );
-        assert!(
-            request
-                .questions()
-                .contains_key("candidate.alpha-1.category")
-        );
+        assert!(request
+            .questions()
+            .contains_key("candidate.alpha-1.applicable"));
+        assert!(request
+            .questions()
+            .contains_key("candidate.alpha-1.durable"));
+        assert!(request
+            .questions()
+            .contains_key("candidate.alpha-1.category"));
         let state = serde_json::to_string(request.state()).unwrap();
         assert!(state.contains("current task context"));
     }
@@ -760,11 +754,9 @@ mod tests {
         .unwrap();
         let request = build_request(&batch).unwrap();
         assert_eq!(request.questions().len(), 2);
-        assert!(
-            !request
-                .questions()
-                .contains_key("candidate.hinted.category")
-        );
+        assert!(!request
+            .questions()
+            .contains_key("candidate.hinted.category"));
     }
 
     #[test]

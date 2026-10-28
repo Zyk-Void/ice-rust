@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use ice_agent::message::AgentMessage;
-use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep, faux_assistant_message};
+use ice_ai::providers::faux::{faux_assistant_message, FauxProvider, FauxScript, FauxStep};
 use ice_ai::types::{AssistantMessage, Context, StopReason, UserContent, UserMessage};
 use ice_ai::{AssistantMessageEventStream, Model, Provider, SimpleStreamOptions};
 use ice_harness::agent_harness::{AgentHarness, AgentLane, CompactionOutcome};
@@ -672,11 +672,9 @@ async fn request_context_append_failure_does_not_inject_or_acknowledge() {
         ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }
     ));
     assert_eq!(packet.acknowledgments.lock().unwrap().as_slice(), &[false]);
-    assert!(
-        !user_texts(&provider.contexts.lock().unwrap()[0])
-            .iter()
-            .any(|text| text == "do not inject")
-    );
+    assert!(!user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .any(|text| text == "do not inject"));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -778,11 +776,9 @@ async fn prompt_template_keeps_expansion_and_raw_invocation_distinct() {
         probe.events.lock().unwrap()[0].1.as_deref(),
         Some("summarize the report")
     );
-    assert!(
-        user_texts(&provider.contexts.lock().unwrap()[0])
-            .iter()
-            .any(|text| text == "Summarize the report")
-    );
+    assert!(user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .any(|text| text == "Summarize the report"));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -820,16 +816,12 @@ async fn request_context_waits_for_existing_tool_turn_and_uses_raw_origin() {
     assert_eq!(events[1].5, 0);
     assert_eq!(events[0].3, events[1].3);
     assert_eq!(provider.contexts.lock().unwrap().len(), 2);
-    assert!(
-        user_texts(&provider.contexts.lock().unwrap()[0])
-            .iter()
-            .all(|text| !text.contains("READY MEMORY"))
-    );
-    assert!(
-        user_texts(&provider.contexts.lock().unwrap()[1])
-            .iter()
-            .any(|text| text.contains("READY MEMORY"))
-    );
+    assert!(user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .all(|text| !text.contains("READY MEMORY")));
+    assert!(user_texts(&provider.contexts.lock().unwrap()[1])
+        .iter()
+        .any(|text| text.contains("READY MEMORY")));
     assert_eq!(probe.acknowledgments.lock().unwrap().as_slice(), &[true]);
 }
 
@@ -910,11 +902,9 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
         })
         .collect();
     assert_eq!(hidden.len(), 2);
-    assert!(
-        hidden
-            .iter()
-            .all(|data| data.custom_type == "test-memory" && !data.display)
-    );
+    assert!(hidden
+        .iter()
+        .all(|data| data.custom_type == "test-memory" && !data.display));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -952,11 +942,9 @@ async fn failed_prompt_context_append_is_not_sent_to_provider() {
     assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[false]);
     let contexts = provider.contexts.lock().unwrap();
     assert_eq!(contexts.len(), 1);
-    assert!(
-        !user_texts(&contexts[0])
-            .iter()
-            .any(|text| text.contains("MEMORY for:"))
-    );
+    assert!(!user_texts(&contexts[0])
+        .iter()
+        .any(|text| text.contains("MEMORY for:")));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -1005,11 +993,9 @@ async fn request_context_observes_midrun_compaction_once_with_bounded_context() 
     );
     let contexts = provider.contexts.lock().unwrap();
     assert_eq!(contexts.len(), 2);
-    assert!(
-        user_texts(&contexts[1])
-            .iter()
-            .all(|text| !text.contains("OLD "))
-    );
+    assert!(user_texts(&contexts[1])
+        .iter()
+        .all(|text| !text.contains("OLD ")));
     assert_eq!(
         events.len(),
         2,
@@ -1051,15 +1037,13 @@ async fn boundary_request_compacts_mid_run_and_pauses() {
         "paused after checkpoint"
     );
     let triggers = probe.seen_triggers.lock().unwrap().clone();
-    assert!(
-        triggers
-            .iter()
-            .any(
-                |(trigger, from_extension, summary)| *trigger == CompactionTrigger::MidRun
-                    && *from_extension
-                    && summary == "MIDRUN CHECKPOINT"
-            )
-    );
+    assert!(triggers
+        .iter()
+        .any(
+            |(trigger, from_extension, summary)| *trigger == CompactionTrigger::MidRun
+                && *from_extension
+                && summary == "MIDRUN CHECKPOINT"
+        ));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

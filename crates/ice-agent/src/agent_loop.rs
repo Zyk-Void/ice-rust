@@ -35,8 +35,8 @@ use ice_ai::types::{
     ToolResultMessage, ToolResultRole,
 };
 use ice_ai::validate_tool_arguments;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 /// The messages a single `run_agent_loop` invocation added (prompt + assistant
 /// + tool results + injected steering/follow-ups). Returned to the caller.

@@ -14,11 +14,12 @@ use crate::cognee::source_validation::{validate_source, SourceEvidence};
 
 const MAX_SOURCE_ENTRIES: usize = 256;
 
-pub(super) struct CurrentSources {
-    pub(super) operation: OperationContext,
-    pub(super) repository: Option<RepositoryIdentity>,
-    pub(super) leaf: Option<String>,
-    pub(super) messages: Vec<(String, AgentMessage)>,
+pub(in crate::cognee) struct CurrentSources {
+    pub(in crate::cognee) operation: OperationContext,
+    pub(in crate::cognee) repository: Option<RepositoryIdentity>,
+    pub(in crate::cognee) leaf: Option<String>,
+    pub(in crate::cognee) task_id: Option<String>,
+    pub(in crate::cognee) messages: Vec<(String, AgentMessage)>,
 }
 
 /// Only host code can construct this proof; a tool's JSON cannot claim a
@@ -28,12 +29,51 @@ pub(super) struct CandidateSourceProof {
     pub(super) evidence: SourceEvidence,
 }
 
+pub(in crate::cognee) fn validate_candidate_scope(
+    candidate: &Candidate,
+    sources: &CurrentSources,
+    evidence: &SourceEvidence,
+    require_scope: bool,
+) -> Result<(), &'static str> {
+    let Some(scope) = candidate.source_scope.as_ref() else {
+        return if require_scope || sources.task_id.is_some() {
+            Err("candidate task ownership is unknown")
+        } else {
+            Ok(())
+        };
+    };
+    if scope.session_id != sources.operation.host_session_id
+        || scope.task_id != sources.task_id
+        || scope.source_text_hash != evidence.source_text_hash
+        || !scope
+            .conversation_branch
+            .as_ref()
+            .is_some_and(|branch| branch.contains(&candidate.source.entry_id))
+    {
+        return Err("candidate source ownership changed");
+    }
+    let volatile = matches!(
+        candidate.category,
+        crate::cognee::candidates::Category::Outcome | crate::cognee::candidates::Category::Lesson
+    );
+    if volatile
+        && sources.repository.as_ref().is_none_or(|repository| {
+            scope.git_branch != repository.branch
+                || scope.git_revision != repository.revision
+                || scope.worktree_id.as_deref() != Some(repository.worktree_id.as_str())
+        })
+    {
+        return Err("candidate repository ownership changed");
+    }
+    Ok(())
+}
+
 impl CogneeRuntime {
-    pub(crate) async fn candidate_source_messages(
+    pub(in crate::cognee) async fn candidate_source_snapshot(
         &self,
         signal: &CancellationToken,
-    ) -> Result<Vec<(String, AgentMessage)>, String> {
-        Ok(self.current_candidate_sources(signal).await?.messages)
+    ) -> Result<CurrentSources, String> {
+        self.current_candidate_sources(signal).await
     }
 
     /// This is the single host application gate for both direct proposals and
@@ -43,7 +83,7 @@ impl CogneeRuntime {
         candidate: &Candidate,
         signal: &CancellationToken,
         require_pending_record: bool,
-    ) -> Result<bool, String> {
+    ) -> Result<Option<crate::cognee::propose::AdmissionOutcome>, String> {
         let stored = crate::cognee::candidates::read_candidates(&self.candidates_dir());
         match stored.iter().find(|stored| stored.id == candidate.id) {
             Some(current)
@@ -58,11 +98,65 @@ impl CogneeRuntime {
             _ => {}
         }
         let proof = self.validate_current_candidate(candidate, signal).await?;
+        validate_candidate_scope(
+            candidate,
+            &proof.sources,
+            &proof.evidence,
+            require_pending_record,
+        )
+        .map_err(str::to_owned)?;
         self.revalidate_candidate_proof(&proof, signal).await?;
         if signal.is_cancelled() {
             return Err("Candidate operation was cancelled".into());
         }
-        let accepted = crate::cognee::propose::accept_candidate(self, candidate)?;
+        let mut attributed = candidate.clone();
+        let volatile = matches!(
+            candidate.category,
+            crate::cognee::candidates::Category::Outcome
+                | crate::cognee::candidates::Category::Lesson
+        );
+        attributed.source_scope = Some(crate::cognee::candidates::SourceScope {
+            session_id: proof.sources.operation.host_session_id.clone(),
+            task_id: proof.sources.task_id.clone(),
+            conversation_branch: Some(
+                proof
+                    .sources
+                    .messages
+                    .iter()
+                    .map(|(id, _)| id.clone())
+                    .collect(),
+            ),
+            git_branch: if volatile {
+                proof
+                    .sources
+                    .repository
+                    .as_ref()
+                    .and_then(|repo| repo.branch.clone())
+            } else {
+                None
+            },
+            git_revision: if volatile {
+                proof
+                    .sources
+                    .repository
+                    .as_ref()
+                    .and_then(|repo| repo.revision.clone())
+            } else {
+                None
+            },
+            worktree_id: if volatile {
+                proof
+                    .sources
+                    .repository
+                    .as_ref()
+                    .map(|repo| repo.worktree_id.clone())
+            } else {
+                None
+            },
+            source_text_hash: proof.evidence.source_text_hash.clone(),
+        });
+        let outcome = crate::cognee::propose::accept_candidate(self, &attributed)?;
+        let accepted = outcome.is_some();
         self.observe_for("candidate_validation",if accepted {"succeeded"} else {"failed"},super::ObserveFields {
             request_id:Some(candidate.id.clone()),
             meta:super::meta(serde_json::json!({"outcomeVersion":2,"outcome":if accepted {"source_validated_and_queued"}else{"queue_full"},
@@ -73,7 +167,7 @@ impl CogneeRuntime {
         if accepted {
             self.invalidate_curated_memory();
         }
-        Ok(accepted)
+        Ok(outcome)
     }
 
     pub(super) async fn current_candidate_sources(
@@ -86,6 +180,7 @@ impl CogneeRuntime {
         self.ensure_loaded();
         let repository = self.refresh_repository_identity();
         let operation = self.operation_context();
+        let task_id = self.read_coordinator.lock().unwrap().task.current_id();
         {
             let state = self.state();
             if !Self::enabled(&state, self.offline)
@@ -130,20 +225,25 @@ impl CogneeRuntime {
             || signal.is_cancelled()
             || self.operation_context() != operation
             || self.refresh_repository_identity() != repository
+            || self.read_coordinator.lock().unwrap().task.current_id() != task_id
         {
             return Err("Candidate source scope changed; no memory was accepted".into());
         }
         let messages = entries
             .into_iter()
-            .filter_map(|entry| match entry {
-                Entry::Message(message) => Some((message.base.id, message.message)),
-                _ => None,
+            .filter_map(|entry| {
+                let id = entry.id().to_string();
+                match entry {
+                    Entry::Message(message) => Some((id, message.message)),
+                    _ => None,
+                }
             })
             .collect();
         Ok(CurrentSources {
             operation,
             repository,
             leaf,
+            task_id,
             messages,
         })
     }
@@ -211,6 +311,7 @@ impl CogneeRuntime {
         if leaf != proof.sources.leaf
             || signal.is_cancelled()
             || self.operation_context() != proof.sources.operation
+            || self.read_coordinator.lock().unwrap().task.current_id() != proof.sources.task_id
         {
             return Err("Candidate conversation changed before commitment".into());
         }

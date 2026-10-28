@@ -16,9 +16,9 @@ use crate::types::{
     BeforeToolCallResult, ShouldStopAfterTurnContext, ToolExecutionMode,
 };
 use futures::future::BoxFuture;
-use ice_ai::Model;
 use ice_ai::provider::{CacheRetention, SimpleStreamOptions};
 use ice_ai::types::{Message, ThinkingLevel};
+use ice_ai::Model;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;

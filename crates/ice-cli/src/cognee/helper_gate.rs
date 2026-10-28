@@ -46,6 +46,7 @@ impl Default for SharedHelperBudget {
     }
 }
 impl SharedHelperBudget {
+    #[cfg(test)]
     pub(crate) fn isolated() -> Arc<Self> {
         Arc::new(Self::default())
     }
@@ -332,14 +333,12 @@ mod tests {
             130 * RATE_WINDOW_MS,
             &HelperOutcome::Abstained(AbstainReason::Timeout),
         );
-        assert!(
-            g.cached("negative", 130 * RATE_WINDOW_MS + NEGATIVE_TTL_MS - 1)
-                .is_some()
-        );
-        assert!(
-            g.cached("negative", 130 * RATE_WINDOW_MS + NEGATIVE_TTL_MS)
-                .is_none()
-        );
+        assert!(g
+            .cached("negative", 130 * RATE_WINDOW_MS + NEGATIVE_TTL_MS - 1)
+            .is_some());
+        assert!(g
+            .cached("negative", 130 * RATE_WINDOW_MS + NEGATIVE_TTL_MS)
+            .is_none());
     }
     #[test]
     fn old_flight_cannot_clear_rebound_guard() {

@@ -62,8 +62,9 @@ pub fn is_complete_source_fact(source: &str, candidate: &str) -> bool {
         return false;
     }
     let same = |source: &str| {
-        normalize(source).trim_end_matches(['.', '!', '?'])
-            == fact.trim_end_matches(['.', '!', '?'])
+        normalize(source)
+            .trim_end_matches(['.', '!', '?'])
+            .eq_ignore_ascii_case(fact.trim_end_matches(['.', '!', '?']))
     };
     if same(source) {
         return true;
@@ -252,6 +253,8 @@ mod tests {
     fn candidate(text: &str) -> Candidate {
         Candidate {
             id: "candidate".into(),
+            admission_id: None,
+            source_scope: None,
             category: Category::Constraint,
             text: text.into(),
             source: Source {

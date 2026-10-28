@@ -22,8 +22,8 @@ use crate::queue::PendingMessageQueue;
 use crate::stream_fn::{get_default_stream_fn, StreamFn};
 use crate::types::{AgentContext, AgentState, QueueMode, ToolExecutionMode};
 
-use ice_ai::Model;
 use ice_ai::types::{AssistantMessage, UserContent, UserMessage};
+use ice_ai::Model;
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use tokio::sync::{broadcast, Notify};
