@@ -9,7 +9,7 @@ This is an authored synthetic corpus and production-runtime integration check, n
 From repository root (the report argument is absolute because Cargo tests run with the crate directory as cwd):
 
 ```sh
-ICE_MEMORY_REPLAY_REPORT="$PWD/docs/cognee-jev-memory/evidence/offline-replay.json" \
+ICERS_MEMORY_REPLAY_REPORT="$PWD/docs/cognee-jev-memory/evidence/offline-replay.json" \
   cargo test -p ice-cli chronological_offline_replay_report -- \
   --ignored --exact cognee::runtime::tests::chronological_offline_replay_report --nocapture
 cargo test -p ice-cli chronological_replay_regressions_temporal_boundary_zero_calls_and_denominators
@@ -36,6 +36,8 @@ Legacy behavior uses the actual legacy runtime policy, whose current recall gate
 The JSON is the measured artifact; it records exact code revision, dirty state, fixture hash, generation date, case counts/cohorts, latency scope, and supplied hardware metadata status. `worktree_dirty` is expected while this change is being developed; a lead rerun after integration should replace the report with the final tested revision. The runner stores timings from actual runtime calls and reports a separate warmup-excluded local fast-path benchmark (1,010 admissions; first 10 excluded) with cache/window/input details and asserts zero fake-transport calls. These values are machine-specific observations, not a hard CI performance promise.
 
 Positive traces are synthetic end-to-end runtime traces: prior fact timestamp precedes the request, active messages are empty, runtime delivers it before the decision boundary, and the frozen case expects reuse. This is synthetic asserted constraint reuse, not an observed user outcome or saved-time claim. Failure and zero/empty outcomes remain in counts. Boundary labels that are not represented by metadata fields in the fake service (e.g. malformed metadata, late task finish) are only labeled corpus cases, not proven runtime rejection semantics; consult focused production tests for those semantics.
+
+On-demand tool evidence is counted as retained/delivered evidence, separately from automatic injection and persistence: this runner does not persist tool results through a harness. Its historical-decision cohort must have zero required misses; other cohorts do not simulate explicit tool calls. Unmeasured wrong-scope, stale, contradiction, novelty and false-positive admission metrics are JSON `null`, not asserted zero. Writes are manual in every enabled arm, so this corpus cannot measure automatic admission. The future-evidence counter measures actual delivery, not a request made when no fact was available. Context overhead uses the production estimated-token function and is not an actual model tokenizer measurement.
 
 The local zero-request regression runs 1,000 ordinary event-policy request boundaries against the real runtime and asserts that the fake transport receives no calls. The temporal regression includes a future fact and the runner excludes it before constructing fake results. Nearest-rank quantile is tested. The result does not establish main-model task correctness, TTFT, end-to-end time benefit, JEV quality, JEV backend accepted-to-searchable lag, or rollout safety; those are explicitly unverified/unknown/off. No dollar/time-saved estimate is made.
 

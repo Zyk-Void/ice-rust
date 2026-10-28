@@ -23,6 +23,10 @@ struct ReplayCase {
     failure: Option<String>,
 }
 
+fn replay_contains_fact(text: &str, case: &ReplayCase) -> bool {
+    text.contains(&case.fact_id) || text.contains(&case.fact_text)
+}
+
 fn nearest_rank(values: &mut [u64], percentile: usize) -> u64 {
     if values.is_empty() {
         return 0;
@@ -34,9 +38,9 @@ fn nearest_rank(values: &mut [u64], percentile: usize) -> u64 {
 }
 
 #[tokio::test]
-#[ignore = "opt-in offline replay; set ICE_MEMORY_REPLAY_REPORT to write JSON"]
+#[ignore = "opt-in offline replay; set ICERS_MEMORY_REPLAY_REPORT to write JSON"]
 async fn chronological_offline_replay_report() {
-    let Some(report_path) = std::env::var_os("ICE_MEMORY_REPLAY_REPORT") else {
+    let Some(report_path) = std::env::var_os("ICERS_MEMORY_REPLAY_REPORT") else {
         return;
     };
     let corpus_bytes =
@@ -67,10 +71,9 @@ async fn chronological_offline_replay_report() {
         let mut unnecessary = 0usize;
         let mut required_miss = 0usize;
         let mut forbidden = 0usize;
-        let mut wrong_scope = 0usize;
-        let mut stale = 0usize;
-        let mut contradictory = 0usize;
-        let mut novelty_miss = 0usize;
+        let mut tool_results = 0usize;
+        let mut context_tokens = 0usize;
+        let mut future_evidence = 0usize;
         let mut latencies = Vec::new();
         let mut per_cohort = serde_json::Map::new();
         for case in &corpus.cases {
@@ -111,13 +114,19 @@ async fn chronological_offline_replay_report() {
             );
             let started = Instant::now();
             let mut packet = None;
+            let mut tool_evidence = None;
             if arm != "A_memory_off" {
                 // Legacy and event request boundary are real production calls. On-demand
                 // simulates an explicit user tool request only for explicit history cases.
                 if arm == "E_on_demand" && case.cohort == "historical_decision" {
                     let query = &case.prompt;
-                    let (_text, _details) =
+                    let (text, details) =
                         rt.search_for_tool(query, CancellationToken::new()).await;
+                    if details["count"].as_u64().unwrap_or(0) > 0
+                        && details.get("error").is_none()
+                    {
+                        tool_evidence = Some(text);
+                    }
                 } else {
                     packet = rt
                         .request_context(&request_event(&case.prompt, &[], &case.task, 0))
@@ -139,14 +148,21 @@ async fn chronological_offline_replay_report() {
             if eligible_response && sent > 0 {
                 retrieved += 1;
             }
-            let delivered = packet.as_ref().is_some_and(|p| {
-                p.text.contains(&case.fact_id) || p.text.contains(&case.fact_text)
+            let injected_fact = packet.as_ref().is_some_and(|p| {
+                replay_contains_fact(&p.text, case)
             });
-            if delivered {
-                retained += 1;
-                injected += 1;
-                persisted += 1;
-            }
+            let tool_fact = tool_evidence.as_ref().is_some_and(|text| {
+                replay_contains_fact(text, case)
+            });
+            let delivered = injected_fact || tool_fact;
+            retained += usize::from(delivered);
+            injected += usize::from(injected_fact);
+            persisted += usize::from(injected_fact);
+            tool_results += usize::from(tool_fact);
+            context_tokens += packet.as_ref().map_or(0, |p| {
+                super::super::text::estimate_tokens(&p.text)
+            });
+            future_evidence += usize::from(delivered && !available);
             let miss = case.expected_required.iter().any(|id| id == &case.fact_id) && !delivered;
             required_miss += usize::from(miss);
             if miss && available && case.failure.is_none() {
@@ -154,10 +170,6 @@ async fn chronological_offline_replay_report() {
             }
             failures += usize::from(case.failure.is_some() && sent > 0);
             unnecessary += usize::from(sent > 0 && case.expected_required.is_empty());
-            wrong_scope += 0;
-            stale += usize::from(!available && sent > 0);
-            contradictory += 0;
-            novelty_miss += 0;
             forbidden += usize::from(
                 case.expected_forbidden
                     .iter()
@@ -181,8 +193,12 @@ async fn chronological_offline_replay_report() {
         let p95 = nearest_rank(&mut latencies, 95);
         let max = latencies.iter().copied().max().unwrap_or(0);
         let min = latencies.iter().copied().min().unwrap_or(0);
-        arm_reports.insert(arm.into(),serde_json::json!({"cases":count,"by_cohort":per_cohort,"requested":requested,"skipped":skipped,"cached":0,"retrieved":retrieved,"retained":retained,"injected":injected,"persisted":persisted,"faux_used":0,"unknown":unknown,"late_error":failures,"wrong_scope":wrong_scope,"stale":stale,"contradictory":contradictory,"novelty_miss":novelty_miss,"required_critical_miss":required_miss,"forbidden_evidence":forbidden,"unnecessary_requests":unnecessary,"latency_us":{"n":count,"includes_failures":true,"warmup_excluded":false,"min":min,"p50_nearest_rank":p50,"p95_nearest_rank":p95,"max":max},"service_latency":"simulated by local fake transport; not remote"}));
+        arm_reports.insert(arm.into(),serde_json::json!({"cases":count,"by_cohort":per_cohort,"requested":requested,"skipped":skipped,"cached":0,"retrieved":retrieved,"retained":retained,"injected":injected,"persisted":persisted,"faux_used":0,"unknown":unknown,"late_error":failures,"wrong_scope":null,"stale":null,"contradictory":null,"novelty_miss":null,"false_positive_admission":null,"future_evidence_delivered":future_evidence,"tool_evidence_results":tool_results,"injected_context_tokens_estimated":context_tokens,"required_critical_miss":required_miss,"forbidden_evidence":forbidden,"unnecessary_requests":unnecessary,"latency_us":{"n":count,"includes_failures":true,"warmup_excluded":false,"min":min,"p50_nearest_rank":p50,"p95_nearest_rank":p95,"max":max},"service_latency":"simulated by local fake transport; not remote"}));
     }
+    assert!(arm_reports["E_on_demand"]["tool_evidence_results"].as_u64().unwrap() > 0);
+    assert_eq!(arm_reports["E_on_demand"]["persisted"], 0);
+    assert_eq!(arm_reports["E_on_demand"]["by_cohort"]["historical_decision"]["required_misses"], 0);
+    assert!(arm_reports.values().all(|arm| arm["future_evidence_delivered"] == 0));
     let dir = tempfile::tempdir().unwrap();
     let transport = Arc::new(FakeTransport::default());
     let fast_rt = runtime(
