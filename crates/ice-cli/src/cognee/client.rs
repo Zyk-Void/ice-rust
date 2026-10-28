@@ -1544,14 +1544,16 @@ pub(crate) mod tests {
 
     #[tokio::test]
     async fn reqwest_transport_does_not_follow_cross_origin_redirects_with_api_key() {
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
         use tokio::net::TcpListener;
 
         let redirect_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let redirect_address = redirect_listener.local_addr().unwrap();
         let sink_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let sink_address = sink_listener.local_addr().unwrap();
+        let sink_path = format!("/sink/{}", uuid::Uuid::new_v4().simple());
 
+        let redirect_sink_path = sink_path.clone();
         let redirect_server = tokio::spawn(async move {
             let (mut socket, _) = redirect_listener.accept().await.unwrap();
             let mut request = [0; 4096];
@@ -1559,18 +1561,23 @@ pub(crate) mod tests {
             socket
                 .write_all(
                     format!(
-                        "HTTP/1.1 302 Found\r\nLocation: http://{sink_address}/sink\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                        "HTTP/1.1 302 Found\r\nLocation: http://{sink_address}{redirect_sink_path}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
                     )
                     .as_bytes(),
                 )
                 .await
                 .unwrap();
         });
+        let expected_sink_line = format!("GET {sink_path} HTTP/1.1\r\n");
         let mut sink_server = tokio::spawn(async move {
-            let (mut socket, _) = sink_listener.accept().await.unwrap();
-            let mut request = [0; 4096];
-            let size = socket.read(&mut request).await.unwrap();
-            String::from_utf8_lossy(&request[..size]).into_owned()
+            loop {
+                let (socket, _) = sink_listener.accept().await?;
+                let mut request_line = String::new();
+                BufReader::new(socket).read_line(&mut request_line).await?;
+                if request_line == expected_sink_line {
+                    return Ok::<_, std::io::Error>(true);
+                }
+            }
         });
 
         let response = ReqwestTransport::new()
@@ -1586,11 +1593,16 @@ pub(crate) mod tests {
         assert_eq!(response.status, 302);
         redirect_server.await.unwrap();
         let sink_result = tokio::time::timeout(Duration::from_millis(200), &mut sink_server).await;
-        sink_server.abort();
-        assert!(
-            sink_result.is_err(),
-            "the cross-origin redirect target must not receive the API key request"
-        );
+        match sink_result {
+            Err(_) => {
+                sink_server.abort();
+                let _ = sink_server.await;
+            }
+            Ok(Ok(Ok(true))) => {
+                panic!("the cross-origin redirect target must not receive the API key request");
+            }
+            other => panic!("redirect sink failed before verification: {other:?}"),
+        }
     }
 
     #[tokio::test]

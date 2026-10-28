@@ -5417,7 +5417,7 @@ mod tests {
         let rt = runtime(
             dir.path(),
             &transport,
-            Some(json!({"writePolicy":"selective"})),
+            Some(json!({"writePolicy":"selective", "helperEnabled":false})),
             true,
         );
         for _ in 0..100 {
@@ -5435,7 +5435,7 @@ mod tests {
         let rt = runtime(
             dir.path(),
             &transport,
-            Some(json!({"writePolicy":"selective"})),
+            Some(json!({"writePolicy":"selective", "helperEnabled":false})),
             false,
         );
         let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
@@ -6763,7 +6763,12 @@ mod tests {
     async fn doctor_reports_unverified_contract_without_endpoint_credentials() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
-        let rt = runtime(dir.path(), &transport, Some(json!({})), true);
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            true,
+        );
         rt.ensure_loaded();
         let mut client = rt.state().client.clone().unwrap();
         client.config.api_key = Some("private-api-key".into());
@@ -6780,7 +6785,7 @@ mod tests {
         let mut report = rt.collect_doctor().await;
         report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
         let doctor = report.doctor_line();
-        assert!(doctor.contains("helper=off requests=0 abstains=0 skips=0"));
+        assert!(doctor.contains("helper=unconfigured requests=0 abstains=0 skips=0"));
         assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified;"));
         assert!(doctor.contains("sends query, topK, onlyContext, scope, sessionId, datasets"));
         assert!(doctor.contains("nativeRemember=POST:/api/v1/remember (multipart"));

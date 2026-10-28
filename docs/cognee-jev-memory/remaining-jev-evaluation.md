@@ -2,11 +2,11 @@
 
 - Date: 2026-10-28
 - Status: **BLOCKED / not run**. This document prepares a reproducible protocol; it is not a benchmark result.
-- No real JEV request, endpoint contact, model call, independent label, or new A/B/C/D/E result was produced. The helper remains disabled by default. Existing synthetic offline results remain synthetic.
+- No real JEV request, endpoint contact, model call, independent label, or new A/B/C/D/E result was produced. The helper setting is enabled by default in repository configuration, but no endpoint/model is inferred or auto-configured; missing binding safely prevents dispatch. Existing synthetic offline results remain synthetic.
 
 ## What is already locally established
 
-The helper constructs a bounded typed `typesafe::Request`, wraps a bound `DecisionClient` in `ClientDecider`, enforces one deadline/cancellation path, and validates exact response question IDs/types before returning judgments. `DecisionClient` fixes the TypeSafe System One endpoint path, disables redirects, avoids retries, bounds response data and checks cancellation/deadline. Provider configuration comes only from `models.json` `decisionProviders`; it does not fall back to a chat provider. The current tests had exercised helper behavior through `FakeDecider` and the HTTP client independently, but did not join these layers.
+The helper constructs a bounded typed `typesafe::Request`, wraps a bound `DecisionClient` in `ClientDecider`, enforces one deadline/cancellation path, and validates exact response question IDs/types before returning judgments. `DecisionClient` fixes the TypeSafe System One endpoint path, disables redirects, avoids retries, bounds response data and checks cancellation/deadline. Provider configuration comes only from `models.json` `decisionProviders`; it does not fall back to a chat provider. The local tests exercise helper behavior through `FakeDecider` and also join the layers with the real typed client against a synthetic loopback fixture.
 
 This change adds `helper_judges_through_the_real_typesafe_http_client`: `Helper::judge` uses the actual `ClientDecider(DecisionClient)` path against a one-shot loopback TCP fixture, returning synthetic typed answers. It verifies TypeSafe path, bearer request routing and decoded judgments. It has no external network, provider credential, JEV call or effectiveness score. It is integration coverage only; D remains **not executed**.
 
@@ -27,7 +27,7 @@ Pair the same frozen task, starting repository snapshot, initial context, primar
 
 - **A — off:** Cognee disabled; current session/repository/tools only.
 - **B — legacy:** current production legacy recall/capture policy, with all inferred writes confined to the isolated authorized dataset.
-- **C — selective, helper off:** event/local selective behavior, helper/JEV explicitly off, manual user writes only.
+- **C — selective, helper off:** event/local selective behavior, helper/JEV explicitly off (including explicit `helperEnabled: false`), manual user writes only.
 - **D — selective + JEV:** identical to C except the configured TypeSafe JEV judges eligible candidates. This arm is forbidden until explicitly authorized and the isolated endpoint/model are confirmed.
 - **E — on demand:** automatic retrieval off; the same explicit search tool is available to the primary model under the same permission policy.
 
@@ -52,7 +52,7 @@ These are prospective gates, not results or guarantees:
 
 - Required pre-run control gates: 100% of critical source-grounded constraints retained in A–E where the arm is expected to support them; zero known cross-project, forbidden-skill, stale-revision or superseded-critical evidence delivered; zero selective-policy bypass; zero ambiguous write automatically replayed; zero ordinary self-contained Cognee/JEV calls in C; D calls only for eligible candidate batches.
 - D can advance only if the held-out paired D-minus-C task-correctness difference has a 95% cluster-bootstrap lower bound above zero **and** the predeclared quality/effort composite (correctness primary; total task time and repeated investigation secondary) improves without violating any control gate. This is a conservative engineering screen, not a population guarantee. Report D vs C directly; D vs B is not evidence of incremental JEV benefit.
-- Keep D off if the quality interval includes no benefit, critical harms occur, the sample is underpowered/unstable, labels are incomplete, costs/latency exceed the authorized budget, or endpoint/version changes. Do not continue until a favorable threshold is reached; freeze the planned sample size and maximum duration before unblinding. A new look or interim analysis requires a predeclared sequential plan.
+- Do not dispatch D-arm calls unless an explicit provider/model binding and the separate endpoint, data, credential, request, and billing authorizations below are present. The repository default-on setting is not authorization to contact a service. Keep D off if the quality interval includes no benefit, critical harms occur, the sample is underpowered/unstable, labels are incomplete, costs/latency exceed the authorized budget, or endpoint/version changes. Do not continue until a favorable threshold is reached; freeze the planned sample size and maximum duration before unblinding. A new look or interim analysis requires a predeclared sequential plan.
 - Stop immediately on unexpected data destination, unauthorized inference, wrong-project/forbidden evidence, credential leakage, service mutation outside isolated data, excess budget, unexpected foreground blocking, uncontrolled job growth, repeated timeouts, ambiguous duplicate writes or any rollback failure. Preserve raw logs securely, stop new requests, disable helper and retain uncertainty.
 
 The thresholds above are initial safety/engineering acceptance targets and must be approved by the owner and independent evaluator before touching held-out data. They do not imply statistical power or a universal quality claim.
@@ -69,4 +69,4 @@ The owner must provide and approve all of the following in writing; a missing/un
 6. Explicit permission to issue D-arm inference on the named held-out data and whether a separately isolated Cognee service is permitted. JEV/helper and every incidental model must be listed. Current authorization to use `cx/gpt-6-luna` does **not** authorize live JEV.
 7. Named independent labelers/adjudicator, conflict handling, access controls, retention/deletion for raw traces, and who may see held-out labels.
 
-Until these are supplied and reviewed, use only offline fixtures and local fake HTTP integration tests. Do not contact a guessed or real endpoint; do not execute D; keep helper default off.
+Until these are supplied and reviewed, use only offline fixtures and local fake HTTP integration tests. Do not contact a guessed or real endpoint or execute D. The helper setting may remain enabled, but without its explicit binding and separately authorized eligible work it must produce no remote request.

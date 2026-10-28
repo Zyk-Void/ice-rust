@@ -920,8 +920,12 @@ mod tests {
     }
 
     #[test]
-    fn binding_off_does_not_construct_a_client() {
-        let mut config = CogneeConfig::default();
+    fn explicit_helper_off_does_not_construct_a_client() {
+        let mut config = CogneeConfig {
+            helper_enabled: false,
+            write_policy: super::super::config::WritePolicy::Selective,
+            ..CogneeConfig::default()
+        };
         let calls = AtomicUsize::new(0);
         let result = Helper::bind_using(&config, |_| {
             calls.fetch_add(1, Ordering::SeqCst);
@@ -936,8 +940,43 @@ mod tests {
     }
 
     #[test]
-    fn bind_off_returns_none_without_constructing_client() {
-        assert!(Helper::bind(&CogneeConfig::default()).unwrap().is_none());
+    fn enabled_default_with_missing_binding_is_nonfatal_and_does_not_construct_a_client() {
+        let config = CogneeConfig {
+            write_policy: super::super::config::WritePolicy::Selective,
+            ..CogneeConfig::default()
+        };
+        assert!(config.helper_enabled);
+        let calls = AtomicUsize::new(0);
+        let result = Helper::bind_using(&config, |_| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Err(DecisionConfigError::UnknownProvider(
+                "must-not-be-read".into(),
+            ))
+        })
+        .unwrap();
+        assert!(result.is_none());
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn manual_mode_suppresses_enabled_helper_binding() {
+        let config = CogneeConfig {
+            write_policy: super::super::config::WritePolicy::Manual,
+            helper_provider: Some("decision-provider".into()),
+            helper_model: Some("test/model".into()),
+            ..CogneeConfig::default()
+        };
+        assert!(config.helper_enabled);
+        let calls = AtomicUsize::new(0);
+        let result = Helper::bind_using(&config, |_| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Err(DecisionConfigError::UnknownProvider(
+                "must-not-be-read".into(),
+            ))
+        })
+        .unwrap();
+        assert!(result.is_none());
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
     }
 
     #[test]

@@ -47,6 +47,6 @@ The following are historical baseline findings, not claims about current source.
 
 ## Verification policy
 
-Use synthetic/faux transports and isolated temporary agent directories. Any live inference would require the exact authorized `cx/gpt-6-luna`; JEV itself must not be called under that restriction. Implement and verify its integration offline, keep it off by default, and report its quality/latency gate as unverified rather than manufacturing measurements. No writes to the real agent directory, no dataset deletion, no protected-branch merge, no release or tag.
+Use synthetic/faux transports and isolated temporary agent directories. Any live inference would require separate authorization for the exact provider/model; do not contact JEV without explicit endpoint, data, credential, and request authorization. Implement and verify integration offline, keep effectiveness unverified rather than manufacturing measurements. The current repository helper flag defaults on, but no provider/model is inferred and missing binding prevents dispatch. No writes to the real agent directory, no dataset deletion, no protected-branch merge, no release or tag.
 
 See `completion-evidence-matrix.md` for frozen requirements and `completion-remaining-fixes.md` for execution order. Final readiness requires code wiring, failure-path tests, a reviewable committed tree, and explicit separation of implementation correctness from production effectiveness.

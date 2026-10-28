@@ -188,11 +188,11 @@ For each candidate batch, record call reason, number of candidates/questions, re
 
 Threshold tuning must consider false-negative cost and false-positive pollution separately. A correction/constraint may need a different gate from a suggested optimization. Do not force every borderline candidate into save or discard; bounded pending/abstain is an acceptable result.
 
-Compare D directly with C. If JEV does not improve the held-out quality/effort trade-off, leave it off. A cheaper model bill alone is not a useful metric if the extra dependency slows tasks or loses relevant facts.
+Compare D directly with C. If JEV does not improve the held-out quality/effort trade-off, disable helper dispatch explicitly. A cheaper model bill alone is not a useful metric if the extra dependency slows tasks or loses relevant facts.
 
 ## 8. Proposed engineering release gates
 
-These are prospective screening targets, not measured results, power guarantees, or post-hoc stopping rules. Approve them and freeze the sample size before held-out access. D may be considered only if its paired improvement over C has a 95% cluster-bootstrap lower bound above zero on a predeclared primary correctness outcome, with no safety/control gate violation; report uncertainty when the set cannot support a stable interval. Do not promote D on cost alone. Stop immediately for wrong-project/forbidden/stale critical evidence, selective-policy bypass, ambiguous-write replay, unauthorized inference/data destination, budget breach, credential exposure, unexpected foreground blocking, uncontrolled jobs, or rollback failure. A null/unstable interval, missing labels, or incomplete denominators means retain helper-off, not continue until a win.
+These are prospective screening targets, not measured results, power guarantees, or post-hoc stopping rules. Approve them and freeze the sample size before held-out access. D may be considered only if its paired improvement over C has a 95% cluster-bootstrap lower bound above zero on a predeclared primary correctness outcome, with no safety/control gate violation; report uncertainty when the set cannot support a stable interval. Do not promote D on cost alone. Stop immediately for wrong-project/forbidden/stale critical evidence, selective-policy bypass, ambiguous-write replay, unauthorized inference/data destination, budget breach, credential exposure, unexpected foreground blocking, uncontrolled jobs, or rollback failure. A null/unstable interval, missing labels, or incomplete denominators means retain helper dispatch explicitly disabled, not continue until a win.
 
 | Gate | Initial criterion |
 |---|---|

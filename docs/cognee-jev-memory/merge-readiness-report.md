@@ -1,12 +1,12 @@
 # Cognee + JEV follow-up merge readiness
 
 Date: 2026-10-28. Branch: `fix/cognee-remaining-acceptance`.
-Verified source commit: `6276ab001aaef45b52576650bd21000e2d48cf91`.
+Prior verified source commit: `6276ab001aaef45b52576650bd21000e2d48cf91`. The subsequent default-on source and redirect-fixture correction were verified together in this worktree before committing; the commit containing this report identifies that tested source tree.
 Base closeout: `0658512a7221daceb62e98e5d5c4a689486252d3`; original stack tip: `b87d10c073af0dffaed1f3cf4fd54ce641fb27a7`.
 
 ## Verdict
 
-Offline changes are ready for human review, not full production acceptance. All final offline gates passed in the follow-up worktree. Safe for an approved isolated JEV-off canary only after the service/inference and connected-writer boundaries are resolved. Production rollout is not verified. JEV remains disabled by default. No production runtime behavior changed in this follow-up: code additions are regressions and test-only wiring.
+Offline changes are ready for human review, not full production acceptance. Warning-denied offline gates pass with a serial workspace test execution. The redirect security test continues to assert that a unique cross-origin redirect target receives no request; its loopback fixture now matches only the unique target path, avoiding unrelated traffic on localhost. Production rollout is not verified. The helper setting defaults on for eligible selective candidates, but no provider/model is inferred or auto-configured; missing binding safely prevents dispatch. This default is not authorization to contact a service, and effectiveness remains unverified. No active production settings were changed.
 
 The original 25-task denominator and statuses remain unchanged: 21 VERIFIED, 2 PARTIAL (M0.2/M4.2), 2 BLOCKED (M5.4/M7.3), **88.0% = (21 + 2 × 0.5) / 25 × 100**. Additional tests do not substitute for deployed evidence.
 
@@ -15,7 +15,7 @@ The original 25-task denominator and statuses remain unchanged: 21 VERIFIED, 2 P
 - [Native/MCP contracts](remaining-contract-evidence.md): exact native request fixtures, terminal errors, absent provenance/job handles. Deployed wrapper and actual MCP schemas remain unverified.
 - [Writer boundary](remaining-writer-evidence.md): native enforcement versus MCP host approval and uncontrolled third-party behavior; stale-source regression.
 - [JEV evaluation](remaining-jev-evaluation.md): real typed DecisionClient exercised through synthetic loopback HTTP; paired A/B/C/D/E protocol. No D-arm utility result or independently labeled user dataset was fabricated.
-- [Isolated rollback](remaining-canary-rollback.md): executed historical/current reader comparison, synthetic backup/restore hashes and current-runtime uncertainty preservation. Historical warmup reader can replay ambiguous records; use the compatible current binary with automatic writes and JEV disabled.
+- [Isolated rollback](remaining-canary-rollback.md): executed historical/current reader comparison, synthetic backup/restore hashes and current-runtime uncertainty preservation. Historical warmup reader can replay ambiguous records; use the compatible current binary with helper binding absent or explicitly disabled until the intended isolated service and policy are authorized.
 
 ## Final verification
 
@@ -25,15 +25,19 @@ Commands ran from `/home/mewtwo/Zykairotis/ice-rust/.worktrees/cognee-remaining-
 |---|---:|
 | `cargo fmt --all -- --check` | 0 |
 | `cargo check --workspace --all-targets --locked` | 0 |
-| `cargo test --workspace --locked --no-fail-fast` | 0 |
+| `cargo test --workspace --locked --no-fail-fast -- --test-threads=1` | 0 |
 | `sh scripts/sync-embedded-docs.sh` | 0 |
 | `git diff --exit-code -- crates/ice-cli/embedded-docs` | 0 |
 | `python3 scripts/test_prebuilt_release.py` | 0 |
 | `git diff --check` | 0 |
 
-Full output and exits are retained in `target/cognee-remaining-validation/verified-*.log` and `verified-gates.json`. Workspace totals: **3,439 passed, 0 failed, 9 ignored** across 88 unfiltered summaries; four nested filtered subprocess tests also passed (3,443 passes across all 92 summaries). Do not compare the latter directly with unique test counts.
+The initially parallel default-on workspace run is retained as historical diagnostic evidence in `target/cognee-remaining-validation/default-on-verified-workspace.log` (exit 101). It reproduced a redirect-fixture false positive: the sink accepted unrelated localhost requests, including unrelated runtime/telemetry traffic on `/`, rather than requiring the redirect's unique target path. The fixture was corrected to observe that unique target only, with the API-key redirect assertion preserved and a bounded wait/abort for the sink task. The focused redirect test passed 40/40 serial repetitions. The final serial workspace run is `target/cognee-remaining-validation/final-workspace-tests.log` (exit 0, 3,444 passed, 0 failed, 9 ignored across 92 summaries); final formatter, warning-denied check, embedded-doc sync/diff, prebuilt-release, and diff-check logs use the `gated-*` prefix and all exited 0. A parallel rerun also failed in existing process-environment-mutating tests and cascaded through poisoned mutexes; rerunning the suite serially avoids that process-global test interference. Historical `verified-*.log`, `verified-gates.json`, and their 3,439-pass totals were not rewritten. Earlier worker `final-*` logs that targeted the main checkout remain rejected evidence for this branch.
 
-An earlier worker's `final-*` gate logs were found to target the main checkout, despite residing under this worktree's target directory. Those results (3,127 unfiltered passes) are rejected as acceptance evidence for this branch. The orchestrator reran every gate with explicit working-directory binding. No failure was suppressed. Subsequent documentation-only commits do not alter tested source or build configuration.
+### Orchestrator final rerun
+
+After review, the sink fixture was additionally made fail closed on task/I/O errors rather than accepting them as evidence that no redirect occurred. All gates above were rerun on that exact source; complete logs are `target/cognee-remaining-validation/default-final-*.log`, with commands, working directory and exit codes in `default-final-gates.json`. Every exit was 0. Counts: **3,440 passed, 0 failed, 9 ignored** across 88 unfiltered summaries, plus four passing nested subprocess checks (3,444 passes across all 92 summaries). Tests were serialized; parallel execution is not represented as passing. The historical `evidence/closeout-verification.json` remains unchanged.
+
+The user explicitly authorized paid JEV testing and enabled-by-default behavior. The remaining live-test input is a selected JEV model plus secure credential delivery, not a blanket prohibition on JEV. Local installation source and the configured MCP launcher have now been located; final compatibility and complete writer-route acceptance remain open. No real JEV request has been executed.
 
 ## Git and authorization boundaries
 

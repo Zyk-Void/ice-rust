@@ -221,7 +221,7 @@ impl Default for CogneeConfig {
             write_policy: WritePolicy::Legacy,
             helper_provider: None,
             helper_model: None,
-            helper_enabled: false,
+            helper_enabled: true,
             auto_remember: AutoRememberMode::Compaction,
             capture_session: true,
             capture_tools: true,
@@ -467,7 +467,9 @@ fn raw_string(value: &Option<Raw<'_>>) -> Option<String> {
 
 /// `resolveIceCogneeConfig`: environment over stored values over defaults.
 /// Every non-null object (arrays included) counts as stored config. Invalid
-/// supplied values are errors, not silent defaults.
+/// supplied values are errors, not silent defaults. Configurations that omit
+/// `helperEnabled` inherit the enabled-by-default setting; explicit `false`
+/// remains an opt-out.
 pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeConfig, String> {
     let empty = Map::new();
     let source = match stored {
@@ -1074,10 +1076,13 @@ mod tests {
     }
 
     #[test]
-    fn defaults_match_ice() {
+    fn defaults_enable_helper_flag_without_binding() {
         let config = resolve_config(None, &env(&[])).unwrap();
         assert_eq!(config, CogneeConfig::default());
         assert!(config.enabled);
+        assert!(config.helper_enabled);
+        assert_eq!(config.helper_provider, None);
+        assert_eq!(config.helper_model, None);
         assert_eq!(config.base_url, "http://127.0.0.1:8211");
         assert_eq!(config.compaction_summary_mode, CompactionSummaryMode::Auto);
         assert!(!config.checkpoint_recall);
@@ -1120,9 +1125,15 @@ mod tests {
             resolve_config(Some(&json!({"unknownLegacyKey": true})), &env(&[])).unwrap(),
             CogneeConfig::default()
         );
-        let old = resolve_config(Some(&json!({"helperProvider":"typesafe"})), &env(&[])).unwrap();
-        assert!(!old.helper_enabled);
-        assert_eq!(old.helper_model, None);
+        let legacy =
+            resolve_config(Some(&json!({"helperProvider":"typesafe"})), &env(&[])).unwrap();
+        assert!(legacy.helper_enabled);
+        assert_eq!(legacy.helper_model, None);
+        let explicitly_disabled =
+            resolve_config(Some(&json!({"helperEnabled": false})), &env(&[])).unwrap();
+        assert!(!explicitly_disabled.helper_enabled);
+        let env_disabled = resolve_config(None, &env(&[(ENV_HELPER_ENABLED, "false")])).unwrap();
+        assert!(!env_disabled.helper_enabled);
 
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("config.json");

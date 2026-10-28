@@ -30,7 +30,7 @@ The existing explicit uncertain permanent-queue flush is an operator decision th
 
 Use a new temporary `ICERS_CODING_AGENT_DIR`, a dedicated project/profile and a separate test dataset or confirmed inference-disabled adapter. Do not point a test process at the user's actual agent directory or historical datasets. Confirm every downstream model before making a service request; the current authorization allows only `cx/gpt-6-luna`, not a real JEV model.
 
-Begin with helper dispatch off and manual writes. Confirm the resident capability inventory is unprobed rather than assuming it is connected. Exercise self-contained turns, explicit history, context compaction, mode changes and shutdown with observable request counts. Check accepted versus searchable separately. The committed fake-transport tests exercise these mechanics, but are not a representative user-effectiveness study.
+Begin with manual writes, which suppress helper dispatch regardless of the saved enable flag. Confirm the resident capability inventory is unprobed rather than assuming it is connected. Exercise self-contained turns, explicit history, context compaction, mode changes and shutdown with observable request counts. Check accepted versus searchable separately. The committed fake-transport tests exercise these mechanics, but are not a representative user-effectiveness study.
 
 For an authorized real canary, compare actual task correctness and repeated investigations against memory-off and on-demand baselines. Measure full time to first token and total task latency, including failed or unconsumed background work. Do not promote JEV based on the synthetic replay; its D arm was not executed.
 
@@ -38,7 +38,7 @@ For an authorized real canary, compare actual task correctness and repeated inve
 
 1. Stop automatic/helper work and all processes sharing the test storage. Preserve logs and effective configuration.
 2. Back up the entire relevant memory state together: configuration, pending queue, warmup files, candidate records, admission receipts, completion markers, suppression history and accepted-job records. Do not delete old datasets.
-3. Prefer a mode rollback on the same compatible binary: helper disabled plus manual, or Cognee off. Verify that optional work stops and explicit tools retain their documented behavior.
+3. Prefer a mode rollback on the same compatible binary: manual mode (which suppresses helper dispatch), explicit helper disabled plus selective, or Cognee off. Verify that optional work stops and explicit tools retain their documented behavior.
 4. **Do not point an older binary directly at the new warmup queue.** Old code may ignore the new state field and replay an Uncertain/InFlight record. A binary downgrade requires a separately reviewed isolated copy or compatible restoration, not merely replacing the executable.
 5. Keep ambiguous outcomes ambiguous until the backend or operator reconciles them. Do not claim exactly-once delivery without a backend idempotency contract.
 

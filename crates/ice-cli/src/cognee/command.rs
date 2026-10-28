@@ -416,7 +416,7 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
         SettingRow::new(
             "cognee.helperEnabled",
             "Decision helper",
-            "Optional selective-write judgment; requires explicit provider/model, at most 8 candidates, 1.5 s background deadline, and shared quotas; no routine prompt call",
+            "Enabled by default for eligible selective-write candidates only; requires explicit provider/model, at most 8 candidates, 1.5 s background deadline, and shared quotas; no routine prompt call. Manual/canary modes suppress dispatch.",
             on_off(config.helper_enabled),
             &["off", "on"],
         ),
@@ -595,6 +595,10 @@ mod tests {
         assert_eq!(rows[1].key, "cognee.memoryMode");
         assert_eq!(rows[1].current, "legacy");
         assert_eq!(rows[1].values, ["legacy", "manual", "canary", "selective"]);
+        assert_eq!(rows[2].key, "cognee.helperEnabled");
+        assert_eq!(rows[2].current, "on");
+        assert!(rows[2].description.contains("Enabled by default"));
+        assert!(rows[2].description.contains("explicit provider/model"));
         assert_eq!(
             settings_rows(&CogneeConfig {
                 read_policy: ReadPolicy::Event,

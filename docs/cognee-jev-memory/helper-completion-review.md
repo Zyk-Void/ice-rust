@@ -2,7 +2,7 @@
 
 ## Implemented controls
 
-- Helper activation remains opt-in and defaults off. Persisted/environment provider and model binding remain unchanged; unsupported protocols and missing bindings are nonfatal and do not fall back to chat or network retries.
+- The helper enable flag defaults on, including for older configs that omit `helperEnabled`; explicit saved/environment `false` remains off. This does not auto-configure service access: provider/model binding stays explicit, and unsupported protocols or missing bindings remain nonfatal without chat fallback or network retries. Manual/canary write policies suppress helper dispatch.
 - Production admission uses one process-wide `SharedHelperBudget`, keyed by a SHA-256 digest of the configured provider identity (never credentials). Defaults are process concurrency 2, provider concurrency 1, 6 requests/provider/minute, 12 requests/process/minute, with the existing per-session 2/minute gate. All admission is try-only. Provider history is capped at 32 identities; eviction only removes identities with no active permit and no rolling-window requests. Canceled/panicked flights release owned permits by RAII. Session/rebind cancellation does not reset budget history.
 - The in-memory batch cache is capped at 128 FIFO entries, with 10-minute judged and 1-minute abstention TTLs. Cache identity includes provider/model, active dataset and context generation, sorted candidate ID/text hash/source entry/category/scope/branch/supersedes/expiry. Cached verdicts do not consume quota. Source/config/task changes naturally produce new keys.
 - Helper work is candidate-revision driven. Successful proposal-tool completion marks a revision; run-settled events only dispatch an unseen revision and perform no candidate-directory scan on unchanged revisions. Reads are capped at 32 records and source context comes only from bounded current-branch excerpts named by candidates, never the latest prompt. Outbound candidate/context text passes the existing redactor.
@@ -18,7 +18,7 @@
 ## Remaining independent gates
 
 - Fresh shared-acceptance validation is integrated in `440edddc` and `6297a800`. The helper branch's remaining helper/config differences are formatting or test-only visibility; its older runtime does not include later receipt and source safety, so it must not replace the integrated runtime.
-- JEV quality/effectiveness and latency remain **UNVERIFIED**. No quality or performance claim is made; default activation remains off.
+- JEV quality/effectiveness and latency remain **UNVERIFIED**. No quality or performance claim is made; the enabled-by-default flag is not endpoint authorization and missing binding results in no dispatch.
 
 ## Worktree note
 

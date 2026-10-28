@@ -11,7 +11,7 @@ The test fixture `runtime()` uses `tempfile::tempdir()` as its agent directory, 
 
 | Exercise | Existing proof |
 |---|---|
-| Off / helper default off / zero service calls | `helper::tests::binding_off_does_not_construct_a_client`; `runtime::tests::helper_off_leaves_pending_and_prompt_hook_never_judges`; `offline_replay_tests::chronological_replay_regressions_temporal_boundary_zero_calls_and_denominators` (1,000 ordinary event turns, no fake requests) |
+| Explicit helper-off / no binding / manual-mode suppression | `helper::tests::explicit_helper_off_does_not_construct_a_client`; `helper::tests::enabled_default_with_missing_binding_is_nonfatal_and_does_not_construct_a_client`; `helper::tests::manual_mode_suppresses_enabled_helper_binding`; `runtime::tests::helper_off_leaves_pending_and_prompt_hook_never_judges`; `offline_replay_tests::chronological_replay_regressions_temporal_boundary_zero_calls_and_denominators` (1,000 ordinary event turns, no fake requests) |
 | Manual and event reads | `runtime::tests::on_demand_read_policy_never_searches_automatically`; `runtime::tests::event_read_policy_searches_only_for_history_requests`; `runtime::tests::event_recall_injects_only_new_evidence_and_reinjects_after_compaction` |
 | Self-contained prompts | `request_tests::request_boundary_plain_prompts_and_unknown_skill_origin_have_no_network_work`; chronological synthetic self-contained cohort |
 | Explicit history, same-task continuation and evidence acknowledgement | `request_tests::request_boundary_uses_raw_intent_for_explicit_history_and_shared_small_model_budget`; `request_boundary_prefetch_is_same_task_and_consumed_only_after_ack`; `request_boundary_cancellation_keeps_evidence_unconsumed` |
@@ -25,7 +25,7 @@ These are unit/integration tests with synthetic profiles and do not prove live u
 
 ## Isolated profile setup and diagnostics
 
-The following commands are examples for a new disposable local drill. Choose a new absolute `DRILL_ROOT` outside any user profile, do not reuse or export an active `~/.icers` path, and do not put real credentials or user data in it. These commands configure no Cognee endpoint and make no remote request; the default helper remains off. Run a drill binary only after verifying its build revision and environment. Use a disposable project copy too, not the working tree containing user work.
+The following commands are examples for a new disposable local drill. Choose a new absolute `DRILL_ROOT` outside any user profile, do not reuse or export an active `~/.icers` path, and do not put real credentials or user data in it. These commands configure no decision provider/model and make no JEV request; the helper setting may default on, but missing explicit binding prevents dispatch. Run a drill binary only after verifying its build revision and environment. Use a disposable project copy too, not the working tree containing user work.
 
 ```sh
 set -eu
@@ -47,7 +47,7 @@ printf 'agent_dir_override=%s\n' "$ICERS_CODING_AGENT_DIR"
 find "$ICERS_CODING_AGENT_DIR" -maxdepth 3 -type f -printf '%P\n' | sort
 ```
 
-At startup and after each mode transition, inspect the CLI's read-only `/cognee status`, `/cognee mode status`, `/cognee helper status`, and `/cognee doctor` output. Redact endpoint credentials before retaining logs. The doctor reports capability inventory as unprobed/last observed; do not treat that as a live service check. Assert helper enabled is false and mode is the intended manual/canary setting before ordinary prompts. Check the fake transport/request counter or an inference-disabled adapter; do not infer zero requests from absence of a UI badge.
+At startup and after each mode transition, inspect the CLI's read-only `/cognee status`, `/cognee mode status`, `/cognee helper status`, and `/cognee doctor` output. Redact endpoint credentials before retaining logs. The doctor reports capability inventory as unprobed/last observed; do not treat that as a live service check. Assert the effective mode is the intended manual/canary setting and that helper dispatch is suppressed (through explicit helper-off, absent binding, or manual/canary policy); do not infer safety from the saved enable flag alone. Check the fake transport/request counter or an inference-disabled adapter; do not infer zero requests from absence of a UI badge.
 
 To run the temporary-profile behavior regressions with isolated process state and complete logs, from repository root:
 
