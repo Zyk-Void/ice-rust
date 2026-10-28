@@ -524,19 +524,37 @@ fn load_settings_file(path: &Path) -> Result<Settings, ConfigError> {
 }
 
 /// Resolve a configured path relative to its settings owner. Absolute paths
-/// are preserved; empty entries are ignored.
+/// are preserved, a leading `~` or `~/` expands to the home directory, and
+/// empty entries are ignored. A `~` entry is dropped when no home directory
+/// can be resolved rather than turned into a bogus `<base>/~/...` path.
 pub fn resolve_configured_paths(base: &Path, values: &[String]) -> Vec<PathBuf> {
+    resolve_configured_paths_with_home(base, values, dirs::home_dir().as_deref())
+}
+
+fn resolve_configured_paths_with_home(
+    base: &Path,
+    values: &[String],
+    home: Option<&Path>,
+) -> Vec<PathBuf> {
     values
         .iter()
         .map(|value| value.trim())
         .filter(|value| !value.is_empty())
-        .map(|value| {
+        .filter_map(|value| {
+            let tilde_rest = if value == "~" {
+                Some("")
+            } else {
+                value.strip_prefix("~/")
+            };
+            if let Some(rest) = tilde_rest {
+                return home.map(|home| home.join(rest));
+            }
             let path = PathBuf::from(value);
-            if path.is_absolute() {
+            Some(if path.is_absolute() {
                 path
             } else {
                 base.join(path)
-            }
+            })
         })
         .collect()
 }
@@ -788,6 +806,41 @@ fn read_fallback_settings_value(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn configured_paths_expand_leading_tilde_to_home() {
+        let base = Path::new("/work/project");
+        let home = Path::new("/home/someone");
+        let values = [
+            "~/.agents/skills".to_string(),
+            "~".to_string(),
+            "./local".to_string(),
+            "/abs/dir".to_string(),
+            "  ".to_string(),
+            "~other/skills".to_string(),
+        ];
+        assert_eq!(
+            resolve_configured_paths_with_home(base, &values, Some(home)),
+            vec![
+                PathBuf::from("/home/someone/.agents/skills"),
+                PathBuf::from("/home/someone"),
+                PathBuf::from("/work/project/./local"),
+                PathBuf::from("/abs/dir"),
+                // `~user` is not supported: stays relative to the settings owner.
+                PathBuf::from("/work/project/~other/skills"),
+            ]
+        );
+    }
+
+    #[test]
+    fn configured_tilde_path_is_dropped_without_a_home_directory() {
+        let base = Path::new("/work/project");
+        let values = ["~/.agents/skills".to_string(), "./kept".to_string()];
+        assert_eq!(
+            resolve_configured_paths_with_home(base, &values, None),
+            vec![PathBuf::from("/work/project/./kept")]
+        );
+    }
+
     use super::*;
     use crate::config::test_support::env_lock;
 
