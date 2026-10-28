@@ -492,6 +492,8 @@ mod tests {
     use ice_ai::decision::typesafe::Question;
     use ice_ai::decision::Probability;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
 
     fn batch(ids: &[&str]) -> CandidateBatch {
         CandidateBatch::new(
@@ -554,6 +556,80 @@ mod tests {
             None,
         )
         .unwrap()
+    }
+
+    async fn serve_typesafe_once() -> (String, tokio::task::JoinHandle<String>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0_u8; 4096];
+            loop {
+                let read = socket.read(&mut buffer).await.unwrap();
+                if read == 0 {
+                    break;
+                }
+                request.extend_from_slice(&buffer[..read]);
+                let text = String::from_utf8_lossy(&request);
+                if let Some(header_end) = text.find("\r\n\r\n") {
+                    let length = text[..header_end]
+                        .lines()
+                        .find_map(|line| {
+                            line.to_ascii_lowercase()
+                                .strip_prefix("content-length:")
+                                .and_then(|value| value.trim().parse::<usize>().ok())
+                        })
+                        .unwrap_or(0);
+                    if request.len() >= header_end + 4 + length {
+                        break;
+                    }
+                }
+            }
+            let text = String::from_utf8_lossy(&request);
+            let body_offset = text.find("\r\n\r\n").unwrap() + 4;
+            let body: Value = serde_json::from_slice(&request[body_offset..]).unwrap();
+            assert_eq!(body["model"], TEST_MODEL_ID);
+            let answers = body["questions"]
+                .as_object()
+                .unwrap()
+                .iter()
+                .map(|(id, question)| {
+                    let answer = if question["type"] == "choice" {
+                        json!({
+                            "type": "choice",
+                            "choice": "constraint",
+                            "probabilities": {
+                                "decision": 0.0,
+                                "constraint": 1.0,
+                                "preference": 0.0,
+                                "lesson": 0.0,
+                                "none": 0.0
+                            },
+                            "confidence": 0.9
+                        })
+                    } else {
+                        json!({"type": "noul", "noul": 0.9})
+                    };
+                    (id.clone(), answer)
+                })
+                .collect::<Map<String, Value>>();
+            let response = serde_json::to_vec(&json!({
+                "model": TEST_MODEL_ID,
+                "answers": answers,
+                "usage": {"input_tokens": 12, "output_tokens": 4}
+            }))
+            .unwrap();
+            let head = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                response.len()
+            );
+            socket.write_all(head.as_bytes()).await.unwrap();
+            socket.write_all(&response).await.unwrap();
+            socket.shutdown().await.ok();
+            String::from_utf8(request).unwrap()
+        });
+        (format!("http://{address}/v1/"), server)
     }
 
     #[test]
@@ -956,6 +1032,47 @@ mod tests {
             },
             decider,
         )
+    }
+
+    #[tokio::test]
+    async fn helper_judges_through_the_real_typesafe_http_client() {
+        let (base_url, server) = serve_typesafe_once().await;
+        let client = DecisionClient::new(
+            DecisionEndpoint {
+                protocol: DecisionProtocol::TypeSafeSystemOne,
+                base_url,
+                api_key: "local-fixture-key".into(),
+                headers: BTreeMap::new(),
+            },
+            None,
+        )
+        .unwrap();
+        let helper = Helper {
+            decider: Arc::new(ClientDecider(client)),
+            deadline_ms: 1_000,
+            model_id: TEST_MODEL_ID.into(),
+        };
+
+        let outcome = helper
+            .judge(&batch(&["alpha"]), CancellationToken::new())
+            .await;
+        let raw_request = tokio::time::timeout(Duration::from_secs(5), server)
+            .await
+            .expect("loopback TypeSafe fixture must finish within its deadline")
+            .unwrap();
+
+        let HelperOutcome::Judged(judgments) = outcome else {
+            panic!("local TypeSafe response should produce a judgment");
+        };
+        assert_eq!(judgments.len(), 1);
+        assert_eq!(judgments[0].id, "alpha");
+        assert_eq!(judgments[0].applicable, Verdict::Yes);
+        assert_eq!(judgments[0].durable, Verdict::Yes);
+        assert_eq!(judgments[0].category, Some(Category::Constraint));
+        assert!(raw_request.starts_with("POST /v1/systemone HTTP/1.1\r\n"));
+        assert!(raw_request
+            .to_ascii_lowercase()
+            .contains("authorization: bearer local-fixture-key\r\n"));
     }
 
     #[tokio::test]

@@ -1373,6 +1373,7 @@ pub(crate) mod tests {
 
     include!("record_tests.rs");
     include!("accepted_receipt_tests.rs");
+    include!("contract_tests.rs");
 
     pub(crate) fn client(transport: Arc<FakeTransport>) -> CogneeClient {
         CogneeClient::new(

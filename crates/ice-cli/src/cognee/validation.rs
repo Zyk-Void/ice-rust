@@ -325,3 +325,83 @@ impl CogneeRuntime {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cognee::candidates::{Category, Role, Source, SourceScope};
+
+    #[test]
+    fn volatile_candidate_rejects_a_stale_repository_revision() {
+        let operation = OperationContext {
+            host_session_id: Some("host-session".into()),
+            session_id: Some("cognee-session".into()),
+            dataset: "project".into(),
+            generation: 3,
+        };
+        let repository = RepositoryIdentity {
+            root: "/repo".into(),
+            git_dir: None,
+            common_dir: None,
+            repository_id: "repo-id".into(),
+            worktree_id: "worktree-id".into(),
+            branch: Some("main".into()),
+            revision: Some("current-revision".into()),
+        };
+        let sources = CurrentSources {
+            operation,
+            repository: Some(repository.clone()),
+            leaf: Some("entry-1".into()),
+            task_id: None,
+            messages: Vec::new(),
+        };
+        let evidence = SourceEvidence {
+            source_entry_id: "entry-1".into(),
+            source_text_hash: "source-hash".into(),
+            verifier_entry_id: None,
+            verifier_text_hash: None,
+        };
+        let candidate = Candidate {
+            id: "candidate-1".into(),
+            admission_id: None,
+            source_scope: Some(SourceScope {
+                session_id: Some("host-session".into()),
+                task_id: None,
+                conversation_branch: Some(vec!["entry-1".into()]),
+                git_branch: Some("main".into()),
+                git_revision: Some("old-revision".into()),
+                worktree_id: Some("worktree-id".into()),
+                source_text_hash: "source-hash".into(),
+            }),
+            category: Category::Outcome,
+            text: "The operation succeeded".into(),
+            source: Source {
+                entry_id: "entry-1".into(),
+                role: Role::Assistant,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: "project".into(),
+            branch: Some("main".into()),
+            valid_until_ms: None,
+            created_at: 10,
+            state: CandidateState::Pending,
+        };
+
+        assert_eq!(
+            validate_candidate_scope(&candidate, &sources, &evidence, true),
+            Err("candidate repository ownership changed")
+        );
+
+        let mut current_candidate = candidate;
+        current_candidate
+            .source_scope
+            .as_mut()
+            .unwrap()
+            .git_revision = repository.revision;
+        assert_eq!(
+            validate_candidate_scope(&current_candidate, &sources, &evidence, true),
+            Ok(())
+        );
+    }
+}
