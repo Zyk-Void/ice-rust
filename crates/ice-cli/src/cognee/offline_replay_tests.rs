@@ -195,6 +195,8 @@ async fn chronological_offline_replay_report() {
         let min = latencies.iter().copied().min().unwrap_or(0);
         arm_reports.insert(arm.into(),serde_json::json!({"cases":count,"by_cohort":per_cohort,"requested":requested,"skipped":skipped,"cached":0,"retrieved":retrieved,"retained":retained,"injected":injected,"persisted":persisted,"faux_used":0,"unknown":unknown,"late_error":failures,"wrong_scope":null,"stale":null,"contradictory":null,"novelty_miss":null,"false_positive_admission":null,"future_evidence_delivered":future_evidence,"tool_evidence_results":tool_results,"injected_context_tokens_estimated":context_tokens,"required_critical_miss":required_miss,"forbidden_evidence":forbidden,"unnecessary_requests":unnecessary,"latency_us":{"n":count,"includes_failures":true,"warmup_excluded":false,"min":min,"p50_nearest_rank":p50,"p95_nearest_rank":p95,"max":max},"service_latency":"simulated by local fake transport; not remote"}));
     }
+    assert_eq!(arm_reports["C_local_selective"]["by_cohort"]["self_contained"]["requests"], 0);
+    assert_eq!(arm_reports["C_local_selective"]["forbidden_evidence"], 0);
     assert!(arm_reports["E_on_demand"]["tool_evidence_results"].as_u64().unwrap() > 0);
     assert_eq!(arm_reports["E_on_demand"]["persisted"], 0);
     assert_eq!(arm_reports["E_on_demand"]["by_cohort"]["historical_decision"]["required_misses"], 0);

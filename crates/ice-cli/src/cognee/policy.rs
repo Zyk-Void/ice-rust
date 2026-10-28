@@ -92,7 +92,25 @@ pub enum Admission {
 
 pub fn asks_for_history(prompt: &str) -> bool {
     let lower = prompt.to_lowercase();
-    HISTORY_PHRASES.iter().any(|phrase| lower.contains(phrase))
+    HISTORY_PHRASES.iter().any(|phrase| {
+        lower.match_indices(phrase).any(|(start, _)| {
+            let prefix = &lower[..start];
+            let mut words = prefix.split_whitespace().rev();
+            let previous = words
+                .next()
+                .unwrap_or("")
+                .trim_start_matches(|c: char| !c.is_alphanumeric());
+            let previous = if matches!(previous, "the" | "any") {
+                words
+                    .next()
+                    .unwrap_or("")
+                    .trim_start_matches(|c: char| !c.is_alphanumeric())
+            } else {
+                previous
+            };
+            !matches!(previous, "no" | "not" | "never" | "without")
+        })
+    })
 }
 
 pub fn admit_prompt(policy: ReadPolicy, prompt: &str) -> Admission {
@@ -131,6 +149,27 @@ mod tests {
             admit_prompt(ReadPolicy::OnDemand, "What did we decide about the cache?"),
             Admission::Skip(SkipReason::OnDemand)
         );
+    }
+
+    #[test]
+    fn negated_history_phrases_do_not_trigger_automatic_recall() {
+        for prompt in [
+            "Implement a standalone component with no earlier decisions",
+            "Proceed without the previous decision",
+            "Do not remember when the cache changed",
+            "No previous decision applies. What did we decide about caching?",
+        ] {
+            let expected = if prompt.contains("What did we") {
+                Admission::Recall(RecallReason::ExplicitHistory)
+            } else {
+                Admission::Skip(SkipReason::NoHistoryRequest)
+            };
+            assert_eq!(
+                admit_prompt(ReadPolicy::Event, prompt),
+                expected,
+                "{prompt}"
+            );
+        }
     }
 
     #[test]
