@@ -113,16 +113,16 @@ Do not fabricate historical state merely to fill this schema. Unknown fields rem
 
 ## 5. Seed diagnostic cases from the actual audit
 
-The full run/request IDs and sequence references are in the observability report, which is withheld from this repository because it quotes private local session activity.
+The [observability report](observability-audit.md) is published redacted; the full run/request IDs and sequence references are withheld because they identify private local sessions.
 
 | Case | Existing evidence | Proposed expected behavior |
 |---|---|---|
 | Build current branch | 4,423 ms recall returning routine activity; incremental build later reports 0.33 s | Skip automatic recall; inspect current instructions and build |
-| “Which one is main” in Skyrim task | 3,993 ms; unrelated topics returned | Resolve subject from active task or clarify; no raw global-ish query |
+| “Which one is main” in a game-setup task | 3,993 ms; unrelated topics returned | Resolve subject from active task or clarify; no raw global-ish query |
 | Commit count | Tool-operation count returned; answer already known from current session | Use current context/Git; avoid history search |
 | Planning skill inventory | 4,375 ms; old autocomplete discussion instead of current resource inventory | Search catalog/configured skill roots locally |
 | Expanded context-mode invocation | 6,269 ms querying full resource instructions | Query original task intent only if memory is actually needed |
-| Prior Skyrim migration | Relevant history retrieved; live launcher state still checked | Preserve relevant scoped pointer, verify volatile state, count savings only if shown |
+| Prior game-setup migration | Relevant history retrieved; live launcher state still checked | Preserve relevant scoped pointer, verify volatile state, count savings only if shown |
 | Manual memory retrieval | One 404 and one timeout; tool callback marked done | Clear semantic error; do not treat completed callback as successful evidence |
 
 These are selected failure/success-looking episodes, not a random sample. No precision percentage should be derived from them.

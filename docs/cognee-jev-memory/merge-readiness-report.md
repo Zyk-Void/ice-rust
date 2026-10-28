@@ -6,7 +6,7 @@
 
 - Integration branch: `feat/cognee-memory-completion`. Tested implementation HEAD: `b3c71e883b780a15bdc57b512d70be62657ba67f`. This report and the measured replay are documentation/evidence commits on top of that implementation; use `git rev-parse HEAD` for the exact containing commit, avoiding a self-referential commit hash.
 - Baseline: `main` at `dd0e2405eca8f09648882d387bbe19a543db9c27`, the merge base. The feature diff before these final evidence edits spans approximately 99 files, 22,157 additions and 832 deletions; it is substantially larger than the repository's normal review-size guideline and deserves staged human review.
-- The plan is committed as [`../cognee-jev-memory-plan.md`](../cognee-jev-memory-plan.md). That copy differs from the original planning worktree file only by a neutralised local path, a status banner and two links to withheld private reports; the original file's SHA-256 was `0760aed89a52107e7b109f030fbd7608011292bbdcd3068271ca4cb8fe619366`. The 25-task ledger with source, test, integrated SHA and unresolved acceptance gaps is [`completion-evidence-matrix.md`](completion-evidence-matrix.md). No claim is made that M0–M7 are all complete.
+- The plan is committed as [`../cognee-jev-memory-plan.md`](../cognee-jev-memory-plan.md). That copy differs from the original planning worktree file only by a neutralised local path, a status banner and a link to the redacted observability audit; the original file's SHA-256 was `0760aed89a52107e7b109f030fbd7608011292bbdcd3068271ca4cb8fe619366`. The 25-task ledger with source, test, integrated SHA and unresolved acceptance gaps is [`completion-evidence-matrix.md`](completion-evidence-matrix.md). No claim is made that M0–M7 are all complete.
 
 ## Integrated work
 
