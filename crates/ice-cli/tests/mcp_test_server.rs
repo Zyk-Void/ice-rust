@@ -38,6 +38,17 @@ fn main() {
             }
             continue;
         }
+        // Stand-in for a remote memory store: every call that reaches the server.
+        if method == "tools/call" {
+            if let Some(path) = std::env::var_os("ICERS_MCP_TEST_WRITES") {
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .unwrap();
+                writeln!(file, "{}", value["params"]).unwrap();
+            }
+        }
         let result = match method {
             "initialize" => {
                 if let Ok(delay) = std::env::var("MCP_TEST_DELAY_MS") {
