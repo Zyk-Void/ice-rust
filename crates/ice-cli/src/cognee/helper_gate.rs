@@ -187,7 +187,11 @@ impl HelperGate {
     ) -> (Admission, Option<BudgetPermit>) {
         self.requests
             .retain(|t| now.saturating_sub(*t) < RATE_WINDOW_MS);
-        self.batches.retain(|(k, e, _)| *e > now || k == key);
+        // A repeated key must not keep its expired verdict alive forever.
+        // Retain a genuine in-flight reservation until its owner finishes.
+        let has_flight = self.in_flight.is_some();
+        self.batches
+            .retain(|(_, expiry, outcome)| *expiry > now || (outcome.is_none() && has_flight));
         if self.breaker_until.is_some_and(|until| until > now) {
             return (Admission::Skip(SkipReason::CircuitOpen), None);
         }
@@ -340,6 +344,30 @@ mod tests {
             .cached("negative", 130 * RATE_WINDOW_MS + NEGATIVE_TTL_MS)
             .is_none());
     }
+    #[test]
+    fn expired_same_key_can_be_judged_again_after_positive_and_negative_ttl() {
+        for outcome in [judged(), HelperOutcome::Abstained(AbstainReason::Timeout)] {
+            let mut gate = HelperGate::with_budget(SharedHelperBudget::isolated());
+            let (first, permit) = gate.admit("same-key", "provider", 0);
+            assert_eq!(first, Admission::Start);
+            let id = gate.flight_id().unwrap();
+            drop(permit);
+            gate.finish(id, "same-key", 0, &outcome);
+            let ttl = if matches!(outcome, HelperOutcome::Judged(_)) {
+                POSITIVE_TTL_MS
+            } else {
+                NEGATIVE_TTL_MS
+            };
+            assert_eq!(
+                gate.admit("same-key", "provider", ttl - 1).0,
+                Admission::Skip(SkipReason::BatchCached)
+            );
+            let (next, permit) = gate.admit("same-key", "provider", ttl);
+            assert_eq!(next, Admission::Start);
+            assert!(permit.is_some());
+        }
+    }
+
     #[test]
     fn old_flight_cannot_clear_rebound_guard() {
         let b = SharedHelperBudget::isolated();

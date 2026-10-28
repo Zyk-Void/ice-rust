@@ -342,3 +342,74 @@ fn legacy_warmup_outcomes_are_readable_but_not_assumed_replayable() {
     assert_eq!(records[0].state, PendingState::Uncertain);
     assert!(crate::cognee::queue::read_replayable_warmup_batch(dir.path()).is_empty());
 }
+
+#[tokio::test]
+async fn helper_skips_and_cached_verdicts_do_not_count_as_new_requests() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+    rt.ensure_loaded();
+    rt.observe_helper(Some("skip"), "skipped", "rate_limited", 8, 0, 0, None);
+    rt.observe_helper(Some("cached"), "judged", "batch_cached", 3, 1, 1, None);
+    rt.observe_helper(Some("called"), "abstained", "timeout", 4, 0, 0, Some(1500));
+    rt.wait_for_background().await;
+    let events = crate::cognee::observer::read_observations(&rt.storage_dir);
+    for id in ["skip", "cached"] {
+        let meta = events
+            .iter()
+            .find(|e| e.request_id.as_deref() == Some(id))
+            .unwrap()
+            .meta
+            .as_ref()
+            .unwrap();
+        assert_eq!(meta["invocationCount"], 0);
+        assert_eq!(meta["requested"], 0);
+    }
+    let meta = events
+        .iter()
+        .find(|e| e.request_id.as_deref() == Some("called"))
+        .unwrap()
+        .meta
+        .as_ref()
+        .unwrap();
+    assert_eq!(meta["invocationCount"], 1);
+    assert_eq!(meta["requested"], 4);
+    assert_eq!(meta["outcomeVersion"], 3);
+    assert!(transport.sent().is_empty());
+}
+
+#[tokio::test]
+async fn helper_late_observation_preserves_source_scope_instead_of_current_session() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    let rt = runtime(
+        dir.path(),
+        &transport,
+        Some(json!({"dataset":"new-dataset"})),
+        false,
+    );
+    rt.ensure_loaded();
+    rt.ensure_session_id("new-session");
+    rt.observe_helper_for(
+        Some("old-operation"),
+        "skipped",
+        "cancelled",
+        1,
+        0,
+        0,
+        Some(5),
+        Some(("old-session", "old-dataset")),
+    );
+    rt.wait_for_background().await;
+    let event = crate::cognee::observer::read_observations(&rt.storage_dir)
+        .into_iter()
+        .find(|e| e.request_id.as_deref() == Some("old-operation"))
+        .unwrap();
+    assert_eq!(event.session_id.as_deref(), Some("old-session"));
+    assert_eq!(event.dataset.as_deref(), Some("old-dataset"));
+    assert_eq!(event.meta.as_ref().unwrap()["invocationCount"], 1);
+    assert_eq!(
+        event.meta.as_ref().unwrap()["networkRequestCount"],
+        Value::Null
+    );
+}

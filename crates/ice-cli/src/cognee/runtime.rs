@@ -975,7 +975,26 @@ impl CogneeRuntime {
         rejected: usize,
         latency_ms: Option<u64>,
     ) {
-        self.observe(
+        self.observe_helper_for(
+            request_id, outcome, reason, candidates, accepted, rejected, latency_ms, None,
+        );
+    }
+
+    fn observe_helper_for(
+        &self,
+        request_id: Option<&str>,
+        outcome: &str,
+        reason: &str,
+        candidates: usize,
+        accepted: usize,
+        rejected: usize,
+        latency_ms: Option<u64>,
+        identity: Option<(&str, &str)>,
+    ) {
+        // A helper invocation is not proof of an HTTP send. Keep attempt counts
+        // separate from unknown wire counts; skips and cached results are local.
+        let invoked = latency_ms.is_some() && reason != "batch_cached";
+        self.observe_for(
             "helper",
             outcome,
             ObserveFields {
@@ -990,7 +1009,10 @@ impl CogneeRuntime {
                     "candidates": candidates,
                     "accepted": accepted,
                     "rejected": rejected,
-                    "requested": candidates,
+                    "requested": if invoked { candidates } else { 0 },
+                    "invocationCount": usize::from(invoked),
+                    "networkRequestCount": Value::Null,
+                    "candidateCount": candidates,
                     "judged": if outcome == "judged" { candidates } else { 0 },
                     "abstained": if outcome == "abstained" { candidates } else { 0 },
                     "cached": reason == "batch_cached",
@@ -999,10 +1021,11 @@ impl CogneeRuntime {
                     "stale": reason == "stale",
                     "applicationFailed": reason == "application_failed",
                     "persisted": accepted,
-                    "outcomeVersion": 2
+                    "outcomeVersion": 3
                 })),
                 ..ObserveFields::default()
             },
+            identity,
         );
     }
 
@@ -1092,11 +1115,15 @@ impl CogneeRuntime {
         let this = self.arc();
         let operation_id = uuid::Uuid::new_v4().to_string();
         let work_operation_id = operation_id.clone();
+        let source_identity = (
+            self.state().session_id.clone().unwrap_or_default(),
+            dataset.clone(),
+        );
         let work = async move {
             let sources = match this.candidate_source_snapshot(&cancel).await {
                 Ok(sources) => sources,
                 Err(_) => {
-                    this.observe_helper(
+                    this.observe_helper_for(
                         Some(&work_operation_id),
                         "skipped",
                         "no_pending",
@@ -1104,12 +1131,13 @@ impl CogneeRuntime {
                         0,
                         0,
                         None,
+                        Some((&source_identity.0, &source_identity.1)),
                     );
                     return;
                 }
             };
             if sources.task_id.is_none() {
-                this.observe_helper(
+                this.observe_helper_for(
                     Some(&work_operation_id),
                     "skipped",
                     "no_pending",
@@ -1117,6 +1145,7 @@ impl CogneeRuntime {
                     0,
                     0,
                     None,
+                    Some((&source_identity.0, &source_identity.1)),
                 );
                 return;
             }
@@ -1165,7 +1194,7 @@ impl CogneeRuntime {
                 }
             }
             if candidates.is_empty() {
-                this.observe_helper(
+                this.observe_helper_for(
                     Some(&work_operation_id),
                     "skipped",
                     "no_pending",
@@ -1173,6 +1202,7 @@ impl CogneeRuntime {
                     0,
                     0,
                     None,
+                    Some((&source_identity.0, &source_identity.1)),
                 );
                 return;
             }
@@ -1199,7 +1229,7 @@ impl CogneeRuntime {
             let batch = match CandidateBatch::new(helper_candidates, Some(excerpt)) {
                 Ok(batch) => batch,
                 Err(_) => {
-                    this.observe_helper(
+                    this.observe_helper_for(
                         Some(&work_operation_id),
                         "abstained",
                         "malformed",
@@ -1207,6 +1237,7 @@ impl CogneeRuntime {
                         0,
                         0,
                         None,
+                        Some((&source_identity.0, &source_identity.1)),
                     );
                     return;
                 }
@@ -1256,12 +1287,12 @@ impl CogneeRuntime {
                 .collect::<String>();
             let (admission, permit, flight_id) = {
                 let mut state = this.state();
-                let origin = super::observer::sanitize_endpoint(&endpoint);
-                let provider_key =
-                    Sha256::digest([provider.as_bytes(), origin.as_bytes()].concat())
-                        .iter()
-                        .map(|byte| format!("{byte:02x}"))
-                        .collect::<String>();
+                // The Cognee dataset endpoint is not the decision provider.
+                // Changing it must not grant a fresh provider quota.
+                let provider_key = Sha256::digest(provider.as_bytes())
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<String>();
                 let (admission, permit) = state.helper_gate.admit(&key, &provider_key, this.now());
                 (admission, permit, state.helper_gate.flight_id())
             };
@@ -1302,7 +1333,7 @@ impl CogneeRuntime {
                                 }
                             }
                         }
-                        this.observe_helper(
+                        this.observe_helper_for(
                             Some(&work_operation_id),
                             "judged",
                             "batch_cached",
@@ -1310,9 +1341,10 @@ impl CogneeRuntime {
                             accepted,
                             rejected,
                             None,
+                            Some((&source_identity.0, &source_identity.1)),
                         );
                     } else {
-                        this.observe_helper(
+                        this.observe_helper_for(
                             Some(&work_operation_id),
                             "skipped",
                             "batch_cached",
@@ -1320,6 +1352,7 @@ impl CogneeRuntime {
                             0,
                             0,
                             None,
+                            Some((&source_identity.0, &source_identity.1)),
                         );
                     }
                 } else if let Some(reason) = admission.reason() {
@@ -1327,7 +1360,7 @@ impl CogneeRuntime {
                         let mut state = this.state();
                         state.helper_skips = state.helper_skips.saturating_add(1);
                     }
-                    this.observe_helper(
+                    this.observe_helper_for(
                         Some(&work_operation_id),
                         "skipped",
                         reason.as_str(),
@@ -1335,6 +1368,7 @@ impl CogneeRuntime {
                         0,
                         0,
                         None,
+                        Some((&source_identity.0, &source_identity.1)),
                     );
                 }
                 return;
@@ -1355,7 +1389,7 @@ impl CogneeRuntime {
             let latency = started.elapsed().as_millis() as u64;
             if cancel.is_cancelled() {
                 guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
-                this.observe_helper(
+                this.observe_helper_for(
                     Some(&work_operation_id),
                     "skipped",
                     "cancelled",
@@ -1363,6 +1397,7 @@ impl CogneeRuntime {
                     0,
                     0,
                     Some(latency),
+                    Some((&source_identity.0, &source_identity.1)),
                 );
                 return;
             }
@@ -1373,7 +1408,7 @@ impl CogneeRuntime {
                 }
                 HelperOutcome::Abstained(AbstainReason::Cancelled) if cancel.is_cancelled() => {
                     guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
-                    this.observe_helper(
+                    this.observe_helper_for(
                         Some(&work_operation_id),
                         "skipped",
                         "cancelled",
@@ -1381,6 +1416,7 @@ impl CogneeRuntime {
                         0,
                         0,
                         Some(latency),
+                        Some((&source_identity.0, &source_identity.1)),
                     );
                     return;
                 }
@@ -1398,7 +1434,7 @@ impl CogneeRuntime {
                         let mut state = this.state();
                         state.helper_abstains = state.helper_abstains.saturating_add(1);
                     }
-                    this.observe_helper(
+                    this.observe_helper_for(
                         Some(&work_operation_id),
                         "abstained",
                         label,
@@ -1406,6 +1442,7 @@ impl CogneeRuntime {
                         0,
                         0,
                         Some(latency),
+                        Some((&source_identity.0, &source_identity.1)),
                     );
                     return;
                 }
@@ -1460,7 +1497,7 @@ impl CogneeRuntime {
                     }
                 }
             }
-            this.observe_helper(
+            this.observe_helper_for(
                 Some(&work_operation_id),
                 "judged",
                 "judged",
@@ -1468,6 +1505,7 @@ impl CogneeRuntime {
                 accepted,
                 rejected,
                 Some(latency),
+                Some((&source_identity.0, &source_identity.1)),
             );
         };
         self.track_helper(work);
