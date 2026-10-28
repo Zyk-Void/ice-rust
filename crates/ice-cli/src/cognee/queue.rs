@@ -414,6 +414,56 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    #[ignore]
+    fn dispatch_lease_child() {
+        let Ok(directory) = std::env::var("ICERS_DISPATCH_LEASE_CHILD") else {
+            return;
+        };
+        assert!(DispatchLease::try_acquire(Path::new(&directory))
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn dispatch_lease_excludes_another_process() {
+        use std::process::{Command, Stdio};
+        use std::time::{Duration, Instant};
+
+        let directory = tempfile::tempdir().unwrap();
+        let owner = DispatchLease::try_acquire(directory.path())
+            .unwrap()
+            .unwrap();
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "cognee::queue::tests::dispatch_lease_child",
+                "--ignored",
+                "--nocapture",
+            ])
+            .env("ICERS_DISPATCH_LEASE_CHILD", directory.path())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            if let Some(status) = child.try_wait().unwrap() {
+                assert!(status.success(), "child test exited with {status}");
+                break;
+            }
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                panic!("child test exceeded bounded wait");
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        drop(owner);
+        assert!(DispatchLease::try_acquire(directory.path())
+            .unwrap()
+            .is_some());
+    }
+
+    #[test]
     fn circuit_opens_after_three_failures_and_resets() {
         let mut circuit = CircuitState::default();
         circuit.note_failure("timeout", 1_000);

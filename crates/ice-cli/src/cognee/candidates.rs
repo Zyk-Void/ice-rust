@@ -499,7 +499,10 @@ pub fn set_state(
     // record. The caller's source/text snapshot is never written back.
     if stored.state != CandidateState::Pending {
         let _ = FileExt::unlock(&lock);
-        return Ok(());
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            "candidate is already terminal",
+        ));
     }
     stored.state = state.clone();
     let result = write_private_file_atomic(
@@ -683,15 +686,119 @@ mod tests {
 
         assert!(!store_pending(directory.path(), &candidate, 2).unwrap());
         let mut stale = candidate;
-        set_state(
-            directory.path(),
-            &mut stale,
-            CandidateState::Rejected("late_helper_result".into()),
-        )
-        .unwrap();
+        assert_eq!(
+            set_state(
+                directory.path(),
+                &mut stale,
+                CandidateState::Rejected("late_helper_result".into()),
+            )
+            .unwrap_err()
+            .kind(),
+            std::io::ErrorKind::AlreadyExists
+        );
         let stored = read_candidates(directory.path()).pop().unwrap();
         assert_eq!(stored.state, CandidateState::Accepted);
         assert_eq!(stored.admission_id.as_deref(), Some("admission-1"));
+    }
+
+    #[test]
+    fn terminal_state_update_reports_conflict_without_mutating_snapshot() {
+        let directory = tempfile::tempdir().unwrap();
+        let mut stored = candidate(
+            Category::Lesson,
+            "committed fact",
+            Role::Assistant,
+            "assistant",
+        );
+        stored.state = CandidateState::Accepted;
+        store_pending(directory.path(), &stored, 1).unwrap();
+        let mut stale = stored.clone();
+        stale.state = CandidateState::Pending;
+        let result = set_state(
+            directory.path(),
+            &mut stale,
+            CandidateState::Rejected("late_rejection".into()),
+        );
+        assert_eq!(
+            result.unwrap_err().kind(),
+            std::io::ErrorKind::AlreadyExists
+        );
+        assert_eq!(stale.state, CandidateState::Pending);
+        assert_eq!(
+            read_candidates(directory.path())[0].state,
+            CandidateState::Accepted
+        );
+    }
+
+    // Invoked only by the exact-filtered parent test below. The sentinel keeps
+    // normal test runs from doing any child-process work.
+    #[test]
+    #[ignore]
+    fn candidate_lock_child() {
+        let Ok(directory) = std::env::var("ICERS_CANDIDATE_LOCK_CHILD") else {
+            return;
+        };
+        let mut candidate = candidate(
+            Category::Lesson,
+            "child candidate",
+            Role::Assistant,
+            "assistant",
+        );
+        candidate.id = "ffffffffffffffffffffffffffffffff".into();
+        assert!(!store_pending(Path::new(&directory), &candidate, 10).unwrap());
+    }
+
+    #[test]
+    fn candidate_capacity_lock_blocks_another_process() {
+        use std::process::{Command, Stdio};
+        use std::time::{Duration, Instant};
+
+        let directory = tempfile::tempdir().unwrap();
+        for index in 0..MAX_PENDING_CANDIDATES {
+            let mut item = candidate(
+                Category::Lesson,
+                "capacity occupant",
+                Role::Assistant,
+                "assistant",
+            );
+            item.id = format!("{index:032x}");
+            assert!(store_pending(directory.path(), &item, 10).unwrap());
+        }
+        let held = candidate_lock(directory.path()).unwrap();
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "cognee::candidates::tests::candidate_lock_child",
+                "--ignored",
+                "--nocapture",
+            ])
+            .env("ICERS_CANDIDATE_LOCK_CHILD", directory.path())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        assert!(
+            child.try_wait().unwrap().is_none(),
+            "child bypassed held cross-process lock"
+        );
+        FileExt::unlock(&held).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            if let Some(status) = child.try_wait().unwrap() {
+                assert!(status.success(), "child test exited with {status}");
+                break;
+            }
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                panic!("child test exceeded bounded wait");
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(
+            read_candidates(directory.path()).len(),
+            MAX_PENDING_CANDIDATES
+        );
     }
 
     #[test]
@@ -782,6 +889,80 @@ mod tests {
         let other_dataset = query_accepted(directory.path(), "other", None, "", 100, 10);
         assert_eq!(other_dataset.len(), 1);
         assert_eq!(other_dataset[0].text, "pending correction");
+    }
+
+    #[test]
+    fn accepted_receipt_projection_is_ignored_and_expiry_supersession_apply() {
+        let directory = tempfile::tempdir().unwrap();
+        let receipts = super::super::admission::receipt_dir(directory.path());
+        let mut accepted = super::super::admission::tests::receipt();
+        accepted.candidate.category = Category::Lesson;
+        accepted.candidate.text = "durable accepted knowledge".into();
+        accepted.candidate.dataset = "d".into();
+        accepted.operation.dataset = "d".into();
+        accepted.candidate.valid_until_ms = Some(500);
+        accepted.id = "accepted-receipt".into();
+        accepted.candidate.admission_id = Some(accepted.id.clone());
+        accepted.operation.admission_id = Some(accepted.id.clone());
+        super::super::admission::commit(&receipts, &accepted).unwrap();
+
+        let mut expired = accepted.clone();
+        expired.id = "expired-receipt".into();
+        expired.candidate.id = "00000000-0000-4000-8000-000000000002".into();
+        expired.candidate.admission_id = Some(expired.id.clone());
+        expired.candidate.text = "expired knowledge".into();
+        expired.candidate.valid_until_ms = Some(100);
+        expired.operation.admission_id = Some(expired.id.clone());
+        super::super::admission::commit(&receipts, &expired).unwrap();
+
+        let mut correction = accepted.clone();
+        correction.id = "correction-receipt".into();
+        correction.candidate.id = "00000000-0000-4000-8000-000000000003".into();
+        correction.candidate.admission_id = Some(correction.id.clone());
+        correction.candidate.category = Category::Constraint;
+        correction.operation.node_set = "user_context".into();
+        correction.candidate.text = "corrected durable knowledge".into();
+        correction.candidate.source.role = Role::User;
+        correction.candidate.branch = Some("main".into());
+        correction.candidate.supersedes = Some(accepted.candidate.id.clone());
+        correction.candidate.valid_until_ms = Some(500);
+        correction.operation.admission_id = Some(correction.id.clone());
+        correction.superseded_target = Some(super::super::admission::SupersededTarget {
+            source: "e".into(),
+            scope: Some("main".into()),
+            hash: "a".repeat(64),
+        });
+        super::super::admission::commit(&receipts, &correction).unwrap();
+
+        let projection = candidate_path(directory.path(), &accepted.candidate.id).unwrap();
+        std::fs::write(&projection, "{corrupt projection").unwrap();
+        assert_eq!(
+            query_accepted(directory.path(), "d", None, "durable", 200, 10)
+                .iter()
+                .map(|item| item.text.as_str())
+                .collect::<Vec<_>>(),
+            ["durable accepted knowledge"]
+        );
+        assert!(query_accepted(directory.path(), "d", None, "expired", 200, 10).is_empty());
+        assert!(query_accepted(
+            directory.path(),
+            "d",
+            Some("main"),
+            "durable accepted",
+            200,
+            10
+        )
+        .is_empty());
+        assert_eq!(
+            query_accepted(directory.path(), "d", None, "durable accepted", 200, 10).len(),
+            1,
+            "correction only supersedes within its matching branch"
+        );
+        std::fs::remove_file(projection).unwrap();
+        assert_eq!(
+            query_accepted(directory.path(), "d", None, "durable", 200, 10).len(),
+            1
+        );
     }
 
     #[test]

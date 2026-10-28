@@ -267,11 +267,11 @@ pub fn reconcile(
 }
 
 #[cfg(test)]
-mod tests {
+pub(super) mod tests {
     use super::*;
     use crate::cognee::candidates::{Category, Role, Source};
 
-    fn receipt() -> AdmissionReceipt {
+    pub(crate) fn receipt() -> AdmissionReceipt {
         let mut operation =
             queue::create_pending_remember("[lesson] fact", "d", "agent_actions", 7);
         operation.admission_id = Some("admission-1".into());

@@ -1,40 +1,30 @@
 # Cognee durable closeout (local implementation)
 
-## Implemented
+## Owned durable implementation and regression proof
 
-- `crates/ice-cli/src/cognee/candidates.rs`: serialized candidate-store mutations with a stable advisory lock; pending capacity accounting and expiry now run under that process-wide lock.
-- A stale Pending candidate cannot replace an existing terminal candidate or a candidate carrying an admission receipt. A malformed file at the same candidate ID fails closed and is preserved.
-- Candidate state updates reload and mutate the persisted record under the lock, rather than serializing a stale caller snapshot. Terminal records cannot be reopened by delayed helper outcomes; unrelated persisted provenance/admission fields are preserved.
-- Added regressions for a late helper result against an admitted candidate and for preserving malformed candidate data.
+Changes in this closeout are limited to `crates/ice-cli/src/cognee/{candidates,admission,queue}.rs` and this note. No live service, model, or external user data was used.
 
-## M4 acceptance mapping
+- `candidates::store_pending` and `set_state` use the stable cross-process candidate advisory lock. `set_state` reloads and mutates the stored record, preserves receipt-backed/provenance data, and now returns `AlreadyExists` for a persisted terminal candidate instead of returning `Ok(())` while leaving the caller snapshot unchanged. The existing late-helper regression and a direct stale-snapshot test assert that conflict and verify accepted data remains stored.
+- Cross-process candidate-capacity test: parent fills all 32 Pending slots and holds `.candidates.lock`; it starts only the exact ignored child test in the current test executable with a temp-directory sentinel. The child proposes a 33rd candidate and must observe capacity rejection after the parent releases the lock. Parent checks the child is blocked while the lock is held, enforces a five-second bound, checks successful child exit, and verifies capacity remains 32.
+- Cross-process dispatch-lease test: parent owns `.dispatch.lock`; an exact-filtered ignored child with a temp-directory sentinel verifies another process cannot acquire the lease. Parent checks bounded successful exit and can acquire again after releasing its lease. No service or backend is started.
+- Receipt-backed query test: accepted immutable receipt data remains queryable when its candidate projection is corrupt and when that projection is absent; an expired receipt is excluded. A receipt-backed user/Constraint correction with matching branch supersedes the target only in that branch. Existing candidate tests separately cover invalid role, dataset/scope and expiry correction cases.
+- Existing receipt tests remain in place and pass: receipt writer failure does not commit; Prepared orphan without a receipt stays blocked; committed receipt reconciliation repairs projections idempotently; InFlight/Uncertain are not reset; completed receipt does not re-create pending queue work; conflicting receipts and traversal IDs are rejected. Existing queue tests cover admission capacity/dedup by dataset and node-set and Uncertain explicit-flush selection.
 
-- **M4.1 — NOT fully verified here.** Admission receipt durability/reconciliation, prepared reservation, dispatch lock, and explicit uncertain selection are present in owned queue/admission modules and focused tests pass. Full runtime dispatch-intent integration, timeout-after-acceptance proof, compatibility/migration, and complete cross-process drain behavior are not verified by this subtask.
-- **M4.2 — PARTIALLY verified.** Source-validation and candidate focused suites pass; bounded pending candidates and accepted local evidence are exercised. Candidate capacity is now cross-process serialized. End-to-end attribution and all capture/improve switches are runtime-owned and remain to integrate/verify.
-- **M4.3 — PARTIALLY verified.** Existing scoped correction/freshness tests remain unchanged and pass as part of candidate tests. No new exhaustive branch/role/revision correction matrix was added in this implementation.
-- **M4.4 — NOT fully verified.** Dream ledger unit tests pass and runtime currently emits accepted/searchable-unknown outcome metadata. Supported job-handle persistence and reconciliation are owned by excluded client/runtime modules and remain unimplemented/unverified here. No live Cognee or inference proof was attempted.
+## M4 acceptance mapping / limits
+
+- **M4.1 — locally verified subset:** candidate capacity and dispatch lease exclusion across processes; receipt-writer failure; Prepared/committed recovery, no InFlight/Uncertain reactivation, and completed-operation projection behavior as enumerated above. Cross-process child waits are bounded and exit status is checked. This does not constitute end-to-end runtime dispatch-intent, timeout-after-remote-acceptance, migration, or full cross-process drain proof.
+- **M4.2 — locally verified subset:** pending capacity is bounded under the process-wide lock; immutable accepted receipt facts are available to local query despite corrupt/missing candidate projections and expired evidence is filtered. Attribution and runtime switches are not established by these storage tests.
+- **M4.3 — locally verified subset:** correction role/category, dataset/branch scope and expiry gates are exercised by existing candidate tests and the receipt-backed branch-supersession regression. This is fixture-level local proof, not production-backend validation.
+- **M4.4 — not verified here:** runtime job-handle persistence, reconciliation, retry/backoff and backend searchability are outside these owned changes.
 
 ## Local verification
 
-All test commands used the inherited per-worktree `CARGO_TARGET_DIR`, `CARGO_BUILD_JOBS=2`, `RUSTFLAGS=-Dwarnings`, and `--locked`.
+Commands use the inherited private per-worktree `CARGO_TARGET_DIR` (`target/validation`), `CARGO_BUILD_JOBS=2`, `RUSTFLAGS=-Dwarnings`, and `--locked`; no shared `/tmp` target was used.
 
-- `cargo test -p ice-cli --lib --locked cognee::candidates -- --nocapture` — PASS, 7 tests (final run).
-- `cargo test -p ice-cli --lib --locked cognee::admission -- --nocapture` — PASS, 7 tests.
-- `cargo test -p ice-cli --lib --locked cognee::queue -- --nocapture` — PASS, 8 tests.
-- `cargo test -p ice-cli --lib --locked cognee::source_validation -- --nocapture` — PASS, 5 tests.
-- `cargo test -p ice-cli --lib --locked cognee::dream -- --nocapture` — PASS, 8 tests.
-- `cargo test -p ice-cli --lib --locked cognee::suppress -- --nocapture` — PASS, 4 tests.
-- `cargo test -p ice-cli --lib --locked cognee::propose -- --nocapture` — PASS, no dedicated matching tests.
-- `cargo test -p ice-cli --lib --locked cognee::validation -- --nocapture` — PASS (successful filtered build/test invocation).
-- `rustfmt --edition 2021 --config skip_children=true` on the eight owned files — PASS; same command with `--check` — PASS.
+- `cargo test -p ice-cli --lib --locked cognee::candidates::tests -- --nocapture` — PASS, 10 passed, 1 ignored child helper. The passing parent regression launches the helper with the exact filter.
+- `cargo test -p ice-cli --lib --locked cognee::queue::tests -- --nocapture` — PASS, 9 passed, 1 ignored child helper. The passing parent regression launches the helper with the exact filter.
+- `cargo test -p ice-cli --lib --locked cognee::admission::tests -- --nocapture` — PASS, 7 passed.
+- `rustfmt --edition 2021 --config skip_children=true` on the three owned Rust files — PASS.
 - `git diff --check` — PASS.
-- One initial test build failed because state was moved before reuse; corrected and rerun successfully. No failed-build artifacts are tracked.
 
-## Exact lead-only integration remaining
-
-1. In `crates/ice-cli/src/cognee/runtime.rs`, ensure manual remember and candidate dispatch commit the durable admission receipt and Prepared operation before any backend request; mark InFlight immediately before dispatch. On transport uncertainty, persist Uncertain, never auto-select it, and require explicit flush for uncertain replay. Hold the existing process-wide dispatch lease through recovery/dispatch; do not allow two drainers to send the same intent. Reconcile receipt projections without reactivating InFlight/Uncertain operations.
-2. In `runtime.rs`, route explicit remember/correction and attributable source/outcome candidates through the same deterministic source validation/admission path regardless of optional helper/JEV switches. Revalidate source ID, role, exact span/hash, scope/revision, expiry, and policy after every await and before durable commitment. Keep rejected helper outcomes terminal and ensure no stale snapshot can be stored over admitted candidate state.
-3. In `crates/ice-cli/src/cognee/client.rs` and `runtime.rs`, distinguish accepted-unverified from searchable. Persist backend job handles only where supported; reconcile by revision, coalesce same-revision work, and bound retry/backoff. Do not infer searchability from HTTP 2xx. Keep locally curated accepted facts usable with provenance independently of indexing verification.
-4. Add runtime fake-backend tests for crash/abort after backend acceptance, explicit uncertain replay, restart projection repair, concurrent drains, same text across distinct category/scope, correction scope/role, helper/capture/improve switch matrix, and accepted/delayed/unsupported searchability. Keep all tests offline and fixture-backed.
-
-No live inference, Cognee/JEV, external user data/config, or `~/.ice` access was used.
+No live inference, Cognee/JEV service, external user data/config, or `~/.ice` access was used. Runtime dispatch/admission gates remain with their runtime owner; this closeout does not assign completed durable code or these passing storage regressions back as missing lead implementation.
