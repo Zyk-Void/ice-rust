@@ -302,7 +302,11 @@ fn pick<'a>(
 ) -> Option<Raw<'a>> {
     match env.get(name) {
         Some(value) => Some(Raw::Env(value)),
-        None => stored.get(key).map(Raw::Json),
+        // `config_json` saves an unset optional field as `null`.
+        None => stored
+            .get(key)
+            .filter(|value| !value.is_null())
+            .map(Raw::Json),
     }
 }
 
@@ -1204,6 +1208,24 @@ mod tests {
         let saved = config_json(&config);
         assert_eq!(saved["readPolicy"], "event");
         assert_eq!(saved["writePolicy"], "manual");
+    }
+
+    #[test]
+    fn saved_config_without_a_helper_binding_reloads_as_saved() {
+        // An unbound helper is saved as `null`; rejecting it made the whole file
+        // invalid, so a saved "off" came back as the enabled defaults.
+        let config = CogneeConfig {
+            enabled: false,
+            base_url: "http://127.0.0.1:18771".into(),
+            ..CogneeConfig::default()
+        };
+        let saved = config_json(&config);
+        assert_eq!(saved["helperProvider"], Value::Null);
+        let reloaded = resolve_config(Some(&saved), &env(&[])).unwrap();
+        assert!(!reloaded.enabled);
+        assert_eq!(reloaded.base_url, "http://127.0.0.1:18771");
+        assert_eq!(reloaded.helper_provider, None);
+        assert_eq!(reloaded.helper_model, None);
     }
 
     #[test]
