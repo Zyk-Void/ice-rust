@@ -1,0 +1,409 @@
+{
+ "server": {
+  "name": "Cognee",
+  "version": "0.5.7"
+ },
+ "protocolVersion": "2025-06-18",
+ "toolMode": "minimal",
+ "tools": [
+  {
+   "name": "remember",
+   "description": "Store data in memory.\n\nTwo modes depending on whether session_id is provided:\n\nWithout session_id (permanent memory): Runs the full add + cognify\npipeline to ingest data and build the knowledge graph, then the\nself-improvement loop (improve) unless self_improvement=False.\n\nWith session_id (session memory): Stores the data in the session\ncache. Direct mode may also bridge it to the graph in the background;\nAPI mode uses typed cache entries and does not bridge to the graph.\nOmit session_id when the content should be stored as permanent graph memory.\n\nPass either `data` (text) or `filename` + `content_base64` (a file\nupload, up to 10 MB), not both. File uploads are permanent-memory\nonly and don't support session_id.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "data": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "The text content to store. Mutually exclusive with\nfilename/content_base64."
+     },
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Original filename for a file upload. Used to derive the stored\ndocument's name. Requires content_base64."
+     },
+     "content_base64": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Base64-encoded file content to ingest. Requires filename."
+     },
+     "dataset_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Target dataset name. Defaults to the current MCP client's\nagent-scoped dataset (e.g. \"cursor_vscode_memory\"), or\n\"main_dataset\" if no client identity is detected."
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Session ID. Stores in cache; direct mode may also bridge to the graph\nunless self_improvement is False."
+     },
+     "custom_prompt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Custom prompt for entity extraction (permanent mode only)."
+     },
+     "background": {
+      "default": false,
+      "type": "boolean",
+      "description": "Queue permanent ingestion as a background task and return immediately\ninstead of waiting for the pipeline. Use when the caller has a request\ndeadline shorter than ingestion takes. Ignored with session_id, which\nis already fast. Errors surface via cognify_status, not the return\nvalue."
+     },
+     "ontology_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "One or more uploaded ontology keys for extraction (permanent mode only).\nAPI mode uses ontologies uploaded by the authenticated API user. Local\nmode uses the default user's ontology store. Omit to keep the configured\nserver ontology."
+     },
+     "self_improvement": {
+      "default": true,
+      "type": "boolean",
+      "description": "False skips automatic improvement after permanent ingestion; add and\ncognify still run. In direct session mode, False disables the background\nsession-to-graph bridge. API session entries are cache-only regardless\nof this flag. Default True."
+     }
+    },
+    "type": "object"
+   },
+   "outputSchema": {
+    "properties": {
+     "result": {
+      "items": {},
+      "type": "array"
+     }
+    },
+    "required": [
+     "result"
+    ],
+    "type": "object",
+    "x-fastmcp-wrap-result": true
+   },
+   "_meta": {
+    "fastmcp": {
+     "tags": [
+      "default",
+      "memory"
+     ]
+    }
+   }
+  },
+  {
+   "name": "recall",
+   "description": "Search memory with auto-routing and session awareness.\n\nWhen session_id is provided without datasets or search_type,\nsearches session cache first by keyword matching. Falls through\nto the permanent knowledge graph if no session results match.\n\nAuto-routing picks the best search strategy when search_type\nis not specified.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Natural language query to search for."
+     },
+     "search_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Override auto-routing with one SearchType name. Completion types\n(answer written by an LLM): HYBRID_COMPLETION (the default when\nrouting is off), GRAPH_COMPLETION, GRAPH_COMPLETION_COT,\nGRAPH_COMPLETION_CONTEXT_EXTENSION, GRAPH_COMPLETION_DECOMPOSITION,\nGRAPH_SUMMARY_COMPLETION, RAG_COMPLETION, TRIPLET_COMPLETION,\nTEMPORAL, AGENTIC_COMPLETION. Retrieval-only types (no LLM):\nCHUNKS, CHUNKS_LEXICAL, SUMMARIES, SKILLS, CODE. Other: CYPHER,\nNATURAL_LANGUAGE, CODING_RULES, GRAPH_REPORT, FEELING_LUCKY.\nAn unknown name is rejected with a validation error."
+     },
+     "datasets": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Comma-separated dataset names to search within."
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Session ID for session-first search."
+     },
+     "system_prompt": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Override the synthesis prompt for completion searches. When omitted,\nfalls back to COGNEE_MCP_RECALL_SYSTEM_PROMPT / _FILE if configured\non the server."
+     },
+     "top_k": {
+      "default": 15,
+      "type": "integer",
+      "description": "Maximum results to return (default: 15)."
+     },
+     "scope": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Comma-separated memory sources to include: 'graph', 'session',\n'session_first', 'trace', 'session_context', 'tools', 'code', 'all',\n'auto'. Defaults to 'auto' (session first when session_id is set,\nelse graph). 'tools' and 'code' are explicit opt-in only. 'code' runs\na deterministic code-graph query and tags results source='code'."
+     },
+     "code_query": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "'code' scope only: structured operation and arguments for the\ndeterministic code-graph query, e.g. {\"operation\": \"query_facts\",\n\"property\": \"language\", \"limit\": 500}. Supported operations:\nquery_facts, explore, traverse, find_path, impact_analysis, insights,\narchitecture, delta. When omitted, 'code' scope runs an 'explore'\nseeded with the query text. Requires exact node names/IDs or\nstructured filters, not natural-language questions."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "type": "object"
+   },
+   "outputSchema": {
+    "properties": {
+     "result": {
+      "items": {},
+      "type": "array"
+     }
+    },
+    "required": [
+     "result"
+    ],
+    "type": "object",
+    "x-fastmcp-wrap-result": true
+   },
+   "_meta": {
+    "fastmcp": {
+     "tags": [
+      "default",
+      "memory"
+     ]
+    }
+   }
+  },
+  {
+   "name": "forget",
+   "description": "Delete data from memory.\n\nCan target a single data item, a specific dataset (by name or id), or\neverything the user owns. Removes data from the relational DB, graph DB,\nand vector DB.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "dataset": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Dataset name to delete entirely."
+     },
+     "everything": {
+      "default": false,
+      "type": "boolean",
+      "description": "If true, delete ALL data across all datasets."
+     },
+     "data_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "UUID of a single data item to delete. Must be paired with `dataset`\nor `dataset_id` so the owning dataset is unambiguous."
+     },
+     "dataset_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "UUID of the dataset to delete entirely, or to scope `data_id`."
+     }
+    },
+    "type": "object"
+   },
+   "outputSchema": {
+    "properties": {
+     "result": {
+      "items": {},
+      "type": "array"
+     }
+    },
+    "required": [
+     "result"
+    ],
+    "type": "object",
+    "x-fastmcp-wrap-result": true
+   },
+   "_meta": {
+    "fastmcp": {
+     "tags": [
+      "default",
+      "memory"
+     ]
+    }
+   }
+  },
+  {
+   "name": "search_tools",
+   "description": "Search for tools using natural language.\n\nReturns matching tool definitions ranked by relevance,\nin the same format as list_tools.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "query": {
+      "description": "Natural language query to search for tools",
+      "type": "string"
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "type": "object"
+   },
+   "outputSchema": {
+    "properties": {
+     "result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "items": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "type": "array"
+       }
+      ]
+     }
+    },
+    "required": [
+     "result"
+    ],
+    "type": "object",
+    "x-fastmcp-wrap-result": true
+   },
+   "_meta": {
+    "fastmcp": {
+     "tags": []
+    }
+   }
+  },
+  {
+   "name": "call_tool",
+   "description": "Call a tool by name with the given arguments.\n\nUse this to execute tools discovered via search_tools.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The name of the tool to call",
+      "type": "string"
+     },
+     "arguments": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Arguments to pass to the tool"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "_meta": {
+    "fastmcp": {
+     "tags": []
+    }
+   }
+  }
+ ]
+}
