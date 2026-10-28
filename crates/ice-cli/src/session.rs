@@ -4745,7 +4745,9 @@ mod tests {
         assert!(!outcome.summary.contains("Settings reload failed"));
         let resources = harness.get_resources().await.unwrap();
         let skills = resources.skills.as_ref().unwrap();
-        assert!(outcome.summary.contains(&format!("{} skill(s)", skills.len())));
+        assert!(outcome
+            .summary
+            .contains(&format!("{} skill(s)", skills.len())));
         assert!(skills.iter().any(|skill| skill.name == "frozen-skill"));
     }
 

@@ -163,7 +163,9 @@ fn mcp_schema_only_change_updates_capability_fingerprint() {
             &SkillSourceDirs::default(),
             &[server(
                 "remote",
-                ServerStatus::Connected { tools: vec!["remote_find".into()] },
+                ServerStatus::Connected {
+                    tools: vec!["remote_find".into()],
+                },
                 false,
                 Some(vec![tool]),
             )],

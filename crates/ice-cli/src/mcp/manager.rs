@@ -1387,9 +1387,9 @@ fn cached_catalog(cached: &cache::CachedServer) -> Vec<ToolInfo> {
                 description: description.unwrap_or("MCP tool").into(),
                 tokens: tool_tokens(name, description, item.get("inputSchema")?),
                 direct: true,
-                schema_hash: item
-                    .get("inputSchema")
-                    .and_then(|schema| schema_fingerprint(name, description.unwrap_or("MCP tool"), schema)),
+                schema_hash: item.get("inputSchema").and_then(|schema| {
+                    schema_fingerprint(name, description.unwrap_or("MCP tool"), schema)
+                }),
             })
         })
         .collect()
