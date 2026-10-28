@@ -49,6 +49,12 @@ Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.
 - `sh scripts/sync-embedded-docs.sh`, embedded-doc diff check, `python3 scripts/test_prebuilt_release.py` (4 passed), and `git diff --check`: passed.
 - No live Cognee/JEV/provider calls, model inference, real agent configuration, or user data were used. Fake-transport timings are not backend measurements.
 
+## Final implementation verification (2026-10-28)
+
+- Tested implementation commit: `b3c71e883b780a15bdc57b512d70be62657ba67f`. The correction `82dc9ed` accounts for on-demand results and marks unmeasured replay harm metrics unknown; `b3c71e8` fixes negated-history false positives and adds regression assertions.
+- Warning-denied workspace tests: **3,396 passed, 0 failed, 7 ignored** across 92 suites. Warning-denied all-target workspace check and format check passed. Embedded-doc sync/no-diff, four prebuilt release tests, and `git diff --check` passed. See the merge report for commands and retained logs.
+- Synthetic replay: 56 cases per arm; selective mode made 0 fake requests for 20 self-contained cases and delivered 0 forbidden facts across all 56. The previous implementation made 20 unnecessary self-contained requests. D does not execute JEV; do not interpret it as a JEV outcome.
+
 ## Remaining gates
 
-See `completion-evidence-matrix.md`, `completion-remaining-fixes.md`, and `merge-readiness-report.md`. The 25-task denominator remains unchanged. Final integrated format, warning-denied workspace check/tests, docs/prebuilt gates, diff/privacy audit, commit status and review readiness require exact fresh evidence. No milestone is being represented as wholly complete based only on code presence or broad test counts.
+The complete 25-task current ledger, including explicit partial/blocked criteria, is in `completion-evidence-matrix.md`. Production service contracts, JEV usefulness and rollout remain unverified. The replay is authored synthetic data, and its labeled boundary cases are not complete metadata or held-out quality evidence. Broad test passes do not establish all acceptance requirements.

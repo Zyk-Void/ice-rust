@@ -31,7 +31,9 @@ Final integrated verification passed: format check; warning-denied workspace all
 
 The 25-task denominator and baseline score remain unchanged; see `completion-evidence-matrix.md` and `merge-readiness-report.md`. Code review readiness is distinct from production or release readiness.
 
-## Principal gaps confirmed in source
+## Principal gaps confirmed at baseline
+
+The following are historical baseline findings, not claims about current source. Subsequent fixes are recorded above and in `implementation-progress.md`; outstanding verification remains in the task ledger.
 
 1. `BeforeRunEvent` has only expanded prompt/system/session/cancellation fields. It cannot convey original intent, active messages, model window, task identity, conversation branch or request-boundary identity.
 2. `coordinator.rs::take` marks results delivered before persistence, discards structured provenance by rebuilding a result with `metadata: None`, and is consumed only at prompt admission. Its prefetch selector does not apply contextual expiry/branch filters.

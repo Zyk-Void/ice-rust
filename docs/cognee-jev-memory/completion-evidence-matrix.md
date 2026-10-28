@@ -36,6 +36,36 @@ The integrated implementation adds request-boundary persistence acknowledgment, 
 
 Final integrated gates passed: format check; `-D warnings` workspace all-target check; `-D warnings` workspace tests (3,395 passed, 7 ignored); final embedded-doc sync/no-diff; prebuilt tests; and `git diff --check`. An earlier full workspace run exposed a stale expected Codex tool list which was corrected before the final pass. No live Cognee/JEV/provider requests or user data were used. The 25-task denominator remains frozen; this update does not mark all remaining partial/missing tasks complete.
 
-## Final evidence
+## Current acceptance evidence (2026-10-28)
 
-Record the final commit, exact commands and selected test counts, failed and skipped checks, fixture provenance, latency measurement scope, and remaining deployment-only gates before claiming readiness.
+The baseline table above is historical, not current status. The source snapshot tested is `b3c71e883b780a15bdc57b512d70be62657ba67f`; source and test paths below are relative to `crates/ice-cli/src/` unless otherwise stated. The whole task remains **partial** whenever a listed acceptance gap is not established. Relevant changes are included in the tested snapshot; short SHAs identify integration commits, not necessarily the first introduction of every feature.
+
+| Task | Integrated behavior and focused regression evidence | Status / remaining proof |
+|---|---|---|
+| M0.1 | `cognee/runtime.rs`, `observe/recorder_tests.rs`; persistence-failure and late-recall tests; request-boundary integration `7a789f4c` | Partial: complete operation-level attribution not independently demonstrated. |
+| M0.2 | `cognee/client.rs`, `runtime.rs` doctor; 404/422 and unsupported-status fixtures | Partial: connected MCP Cognee capability inventory and live contract unverified. |
+| M1.1 | `cognee/identity.rs`, `config.rs`; linked-worktree identity fixtures | Partial: complete cross-branch/revision and backend metadata proof remains. |
+| M1.2 | `cognee/lookup.rs`, `runtime.rs`; fallback and bypass fixtures | Partial: alias cancellation/deadline and provenance coverage not complete. |
+| M2.1 | `cognee/policy.rs`, `request.rs`; `negated_history_phrases_do_not_trigger_automatic_recall` (`b3c71e8`), raw-intent and fast-path tests | Partial: full task-event and sufficient-context acceptance coverage not established. |
+| M2.2 | `cognee/coordinator.rs`, `request.rs`; prepared packet, persistence ack, expiry/cancellation tests | Partial: independent full lifecycle and live service proof outstanding. |
+| M2.3 | `cognee/validation.rs`, `request_tests.rs`; stale task and branch/correlation tests (`6297a800`) | Partial: every generation/config transition not covered. |
+| M3.1 | `cognee/client.rs`, `evidence.rs`, `lookup.rs`; fallback provenance tests | Partial: real graph normalization/source semantics unverified. |
+| M3.2 | `cognee/evidence.rs`, `delivery.rs`, `suppress.rs`; branch/expiry/duplicate/active-context and suppression tests | Partial: live metadata and graph paraphrases unverified. |
+| M3.3 | `cognee/delivery.rs`, `request_tests.rs`; tiny-window, shared-budget, complete-envelope and append-failure tests | Partial: full host transition coverage remains. |
+| M4.1 | `cognee/admission.rs`, `queue.rs`; receipt, queue reservation, recovery, duplicate, lock and uncertain-write tests (`5e289a87`, `8d479121`) | Partial: production filesystem and remote completion semantics unverified. |
+| M4.2 | `cognee/source_validation.rs`, `validation.rs`, `runtime.rs`; invalid/negated/stale-source and valid helper admission tests (`440edddc`, `6297a800`) | Partial: all historical promotion paths and live integration require review. |
+| M4.3 | `cognee/suppress.rs`, `admission.rs`; accepted correction and expiry fixtures | Partial: volatile re-verification and cross-branch production coverage remain. |
+| M4.4 | `cognee/runtime.rs`, `admission.rs`; acceptance/backoff/coalescing and local curated receipt tests | Partial: remote job completion/searchability endpoint unsupported or unverified. |
+| M5.1 | `cognee/config.rs`, `helper.rs`, `runtime.rs`; explicit binding, off and nonfatal invalid provider tests | Partial: live provider endpoint behavior not tested; helper remains off by default. |
+| M5.2 | `cognee/helper.rs`; bounded typed IDs, redaction, invalid input and abstention fixtures | Partial: complete combined client/service behavior not verified live. |
+| M5.3 | `cognee/helper_gate.rs`, `runtime.rs`; shared quota, cache, stale flight and shutdown tests | Partial: settings/revision races and live provider limits remain unverified. |
+| M5.4 | `offline_replay_tests.rs`, `offline-evaluation.md`; fake transport, 56 authored cases | Blocked: no JEV judgment executed; no held-out usefulness or latency evidence. JEV stays off. |
+| M6.1 | `capability_catalog.rs`, `capability_service.rs`; live registry snapshots and capability tests (`17db78cc`) | Partial: all host refresh and real MCP lifecycle transitions not proven. |
+| M6.2 | `skill_coverage.rs`, `capability_service.rs`; full/partial and compaction-aware tests | Partial: all restored-session and live lifecycle transitions not proven. |
+| M6.3 | `capability_suggest.rs`, `capability_service.rs`; bounded advisory/miss tests, no execution | Partial: task-transition and UX coverage incomplete; no JEV ranking evaluation. |
+| M6.4 | `cognee/lookup.rs`, `client.rs`, `mcp/proxy_tests.rs`; empty/error/timeout/cancellation fixtures | Locally verified; remote contracts remain deployment-dependent. |
+| M7.1 | `cognee/config.rs`, `command.rs`; mode presets, helper settings and override tests | Partial: interactive TUI and real settings review outstanding. |
+| M7.2 | `offline_replay_tests.rs`; 56 cases, five labelled arms, explicit ablation, failure-inclusive local timings (`3173b8b4`, `82dc9ed`, `b3c71e8`) | Partial: D does not invoke JEV; labels do not prove all harm metadata; TTFT, utility and background latency unknown. |
+| M7.3 | `cognee/config.rs`, `command.rs`; manual/canary/selective/legacy modes, cancellation fixtures | Blocked: no real shadow/canary or rollback drill and no production rollout proof. |
+
+Counts, commands, synthetic limitations and rollback guidance are in `merge-readiness-report.md` and `offline-evaluation.md`. Do not interpret synthetic false-positive counts as real-world admission quality.

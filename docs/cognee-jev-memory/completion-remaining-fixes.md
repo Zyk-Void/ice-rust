@@ -1,6 +1,6 @@
 # Remaining fixes and dependency order
 
-This execution list follows the frozen 25-task matrix. It does not redefine completion.
+This execution list follows the frozen 25-task matrix. It does not redefine completion. The list below preserves the original integration checklist; the current task-level status is in `completion-evidence-matrix.md`. Receipt/capability/replay integration and the final offline workspace gates have run, but completing those checks does not prove the remaining production and acceptance criteria.
 
 1. Reconcile feature branches by patch identity and functional review, not blind cherry-picking. Receipt recovery hardening, capability miss/compaction coverage, and synthetic chronological replay are now integrated; final gate verification and evidence recording remain.
 2. Add or verify cached repository identity (common directory, worktree, branch, revision), immutable task/context ownership, and typed original prompt metadata. Wire any remaining host lifecycle and main-agent task/capability-miss events; prompt text changes alone never schedule work.

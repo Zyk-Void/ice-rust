@@ -6,7 +6,7 @@
 - Production admission uses one process-wide `SharedHelperBudget`, keyed by a SHA-256 digest of the configured provider identity (never credentials). Defaults are process concurrency 2, provider concurrency 1, 6 requests/provider/minute, 12 requests/process/minute, with the existing per-session 2/minute gate. All admission is try-only. Provider history is capped at 32 identities; eviction only removes identities with no active permit and no rolling-window requests. Canceled/panicked flights release owned permits by RAII. Session/rebind cancellation does not reset budget history.
 - The in-memory batch cache is capped at 128 FIFO entries, with 10-minute judged and 1-minute abstention TTLs. Cache identity includes provider/model, active dataset and context generation, sorted candidate ID/text hash/source entry/category/scope/branch/supersedes/expiry. Cached verdicts do not consume quota. Source/config/task changes naturally produce new keys.
 - Helper work is candidate-revision driven. Successful proposal-tool completion marks a revision; run-settled events only dispatch an unseen revision and perform no candidate-directory scan on unchanged revisions. Reads are capped at 32 records and source context comes only from bounded current-branch excerpts named by candidates, never the latest prompt. Outbound candidate/context text passes the existing redactor.
-- Application requires explicit durable `Yes` and applicable `Yes`; `Uncertain`, unknown IDs, and explicit `Category::None` do not apply. Existing `super::propose::accept_candidate` is retained as the application-call hook pending integration of the separate fresh shared-acceptance validation owner; this slice does not claim that hook is itself the full fresh-acceptance gate.
+- Application requires explicit durable `Yes` and applicable `Yes`; `Uncertain`, unknown IDs, and explicit `Category::None` do not apply. Integrated `accept_validated_candidate` validates current source and task/session ownership again before receipt-backed acceptance, including cached judgments.
 - Helper observations use one UUID captured for the scheduled logical operation, retain elapsed request latency, and report separate requested/judged/abstained/cached/busy/rate-limited/stale/application-failed/persisted fields. Candidate text and prompts are not included in helper observation metadata.
 
 ## Verification
@@ -17,7 +17,7 @@
 
 ## Remaining independent gates
 
-- The separate owner is completing fresh shared-acceptance validation; integrate that implementation at the marked `accept_candidate` application-call hook when available.
+- Fresh shared-acceptance validation is integrated in `440edddc` and `6297a800`. The helper branch's remaining helper/config differences are formatting or test-only visibility; its older runtime does not include later receipt and source safety, so it must not replace the integrated runtime.
 - JEV quality/effectiveness and latency remain **UNVERIFIED**. No quality or performance claim is made; default activation remains off.
 
 ## Worktree note

@@ -10,9 +10,9 @@ After receipt commit, candidate JSON and activated queue records are projections
 
 `candidates::query_accepted` now accepts new records only from valid committed receipts; candidate projections with `admission_id` cannot prove acceptance. Legacy accepted candidate records with no admission ID remain readable. Correction/supersession is derived from the same committed receipt collection, so uncommitted changes cannot suppress old facts; remote graph history is never removed. Candidate and queue projections are repairable from receipts. Older candidate and pending-operation formats remain readable through serde defaults.
 
-## Scope boundary / next slice
+## Integrated source-validation boundary
 
-Fresh asynchronous source revalidation (current branch/source generation/cancellation) is not yet implemented. The existing deterministic attribution checks remain in force; helper-provided snapshots must not be described as freshly revalidated. The next slice owns that validation work. This implementation does not modify helper scheduling, configuration, clients, coordinator, evidence policy, or capability handling.
+Subsequent integration in `440edddc` and `6297a800` added current source, session, task, branch and repository validation before helper dispatch and again before acceptance. See `validation.rs`, `source_validation.rs`, and the helper admission tests in `runtime.rs`. Helper verdicts are advisory and cannot replace those checks; the receipt remains the admission commit point. The receipt implementation itself does not control helper scheduling or capability routing.
 
 ## Verification
 
