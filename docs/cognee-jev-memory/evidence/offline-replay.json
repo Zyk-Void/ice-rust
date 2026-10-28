@@ -57,7 +57,7 @@
         "min": 0,
         "p50_nearest_rank": 0,
         "p95_nearest_rank": 0,
-        "max": 2
+        "max": 7
       },
       "service_latency": "simulated by local fake transport; not remote"
     },
@@ -111,10 +111,10 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 755,
-        "p50_nearest_rank": 1619,
-        "p95_nearest_rank": 2424,
-        "max": 1002129
+        "min": 670,
+        "p50_nearest_rank": 1714,
+        "p95_nearest_rank": 1862,
+        "max": 1001752
       },
       "service_latency": "simulated by local fake transport; not remote"
     },
@@ -168,10 +168,10 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 309,
-        "p50_nearest_rank": 1587,
-        "p95_nearest_rank": 1863,
-        "max": 1001372
+        "min": 335,
+        "p50_nearest_rank": 1702,
+        "p95_nearest_rank": 1807,
+        "max": 1002185
       },
       "service_latency": "simulated by local fake transport; not remote"
     },
@@ -226,9 +226,9 @@
         "includes_failures": true,
         "warmup_excluded": false,
         "min": 319,
-        "p50_nearest_rank": 1612,
-        "p95_nearest_rank": 2224,
-        "max": 1001601
+        "p50_nearest_rank": 1666,
+        "p95_nearest_rank": 2192,
+        "max": 1001564
       },
       "service_latency": "simulated by local fake transport; not remote"
     },
@@ -282,20 +282,20 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 248,
-        "p50_nearest_rank": 343,
-        "p95_nearest_rank": 1141,
-        "max": 1548
+        "min": 265,
+        "p50_nearest_rank": 369,
+        "p95_nearest_rank": 1292,
+        "max": 1656
       },
       "service_latency": "simulated by local fake transport; not remote"
     }
   },
   "arm_D_scope": "mock JEV integration was not run by this corpus; faux ID judgment is not implemented in this driver, recorded not eligible/unverified; no JEV quality inference",
   "runtime": {
-    "code_commit": "3cf36572fd655ec75e7a510afa23a7007f092d9e",
+    "code_commit": "45d1fa4d570ba93e397cddfbba01c13165f6b655",
     "worktree_dirty": true,
     "hardware": "supplied local metadata: not provided",
-    "date_utc": 1793153445899,
+    "date_utc": 1793153519404,
     "main_model_correctness": "unverified",
     "TTFT": "unverified",
     "end_to_end_benefit": "unverified",
@@ -315,8 +315,8 @@
     "latency_us": {
       "n": 1000,
       "p50_nearest_rank": 32,
-      "p95_nearest_rank": 39,
-      "max": 147
+      "p95_nearest_rank": 33,
+      "max": 129
     }
   },
   "paired_C_vs_B": {
@@ -440,5 +440,5 @@
     "total_requests": 174,
     "local_latency_samples_including_failures": 280
   },
-  "generated_at_ms": 1793153445899
+  "generated_at_ms": 1793153519404
 }
