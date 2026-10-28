@@ -1,3 +1,7 @@
+## Superseded component-stage evidence
+
+This file records an earlier component-stage run. The final integrated source, verification and acceptance status are in [offline-closeout-report.md](offline-closeout-report.md). Do not use earlier counts or mock-JEV metrics as current results.
+
 # Capability closeout: M6.1–M6.3
 
 This closeout records the repository-side implementation and offline evidence. It does not claim live host UX, live Cognee/MCP/provider behavior, or real JEV ranking quality.

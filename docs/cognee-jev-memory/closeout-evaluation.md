@@ -1,3 +1,7 @@
+## Superseded component-stage evidence
+
+This file records an earlier component-stage run. The final integrated source, verification and acceptance status are in [offline-closeout-report.md](offline-closeout-report.md). Do not use earlier counts or mock-JEV metrics as current results.
+
 # Cognee/JEV offline closeout evaluation
 
 Date: 2026-10-28. Scope: isolated synthetic fixtures and the production local evidence selector. No Cognee, JEV, provider, or model service was contacted. No production settings or user directories were changed. The only transport used was the existing fake test transport; test files and runtime state used temporary directories. Live model authorization remains `cx/gpt-6-luna` only, and no model was needed.

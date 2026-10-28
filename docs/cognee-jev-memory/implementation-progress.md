@@ -1,3 +1,7 @@
+# Current execution status
+
+See [offline-closeout-report.md](offline-closeout-report.md) and [current acceptance matrix](completion-evidence-matrix.md). Current strict score: **88.0%**, 21 locally verified / 2 partial / 2 externally blocked. Verified source: `1df122d4febc8abd0d578d4c20a2191d58c7043a`. The following original progress log is retained as history, not current task status.
+
 # Cognee + JEV implementation progress
 
 Baseline: `09a728cdc5b98e270b8f01e38d2575ca047d45ff` on `feat/cognee-helper`.

@@ -1,3 +1,7 @@
+## Superseded component-stage evidence
+
+This file records an earlier component-stage run. The final integrated source, verification and acceptance status are in [offline-closeout-report.md](offline-closeout-report.md). Do not use earlier counts or mock-JEV metrics as current results.
+
 # Cognee/JEV memory M1–M3 closeout context
 
 This is an offline implementation/test closeout, not evidence of held-out real-world utility. No live Cognee/JEV service, other model, user data/configuration, or `~/.ice` was used. The only model involved was the authorized implementation agent. No push, PR, merge, or protected-branch operation was performed.

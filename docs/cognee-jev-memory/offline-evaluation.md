@@ -1,3 +1,7 @@
+## Superseded component-stage evidence
+
+This file records an earlier component-stage run. The final integrated source, verification and acceptance status are in [offline-closeout-report.md](offline-closeout-report.md). Do not use earlier counts or mock-JEV metrics as current results.
+
 # M7 offline chronological evaluation
 
 **Status:** executed synthetic regression evaluation, not a user-quality benchmark.

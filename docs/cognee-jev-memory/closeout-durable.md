@@ -1,3 +1,7 @@
+## Superseded component-stage evidence
+
+This file records an earlier component-stage run. The final integrated source, verification and acceptance status are in [offline-closeout-report.md](offline-closeout-report.md). Do not use earlier counts or mock-JEV metrics as current results.
+
 # Cognee durable closeout (local implementation)
 
 ## Owned durable implementation and regression proof

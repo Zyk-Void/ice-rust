@@ -125,10 +125,10 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 820,
-        "p50_nearest_rank": 1774,
-        "p95_nearest_rank": 3235,
-        "max": 1001731
+        "min": 718,
+        "p50_nearest_rank": 1850,
+        "p95_nearest_rank": 1990,
+        "max": 1001853
       },
       "local_driver_latency": "includes runtime/fake transport; not remote service latency"
     },
@@ -189,10 +189,10 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 324,
-        "p50_nearest_rank": 1392,
-        "p95_nearest_rank": 2406,
-        "max": 1000990
+        "min": 380,
+        "p50_nearest_rank": 1401,
+        "p95_nearest_rank": 1957,
+        "max": 1001639
       },
       "local_driver_latency": "includes runtime/fake transport; not remote service latency"
     },
@@ -253,10 +253,10 @@
         "n": 56,
         "includes_failures": true,
         "warmup_excluded": false,
-        "min": 268,
-        "p50_nearest_rank": 378,
-        "p95_nearest_rank": 1445,
-        "max": 1560
+        "min": 274,
+        "p50_nearest_rank": 380,
+        "p95_nearest_rank": 1322,
+        "max": 1525
       },
       "local_driver_latency": "includes runtime/fake transport; not remote service latency"
     }
@@ -269,10 +269,10 @@
     "results": null
   },
   "runtime": {
-    "code_commit": "562dd769199c61a1171a99af53969fc7d9f08833",
+    "code_commit": "1df122d4febc8abd0d578d4c20a2191d58c7043a",
     "worktree_dirty": true,
     "hardware": "supplied local metadata: not provided",
-    "date_utc": 1793163907917,
+    "date_utc": 1793166378378,
     "main_model_correctness": "unverified",
     "TTFT": "unverified",
     "end_to_end_benefit": "unverified",
@@ -291,9 +291,9 @@
     "fake_transport_requests": 0,
     "latency_us": {
       "n": 1000,
-      "p50_nearest_rank": 32,
-      "p95_nearest_rank": 47,
-      "max": 1293
+      "p50_nearest_rank": 36,
+      "p95_nearest_rank": 51,
+      "max": 99
     }
   },
   "paired_C_vs_B": {
@@ -311,9 +311,9 @@
       "available_at": 1800000003000,
       "request_at": 1800000003050,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -324,9 +324,9 @@
       "available_at": 1800000003100,
       "request_at": 1800000003150,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -337,9 +337,9 @@
       "available_at": 1800000003200,
       "request_at": 1800000003250,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -350,9 +350,9 @@
       "available_at": 1800000003300,
       "request_at": 1800000003350,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -363,9 +363,9 @@
       "available_at": 1800000003400,
       "request_at": 1800000003450,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -376,9 +376,9 @@
       "available_at": 1800000003500,
       "request_at": 1800000003550,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -389,9 +389,9 @@
       "available_at": 1800000003600,
       "request_at": 1800000003650,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -402,9 +402,9 @@
       "available_at": 1800000003700,
       "request_at": 1800000003750,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -415,9 +415,9 @@
       "available_at": 1800000003800,
       "request_at": 1800000003850,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -428,9 +428,9 @@
       "available_at": 1800000003900,
       "request_at": 1800000003950,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -441,9 +441,9 @@
       "available_at": 1800000004000,
       "request_at": 1800000004050,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -454,9 +454,9 @@
       "available_at": 1800000004100,
       "request_at": 1800000004150,
       "active_context_absent": true,
-      "prepared": true,
+      "expected_fact_prepared": true,
       "persist_acknowledged": false,
-      "delivered": true,
+      "delivered_to_model": null,
       "downstream_observation": false,
       "constraint_reused": null,
       "benefit": null
@@ -466,5 +466,5 @@
     "total_requests": 101,
     "local_latency_samples_including_failures": 224
   },
-  "generated_at_ms": 1793163907918
+  "generated_at_ms": 1793166378378
 }
