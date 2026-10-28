@@ -388,6 +388,7 @@ Start with the [documentation index](docs/README.md), grouped by feature.
 - [Architecture](docs/architecture/overview.md) — how the crates fit together and why
 - [Building an agent project](docs/agent/project-structure.md) — recommended structure
 - [Extension authoring](docs/extensions/authoring.md) — plugin templates and ABI rules
+- [Adding tools](docs/guides/adding-tools.md) — every route for adding or changing a tool, and what is missing
 - [Subagents](docs/extensions/subagents.md) — configuration inheritance, permissions and lifecycle
 - [Remote mode](docs/remote/user-guide.md) — protocol, tokens, limitations
 - [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)

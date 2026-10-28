@@ -14,6 +14,7 @@ are recorded in the [CHANGELOG](../CHANGELOG.md); future plans are in the
 | Messages, streaming responses, and tool execution | [Agent loop walkthrough](agent/loop-walkthrough.md) |
 | Long sessions and context compaction | [Context compaction](agent/context-compaction.md) |
 | Rust dynamic-library extensions and ABI | [Extension authoring](extensions/authoring.md) |
+| Adding or changing agent tools (built-in, plugin, MCP) and the gap versus ice | [Adding tools](guides/adding-tools.md) |
 | Startup, session, and shutdown events | [Extension lifecycle](extensions/lifecycle.md) |
 | Subagent configuration inheritance, permissions, and lifecycle | [Host-managed subagents](extensions/subagents.md) |
 | Stdio MCP servers and tool discovery | [MCP tools](extensions/mcp.md) |
