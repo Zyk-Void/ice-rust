@@ -23,6 +23,35 @@ pub const MAX_ERROR_RESPONSE_BYTES: usize = 4 * 1024;
 const RECALL_PREREQUISITES_ERROR: &str = "Recall prerequisites not met";
 const MAX_GRAPH_NODE_CHARS: usize = 400;
 
+/// HTTP acceptance only. A returned handle is opaque; this adapter never
+/// guesses a polling endpoint or treats the job as completed/searchable.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcceptedReceipt {
+    pub job_id: Option<String>,
+}
+
+async fn read_accepted_receipt(response: &mut HttpResponse) -> AcceptedReceipt {
+    let Ok(Ok(value)) =
+        tokio::time::timeout(Duration::from_millis(250), read_json(response, 4096)).await
+    else {
+        return AcceptedReceipt::default();
+    };
+    let job_id = ["job_id", "jobId", "task_id", "taskId"]
+        .into_iter()
+        .find_map(|key| value.get(key).and_then(Value::as_str))
+        .filter(|id| {
+            !id.is_empty()
+                && id.len() <= 128
+                && id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b':'))
+                && super::text::redact_credential_text(id) == *id
+        })
+        .map(str::to_owned);
+    AcceptedReceipt { job_id }
+}
+
 /// `CogneeErrorKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CogneeErrorKind {
@@ -931,6 +960,22 @@ impl CogneeClient {
         session_id: Option<&str>,
         options: CallOptions,
     ) -> Result<(), CogneeError> {
+        self.remember_with_receipt(text, node_set, dataset, session_id, options)
+            .await
+            .map(|_| ())
+    }
+
+    /// Preserve a bounded optional job handle without inferring completion.
+    pub async fn remember_with_receipt(
+        &self,
+        text: &str,
+        node_set: &str,
+        dataset: Option<&str>,
+        session_id: Option<&str>,
+        options: CallOptions,
+    ) -> Result<AcceptedReceipt, CogneeError> {
+        let accepted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let acceptance_flag = accepted.clone();
         let result = async {
             let mut parts = vec![
                 FormPart {
@@ -979,11 +1024,24 @@ impl CogneeClient {
                 options
                     .timeout_ms
                     .unwrap_or(self.config.recall_budget_ms.max(30_000)),
-                |response| async move { assert_ok(&response, "remember") },
+                |mut response| async move {
+                    assert_ok(&response, "remember")?;
+                    acceptance_flag.store(true, std::sync::atomic::Ordering::Release);
+                    Ok(read_accepted_receipt(&mut response).await)
+                },
             )
             .await
         }
         .await;
+        // Cancellation while reading an optional acknowledgment cannot undo
+        // observed HTTP acceptance or turn it into permission to resend.
+        let result = result.or_else(|error| {
+            if accepted.load(std::sync::atomic::Ordering::Acquire) {
+                Ok(AcceptedReceipt::default())
+            } else {
+                Err(error)
+            }
+        });
         self.record_outcome(|outcomes| &mut outcomes.remember, &result, false);
         result
     }
@@ -1046,6 +1104,20 @@ impl CogneeClient {
         session_ids: &[String],
         options: CallOptions,
     ) -> Result<(), CogneeError> {
+        self.improve_with_receipt(dataset, session_ids, options)
+            .await
+            .map(|_| ())
+    }
+
+    /// Preserve a bounded optional job handle without inferring completion.
+    pub async fn improve_with_receipt(
+        &self,
+        dataset: Option<&str>,
+        session_ids: &[String],
+        options: CallOptions,
+    ) -> Result<AcceptedReceipt, CogneeError> {
+        let accepted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let acceptance_flag = accepted.clone();
         let result = async {
             let mut body = json!({"datasetName": dataset.unwrap_or(&self.config.dataset)});
             if !session_ids.is_empty() {
@@ -1058,11 +1130,24 @@ impl CogneeClient {
                 http,
                 options.signal.as_ref(),
                 options.timeout_ms.unwrap_or(120_000),
-                |response| async move { assert_ok(&response, "improve") },
+                |mut response| async move {
+                    assert_ok(&response, "improve")?;
+                    acceptance_flag.store(true, std::sync::atomic::Ordering::Release);
+                    Ok(read_accepted_receipt(&mut response).await)
+                },
             )
             .await
         }
         .await;
+        // Cancellation while reading an optional acknowledgment cannot undo
+        // observed HTTP acceptance or turn it into permission to resend.
+        let result = result.or_else(|error| {
+            if accepted.load(std::sync::atomic::Ordering::Acquire) {
+                Ok(AcceptedReceipt::default())
+            } else {
+                Err(error)
+            }
+        });
         self.record_outcome(|outcomes| &mut outcomes.improve, &result, false);
         result
     }
@@ -1287,6 +1372,7 @@ pub(crate) mod tests {
     }
 
     include!("record_tests.rs");
+    include!("accepted_receipt_tests.rs");
 
     pub(crate) fn client(transport: Arc<FakeTransport>) -> CogneeClient {
         CogneeClient::new(
