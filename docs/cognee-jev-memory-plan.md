@@ -19,7 +19,7 @@ Success means that the agent carries a relevant earlier decision into a later ta
 ### Supporting reports
 
 - [Code audit](cognee-jev-memory/code-audit.md): exact code paths, ten findings, existing invariants, and corrections to the rough proposal.
-- Observability audit (**withheld from this repository**): actual session cohorts, latency, representative failures and relevant retrieval, and evidence limitations. It and its evidence snapshots quote private local session activity, so they stay out of this public repository until a privacy-safe version exists. The aggregate figures in section 2.1 below are the published summary.
+- [Observability audit](cognee-jev-memory/observability-audit.md): actual session cohorts, latency, representative failures and relevant retrieval, and evidence limitations. Published in redacted form (IDs, paths and personal names removed); its reproduction script and evidence JSON are withheld because they embed private session text.
 - [Capability routing audit](cognee-jev-memory/capability-routing-audit.md): existing JEV client, skill loading, MCP search, and what to reuse.
 - [Upstream research](cognee-jev-memory/upstream-research.md): current primary documentation, adopted and rejected patterns, version caveats.
 - [Evaluation protocol](cognee-jev-memory/evaluation-protocol.md): chronological cases, baselines, labels, budgets, and release gates.
@@ -43,7 +43,7 @@ The database snapshot covers **46 runs and 3,601 events**, from **2026-10-26 03:
 | 75 Q/A capture terminals; 254 trace terminals, including 8 timeouts | The memory input stream includes substantial routine activity | Every accepted entry was durably stored/indexed |
 | 18 improvement acceptances, 58 improvement timeouts, 32 started-only items | Consolidation attempts have an operational problem and incomplete outcomes | 18 completed promotions, or 32 confirmed failures |
 
-Examples in the observability report include an underspecified “which one is main” receiving unrelated earlier topics, a build request receiving command-success records, and a commit-count request receiving a count of successful operations. A Skyrim continuation retrieved relevant earlier migration paths; the agent still verified the live state. That is a relevant retrieval candidate, not proof of net time saved. The report preserves episode IDs and sequence numbers.
+Examples in the observability report include an underspecified “which one is main” receiving unrelated earlier topics, a build request receiving command-success records, and a commit-count request receiving a count of successful operations. A game-setup continuation retrieved relevant earlier migration paths; the agent still verified the live state. That is a relevant retrieval candidate, not proof of net time saved. The report preserves episode IDs and sequence numbers.
 
 The current stored Cognee configuration has automatic recall, session capture, tool capture, automatic improve, and compaction remembering enabled, a `$project` dataset, and a 10,000 ms recall budget. This is a file snapshot; effective process environment overrides were not inspected. There is no evidence in this audit of a curated manual permanent-memory habit: the two permanent remember observations were compaction checkpoints.
 
