@@ -400,6 +400,22 @@ mod tests {
         assert!(RepositoryIdentity::read(dir.path()).revision.is_none());
     }
 
+    #[test]
+    fn moving_filesystem_git_repository_changes_path_scoped_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let original = dir.path().join("before");
+        fs::create_dir_all(original.join("src")).unwrap();
+        main_repo(&original);
+        let before = RepositoryIdentity::read(&original);
+        let moved = dir.path().join("after");
+        fs::rename(&original, &moved).unwrap();
+        let after = RepositoryIdentity::read(&moved);
+        assert_ne!(before.repository_id, after.repository_id);
+        assert_ne!(before.worktree_id, after.worktree_id);
+        assert_eq!(before.branch, after.branch);
+        assert_eq!(before.revision, after.revision);
+    }
+
     #[cfg(unix)]
     #[test]
     fn nested_path_and_symlink_resolve_to_the_same_canonical_repository() {

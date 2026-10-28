@@ -4,16 +4,18 @@ This is an offline implementation/test closeout, not evidence of held-out real-w
 
 ## Verification
 
-Commands run from the isolated closeout worktree with the inherited build constraints:
+Earlier closeout checks used `/tmp/ice-cognee-closeout-target`, which is shared with a runtime worker; do not reuse that target. This follow-up used only the worktree-owned target `target/validation`, with `CARGO_BUILD_JOBS=2` and `RUSTFLAGS=-Dwarnings`:
 
-- `CARGO_TARGET_DIR=/tmp/ice-cognee-closeout-target CARGO_BUILD_JOBS=2 RUSTFLAGS=-Dwarnings cargo test -p ice-cli --lib --locked cognee::` — **226 passed, 1 ignored, 0 failed**.
-- `CARGO_TARGET_DIR=/tmp/ice-cognee-closeout-target CARGO_BUILD_JOBS=2 RUSTFLAGS=-Dwarnings cargo test -p ice-harness --test harness_extensions --locked --features ice-ai/providers` — **17 passed, 0 failed**.
+- `cargo test -p ice-cli explicit_lookup_ --lib` — **6 passed, 0 failed** (includes shared canonical/legacy deadline and cancellation/no-alias-request regressions).
+- `cargo test -p ice-cli cognee:: --lib` — **230 passed, 1 ignored, 0 failed**.
+- `cargo test -p ice-cli moving_filesystem_git_repository_changes_path_scoped_identity --lib` — **1 passed, 0 failed**.
+- `cargo fmt --all` and `git diff --check` — clean.
 
 ## M1 — Repository identity and legacy aliases
 
 - **M1.1 identity proof:** `crates/ice-cli/src/cognee/identity.rs` provides cached filesystem-backed Git identity and revision tracking without spawning Git on the prompt path. Its unit fixtures cover linked worktrees sharing common repository identity while retaining branch/worktree distinction (`linked_worktrees_share_repo_but_not_branch_or_worktree`), nested paths and symlink aliases (`nested_path_and_symlink_resolve_to_the_same_canonical_repository`), detached/unborn/malformed refs, packed refs, external ref/revision changes, non-Git and unrelated repositories, and oversized control files. Runtime identity/generation integration is exercised by `runtime::context_generation_tracks_identity_but_not_compaction_or_repeated_start` and `runtime::recall_result_is_dropped_when_session_switches_mid_flight` in `crates/ice-cli/src/cognee/runtime.rs`.
-- **M1.2 alias/read-through proof:** Runtime fallback implementation and tests are in the excluded `runtime.rs`; `fallback_recall_keeps_provenance_and_scope` checks the mapped legacy path and its provenance, while `fallback_is_bypassed_for_hits_errors_explicit_dataset_and_legacy_policy` checks the bounded fallback conditions. Shared-budget behavior is covered by `event_cache_and_network_share_budget`; unavailable/error paths are covered by the fallback bypass test. Explicit datasets remain unaliased. This is read-through only; no legacy dataset is rewritten/deleted.
-- **Identity limitation:** local canonical common-dir identity cannot unify independent clones/machines and intentionally does not infer ownership from same-basename paths. Git state is a snapshot, not proof of working-tree content.
+- **M1.2 alias/read-through proof:** Runtime fallback implementation and tests are in the excluded `runtime.rs`; `fallback_recall_keeps_provenance_and_scope` checks the mapped legacy path and its provenance, while `fallback_is_bypassed_for_hits_errors_explicit_dataset_and_legacy_policy` checks the bounded fallback conditions. New `lookup_tests.rs` regressions prove canonical plus legacy alias work shares one deadline and cancellation prevents an alias request. Shared-budget behavior is also covered by `event_cache_and_network_share_budget`; unavailable/error paths are covered by the fallback bypass test. Explicit datasets remain unaliased. This is read-through only; no legacy dataset is rewritten/deleted.
+- **Identity limitation:** local canonical common-dir identity cannot unify independent clones/machines and intentionally does not infer ownership from same-basename paths. New `moving_filesystem_git_repository_changes_path_scoped_identity` proves a repo move changes path-scoped identities without inferring a global identity. Git state is a snapshot, not proof of working-tree content.
 
 ## M2 — Admission, resident cache, and operation ownership
 
@@ -24,15 +26,15 @@ Commands run from the isolated closeout worktree with the inherited build constr
 
 ## M3 — Provenance, filters, and bounded safe delivery
 
-- **M3.1 provenance proof:** `evidence.rs` and runtime normalization retain recognized provenance without inventing unknown fields. `provenance_reads_only_known_string_fields`, runtime `fallback_recall_keeps_provenance_and_scope`, and the runtime fallback metadata assertions are focused fixtures. Cache tests confirm speculative reads retain raw provenance.
+- **M3.1 provenance proof:** `evidence.rs` and runtime normalization retain recognized provenance without inventing unknown fields. `provenance_reads_only_known_string_fields`, runtime `fallback_recall_keeps_provenance_and_scope`, and the runtime fallback metadata assertions are focused fixtures. `request_boundary_active_context_and_provenance_restrictions_filter_ready_records` verifies mismatched branch/revision and malformed validity cannot become facts; legacy lookup remains explicit fallback only. Cache tests confirm speculative reads retain raw provenance.
 - **M3.2 filter/novelty proof:** evidence tests cover routine tool-success rejection, local suppression, metadata/line rejection accounting, deduplication and reinjection after clearing seen-state. Delivery tests cover active context, irrelevant history, unknown/malformed scope/validity, and repeated evidence. Runtime tests `event_read_policy_searches_only_for_history_requests`, `event_recall_injects_only_new_evidence_and_reinjects_after_compaction`, `suppression_recorded_after_prefetch_filters_cached_delivery`, and `accepted_user_correction_persists_and_filters_old_fact_after_seen_clear` exercise current-context priority, compaction, suppression, and supersession behavior.
 - **M3.3 budget/append proof:** `delivery.rs` tests enforce atomic complete envelopes, tiny-budget whole-item dropping, multibyte-safe text, markup containment, bounded query/model budgets, and not marking oversized facts seen. Runtime `checkpoint_and_recall_share_one_budget_with_a_complete_envelope` and `automatic_budget_caps_large_checkpoint_and_recall` cover combined budgets. Harness tests verify append failure is not sent/acknowledged and persisted context is appended without changing the stable prefix. Request-context late/stale results are generation-fenced; no streaming-request mutation is used.
 
 ## Remaining integration boundaries / external requirements
 
 1. `crates/ice-cli/src/cognee/runtime.rs` and `crates/ice-cli/src/cognee/config.rs` were explicitly outside this worktree’s ownership. Their existing code and tests were inspected and exercised but not modified here. Any future runtime interface fix should be made by the runtime owner; in particular, the request-context lifecycle remains an additive Rust harness contract and should continue to be wired at each model-request construction boundary, including post-tool boundaries.
-2. Git identity is intentionally machine-local. Explicit reconciliation is needed to associate a moved working directory or an independent clone; automatic cross-machine identity is out of scope. A moved-directory reconciliation fixture was not run.
-3. Verification is deterministic offline fixture coverage only. It does not establish live-backend compatibility/searchability, production service availability, model/JEV judgment quality, or held-out task utility. Those remain external rollout/evaluation gates, not prerequisites for the plan’s local offline acceptance criteria.
+2. Git identity is intentionally machine-local. The moved-directory fixture proves identity is path-scoped; deliberate explicit reconciliation is needed to associate a moved working directory or independent clone. Automatic cross-machine identity is out of scope. A moved-directory reconciliation fixture was not run.
+3. Verification is offline fixture coverage only. It does not establish live-backend compatibility/searchability, production service availability, model/JEV judgment quality, or held-out task utility. Those remain external rollout/evaluation gates, not prerequisites for the plan’s local offline acceptance criteria.
 
 ## Commits
 

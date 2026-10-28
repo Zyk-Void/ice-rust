@@ -111,3 +111,80 @@ async fn explicit_lookup_cancelled_or_oversized_query_makes_no_request() {
     );
     assert!(transport.sent().is_empty());
 }
+
+#[tokio::test]
+async fn explicit_lookup_canonical_and_legacy_alias_share_one_deadline() {
+    let dir = tempfile::tempdir().unwrap();
+    let main = dir.path().join("main");
+    std::fs::create_dir_all(main.join(".git/refs/heads")).unwrap();
+    let linked = main.join("worktree");
+    let admin = main.join(".git/worktrees/linked");
+    std::fs::create_dir_all(&linked).unwrap();
+    std::fs::create_dir_all(&admin).unwrap();
+    std::fs::write(main.join(".git/HEAD"), "ref: refs/heads/main\n").unwrap();
+    std::fs::write(main.join(".git/refs/heads/main"), "0123456789012345678901234567890123456789\n").unwrap();
+    std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+    std::fs::write(admin.join("HEAD"), "ref: refs/heads/main\n").unwrap();
+    std::fs::write(linked.join(".git"), format!("gitdir: {}\n", admin.display())).unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    transport.push(FakeResponse::Ok {
+        status: 200,
+        headers: vec![],
+        chunks: vec![json!({"results":[]}).to_string().into_bytes()],
+        delay_ms: 850,
+    });
+    transport.push(FakeResponse::json(200, json!({"results":[]})));
+    let rt = runtime(
+        &linked,
+        &transport,
+        Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallBudgetMs":1000})),
+        false,
+    );
+    let (_, details) = rt.search_for_tool("cache history", CancellationToken::new()).await;
+    assert!(details.get("legacyDataset").is_none());
+    assert_eq!(transport.sent().len(), 1, "remaining deadline is below alias admission threshold");
+    rt.wait_for_background().await;
+}
+
+#[tokio::test]
+async fn explicit_lookup_cancellation_prevents_legacy_alias_request() {
+    let dir = tempfile::tempdir().unwrap();
+    let main = dir.path().join("main");
+    std::fs::create_dir_all(main.join(".git/refs/heads")).unwrap();
+    let linked = main.join("worktree");
+    let admin = main.join(".git/worktrees/linked");
+    std::fs::create_dir_all(&linked).unwrap();
+    std::fs::create_dir_all(&admin).unwrap();
+    std::fs::write(main.join(".git/HEAD"), "ref: refs/heads/main\n").unwrap();
+    std::fs::write(main.join(".git/refs/heads/main"), "0123456789012345678901234567890123456789\n").unwrap();
+    std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+    std::fs::write(admin.join("HEAD"), "ref: refs/heads/main\n").unwrap();
+    std::fs::write(linked.join(".git"), format!("gitdir: {}\n", admin.display())).unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    transport.push(FakeResponse::Ok {
+        status: 200,
+        headers: vec![],
+        chunks: vec![json!({"results":[]}).to_string().into_bytes()],
+        delay_ms: 150,
+    });
+    transport.push(FakeResponse::json(200, json!({"results":[]})));
+    let rt = runtime(
+        &linked,
+        &transport,
+        Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+        false,
+    );
+    let signal = CancellationToken::new();
+    let cancel = signal.clone();
+    let observed_transport = transport.clone();
+    let lookup = rt.search_for_tool("cache history", signal);
+    let cancellation = async move {
+        while observed_transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        cancel.cancel();
+    };
+    let (_, ()) = tokio::join!(lookup, cancellation);
+    assert_eq!(transport.sent().len(), 1);
+    rt.wait_for_background().await;
+}
