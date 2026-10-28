@@ -122,10 +122,18 @@ async fn explicit_lookup_canonical_and_legacy_alias_share_one_deadline() {
     std::fs::create_dir_all(&linked).unwrap();
     std::fs::create_dir_all(&admin).unwrap();
     std::fs::write(main.join(".git/HEAD"), "ref: refs/heads/main\n").unwrap();
-    std::fs::write(main.join(".git/refs/heads/main"), "0123456789012345678901234567890123456789\n").unwrap();
+    std::fs::write(
+        main.join(".git/refs/heads/main"),
+        "0123456789012345678901234567890123456789\n",
+    )
+    .unwrap();
     std::fs::write(admin.join("commondir"), "../..\n").unwrap();
     std::fs::write(admin.join("HEAD"), "ref: refs/heads/main\n").unwrap();
-    std::fs::write(linked.join(".git"), format!("gitdir: {}\n", admin.display())).unwrap();
+    std::fs::write(
+        linked.join(".git"),
+        format!("gitdir: {}\n", admin.display()),
+    )
+    .unwrap();
     let transport = Arc::new(FakeTransport::default());
     transport.push(FakeResponse::Ok {
         status: 200,
@@ -140,9 +148,15 @@ async fn explicit_lookup_canonical_and_legacy_alias_share_one_deadline() {
         Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallBudgetMs":1000})),
         false,
     );
-    let (_, details) = rt.search_for_tool("cache history", CancellationToken::new()).await;
+    let (_, details) = rt
+        .search_for_tool("cache history", CancellationToken::new())
+        .await;
     assert!(details.get("legacyDataset").is_none());
-    assert_eq!(transport.sent().len(), 1, "remaining deadline is below alias admission threshold");
+    assert_eq!(
+        transport.sent().len(),
+        1,
+        "remaining deadline is below alias admission threshold"
+    );
     rt.wait_for_background().await;
 }
 
@@ -156,10 +170,18 @@ async fn explicit_lookup_cancellation_prevents_legacy_alias_request() {
     std::fs::create_dir_all(&linked).unwrap();
     std::fs::create_dir_all(&admin).unwrap();
     std::fs::write(main.join(".git/HEAD"), "ref: refs/heads/main\n").unwrap();
-    std::fs::write(main.join(".git/refs/heads/main"), "0123456789012345678901234567890123456789\n").unwrap();
+    std::fs::write(
+        main.join(".git/refs/heads/main"),
+        "0123456789012345678901234567890123456789\n",
+    )
+    .unwrap();
     std::fs::write(admin.join("commondir"), "../..\n").unwrap();
     std::fs::write(admin.join("HEAD"), "ref: refs/heads/main\n").unwrap();
-    std::fs::write(linked.join(".git"), format!("gitdir: {}\n", admin.display())).unwrap();
+    std::fs::write(
+        linked.join(".git"),
+        format!("gitdir: {}\n", admin.display()),
+    )
+    .unwrap();
     let transport = Arc::new(FakeTransport::default());
     transport.push(FakeResponse::Ok {
         status: 200,

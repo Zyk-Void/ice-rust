@@ -184,7 +184,7 @@ async fn chronological_offline_replay_report() {
                 cohort["required_misses"].as_u64().unwrap_or(0) + u64::from(miss)
             );
             if arm == "C_local_selective" && case.cohort == "historical_decision" && delivered {
-                traces.push(serde_json::json!({"case":case.id,"prior_fact":case.fact_id,"available_at":case.available_at,"request_at":case.request_ms,"active_context_absent":true,"prepared":true,"persist_acknowledged":false,"delivered":true,"downstream_observation":false,"constraint_reused":null,"benefit":null}));
+                traces.push(serde_json::json!({"case":case.id,"prior_fact":case.fact_id,"available_at":case.available_at,"request_at":case.request_ms,"active_context_absent":true,"expected_fact_prepared":true,"persist_acknowledged":false,"delivered_to_model":null,"downstream_observation":false,"constraint_reused":null,"benefit":null}));
             }
         }
         let count = latencies.len();
@@ -201,9 +201,16 @@ async fn chronological_offline_replay_report() {
     assert_eq!(arm_reports["C_local_selective"]["forbidden_evidence"], 0);
     assert!(arm_reports["C_local_selective"]["cognee_persist_acknowledged"].as_u64() == Some(0));
     assert_eq!(arm_reports["E_on_demand"]["harness_persist_callback"], 0);
-    assert!(arm_reports["E_on_demand"]["tool_delivered"]
-        .as_u64()
-        .is_some());
+    assert!(
+        arm_reports["E_on_demand"]["tool_delivered"]
+            .as_u64()
+            .unwrap()
+            > 0
+    );
+    assert_eq!(
+        arm_reports["E_on_demand"]["by_cohort"]["historical_decision"]["required_misses"],
+        0
+    );
     assert!(arm_reports
         .values()
         .all(|arm| arm["future_evidence_delivered"] == 0));
@@ -274,16 +281,16 @@ async fn isolated_mode_disable_and_rollback_preserve_uncertain_records() {
         canary.write_policy,
         super::super::config::WritePolicy::Manual
     );
-    rt.persist_config_now(canary).unwrap();
+    assert!(rt.persist_config(canary).await);
     let disabled = rt
         .config()
         .with_mode(super::super::config::MemoryMode::Manual)
         .unwrap();
-    rt.persist_config_now(disabled).unwrap();
+    assert!(rt.persist_config(disabled).await);
     let mut off = rt.config();
     off.enabled = false;
     off.helper_enabled = false;
-    rt.persist_config_now(off).unwrap();
+    assert!(rt.persist_config(off).await);
     assert!(rt
         .request_context(&request_event(
             "What earlier constraint applies to this task?",
@@ -302,7 +309,8 @@ async fn isolated_mode_disable_and_rollback_preserve_uncertain_records() {
         .config()
         .with_mode(super::super::config::MemoryMode::Legacy)
         .unwrap();
-    rt.persist_config_now(rollback).unwrap();
+    assert!(rt.persist_config(rollback).await);
+    rt.wait_for_background().await;
     let records = super::super::queue::read_pending_remember(&rt.pending_dir());
     assert_eq!(records.len(), 1);
     assert_eq!(
