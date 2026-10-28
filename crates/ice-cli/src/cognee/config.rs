@@ -88,6 +88,8 @@ pub enum ReadPolicy {
     OnDemand,
     /// Only a prompt that asks about earlier work searches memory.
     Event,
+    /// Race recall with a typed decision about older-session memory.
+    Judged,
 }
 
 impl ReadPolicy {
@@ -96,6 +98,7 @@ impl ReadPolicy {
             Self::Legacy => "legacy",
             Self::OnDemand => "on_demand",
             Self::Event => "event",
+            Self::Judged => "judged",
         }
     }
     pub fn parse(value: &str) -> Option<Self> {
@@ -103,6 +106,7 @@ impl ReadPolicy {
             "legacy" => Some(Self::Legacy),
             "on_demand" => Some(Self::OnDemand),
             "event" => Some(Self::Event),
+            "judged" => Some(Self::Judged),
             _ => None,
         }
     }
@@ -1180,6 +1184,22 @@ mod tests {
         std::fs::create_dir_all(&broken).unwrap();
         std::fs::write(broken.join(".git"), "not a gitdir file").unwrap();
         assert_eq!(repository_root(&broken), broken);
+    }
+
+    #[test]
+    fn judged_config_round_trips_without_changing_defaults() {
+        let config = resolve_config(
+            Some(&json!({"readPolicy":"judged", "writePolicy":"manual"})),
+            &env(&[]),
+        )
+        .unwrap();
+        assert_eq!(config.read_policy, ReadPolicy::Judged);
+        let saved = config_json(&config);
+        assert_eq!(saved["readPolicy"], "judged");
+        let restored = resolve_config(Some(&saved), &env(&[])).unwrap();
+        assert_eq!(restored.read_policy, ReadPolicy::Judged);
+        assert_eq!(restored.write_policy, WritePolicy::Manual);
+        assert_eq!(CogneeConfig::default().read_policy, ReadPolicy::Legacy);
     }
 
     #[test]

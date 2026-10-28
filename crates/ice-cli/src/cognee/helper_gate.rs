@@ -146,16 +146,47 @@ impl Admission {
         }
     }
 }
-pub(crate) struct HelperGate {
+pub(crate) trait GateOutcome: Clone {
+    fn succeeded(&self) -> bool;
+    fn failed(&self) -> bool;
+}
+impl GateOutcome for HelperOutcome {
+    fn succeeded(&self) -> bool {
+        matches!(self, Self::Judged(_))
+    }
+    fn failed(&self) -> bool {
+        matches!(
+            self,
+            Self::Abstained(
+                AbstainReason::Timeout | AbstainReason::Unavailable | AbstainReason::Malformed
+            )
+        )
+    }
+}
+impl GateOutcome for super::helper::ReadGateOutcome {
+    fn succeeded(&self) -> bool {
+        matches!(self, Self::Judged { .. })
+    }
+    fn failed(&self) -> bool {
+        matches!(
+            self,
+            Self::Abstained(
+                AbstainReason::Timeout | AbstainReason::Unavailable | AbstainReason::Malformed
+            )
+        )
+    }
+}
+
+pub(crate) struct HelperGate<O = HelperOutcome> {
     in_flight: Option<u64>,
     next_flight: u64,
     requests: VecDeque<u64>,
-    batches: VecDeque<(String, u64, Option<HelperOutcome>)>,
+    batches: VecDeque<(String, u64, Option<O>)>,
     consecutive_failures: u8,
     breaker_until: Option<u64>,
     budget: Arc<SharedHelperBudget>,
 }
-impl Default for HelperGate {
+impl<O: GateOutcome> Default for HelperGate<O> {
     fn default() -> Self {
         #[cfg(test)]
         {
@@ -167,7 +198,7 @@ impl Default for HelperGate {
         }
     }
 }
-impl HelperGate {
+impl<O: GateOutcome> HelperGate<O> {
     pub(crate) fn with_budget(budget: Arc<SharedHelperBudget>) -> Self {
         Self {
             in_flight: None,
@@ -232,18 +263,18 @@ impl HelperGate {
     pub(crate) fn flight_id(&self) -> Option<u64> {
         self.in_flight
     }
-    pub(crate) fn cached(&mut self, key: &str, now: u64) -> Option<HelperOutcome> {
+    pub(crate) fn cached(&mut self, key: &str, now: u64) -> Option<O> {
         self.batches
             .iter()
             .find(|(k, e, _)| k == key && *e > now)
             .and_then(|(_, _, o)| o.clone())
     }
-    pub(crate) fn finish(&mut self, id: u64, key: &str, now: u64, outcome: &HelperOutcome) {
+    pub(crate) fn finish(&mut self, id: u64, key: &str, now: u64, outcome: &O) {
         if self.in_flight != Some(id) {
             return;
         }
         self.in_flight = None;
-        let ttl = if matches!(outcome, HelperOutcome::Judged(_)) {
+        let ttl = if outcome.succeeded() {
             POSITIVE_TTL_MS
         } else {
             NEGATIVE_TTL_MS
@@ -252,12 +283,7 @@ impl HelperGate {
             *expiry = now.saturating_add(ttl);
             *cache = Some(outcome.clone())
         }
-        if matches!(
-            outcome,
-            HelperOutcome::Abstained(
-                AbstainReason::Timeout | AbstainReason::Unavailable | AbstainReason::Malformed
-            )
-        ) {
+        if outcome.failed() {
             self.consecutive_failures = self.consecutive_failures.saturating_add(1);
             if self.consecutive_failures >= 3 {
                 self.breaker_until = Some(now.saturating_add(BREAKER_OPEN_MS));
@@ -353,7 +379,7 @@ mod tests {
             let id = gate.flight_id().unwrap();
             drop(permit);
             gate.finish(id, "same-key", 0, &outcome);
-            let ttl = if matches!(outcome, HelperOutcome::Judged(_)) {
+            let ttl = if outcome.succeeded() {
                 POSITIVE_TTL_MS
             } else {
                 NEGATIVE_TTL_MS

@@ -53,6 +53,8 @@ pub enum RecallReason {
     Legacy,
     /// The prompt asks about earlier work.
     ExplicitHistory,
+    /// Recall starts speculatively; the typed gate decides whether it is used.
+    Judged,
 }
 
 impl RecallReason {
@@ -60,6 +62,7 @@ impl RecallReason {
         match self {
             Self::Legacy => "legacy",
             Self::ExplicitHistory => "explicit_history",
+            Self::Judged => "judged",
         }
     }
 }
@@ -124,6 +127,7 @@ pub fn admit_prompt(policy: ReadPolicy, prompt: &str) -> Admission {
             Admission::Recall(RecallReason::ExplicitHistory)
         }
         ReadPolicy::Event => Admission::Skip(SkipReason::NoHistoryRequest),
+        ReadPolicy::Judged => Admission::Recall(RecallReason::Judged),
     }
 }
 

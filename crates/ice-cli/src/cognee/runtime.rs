@@ -290,6 +290,8 @@ pub struct DoctorReport {
     pub queue_pending: usize,
     pub queue_uncertain: usize,
     pub helper_status: String,
+    pub read_gate_status: String,
+    pub last_read_gate: String,
     pub helper_requests: u64,
     pub helper_abstains: u64,
     pub helper_skips: u64,
@@ -308,7 +310,7 @@ impl DoctorReport {
     pub fn status_line(&self) -> String {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         format!(
-            "Cognee {}; health {}; recall {} ({}); remember {}; write {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}",
+            "Cognee {}; health {}; recall {} ({}); remember {}; write {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}; readGate={} last={}",
             on_off(self.enabled),
             self.health(),
             on_off(self.auto_recall),
@@ -342,6 +344,8 @@ impl DoctorReport {
             circuit(self.recall_circuit_open),
             circuit(self.remember_circuit_open),
             self.last_error.as_deref().unwrap_or("none"),
+            self.read_gate_status,
+            self.last_read_gate,
         )
     }
 
@@ -383,6 +387,7 @@ impl DoctorReport {
             ),
             format!("queue={}/{}", self.queue_pending, self.queue_uncertain),
             format!("helper={} requests={} abstains={} skips={}", self.helper_status, self.helper_requests, self.helper_abstains, self.helper_skips),
+            format!("readGate={} last={}", self.read_gate_status, self.last_read_gate),
             format!("detail={}", self.health_detail),
         ]
         .join(" · ")
@@ -444,7 +449,18 @@ pub(crate) struct State {
     turn_traces: u32,
     helper: Option<Arc<Helper>>,
     helper_error: Option<String>,
-    helper_signature: Option<(bool, WritePolicy, bool, Option<String>, Option<String>)>,
+    last_read_gate: String,
+    read_gate: super::helper_gate::HelperGate<helper::ReadGateOutcome>,
+    read_helper: Option<Arc<Helper>>,
+    read_helper_status: String,
+    helper_signature: Option<(
+        bool,
+        WritePolicy,
+        ReadPolicy,
+        bool,
+        Option<String>,
+        Option<String>,
+    )>,
     helper_cancel: CancellationToken,
     automatic_write_cancel: CancellationToken,
     helper_gate: HelperGate,
@@ -496,7 +512,11 @@ impl State {
             turn_traces: 0,
             helper: None,
             helper_error: None,
+            last_read_gate: "not_run".into(),
             helper_signature: None,
+            read_gate: super::helper_gate::HelperGate::default(),
+            read_helper: None,
+            read_helper_status: "unbound".into(),
             helper_cancel: CancellationToken::new(),
             automatic_write_cancel: CancellationToken::new(),
             helper_gate: HelperGate::default(),
@@ -582,6 +602,38 @@ impl RuntimeOptions {
             now: Arc::new(|| crate::blackhole::now_ms().max(0) as u64),
             offline: crate::args::offline_env_enabled(),
             cwd: std::env::current_dir().ok(),
+        }
+    }
+}
+
+struct ReadFlightGuard<'a> {
+    runtime: &'a CogneeRuntime,
+    key: String,
+    flight_id: u64,
+    finished: bool,
+    _permit: Option<super::helper_gate::BudgetPermit>,
+}
+impl ReadFlightGuard<'_> {
+    fn finish(&mut self, outcome: &helper::ReadGateOutcome) {
+        self.runtime.state().read_gate.finish(
+            self.flight_id,
+            &self.key,
+            self.runtime.now(),
+            outcome,
+        );
+        self.finished = true;
+        self._permit.take();
+    }
+}
+impl Drop for ReadFlightGuard<'_> {
+    fn drop(&mut self) {
+        if !self.finished {
+            self.runtime.state().read_gate.finish(
+                self.flight_id,
+                &self.key,
+                self.runtime.now(),
+                &helper::ReadGateOutcome::Abstained(AbstainReason::Cancelled),
+            );
         }
     }
 }
@@ -850,6 +902,7 @@ impl CogneeRuntime {
         let signature = (
             state.config.enabled,
             state.config.write_policy,
+            state.config.read_policy,
             state.config.helper_enabled,
             state.config.helper_provider.clone(),
             state.config.helper_model.clone(),
@@ -861,6 +914,17 @@ impl CogneeRuntime {
         state.helper_cancel.cancel();
         state.helper_cancel = CancellationToken::new();
         state.helper_error = None;
+        state.read_helper = match Helper::bind_read_gate(&state.config) {
+            Ok(helper) => {
+                state.read_helper_status =
+                    if helper.is_some() { "bound" } else { "unbound" }.into();
+                helper.map(Arc::new)
+            }
+            Err(error) => {
+                state.read_helper_status = format!("unavailable({error})");
+                None
+            }
+        };
         let should_bind = state.config.enabled
             && state.config.selective_writes()
             && state.config.helper_enabled
@@ -1428,7 +1492,7 @@ impl CogneeRuntime {
                         AbstainReason::Unavailable => "unavailable",
                         AbstainReason::Malformed | AbstainReason::TooLarge => "malformed",
                         AbstainReason::UnknownCandidateId => "unknown_candidate_id",
-                        AbstainReason::Disabled => "unavailable",
+                        AbstainReason::Disabled | AbstainReason::LowConfidence => "unavailable",
                     };
                     {
                         let mut state = this.state();
@@ -2730,6 +2794,8 @@ impl CogneeRuntime {
             } else {
                 "off".into()
             },
+            read_gate_status: state.read_helper_status.clone(),
+            last_read_gate: state.last_read_gate.clone(),
             helper_requests: state.helper_requests,
             helper_abstains: state.helper_abstains,
             helper_skips: state.helper_skips,
@@ -3930,6 +3996,7 @@ impl CogneeRuntime {
         event: &BeforeRunEvent<'_>,
         request_id: &str,
         started: std::time::Instant,
+        previous_assistant: Option<&str>,
     ) -> Option<String> {
         let latency = || Some(started.elapsed().as_millis() as u64);
         let succeeded = |meta_value: Value| ObserveFields {
@@ -4030,7 +4097,8 @@ impl CogneeRuntime {
         }
         let operation_context = self.operation_context();
         let network_started = std::time::Instant::now();
-        let (result, legacy_attempted) = recall_with_fallback(
+        let recall_signal = event.signal.child_token();
+        let recall = recall_with_fallback(
             &client,
             event.prompt,
             RecallOptions {
@@ -4041,13 +4109,146 @@ impl CogneeRuntime {
                     .iter()
                     .map(|scope| scope.to_string())
                     .collect(),
-                signal: Some(event.signal.clone()),
+                signal: Some(recall_signal.clone()),
                 ..RecallOptions::default()
             },
             legacy_dataset,
             budget_ms,
-        )
-        .await;
+        );
+        let (result, legacy_attempted) = if read_policy == ReadPolicy::Judged {
+            let helper = self.state().read_helper.clone();
+            let judge_signal = event.signal.child_token();
+            let judge = async {
+                let Some(helper) = &helper else {
+                    return helper::ReadGateOutcome::Abstained(helper::AbstainReason::Unavailable);
+                };
+                let key = format!(
+                    "{:x}",
+                    Sha256::digest(
+                        format!(
+                            "{:?}\n{:?}\n{}\n{}",
+                            self.config().helper_provider,
+                            self.config().helper_model,
+                            event.prompt,
+                            previous_assistant.unwrap_or_default()
+                        )
+                        .as_bytes()
+                    )
+                );
+                let (cached, admission, permit, flight_id) = {
+                    let mut state = self.state();
+                    let cached = state.read_gate.cached(&key, self.now());
+                    let provider = state
+                        .config
+                        .helper_provider
+                        .clone()
+                        .unwrap_or_else(|| "fixture".into());
+                    let (admission, permit) = state.read_gate.admit(&key, &provider, self.now());
+                    (cached, admission, permit, state.read_gate.flight_id())
+                };
+                if let Some(cached) = cached {
+                    return cached;
+                }
+                if admission != super::helper_gate::Admission::Start {
+                    return helper::ReadGateOutcome::Abstained(AbstainReason::Unavailable);
+                }
+                let mut guard = ReadFlightGuard {
+                    runtime: self,
+                    key,
+                    flight_id: flight_id.expect("admitted read flight"),
+                    finished: false,
+                    _permit: permit,
+                };
+                let outcome = helper
+                    .judge_read_gate(event.prompt, previous_assistant, judge_signal.clone())
+                    .await;
+                guard.finish(&outcome);
+                outcome
+            };
+            // Poll both immediately. Completed recall is held, never injected until
+            // the gate admits it. Dropping either future cancels its in-flight I/O.
+            tokio::pin!(recall, judge);
+            let mut completed = None;
+            let gate_started = std::time::Instant::now();
+            let budget = tokio::time::sleep(std::time::Duration::from_millis(budget_ms));
+            tokio::pin!(budget);
+            let outcome = loop {
+                tokio::select! {
+                    biased;
+                    _ = event.signal.cancelled() => {
+                        recall_signal.cancel();
+                        judge_signal.cancel();
+                        return None;
+                    }
+                    value = &mut recall, if completed.is_none() => {
+                        completed = Some((value, network_started.elapsed().as_millis() as u64));
+                    }
+                    value = &mut judge => break value,
+                    _ = &mut budget => {
+                        judge_signal.cancel();
+                        break helper::ReadGateOutcome::Abstained(helper::AbstainReason::Timeout);
+                    }
+                }
+            };
+            if event.signal.is_cancelled() || self.generation() != operation_context.generation {
+                recall_signal.cancel();
+                judge_signal.cancel();
+                return None;
+            }
+            let (decision, reason, incomplete, use_recall) = match outcome {
+                helper::ReadGateOutcome::Judged { needs, incomplete } => (
+                    needs.as_str(),
+                    "judged".to_string(),
+                    Some(incomplete),
+                    needs == helper::ReadNeed::Memory,
+                ),
+                helper::ReadGateOutcome::Abstained(reason) => (
+                    "fallback",
+                    if helper.is_none() {
+                        "unbound".into()
+                    } else {
+                        format!("{reason:?}").to_lowercase()
+                    },
+                    None,
+                    super::policy::asks_for_history(event.prompt),
+                ),
+            };
+            let mut gate_meta = json!({"decision": decision, "reason": reason, "jevLatencyMs": gate_started.elapsed().as_millis() as u64, "incomplete": incomplete, "recallCancelled": !use_recall && completed.is_none(), "recallUsed": use_recall});
+            if let Some((_, elapsed)) = &completed {
+                gate_meta["recallLatencyMs"] = json!(elapsed);
+            }
+            if !use_recall {
+                recall_signal.cancel();
+                gate_meta["skipped"] = json!(true);
+                gate_meta["outcome"] = json!("skipped");
+                self.state().last_read_gate = gate_meta.to_string();
+                self.observe("recall", "succeeded", succeeded(gate_meta));
+                return None;
+            }
+            let (value, recall_elapsed) = match completed {
+                Some((value, elapsed)) => (value, elapsed),
+                None => {
+                    let value = tokio::select! {
+                        biased;
+                        _ = event.signal.cancelled() => { recall_signal.cancel(); return None; }
+                        value = &mut recall => value,
+                    };
+                    (value, network_started.elapsed().as_millis() as u64)
+                }
+            };
+            if event.signal.is_cancelled() || self.generation() != operation_context.generation {
+                return None;
+            }
+            gate_meta["recallLatencyMs"] = json!(recall_elapsed);
+            self.state().last_read_gate = gate_meta.to_string();
+            self.observe("read_gate", "succeeded", succeeded(gate_meta));
+            value
+        } else {
+            recall.await
+        };
+        if event.signal.is_cancelled() {
+            return None;
+        }
         let remote_wait_ms = network_started.elapsed().as_millis() as u64;
         let still_current = self.generation() == operation_context.generation;
         if !still_current {
@@ -4222,7 +4423,9 @@ impl HarnessExtension for CogneeRuntime {
                 ..ObserveFields::default()
             },
         );
-        let text = self.recall_for_prompt(event, &request_id, started).await?;
+        let text = self
+            .recall_for_prompt(event, &request_id, started, None)
+            .await?;
         Some(PromptContext {
             custom_type: MEMORY_CUSTOM_TYPE.into(),
             text,
@@ -4454,6 +4657,7 @@ mod tests {
     const NOW: u64 = 1_800_000_000_000;
 
     include!("request_tests.rs");
+    include!("judged_tests.rs");
     include!("lookup_tests.rs");
     include!("closeout_runtime_tests.rs");
     include!("offline_replay_tests.rs");

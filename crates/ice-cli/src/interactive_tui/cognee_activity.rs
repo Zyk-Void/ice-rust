@@ -247,6 +247,20 @@ impl Model {
             .unwrap_or("");
         let phase = obs.phase.as_str();
         match obs.operation.as_str() {
+            "read_gate" => {
+                if let Some(recall) = self.recalls.iter_mut().find(|recall| recall.id == id) {
+                    recall.note = format!(
+                        "read gate · {}",
+                        obs.meta
+                            .as_ref()
+                            .and_then(|meta| serde_json::to_string(meta).ok())
+                            .unwrap_or_default()
+                    );
+                    true
+                } else {
+                    false
+                }
+            }
             "recall" => self.apply_recall(obs, id, phase, preview, error),
             operation @ ("remember_entry" | "remember" | "trace") => {
                 let list = if operation == "trace" {
@@ -368,6 +382,19 @@ impl Model {
         }
         let recall = &mut self.recalls[index];
         recall.latency_ms = obs.latency_ms;
+        let gate_note = if meta("decision").is_some() {
+            format!(
+                "read gate · {}",
+                obs.meta
+                    .as_ref()
+                    .and_then(|meta| serde_json::to_string(meta).ok())
+                    .unwrap_or_default()
+            )
+        } else if recall.note.starts_with("read gate") {
+            recall.note.clone()
+        } else {
+            String::new()
+        };
         match phase {
             "succeeded"
                 if flag("skipped")
@@ -402,6 +429,9 @@ impl Model {
                 recall.note = format!("failed · {}", error.unwrap_or_default());
             }
             _ => return false,
+        }
+        if !gate_note.is_empty() {
+            recall.note = format!("{} · {gate_note}", recall.note);
         }
         true
     }

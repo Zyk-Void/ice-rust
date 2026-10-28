@@ -218,6 +218,50 @@ impl CogneeRuntime {
         }
         let session_id = self.ensure_session_id(event.session_id);
         let policy = self.state().config.read_policy;
+        if policy == ReadPolicy::Judged {
+            if event.request_index != 0 {
+                return None;
+            }
+            let original = event.original_prompt?;
+            let previous = event
+                .messages
+                .iter()
+                .rev()
+                .find(|message| matches!(message, ice_agent::AgentMessage::Assistant(_)))
+                .map(super::extract_message_text);
+            let request_id = uuid::Uuid::new_v4().to_string();
+            let started = std::time::Instant::now();
+            self.observe(
+                "recall",
+                "started",
+                ObserveFields {
+                    request_id: Some(request_id.clone()),
+                    preview: Some(serde_json::Value::String(original.into())),
+                    ..ObserveFields::default()
+                },
+            );
+            let text = self
+                .recall_for_prompt(
+                    &BeforeRunEvent {
+                        prompt: original,
+                        system_prompt: Some(event.system_prompt),
+                        session_id: event.session_id,
+                        signal: event.signal.clone(),
+                    },
+                    &request_id,
+                    started,
+                    previous.as_deref(),
+                )
+                .await?;
+            if event.signal.is_cancelled() {
+                return None;
+            }
+            return Some(PromptContext {
+                custom_type: MEMORY_CUSTOM_TYPE.into(),
+                text,
+                correlation_id: Some(request_id),
+            });
+        }
         if policy == ReadPolicy::Legacy {
             if event.request_index != 0 {
                 return None;

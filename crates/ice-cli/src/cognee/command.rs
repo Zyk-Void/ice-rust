@@ -19,7 +19,7 @@ use super::config::{
 use super::runtime::{CogneeRuntime, SEARCH_TOOL_NAME};
 use crate::builtin_extensions::{NoticeLevel, SettingRow};
 
-pub const USAGE: &str = "Usage: /cognee status|doctor|mode [legacy|manual|canary|selective|status]|on|off|helper provider <id>|model <id>|on|off|status|recall on|off|read legacy|on_demand|event|write legacy|manual|selective|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
+pub const USAGE: &str = "Usage: /cognee status|doctor|mode [legacy|manual|canary|selective|status]|on|off|helper provider <id>|model <id>|on|off|status|recall on|off|read legacy|on_demand|event|judged|write legacy|manual|selective|capture on|off|tools on|off|improve on|off|improve [now]|compact auto|defer|own|remember on|off|search <query>|remember [node_set] <text>|flush [pending|uncertain]";
 
 const NODE_SETS: [&str; 3] = ["user_context", "project_docs", "agent_actions"];
 
