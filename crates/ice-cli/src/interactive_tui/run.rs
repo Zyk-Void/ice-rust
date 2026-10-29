@@ -300,12 +300,16 @@ pub(super) async fn run_initial_prompts(
     streaming: bool,
     running: &Arc<Mutex<bool>>,
 ) {
+    let resources = harness.get_resources().await.unwrap_or_default();
     for prompt in prompts {
         if !*running.lock().unwrap() {
             break;
         }
         // Direct prompts do not receive a user MessageStart event.
-        add_user_message(&state.chat_container, &prompt);
+        add_user_message(
+            &state.chat_container,
+            &display_user_prompt(&resources, &prompt),
+        );
         add_image_previews(&state.chat_container, &images, state.images_visible());
         tui.request_render(false);
         if !run_prompt_streaming(
@@ -322,6 +326,110 @@ pub(super) async fn run_initial_prompts(
             break;
         }
     }
+}
+
+/// Characters a `$name` skill mention may contain.
+pub(super) fn is_skill_name_char(c: char) -> bool {
+    c.is_alphanumeric() || matches!(c, '-' | '_' | '.' | ':')
+}
+
+/// Expand explicit skill invocations into their full instruction blocks.
+///
+/// A prompt starting with `/skill:name args` expands like upstream
+/// `AgentSession._expandSkillCommand` (block, blank line, args). Otherwise
+/// each `$name` mention that starts a word and names a loaded skill is
+/// replaced in place; trailing `.`/`:` is read as punctuation. Unknown names
+/// (`$PATH`, `$5`, `/skill:missing`) are left as typed.
+pub(super) fn expand_skill_references(
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> String {
+    let skills = resources.skills.as_deref().unwrap_or_default();
+    let find = |name: &str| skills.iter().find(|s| s.name == name);
+    if let Some(rest) = prompt.strip_prefix("/skill:") {
+        let (name, args) = rest.split_once(' ').unwrap_or((rest, ""));
+        return match find(name) {
+            Some(skill) => ice_harness::skills::format_skill_invocation(skill, Some(args.trim())),
+            None => prompt.to_string(),
+        };
+    }
+    let mut expanded = String::new();
+    let mut copied = 0;
+    for (start, _) in prompt.match_indices('$') {
+        if start < copied
+            || prompt[..start]
+                .chars()
+                .next_back()
+                .is_some_and(|c| !c.is_whitespace())
+        {
+            continue;
+        }
+        let rest = &prompt[start + 1..];
+        let len = rest.find(|c| !is_skill_name_char(c)).unwrap_or(rest.len());
+        let name = rest[..len].trim_end_matches(['.', ':']);
+        if let Some(skill) = find(name) {
+            expanded.push_str(&prompt[copied..start]);
+            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
+            copied = start + 1 + name.len();
+        }
+    }
+    expanded.push_str(&prompt[copied..]);
+    expanded
+}
+
+/// Replace each skill invocation block (and the blank line before any text
+/// that follows it) with `render(name)` plus a space separator.
+fn replace_skill_blocks(text: &str, render: impl Fn(&str) -> String) -> String {
+    static BLOCK: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r#"<skill name="([^"]+)" location="[^"]*">\n(?s:.*?)\n</skill>(\n\n)?"#)
+            .unwrap()
+    });
+    BLOCK
+        .replace_all(text, |captures: &regex::Captures<'_>| {
+            let separator = if captures.get(2).is_some() { " " } else { "" };
+            format!("{}{separator}", render(&captures[1]))
+        })
+        .into_owned()
+}
+
+/// Inverse of [`expand_skill_references`] for draft restoration and plain
+/// listings: each skill invocation block becomes its `$name` mention again.
+pub(super) fn collapse_skill_invocations(text: &str) -> String {
+    replace_skill_blocks(text, |name| format!("${name}"))
+}
+
+/// Transcript text for a user prompt: each invoked skill shows as its bare
+/// name in the accent color instead of the skill body or the `$` marker.
+pub(super) fn skill_display_text(text: &str) -> String {
+    let accent = current_theme().colors.accent;
+    replace_skill_blocks(text, |name| accent.fg(name))
+}
+
+/// Transcript text for a prompt the user is sending directly.
+pub(super) fn display_user_prompt(
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> String {
+    skill_display_text(&expand_skill_references(resources, prompt))
+}
+
+/// The message and images to queue for a prompt submitted mid-run.
+pub(super) fn queued_user_message(
+    state: &TuiState,
+    resources: &ice_harness::types::AgentHarnessResources,
+    prompt: &str,
+) -> (AgentMessage, Vec<ice_ai::types::ImageContent>) {
+    let images = state.take_prompt_images(prompt);
+    let expanded = expand_skill_references(resources, prompt);
+    let AgentMessage::User(user) = user_message_with_images(&expanded, images.clone()) else {
+        unreachable!()
+    };
+    let user = if expanded != prompt {
+        user.with_origin(prompt, "skill-expansion-v1")
+    } else {
+        user
+    };
+    (AgentMessage::User(user), images)
 }
 
 /// Drive one prompt, reconcile its final response, and settle buffered writes.
@@ -356,7 +464,17 @@ pub(super) async fn run_prompt_streaming(
             Err(error) => Err(error),
         }
     } else {
-        lane.prompt_text(prompt, images).await
+        let resources = harness.get_resources().await.unwrap_or_default();
+        let expanded = expand_skill_references(&resources, prompt);
+        let AgentMessage::User(user) = user_message_with_images(&expanded, images) else {
+            unreachable!()
+        };
+        let user = if expanded != prompt {
+            user.with_origin(prompt, "skill-expansion-v1")
+        } else {
+            user
+        };
+        lane.prompt_message(AgentMessage::User(user)).await
     };
 
     // Settle final tool/message delivery before completion reconciliation. This
@@ -1089,6 +1207,10 @@ pub(super) fn read_clipboard_text() -> Option<String> {
 /// builds free of platform clipboard dependencies.
 #[cfg(all(feature = "clipboard", not(target_os = "android")))]
 pub(super) fn read_clipboard_image() -> Result<Option<ice_ai::types::ImageContent>, String> {
+    #[cfg(target_os = "linux")]
+    if let Some(image) = read_linux_clipboard_image() {
+        return Ok(Some(image));
+    }
     let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
     let image = match clipboard.get_image() {
         Ok(image) => image,
@@ -1116,6 +1238,77 @@ pub(super) fn read_clipboard_image() -> Result<Option<ice_ai::types::ImageConten
         data: base64::engine::general_purpose::STANDARD.encode(bytes),
         mime_type: "image/png".into(),
     }))
+}
+
+/// Prefer native Wayland clipboard access, with X11 as a fallback.
+#[cfg(all(feature = "clipboard", target_os = "linux"))]
+fn read_linux_clipboard_image() -> Option<ice_ai::types::ImageContent> {
+    let mut commands: Vec<(&str, &[&str])> = Vec::new();
+    if std::env::var_os("WAYLAND_DISPLAY").is_some() {
+        commands.push(("wl-paste", &["--no-newline", "--type", "image/png"]));
+    }
+    commands.push((
+        "xclip",
+        &["-selection", "clipboard", "-o", "-t", "image/png"],
+    ));
+    for (command, args) in commands {
+        if let Some(stdout) = clipboard_command_output(command, args) {
+            if stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
+                return Some(ice_ai::types::ImageContent {
+                    kind: ice_ai::types::ImageContentType,
+                    data: base64::engine::general_purpose::STANDARD.encode(stdout),
+                    mime_type: "image/png".into(),
+                });
+            }
+        }
+    }
+    None
+}
+
+/// Stdout of a successful clipboard tool run, or `None` on failure or after
+/// 2 s. Runs on the key worker, so an unresponsive clipboard owner must not
+/// freeze input. Stdout is drained on a thread: an image larger than the pipe
+/// buffer would otherwise block the child before it exits.
+#[cfg(all(feature = "clipboard", target_os = "linux"))]
+fn clipboard_command_output(command: &str, args: &[&str]) -> Option<Vec<u8>> {
+    let mut child = std::process::Command::new(command)
+        .args(args)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .ok()?;
+    let mut stdout = child.stdout.take()?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        // Bound the buffer: a provider may emit far more than any image we accept.
+        const MAX_CLIPBOARD_BYTES: u64 = 64 * 1024 * 1024;
+        let mut bytes = Vec::new();
+        let read = std::io::Read::read_to_end(
+            &mut std::io::Read::take(&mut stdout, MAX_CLIPBOARD_BYTES + 1),
+            &mut bytes,
+        );
+        let _ = tx.send(match read {
+            Ok(_) if bytes.len() as u64 > MAX_CLIPBOARD_BYTES => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "clipboard output too large",
+            )),
+            other => other.map(|_| bytes),
+        });
+    });
+    match rx.recv_timeout(std::time::Duration::from_secs(2)) {
+        Ok(Ok(bytes)) => child
+            .wait()
+            .is_ok_and(|status| status.success())
+            .then_some(bytes),
+        // A failed or oversized read, or a timeout: never leave the child
+        // blocked on its pipe or unreaped.
+        Ok(Err(_)) | Err(_) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            None
+        }
+    }
 }
 
 /// Finder copied files arrive as aliases, rather than clipboard bitmaps.
@@ -1205,15 +1398,23 @@ pub(super) fn attach_pasted_images(state: &Arc<TuiState>, text: &str) -> bool {
     let Some(images) = images_from_pasted_paths(text) else {
         return false;
     };
-    let count = images.len();
-    for image in images {
-        state.queue_image(image);
-    }
-    add_note_message(
-        &state.chat_container,
-        &format!("Attached {count} image(s) to the next prompt."),
-    );
+    attach_images_to_draft(state, images);
     true
+}
+
+pub(super) fn attach_images_to_draft(
+    state: &Arc<TuiState>,
+    images: Vec<ice_ai::types::ImageContent>,
+) {
+    for image in images {
+        let number = state.queue_image(image);
+        state.editor.insert(&format!("{} ", image_marker(number)));
+    }
+}
+
+/// Draft marker for the `number`th (1-based) pending image.
+pub(super) fn image_marker(number: usize) -> String {
+    format!("[Image #{number}]")
 }
 
 /// Consume a paste as attachments only when every path is an actual image.

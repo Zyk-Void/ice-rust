@@ -630,6 +630,7 @@ mod tests {
                         description: description.into(),
                         tokens: 100,
                         direct,
+                        schema_hash: None,
                     })
                     .collect()
             }),

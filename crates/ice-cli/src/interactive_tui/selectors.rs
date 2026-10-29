@@ -881,6 +881,203 @@ const ADD_PROVIDER_VALUE: &str = "__add_provider__";
 const REMOVE_PROVIDER_VALUE: &str = "__remove_provider__";
 
 /// Pick a provider for the current session; the async loop applies and saves it.
+#[derive(Debug, PartialEq, Eq)]
+enum ProviderPickerKey {
+    Ignore,
+    Forward,
+    ExitSearch,
+    Refresh(String),
+    Reauthenticate(String),
+}
+
+fn provider_picker_key(
+    searching: &mut bool,
+    key: KeyEvent,
+    selected: Option<&str>,
+) -> ProviderPickerKey {
+    if key.kind == KeyEventKind::Release {
+        return ProviderPickerKey::Ignore;
+    }
+    if *searching {
+        if key.code == KeyCode::Esc {
+            *searching = false;
+            return ProviderPickerKey::ExitSearch;
+        }
+        return ProviderPickerKey::Forward;
+    }
+    if key.modifiers == KeyModifiers::NONE {
+        match key.code {
+            KeyCode::Char('/') => {
+                *searching = true;
+                return ProviderPickerKey::Ignore;
+            }
+            KeyCode::Char('r' | 'a') if key.kind == KeyEventKind::Repeat => {
+                // Holding a key must not queue repeated network actions.
+                return ProviderPickerKey::Ignore;
+            }
+            KeyCode::Char(action @ ('r' | 'a')) => {
+                return match selected.filter(|id| {
+                    !id.is_empty() && *id != ADD_PROVIDER_VALUE && *id != REMOVE_PROVIDER_VALUE
+                }) {
+                    Some(id) if action == 'r' => ProviderPickerKey::Refresh(id.to_owned()),
+                    Some(id) => ProviderPickerKey::Reauthenticate(id.to_owned()),
+                    None => ProviderPickerKey::Ignore,
+                };
+            }
+            KeyCode::Char(_) => return ProviderPickerKey::Ignore,
+            _ => {}
+        }
+    }
+    ProviderPickerKey::Forward
+}
+
+struct ProviderPickerView {
+    searchable: Arc<SearchableSelectList>,
+    search_mode: Arc<Mutex<bool>>,
+}
+
+impl Component for ProviderPickerView {
+    fn render(&self, width: usize) -> Vec<String> {
+        let searching = *self.search_mode.lock().unwrap();
+        let hint = if searching {
+            "SEARCH MODE · Esc: keep filter and exit · Enter: select"
+        } else {
+            "BROWSE MODE · /: search · r: refresh · a: reauthenticate · Esc: cancel"
+        };
+        let mut lines = vec![ice_tui::truncate_to_width(hint, width, "…")];
+        lines.extend(self.searchable.render(width));
+        lines
+    }
+
+    fn invalidate(&self) {
+        self.searchable.invalidate();
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+#[cfg(test)]
+mod provider_picker_key_tests {
+    use super::*;
+
+    fn key(code: KeyCode) -> KeyEvent {
+        KeyEvent::new(code, KeyModifiers::NONE)
+    }
+
+    #[test]
+    fn shortcuts_require_a_provider_selection() {
+        for id in [
+            None,
+            Some(""),
+            Some(ADD_PROVIDER_VALUE),
+            Some(REMOVE_PROVIDER_VALUE),
+        ] {
+            for action in ['r', 'a'] {
+                assert_eq!(
+                    provider_picker_key(&mut false, key(KeyCode::Char(action)), id),
+                    ProviderPickerKey::Ignore
+                );
+            }
+        }
+        assert_eq!(
+            provider_picker_key(&mut false, key(KeyCode::Char('r')), Some("openai")),
+            ProviderPickerKey::Refresh("openai".into())
+        );
+        assert_eq!(
+            provider_picker_key(&mut false, key(KeyCode::Char('a')), Some("openai")),
+            ProviderPickerKey::Reauthenticate("openai".into())
+        );
+    }
+
+    #[test]
+    fn held_shortcut_keys_do_not_repeat_network_actions() {
+        for action in ['r', 'a'] {
+            let mut repeat = key(KeyCode::Char(action));
+            repeat.kind = KeyEventKind::Repeat;
+            assert_eq!(
+                provider_picker_key(&mut false, repeat, Some("openai")),
+                ProviderPickerKey::Ignore
+            );
+        }
+    }
+
+    #[test]
+    fn search_mode_routes_text_and_escape_then_restores_shortcuts() {
+        let mut searching = false;
+        assert_eq!(
+            provider_picker_key(&mut searching, key(KeyCode::Char('/')), None),
+            ProviderPickerKey::Ignore
+        );
+        assert!(searching);
+        for code in [
+            KeyCode::Char('r'),
+            KeyCode::Char('a'),
+            KeyCode::Down,
+            KeyCode::Enter,
+        ] {
+            assert_eq!(
+                provider_picker_key(&mut searching, key(code), Some("openai")),
+                ProviderPickerKey::Forward
+            );
+        }
+        assert_eq!(
+            provider_picker_key(&mut searching, key(KeyCode::Esc), None),
+            ProviderPickerKey::ExitSearch
+        );
+        assert!(!searching);
+        assert_eq!(
+            provider_picker_key(&mut searching, key(KeyCode::Char('r')), Some("openai")),
+            ProviderPickerKey::Refresh("openai".into())
+        );
+    }
+
+    #[test]
+    fn exiting_search_preserves_filter_and_selection() {
+        let list = Arc::new(SelectList::new(
+            vec![
+                SelectItem::new("openai", "OpenAI"),
+                SelectItem::new("other", "Other"),
+            ],
+            10,
+        ));
+        let searchable = SearchableSelectList::new(None, None, list.clone());
+        searchable.set_search_text("openai");
+        let selected = list.get_selected_item().unwrap().value;
+        let mut searching = true;
+        assert_eq!(
+            provider_picker_key(&mut searching, key(KeyCode::Esc), Some(&selected)),
+            ProviderPickerKey::ExitSearch
+        );
+        assert_eq!(list.get_selected_item().unwrap().value, selected);
+        assert_eq!(searchable.input().get_value(), "openai");
+    }
+
+    #[test]
+    fn navigation_and_cancel_are_forwarded_without_typing() {
+        for code in [KeyCode::Up, KeyCode::Down, KeyCode::Enter, KeyCode::Esc] {
+            assert_eq!(
+                provider_picker_key(&mut false, key(code), None),
+                ProviderPickerKey::Forward
+            );
+        }
+        assert_eq!(
+            provider_picker_key(&mut false, key(KeyCode::Char('x')), None),
+            ProviderPickerKey::Ignore
+        );
+        let release = KeyEvent::new_with_kind(
+            KeyCode::Char('r'),
+            KeyModifiers::NONE,
+            KeyEventKind::Release,
+        );
+        assert_eq!(
+            provider_picker_key(&mut false, release, Some("openai")),
+            ProviderPickerKey::Ignore
+        );
+    }
+}
+
 pub(super) fn open_provider_selector(
     state: &Arc<TuiState>,
     editor_container: &Arc<Container>,
@@ -942,18 +1139,72 @@ pub(super) fn open_provider_selector(
         close_selector(&state_cancel, &ec_cancel, &editor_cancel, &tui_cancel);
     }));
 
-    // Searchable like `/model` so the selector carries a title, a filter box,
-    // and the Enter/Esc affordances instead of a bare list.
-    open_searchable_selector(
+    let searchable = Arc::new(SearchableSelectList::new(
+        Some("Select provider"),
+        Some("↑/↓ navigate · Enter selects"),
+        list.clone(),
+    ));
+    let search_mode = Arc::new(Mutex::new(false));
+    let router = searchable.clone();
+    let view = Arc::new(ProviderPickerView {
+        searchable: searchable.clone(),
+        search_mode: search_mode.clone(),
+    });
+    let state_action = state.clone();
+    let ec_action = editor_container.clone();
+    let editor_action = editor.clone();
+    let tui_action = tui.clone();
+    let tx_action = tx.clone();
+    let extension_action = extension_session.clone();
+    open_selector_with_view(
         state,
         editor_container,
         editor,
         tui,
-        Some("Select provider"),
-        Some("Type to filter providers · Enter selects · Esc cancels"),
-        list,
+        SelectorView::Custom(Arc::new(move |key| {
+            let selected = list.get_selected_item();
+            let mut searching = search_mode.lock().unwrap();
+            let action = provider_picker_key(
+                &mut searching,
+                key,
+                selected.as_ref().map(|item| item.value.as_str()),
+            );
+            router.set_focused(*searching);
+            drop(searching);
+            match action {
+                ProviderPickerKey::Ignore | ProviderPickerKey::ExitSearch => {}
+                ProviderPickerKey::Forward => {
+                    SelectorView::Searchable(router.clone()).handle_key(key)
+                }
+                ProviderPickerKey::Refresh(id) => {
+                    let _ = tx_action.send(TuiMessage::RefreshProviderModels(id));
+                }
+                ProviderPickerKey::Reauthenticate(id) => {
+                    let manifests = current_provider_manifests(&extension_action);
+                    let oauth = current_oauth_providers(&extension_action);
+                    if !login_provider_items_with_oauth(&manifests, &oauth)
+                        .iter()
+                        .any(|provider| provider.value == id)
+                    {
+                        return;
+                    }
+                    close_selector(&state_action, &ec_action, &editor_action, &tui_action);
+                    begin_provider_login(
+                        &state_action,
+                        &ec_action,
+                        &editor_action,
+                        &tui_action,
+                        &tx_action,
+                        &extension_action,
+                        &id,
+                    );
+                }
+            }
+        })),
+        view,
         SelectorKind::Provider,
     );
+    searchable.set_focused(false);
 }
 
 /// Pick a provider for `/login`, then run its OAuth or API-key flow.

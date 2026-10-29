@@ -204,7 +204,8 @@ fn plain_prompt_uses_codex_input_text_items_through_the_cli() {
             "bash_output",
             "bash_kill",
             "bash_input",
-            "bash_watch"
+            "bash_watch",
+            "capability_search"
         ]
     );
     assert!(

@@ -6,12 +6,32 @@
 //! improve the cache while idle. Nothing here is required for a session to
 //! run: every failure degrades to no memory.
 
+mod accepted_jobs;
+pub mod admission;
 pub mod browse;
+pub mod candidates;
 pub mod client;
 pub mod command;
 pub mod config;
+pub mod delivery;
 pub mod dream;
+pub mod evidence;
+pub mod helper;
+pub mod helper_gate;
+pub mod identity;
 pub mod observer;
+pub mod policy;
+pub mod propose;
 pub mod queue;
 pub mod runtime;
+pub mod suppress;
+pub mod task;
 pub mod text;
+
+pub mod source_validation;
+
+#[cfg(test)]
+mod heldout_tests;
+
+#[cfg(test)]
+mod judged_eval_tests;

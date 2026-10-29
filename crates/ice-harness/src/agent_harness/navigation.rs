@@ -234,6 +234,12 @@ impl AgentHarness {
                 }
             },
         };
+        // The tree has already moved, so context built for the old branch is
+        // stale even if recording the finish fails below.
+        if matches!(outcome, NavigationOutcome::Completed { .. }) {
+            let mut inner = self.inner.lock().unwrap();
+            inner.navigation_epoch = inner.navigation_epoch.wrapping_add(1);
+        }
         // A failed finish leaves an open durable intent for recovery; do not
         // claim success if that acceptance record did not reach storage.
         self.write_operation_finished(&run_id, durable, error)

@@ -12,9 +12,22 @@
 //! exists or an `ICERS_COGNEE_*` variable is set, and never contacts the
 //! server while running offline (`ICERS_OFFLINE` / `--offline`).
 
+#[path = "coordinator.rs"]
+mod coordinator;
+#[path = "lookup.rs"]
+mod lookup;
+#[path = "request.rs"]
+mod request;
+#[path = "validation.rs"]
+mod validation;
+
+use coordinator::EvidenceCache;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};
+use std::time::Duration;
+
+use sha2::{Digest, Sha256};
 
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::extension::{
@@ -25,28 +38,47 @@ use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+#[cfg(test)]
+use super::candidates::Category;
+use super::candidates::{Candidate, CandidateState, Role};
 use super::client::{
-    CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport, RecallOptions,
-    RecallResult, ReqwestTransport,
+    CallOptions, ClientConfig, CogneeClient, CogneeError, CogneeTransport,
+    OperationOutcomesSnapshot, RecallOptions, RecallResult, ReqwestTransport,
 };
 use super::config::{
-    find_git_root, load_connection, process_env, resolve_runtime_dataset, save_config,
-    write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv, CompactionSummaryMode,
-    ConnectionInputs, KeySource, PROJECT_DATASET_SENTINEL,
+    find_git_root, load_connection, process_env, repository_root, resolve_runtime_dataset,
+    save_config, write_private_file_atomic, AutoRememberMode, CogneeConfig, CogneeEnv,
+    CompactionSummaryMode, ConnectionInputs, KeySource, ReadPolicy, WritePolicy,
+    PROJECT_DATASET_SENTINEL,
 };
 use super::dream::{
-    claim_dream_candidate, mark_dream_captured, mark_dream_improved, read_dream_candidates,
-    read_dream_record_for_dataset, release_dream_claim, DreamClaim,
+    claim_dream_candidate, mark_dream_accepted, mark_dream_captured, mark_dream_improved,
+    read_dream_candidates, read_dream_record_for_dataset, release_dream_claim, DreamClaim,
 };
+use super::evidence::{
+    select_new_with_context, FilterContext, RejectCounts, SeenEvidence, Selection,
+};
+use super::helper::{
+    self, AbstainReason, Candidate as HelperCandidate, CandidateBatch, Helper, HelperOutcome,
+    Verdict,
+};
+use super::helper_gate::{Admission as HelperAdmission, HelperGate};
 use super::observer::{persist_observation, publish_observation, sanitize_endpoint, Observation};
+use super::policy::{admit_prompt, Admission};
+#[cfg(test)]
+use super::queue::read_warmup_batch;
 use super::queue::{
     buffer_warmup_entry, create_pending_remember, enqueue_pending_remember, read_pending_remember,
-    read_warmup_batch, remove_pending_remember, select_drain_batch, update_pending_remember_state,
-    CircuitState, PendingState,
+    recover_inflight, remove_pending_remember, select_drain_batch, update_pending_remember_state,
+    CircuitState, DispatchLease, PendingState,
 };
+#[cfg(test)]
+use super::suppress::Suppression;
+use super::suppress::SuppressionSet;
 use super::text::{
-    extract_message_text, format_last_compact_injection, format_recall, redact_memory_text,
-    truncate_for_capture, truncate_value_for_capture, RecallLine,
+    extract_message_text, fit_lines, format_bounded_last_compact_injection,
+    format_last_compact_injection, format_recall, redact_memory_text, truncate_for_capture,
+    truncate_value_for_capture, RecallLine,
 };
 use crate::blackhole::js::{iso_from_ms, len16, prefix16};
 use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
@@ -54,7 +86,11 @@ use crate::builtin_extensions::{NoticeLevel, NoticeMailbox};
 pub const STATUS_KEY: &str = "ice-cognee";
 pub const SESSION_ENTRY_TYPE: &str = "ice-cognee";
 pub const SEARCH_TOOL_NAME: &str = "cognee_search";
+pub const PROPOSE_TOOL_NAME: &str = "cognee_propose_memory";
 const RECALL_MIN_WORDS: usize = 4;
+/// Non-legacy automatic memory is capped at 800 estimated tokens. BeforeRunEvent
+/// has no model-window information, so a model-window-relative cap is unavailable.
+const AUTO_INJECT_TOKEN_CAP: usize = 800;
 const RECALL_DEDUP_TTL_MS: u64 = 15_000;
 const MAX_TRACES_PER_TURN: u32 = 24;
 const IDLE_IMPROVE_COOLDOWN_MS: u64 = 300_000;
@@ -191,6 +227,19 @@ pub fn build_owned_compaction_summary(
     redact_memory_text(&parts.join("\n"), max_chars)
 }
 
+fn read_helper_candidates_bounded(directory: &Path, limit: usize) -> Vec<Candidate> {
+    let Ok(entries) = std::fs::read_dir(directory) else {
+        return Vec::new();
+    };
+    entries
+        .filter_map(Result::ok)
+        .take(limit)
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "json"))
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .filter_map(|text| serde_json::from_str::<Candidate>(&text).ok())
+        .collect()
+}
+
 fn error_kind(error: &CogneeError) -> String {
     error.kind.as_str().to_string()
 }
@@ -221,9 +270,13 @@ pub struct DoctorReport {
     pub api_key_source: KeySource,
     pub healthy: bool,
     pub health_detail: String,
+    pub operation_outcomes: OperationOutcomesSnapshot,
+    pub capability_inventory: Value,
     pub capture_session: bool,
     pub capture_tools: bool,
     pub auto_recall: bool,
+    pub read_policy: ReadPolicy,
+    pub write_policy: WritePolicy,
     pub auto_remember: AutoRememberMode,
     pub auto_improve: bool,
     pub compaction_summary_mode: CompactionSummaryMode,
@@ -236,6 +289,12 @@ pub struct DoctorReport {
     pub last_recall_hits: usize,
     pub queue_pending: usize,
     pub queue_uncertain: usize,
+    pub helper_status: String,
+    pub read_gate_status: String,
+    pub last_read_gate: String,
+    pub helper_requests: u64,
+    pub helper_abstains: u64,
+    pub helper_skips: u64,
 }
 
 impl DoctorReport {
@@ -251,18 +310,28 @@ impl DoctorReport {
     pub fn status_line(&self) -> String {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         format!(
-            "Cognee {}; health {}; recall {}; remember {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}",
+            "Cognee {}; health {}; recall {} ({}); remember {}; write {}; capture {}; tools {}; improve {}; compact={}{}{}; endpoint {}; dataset {}; session {}; key {}; saves p/t/a={}/{}/{}; lastRecall={}; queue pending={} uncertain={}; breaker recall={} remember={}; lastError={}; readGate={} last={}",
             on_off(self.enabled),
             self.health(),
             on_off(self.auto_recall),
+            self.read_policy.as_str(),
             self.auto_remember.as_str(),
+            self.write_policy.as_str(),
             on_off(self.capture_session),
             on_off(self.capture_tools),
             on_off(self.auto_improve),
             self.compaction_summary_mode.as_str(),
-            if self.blackhole_active { "+blackhole" } else { "" },
-            if self.own_compaction_summary { "(own-summary)" } else { "(defer-summary)" },
-            self.base_url,
+            if self.blackhole_active {
+                "+blackhole"
+            } else {
+                ""
+            },
+            if self.own_compaction_summary {
+                "(own-summary)"
+            } else {
+                "(defer-summary)"
+            },
+            sanitize_endpoint(&self.base_url),
             self.dataset,
             self.session_id.as_deref().unwrap_or("none"),
             self.api_key_source.as_str(),
@@ -275,6 +344,8 @@ impl DoctorReport {
             circuit(self.recall_circuit_open),
             circuit(self.remember_circuit_open),
             self.last_error.as_deref().unwrap_or("none"),
+            self.read_gate_status,
+            self.last_read_gate,
         )
     }
 
@@ -283,8 +354,19 @@ impl DoctorReport {
         let circuit = |open: bool| if open { "open" } else { "closed" };
         [
             "mode=http".to_string(),
+            format!(
+                "readPolicy={} writePolicy={}",
+                self.read_policy.as_str(),
+                self.write_policy.as_str()
+            ),
+            "nativeRecall=POST:/api/v1/recall (support unverified; sends query, topK, onlyContext, scope, sessionId, datasets)".to_string(),
+            "nativeRemember=POST:/api/v1/remember (multipart datasetName, node_set, run_in_background, optional session_id, data; support unverified)".to_string(),
+            "nativeRememberEntry=POST:/api/v1/remember/entry (JSON entry, dataset_name, session_id; support unverified)".to_string(),
+            "nativeImprove=POST:/api/v1/improve (sends datasetName, sessionIds, runInBackground; background acceptance only; completion status: not exposed by this adapter)".to_string(),
+            format!("mcpCognee=separate catalog (not probed); inventory={}", self.capability_inventory),
+            format!("operations={}", self.operation_outcomes),
             format!("health={}", self.health()),
-            format!("endpoint={}", self.base_url),
+            format!("endpoint={}", sanitize_endpoint(&self.base_url)),
             format!("dataset={}", self.dataset),
             format!("session={}", self.session_id.as_deref().unwrap_or("none")),
             format!("apiKey={}", self.api_key_source.as_str()),
@@ -304,6 +386,8 @@ impl DoctorReport {
                 self.saves.prompt, self.saves.trace, self.saves.answer
             ),
             format!("queue={}/{}", self.queue_pending, self.queue_uncertain),
+            format!("helper={} requests={} abstains={} skips={}", self.helper_status, self.helper_requests, self.helper_abstains, self.helper_skips),
+            format!("readGate={} last={}", self.read_gate_status, self.last_read_gate),
             format!("detail={}", self.health_detail),
         ]
         .join(" · ")
@@ -326,8 +410,8 @@ fn meta(value: Value) -> Option<Map<String, Value>> {
     }
 }
 
-struct State {
-    config: CogneeConfig,
+pub(crate) struct State {
+    pub(crate) config: CogneeConfig,
     installed: bool,
     api_key: Option<String>,
     client: Option<CogneeClient>,
@@ -338,8 +422,15 @@ struct State {
     last_recall_key: Option<String>,
     last_recall_at: u64,
     last_compact_summary: Option<String>,
+    /// Recall lines already in the active context (non-legacy read policies).
+    seen_evidence: SeenEvidence,
+    suppressions: SuppressionSet,
+    evidence_cache: EvidenceCache,
     resolved_dataset: String,
+    context_generation: u64,
+    legacy_dataset: Option<String>,
     improve_in_flight: bool,
+    improve_backoff: HashMap<(String, String), (f64, u64, u32)>,
     pending_prompt: Option<String>,
     session_id: Option<String>,
     host_session_id: Option<String>,
@@ -356,6 +447,28 @@ struct State {
     key_source: KeySource,
     shutting_down: bool,
     turn_traces: u32,
+    helper: Option<Arc<Helper>>,
+    helper_error: Option<String>,
+    last_read_gate: String,
+    read_gate: super::helper_gate::HelperGate<helper::ReadGateOutcome>,
+    read_helper: Option<Arc<Helper>>,
+    read_helper_status: String,
+    helper_signature: Option<(
+        bool,
+        WritePolicy,
+        ReadPolicy,
+        bool,
+        Option<String>,
+        Option<String>,
+    )>,
+    helper_cancel: CancellationToken,
+    automatic_write_cancel: CancellationToken,
+    helper_gate: HelperGate,
+    helper_requests: u64,
+    helper_abstains: u64,
+    helper_skips: u64,
+    candidate_revision: u64,
+    helper_scheduled_revision: u64,
 }
 
 impl State {
@@ -363,6 +476,8 @@ impl State {
         let config = CogneeConfig::default();
         Self {
             resolved_dataset: config.dataset.clone(),
+            context_generation: 0,
+            legacy_dataset: None,
             config,
             installed: false,
             api_key: None,
@@ -374,7 +489,11 @@ impl State {
             last_recall_key: None,
             last_recall_at: 0,
             last_compact_summary: None,
+            seen_evidence: SeenEvidence::default(),
+            suppressions: SuppressionSet::default(),
+            evidence_cache: EvidenceCache::default(),
             improve_in_flight: false,
+            improve_backoff: HashMap::new(),
             pending_prompt: None,
             session_id: None,
             host_session_id: None,
@@ -391,14 +510,70 @@ impl State {
             key_source: KeySource::None,
             shutting_down: false,
             turn_traces: 0,
+            helper: None,
+            helper_error: None,
+            last_read_gate: "not_run".into(),
+            helper_signature: None,
+            read_gate: super::helper_gate::HelperGate::default(),
+            read_helper: None,
+            read_helper_status: "unbound".into(),
+            helper_cancel: CancellationToken::new(),
+            automatic_write_cancel: CancellationToken::new(),
+            helper_gate: HelperGate::default(),
+            helper_requests: 0,
+            helper_abstains: 0,
+            helper_skips: 0,
+            candidate_revision: 0,
+            helper_scheduled_revision: 0,
         }
     }
 
-    fn active_dataset(&self) -> String {
+    /// Resolve `$project` for `cwd` and, for a linked worktree, the dataset
+    /// it used before sharing its repository's. An explicit dataset has none.
+    fn refresh_dataset(&mut self, cwd: Option<&Path>, storage_dir: &Path) {
+        let previous = self.active_dataset();
+        self.resolved_dataset = resolve_runtime_dataset(&self.config.dataset, cwd);
+        self.suppressions =
+            SuppressionSet::load(&storage_dir.join("suppress"), &self.active_dataset());
+        self.suppressions
+            .include_receipts(&storage_dir.join("candidates"), &self.active_dataset());
+        if previous != self.active_dataset() {
+            self.context_generation = self.context_generation.saturating_add(1);
+            self.helper_cancel.cancel();
+            self.helper_cancel = CancellationToken::new();
+            self.evidence_cache.clear();
+        }
+        self.legacy_dataset = (self.config.dataset == PROJECT_DATASET_SENTINEL)
+            .then(|| {
+                let cwd = cwd
+                    .map(Path::to_path_buf)
+                    .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                super::config::legacy_project_dataset(&cwd)
+            })
+            .filter(|legacy| *legacy != self.resolved_dataset);
+    }
+
+    /// The one extra dataset an empty automatic recall may try.
+    fn fallback_dataset(&self) -> Option<String> {
+        (self.config.read_policy != ReadPolicy::Legacy)
+            .then(|| self.legacy_dataset.clone())
+            .flatten()
+    }
+
+    pub(crate) fn active_dataset(&self) -> String {
         if self.resolved_dataset.is_empty() {
             self.config.dataset.clone()
         } else {
             self.resolved_dataset.clone()
+        }
+    }
+
+    fn operation_context(&self) -> coordinator::OperationContext {
+        coordinator::OperationContext {
+            host_session_id: self.host_session_id.clone(),
+            session_id: self.session_id.clone(),
+            dataset: self.active_dataset(),
+            generation: self.context_generation,
         }
     }
 }
@@ -431,6 +606,74 @@ impl RuntimeOptions {
     }
 }
 
+struct ReadFlightGuard<'a> {
+    runtime: &'a CogneeRuntime,
+    key: String,
+    flight_id: u64,
+    finished: bool,
+    _permit: Option<super::helper_gate::BudgetPermit>,
+}
+impl ReadFlightGuard<'_> {
+    fn finish(&mut self, outcome: &helper::ReadGateOutcome) {
+        self.runtime.state().read_gate.finish(
+            self.flight_id,
+            &self.key,
+            self.runtime.now(),
+            outcome,
+        );
+        self.finished = true;
+        self._permit.take();
+    }
+}
+impl Drop for ReadFlightGuard<'_> {
+    fn drop(&mut self) {
+        if !self.finished {
+            self.runtime.state().read_gate.finish(
+                self.flight_id,
+                &self.key,
+                self.runtime.now(),
+                &helper::ReadGateOutcome::Abstained(AbstainReason::Cancelled),
+            );
+        }
+    }
+}
+
+struct HelperFlightGuard {
+    runtime: Weak<CogneeRuntime>,
+    key: String,
+    flight_id: u64,
+    finished: bool,
+    _permit: Option<super::helper_gate::BudgetPermit>,
+}
+
+impl HelperFlightGuard {
+    fn finish(&mut self, outcome: &HelperOutcome) {
+        if let Some(runtime) = self.runtime.upgrade() {
+            runtime
+                .state()
+                .helper_gate
+                .finish(self.flight_id, &self.key, runtime.now(), outcome);
+        }
+        self._permit.take();
+        self.finished = true;
+    }
+}
+
+impl Drop for HelperFlightGuard {
+    fn drop(&mut self) {
+        if !self.finished {
+            if let Some(runtime) = self.runtime.upgrade() {
+                runtime.state().helper_gate.finish(
+                    self.flight_id,
+                    &self.key,
+                    runtime.now(),
+                    &HelperOutcome::Abstained(AbstainReason::Cancelled),
+                );
+            }
+        }
+    }
+}
+
 pub struct CogneeRuntime {
     me: Weak<CogneeRuntime>,
     agent_dir: PathBuf,
@@ -444,14 +687,20 @@ pub struct CogneeRuntime {
     notices: NoticeMailbox,
     status: Mutex<Option<ice_extensions::ExtensionStatusMailbox>>,
     harness: Mutex<Option<ice_harness::agent_harness::WeakAgentHarness>>,
+    capability_service: Mutex<Weak<crate::capability_service::CapabilityService>>,
     state: Mutex<State>,
+    read_coordinator: Mutex<request::ReadCoordinator>,
     background: Mutex<Vec<JoinHandle<()>>>,
+    helper_tasks: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
     tool_args: Mutex<HashMap<String, Value>>,
+    tools_allowed: Mutex<Option<bool>>,
     /// Dream ledger writes run one at a time.
     dream_writes: tokio::sync::Mutex<()>,
     /// Single-flight pending drain.
     drain: tokio::sync::Mutex<()>,
+    /// Single-flight warmup replay.
+    warmup_drain: tokio::sync::Mutex<()>,
 }
 
 impl CogneeRuntime {
@@ -472,24 +721,45 @@ impl CogneeRuntime {
             notices,
             status: Mutex::new(None),
             harness: Mutex::new(None),
+            capability_service: Mutex::new(Weak::new()),
             state: Mutex::new(State::new()),
+            read_coordinator: Mutex::new(request::ReadCoordinator::default()),
             background: Mutex::new(Vec::new()),
+            helper_tasks: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
             tool_args: Mutex::new(HashMap::new()),
+            tools_allowed: Mutex::new(None),
             dream_writes: tokio::sync::Mutex::new(()),
             drain: tokio::sync::Mutex::new(()),
+            warmup_drain: tokio::sync::Mutex::new(()),
         })
+    }
+
+    /// Share the host's resident catalog without probing MCP or retaining a cycle.
+    pub fn bind_capability_service(
+        &self,
+        service: &Arc<crate::capability_service::CapabilityService>,
+    ) {
+        *self.capability_service.lock().unwrap() = Arc::downgrade(service);
+    }
+
+    fn capability_inventory(&self) -> Value {
+        let service = self.capability_service.lock().unwrap().upgrade();
+        service.map_or_else(
+            || json!({"tools":[], "probed":false, "status":"catalog_unavailable"}),
+            |service| service.doctor_cognee_contract(),
+        )
     }
 
     fn arc(&self) -> Arc<Self> {
         self.me.upgrade().expect("Cognee runtime is alive")
     }
 
-    fn now(&self) -> u64 {
+    pub(crate) fn now(&self) -> u64 {
         (self.now)()
     }
 
-    fn state(&self) -> std::sync::MutexGuard<'_, State> {
+    pub(crate) fn state(&self) -> std::sync::MutexGuard<'_, State> {
         self.state.lock().unwrap_or_else(|error| error.into_inner())
     }
 
@@ -501,8 +771,12 @@ impl CogneeRuntime {
         self.storage_dir.join("config.json")
     }
 
-    fn pending_dir(&self) -> PathBuf {
+    pub(crate) fn pending_dir(&self) -> PathBuf {
         self.storage_dir.join("pending")
+    }
+
+    pub(crate) fn candidates_dir(&self) -> PathBuf {
+        self.storage_dir.join("candidates")
     }
 
     fn warmup_dir(&self) -> PathBuf {
@@ -525,12 +799,16 @@ impl CogneeRuntime {
         status: ice_extensions::ExtensionStatusMailbox,
         cwd: PathBuf,
     ) {
+        if let Some(live) = harness.upgrade() {
+            self.ensure_session_id(&live.session().storage().metadata().id);
+        }
         *self.harness.lock().unwrap() = Some(harness);
         *self.status.lock().unwrap() = Some(status);
         *self.cwd.lock().unwrap() = Some(cwd);
+        self.refresh_repository_identity();
     }
 
-    fn harness(&self) -> Option<ice_harness::agent_harness::AgentHarness> {
+    pub(crate) fn harness(&self) -> Option<ice_harness::agent_harness::AgentHarness> {
         self.harness.lock().unwrap().as_ref()?.upgrade()
     }
 
@@ -596,22 +874,80 @@ impl CogneeRuntime {
         }
         state.config = connection.config;
         state.installed = installed;
-        state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         state.api_key = connection.api_key;
         state.key_source = connection.key_source;
+        Self::rebuild_helper(&mut state);
+        let helper_error = state.helper_error.clone();
         state.client = Some(CogneeClient::new(
             Self::client_config(&state),
             self.transport.clone(),
         ));
         state.loaded = true;
+        drop(state);
+        if let Some(error) = helper_error {
+            self.notify(
+                NoticeLevel::Warning,
+                format!("Cognee helper binding failed: {error}"),
+            );
+            self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
+        }
     }
 
     fn rebuild_client(state: &mut State, transport: Arc<dyn CogneeTransport>) {
         state.client = Some(CogneeClient::new(Self::client_config(state), transport));
     }
 
+    fn rebuild_helper(state: &mut State) {
+        let signature = (
+            state.config.enabled,
+            state.config.write_policy,
+            state.config.read_policy,
+            state.config.helper_enabled,
+            state.config.helper_provider.clone(),
+            state.config.helper_model.clone(),
+        );
+        if state.helper_signature.as_ref() == Some(&signature) {
+            return;
+        }
+        state.helper_signature = Some(signature);
+        state.helper_cancel.cancel();
+        state.helper_cancel = CancellationToken::new();
+        state.helper_error = None;
+        state.read_helper = match Helper::bind_read_gate(&state.config) {
+            Ok(helper) => {
+                state.read_helper_status =
+                    if helper.is_some() { "bound" } else { "unbound" }.into();
+                helper.map(Arc::new)
+            }
+            Err(error) => {
+                state.read_helper_status = format!("unavailable({error})");
+                None
+            }
+        };
+        let should_bind = state.config.enabled
+            && state.config.selective_writes()
+            && state.config.helper_enabled
+            && state.config.helper_provider.is_some()
+            && state.config.helper_model.is_some();
+        if !should_bind {
+            state.helper = None;
+            return;
+        }
+        state.helper = match Helper::bind(&state.config) {
+            Ok(helper) => helper.map(Arc::new),
+            Err(error) => {
+                state.helper_error = Some(match error {
+                    helper::HelperError::UnsupportedProtocol => "unsupported_protocol".into(),
+                    _ => "binding_failed".into(),
+                });
+                None
+            }
+        };
+    }
+
     /// The client when Cognee may contact the server.
-    fn live_client(&self) -> Option<CogneeClient> {
+    pub(crate) fn live_client(&self) -> Option<CogneeClient> {
         let state = self.state();
         if Self::enabled(&state, self.offline) {
             state.client.clone()
@@ -620,11 +956,64 @@ impl CogneeRuntime {
         }
     }
 
+    fn persist_backend_acceptance(
+        &self,
+        id: &str,
+        operation: &str,
+        session: Option<&str>,
+        dataset: &str,
+        receipt: &super::client::AcceptedReceipt,
+    ) -> bool {
+        let record = super::accepted_jobs::AcceptedJob {
+            version: 1,
+            operation_id: id.to_owned(),
+            operation: operation.to_owned(),
+            dataset: dataset.to_owned(),
+            session_id: session.map(str::to_owned),
+            accepted_at_ms: self.now(),
+            receipt: receipt.clone(),
+            searchability: super::accepted_jobs::Searchability::Unverified,
+        };
+        if super::accepted_jobs::persist(&self.storage_dir.join("accepted-jobs"), &record).is_err()
+        {
+            self.notify(NoticeLevel::Warning, "Cognee accepted the request but its local acknowledgment could not be retained; searchability remains unverified");
+            false
+        } else {
+            true
+        }
+    }
+
+    fn automatic_capture_allowed(&self, kind: &str) -> bool {
+        let state = self.state();
+        !state.shutting_down
+            && Self::enabled(&state, self.offline)
+            && if kind == "trace" {
+                state.config.captures_tools()
+            } else {
+                state.config.captures_session()
+            }
+    }
+
+    fn automatic_improve_allowed(&self) -> bool {
+        let state = self.state();
+        Self::enabled(&state, self.offline) && state.config.improves()
+    }
+
     fn ensure_session_id(&self, host_id: &str) -> String {
         let id = super::config::cognee_session_id(host_id);
         let mut state = self.state();
-        if state.session_id.as_deref() != Some(id.as_str()) {
+        if state.session_id.as_deref() != Some(id.as_str())
+            || state.host_session_id.as_deref() != Some(host_id)
+        {
+            state.context_generation = state.context_generation.saturating_add(1);
             state.dream_dirty = false;
+            state.seen_evidence.clear();
+        }
+        if state.session_id.as_deref() != Some(id.as_str())
+            || state.host_session_id.as_deref() != Some(host_id)
+        {
+            state.helper_cancel.cancel();
+            state.helper_cancel = CancellationToken::new();
         }
         state.session_id = Some(id.clone());
         state.host_session_id = Some(host_id.into());
@@ -632,6 +1021,574 @@ impl CogneeRuntime {
     }
 
     // ── background work ──
+
+    fn track_helper(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
+        let handle = tokio::spawn(work);
+        let mut tasks = self.helper_tasks.lock().unwrap();
+        tasks.retain(|task| !task.is_finished());
+        tasks.push(handle);
+    }
+
+    fn observe_helper(
+        &self,
+        request_id: Option<&str>,
+        outcome: &str,
+        reason: &str,
+        candidates: usize,
+        accepted: usize,
+        rejected: usize,
+        latency_ms: Option<u64>,
+    ) {
+        self.observe_helper_for(
+            request_id, outcome, reason, candidates, accepted, rejected, latency_ms, None,
+        );
+    }
+
+    fn observe_helper_for(
+        &self,
+        request_id: Option<&str>,
+        outcome: &str,
+        reason: &str,
+        candidates: usize,
+        accepted: usize,
+        rejected: usize,
+        latency_ms: Option<u64>,
+        identity: Option<(&str, &str)>,
+    ) {
+        // A helper invocation is not proof of an HTTP send. Keep attempt counts
+        // separate from unknown wire counts; skips and cached results are local.
+        let invoked = latency_ms.is_some() && reason != "batch_cached";
+        self.observe_for(
+            "helper",
+            outcome,
+            ObserveFields {
+                request_id: Some(
+                    request_id
+                        .map(str::to_owned)
+                        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+                ),
+                latency_ms,
+                meta: meta(json!({
+                    "reason": reason,
+                    "candidates": candidates,
+                    "accepted": accepted,
+                    "rejected": rejected,
+                    "requested": if invoked { candidates } else { 0 },
+                    "invocationCount": usize::from(invoked),
+                    "networkRequestCount": Value::Null,
+                    "candidateCount": candidates,
+                    "judged": if outcome == "judged" { candidates } else { 0 },
+                    "abstained": if outcome == "abstained" { candidates } else { 0 },
+                    "cached": reason == "batch_cached",
+                    "busy": reason == "busy",
+                    "rateLimited": reason == "rate_limited",
+                    "stale": reason == "stale",
+                    "applicationFailed": reason == "application_failed",
+                    "persisted": accepted,
+                    "outcomeVersion": 3
+                })),
+                ..ObserveFields::default()
+            },
+            identity,
+        );
+    }
+
+    fn notify_helper_candidates_changed(&self) {
+        {
+            let mut state = self.state();
+            state.candidate_revision = state.candidate_revision.saturating_add(1);
+        }
+        self.schedule_helper();
+    }
+
+    fn schedule_helper(&self) {
+        self.ensure_loaded();
+        let (eligible, helper, cancel, dataset, provider, endpoint, shutting_down) = {
+            let state = self.state();
+            (
+                state.config.selective_writes()
+                    && state.config.enabled
+                    && Self::enabled(&state, self.offline),
+                state.helper.clone(),
+                state.helper_cancel.child_token(),
+                state.active_dataset(),
+                state.config.helper_provider.clone().unwrap_or_default(),
+                state.config.base_url.clone(),
+                state.shutting_down,
+            )
+        };
+        if shutting_down || !eligible {
+            return;
+        }
+        let Some(helper) = helper else {
+            if let Some(error) = self.state().helper_error.clone() {
+                self.notify(
+                    NoticeLevel::Warning,
+                    format!("Cognee helper binding failed: {error}"),
+                );
+                self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
+            }
+            return;
+        };
+        {
+            let mut state = self.state();
+            if state.helper_gate.flight_id().is_some()
+                || state.candidate_revision == state.helper_scheduled_revision
+            {
+                return;
+            }
+            state.helper_scheduled_revision = state.candidate_revision;
+        };
+        let candidates_dir = self.candidates_dir();
+        let receipt_candidates: std::collections::HashSet<_> =
+            super::admission::read_receipts(&super::admission::receipt_dir(&candidates_dir))
+                .into_iter()
+                .map(|receipt| receipt.candidate.id)
+                .collect();
+        let now = self.now();
+        let mut pending = Vec::new();
+        for mut candidate in read_helper_candidates_bounded(&candidates_dir, 32) {
+            if receipt_candidates.contains(&candidate.id)
+                || candidate.dataset != dataset
+                || candidate.state != CandidateState::Pending
+            {
+                continue;
+            }
+            if now.saturating_sub(candidate.created_at) >= super::candidates::CANDIDATE_TTL_MS
+                || candidate.valid_until_ms.is_some_and(|expiry| expiry <= now)
+            {
+                let _ = super::candidates::set_state(
+                    &candidates_dir,
+                    &mut candidate,
+                    CandidateState::Expired,
+                );
+            } else {
+                pending.push(candidate);
+            }
+        }
+        let (helper, cancel, dataset, provider, endpoint) =
+            (helper, cancel, dataset, provider, endpoint);
+        let pending = pending
+            .into_iter()
+            .filter(|candidate| candidate.dataset == dataset)
+            .collect::<Vec<_>>();
+        if pending.is_empty() {
+            self.observe_helper(None, "skipped", "no_pending", 0, 0, 0, None);
+            return;
+        }
+        let this = self.arc();
+        let operation_id = uuid::Uuid::new_v4().to_string();
+        let work_operation_id = operation_id.clone();
+        let source_identity = (
+            self.state().session_id.clone().unwrap_or_default(),
+            dataset.clone(),
+        );
+        let work = async move {
+            let sources = match this.candidate_source_snapshot(&cancel).await {
+                Ok(sources) => sources,
+                Err(_) => {
+                    this.observe_helper_for(
+                        Some(&work_operation_id),
+                        "skipped",
+                        "no_pending",
+                        0,
+                        0,
+                        0,
+                        None,
+                        Some((&source_identity.0, &source_identity.1)),
+                    );
+                    return;
+                }
+            };
+            if sources.task_id.is_none() {
+                this.observe_helper_for(
+                    Some(&work_operation_id),
+                    "skipped",
+                    "no_pending",
+                    0,
+                    0,
+                    0,
+                    None,
+                    Some((&source_identity.0, &source_identity.1)),
+                );
+                return;
+            }
+            let mut candidates = Vec::new();
+            for mut candidate in pending {
+                if this.now().saturating_sub(candidate.created_at)
+                    >= super::candidates::CANDIDATE_TTL_MS
+                    || candidate
+                        .valid_until_ms
+                        .is_some_and(|expiry| expiry <= this.now())
+                {
+                    let _ = super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Expired,
+                    );
+                    continue;
+                }
+                let evidence = match super::source_validation::validate_source(
+                    &candidate,
+                    &sources.messages,
+                ) {
+                    Ok(evidence) => evidence,
+                    Err(reason) => {
+                        let _ = super::candidates::set_state(
+                            &candidates_dir,
+                            &mut candidate,
+                            CandidateState::Rejected(reason.as_str().into()),
+                        );
+                        continue;
+                    }
+                };
+                if validation::validate_candidate_scope(&candidate, &sources, &evidence, true)
+                    .is_err()
+                {
+                    let _ = super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Rejected("stale_source_scope".into()),
+                    );
+                    continue;
+                }
+                candidates.push(candidate);
+                if candidates.len() == 8 {
+                    break;
+                }
+            }
+            if candidates.is_empty() {
+                this.observe_helper_for(
+                    Some(&work_operation_id),
+                    "skipped",
+                    "no_pending",
+                    0,
+                    0,
+                    0,
+                    None,
+                    Some((&source_identity.0, &source_identity.1)),
+                );
+                return;
+            }
+            let helper_candidates = candidates
+                .iter()
+                .map(|candidate| HelperCandidate {
+                    id: candidate.id.clone(),
+                    text: candidate.text.clone(),
+                    kind_hint: Some(candidate.category.as_str().to_owned()),
+                })
+                .collect::<Vec<_>>();
+            let source_excerpt = candidates
+                .iter()
+                .filter_map(|candidate| {
+                    sources
+                        .messages
+                        .iter()
+                        .find(|(id, _)| id == &candidate.source.entry_id)
+                        .map(|(_, message)| extract_message_text(message))
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            let excerpt = source_excerpt.chars().take(800).collect::<String>();
+            let batch = match CandidateBatch::new(helper_candidates, Some(excerpt)) {
+                Ok(batch) => batch,
+                Err(_) => {
+                    this.observe_helper_for(
+                        Some(&work_operation_id),
+                        "abstained",
+                        "malformed",
+                        candidates.len(),
+                        0,
+                        0,
+                        None,
+                        Some((&source_identity.0, &source_identity.1)),
+                    );
+                    return;
+                }
+            };
+            let mut ordered_candidates = candidates.iter().collect::<Vec<_>>();
+            ordered_candidates.sort_by(|left, right| left.id.cmp(&right.id));
+            let mut hasher = Sha256::new();
+            hasher.update(provider.as_bytes());
+            let origin = super::observer::sanitize_endpoint(&endpoint);
+            hasher.update(Sha256::digest(origin.as_bytes()));
+            let (model, dataset, generation) = {
+                let state = this.state();
+                (
+                    state
+                        .config
+                        .helper_model
+                        .as_deref()
+                        .unwrap_or_default()
+                        .to_owned(),
+                    state.active_dataset(),
+                    state.context_generation,
+                )
+            };
+            hasher.update(model.as_bytes());
+            hasher.update(dataset.as_bytes());
+            hasher.update(generation.to_le_bytes());
+            for candidate in ordered_candidates {
+                hasher.update(candidate.id.as_bytes());
+                hasher.update(Sha256::digest(candidate.text.as_bytes()));
+                hasher.update(candidate.source.entry_id.as_bytes());
+                hasher.update(candidate.category.as_str().as_bytes());
+                hasher.update(candidate.dataset.as_bytes());
+                hasher.update(candidate.branch.as_deref().unwrap_or_default().as_bytes());
+                hasher.update(
+                    candidate
+                        .supersedes
+                        .as_deref()
+                        .unwrap_or_default()
+                        .as_bytes(),
+                );
+                hasher.update(candidate.valid_until_ms.unwrap_or_default().to_le_bytes());
+            }
+            let key = hasher
+                .finalize()
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
+            let (admission, permit, flight_id) = {
+                let mut state = this.state();
+                // The Cognee dataset endpoint is not the decision provider.
+                // Changing it must not grant a fresh provider quota.
+                let provider_key = Sha256::digest(provider.as_bytes())
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<String>();
+                let (admission, permit) = state.helper_gate.admit(&key, &provider_key, this.now());
+                (admission, permit, state.helper_gate.flight_id())
+            };
+            let HelperAdmission::Start = admission else {
+                if admission.reason() == Some(super::helper_gate::SkipReason::BatchCached) {
+                    let cached = this.state().helper_gate.cached(&key, this.now());
+                    if let Some(HelperOutcome::Judged(judgments)) = cached {
+                        let mut accepted = 0;
+                        let mut rejected = 0;
+                        for mut candidate in candidates {
+                            let Some(judgment) = judgments
+                                .iter()
+                                .find(|judgment| judgment.id == candidate.id)
+                            else {
+                                continue;
+                            };
+                            if judgment.durable == Verdict::No {
+                                if super::candidates::set_state(
+                                    &candidates_dir,
+                                    &mut candidate,
+                                    CandidateState::Rejected("helper_not_durable".into()),
+                                )
+                                .is_ok()
+                                {
+                                    rejected += 1;
+                                }
+                            } else if judgment.durable == Verdict::Yes
+                                && judgment.applicable == Verdict::Yes
+                                && judgment.category != Some(helper::Category::None)
+                            {
+                                if this
+                                    .accept_validated_candidate(&candidate, &cancel, true)
+                                    .await
+                                    .map(|outcome| outcome.is_some())
+                                    .unwrap_or(false)
+                                {
+                                    accepted += 1;
+                                }
+                            }
+                        }
+                        this.observe_helper_for(
+                            Some(&work_operation_id),
+                            "judged",
+                            "batch_cached",
+                            accepted + rejected,
+                            accepted,
+                            rejected,
+                            None,
+                            Some((&source_identity.0, &source_identity.1)),
+                        );
+                    } else {
+                        this.observe_helper_for(
+                            Some(&work_operation_id),
+                            "skipped",
+                            "batch_cached",
+                            candidates.len(),
+                            0,
+                            0,
+                            None,
+                            Some((&source_identity.0, &source_identity.1)),
+                        );
+                    }
+                } else if let Some(reason) = admission.reason() {
+                    if reason != super::helper_gate::SkipReason::BatchCached {
+                        let mut state = this.state();
+                        state.helper_skips = state.helper_skips.saturating_add(1);
+                    }
+                    this.observe_helper_for(
+                        Some(&work_operation_id),
+                        "skipped",
+                        reason.as_str(),
+                        candidates.len(),
+                        0,
+                        0,
+                        None,
+                        Some((&source_identity.0, &source_identity.1)),
+                    );
+                }
+                return;
+            };
+            let mut guard = HelperFlightGuard {
+                runtime: Arc::downgrade(&this),
+                key: key.clone(),
+                flight_id: flight_id.expect("started helper flight has an id"),
+                finished: false,
+                _permit: permit,
+            };
+            {
+                let mut state = this.state();
+                state.helper_requests = state.helper_requests.saturating_add(1);
+            }
+            let started = std::time::Instant::now();
+            let outcome = helper.judge(&batch, cancel.clone()).await;
+            let latency = started.elapsed().as_millis() as u64;
+            if cancel.is_cancelled() {
+                guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
+                this.observe_helper_for(
+                    Some(&work_operation_id),
+                    "skipped",
+                    "cancelled",
+                    candidates.len(),
+                    0,
+                    0,
+                    Some(latency),
+                    Some((&source_identity.0, &source_identity.1)),
+                );
+                return;
+            }
+            let judgments = match outcome {
+                HelperOutcome::Judged(judgments) => {
+                    guard.finish(&HelperOutcome::Judged(judgments.clone()));
+                    judgments
+                }
+                HelperOutcome::Abstained(AbstainReason::Cancelled) if cancel.is_cancelled() => {
+                    guard.finish(&HelperOutcome::Abstained(AbstainReason::Cancelled));
+                    this.observe_helper_for(
+                        Some(&work_operation_id),
+                        "skipped",
+                        "cancelled",
+                        candidates.len(),
+                        0,
+                        0,
+                        Some(latency),
+                        Some((&source_identity.0, &source_identity.1)),
+                    );
+                    return;
+                }
+                HelperOutcome::Abstained(reason) => {
+                    guard.finish(&HelperOutcome::Abstained(reason));
+                    let label = match reason {
+                        AbstainReason::Timeout => "timeout",
+                        AbstainReason::Cancelled => "cancelled",
+                        AbstainReason::Unavailable => "unavailable",
+                        AbstainReason::Malformed | AbstainReason::TooLarge => "malformed",
+                        AbstainReason::UnknownCandidateId => "unknown_candidate_id",
+                        AbstainReason::Disabled | AbstainReason::LowConfidence => "unavailable",
+                    };
+                    {
+                        let mut state = this.state();
+                        state.helper_abstains = state.helper_abstains.saturating_add(1);
+                    }
+                    this.observe_helper_for(
+                        Some(&work_operation_id),
+                        "abstained",
+                        label,
+                        candidates.len(),
+                        0,
+                        0,
+                        Some(latency),
+                        Some((&source_identity.0, &source_identity.1)),
+                    );
+                    return;
+                }
+            };
+            let mut accepted = 0;
+            let mut rejected = 0;
+            for mut candidate in candidates {
+                if candidate.state != CandidateState::Pending {
+                    continue;
+                }
+                let Some(judgment) = judgments
+                    .iter()
+                    .find(|judgment| judgment.id == candidate.id)
+                else {
+                    continue;
+                };
+                if judgment.durable == Verdict::No {
+                    if super::candidates::set_state(
+                        &candidates_dir,
+                        &mut candidate,
+                        CandidateState::Rejected("helper_not_durable".into()),
+                    )
+                    .is_ok()
+                    {
+                        rejected += 1;
+                    }
+                } else if judgment.durable == Verdict::Yes
+                    && judgment.applicable == Verdict::Yes
+                    && judgment.category != Some(helper::Category::None)
+                {
+                    match this
+                        .accept_validated_candidate(&candidate, &cancel, true)
+                        .await
+                    {
+                        Ok(Some(_)) => {
+                            accepted += 1;
+                        }
+                        Ok(None) => {
+                            if super::candidates::set_state(
+                                &candidates_dir,
+                                &mut candidate,
+                                CandidateState::Rejected(
+                                    super::candidates::Reason::QueueFull.as_str().into(),
+                                ),
+                            )
+                            .is_ok()
+                            {
+                                rejected += 1;
+                            }
+                        }
+                        Err(_) => {}
+                    }
+                }
+            }
+            this.observe_helper_for(
+                Some(&work_operation_id),
+                "judged",
+                "judged",
+                accepted + rejected,
+                accepted,
+                rejected,
+                Some(latency),
+                Some((&source_identity.0, &source_identity.1)),
+            );
+        };
+        self.track_helper(work);
+    }
+
+    #[cfg(test)]
+    fn use_helper_for_test(&self, helper: Arc<Helper>) {
+        let mut state = self.state();
+        state.config.write_policy = WritePolicy::Selective;
+        state.config.enabled = true;
+        state.installed = true;
+        state.helper = Some(helper);
+        state.helper_error = None;
+    }
+
+    #[cfg(test)]
+    fn store_pending_candidate_for_test(&self, candidate: &Candidate) {
+        super::candidates::store_pending(&self.candidates_dir(), candidate, self.now()).unwrap();
+    }
 
     fn track(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
         let handle = tokio::spawn(work);
@@ -646,10 +1603,12 @@ impl CogneeRuntime {
         loop {
             let handles: Vec<JoinHandle<()>> =
                 std::mem::take(&mut *self.background.lock().unwrap());
-            if handles.is_empty() {
+            let helper_handles: Vec<JoinHandle<()>> =
+                std::mem::take(&mut *self.helper_tasks.lock().unwrap());
+            if handles.is_empty() && helper_handles.is_empty() {
                 break;
             }
-            for handle in handles {
+            for handle in handles.into_iter().chain(helper_handles) {
                 let _ = handle.await;
             }
         }
@@ -667,15 +1626,85 @@ impl CogneeRuntime {
         self.notices.notify(level, text);
     }
 
+    pub(crate) fn observe_candidate_with_supersession(
+        &self,
+        candidate: &Candidate,
+        outcome: &str,
+        supersession: Option<&str>,
+        supersession_reason: Option<&str>,
+    ) {
+        let reason = match &candidate.state {
+            CandidateState::Rejected(reason) => Some(reason.clone()),
+            _ => None,
+        };
+        let mut metadata = json!({
+            "category": candidate.category.as_str(),
+            "outcome": outcome,
+            "reason": reason,
+            "sourceRole": match candidate.source.role {
+                Role::User => "user",
+                Role::Assistant => "assistant",
+                Role::Tool => "tool",
+            },
+            "supersedes": candidate.supersedes,
+            "outcomeVersion": 1
+        });
+        if let Some(status) = supersession {
+            metadata["supersession"] = json!(status);
+            if let Some(reason) = supersession_reason {
+                metadata["supersessionReason"] = json!(reason);
+            }
+        }
+        self.observe(
+            "candidate",
+            outcome,
+            ObserveFields {
+                request_id: Some(candidate.id.clone()),
+                meta: meta(metadata),
+                ..ObserveFields::default()
+            },
+        );
+    }
+
+    pub(crate) fn refresh_receipt_suppressions(&self) {
+        let dataset = self.active_dataset();
+        let mut suppressions = SuppressionSet::load(&self.storage_dir.join("suppress"), &dataset);
+        suppressions.include_receipts(&self.candidates_dir(), &dataset);
+        self.state().suppressions = suppressions;
+    }
+    #[cfg(test)]
+    pub(crate) fn record_suppression(&self, suppression: Suppression) -> Result<(), String> {
+        let directory = self.storage_dir.join("suppress");
+        super::suppress::record(&directory, &suppression)
+            .map_err(|error| format!("Could not record Cognee suppression: {error}"))?;
+        self.state().suppressions.insert(suppression);
+        Ok(())
+    }
+
     fn observe(&self, operation: &str, phase: &str, fields: ObserveFields) {
+        self.observe_for(operation, phase, fields, None);
+    }
+
+    fn observe_for(
+        &self,
+        operation: &str,
+        phase: &str,
+        fields: ObserveFields,
+        identity: Option<(&str, &str)>,
+    ) {
         let (session_id, dataset, base_url, model) = {
             let state = self.state();
             if !state.installed {
                 return;
             }
             (
-                state.session_id.clone(),
-                state.active_dataset(),
+                match identity {
+                    Some((session, _)) => (!session.is_empty()).then(|| session.to_owned()),
+                    None => state.session_id.clone(),
+                },
+                identity
+                    .map(|(_, dataset)| dataset.to_owned())
+                    .unwrap_or_else(|| state.active_dataset()),
                 state.config.base_url.clone(),
                 state.server_model.clone(),
             )
@@ -750,15 +1779,23 @@ impl CogneeRuntime {
 
     /// `storeEntry`: send one cache entry in the background.
     fn store_entry(&self, entry: Map<String, Value>, kind: &'static str) -> Option<()> {
-        let (client, session_id, dataset) = {
+        let (client, session_id, dataset, signal) = {
             let state = self.state();
-            if state.shutting_down || !Self::enabled(&state, self.offline) {
+            if state.shutting_down
+                || !Self::enabled(&state, self.offline)
+                || !(if kind == "trace" {
+                    state.config.captures_tools()
+                } else {
+                    state.config.captures_session()
+                })
+            {
                 return None;
             }
             (
                 state.client.clone()?,
                 state.session_id.clone()?,
                 state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
             )
         };
         let request_id = uuid::Uuid::new_v4().to_string();
@@ -768,25 +1805,32 @@ impl CogneeRuntime {
         } else {
             "remember_entry"
         };
-        self.observe(
-            operation,
-            "started",
-            ObserveFields {
-                request_id: Some(request_id.clone()),
-                preview: Some(Value::Object(entry.clone())),
-                meta: meta(json!({"kind": kind})),
-                ..ObserveFields::default()
-            },
-        );
         let this = self.arc();
         self.track(async move {
+            if signal.is_cancelled() || !this.automatic_capture_allowed(kind) {
+                return;
+            }
+            this.observe_for(
+                operation,
+                "started",
+                ObserveFields {
+                    request_id: Some(request_id.clone()),
+                    preview: Some(Value::Object(entry.clone())),
+                    meta: meta(json!({"kind": kind})),
+                    ..ObserveFields::default()
+                },
+                Some((&session_id, &dataset)),
+            );
             let entry_value = Value::Object(entry.clone());
             let result = client
                 .remember_entry(
                     &entry_value,
                     Some(&dataset),
                     &session_id,
-                    CallOptions::default(),
+                    CallOptions {
+                        signal: Some(signal),
+                        ..CallOptions::default()
+                    },
                 )
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
@@ -817,7 +1861,7 @@ impl CogneeRuntime {
                             }
                         }
                     });
-                    this.observe(
+                    this.observe_for(
                         operation,
                         "succeeded",
                         ObserveFields {
@@ -826,12 +1870,13 @@ impl CogneeRuntime {
                             meta: meta(json!({"kind": kind})),
                             ..ObserveFields::default()
                         },
+                        Some((&session_id, &dataset)),
                     );
                 }
                 Err(error) => {
                     let kind_name = error_kind(&error);
                     this.state().last_error = Some(kind_name.clone());
-                    this.observe(
+                    this.observe_for(
                         operation,
                         "failed",
                         ObserveFields {
@@ -841,23 +1886,28 @@ impl CogneeRuntime {
                             meta: meta(json!({"kind": kind})),
                             ..ObserveFields::default()
                         },
+                        Some((&session_id, &dataset)),
                     );
-                    this.buffer_warmup(&entry);
+                    if drain_failure_state(&error_kind(&error)) == PendingState::Uncertain {
+                        super::queue::buffer_warmup_entry_with_state(
+                            &this.warmup_dir(),
+                            &session_id,
+                            &dataset,
+                            &entry,
+                            this.now(),
+                            PendingState::Uncertain,
+                        );
+                    } else {
+                        this.buffer_warmup_for(&session_id, &dataset, &entry);
+                    }
                 }
             }
         });
         Some(())
     }
 
-    /// Buffer under the current session identity (as the TypeScript does).
-    fn buffer_warmup(&self, entry: &Map<String, Value>) {
-        let (session_id, dataset) = {
-            let state = self.state();
-            (state.session_id.clone(), state.active_dataset())
-        };
-        if let Some(session_id) = session_id {
-            buffer_warmup_entry(&self.warmup_dir(), &session_id, &dataset, entry, self.now());
-        }
+    fn buffer_warmup_for(&self, session_id: &str, dataset: &str, entry: &Map<String, Value>) {
+        buffer_warmup_entry(&self.warmup_dir(), session_id, dataset, entry, self.now());
     }
 
     /// Replay up to 16 buffered cache writes.
@@ -866,26 +1916,77 @@ impl CogneeRuntime {
             return;
         };
         let (dir, dataset) = (self.warmup_dir(), self.state().active_dataset());
+        let signal = self.state().automatic_write_cancel.child_token();
+        let this = self.arc();
         self.track(async move {
-            let batch = tokio::task::spawn_blocking(move || read_warmup_batch(&dir))
-                .await
-                .unwrap_or_default();
+            let Ok(_guard) = this.warmup_drain.try_lock() else {
+                return;
+            };
+            let lease_dir = dir.clone();
+            let Ok(Some(_lease)) =
+                tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                    .await
+                    .unwrap_or(Ok(None))
+            else {
+                return;
+            };
+            let batch = tokio::task::spawn_blocking(move || {
+                super::queue::read_replayable_warmup_batch(&dir)
+            })
+            .await
+            .unwrap_or_default();
+            let (mut replayed, mut failed) = (0, 0);
             for record in batch {
+                if signal.is_cancelled() || !this.automatic_capture_allowed("answer") {
+                    break;
+                }
+                if record.entry.get("type").and_then(Value::as_str) == Some("trace")
+                    && !this.automatic_capture_allowed("trace")
+                {
+                    // Preserve traces that their original capture policy no
+                    // longer authorizes; other eligible answers may proceed.
+                    continue;
+                }
                 let entry = Value::Object(record.entry.clone());
                 let dataset = record.dataset.clone().unwrap_or_else(|| dataset.clone());
-                if client
+                if super::queue::set_warmup_state(&record, PendingState::InFlight).is_err() {
+                    failed += 1;
+                    continue;
+                }
+                let result = client
                     .remember_entry(
                         &entry,
                         Some(&dataset),
                         &record.session_id,
-                        CallOptions::default(),
+                        CallOptions {
+                            signal: Some(signal.clone()),
+                            ..CallOptions::default()
+                        },
                     )
-                    .await
-                    .is_ok()
-                {
-                    let _ = std::fs::remove_file(&record.path);
+                    .await;
+                match result {
+                    Ok(_) => {
+                        if std::fs::remove_file(&record.path).is_ok() {
+                            replayed += 1;
+                        } else {
+                            failed += 1;
+                        } // keep InFlight if local acknowledgment fails
+                    }
+                    Err(error) => {
+                        let state = drain_failure_state(&error_kind(&error));
+                        let _ = super::queue::set_warmup_state(&record, state);
+                        failed += 1;
+                    }
                 }
             }
+            this.observe(
+                "warmup_replay",
+                "completed",
+                ObserveFields {
+                    meta: meta(json!({"replayed": replayed, "failed": failed})),
+                    ..ObserveFields::default()
+                },
+            );
         });
     }
 
@@ -898,24 +1999,42 @@ impl CogneeRuntime {
             let _ = self.drain.lock().await;
             return;
         };
-        let client = {
-            let state = self.state();
-            if state.shutting_down {
-                return;
-            }
-            drop(state);
-            match self.live_client() {
-                Some(client) => client,
-                None => return,
-            }
-        };
+        let shutting_down = self.state().shutting_down;
+        if shutting_down || self.live_client().is_none() {
+            return;
+        }
+        let dispatch_session = self.state().session_id.clone().unwrap_or_default();
         let dir = self.pending_dir();
+        let lease_dir = dir.clone();
+        let Ok(Some(_dispatch_lease)) =
+            tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                .await
+                .unwrap_or(Ok(None))
+        else {
+            return;
+        };
         let scan_dir = dir.clone();
         let records =
             tokio::task::spawn_blocking(move || select_drain_batch(&scan_dir, allow_uncertain))
                 .await
                 .unwrap_or_default();
         for record in records {
+            // Preserve durable authorized intents while disabled, but do not
+            // dispatch them until Cognee is enabled again.
+            // Re-read the client: configuration may have changed while this
+            // drain waited for the lease, and the old one must not send.
+            let Some(client) = self.live_client() else {
+                return;
+            };
+            if record.admission_id.is_some()
+                && super::admission::is_completed(
+                    &super::admission::receipt_dir(&self.candidates_dir()),
+                    &record.operation_id,
+                )
+            {
+                let _ = remove_pending_remember(&dir, &record.operation_id);
+                continue;
+            }
             if !self.state().remember_circuit.can_attempt(wall_ms()) {
                 return;
             }
@@ -924,8 +2043,15 @@ impl CogneeRuntime {
             let state_name = match record.state {
                 PendingState::Pending => "pending",
                 PendingState::Uncertain => "uncertain",
+                PendingState::InFlight => "inflight",
+                PendingState::Prepared => continue,
             };
-            self.observe(
+            if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
+                .is_err()
+            {
+                continue;
+            }
+            self.observe_for(
                 "remember",
                 "started",
                 ObserveFields {
@@ -934,9 +2060,10 @@ impl CogneeRuntime {
                     meta: meta(json!({"operationId": record.operation_id, "state": state_name})),
                     ..ObserveFields::default()
                 },
+                Some((&dispatch_session, &record.dataset)),
             );
             let sent = client
-                .remember(
+                .remember_with_receipt(
                     &record.text,
                     &record.node_set,
                     Some(&record.dataset),
@@ -946,14 +2073,36 @@ impl CogneeRuntime {
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
             let outcome = match sent {
-                Ok(()) => remove_pending_remember(&dir, &record.operation_id)
-                    .map_err(|_| "unknown".to_string()),
+                Ok(receipt) => {
+                    if !self.persist_backend_acceptance(
+                        &request_id,
+                        "remember",
+                        (!dispatch_session.is_empty()).then_some(dispatch_session.as_str()),
+                        &record.dataset,
+                        &receipt,
+                    ) {
+                        Err("unknown".to_string())
+                    } else if record.admission_id.is_some()
+                        && super::admission::mark_completed(
+                            &super::admission::receipt_dir(&self.candidates_dir()),
+                            &record.operation_id,
+                        )
+                        .is_err()
+                    {
+                        // The remote accepted the write, but local acknowledgement
+                        // could not be made durable. Keep it ambiguous; never resend.
+                        Err("unknown".to_string())
+                    } else {
+                        remove_pending_remember(&dir, &record.operation_id)
+                            .map_err(|_| "unknown".to_string())
+                    }
+                }
                 Err(error) => Err(error_kind(&error)),
             };
             match outcome {
                 Ok(()) => {
                     self.state().remember_circuit.reset();
-                    self.observe(
+                    self.observe_for(
                         "remember",
                         "succeeded",
                         ObserveFields {
@@ -962,6 +2111,7 @@ impl CogneeRuntime {
                             meta: meta(json!({"operationId": record.operation_id})),
                             ..ObserveFields::default()
                         },
+                        Some((&dispatch_session, &record.dataset)),
                     );
                     self.append_operation(json!({
                         "action": "remember",
@@ -973,7 +2123,7 @@ impl CogneeRuntime {
                     }));
                 }
                 Err(kind) => {
-                    self.observe(
+                    self.observe_for(
                         "remember",
                         "failed",
                         ObserveFields {
@@ -985,6 +2135,7 @@ impl CogneeRuntime {
                             ),
                             ..ObserveFields::default()
                         },
+                        Some((&dispatch_session, &record.dataset)),
                     );
                     let open = {
                         let mut state = self.state();
@@ -992,14 +2143,14 @@ impl CogneeRuntime {
                         state.remember_circuit.note_failure(&kind, wall_ms());
                         !state.remember_circuit.can_attempt(wall_ms())
                     };
-                    let ambiguous = drain_failure_state(&kind) == PendingState::Uncertain;
-                    if ambiguous {
-                        let _ = update_pending_remember_state(
-                            &dir,
-                            &record.operation_id,
-                            PendingState::Uncertain,
-                        );
-                    }
+                    let failure_state = if record.admission_id.is_some() && kind == "unknown" {
+                        PendingState::Uncertain
+                    } else {
+                        drain_failure_state(&kind)
+                    };
+                    let ambiguous = failure_state == PendingState::Uncertain;
+                    let _ =
+                        update_pending_remember_state(&dir, &record.operation_id, failure_state);
                     self.append_operation(json!({
                         "action": "remember",
                         "operationId": record.operation_id,
@@ -1020,20 +2171,84 @@ impl CogneeRuntime {
         }
     }
 
-    fn spawn_drain_pending(&self) {
+    pub(crate) fn spawn_drain_pending(&self) {
         let this = self.arc();
         self.track(async move { this.drain_pending(false).await });
     }
 
     // ── improvement ──
 
+    fn suppress_improve(
+        &self,
+        session: &str,
+        dataset: &str,
+        revision: f64,
+        accepted: Option<f64>,
+    ) -> bool {
+        let now = self.now();
+        let mut state = self.state();
+        let key = (session.to_string(), dataset.to_string());
+        if state
+            .improve_backoff
+            .get(&key)
+            .is_some_and(|entry| entry.0 != revision)
+        {
+            state.improve_backoff.remove(&key);
+        }
+        let suppression = if accepted.is_some_and(|value| value >= revision) {
+            Some(("already_accepted_revision", None))
+        } else {
+            state
+                .improve_backoff
+                .get(&key)
+                .and_then(|entry| (entry.1 > now).then_some(("backoff", Some(entry.1 - now))))
+        };
+        drop(state);
+        if let Some((reason, retry)) = suppression {
+            let mut value = json!({"reason": reason, "outcomeVersion": 1, "outcome": "skipped", "target": session});
+            if let Some(retry) = retry {
+                value["retryAfterMs"] = json!(retry);
+            }
+            self.observe(
+                "improve",
+                "skipped",
+                ObserveFields {
+                    meta: meta(value),
+                    ..ObserveFields::default()
+                },
+            );
+            true
+        } else {
+            false
+        }
+    }
+
+    fn improve_result(&self, session: &str, dataset: &str, revision: f64, accepted: bool) {
+        let now = self.now();
+        let mut state = self.state();
+        let key = (session.to_string(), dataset.to_string());
+        if accepted {
+            state.improve_backoff.remove(&key);
+        } else {
+            let failures = state
+                .improve_backoff
+                .get(&key)
+                .filter(|entry| entry.0 == revision)
+                .map_or(1, |entry| entry.2.saturating_add(1));
+            let delay = if failures == 1 { 60_000 } else { 300_000 };
+            state
+                .improve_backoff
+                .insert(key, (revision, now.saturating_add(delay), failures));
+        }
+    }
+
     /// `runImprove`: one current-session improve, claim-fenced.
     pub fn run_improve(&self, reason: &'static str) -> Option<JoinHandle<()>> {
         let now = self.now();
-        let (client, session_id, dataset) = {
+        let (client, session_id, dataset, signal) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.auto_improve
+                || !state.config.improves()
                 || state.improve_in_flight
             {
                 return None;
@@ -1047,11 +2262,16 @@ impl CogneeRuntime {
             }
             state.improve_in_flight = true;
             state.dream_dirty = false;
-            (client, session_id, state.active_dataset())
+            (
+                client,
+                session_id,
+                state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
+            )
         };
         let this = self.arc();
         let handle = tokio::spawn(async move {
-            this.improve_current(client, session_id, dataset, reason)
+            this.improve_current_guarded(client, session_id, dataset, reason, signal)
                 .await;
             let mut state = this.state();
             state.improve_in_flight = false;
@@ -1060,6 +2280,7 @@ impl CogneeRuntime {
         Some(handle)
     }
 
+    #[cfg(test)]
     async fn improve_current(
         &self,
         client: CogneeClient,
@@ -1067,10 +2288,37 @@ impl CogneeRuntime {
         dataset: String,
         reason: &'static str,
     ) {
+        let signal = self.state().automatic_write_cancel.child_token();
+        self.improve_current_guarded(client, session_id, dataset, reason, signal)
+            .await;
+    }
+
+    async fn improve_current_guarded(
+        &self,
+        client: CogneeClient,
+        session_id: String,
+        dataset: String,
+        reason: &'static str,
+        signal: CancellationToken,
+    ) {
         drop(self.dream_writes.lock().await);
         let token = uuid::Uuid::new_v4().to_string();
         let dir = self.dream_dir();
         let claim_now = self.now() as f64;
+        let snapshot = read_dream_record_for_dataset(&dir, &session_id, &dataset);
+        let revision = snapshot
+            .as_ref()
+            .map_or(0.0, |record| record.capture_revision);
+        if self.suppress_improve(
+            &session_id,
+            &dataset,
+            revision,
+            snapshot
+                .as_ref()
+                .and_then(|record| record.accepted_revision),
+        ) {
+            return;
+        }
         let claim = {
             let (dir, session_id, dataset, token) = (
                 dir.clone(),
@@ -1096,10 +2344,36 @@ impl CogneeRuntime {
             Some(Some(record)) => Some(record),
             None => None,
         };
+        if let Some(record) = &claim {
+            if self.suppress_improve(
+                &session_id,
+                &dataset,
+                record.capture_revision,
+                record.accepted_revision,
+            ) {
+                let file = record.ledger_file.clone();
+                let _ = tokio::task::spawn_blocking(move || {
+                    release_dream_claim(&dir, &session_id, &token, file.as_deref())
+                })
+                .await;
+                return;
+            }
+        }
+        if signal.is_cancelled() || !self.automatic_improve_allowed() {
+            if let Some(claim) = &claim {
+                let file = claim.ledger_file.clone();
+                let (dir, session) = (dir.clone(), session_id.clone());
+                let _ = tokio::task::spawn_blocking(move || {
+                    release_dream_claim(&dir, &session, &token, file.as_deref())
+                })
+                .await;
+            }
+            return;
+        }
         let request_id = uuid::Uuid::new_v4().to_string();
         let started = std::time::Instant::now();
         let improved_at = self.now() as f64;
-        self.observe(
+        self.observe_for(
             "improve",
             "started",
             ObserveFields {
@@ -1107,28 +2381,44 @@ impl CogneeRuntime {
                 meta: meta(json!({"reason": reason})),
                 ..ObserveFields::default()
             },
+            Some((&session_id, &dataset)),
         );
         let result = client
-            .improve(
+            .improve_with_receipt(
                 Some(&dataset),
                 std::slice::from_ref(&session_id),
                 CallOptions {
                     timeout_ms: Some(DREAM_IMPROVE_TIMEOUT_MS),
+                    signal: Some(signal.clone()),
                     ..CallOptions::default()
                 },
             )
             .await;
         let latency = Some(started.elapsed().as_millis() as u64);
         match result {
-            Ok(()) => {
-                self.observe(
+            Ok(receipt) => {
+                self.persist_backend_acceptance(
+                    &request_id,
+                    "improve",
+                    Some(&session_id),
+                    &dataset,
+                    &receipt,
+                );
+                let revision = claim
+                    .as_ref()
+                    .map_or(revision, |record| record.capture_revision);
+                self.improve_result(&session_id, &dataset, revision, true);
+                let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
+                self.observe_for(
                     "improve",
                     "succeeded",
                     ObserveFields {
                         request_id: Some(request_id),
                         latency_ms: latency,
+                        meta: meta(json!({"outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
                 if let Some(claim) = &claim {
                     let dream_claim = DreamClaim {
@@ -1144,9 +2434,13 @@ impl CogneeRuntime {
                 }
             }
             Err(error) => {
+                let revision = claim
+                    .as_ref()
+                    .map_or(revision, |record| record.capture_revision);
+                self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
-                self.observe(
+                self.observe_for(
                     "improve",
                     "failed",
                     ObserveFields {
@@ -1155,6 +2449,7 @@ impl CogneeRuntime {
                         error: Some(kind),
                         ..ObserveFields::default()
                     },
+                    Some((&session_id, &dataset)),
                 );
             }
         }
@@ -1169,10 +2464,10 @@ impl CogneeRuntime {
     /// `runDream`: improve up to two older sessions.
     pub fn run_dream(&self) -> Option<JoinHandle<()>> {
         let now = self.now();
-        let (client, dataset) = {
+        let (client, dataset, signal) = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.auto_improve
+                || !state.config.improves()
                 || state.dream_in_flight
                 || state.shutting_down
             {
@@ -1184,16 +2479,20 @@ impl CogneeRuntime {
             }
             state.dream_in_flight = true;
             state.last_dream_at = now;
-            (client, state.active_dataset())
+            (
+                client,
+                state.active_dataset(),
+                state.automatic_write_cancel.child_token(),
+            )
         };
         let this = self.arc();
         Some(tokio::spawn(async move {
-            this.dream_pass(client, dataset).await;
+            this.dream_pass(client, dataset, signal).await;
             this.state().dream_in_flight = false;
         }))
     }
 
-    async fn dream_pass(&self, client: CogneeClient, dataset: String) {
+    async fn dream_pass(&self, client: CogneeClient, dataset: String, signal: CancellationToken) {
         drop(self.dream_writes.lock().await);
         let dir = self.dream_dir();
         let scan_now = self.now() as f64;
@@ -1215,7 +2514,10 @@ impl CogneeRuntime {
         for record in candidates {
             {
                 let state = self.state();
-                if state.shutting_down {
+                if state.shutting_down
+                    || !Self::enabled(&state, self.offline)
+                    || !state.config.improves()
+                {
                     return;
                 }
                 if state.improve_in_flight
@@ -1223,6 +2525,14 @@ impl CogneeRuntime {
                 {
                     continue;
                 }
+            }
+            if self.suppress_improve(
+                &record.session_id,
+                &record.dataset,
+                record.capture_revision,
+                record.accepted_revision,
+            ) {
+                continue;
             }
             let token = uuid::Uuid::new_v4().to_string();
             let claim_now = self.now() as f64;
@@ -1245,6 +2555,31 @@ impl CogneeRuntime {
                     release_dream_claim(&dir, &session, &token, file.as_deref())
                 })
             };
+            if self.suppress_improve(
+                &claim.session_id,
+                &claim.dataset,
+                claim.capture_revision,
+                claim.accepted_revision,
+            ) {
+                let _ = release(
+                    dir.clone(),
+                    claim.session_id.clone(),
+                    token,
+                    claim.ledger_file.clone(),
+                )
+                .await;
+                continue;
+            }
+            if signal.is_cancelled() || !self.automatic_improve_allowed() {
+                let _ = release(
+                    dir.clone(),
+                    record.session_id.clone(),
+                    token,
+                    claim.ledger_file.clone(),
+                )
+                .await;
+                return;
+            }
             if self.state().shutting_down {
                 let _ = release(
                     dir.clone(),
@@ -1259,7 +2594,7 @@ impl CogneeRuntime {
             let started = std::time::Instant::now();
             let improved_at = self.now() as f64;
             let meta_value = json!({"reason": "dream", "target": record.session_id});
-            self.observe(
+            self.observe_for(
                 "improve",
                 "started",
                 ObserveFields {
@@ -1267,20 +2602,41 @@ impl CogneeRuntime {
                     meta: meta(meta_value.clone()),
                     ..ObserveFields::default()
                 },
+                Some((&record.session_id, &record.dataset)),
             );
             let result = client
-                .improve(
+                .improve_with_receipt(
                     Some(&claim.dataset),
                     std::slice::from_ref(&claim.session_id),
                     CallOptions {
                         timeout_ms: Some(DREAM_IMPROVE_TIMEOUT_MS),
+                        signal: Some(signal.clone()),
                         ..CallOptions::default()
                     },
                 )
                 .await;
             let latency = Some(started.elapsed().as_millis() as u64);
             let failed = match result {
-                Ok(()) => {
+                Ok(receipt) => {
+                    self.persist_backend_acceptance(
+                        &request_id,
+                        "improve",
+                        Some(&claim.session_id),
+                        &claim.dataset,
+                        &receipt,
+                    );
+                    self.improve_result(
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                        true,
+                    );
+                    let _ = mark_dream_accepted(
+                        &dir,
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                    );
                     let dream_claim = DreamClaim {
                         token: token.clone(),
                         capture_revision: claim.capture_revision,
@@ -1291,22 +2647,29 @@ impl CogneeRuntime {
                         mark_dream_improved(&dir, &session, improved_at, &dream_claim)
                     })
                     .await;
-                    self.observe(
+                    self.observe_for(
                         "improve",
                         "succeeded",
                         ObserveFields {
                             request_id: Some(request_id),
                             latency_ms: latency,
-                            meta: meta(meta_value),
+                            meta: meta(json!({"reason": "dream", "target": record.session_id, "outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"})),
                             ..ObserveFields::default()
                         },
+                        Some((&record.session_id, &record.dataset)),
                     );
                     false
                 }
                 Err(error) => {
+                    self.improve_result(
+                        &claim.session_id,
+                        &claim.dataset,
+                        claim.capture_revision,
+                        false,
+                    );
                     let kind = error_kind(&error);
                     self.state().last_error = Some(kind.clone());
-                    self.observe(
+                    self.observe_for(
                         "improve",
                         "failed",
                         ObserveFields {
@@ -1316,6 +2679,7 @@ impl CogneeRuntime {
                             meta: meta(meta_value),
                             ..ObserveFields::default()
                         },
+                        Some((&record.session_id, &record.dataset)),
                     );
                     true
                 }
@@ -1371,9 +2735,17 @@ impl CogneeRuntime {
             api_key_source: state.key_source,
             healthy,
             health_detail: detail,
+            capability_inventory: self.capability_inventory(),
+            operation_outcomes: state
+                .client
+                .as_ref()
+                .map(CogneeClient::operation_outcomes)
+                .unwrap_or_default(),
             capture_session: state.config.capture_session,
             capture_tools: state.config.capture_tools,
             auto_recall: state.config.auto_recall,
+            read_policy: state.config.read_policy,
+            write_policy: state.config.write_policy,
             auto_remember: state.config.auto_remember,
             auto_improve: state.config.auto_improve,
             compaction_summary_mode: state.config.compaction_summary_mode,
@@ -1392,15 +2764,44 @@ impl CogneeRuntime {
                 .count(),
             queue_uncertain: records
                 .iter()
-                .filter(|record| record.state == PendingState::Uncertain)
+                .filter(|record| {
+                    matches!(
+                        record.state,
+                        PendingState::Uncertain | PendingState::InFlight
+                    )
+                })
                 .count(),
+            helper_status: if !state.config.enabled
+                || !state.config.selective_writes()
+                || !state.config.helper_enabled
+            {
+                "off".into()
+            } else if state.config.helper_provider.is_none() || state.config.helper_model.is_none()
+            {
+                "unconfigured".into()
+            } else if let Some(error) = &state.helper_error {
+                format!("error({error})")
+            } else if state.helper.is_some() {
+                format!(
+                    "bound({})",
+                    state.config.helper_provider.as_deref().unwrap_or("unknown")
+                )
+            } else {
+                "off".into()
+            },
+            read_gate_status: state.read_helper_status.clone(),
+            last_read_gate: state.last_read_gate.clone(),
+            helper_requests: state.helper_requests,
+            helper_abstains: state.helper_abstains,
+            helper_skips: state.helper_skips,
         }
     }
 
     // ── tools and config ──
 
-    /// Register `cognee_search` once (when the tool policy allows it).
+    /// Register Cognee tools under their respective read/write policies.
     pub async fn register_search_tool(&self, allowed: bool) {
+        *self.tools_allowed.lock().unwrap() = Some(allowed);
         if !allowed {
             return;
         }
@@ -1410,49 +2811,100 @@ impl CogneeRuntime {
         let Ok(mut tools) = harness.get_tools().await else {
             return;
         };
-        if tools
+        let config = self.config();
+        let enabled = self.is_enabled();
+        let has_search = tools
             .iter()
-            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME)
-        {
-            return;
+            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME);
+        let has_propose = tools
+            .iter()
+            .any(|tool| tool.tool.schema().name == PROPOSE_TOOL_NAME);
+        let mut changed = false;
+        if !has_search {
+            tools.push(ice_harness::types::HarnessTool::new(Arc::new(
+                super::command::CogneeSearchTool::new(self.me.clone()),
+            )));
+            changed = true;
         }
-        let Ok(active) = harness.lane("main").get_active_tools().await else {
-            return;
-        };
-        tools.push(ice_harness::types::HarnessTool::new(Arc::new(
-            super::command::CogneeSearchTool::new(self.me.clone()),
-        )));
-        let _ = harness.set_tools(tools, Some(active)).await;
+        if config.selective_writes() && enabled && !has_propose {
+            tools.push(ice_harness::types::HarnessTool::new(Arc::new(
+                super::propose::CogneeProposeMemoryTool::new(self.me.clone()),
+            )));
+            changed = true;
+        }
+        if changed {
+            let Ok(active) = harness.lane("main").get_active_tools().await else {
+                return;
+            };
+            let _ = harness.set_tools(tools, Some(active)).await;
+        }
     }
 
-    /// `applyToolState`: toggle only `cognee_search` in the active set.
+    /// Toggle Cognee tools according to availability and the active write policy.
     pub async fn apply_tool_state(&self) {
+        if self.tools_allowed.lock().unwrap().unwrap_or(false) {
+            self.register_search_tool(true).await;
+        }
         let Some(harness) = self.harness() else {
             return;
         };
-        let enabled = Self::enabled(&self.state(), self.offline);
-        let Ok(tools) = harness.get_tools().await else {
+        let (enabled, selective) = {
+            let state = self.state();
+            (
+                Self::enabled(&state, self.offline),
+                state.config.selective_writes(),
+            )
+        };
+        let Ok(mut tools) = harness.get_tools().await else {
             return;
         };
-        if !tools
-            .iter()
-            .any(|tool| tool.tool.schema().name == SEARCH_TOOL_NAME)
-        {
-            return;
-        }
         let lane = harness.lane("main");
         let Ok(mut active) = lane.get_active_tools().await else {
             return;
         };
-        let present = active.iter().any(|name| name == SEARCH_TOOL_NAME);
-        if enabled && !present {
-            active.push(SEARCH_TOOL_NAME.into());
-        } else if !enabled && present {
-            active.retain(|name| name != SEARCH_TOOL_NAME);
-        } else {
+        let mut changed = false;
+        if !enabled || !selective {
+            let before = tools.len();
+            tools.retain(|tool| tool.tool.schema().name != PROPOSE_TOOL_NAME);
+            changed |= tools.len() != before;
+            let active_before = active.len();
+            active.retain(|name| name != PROPOSE_TOOL_NAME);
+            changed |= active.len() != active_before;
+        }
+        for (name, should_enable) in [
+            (SEARCH_TOOL_NAME, enabled),
+            (PROPOSE_TOOL_NAME, enabled && selective),
+        ] {
+            if !tools.iter().any(|tool| tool.tool.schema().name == name) {
+                continue;
+            }
+            let present = active.iter().any(|current| current == name);
+            if should_enable && !present {
+                active.push(name.into());
+                changed = true;
+            } else if !should_enable && present {
+                active.retain(|current| current != name);
+                changed = true;
+            }
+        }
+        if changed && harness.set_tools(tools, Some(active)).await.is_err() {
             return;
         }
-        let _ = lane.set_active_tools(active).await;
+        // Tool availability may change without a resource reload. Publish the
+        // actual active host registry, not names inferred from settings.
+        let service = self.capability_service.lock().unwrap().upgrade();
+        if let Some(service) = service {
+            if let (Ok(tools), Ok(active)) = (
+                harness.get_tools().await,
+                harness.lane("main").get_active_tools().await,
+            ) {
+                let active_tools: Vec<_> = tools
+                    .into_iter()
+                    .filter(|tool| active.contains(&tool.tool.schema().name))
+                    .collect();
+                service.refresh_native_tools(&active_tools);
+            }
+        }
     }
 
     /// `persistConfig`: save, adopt, rebuild the client and re-apply the
@@ -1483,17 +2935,42 @@ impl CogneeRuntime {
         Ok(())
     }
 
-    fn save_and_adopt(&self, next: CogneeConfig) -> bool {
+    pub(crate) fn save_and_adopt(&self, next: CogneeConfig) -> bool {
         self.ensure_loaded();
         if save_config(&self.config_path(), &next).is_err() {
             return false;
         }
         let mut state = self.state();
+        let previous_dataset = state.active_dataset();
+        if state.config.enabled != next.enabled
+            || state.config.write_policy != next.write_policy
+            || state.config.capture_session != next.capture_session
+            || state.config.capture_tools != next.capture_tools
+            || state.config.auto_improve != next.auto_improve
+            || state.config.base_url != next.base_url
+        {
+            state.automatic_write_cancel.cancel();
+            state.automatic_write_cancel = CancellationToken::new();
+        }
         state.config = next;
         state.installed = true;
+        Self::rebuild_helper(&mut state);
         let cwd = self.cwd.lock().unwrap().clone();
-        state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+        state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
+        state.context_generation = state.context_generation.saturating_add(1);
+        if previous_dataset != state.active_dataset() {
+            state.evidence_cache.clear();
+        }
         Self::rebuild_client(&mut state, self.transport.clone());
+        let helper_error = state.helper_error.clone();
+        drop(state);
+        if let Some(error) = helper_error {
+            self.notify(
+                NoticeLevel::Warning,
+                format!("Cognee helper binding failed: {error}"),
+            );
+            self.observe_helper(None, "skipped", "bind_failed", 0, 0, 0, None);
+        }
         true
     }
 
@@ -1511,118 +2988,28 @@ impl CogneeRuntime {
         self.state().active_dataset()
     }
 
+    pub(super) fn generation(&self) -> u64 {
+        self.state().context_generation
+    }
+
+    fn operation_context(&self) -> coordinator::OperationContext {
+        self.state().operation_context()
+    }
+
     pub fn offline(&self) -> bool {
         self.offline
     }
 
     // ── recall paths shared by the tool and commands ──
 
-    /// Model-facing search: no session scope, no circuit admission check.
+    /// Explicit searches share one scoped, context-only contract with the UI.
     pub async fn search_for_tool(&self, query: &str, signal: CancellationToken) -> (String, Value) {
-        self.ensure_loaded();
-        let dataset = self.active_dataset();
-        let (client, top_k, max_chars) = {
-            let state = self.state();
-            (
-                state.client.clone(),
-                state.config.top_k,
-                state.config.recall_max_chars,
-            )
-        };
-        let Some(client) = client.filter(|_| self.is_enabled()) else {
-            return (
-                "Cognee is disabled.".into(),
-                json!({"enabled": false, "count": 0, "dataset": dataset}),
-            );
-        };
-        let result = client
-            .recall(
-                query,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset.clone()),
-                    signal: Some(signal),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
-        match result {
-            Ok(results) => {
-                self.state().recall_circuit.reset();
-                let text = if results.is_empty() {
-                    "No Cognee memory found.".to_string()
-                } else {
-                    format_recall(&recall_lines(&results), max_chars)
-                };
-                (
-                    text,
-                    json!({"enabled": true, "count": results.len(), "dataset": dataset}),
-                )
-            }
-            Err(error) => {
-                let kind = error_kind(&error);
-                {
-                    let mut state = self.state();
-                    state.last_error = Some(kind.clone());
-                    state.recall_circuit.note_failure(&kind, wall_ms());
-                }
-                (
-                    format!("Cognee search failed: {kind}"),
-                    json!({"enabled": true, "count": 0, "dataset": dataset, "error": kind}),
-                )
-            }
-        }
+        self.explicit_lookup(query, signal).await
     }
 
-    /// `/cognee search`.
+    /// `/cognee search` uses the same deadline, aliases and source filters.
     pub async fn manual_search(&self, query: &str) {
-        self.ensure_loaded();
-        let Some(client) = self.live_client() else {
-            self.notify(NoticeLevel::Warning, self.disabled_message());
-            return;
-        };
-        let (top_k, max_chars, dataset) = {
-            let state = self.state();
-            (
-                state.config.top_k,
-                state.config.recall_max_chars,
-                state.active_dataset(),
-            )
-        };
-        let result = client
-            .recall(
-                query,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
-        match result {
-            Ok(results) => {
-                {
-                    let mut state = self.state();
-                    state.recall_circuit.reset();
-                    state.last_error = None;
-                }
-                let text = if results.is_empty() {
-                    "No Cognee memory found".to_string()
-                } else {
-                    format_recall(&recall_lines(&results), max_chars)
-                };
-                self.notify(NoticeLevel::Info, text);
-            }
-            Err(error) => {
-                let kind = error_kind(&error);
-                {
-                    let mut state = self.state();
-                    state.last_error = Some(kind.clone());
-                    state.recall_circuit.note_failure(&kind, wall_ms());
-                }
-                self.notify(NoticeLevel::Error, format!("Cognee search failed: {kind}"));
-            }
-        }
+        self.explicit_search_notice(query).await;
     }
 
     fn disabled_message(&self) -> &'static str {
@@ -1633,8 +3020,58 @@ impl CogneeRuntime {
         }
     }
 
-    /// `/cognee remember`: send now; queue as pending on any failure.
+    /// Admit and queue one model-proposed memory against current branch evidence.
+    #[cfg(test)]
+    pub(crate) async fn propose_memory(
+        &self,
+        text: &str,
+        category: Category,
+        source_entry_id: &str,
+        verified_by: Option<&str>,
+        supersedes: Option<&str>,
+    ) -> Result<String, String> {
+        self.propose_memory_with_expiry(
+            text,
+            category,
+            source_entry_id,
+            verified_by,
+            supersedes,
+            None,
+        )
+        .await
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn propose_memory_with_expiry(
+        &self,
+        text: &str,
+        category: Category,
+        source_entry_id: &str,
+        verified_by: Option<&str>,
+        supersedes: Option<&str>,
+        valid_hours: Option<u64>,
+    ) -> Result<String, String> {
+        let result = super::propose::propose_memory(
+            self,
+            text,
+            category,
+            source_entry_id,
+            verified_by,
+            supersedes,
+            valid_hours,
+            super::propose::ProposalControl::default(),
+        )
+        .await;
+        result
+    }
+
+    /// `/cognee remember`: persist intent before sending.
     pub async fn manual_remember(&self, node_set: &str, text: &str) {
+        self.manual_remember_with(node_set, text, CallOptions::default())
+            .await;
+    }
+
+    async fn manual_remember_with(&self, node_set: &str, text: &str, options: CallOptions) {
         self.ensure_loaded();
         let Some(client) = self.live_client() else {
             self.notify(NoticeLevel::Warning, self.disabled_message());
@@ -1656,45 +3093,170 @@ impl CogneeRuntime {
             );
             return;
         }
+
+        let dir = self.pending_dir();
+        if read_pending_remember(&dir).iter().any(|existing| {
+            existing.dataset == dataset
+                && existing.node_set == node_set
+                && existing.text == safe_text
+        }) {
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee remember already exists in the durable queue",
+            );
+            return;
+        }
+        // Stays Pending until this runtime owns the dispatch lease, so a send
+        // that never starts is not mistaken for an ambiguous in-flight one.
+        let record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
+        match enqueue_pending_remember(&dir, &record, limit) {
+            Ok(true) => {}
+            Ok(false) => {
+                self.state().last_error = Some("queue_full".into());
+                self.notify(
+                    NoticeLevel::Error,
+                    "Cognee remember queue is full; no memory was sent",
+                );
+                return;
+            }
+            Err(error) => {
+                self.notify(
+                    NoticeLevel::Error,
+                    format!("Cognee remember was not sent; queue error: {error}"),
+                );
+                return;
+            }
+        }
+        // Dedupe may have returned a prior record with a different timestamp.
+        let Some(record) = read_pending_remember(&dir).into_iter().find(|existing| {
+            existing.dataset == dataset
+                && existing.node_set == node_set
+                && existing.text == safe_text
+        }) else {
+            self.notify(
+                NoticeLevel::Error,
+                "Cognee remember was not sent; queued record disappeared",
+            );
+            return;
+        };
+        let dispatch_session = self.state().session_id.clone();
+        let acceptance_id = uuid::Uuid::new_v4().to_string();
+        let lease_dir = dir.clone();
+        let Ok(Some(_dispatch_lease)) =
+            tokio::task::spawn_blocking(move || DispatchLease::try_acquire(&lease_dir))
+                .await
+                .unwrap_or(Ok(None))
+        else {
+            // The operation may belong to the process holding the lease. Do
+            // not mutate its durable state when this runtime did not acquire
+            // dispatch ownership.
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee remember queued: another process owns dispatch",
+            );
+            return;
+        };
+        if self.live_client().is_none() {
+            self.notify(
+                NoticeLevel::Warning,
+                "Cognee disabled before dispatch; durable intent retained",
+            );
+            return;
+        }
+        if update_pending_remember_state(&dir, &record.operation_id, PendingState::InFlight)
+            .is_err()
+        {
+            self.notify(
+                NoticeLevel::Error,
+                "Cognee remember was not sent; queue update failed",
+            );
+            return;
+        }
+
+        self.append_operation(json!({
+            "action": "remember",
+            "operationId": record.operation_id,
+            "contentHash": record.content_hash,
+            "dataset": record.dataset,
+            "nodeSet": record.node_set,
+            "state": "inflight",
+        }));
         match client
-            .remember(
-                &safe_text,
-                node_set,
-                Some(&dataset),
+            .remember_with_receipt(
+                &record.text,
+                &record.node_set,
+                Some(&record.dataset),
                 None,
-                CallOptions::default(),
+                options,
             )
             .await
         {
-            Ok(()) => {
+            Ok(receipt) => {
+                if !self.persist_backend_acceptance(
+                    &acceptance_id,
+                    "remember",
+                    dispatch_session.as_deref(),
+                    &record.dataset,
+                    &receipt,
+                ) || remove_pending_remember(&dir, &record.operation_id).is_err()
+                {
+                    let _ = update_pending_remember_state(
+                        &dir,
+                        &record.operation_id,
+                        PendingState::Uncertain,
+                    );
+                    self.notify(NoticeLevel::Warning, "Cognee accepted the write but local completion is uncertain; it will not be replayed automatically");
+                    return;
+                }
                 {
                     let mut state = self.state();
                     state.remember_circuit.reset();
                     state.last_error = None;
                 }
-                self.notify(NoticeLevel::Info, "Cognee memory stored");
+                self.notify(
+                    NoticeLevel::Info,
+                    "Cognee memory accepted; searchability unverified",
+                );
+                self.append_operation(json!({
+                    "action": "remember",
+                    "operationId": record.operation_id,
+                    "contentHash": record.content_hash,
+                    "dataset": record.dataset,
+                    "nodeSet": record.node_set,
+                    "state": "confirmed",
+                    "outcomeVersion": 2,
+                    "outcome": "accepted",
+                    "searchable": "unknown",
+                }));
             }
             Err(error) => {
                 let kind = error_kind(&error);
+                let failure_state = drain_failure_state(&kind);
+                let _ = update_pending_remember_state(&dir, &record.operation_id, failure_state);
                 {
                     let mut state = self.state();
                     state.last_error = Some(kind.clone());
                     state.remember_circuit.note_failure(&kind, wall_ms());
                 }
-                let record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
-                match enqueue_pending_remember(&self.pending_dir(), &record, limit) {
-                    Ok(true) => self.notify(
+                self.append_operation(json!({
+                    "action": "remember",
+                    "operationId": record.operation_id,
+                    "contentHash": record.content_hash,
+                    "dataset": record.dataset,
+                    "nodeSet": record.node_set,
+                    "state": if failure_state == PendingState::Uncertain { "uncertain" } else { "pending" },
+                    "error": kind,
+                }));
+                if failure_state == PendingState::Uncertain {
+                    self.notify(
+                        NoticeLevel::Warning,
+                        format!("Cognee remember {kind}; it may have been stored. Queued as uncertain; /cognee flush uncertain retries it"),
+                    );
+                } else {
+                    self.notify(
                         NoticeLevel::Warning,
                         format!("Cognee unavailable ({kind}); memory queued"),
-                    ),
-                    Ok(false) => self.notify(
-                        NoticeLevel::Error,
-                        format!("Cognee remember failed: {kind}"),
-                    ),
-                    Err(error) => self.notify(
-                        NoticeLevel::Error,
-                        format!("Cognee remember failed: {kind}; queue error: {error}"),
-                    ),
+                    );
                 }
             }
         }
@@ -1716,17 +3278,71 @@ impl CogneeRuntime {
             return;
         };
         self.state().last_improve_at = 0;
+        let dir = self.dream_dir();
+        let revision = read_dream_record_for_dataset(&dir, &session_id, &dataset)
+            .map_or(0.0, |record| record.capture_revision);
+        let request_id = uuid::Uuid::new_v4().to_string();
+        let started = std::time::Instant::now();
+        self.observe_for(
+            "improve",
+            "started",
+            ObserveFields {
+                request_id: Some(request_id.clone()),
+                meta: meta(json!({"reason": "manual"})),
+                ..ObserveFields::default()
+            },
+            Some((&session_id, &dataset)),
+        );
         match client
-            .improve(Some(&dataset), &[session_id], CallOptions::default())
+            .improve_with_receipt(
+                Some(&dataset),
+                std::slice::from_ref(&session_id),
+                CallOptions::default(),
+            )
             .await
         {
-            Ok(()) => {
+            Ok(receipt) => {
+                self.persist_backend_acceptance(
+                    &request_id,
+                    "improve",
+                    Some(&session_id),
+                    &dataset,
+                    &receipt,
+                );
                 self.state().last_improve_at = self.now();
+                self.improve_result(&session_id, &dataset, revision, true);
+                let _ = mark_dream_accepted(&dir, &session_id, &dataset, revision);
+                self.observe_for(
+                    "improve",
+                    "succeeded",
+                    ObserveFields {
+                        request_id: Some(request_id),
+                        latency_ms: Some(started.elapsed().as_millis() as u64),
+                        meta: meta(
+                            json!({"reason": "manual", "outcomeVersion": 1, "outcome": "accepted", "accepted": true, "searchable": "unknown"}),
+                        ),
+                        ..ObserveFields::default()
+                    },
+                    Some((&session_id, &dataset)),
+                );
                 self.notify(NoticeLevel::Info, "Cognee improve dispatched");
             }
             Err(error) => {
+                self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
                 self.state().last_error = Some(kind.clone());
+                self.observe_for(
+                    "improve",
+                    "failed",
+                    ObserveFields {
+                        request_id: Some(request_id),
+                        latency_ms: Some(started.elapsed().as_millis() as u64),
+                        error: Some(kind.clone()),
+                        meta: meta(json!({"reason": "manual"})),
+                        ..ObserveFields::default()
+                    },
+                    Some((&session_id, &dataset)),
+                );
                 self.notify(NoticeLevel::Error, format!("Cognee improve failed: {kind}"));
             }
         }
@@ -1747,6 +3363,7 @@ impl CogneeRuntime {
 
     pub async fn session_start_for(&self, host_id: &str) {
         self.ensure_loaded();
+        let session_id = self.ensure_session_id(host_id);
         {
             let mut state = self.state();
             if state.started_host_session.as_deref() == Some(host_id) {
@@ -1754,10 +3371,11 @@ impl CogneeRuntime {
             }
             state.started_host_session = Some(host_id.into());
             let cwd = self.cwd.lock().unwrap().clone();
-            state.resolved_dataset = resolve_runtime_dataset(&state.config.dataset, cwd.as_deref());
+            state.refresh_dataset(cwd.as_deref(), &self.storage_dir);
         }
         self.apply_tool_state().await;
-        let session_id = self.ensure_session_id(host_id);
+        // Ready local facts load without a blind remote orientation request.
+        self.invalidate_curated_memory();
         let (enabled, label, base_url) = {
             let mut state = self.state();
             let mut label = format!("shared memory {}", state.active_dataset());
@@ -1769,7 +3387,9 @@ impl CogneeRuntime {
                     .clone()
                     .or_else(|| std::env::current_dir().ok())
                     .unwrap_or_default();
-                let root = find_git_root(&cwd).to_string_lossy().into_owned();
+                let root = repository_root(&find_git_root(&cwd))
+                    .to_string_lossy()
+                    .into_owned();
                 let shown = match self.home_dir.as_ref().map(|home| home.to_string_lossy()) {
                     Some(home) if root == home || root.starts_with(&format!("{home}/")) => {
                         format!("~{}", &root[home.len()..])
@@ -1788,6 +3408,13 @@ impl CogneeRuntime {
             )
         };
         self.update_status_line();
+        let _ = super::admission::reconcile(
+            &self.candidates_dir(),
+            &self.pending_dir(),
+            self.config().queue_limit,
+            self.now(),
+        );
+        recover_inflight(&self.pending_dir());
         if !enabled {
             return;
         }
@@ -1870,8 +3497,19 @@ impl CogneeRuntime {
         let (client, session_id) = {
             let mut state = self.state();
             state.shutting_down = true;
+            state.helper_cancel.cancel();
+            state.evidence_cache.clear();
             (state.client.clone(), state.session_id.clone())
         };
+        let helper_tasks = std::mem::take(&mut *self.helper_tasks.lock().unwrap());
+        for mut task in helper_tasks {
+            if tokio::time::timeout(Duration::from_secs(1), &mut task)
+                .await
+                .is_err()
+            {
+                task.abort();
+            }
+        }
         let settle = self.settle.lock().unwrap().take();
         if let Some(settle) = settle {
             let _ = settle.await;
@@ -1879,10 +3517,7 @@ impl CogneeRuntime {
         self.wait_for_background().await;
         let (enabled, auto_improve) = {
             let state = self.state();
-            (
-                Self::enabled(&state, self.offline),
-                state.config.auto_improve,
-            )
+            (Self::enabled(&state, self.offline), state.config.improves())
         };
         if client.is_some() && session_id.is_some() && enabled && auto_improve {
             if let Some(handle) = self.run_improve("shutdown") {
@@ -1914,8 +3549,7 @@ impl CogneeRuntime {
         let max = {
             let mut state = self.state();
             if !Self::enabled(&state, self.offline)
-                || !state.config.capture_session
-                || !state.config.capture_tools
+                || !state.config.captures_tools()
                 || state.session_id.is_none()
             {
                 return;
@@ -1993,7 +3627,7 @@ impl CogneeRuntime {
         self.ensure_loaded();
         let (question, host, max) = {
             let mut state = self.state();
-            if !Self::enabled(&state, self.offline) || !state.config.capture_session {
+            if !Self::enabled(&state, self.offline) || !state.config.captures_session() {
                 return;
             }
             let Some(question) = state.pending_prompt.take() else {
@@ -2028,9 +3662,10 @@ impl CogneeRuntime {
     }
 
     fn on_run_settled(&self) {
+        self.schedule_helper();
         let ready = {
             let state = self.state();
-            state.loaded && Self::enabled(&state, self.offline) && state.config.auto_improve
+            state.loaded && Self::enabled(&state, self.offline) && state.config.improves()
         };
         if !ready {
             return;
@@ -2073,7 +3708,11 @@ impl CogneeRuntime {
                     .unwrap()
                     .remove(tool_call_id)
                     .unwrap_or(Value::Object(Map::new()));
+                let proposal = tool_name == PROPOSE_TOOL_NAME && !*is_error;
                 self.on_tool_result(tool_name, input, &result.content, *is_error);
+                if proposal {
+                    self.notify_helper_candidates_changed();
+                }
             }
             AgentEvent::AgentEnd { messages } => {
                 // Calls aborted before their result never report an end.
@@ -2241,22 +3880,111 @@ impl CogneeRuntime {
     }
 
     /// The memory text for this prompt: a pending checkpoint summary and the
-    /// recall, if any. The harness stores it after the prompt in the history.
-    fn turn_scoped_memory(&self, extra: Option<String>) -> Option<String> {
-        let (summary, max_chars) = {
+    /// recall, if any, within one character and (for non-legacy policies) token
+    /// budget. The harness stores it after the prompt in the history.
+    fn turn_scoped_memory(&self, recall: Option<Vec<RecallLine>>) -> Option<String> {
+        let (summary, max_chars, read_policy) = {
             let mut state = self.state();
             (
                 state.last_compact_summary.take(),
                 state.config.recall_max_chars,
+                state.config.read_policy,
             )
         };
+        let token_limited = read_policy != ReadPolicy::Legacy;
+        let budget_chars = if token_limited {
+            max_chars.min(AUTO_INJECT_TOKEN_CAP * 4)
+        } else {
+            max_chars
+        };
+        let recall = recall.filter(|lines| !lines.is_empty());
+        // The checkpoint yields a third of the budget to fresh recall.
+        let summary_budget = if recall.is_some() {
+            let target = budget_chars - budget_chars / 3;
+            if token_limited
+                && budget_chars
+                    < super::text::last_compact_envelope_overhead()
+                        + super::text::recall_empty_len()
+                        + 2
+            {
+                0
+            } else {
+                target
+            }
+        } else {
+            budget_chars
+        };
+        let summary = summary
+            .map(|summary| {
+                if token_limited {
+                    format_bounded_last_compact_injection(&summary, summary_budget)
+                } else {
+                    format_last_compact_injection(&summary, summary_budget)
+                }
+            })
+            .filter(|part| !part.is_empty());
+        let used = summary.as_ref().map_or(0, |part| len16(part) + 2);
+        let recall_budget = budget_chars.saturating_sub(used);
+        let recall = recall.and_then(|lines| {
+            if token_limited {
+                let lines = fit_lines(&lines, recall_budget);
+                (!lines.is_empty()).then(|| format_recall(&lines, recall_budget))
+            } else {
+                Some(format_recall(&lines, recall_budget))
+            }
+        });
         let parts: Vec<String> = summary
-            .map(|summary| format_last_compact_injection(&summary, max_chars))
             .into_iter()
-            .chain(extra)
+            .chain(recall)
             .filter(|part| !part.is_empty())
             .collect();
-        (!parts.is_empty()).then(|| parts.join("\n\n"))
+        let memory = (!parts.is_empty()).then(|| parts.join("\n\n"))?;
+        if token_limited && len16(&memory) > budget_chars {
+            // The recall envelope is retained by format_recall; this branch is
+            // a final boundary for the combined checkpoint/header overhead.
+            Some(prefix16(&memory, budget_chars.saturating_sub(1)).to_string() + "…")
+        } else {
+            Some(memory)
+        }
+    }
+
+    /// Recall lines worth injecting. Legacy preserves all results byte-for-byte;
+    /// non-legacy policies also apply metadata-based scope and freshness filters.
+    fn recall_evidence(&self, results: &[RecallResult]) -> Selection {
+        let repository = self.repository_identity();
+        let mut state = self.state();
+        if state.config.read_policy == ReadPolicy::Legacy {
+            let lines = recall_lines(results);
+            let kept = lines.len() as u32;
+            return Selection {
+                lines,
+                rejected: RejectCounts::default(),
+                kept,
+            };
+        }
+        let dataset = state.active_dataset();
+        let legacy_dataset = state.fallback_dataset();
+        let State {
+            seen_evidence,
+            suppressions,
+            ..
+        } = &mut *state;
+        let context = FilterContext {
+            now_ms: self.now(),
+            dataset,
+            legacy_dataset,
+            branch: repository
+                .as_ref()
+                .and_then(|identity| identity.branch.clone()),
+            revision: repository
+                .as_ref()
+                .and_then(|identity| identity.revision.clone()),
+            worktree_id: repository
+                .as_ref()
+                .map(|identity| identity.worktree_id.clone()),
+            suppressions: Some(suppressions),
+        };
+        select_new_with_context(results, seen_evidence, &context)
     }
 
     async fn recall_for_prompt(
@@ -2264,6 +3992,7 @@ impl CogneeRuntime {
         event: &BeforeRunEvent<'_>,
         request_id: &str,
         started: std::time::Instant,
+        previous_assistant: Option<&str>,
     ) -> Option<String> {
         let latency = || Some(started.elapsed().as_millis() as u64);
         let succeeded = |meta_value: Value| ObserveFields {
@@ -2274,13 +4003,17 @@ impl CogneeRuntime {
         };
         self.ensure_loaded();
         let Some(client) = self.live_client() else {
-            self.observe("recall", "succeeded", succeeded(json!({"disabled": true})));
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(json!({"disabled": true, "reason": "unavailable", "outcomeVersion": 1, "outcome": "skipped"})),
+            );
             return None;
         };
         let session_id = self.ensure_session_id(event.session_id);
-        let (auto_recall, can_attempt, top_k, max_chars, dataset) = {
+        let (auto_recall, read_policy, can_attempt, top_k, dataset, legacy_dataset, budget_ms) = {
             let mut state = self.state();
-            if state.config.capture_session && !event.prompt.trim().is_empty() {
+            if state.config.captures_session() && !event.prompt.trim().is_empty() {
                 let max = state.config.capture_max_chars;
                 state.pending_prompt = Some(redact_memory_text(
                     &truncate_for_capture(event.prompt, max),
@@ -2289,23 +4022,56 @@ impl CogneeRuntime {
             }
             (
                 state.config.auto_recall,
+                state.config.read_policy,
                 state.recall_circuit.can_attempt(wall_ms()),
                 state.config.top_k,
-                state.config.recall_max_chars,
                 state.active_dataset(),
+                state.fallback_dataset(),
+                state.config.recall_budget_ms,
             )
         };
+        let mut cached = if read_policy == ReadPolicy::Event {
+            let generation = self.generation();
+            let mut state = self.state();
+            let State {
+                evidence_cache,
+                seen_evidence,
+                suppressions,
+                ..
+            } = &mut *state;
+            let mut entries = evidence_cache.take(&dataset, generation, self.now(), seen_evidence);
+            for entry in &mut entries {
+                entry.text = entry
+                    .text
+                    .lines()
+                    .filter(|line| suppressions.is_suppressed(line, self.now(), None).is_none())
+                    .collect::<Vec<_>>()
+                    .join("\n");
+            }
+            entries.retain(|entry| !entry.text.is_empty());
+            entries
+        } else {
+            Vec::new()
+        };
         if !auto_recall || !can_attempt {
-            self.observe("recall", "succeeded", succeeded(json!({"skipped": true})));
-            return self.turn_scoped_memory(None);
-        }
-        if is_low_signal_recall_prompt(event.prompt) {
             self.observe(
                 "recall",
                 "succeeded",
-                succeeded(json!({"skipped": true, "reason": "short_prompt"})),
+                succeeded(json!({"skipped": true, "reason": if !auto_recall { "auto_recall_disabled" } else { "circuit_open" }, "outcomeVersion": 1, "outcome": "skipped"})),
             );
-            return self.turn_scoped_memory(None);
+            return self.turn_scoped_memory(Some(cached));
+        }
+        if let Admission::Skip(reason) = admit_prompt(read_policy, event.prompt) {
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(if read_policy == ReadPolicy::Event {
+                    json!({"skipped": true, "reason": reason.as_str(), "cacheDelivered": cached.len(), "cacheReason": if cached.is_empty() { "cache_empty" } else { "cache_ready" }, "outcomeVersion": 1, "outcome": "skipped"})
+                } else {
+                    json!({"skipped": true, "reason": reason.as_str(), "outcomeVersion": 1, "outcome": "skipped"})
+                }),
+            );
+            return self.turn_scoped_memory(Some(cached));
         }
         let recall_key = format!("{session_id}\n{}", event.prompt);
         let now = self.now();
@@ -2315,26 +4081,180 @@ impl CogneeRuntime {
                 && now.saturating_sub(state.last_recall_at) < RECALL_DEDUP_TTL_MS
             {
                 drop(state);
-                self.observe("recall", "succeeded", succeeded(json!({"duplicate": true})));
-                return self.turn_scoped_memory(None);
+                self.observe(
+                    "recall",
+                    "succeeded",
+                    succeeded(
+                        json!({"duplicate": true, "reason": "duplicate", "outcomeVersion": 1, "outcome": "skipped"}),
+                    ),
+                );
+                return self.turn_scoped_memory(Some(cached));
             }
         }
-        let result = client
-            .recall(
-                event.prompt,
-                RecallOptions {
-                    top_k: Some(top_k),
-                    dataset: Some(dataset),
-                    session_id: Some(session_id),
-                    scope: AUTO_RECALL_SCOPE
-                        .iter()
-                        .map(|scope| scope.to_string())
-                        .collect(),
-                    signal: Some(event.signal.clone()),
-                    ..RecallOptions::default()
-                },
-            )
-            .await;
+        let operation_context = self.operation_context();
+        let network_started = std::time::Instant::now();
+        let recall_signal = event.signal.child_token();
+        let recall = recall_with_fallback(
+            &client,
+            event.prompt,
+            RecallOptions {
+                top_k: Some(top_k),
+                dataset: Some(dataset.clone()),
+                session_id: Some(session_id.clone()),
+                scope: AUTO_RECALL_SCOPE
+                    .iter()
+                    .map(|scope| scope.to_string())
+                    .collect(),
+                signal: Some(recall_signal.clone()),
+                ..RecallOptions::default()
+            },
+            legacy_dataset,
+            budget_ms,
+        );
+        let (result, legacy_attempted) = if read_policy == ReadPolicy::Judged {
+            let helper = self.state().read_helper.clone();
+            let judge_signal = event.signal.child_token();
+            let judge = async {
+                let Some(helper) = &helper else {
+                    return helper::ReadGateOutcome::Abstained(helper::AbstainReason::Unavailable);
+                };
+                let key = format!(
+                    "{:x}",
+                    Sha256::digest(
+                        format!(
+                            "{:?}\n{:?}\n{}\n{}",
+                            self.config().helper_provider,
+                            self.config().helper_model,
+                            event.prompt,
+                            previous_assistant.unwrap_or_default()
+                        )
+                        .as_bytes()
+                    )
+                );
+                let (cached, admission, permit, flight_id) = {
+                    let mut state = self.state();
+                    let cached = state.read_gate.cached(&key, self.now());
+                    let provider = state
+                        .config
+                        .helper_provider
+                        .clone()
+                        .unwrap_or_else(|| "fixture".into());
+                    let (admission, permit) = state.read_gate.admit(&key, &provider, self.now());
+                    (cached, admission, permit, state.read_gate.flight_id())
+                };
+                if let Some(cached) = cached {
+                    return cached;
+                }
+                if admission != super::helper_gate::Admission::Start {
+                    return helper::ReadGateOutcome::Abstained(AbstainReason::Unavailable);
+                }
+                let mut guard = ReadFlightGuard {
+                    runtime: self,
+                    key,
+                    flight_id: flight_id.expect("admitted read flight"),
+                    finished: false,
+                    _permit: permit,
+                };
+                let outcome = helper
+                    .judge_read_gate(event.prompt, previous_assistant, judge_signal.clone())
+                    .await;
+                guard.finish(&outcome);
+                outcome
+            };
+            // Poll both immediately. Completed recall is held, never injected until
+            // the gate admits it. Dropping either future cancels its in-flight I/O.
+            tokio::pin!(recall, judge);
+            let mut completed = None;
+            let gate_started = std::time::Instant::now();
+            let budget = tokio::time::sleep(std::time::Duration::from_millis(budget_ms));
+            tokio::pin!(budget);
+            let outcome = loop {
+                tokio::select! {
+                    biased;
+                    _ = event.signal.cancelled() => {
+                        recall_signal.cancel();
+                        judge_signal.cancel();
+                        return None;
+                    }
+                    value = &mut recall, if completed.is_none() => {
+                        completed = Some((value, network_started.elapsed().as_millis() as u64));
+                    }
+                    value = &mut judge => break value,
+                    _ = &mut budget => {
+                        judge_signal.cancel();
+                        break helper::ReadGateOutcome::Abstained(helper::AbstainReason::Timeout);
+                    }
+                }
+            };
+            if event.signal.is_cancelled() || self.generation() != operation_context.generation {
+                recall_signal.cancel();
+                judge_signal.cancel();
+                return None;
+            }
+            let (decision, reason, incomplete, use_recall) = match outcome {
+                helper::ReadGateOutcome::Judged { needs, incomplete } => (
+                    needs.as_str(),
+                    "judged".to_string(),
+                    Some(incomplete),
+                    needs == helper::ReadNeed::Memory,
+                ),
+                helper::ReadGateOutcome::Abstained(reason) => (
+                    "fallback",
+                    if helper.is_none() {
+                        "unbound".into()
+                    } else {
+                        format!("{reason:?}").to_lowercase()
+                    },
+                    None,
+                    super::policy::asks_for_history(event.prompt),
+                ),
+            };
+            let mut gate_meta = json!({"decision": decision, "reason": reason, "jevLatencyMs": gate_started.elapsed().as_millis() as u64, "incomplete": incomplete, "recallCancelled": !use_recall && completed.is_none(), "recallUsed": use_recall});
+            if let Some((_, elapsed)) = &completed {
+                gate_meta["recallLatencyMs"] = json!(elapsed);
+            }
+            if !use_recall {
+                recall_signal.cancel();
+                gate_meta["skipped"] = json!(true);
+                gate_meta["outcome"] = json!("skipped");
+                self.state().last_read_gate = gate_meta.to_string();
+                self.observe("recall", "succeeded", succeeded(gate_meta));
+                return None;
+            }
+            let (value, recall_elapsed) = match completed {
+                Some((value, elapsed)) => (value, elapsed),
+                None => {
+                    let value = tokio::select! {
+                        biased;
+                        _ = event.signal.cancelled() => { recall_signal.cancel(); return None; }
+                        value = &mut recall => value,
+                    };
+                    (value, network_started.elapsed().as_millis() as u64)
+                }
+            };
+            if event.signal.is_cancelled() || self.generation() != operation_context.generation {
+                return None;
+            }
+            gate_meta["recallLatencyMs"] = json!(recall_elapsed);
+            self.state().last_read_gate = gate_meta.to_string();
+            self.observe("read_gate", "succeeded", succeeded(gate_meta));
+            value
+        } else {
+            recall.await
+        };
+        if event.signal.is_cancelled() {
+            return None;
+        }
+        let remote_wait_ms = network_started.elapsed().as_millis() as u64;
+        let still_current = self.generation() == operation_context.generation;
+        if !still_current {
+            self.observe(
+                "recall",
+                "succeeded",
+                succeeded(json!({"reason": "stale_session", "outcomeVersion": 1, "outcome": "stale", "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id, "staleGeneration": true})),
+            );
+            return None;
+        }
         match result {
             Ok(results) => {
                 {
@@ -2343,6 +4263,32 @@ impl CogneeRuntime {
                     state.last_recall_hits = results.len();
                     state.last_recall_key = Some(recall_key);
                     state.last_recall_at = now;
+                }
+                let selection = self.recall_evidence(&results);
+                let mut recall_meta = json!({"hits": results.len(), "withProvenance": results.iter().filter(|result| super::evidence::provenance_tag(result).is_some()).count(), "selected": selection.lines.len(), "legacyFallback": legacy_attempted.is_some(), "outcomeVersion": 1, "outcome": if results.is_empty() { "retrieved_empty" } else { "retrieved_nonempty" }, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id});
+                if read_policy != ReadPolicy::Legacy {
+                    recall_meta["rejected"] = json!({
+                        "routine": selection.rejected.routine,
+                        "duplicate": selection.rejected.duplicate,
+                        "expired": selection.rejected.expired,
+                        "superseded": selection.rejected.superseded,
+                        "wrong_scope": selection.rejected.wrong_scope,
+                        "wrong_branch": selection.rejected.wrong_branch,
+                        "unknown_validity": selection.rejected.unknown_validity,
+                    });
+                }
+                if let Some(legacy) = &legacy_attempted {
+                    recall_meta["legacyDataset"] = json!(legacy);
+                    recall_meta["legacyHits"] = json!(results.len());
+                }
+                cached.extend(selection.lines);
+                let memory = self.turn_scoped_memory(Some(cached));
+                if read_policy != ReadPolicy::Legacy {
+                    let budget_tokens =
+                        AUTO_INJECT_TOKEN_CAP.min(self.config().recall_max_chars.div_ceil(4));
+                    let injected_tokens = memory.as_deref().map_or(0, super::text::estimate_tokens);
+                    recall_meta["injectedTokens"] = json!(injected_tokens);
+                    recall_meta["budgetTokens"] = json!(budget_tokens);
                 }
                 self.observe(
                     "recall",
@@ -2357,13 +4303,11 @@ impl CogneeRuntime {
                                 .collect::<Vec<_>>()
                                 .join("\n"),
                         )),
-                        meta: meta(json!({"hits": results.len()})),
+                        meta: meta(recall_meta),
                         ..ObserveFields::default()
                     },
                 );
-                let extra = (!results.is_empty())
-                    .then(|| format_recall(&recall_lines(&results), max_chars));
-                self.turn_scoped_memory(extra)
+                memory
             }
             Err(error) => {
                 let kind = error_kind(&error);
@@ -2372,30 +4316,57 @@ impl CogneeRuntime {
                     state.last_error = Some(kind.clone());
                     state.recall_circuit.note_failure(&kind, wall_ms());
                 }
+                let mut failure_meta = json!({"outcomeVersion": 1, "outcome": kind, "remoteWaitMs": remote_wait_ms, "sourceDataset": dataset, "sourceSessionId": session_id, "hostSessionId": event.session_id, "legacyFallback": legacy_attempted.is_some()});
+                if let Some(legacy) = &legacy_attempted {
+                    failure_meta["legacyDataset"] = json!(legacy);
+                }
                 self.observe(
                     "recall",
                     "failed",
                     ObserveFields {
                         request_id: Some(request_id.into()),
                         latency_ms: latency(),
-                        error: Some(kind),
+                        error: Some(kind.clone()),
+                        meta: meta(failure_meta),
                         ..ObserveFields::default()
                     },
                 );
-                self.turn_scoped_memory(None)
+                self.turn_scoped_memory(Some(cached))
             }
         }
     }
 }
 
-/// A timed-out or aborted write may have been accepted, so it is not
-/// replayed automatically.
+/// Only an explicit rejection is safe to retry automatically. A generic
+/// transport error may occur after the server accepted the non-idempotent write.
 fn drain_failure_state(kind: &str) -> PendingState {
-    if kind == "timeout" || kind == "aborted" {
-        PendingState::Uncertain
-    } else {
-        PendingState::Pending
+    match kind {
+        "auth_failed" | "not_found" | "invalid_request" => PendingState::Pending,
+        _ => PendingState::Uncertain,
     }
+}
+
+async fn recall_with_fallback(
+    client: &CogneeClient,
+    query: &str,
+    mut options: RecallOptions,
+    legacy_dataset: Option<String>,
+    budget_ms: u64,
+) -> (Result<Vec<RecallResult>, CogneeError>, Option<String>) {
+    let started = std::time::Instant::now();
+    options.timeout_ms = Some(options.timeout_ms.unwrap_or(budget_ms).min(budget_ms));
+    let result = client.recall(query, options.clone()).await;
+    let remaining =
+        budget_ms.saturating_sub(started.elapsed().as_millis().min(u64::MAX as u128) as u64);
+    if matches!(&result, Ok(results) if results.is_empty()) && remaining >= 250 {
+        if let Some(dataset) = legacy_dataset {
+            let mut fallback = options;
+            fallback.dataset = Some(dataset.clone());
+            fallback.timeout_ms = Some(remaining);
+            return (client.recall(query, fallback).await, Some(dataset));
+        }
+    }
+    (result, None)
 }
 
 fn recall_lines(results: &[RecallResult]) -> Vec<RecallLine> {
@@ -2404,6 +4375,7 @@ fn recall_lines(results: &[RecallResult]) -> Vec<RecallLine> {
         .map(|result| RecallLine {
             text: result.text.clone(),
             score: result.score,
+            provenance: super::evidence::provenance_tag(result),
         })
         .collect()
 }
@@ -2420,6 +4392,13 @@ fn chrono_now_ms() -> i64 {
 
 #[async_trait::async_trait]
 impl HarnessExtension for CogneeRuntime {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        self.context_for_request(event).await
+    }
+
     /// Recalled memory goes into the history after the prompt, not into the
     /// system prompt: a system prompt that changed every turn kept the
     /// provider from caching any of the conversation after it.
@@ -2440,11 +4419,49 @@ impl HarnessExtension for CogneeRuntime {
                 ..ObserveFields::default()
             },
         );
-        let text = self.recall_for_prompt(event, &request_id, started).await?;
+        let text = self
+            .recall_for_prompt(event, &request_id, started, None)
+            .await?;
         Some(PromptContext {
             custom_type: MEMORY_CUSTOM_TYPE.into(),
             text,
+            correlation_id: Some(request_id),
         })
+    }
+
+    async fn prompt_context_persisted(&self, context: &PromptContext, persisted: bool) {
+        if context.custom_type != MEMORY_CUSTOM_TYPE {
+            return;
+        }
+        if self.acknowledge_request_memory(context, persisted) {
+            return;
+        }
+        let estimated_tokens = if persisted {
+            let message = ice_harness::messages::create_custom_message(
+                &context.custom_type,
+                ice_ai::types::UserContent::Text(context.text.clone()),
+                false,
+                None,
+                0,
+            );
+            ice_harness::compaction::estimate_tokens(&message)
+        } else {
+            0
+        };
+        self.observe(
+            "injection",
+            if persisted { "succeeded" } else { "failed" },
+            ObserveFields {
+                request_id: context.correlation_id.clone(),
+                meta: meta(json!({
+                    "outcomeVersion": 1,
+                    "outcome": if persisted { "persisted" } else { "append_failed" },
+                    "persistedBytes": if persisted { context.text.len() } else { 0 },
+                    "estimatedPersistedTokens": estimated_tokens,
+                })),
+                ..ObserveFields::default()
+            },
+        );
     }
 
     async fn before_compact(&self, event: &BeforeCompactEvent) -> Option<BeforeCompactDecision> {
@@ -2505,6 +4522,8 @@ impl HarnessExtension for CogneeRuntime {
         if !Self::enabled(&self.state(), self.offline) {
             return;
         }
+        let session_id = self.ensure_session_id(event.session_id);
+        self.schedule_helper();
         let summary = event.entry.summary.trim();
         if summary.is_empty() {
             return;
@@ -2524,15 +4543,18 @@ impl HarnessExtension for CogneeRuntime {
                 }
             });
         let reason = event.trigger.reason();
-        let session_id = self.ensure_session_id(event.session_id);
+        // Compaction is observed by the request coordinator; a summary is not
+        // a search query and a checkpoint alone does not authorize a fetch.
         let (capture, capture_max, remember, remember_max, dataset, limit) = {
             let mut state = self.state();
             state.last_compact_summary =
                 Some(redact_memory_text(summary, state.config.recall_max_chars));
+            // Compaction removed earlier injections from the context.
+            state.seen_evidence.clear();
             (
-                state.config.capture_session,
+                state.config.captures_session(),
                 state.config.capture_max_chars,
-                state.config.auto_remember,
+                state.config.remembers_compaction(),
                 state.config.remember_max_chars,
                 state.active_dataset(),
                 state.config.queue_limit,
@@ -2548,7 +4570,7 @@ impl HarnessExtension for CogneeRuntime {
                 self.store_entry(entry, "answer");
             }
         }
-        if remember != AutoRememberMode::Compaction {
+        if !remember {
             return;
         }
         let text = redact_memory_text(
@@ -2563,7 +4585,8 @@ impl HarnessExtension for CogneeRuntime {
             .join("\n"),
             remember_max,
         );
-        let record = create_pending_remember(&text, &dataset, "agent_actions", self.now());
+        let mut record = create_pending_remember(&text, &dataset, "agent_actions", self.now());
+        record.state = PendingState::Pending;
         let accepted = enqueue_pending_remember(&self.pending_dir(), &record, limit);
         if !matches!(accepted, Ok(true)) {
             self.state().last_error = Some("queue_full".into());
@@ -2613,21 +4636,126 @@ mod tests {
     use super::super::client::{Body, HttpRequest};
     use super::*;
     use crate::blackhole::live_state::tests::base;
+    use async_trait::async_trait;
     use ice_agent::types::AgentToolResult;
+    use ice_ai::decision::client::DecisionError;
+    use ice_ai::decision::typesafe::{self, Question};
+    use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
     use ice_ai::types::{
         Api, AssistantMessage, Content, TextContent, TextContentType, UserMessage,
     };
+    use ice_harness::agent_harness::{AgentHarness, AgentLane};
     use ice_harness::compaction::{CompactionPreparation, FileOperations};
-    use ice_harness::session::types::CompactionEntry;
-    use ice_harness::types::CompactionSettings;
+    use ice_harness::session::types::{CompactionEntry, Entry, EntryQuery};
+    use ice_harness::types::{AgentHarnessOptions, CompactionSettings};
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     const NOW: u64 = 1_800_000_000_000;
+
+    include!("request_tests.rs");
+    include!("judged_tests.rs");
+    include!("lookup_tests.rs");
+    include!("closeout_runtime_tests.rs");
+    include!("offline_replay_tests.rs");
+    include!("rollback_tests.rs");
+    include!("live_service_tests.rs");
+
+    #[derive(Clone, Copy)]
+    enum TestVerdict {
+        Durable,
+        NotDurable,
+        Uncertain,
+        ApplicableUnknown,
+    }
+
+    struct RuntimeDecider {
+        calls: Arc<AtomicUsize>,
+        verdict: TestVerdict,
+        slow: bool,
+    }
+
+    #[async_trait]
+    impl helper::DecisionDecider for RuntimeDecider {
+        async fn decide(
+            &self,
+            request: &typesafe::Request,
+            _timeout: Duration,
+            _signal: &CancellationToken,
+        ) -> Result<typesafe::Response, DecisionError> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            if self.slow {
+                std::future::pending::<()>().await;
+            }
+            let answers = request
+                .questions()
+                .iter()
+                .map(|(id, question)| {
+                    let value = match question {
+                        Question::Noul { .. } if id.ends_with(".applicable") => {
+                            let probability =
+                                if matches!(self.verdict, TestVerdict::ApplicableUnknown) {
+                                    0.5
+                                } else {
+                                    0.9
+                                };
+                            json!({"type":"noul", "noul":probability})
+                        }
+                        Question::Noul { .. } => {
+                            let probability = match self.verdict {
+                                TestVerdict::Durable | TestVerdict::ApplicableUnknown => 0.9,
+                                TestVerdict::NotDurable => 0.1,
+                                TestVerdict::Uncertain => 0.5,
+                            };
+                            json!({"type":"noul", "noul":probability})
+                        }
+                        Question::Choice { .. } => json!({
+                            "type":"choice", "choice":"constraint", "probabilities":{
+                                "decision":0.0,"constraint":1.0,"preference":0.0,
+                                "lesson":0.0,"none":0.0
+                            }, "confidence":0.9
+                        }),
+                        Question::Score { .. } => unreachable!(),
+                    };
+                    (id.clone(), value)
+                })
+                .collect::<serde_json::Map<String, Value>>();
+            let bytes = serde_json::to_vec(&json!({
+                "model": "jev-1.14.0",
+                "answers": answers,
+                "usage": {"input_tokens": 1, "output_tokens": 1}
+            }))
+            .unwrap();
+            typesafe::Response::decode_json(&bytes, request)
+                .map_err(|error| DecisionError::Codec(error))
+        }
+    }
+
+    fn fake_helper(verdict: TestVerdict, calls: Arc<AtomicUsize>, slow: bool) -> Arc<Helper> {
+        Arc::new(Helper::with_decider(
+            Arc::new(RuntimeDecider {
+                calls,
+                verdict,
+                slow,
+            }),
+            20,
+        ))
+    }
 
     fn runtime(
         dir: &Path,
         transport: &Arc<FakeTransport>,
         config: Option<Value>,
         offline: bool,
+    ) -> Arc<CogneeRuntime> {
+        runtime_with_clock(dir, transport, config, offline, Arc::new(|| NOW))
+    }
+
+    fn runtime_with_clock(
+        dir: &Path,
+        transport: &Arc<FakeTransport>,
+        config: Option<Value>,
+        offline: bool,
+        now: Arc<dyn Fn() -> u64 + Send + Sync>,
     ) -> Arc<CogneeRuntime> {
         if let Some(config) = config {
             let path = dir.join("ice-cognee").join("config.json");
@@ -2643,12 +4771,1299 @@ mod tests {
                 process_env: CogneeEnv::new(),
                 home_dir: None,
                 transport: transport.clone(),
-                now: Arc::new(|| NOW),
+                now,
                 offline,
                 cwd: Some(dir.to_path_buf()),
             },
             notices,
         )
+    }
+
+    async fn harness_with_messages(messages: Vec<AgentMessage>) -> AgentHarness {
+        let mut options = AgentHarnessOptions::default();
+        options.allow_existing_session = true;
+        let harness = AgentHarness::create(options).await.unwrap();
+        for message in messages {
+            harness.append_message(message).await.unwrap();
+        }
+        harness
+    }
+
+    fn clock_runtime(
+        dir: &Path,
+        transport: &Arc<FakeTransport>,
+        clock: Arc<std::sync::atomic::AtomicU64>,
+    ) -> Arc<CogneeRuntime> {
+        let path = dir.join("ice-cognee").join("config.json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, "{}").unwrap();
+        let notices = NoticeMailbox::new();
+        notices.attach();
+        let rt = CogneeRuntime::new(
+            RuntimeOptions {
+                agent_dir: dir.to_path_buf(),
+                storage_dir: None,
+                process_env: CogneeEnv::new(),
+                home_dir: None,
+                transport: transport.clone(),
+                now: Arc::new(move || clock.load(std::sync::atomic::Ordering::SeqCst)),
+                offline: false,
+                cwd: Some(dir.to_path_buf()),
+            },
+            notices,
+        );
+        rt.ensure_loaded();
+        rt
+    }
+
+    #[tokio::test]
+    async fn selective_proposals_are_attributed_queued_and_category_deduplicated() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let source_text = "Always keep generated files out of source control.";
+        let candidate_text = "Always keep generated files out of source control";
+        let harness =
+            harness_with_messages(vec![AgentMessage::User(UserMessage::new(source_text, 1))]).await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory(candidate_text, Category::Constraint, &source_id, None, None)
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        let receipts_dir = super::super::admission::receipt_dir(&rt.candidates_dir());
+        assert_eq!(
+            super::super::admission::read_receipts(&receipts_dir).len(),
+            1
+        );
+        let accepted = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.state == CandidateState::Accepted)
+            .unwrap();
+        std::fs::remove_file(rt.candidates_dir().join(format!("{}.json", accepted.id))).unwrap();
+        super::super::admission::reconcile(
+            &rt.candidates_dir(),
+            &rt.pending_dir(),
+            rt.config().queue_limit,
+            NOW,
+        )
+        .unwrap();
+        assert!(
+            super::super::candidates::read_candidates(&rt.candidates_dir())
+                .iter()
+                .any(|candidate| candidate.id == accepted.id
+                    && candidate.state == CandidateState::Accepted)
+        );
+        let request = &transport.sent()[0];
+        let Body::Multipart(parts) = &request.body else {
+            panic!("remember is multipart")
+        };
+        assert_eq!(parts[1].value, "user_context");
+        assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+
+        rt.propose_memory(candidate_text, Category::Constraint, &source_id, None, None)
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.propose_memory(
+            "Always keep generated files out of source control",
+            Category::Preference,
+            &source_id,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 2);
+        let invalid = rt
+            .propose_memory(
+                "Always keep generated files out of source control",
+                Category::Lesson,
+                &source_id,
+                None,
+                Some("missing-target"),
+            )
+            .await;
+        assert!(
+            invalid.is_err(),
+            "a user source is not a verified assistant lesson"
+        );
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 2);
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(
+            events
+                .iter()
+                .filter(|event| event.operation == "candidate")
+                .all(|event| event.preview.is_none()),
+            "candidate observations do not dump source text"
+        );
+    }
+
+    #[tokio::test]
+    async fn accepted_valid_hours_expires_at_injected_time_and_legacy_is_unchanged() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let clock_read = clock.clone();
+        let rt = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+            Arc::new(move || clock_read.load(Ordering::Relaxed)),
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "volatile environment state",
+            1,
+        ))])
+        .await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory_with_expiry(
+            "volatile environment state",
+            Category::Preference,
+            &source_id,
+            None,
+            None,
+            Some(1),
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        let candidate = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.text == "volatile environment state")
+            .unwrap();
+        assert_eq!(candidate.valid_until_ms, Some(NOW + 60 * 60 * 1000));
+        let before_expiry = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(before_expiry.lines.len(), 1);
+        clock.store(NOW + 60 * 60 * 1000, Ordering::Relaxed);
+        let after_expiry = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert!(after_expiry.lines.is_empty());
+        assert_eq!(after_expiry.rejected.expired, 1);
+        let receipt = super::super::admission::read_receipts(
+            &super::super::admission::receipt_dir(&rt.candidates_dir()),
+        )
+        .into_iter()
+        .find(|receipt| receipt.candidate.id == candidate.id)
+        .unwrap();
+        assert_eq!(receipt.candidate.valid_until_ms, Some(NOW + 60 * 60 * 1000));
+        let mut reloaded = super::super::suppress::SuppressionSet::load(
+            &rt.storage_dir.join("suppress"),
+            &candidate.dataset,
+        );
+        reloaded.include_receipts(&rt.candidates_dir(), &candidate.dataset);
+        assert_eq!(
+            reloaded.is_suppressed("volatile environment state", NOW + 60 * 60 * 1000, None),
+            Some(super::super::suppress::Reason::Expired)
+        );
+
+        rt.state().config.read_policy = ReadPolicy::Legacy;
+        let legacy = rt.recall_evidence(&[RecallResult {
+            text: "volatile environment state".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(legacy.lines.len(), 1);
+        assert_eq!(legacy.lines[0].text, "volatile environment state");
+    }
+
+    #[tokio::test]
+    async fn accepted_user_correction_persists_and_filters_old_fact_after_seen_clear() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "- old durable fact
+- new durable fact",
+            1,
+        ))])
+        .await;
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        let source_id = entries
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.propose_memory(
+            "old durable fact",
+            Category::Decision,
+            &source_id,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+        let old = super::super::candidates::read_candidates(&rt.candidates_dir())
+            .into_iter()
+            .find(|candidate| candidate.text == "old durable fact")
+            .unwrap();
+        rt.propose_memory(
+            "new durable fact",
+            Category::Decision,
+            &source_id,
+            None,
+            Some(&old.id),
+        )
+        .await
+        .unwrap();
+        rt.wait_for_background().await;
+
+        let candidates = super::super::candidates::read_candidates(&rt.candidates_dir());
+        assert!(candidates.iter().any(|candidate| candidate.id == old.id));
+        assert!(candidates
+            .iter()
+            .any(|candidate| candidate.text == "new durable fact"));
+        let correction_observation = super::super::observer::read_observations(&rt.storage_dir)
+            .into_iter()
+            .find(|event| {
+                event.operation == "candidate"
+                    && event.meta.as_ref().is_some_and(|meta| {
+                        meta.get("supersession").and_then(Value::as_str) == Some("recorded")
+                            && !meta.contains_key("supersessionReason")
+                    })
+            })
+            .unwrap();
+        assert_eq!(correction_observation.phase, "accepted");
+        let correction_receipt = super::super::admission::read_receipts(
+            &super::super::admission::receipt_dir(&rt.candidates_dir()),
+        )
+        .into_iter()
+        .find(|receipt| receipt.candidate.text == "new durable fact")
+        .unwrap();
+        assert_eq!(
+            correction_receipt
+                .superseded_target
+                .as_ref()
+                .map(|target| target.hash.as_str()),
+            Some(super::super::suppress::content_hash("old durable fact").as_str())
+        );
+
+        rt.state().seen_evidence.clear();
+        let selection = rt.recall_evidence(&[RecallResult {
+            text: "old durable fact\nnew durable fact".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert_eq!(selection.lines.len(), 1);
+        assert_eq!(selection.lines[0].text, "new durable fact");
+        assert_eq!(selection.rejected.superseded, 1);
+        let same_fact_under_another_query = rt.recall_evidence(&[RecallResult {
+            text: "old durable fact".into(),
+            score: Some(1.0),
+            metadata: None,
+        }]);
+        assert!(same_fact_under_another_query.lines.is_empty());
+        assert_eq!(same_fact_under_another_query.rejected.superseded, 1);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn selective_proposal_runs_in_a_full_prompt_tool_answer_turn() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "Use the agreed local constraint"}]}),
+        ));
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"legacy", "autoRecall":true})),
+            false,
+        );
+        let candidate_text = "always keep generated files out of source control";
+        let script = FauxScript::new()
+            .with_tool_call(
+                PROPOSE_TOOL_NAME,
+                json!({
+                    "text": candidate_text,
+                    "category": "constraint",
+                    "source_entry_id": "source-entry"
+                }),
+            )
+            .with_text("I recorded the verified constraint.");
+        let provider = FauxProvider::new(script.clone());
+        let mut options = AgentHarnessOptions::default();
+        options.allow_existing_session = true;
+        options.model = provider.default_model().clone();
+        options.models.push(provider.clone());
+        let harness = AgentHarness::create(options).await.unwrap();
+        let source_id = harness
+            .append_message(AgentMessage::User(UserMessage::new(
+                "Please always keep generated files out of source control.",
+                1,
+            )))
+            .await
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.register_search_tool(true).await;
+        rt.apply_tool_state().await;
+        let mut proposal = json!({
+            "text": candidate_text,
+            "category": "constraint",
+            "source_entry_id": source_id
+        });
+        script.set_responses(vec![
+            FauxStep::tool_call(PROPOSE_TOOL_NAME, proposal.take()),
+            FauxStep::text("I recorded the verified constraint."),
+        ]);
+        harness.set_extensions(vec![rt.clone()]);
+
+        harness
+            .prompt_text("Record the durable constraint from earlier.", Vec::new())
+            .await
+            .unwrap();
+        rt.wait_for_background().await;
+
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        assert!(
+            entries.iter().any(|entry| matches!(entry,
+                Entry::Message(message)
+                    if matches!(&message.message, AgentMessage::Custom(custom)
+                        if custom.data["customType"] == MEMORY_CUSTOM_TYPE)
+            )),
+            "entries={entries:#?}"
+        );
+        assert!(entries.iter().any(|entry| matches!(entry,
+            Entry::Message(message)
+                if matches!(&message.message, AgentMessage::ToolResult(result) if !result.is_error)
+        )));
+        assert!(entries.iter().any(|entry| matches!(entry,
+            Entry::Message(message)
+                if matches!(&message.message, AgentMessage::Assistant(assistant)
+                    if assistant.content.iter().any(|block| matches!(block,
+                        Content::Text(text) if text.text == "I recorded the verified constraint.")))
+        )));
+        assert_eq!(transport.sent().len(), 2);
+        let requests = transport.sent();
+        let request = requests
+            .iter()
+            .find(|request| request.url.ends_with("/api/v1/remember"))
+            .unwrap();
+        let Body::Multipart(parts) = &request.body else {
+            panic!("remember is multipart")
+        };
+        assert_eq!(parts[1].value, "user_context");
+        assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations
+            .iter()
+            .any(|event| event.operation == "injection" && event.phase == "succeeded"));
+        assert!(observations.iter().any(|event| event.operation == "recall"
+            && event.phase == "succeeded"
+            && event.meta.as_ref().is_some_and(|meta| {
+                meta["hits"] == 1 && meta["outcome"] == "retrieved_nonempty"
+            })));
+        let active = harness.lane("main").get_active_tools().await.unwrap();
+        assert!(active.contains(&PROPOSE_TOOL_NAME.to_string()));
+    }
+
+    #[tokio::test]
+    async fn manual_remember_still_sends_under_selective_policy() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+
+        rt.manual_remember("user_context", "explicitly remember this")
+            .await;
+        rt.wait_for_background().await;
+
+        let requests = transport.sent();
+        assert_eq!(requests.len(), 1);
+        assert!(requests[0].url.ends_with("/api/v1/remember"));
+        let records = read_pending_remember(&rt.pending_dir());
+        assert!(records.is_empty());
+    }
+
+    #[tokio::test]
+    async fn selective_candidate_tool_is_only_registered_when_available_and_selective() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"manual"})),
+            false,
+        );
+        let harness = harness_with_messages(Vec::new()).await;
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        rt.register_search_tool(true).await;
+        assert!(!harness
+            .get_tools()
+            .await
+            .unwrap()
+            .iter()
+            .any(|tool| { tool.tool.schema().name == PROPOSE_TOOL_NAME }));
+        let mut config = rt.config();
+        config.write_policy = WritePolicy::Selective;
+        assert!(rt.save_and_adopt(config));
+        rt.apply_tool_state().await;
+        let proposal = harness
+            .get_tools()
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|tool| tool.tool.schema().name == PROPOSE_TOOL_NAME)
+            .unwrap();
+        let error = proposal
+            .tool
+            .execute(
+                "invalid",
+                json!({"text": "candidate", "category": "unknown", "source_entry_id": "missing"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(error, ice_agent::AgentError::Validation(_)));
+
+        for valid_hours in [json!(0), json!(8761), json!(-1), json!(1.5), json!("2")] {
+            let invalid_validity = proposal
+                .tool
+                .execute(
+                    "invalid-validity",
+                    json!({
+                        "text": "candidate",
+                        "category": "constraint",
+                        "source_entry_id": "missing",
+                        "valid_hours": valid_hours
+                    }),
+                    CancellationToken::new(),
+                    Arc::new(|_| {}),
+                )
+                .await
+                .unwrap_err();
+            assert!(matches!(
+                invalid_validity,
+                ice_agent::AgentError::Validation(_)
+            ));
+        }
+
+        let mut config = rt.config();
+        config.enabled = false;
+        assert!(rt.save_and_adopt(config));
+        let unavailable = proposal
+            .tool
+            .execute(
+                "unavailable",
+                json!({
+                    "text": "candidate",
+                    "category": "constraint",
+                    "source_entry_id": "missing"
+                }),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(unavailable, ice_agent::AgentError::Tool(message)
+            if message == "Cognee is unavailable"));
+    }
+
+    #[tokio::test]
+    async fn helper_judges_only_pending_candidates_offloads_acceptance_and_abstains_safely() {
+        for (verdict, expected_state, expected_requests) in [
+            (TestVerdict::Durable, CandidateState::Accepted, 1),
+            (
+                TestVerdict::NotDurable,
+                CandidateState::Rejected("helper_not_durable".into()),
+                0,
+            ),
+            (TestVerdict::Uncertain, CandidateState::Pending, 0),
+            (TestVerdict::ApplicableUnknown, CandidateState::Pending, 0),
+        ] {
+            let dir = tempfile::tempdir().unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            let rt = runtime(
+                dir.path(),
+                &transport,
+                Some(
+                    json!({"readPolicy":"event", "writePolicy":"selective", "helperProvider":"fake"}),
+                ),
+                false,
+            );
+            let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+                "Please always keep generated assets outside the source repository.",
+                1,
+            ))])
+            .await;
+            let source_id = harness
+                .session()
+                .find_entries(&EntryQuery::default())
+                .await
+                .unwrap()
+                .into_iter()
+                .find_map(|entry| match &entry {
+                    Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                        Some(entry.id().to_string())
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            rt.bind(
+                harness.downgrade(),
+                ice_extensions::ExtensionStatusMailbox::new(),
+                dir.path().to_path_buf(),
+            );
+            let host_session_id = harness.session().storage().metadata().id.clone();
+            rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+                prompt: "Please always keep generated assets outside the source repository.",
+                original_prompt: Some(
+                    "Please always keep generated assets outside the source repository.",
+                ),
+                messages: &[],
+                system_prompt: "test system",
+                session_id: &host_session_id,
+                run_id: "helper-task",
+                lane_id: "main",
+                branch_generation: 0,
+                request_index: 0,
+                context_window: 128_000,
+                remaining_context_tokens: 800,
+                latest_compaction_at: None,
+                signal: CancellationToken::new(),
+            })
+            .await;
+            let sources = rt
+                .candidate_source_snapshot(&CancellationToken::new())
+                .await
+                .unwrap();
+            let mut candidate = Candidate {
+                id: uuid::Uuid::new_v4().to_string(),
+                admission_id: None,
+                source_scope: None,
+                category: Category::Constraint,
+                text: "always keep generated assets outside the source repository".into(),
+                branch: None,
+                valid_until_ms: None,
+                source: super::super::candidates::Source {
+                    entry_id: source_id.clone(),
+                    role: Role::User,
+                },
+                verified_by: None,
+                supersedes: None,
+                dataset: rt.active_dataset(),
+                created_at: NOW,
+                state: CandidateState::Pending,
+            };
+            let evidence =
+                super::super::source_validation::validate_source(&candidate, &sources.messages)
+                    .unwrap();
+            candidate.source_scope = Some(super::super::candidates::SourceScope {
+                session_id: sources.operation.host_session_id.clone(),
+                task_id: sources.task_id.clone(),
+                conversation_branch: Some(
+                    sources.messages.iter().map(|(id, _)| id.clone()).collect(),
+                ),
+                git_branch: None,
+                git_revision: None,
+                worktree_id: None,
+                source_text_hash: evidence.source_text_hash,
+            });
+            rt.store_pending_candidate_for_test(&candidate);
+            let calls = Arc::new(AtomicUsize::new(0));
+            rt.use_helper_for_test(fake_helper(verdict, calls.clone(), false));
+            rt.notify_helper_candidates_changed();
+            rt.wait_for_background().await;
+            let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+            assert_eq!(
+                calls.load(Ordering::SeqCst),
+                1,
+                "helper calls with candidate records {records:?}"
+            );
+            assert_eq!(transport.sent().len(), expected_requests);
+            candidate = records
+                .into_iter()
+                .find(|item| item.source.entry_id == source_id)
+                .unwrap();
+            assert_eq!(candidate.state, expected_state);
+            if expected_requests == 1 {
+                let Body::Multipart(parts) = &transport.sent()[0].body else {
+                    panic!("remember multipart")
+                };
+                assert_eq!(parts[1].value, "user_context");
+                assert!(parts.last().unwrap().value.starts_with("[constraint] "));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn helper_rejects_unsupported_source_before_remote_judgment() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({
+                "readPolicy":"event",
+                "writePolicy":"selective",
+                "helperProvider":"fake"
+            })),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "Never enable automatic deployment without review.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let host_session_id = harness.session().storage().metadata().id.clone();
+        rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+            prompt: "Never enable automatic deployment without review.",
+            original_prompt: Some("Never enable automatic deployment without review."),
+            messages: &[],
+            system_prompt: "test system",
+            session_id: &host_session_id,
+            run_id: "invalid-source-task",
+            lane_id: "main",
+            branch_generation: 0,
+            request_index: 0,
+            context_window: 128_000,
+            remaining_context_tokens: 800,
+            latest_compaction_at: None,
+            signal: CancellationToken::new(),
+        })
+        .await;
+        let sources = rt
+            .candidate_source_snapshot(&CancellationToken::new())
+            .await
+            .unwrap();
+        let mut candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
+            category: Category::Constraint,
+            text: "Enable automatic deployment without review".into(),
+            source: super::super::candidates::Source {
+                entry_id: source_id.clone(),
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            branch: None,
+            valid_until_ms: None,
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        let evidence =
+            super::super::source_validation::validate_source(&candidate, &sources.messages)
+                .unwrap_err();
+        assert_eq!(
+            evidence,
+            super::super::source_validation::SourceRejection::UnsupportedSpan
+        );
+        candidate.source_scope = Some(super::super::candidates::SourceScope {
+            session_id: sources.operation.host_session_id.clone(),
+            task_id: sources.task_id.clone(),
+            conversation_branch: Some(sources.messages.iter().map(|(id, _)| id.clone()).collect()),
+            git_branch: None,
+            git_revision: None,
+            worktree_id: None,
+            source_text_hash: String::new(),
+        });
+        rt.store_pending_candidate_for_test(&candidate);
+        let mut stale_candidate = candidate.clone();
+        stale_candidate.id = uuid::Uuid::new_v4().to_string();
+        stale_candidate.text = "Never enable automatic deployment without review".into();
+        let evidence =
+            super::super::source_validation::validate_source(&stale_candidate, &sources.messages)
+                .unwrap();
+        let scope = stale_candidate.source_scope.as_mut().unwrap();
+        scope.task_id = Some("different-task".into());
+        scope.source_text_hash = evidence.source_text_hash;
+        rt.store_pending_candidate_for_test(&stale_candidate);
+        let calls = Arc::new(AtomicUsize::new(0));
+        rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), false));
+        rt.notify_helper_candidates_changed();
+        rt.wait_for_background().await;
+
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        assert!(transport.sent().is_empty());
+        let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+        candidate = records
+            .iter()
+            .find(|stored| stored.id == candidate.id)
+            .unwrap()
+            .clone();
+        assert_eq!(
+            candidate.state,
+            CandidateState::Rejected("unsupported_source_span".into())
+        );
+        assert_eq!(
+            records
+                .iter()
+                .find(|stored| stored.id == stale_candidate.id)
+                .unwrap()
+                .state,
+            CandidateState::Rejected("stale_source_scope".into())
+        );
+    }
+
+    #[tokio::test]
+    async fn repeated_settles_without_candidate_revision_do_no_helper_io_or_jobs() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "helperEnabled":false})),
+            true,
+        );
+        for _ in 0..100 {
+            rt.on_run_settled();
+        }
+        assert!(rt.helper_tasks.lock().unwrap().is_empty());
+        assert!(!rt.candidates_dir().exists());
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn helper_off_leaves_pending_and_prompt_hook_never_judges() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "helperEnabled":false})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "I prefer compact reports for status updates.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let mut candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
+            category: Category::Preference,
+            text: "Prefer compact reports".into(),
+            branch: None,
+            valid_until_ms: None,
+            source: super::super::candidates::Source {
+                entry_id: source_id,
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        rt.store_pending_candidate_for_test(&candidate);
+        for _ in 0..20 {
+            let event = BeforeRunEvent {
+                prompt: "An ordinary prompt",
+                system_prompt: None,
+                session_id: "host1",
+                signal: CancellationToken::new(),
+            };
+            let _ = rt.prompt_context(&event).await;
+        }
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        let records = super::super::candidates::read_candidates(&rt.candidates_dir());
+        candidate = records
+            .into_iter()
+            .find(|item| item.id == candidate.id)
+            .unwrap();
+        assert_eq!(candidate.state, CandidateState::Pending);
+        assert!(transport.sent().is_empty());
+        candidate.created_at = NOW - super::super::candidates::CANDIDATE_TTL_MS;
+        super::super::candidates::set_state(
+            &rt.candidates_dir(),
+            &mut candidate,
+            CandidateState::Pending,
+        )
+        .unwrap();
+        rt.on_run_settled();
+        assert_eq!(
+            super::super::candidates::read_candidates(&rt.candidates_dir())[0].state,
+            CandidateState::Pending,
+            "disabled helper scheduling must not mutate candidate storage"
+        );
+    }
+
+    #[tokio::test]
+    async fn slow_helper_is_background_and_shutdown_cancels_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"selective", "helperProvider":"fake"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "Always retain source provenance for generated artifacts.",
+            1,
+        ))])
+        .await;
+        let source_id = harness
+            .session()
+            .find_entries(&EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find_map(|entry| match &entry {
+                Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
+                    Some(entry.id().to_string())
+                }
+                _ => None,
+            })
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let host_session_id = harness.session().storage().metadata().id.clone();
+        rt.context_for_request(&ice_harness::extension::RequestContextEvent {
+            prompt: "Always retain source provenance for generated artifacts.",
+            original_prompt: Some("Always retain source provenance for generated artifacts."),
+            messages: &[],
+            system_prompt: "test system",
+            session_id: &host_session_id,
+            run_id: "slow-helper-task",
+            lane_id: "main",
+            branch_generation: 0,
+            request_index: 0,
+            context_window: 128_000,
+            remaining_context_tokens: 800,
+            latest_compaction_at: None,
+            signal: CancellationToken::new(),
+        })
+        .await;
+        let sources = rt
+            .candidate_source_snapshot(&CancellationToken::new())
+            .await
+            .unwrap();
+        let mut candidate = Candidate {
+            id: uuid::Uuid::new_v4().to_string(),
+            admission_id: None,
+            source_scope: None,
+            category: Category::Constraint,
+            text: "Always retain source provenance for generated artifacts".into(),
+            branch: None,
+            valid_until_ms: None,
+            source: super::super::candidates::Source {
+                entry_id: source_id,
+                role: Role::User,
+            },
+            verified_by: None,
+            supersedes: None,
+            dataset: rt.active_dataset(),
+            created_at: NOW,
+            state: CandidateState::Pending,
+        };
+        let evidence =
+            super::super::source_validation::validate_source(&candidate, &sources.messages)
+                .unwrap();
+        candidate.source_scope = Some(super::super::candidates::SourceScope {
+            session_id: sources.operation.host_session_id.clone(),
+            task_id: sources.task_id,
+            conversation_branch: Some(sources.messages.iter().map(|(id, _)| id.clone()).collect()),
+            git_branch: None,
+            git_revision: None,
+            worktree_id: None,
+            source_text_hash: evidence.source_text_hash,
+        });
+        rt.store_pending_candidate_for_test(&candidate);
+        let calls = Arc::new(AtomicUsize::new(0));
+        rt.use_helper_for_test(fake_helper(TestVerdict::Durable, calls.clone(), true));
+        let started = std::time::Instant::now();
+        rt.notify_helper_candidates_changed();
+        assert!(started.elapsed() < Duration::from_millis(100));
+        tokio::task::yield_now().await;
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        tokio::time::timeout(Duration::from_secs(1), rt.session_shutdown())
+            .await
+            .unwrap();
+        let after_cancel = super::super::candidates::read_candidates(&rt.candidates_dir());
+        assert_eq!(
+            after_cancel
+                .iter()
+                .find(|item| item.id == candidate.id)
+                .unwrap()
+                .state,
+            CandidateState::Pending
+        );
+    }
+
+    #[tokio::test]
+    async fn selective_policy_disables_all_legacy_writes_even_with_switches_on() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({
+                "writePolicy":"selective", "readPolicy":"on_demand", "captureSession":true,
+                "captureTools":true, "autoImprove":true, "autoRemember":"compaction"
+            })),
+            false,
+        );
+        rt.on_agent_event(&AgentEvent::ToolExecutionEnd {
+            tool_call_id: "c1".into(),
+            tool_name: "bash".into(),
+            result: AgentToolResult::text("bash succeeded"),
+            is_error: false,
+        });
+        rt.on_agent_event(&AgentEvent::AgentEnd {
+            messages: vec![assistant("Done.")],
+        });
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        let entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "not retained".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 1,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert!(rt.run_improve("idle").is_none());
+        assert!(rt.run_dream().is_none());
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn rejected_selective_candidate_is_recorded_without_network_promotion() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective", "readPolicy":"on_demand"})),
+            false,
+        );
+        let harness = harness_with_messages(vec![AgentMessage::User(UserMessage::new(
+            "That is the only requested detail.",
+            1,
+        ))])
+        .await;
+        let entry = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|entry| matches!(entry, Entry::Message(message) if matches!(message.message, AgentMessage::User(_))))
+            .unwrap();
+        rt.bind(
+            harness.downgrade(),
+            ice_extensions::ExtensionStatusMailbox::new(),
+            dir.path().to_path_buf(),
+        );
+        let status = rt
+            .propose_memory(
+                "not present in the user source",
+                Category::Constraint,
+                entry.id(),
+                None,
+                None,
+            )
+            .await;
+        assert!(status.is_err());
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(
+            observations.iter().any(|event| {
+                event.operation == "candidate"
+                    && event.meta.as_ref().is_some_and(|meta| {
+                        meta["category"] == "constraint"
+                            && meta["outcome"] == "rejected"
+                            && matches!(
+                                meta["reason"].as_str(),
+                                Some("unsupported_source_span" | "routine_activity")
+                            )
+                            && meta["outcomeVersion"] == 1
+                    })
+            }),
+            "status={status:?}; observations={observations:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn improve_acceptance_coalesces_and_manual_bypasses() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        for _ in 0..3 {
+            transport.push(FakeResponse::json(200, json!({})));
+        }
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"enabled": true})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.ensure_session_id("host1");
+        let dataset = rt.state().active_dataset();
+        let session = "ice_host1";
+        mark_dream_captured(&rt.dream_dir(), session, &dataset, NOW as f64).unwrap();
+        let client = rt.live_client().unwrap();
+        rt.improve_current(client.clone(), session.into(), dataset.clone(), "idle")
+            .await;
+        rt.improve_current(client.clone(), session.into(), dataset.clone(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.manual_improve().await;
+        assert_eq!(transport.sent().len(), 2);
+        mark_dream_captured(&rt.dream_dir(), session, &dataset, NOW as f64).unwrap();
+        rt.improve_current(client, session.into(), dataset, "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 3);
+        rt.wait_for_background().await;
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.operation == "improve"
+            && e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "already_accepted_revision"));
+        assert!(events.iter().any(|e| e.phase == "succeeded"
+            && e.operation == "improve"
+            && e.meta.as_ref().unwrap()["accepted"] == true
+            && e.meta.as_ref().unwrap()["searchable"] == "unknown"));
+    }
+
+    #[tokio::test]
+    async fn improve_failure_backoff_steps_and_new_revision_resets() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        for _ in 0..4 {
+            transport.push(FakeResponse::Fail);
+        }
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let rt = clock_runtime(dir.path(), &transport, clock.clone());
+        let dataset = "dataset";
+        let session = "session";
+        let client = super::super::client::tests::client(transport.clone());
+        mark_dream_captured(&rt.dream_dir(), session, dataset, NOW as f64).unwrap();
+        for (advance, count) in [
+            (0, 1),
+            (0, 1),
+            (60_000, 2),
+            (299_999, 2),
+            (1, 3),
+            (299_999, 3),
+        ] {
+            clock.fetch_add(advance, Ordering::SeqCst);
+            rt.improve_current(client.clone(), session.into(), dataset.into(), "idle")
+                .await;
+            assert_eq!(transport.sent().len(), count);
+        }
+        mark_dream_captured(
+            &rt.dream_dir(),
+            session,
+            dataset,
+            clock.load(Ordering::SeqCst) as f64,
+        )
+        .unwrap();
+        rt.improve_current(client, session.into(), dataset.into(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 4);
+        rt.wait_for_background().await;
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "backoff"
+            && e.meta.as_ref().unwrap()["retryAfterMs"] == 60_000));
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "backoff"
+            && e.meta.as_ref().unwrap()["retryAfterMs"] == 1));
+    }
+
+    #[tokio::test]
+    async fn manual_improve_bypasses_failure_backoff() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Fail);
+        transport.push(FakeResponse::json(200, json!({})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"enabled": true})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.ensure_session_id("host1");
+        let dataset = rt.state().active_dataset();
+        mark_dream_captured(&rt.dream_dir(), "ice_host1", &dataset, NOW as f64).unwrap();
+        let client = rt.live_client().unwrap();
+        rt.improve_current(client.clone(), "ice_host1".into(), dataset.clone(), "idle")
+            .await;
+        rt.improve_current(client, "ice_host1".into(), dataset.clone(), "idle")
+            .await;
+        assert_eq!(transport.sent().len(), 1);
+        rt.manual_improve().await;
+        assert_eq!(transport.sent().len(), 2);
+        assert_eq!(
+            read_dream_record_for_dataset(&rt.dream_dir(), "ice_host1", &dataset)
+                .unwrap()
+                .accepted_revision,
+            Some(1.0)
+        );
+    }
+
+    #[tokio::test]
+    async fn dream_skips_previously_accepted_older_revision() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let ledger = rt.dream_dir();
+        mark_dream_captured(&ledger, "older", "dataset", (NOW - 1_000_000) as f64).unwrap();
+        mark_dream_accepted(&ledger, "older", "dataset", 1.0).unwrap();
+        rt.dream_pass(
+            super::super::client::tests::client(transport.clone()),
+            "other".into(),
+            CancellationToken::new(),
+        )
+        .await;
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+        let events = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(events.iter().any(|e| e.phase == "skipped"
+            && e.meta.as_ref().unwrap()["reason"] == "already_accepted_revision"));
     }
 
     /// The memory text Cognee adds after `prompt`, checking its message type.
@@ -2660,6 +6075,493 @@ mod tests {
         let context = rt.prompt_context(&run_event(prompt, system_prompt)).await?;
         assert_eq!(context.custom_type, MEMORY_CUSTOM_TYPE);
         Some(context.text)
+    }
+
+    #[tokio::test]
+    async fn speculative_cache_reads_are_not_delivery_acknowledgments() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"Use the agreed cache design"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event","writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch("cache design".into(), session.clone());
+        rt.schedule_prefetch("cache design".into(), session);
+        rt.wait_for_background().await;
+        assert_eq!(transport.sent().len(), 1);
+        let dataset = rt.active_dataset();
+        let generation = rt.generation();
+        let mut seen = SeenEvidence::default();
+        let first = rt
+            .state()
+            .evidence_cache
+            .take(&dataset, generation, NOW, &mut seen);
+        let second = rt
+            .state()
+            .evidence_cache
+            .take(&dataset, generation, NOW, &mut seen);
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 1);
+        // The actual host acknowledgment behavior is exercised by the
+        // request_boundary_* tests, including failed writes and ten followups.
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn suppression_recorded_after_prefetch_filters_cached_delivery() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"Use the old cache design"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch("cache design".into(), session);
+        rt.wait_for_background().await;
+        rt.record_suppression(Suppression {
+            id: uuid::Uuid::new_v4().to_string(),
+            hash: super::super::suppress::content_hash("Use the old cache design"),
+            kind: super::super::suppress::SuppressionKind::Superseded {
+                by: "replacement".into(),
+            },
+            dataset: rt.active_dataset(),
+            branch: None,
+            recorded_at_ms: NOW,
+        })
+        .unwrap();
+        assert!(memory(&rt, "hello there", None).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn prefetch_respects_policy_circuit_and_shutdown() {
+        for policy in ["legacy", "on_demand", "event"] {
+            let dir = tempfile::tempdir().unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            let rt = runtime(
+                dir.path(),
+                &transport,
+                Some(json!({"readPolicy":policy, "writePolicy":"manual"})),
+                false,
+            );
+            rt.ensure_loaded();
+            if policy == "event" {
+                rt.state().recall_circuit.open_until = wall_ms() + 60_000;
+            }
+            rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+            rt.wait_for_background().await;
+            assert!(transport.sent().is_empty());
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![b"[]".to_vec()],
+            delay_ms: 30_000,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        tokio::time::timeout(std::time::Duration::from_secs(1), rt.session_shutdown())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn injected_clock_expires_cached_results_without_requests() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"expired decision"}]}),
+        ));
+        transport.push(FakeResponse::json(200, json!({"results":[]})));
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let clock_read = clock.clone();
+        let rt = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+            Arc::new(move || clock_read.load(Ordering::Relaxed)),
+        );
+        rt.ensure_loaded();
+        let session = rt.ensure_session_id("host1");
+        rt.schedule_prefetch("positive".into(), session.clone());
+        rt.wait_for_background().await;
+        clock.store(NOW + 300_000, Ordering::Relaxed);
+        assert!(memory(&rt, "ordinary prompt", None).await.is_none());
+        assert_eq!(transport.sent().len(), 1);
+        rt.schedule_prefetch("negative".into(), session);
+        rt.wait_for_background().await;
+        clock.store(NOW + 360_000, Ordering::Relaxed);
+        assert!(memory(&rt, "another ordinary prompt", None).await.is_none());
+        assert_eq!(transport.sent().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn context_generation_tracks_identity_but_not_compaction_or_repeated_start() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "dataset":"old"})),
+            false,
+        );
+        rt.ensure_loaded();
+        let initial = rt.generation();
+        rt.session_start_for("host1").await;
+        let first = rt.generation();
+        assert!(first > initial);
+        rt.session_start_for("host1").await;
+        assert_eq!(rt.generation(), first);
+        rt.ensure_session_id("host2");
+        assert!(rt.generation() > first);
+        let resumed = rt.generation();
+        rt.session_start_for("host3").await;
+        assert!(rt.generation() > resumed);
+        let before_compaction = rt.generation();
+        {
+            let mut state = rt.state();
+            let key = coordinator::EvidenceCache::key("old", "cached", before_compaction);
+            assert!(state.evidence_cache.schedule(&key, NOW));
+            state.evidence_cache.finish(
+                key,
+                vec![RecallLine {
+                    text: "cached".into(),
+                    score: None,
+                    provenance: None,
+                }],
+                NOW,
+            );
+        }
+        let entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "A compacted summary".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 10,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host3",
+        })
+        .await;
+        assert_eq!(rt.generation(), before_compaction);
+        assert_eq!(
+            rt.state()
+                .evidence_cache
+                .take("old", before_compaction, NOW, &mut SeenEvidence::default(),)
+                .len(),
+            1
+        );
+        let mut config = rt.config();
+        config.dataset = "new".into();
+        assert!(rt.persist_config(config).await);
+        assert!(rt.generation() > before_compaction);
+        let before_reload = rt.generation();
+        let config = rt.config();
+        assert!(rt.persist_config(config).await);
+        assert!(rt.generation() > before_reload);
+        rt.wait_for_background().await;
+    }
+
+    #[tokio::test]
+    async fn repeated_session_start_does_not_make_a_blind_recall() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        rt.session_start_for("host1").await;
+        rt.session_start_for("host1").await;
+        rt.wait_for_background().await;
+        assert_eq!(
+            transport
+                .sent()
+                .iter()
+                .filter(|request| request.url.ends_with("/api/v1/recall"))
+                .count(),
+            0
+        );
+    }
+
+    #[tokio::test]
+    async fn compaction_does_not_use_summary_as_an_unconditional_query() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({"results":[]})));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let mut entry = CompactionEntry {
+            base: base("compaction", 1),
+            summary: "  Project constraints and decisions  ".into(),
+            retained_tail: Vec::new(),
+            tokens_before: 10,
+            details: None,
+            usage: None,
+        };
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+        assert_eq!(
+            rt.state().last_compact_summary.as_deref(),
+            Some("Project constraints and decisions")
+        );
+        entry.summary = "  ".into();
+        rt.after_compact(&AfterCompactEvent {
+            entry: &entry,
+            trigger: CompactionTrigger::Threshold,
+            from_extension: false,
+            session_id: "host1",
+        })
+        .await;
+        rt.wait_for_background().await;
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn session_change_discards_stale_prefetch_generation() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![br#"{"results":[{"text":"stale decision"}]}"#.to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "dataset":"old"})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        let scheduled_generation = rt.generation();
+        rt.ensure_session_id("host2");
+        assert!(rt.generation() > scheduled_generation);
+        rt.wait_for_background().await;
+        assert!(memory(&rt, "ordinary prompt", None).await.is_none());
+        let generation = rt.generation();
+        assert_eq!(
+            rt.state()
+                .evidence_cache
+                .take("old", generation, NOW, &mut SeenEvidence::default())
+                .len(),
+            0
+        );
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations.iter().any(|observation| {
+            observation.operation == "recall"
+                && observation
+                    .meta
+                    .as_ref()
+                    .and_then(|meta| meta.get("reason"))
+                    == Some(&json!("stale_generation"))
+        }));
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn event_cache_and_network_share_budget() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"cached design decision"}]}),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"other historical decision"}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallMaxChars":300})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.schedule_prefetch("query".into(), rt.ensure_session_id("host1"));
+        rt.wait_for_background().await;
+        let text = memory(&rt, "What did we decide earlier?", None)
+            .await
+            .unwrap();
+        assert!(text.contains("cached design decision"));
+        assert!(text.contains("other historical decision"));
+        assert!(len16(&text) <= rt.config().recall_max_chars);
+        assert!(text.contains("</ice-void-cognee-memory>"));
+    }
+
+    #[tokio::test]
+    async fn automatic_budget_caps_large_checkpoint_and_recall() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results":[{"text":"recall fact ".repeat(900)}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual", "recallMaxChars":100_000})),
+            false,
+        );
+        rt.state().last_compact_summary = Some("checkpoint ".repeat(900));
+        let text = memory(&rt, "What did we decide earlier?", None)
+            .await
+            .unwrap();
+        assert!(len16(&text) <= 3200);
+        assert!(text.ends_with("</ice-void-cognee-memory>"));
+        assert!(text.contains("</ice-void-last-compact>"));
+        assert!(text.contains("…"));
+    }
+
+    #[tokio::test]
+    async fn failed_capture_keeps_original_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 500,
+            headers: Default::default(),
+            chunks: vec![b"failure".to_vec()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        {
+            let mut state = rt.state();
+            state.session_id = Some(super::super::config::cognee_session_id("original-host"));
+            state.host_session_id = Some("original-host".into());
+            state.resolved_dataset = "original-dataset".into();
+        }
+        rt.store_entry(Map::new(), "answer").unwrap();
+        tokio::task::yield_now().await;
+        rt.ensure_session_id("new-host");
+        rt.wait_for_background().await;
+        let records = read_warmup_batch(&rt.warmup_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].dataset.as_deref(), Some("original-dataset"));
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let failed = observations
+            .iter()
+            .find(|o| o.operation == "remember_entry" && o.phase == "failed")
+            .unwrap();
+        let original_session = super::super::config::cognee_session_id("original-host");
+        assert_eq!(records[0].session_id, original_session);
+        assert_eq!(
+            failed.session_id.as_deref(),
+            Some(original_session.as_str())
+        );
+        assert_eq!(failed.dataset.as_deref(), Some("original-dataset"));
+        assert_eq!(failed.agent_id.as_deref(), Some(original_session.as_str()));
+    }
+
+    #[tokio::test]
+    async fn warmup_drain_is_single_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        rt.buffer_warmup_for("original", "dataset", &Map::new());
+        rt.drain_warmup();
+        rt.drain_warmup();
+        rt.wait_for_background().await;
+        assert_eq!(transport.requests.lock().unwrap().len(), 1);
+        assert!(read_warmup_batch(&rt.warmup_dir()).is_empty());
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let replay = observations
+            .iter()
+            .find(|o| o.operation == "warmup_replay")
+            .unwrap();
+        assert_eq!(replay.meta.as_ref().unwrap()["replayed"], 1);
+        assert_eq!(replay.meta.as_ref().unwrap()["failed"], 0);
+    }
+
+    #[tokio::test]
+    async fn injection_observation_distinguishes_persistence_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let context = PromptContext {
+            custom_type: MEMORY_CUSTOM_TYPE.into(),
+            text: "évidence".into(),
+            correlation_id: Some("recall-id".into()),
+        };
+        rt.prompt_context_persisted(&context, true).await;
+        rt.prompt_context_persisted(&context, false).await;
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        let mut outcomes: Vec<_> = observations
+            .iter()
+            .filter(|event| event.operation == "injection")
+            .map(|event| {
+                assert_eq!(event.request_id.as_deref(), Some("recall-id"));
+                let meta = event.meta.as_ref().unwrap();
+                (
+                    meta["outcome"].as_str().unwrap().to_string(),
+                    meta["persistedBytes"].as_u64().unwrap(),
+                    meta["estimatedPersistedTokens"].as_i64().unwrap(),
+                )
+            })
+            .collect();
+        outcomes.sort();
+        assert_eq!(
+            outcomes,
+            vec![("append_failed".into(), 0, 0), ("persisted".into(), 9, 2)]
+        );
     }
 
     fn run_event<'a>(prompt: &'a str, system_prompt: Option<&'a str>) -> BeforeRunEvent<'a> {
@@ -2836,10 +6738,111 @@ mod tests {
         assert!(enabled.is_enabled());
         assert!(!enabled.config().auto_improve);
         enabled.manual_improve().await;
+        enabled.wait_for_background().await;
         let requests = enabled_transport.sent();
         assert_eq!(requests.len(), 1);
         assert!(requests[0].url.ends_with("/api/v1/improve"));
         assert_eq!(json_body(&requests[0])["sessionIds"], json!(["ice_host1"]));
+        let observations =
+            super::super::observer::read_observations(&enabled_dir.path().join("ice-cognee"));
+        let accepted = observations
+            .iter()
+            .find(|event| event.operation == "improve" && event.phase == "succeeded")
+            .unwrap();
+        assert_eq!(accepted.meta.as_ref().unwrap()["outcome"], "accepted");
+    }
+
+    #[tokio::test]
+    async fn fallback_recall_keeps_provenance_and_scope() {
+        let dir = tempfile::tempdir().unwrap();
+        let main = dir.path().join("repo");
+        let linked = main.join("worktree");
+        let admin = main.join(".git/worktrees/feature");
+        std::fs::create_dir_all(&admin).unwrap();
+        std::fs::create_dir_all(&linked).unwrap();
+        std::fs::write(admin.join("commondir"), "../..\n").unwrap();
+        std::fs::write(
+            linked.join(".git"),
+            format!("gitdir: {}\n", admin.display()),
+        )
+        .unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        transport.push(FakeResponse::json(200, json!({"results": [
+            {"text": "first fact", "metadata": {"id": "src", "sessionId": "sess", "createdAt": "now"}},
+            {"text": "second fact"}
+        ]})));
+        let rt = runtime(
+            &linked,
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        let injected = memory(&rt, "What did we decide about cache eviction?", None)
+            .await
+            .unwrap();
+        assert!(
+            injected.contains("first fact [source=src session=sess at=now]"),
+            "{injected}"
+        );
+        assert!(injected.contains("second fact"));
+        let sent = transport.sent();
+        assert_eq!(sent.len(), 2);
+        let first = json_body(&sent[0]);
+        let second = json_body(&sent[1]);
+        assert_eq!(
+            second["datasets"],
+            json!([super::super::config::legacy_project_dataset(&linked)])
+        );
+        assert_eq!(first["sessionId"], second["sessionId"]);
+        assert_eq!(first["scope"], second["scope"]);
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&linked.join("ice-cognee"));
+        let event = observations
+            .iter()
+            .find(|event| event.operation == "recall" && event.phase == "succeeded")
+            .unwrap();
+        let meta = event.meta.as_ref().unwrap();
+        assert_eq!(meta["legacyFallback"], true);
+        assert_eq!(meta["legacyHits"], 2);
+        assert_eq!(meta["withProvenance"], 1);
+        assert_eq!(meta["selected"], 2);
+    }
+
+    #[tokio::test]
+    async fn fallback_is_bypassed_for_hits_errors_explicit_dataset_and_legacy_policy() {
+        for (config, response) in [
+            (
+                json!({"readPolicy":"event"}),
+                FakeResponse::json(200, json!({"results":[{"text":"fact"}]})),
+            ),
+            (
+                json!({"readPolicy":"event"}),
+                FakeResponse::json(500, json!({"error":"failed"})),
+            ),
+            (
+                json!({"readPolicy":"event", "dataset":"explicit"}),
+                FakeResponse::json(200, json!({"results":[]})),
+            ),
+            (
+                json!({"readPolicy":"legacy"}),
+                FakeResponse::json(200, json!({"results":[]})),
+            ),
+        ] {
+            let dir = tempfile::tempdir().unwrap();
+            let main = dir.path().join("repo");
+            let linked = main.join("linked");
+            let admin = main.join(".git/worktrees/test");
+            std::fs::create_dir_all(&admin).unwrap();
+            std::fs::create_dir_all(&linked).unwrap();
+            std::fs::write(admin.join("commondir"), "../..").unwrap();
+            std::fs::write(linked.join(".git"), format!("gitdir: {}", admin.display())).unwrap();
+            let transport = Arc::new(FakeTransport::default());
+            transport.push(response);
+            let rt = runtime(&linked, &transport, Some(config), false);
+            let _ = memory(&rt, "What did we decide about cache eviction?", None).await;
+            assert_eq!(transport.sent().len(), 1);
+        }
     }
 
     #[tokio::test]
@@ -2850,8 +6853,13 @@ mod tests {
             200,
             json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]}),
         ));
-        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
-        let prompt = "How does the cache layer evict entries?";
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let prompt = "What did we decide earlier about cache eviction?";
         let injected = memory(&rt, prompt, Some("base")).await.unwrap();
         assert!(
             injected.starts_with("<ice-void-cognee-memory>\n"),
@@ -2879,11 +6887,426 @@ mod tests {
             json!(["session", "graph"]),
             "raw traces are not recalled"
         );
-        assert!(dir
-            .path()
-            .join("ice-cognee")
-            .join("observations.jsonl")
-            .exists());
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        let mut outcomes: Vec<_> = observations
+            .iter()
+            .filter(|event| event.operation == "recall" && event.phase == "succeeded")
+            .map(|event| event.meta.as_ref().unwrap()["outcome"].as_str().unwrap())
+            .collect();
+        // Persistence runs on blocking threads and need not preserve emission order.
+        outcomes.sort_unstable();
+        assert_eq!(outcomes, ["retrieved_nonempty", "skipped", "skipped"]);
+        let mut reasons: Vec<_> = observations
+            .iter()
+            .filter_map(|event| event.meta.as_ref()?.get("reason")?.as_str())
+            .collect();
+        reasons.sort_unstable();
+        assert_eq!(reasons, ["duplicate", "no_history_request"]);
+        let retrieved = observations
+            .iter()
+            .find(|event| {
+                event
+                    .meta
+                    .as_ref()
+                    .and_then(|m| m.get("outcome"))
+                    .and_then(Value::as_str)
+                    == Some("retrieved_nonempty")
+            })
+            .unwrap();
+        let metadata = retrieved.meta.as_ref().unwrap();
+        assert_eq!(metadata["sourceSessionId"], "ice_host1");
+        assert_eq!(metadata["hostSessionId"], "host1");
+        assert_eq!(metadata["sourceDataset"], rt.active_dataset());
+        assert!(metadata["remoteWaitMs"].as_u64().is_some());
+        assert_eq!(metadata["rejected"]["routine"], 0);
+        assert_eq!(metadata["rejected"]["duplicate"], 0);
+        assert!(metadata["injectedTokens"].as_u64().is_some());
+        assert_eq!(metadata["budgetTokens"], 800);
+    }
+
+    #[tokio::test]
+    async fn late_recall_does_not_enter_a_new_session() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![json!({"results": [{"text": "old session fact"}]})
+                .to_string()
+                .into_bytes()],
+            delay_ms: 50,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let pending_rt = rt.clone();
+        let task = tokio::spawn(async move {
+            memory(&pending_rt, "find the previous cache decision", None).await
+        });
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        rt.ensure_session_id("host2");
+        assert_eq!(task.await.unwrap(), None);
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(observations.iter().any(|event| {
+            event
+                .meta
+                .as_ref()
+                .and_then(|m| m.get("outcome"))
+                .and_then(Value::as_str)
+                == Some("stale")
+        }));
+    }
+
+    #[tokio::test]
+    async fn doctor_reports_unverified_contract_without_endpoint_credentials() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            true,
+        );
+        rt.ensure_loaded();
+        let mut client = rt.state().client.clone().unwrap();
+        client.config.api_key = Some("private-api-key".into());
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        client
+            .recall("query", RecallOptions::default())
+            .await
+            .unwrap();
+        transport.push(FakeResponse::json(404, json!({})));
+        client
+            .improve(None, &[], CallOptions::default())
+            .await
+            .unwrap_err();
+        let mut report = rt.collect_doctor().await;
+        report.base_url = "http://user:secret@localhost:8211/path?token=secret".into();
+        let doctor = report.doctor_line();
+        assert!(doctor.contains("helper=unconfigured requests=0 abstains=0 skips=0"));
+        assert!(doctor.contains("nativeRecall=POST:/api/v1/recall (support unverified;"));
+        assert!(doctor.contains("sends query, topK, onlyContext, scope, sessionId, datasets"));
+        assert!(doctor.contains("nativeRemember=POST:/api/v1/remember (multipart"));
+        assert!(doctor.contains("nativeRememberEntry=POST:/api/v1/remember/entry"));
+        assert!(doctor.contains("sends datasetName, sessionIds, runInBackground"));
+        assert!(doctor.contains("completion status: not exposed by this adapter"));
+        assert!(doctor.contains("mcpCognee=separate catalog (not probed)"));
+        assert!(doctor.contains("operations=recall:ok(1),remember:never_called,remember_entry:never_called,improve:not_found(1)"));
+        assert!(!doctor.contains("secret"));
+        assert!(!doctor.contains("private-api-key"));
+        assert!(!report.status_line().contains("secret"));
+        assert_eq!(transport.sent().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn search_tool_propagates_unavailable_and_transport_errors() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&rt));
+        let execute = || {
+            tool.execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+        };
+        let error = execute().await.unwrap_err();
+        assert!(error.to_string().contains("Cognee search failed"));
+        assert_eq!(transport.sent().len(), 1);
+
+        transport.push(FakeResponse::json(200, json!({"results": []})));
+        assert!(execute().await.is_ok());
+
+        transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
+        assert!(execute()
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("not_found"));
+        let cancelled = CancellationToken::new();
+        cancelled.cancel();
+        let error = tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                cancelled,
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("aborted"));
+
+        let requests_before_offline = transport.sent().len();
+        let offline_dir = tempfile::tempdir().unwrap();
+        let offline = runtime(offline_dir.path(), &transport, Some(json!({})), true);
+        let offline_tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&offline));
+        let error = offline_tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("disabled"));
+        assert_eq!(transport.sent().len(), requests_before_offline);
+    }
+
+    #[tokio::test]
+    async fn proposal_tool_rejects_invalid_valid_hours() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy":"selective"})),
+            false,
+        );
+        let tool = super::super::propose::CogneeProposeMemoryTool::new(Arc::downgrade(&rt));
+        for valid_hours in [json!(0), json!(8761), json!(-1), json!(1.5), json!("2")] {
+            let error = tool
+                .execute(
+                    "call",
+                    json!({
+                        "text": "temporary fact",
+                        "category": "preference",
+                        "source_entry_id": "source",
+                        "valid_hours": valid_hours
+                    }),
+                    CancellationToken::new(),
+                    Arc::new(|_| {}),
+                )
+                .await
+                .unwrap_err();
+            assert!(matches!(error, ice_agent::AgentError::Validation(_)));
+        }
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn search_tool_reports_timeout_as_error() {
+        use ice_agent::agent_tool::AgentTool;
+
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![json!({"results": []}).to_string().into_bytes()],
+            delay_ms: 500,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"recallBudgetMs": 100})),
+            false,
+        );
+        let tool = super::super::command::CogneeSearchTool::new(Arc::downgrade(&rt));
+        let error = tool
+            .execute(
+                "call",
+                json!({"query": "cache"}),
+                CancellationToken::new(),
+                Arc::new(|_| {}),
+            )
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("timeout"));
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn event_read_policy_searches_only_for_history_requests() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        for prompt in [
+            "Build the release binary and run the whole test suite",
+            "How many commits are on this branch right now?",
+            "continue",
+        ] {
+            assert_eq!(memory(&rt, prompt, None).await, None, "{prompt}");
+        }
+        assert!(transport.sent().is_empty(), "ordinary turns send nothing");
+        let injected = memory(&rt, "What did we decide about cache eviction?", None)
+            .await
+            .unwrap();
+        assert!(injected.contains("Cache uses LRU eviction"), "{injected}");
+        assert_eq!(transport.sent().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn recall_result_is_dropped_when_session_switches_mid_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: vec![],
+            chunks: vec![br#"{"results":[{"text":"old session decision"}]}"#.to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy":"event", "writePolicy":"manual"})),
+            false,
+        );
+        let task = {
+            let rt = rt.clone();
+            tokio::spawn(async move { memory(&rt, "What did we decide earlier?", None).await })
+        };
+        while transport.sent().is_empty() {
+            tokio::task::yield_now().await;
+        }
+        rt.ensure_session_id("host2");
+        assert!(task.await.unwrap().is_none());
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        assert!(observations.iter().any(|observation| {
+            observation.operation == "recall"
+                && observation.meta.as_ref().is_some_and(|meta| {
+                    meta.get("reason") == Some(&json!("stale_session"))
+                        && meta.get("staleGeneration") == Some(&json!(true))
+                })
+        }));
+    }
+
+    #[tokio::test]
+    async fn event_recall_injects_only_new_evidence_and_reinjects_after_compaction() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let hit = |text: &str| json!({"results": [{"text": text, "score": 0.9}]});
+        transport.push(FakeResponse::json(
+            200,
+            hit("bash succeeded\n- Cache uses LRU eviction\nread succeeded"),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            hit("- cache uses  LRU eviction\nbash succeeded"),
+        ));
+        transport.push(FakeResponse::json(
+            200,
+            hit("- Cache uses LRU eviction\n- TTL is five minutes"),
+        ));
+        transport.push(FakeResponse::json(200, hit("- Cache uses LRU eviction")));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "event"})),
+            false,
+        );
+        let first = memory(&rt, "What did we decide about eviction?", None)
+            .await
+            .unwrap();
+        assert!(first.contains("1. - Cache uses LRU eviction"), "{first}");
+        assert!(!first.contains("succeeded"), "{first}");
+        // The same fact under a different query is already in context.
+        assert_eq!(
+            memory(&rt, "Remind me what we decided on caching", None).await,
+            None
+        );
+        let third = memory(&rt, "What else did we decide about the cache?", None)
+            .await
+            .unwrap();
+        assert!(third.contains("TTL is five minutes"), "{third}");
+        assert!(!third.contains("LRU"), "{third}");
+        // After compaction the earlier injection may be gone: inject again.
+        rt.state().seen_evidence.clear();
+        let fourth = memory(&rt, "Did we choose LRU for the cache?", None)
+            .await
+            .unwrap();
+        assert!(fourth.contains("LRU"), "{fourth}");
+    }
+
+    #[tokio::test]
+    async fn checkpoint_and_recall_share_one_budget_with_a_complete_envelope() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            200,
+            json!({"results": [{"text": "x".repeat(5000), "score": 0.9}]}),
+        ));
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"recallMaxChars": 1000})),
+            false,
+        );
+        rt.ensure_loaded();
+        rt.state().last_compact_summary = Some("y".repeat(5000));
+        let text = memory(&rt, "How does the cache layer evict entries?", None)
+            .await
+            .unwrap();
+        assert!(len16(&text) <= 1000, "{}", len16(&text));
+        assert!(text.contains("<ice-void-last-compact>"));
+        assert!(text.ends_with("</ice-void-cognee-memory>"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn on_demand_read_policy_never_searches_automatically() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"readPolicy": "on_demand"})),
+            false,
+        );
+        assert_eq!(
+            memory(&rt, "What did we decide about cache eviction?", None).await,
+            None
+        );
+        assert!(transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_write_policy_disables_every_automatic_write() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(
+            dir.path(),
+            &transport,
+            Some(json!({"writePolicy": "manual", "readPolicy": "on_demand"})),
+            false,
+        );
+        memory(&rt, "hi there", None).await;
+        rt.on_agent_event(&AgentEvent::ToolExecutionEnd {
+            tool_call_id: "c1".into(),
+            tool_name: "bash".into(),
+            result: AgentToolResult::text("out"),
+            is_error: false,
+        });
+        rt.on_agent_event(&AgentEvent::AgentEnd {
+            messages: vec![assistant("Done answer")],
+        });
+        rt.on_run_settled();
+        rt.wait_for_background().await;
+        assert!(rt.run_improve("idle").is_none());
+        assert!(rt.run_dream().is_none());
+        assert!(transport.sent().is_empty(), "{:?}", transport.sent());
+        // The explicit command still writes.
+        transport.push(FakeResponse::json(200, json!({})));
+        rt.manual_remember("user_context", "Prefer tabs").await;
+        assert_eq!(transport.sent().len(), 1);
     }
 
     #[tokio::test]
@@ -2900,6 +7323,13 @@ mod tests {
         let report = rt.collect_doctor().await;
         assert!(report.recall_circuit_open);
         assert_eq!(report.last_error.as_deref(), Some("unreachable"));
+        rt.wait_for_background().await;
+        let observations =
+            super::super::observer::read_observations(&dir.path().join("ice-cognee"));
+        assert!(observations.iter().any(|event| {
+            event.operation == "recall"
+                && event.meta.as_ref().and_then(|m| m.get("reason")) == Some(&json!("circuit_open"))
+        }));
     }
 
     /// Traces record actions, not contents: a successful read keeps its path
@@ -3043,11 +7473,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn failed_capture_is_buffered_and_replayed() {
+    async fn explicitly_rejected_capture_is_buffered_and_replayed() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         memory(&rt, "hi there", None).await;
+        // Explicit rejection can be replayed; ambiguous failures stay uncertain.
+        transport.push(FakeResponse::json(401, json!({})));
         rt.on_agent_event(&AgentEvent::AgentEnd {
             messages: vec![assistant("Answer")],
         });
@@ -3103,20 +7535,22 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn uncertain_records_need_an_explicit_flush() {
+    async fn inflight_records_recover_to_uncertain_and_require_explicit_flush() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
         rt.ensure_loaded();
         let record = create_pending_remember("fact", "ice", "user_context", 1);
-        enqueue_pending_remember(&rt.pending_dir(), &record, 64).unwrap();
-        update_pending_remember_state(
-            &rt.pending_dir(),
-            &record.operation_id,
-            PendingState::Uncertain,
-        )
-        .unwrap();
-        // Normal drains skip uncertain records; `flush uncertain` sends them.
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        enqueue_pending_remember(&rt.pending_dir(), &inflight, 64).unwrap();
+
+        // Simulate a previous process stopping after writing the intent.
+        assert_eq!(recover_inflight(&rt.pending_dir()), 1);
+        assert_eq!(
+            read_pending_remember(&rt.pending_dir())[0].state,
+            PendingState::Uncertain
+        );
         rt.drain_pending(false).await;
         assert!(transport.sent().is_empty());
         transport.push(FakeResponse::json(200, json!({})));
@@ -3130,7 +7564,199 @@ mod tests {
             .any(|(_, text)| text == "Cognee uncertain queue flushed"));
         assert_eq!(drain_failure_state("timeout"), PendingState::Uncertain);
         assert_eq!(drain_failure_state("aborted"), PendingState::Uncertain);
-        assert_eq!(drain_failure_state("server_error"), PendingState::Pending);
+        assert_eq!(drain_failure_state("server_error"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("unreachable"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("unknown"), PendingState::Uncertain);
+        assert_eq!(drain_failure_state("auth_failed"), PendingState::Pending);
+    }
+
+    #[tokio::test]
+    async fn manual_remember_persists_inflight_before_request_and_removes_on_success() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let request = {
+            let rt = rt.clone();
+            tokio::spawn(async move {
+                rt.manual_remember_with("user_context", "persist first", CallOptions::default())
+                    .await;
+            })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(1), async {
+            while transport.sent().is_empty() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("transport observed the request");
+        let records = read_pending_remember(&rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::InFlight);
+        request.await.unwrap();
+        assert!(read_pending_remember(&rt.pending_dir()).is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_remember_failure_states_and_queue_full_are_safe() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Fail);
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.manual_remember("user_context", "connection failure")
+            .await;
+        let records = read_pending_remember(&rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::Uncertain);
+
+        let timeout_dir = tempfile::tempdir().unwrap();
+        let timeout_transport = Arc::new(FakeTransport::default());
+        timeout_transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let timeout_rt = runtime(
+            timeout_dir.path(),
+            &timeout_transport,
+            Some(json!({})),
+            false,
+        );
+        timeout_rt
+            .manual_remember_with(
+                "user_context",
+                "slow response",
+                CallOptions {
+                    timeout_ms: Some(10),
+                    ..CallOptions::default()
+                },
+            )
+            .await;
+        let records = read_pending_remember(&timeout_rt.pending_dir());
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state, PendingState::Uncertain);
+        timeout_rt.drain_pending(false).await;
+        assert_eq!(timeout_transport.sent().len(), 1);
+
+        let full_dir = tempfile::tempdir().unwrap();
+        let full_transport = Arc::new(FakeTransport::default());
+        let full_rt = runtime(
+            full_dir.path(),
+            &full_transport,
+            Some(json!({"queueLimit": 1})),
+            false,
+        );
+        enqueue_pending_remember(
+            &full_rt.pending_dir(),
+            &create_pending_remember("existing", "ice", "user_context", 1),
+            1,
+        )
+        .unwrap();
+        full_rt
+            .manual_remember("user_context", "cannot enqueue")
+            .await;
+        assert!(full_transport.sent().is_empty());
+        assert!(full_rt
+            .notices()
+            .drain()
+            .iter()
+            .any(|(_, text)| text.contains("queue is full")));
+    }
+
+    #[tokio::test]
+    async fn busy_manual_duplicate_does_not_rewrite_live_inflight_record() {
+        let dir = tempfile::tempdir().unwrap();
+        let holder_transport = Arc::new(FakeTransport::default());
+        let busy_transport = Arc::new(FakeTransport::default());
+        let holder = runtime(dir.path(), &holder_transport, Some(json!({})), false);
+        let busy = runtime(dir.path(), &busy_transport, Some(json!({})), false);
+        holder.ensure_loaded();
+        let mut record = create_pending_remember("active work", "ice", "user_context", 1);
+        record.state = PendingState::InFlight;
+        enqueue_pending_remember(&holder.pending_dir(), &record, 64).unwrap();
+        let _lease = DispatchLease::try_acquire(&holder.pending_dir())
+            .unwrap()
+            .expect("holder owns dispatch");
+
+        busy.manual_remember("user_context", "new manual intent")
+            .await;
+
+        let records = read_pending_remember(&holder.pending_dir());
+        assert_eq!(records.len(), 2);
+        assert_eq!(
+            records
+                .iter()
+                .find(|item| item.text == "active work")
+                .unwrap()
+                .state,
+            PendingState::InFlight
+        );
+        // A write this runtime never started must stay retryable.
+        assert_eq!(
+            records
+                .iter()
+                .find(|item| item.text == "new manual intent")
+                .unwrap()
+                .state,
+            PendingState::Pending
+        );
+        assert!(holder_transport.sent().is_empty());
+        assert!(busy_transport.sent().is_empty());
+    }
+
+    #[tokio::test]
+    async fn pending_drain_is_single_flight() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::Ok {
+            status: 200,
+            headers: Vec::new(),
+            chunks: vec![b"{}".to_vec()],
+            delay_ms: 100,
+        });
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        enqueue_pending_remember(
+            &rt.pending_dir(),
+            &create_pending_remember("single drain", "ice", "user_context", 1),
+            64,
+        )
+        .unwrap();
+        let first = {
+            let rt = rt.clone();
+            tokio::spawn(async move { rt.drain_pending(false).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(1), async {
+            while transport.sent().is_empty() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("first drain reached transport");
+        rt.drain_pending(false).await;
+        first.await.unwrap();
+        assert_eq!(transport.sent().len(), 1);
+        assert!(read_pending_remember(&rt.pending_dir()).is_empty());
+    }
+
+    #[tokio::test]
+    async fn doctor_counts_inflight_with_uncertain_queue_records() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        let mut inflight = create_pending_remember("inflight", "ice", "user_context", 1);
+        inflight.state = PendingState::InFlight;
+        let mut uncertain = create_pending_remember("uncertain", "ice", "user_context", 2);
+        uncertain.state = PendingState::Uncertain;
+        enqueue_pending_remember(&rt.pending_dir(), &inflight, 64).unwrap();
+        enqueue_pending_remember(&rt.pending_dir(), &uncertain, 64).unwrap();
+        assert_eq!(rt.collect_doctor().await.queue_uncertain, 2);
     }
 
     #[tokio::test]
@@ -3210,6 +7836,9 @@ mod tests {
             rt.config().compaction_summary_mode,
             CompactionSummaryMode::Own
         );
+        super::super::command::run_command(&rt, "write selective").await;
+        assert_eq!(rt.config().write_policy, WritePolicy::Selective);
+        assert!(!rt.config().automatic_writes());
         super::super::command::run_command(&rt, "remember on extra").await;
         // `remember on extra` is literal text, so it was sent (and failed).
         let sent = transport.sent();
@@ -3219,7 +7848,10 @@ mod tests {
         };
         assert_eq!(parts[1].value, "user_context");
         assert_eq!(parts.last().unwrap().value, "on extra");
-        assert_eq!(read_pending_remember(&rt.pending_dir()).len(), 1);
+        let queued = read_pending_remember(&rt.pending_dir());
+        assert_eq!(queued.len(), 1);
+        // A generic transport error does not prove the server rejected the write.
+        assert_eq!(queued[0].state, PendingState::Uncertain);
         super::super::command::run_command(&rt, "bogus").await;
         let notices = rt.notices().drain();
         assert!(notices
@@ -3227,7 +7859,8 @@ mod tests {
             .any(|(_, text)| text == "Cognee session capture: off"));
         assert!(notices
             .iter()
-            .any(|(_, text)| text == "Cognee unavailable (unreachable); memory queued"));
+            .any(|(_, text)| text.contains("Cognee remember unreachable")
+                && text.contains("uncertain")));
         assert_eq!(
             notices.last().unwrap(),
             &(

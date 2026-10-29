@@ -38,6 +38,17 @@ fn main() {
             }
             continue;
         }
+        // Stand-in for a remote memory store: every call that reaches the server.
+        if method == "tools/call" {
+            if let Some(path) = std::env::var_os("ICERS_MCP_TEST_WRITES") {
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .unwrap();
+                writeln!(file, "{}", value["params"]).unwrap();
+            }
+        }
         let result = match method {
             "initialize" => {
                 if let Ok(delay) = std::env::var("MCP_TEST_DELAY_MS") {
@@ -257,6 +268,19 @@ fn main() {
                 }
                 Some("error") => {
                     json!({"isError":true,"content":[{"type":"text","text":"failure"}]})
+                }
+                Some("cognee_404") => {
+                    json!({"isError":true,"content":[{"type":"text","text":"Cognee recall failed: HTTP 404"}]})
+                }
+                Some("timeout") => {
+                    std::thread::sleep(std::time::Duration::from_millis(250));
+                    json!({"content":[{"type":"text","text":"late"}]})
+                }
+                Some("json_rpc_error") => {
+                    send(
+                        json!({"jsonrpc":"2.0","id":value["id"],"error":{"code":-32603,"message":"fixture error"}}),
+                    );
+                    continue;
                 }
                 // Larger than the default output guard (2,000 lines) and details limit.
                 Some("big") => {

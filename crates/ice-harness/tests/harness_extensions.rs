@@ -16,11 +16,14 @@ use ice_harness::extension::{
 };
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
 use ice_harness::session::types::{
-    BranchBounds, Entry, EntryOrder, EntryQuery, LaneRecord, OperationOutcome, RecordQuery,
-    SessionMetadata,
+    BranchBounds, Entry, EntryOrder, EntryQuery, LanePointer, LaneRecord, LogItem, LogOptions,
+    OperationOutcome, OperationStartedRecord, ProvisionedEntry, ProvisionedKind, RecordQuery,
+    SessionMetadata, SessionStats, SessionStorage,
 };
 use ice_harness::session::{DefaultIdGenerator, Session};
-use ice_harness::types::{AgentHarnessOptions, CompactionSettings, HarnessTool};
+use ice_harness::types::{
+    AgentHarnessOptions, AgentHarnessResources, CompactionSettings, HarnessTool, PromptTemplate,
+};
 use ice_tools::{ExecutionToolContext, InMemoryExecutionEnv};
 
 struct RecordingProvider {
@@ -106,6 +109,109 @@ impl HarnessExtension for Probe {
             .unwrap()
             .push(latest_compaction_at);
         None
+    }
+}
+
+struct RejectMemoryStorage(Arc<dyn SessionStorage>);
+
+#[async_trait]
+impl SessionStorage for RejectMemoryStorage {
+    fn metadata(&self) -> SessionMetadata {
+        self.0.metadata()
+    }
+    async fn get_lanes(&self) -> ice_harness::error::SessionResult<Vec<LanePointer>> {
+        self.0.get_lanes().await
+    }
+    async fn create_lane(
+        &self,
+        lane: &str,
+        at: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.create_lane(lane, at).await
+    }
+    async fn move_lane(
+        &self,
+        lane: &str,
+        to: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.move_lane(lane, to).await
+    }
+    async fn append_entry(
+        &self,
+        entry: ProvisionedEntry,
+        lane: &str,
+    ) -> ice_harness::error::SessionResult<Entry> {
+        if let ProvisionedKind::Message { message, .. } = &entry.kind {
+            if ice_harness::messages::custom_data(message).is_some_and(|data| {
+                matches!(data.custom_type.as_str(), "test-memory" | "request-memory")
+            }) {
+                return Err(ice_harness::error::SessionError::storage(
+                    "injected failure",
+                ));
+            }
+        }
+        self.0.append_entry(entry, lane).await
+    }
+    async fn append_record(
+        &self,
+        record: LaneRecord,
+    ) -> ice_harness::error::SessionResult<LaneRecord> {
+        self.0.append_record(record).await
+    }
+    async fn get_entry(&self, id: &str) -> ice_harness::error::SessionResult<Option<Entry>> {
+        self.0.get_entry(id).await
+    }
+    async fn find_entries(
+        &self,
+        query: &EntryQuery,
+    ) -> ice_harness::error::SessionResult<Vec<Entry>> {
+        self.0.find_entries(query).await
+    }
+    async fn find_entries_on_branch(
+        &self,
+        query: &EntryQuery,
+        bounds: &BranchBounds,
+        start: &str,
+    ) -> ice_harness::error::SessionResult<Vec<Entry>> {
+        self.0.find_entries_on_branch(query, bounds, start).await
+    }
+    async fn find_records(
+        &self,
+        query: &RecordQuery,
+    ) -> ice_harness::error::SessionResult<Vec<LaneRecord>> {
+        self.0.find_records(query).await
+    }
+    async fn find_open_operations(
+        &self,
+        lane: &str,
+        limit: Option<usize>,
+    ) -> ice_harness::error::SessionResult<Vec<OperationStartedRecord>> {
+        self.0.find_open_operations(lane, limit).await
+    }
+    async fn get_log(
+        &self,
+        options: &LogOptions,
+    ) -> ice_harness::error::SessionResult<Vec<LogItem>> {
+        self.0.get_log(options).await
+    }
+    async fn get_name(&self) -> ice_harness::error::SessionResult<Option<String>> {
+        self.0.get_name().await
+    }
+    async fn set_name(&self, name: Option<&str>) -> ice_harness::error::SessionResult<()> {
+        self.0.set_name(name).await
+    }
+    async fn get_label(&self, id: &str) -> ice_harness::error::SessionResult<Option<String>> {
+        self.0.get_label(id).await
+    }
+    async fn set_label(
+        &self,
+        id: &str,
+        label: Option<&str>,
+    ) -> ice_harness::error::SessionResult<()> {
+        self.0.set_label(id, label).await
+    }
+    async fn get_stats(&self) -> ice_harness::error::SessionResult<SessionStats> {
+        self.0.get_stats().await
     }
 }
 
@@ -344,7 +450,58 @@ async fn before_run_adds_transient_prompt_text_and_transform_sees_compaction_tim
     assert!(times.iter().all(|time| time.is_some()));
 }
 
-struct MemoryProbe;
+#[derive(Default)]
+struct MemoryProbe {
+    persisted: Mutex<Vec<bool>>,
+}
+
+#[derive(Default)]
+struct RequestProbe {
+    events: Mutex<Vec<(String, Option<String>, u64, u64, Option<i64>, usize)>>,
+    acknowledgments: Mutex<Vec<bool>>,
+}
+
+#[async_trait]
+impl HarnessExtension for RequestProbe {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        let texts = event
+            .messages
+            .iter()
+            .filter_map(|message| match message {
+                AgentMessage::Custom(custom)
+                    if custom
+                        .data
+                        .get("customType")
+                        .and_then(serde_json::Value::as_str)
+                        == Some("test-memory") =>
+                {
+                    Some(())
+                }
+                _ => None,
+            })
+            .count();
+        self.events.lock().unwrap().push((
+            event.prompt.to_string(),
+            event.original_prompt.map(str::to_string),
+            event.request_index,
+            event.branch_generation,
+            event.latest_compaction_at,
+            texts,
+        ));
+        (event.request_index == 1).then(|| PromptContext {
+            custom_type: "test-memory".into(),
+            text: "READY MEMORY".into(),
+            correlation_id: Some("stable-correlation".into()),
+        })
+    }
+
+    async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
+        self.acknowledgments.lock().unwrap().push(persisted);
+    }
+}
 
 #[async_trait]
 impl HarnessExtension for MemoryProbe {
@@ -352,8 +509,320 @@ impl HarnessExtension for MemoryProbe {
         Some(PromptContext {
             custom_type: "test-memory".into(),
             text: format!("MEMORY for: {}", event.prompt),
+            correlation_id: None,
         })
     }
+
+    async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
+        self.persisted.lock().unwrap().push(persisted);
+    }
+}
+
+struct PacketExtension {
+    packet: PromptContext,
+    acknowledgments: Mutex<Vec<bool>>,
+    every_request: bool,
+}
+
+#[async_trait]
+impl HarnessExtension for PacketExtension {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        (self.every_request || event.request_index == 0).then(|| self.packet.clone())
+    }
+
+    async fn prompt_context_persisted(&self, _context: &PromptContext, persisted: bool) {
+        self.acknowledgments.lock().unwrap().push(persisted);
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn shared_request_budget_rejects_second_packet_intact() {
+    let (agent_harness, provider, _) = harness(vec![FauxStep::text("done")]).await;
+    let first = Arc::new(PacketExtension {
+        packet: PromptContext {
+            custom_type: "request-memory".into(),
+            text: "a".repeat(40),
+            correlation_id: None,
+        },
+        acknowledgments: Mutex::new(Vec::new()),
+        every_request: false,
+    });
+    let second = Arc::new(PacketExtension {
+        packet: PromptContext {
+            custom_type: "request-memory".into(),
+            text: "b".repeat(40),
+            correlation_id: None,
+        },
+        acknowledgments: Mutex::new(Vec::new()),
+        every_request: false,
+    });
+    agent_harness.set_extensions(vec![
+        first.clone() as Arc<dyn HarnessExtension>,
+        second.clone() as Arc<dyn HarnessExtension>,
+    ]);
+    agent_harness
+        .prompt_text("budget", Vec::new())
+        .await
+        .unwrap();
+    let contexts = provider.contexts.lock().unwrap();
+    let texts = user_texts(&contexts[0]);
+    assert!(texts.iter().any(|text| text == &"a".repeat(40)));
+    assert!(!texts.iter().any(|text| text == &"b".repeat(40)));
+    assert_eq!(first.acknowledgments.lock().unwrap().as_slice(), &[true]);
+    assert_eq!(second.acknowledgments.lock().unwrap().as_slice(), &[false]);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn duplicate_correlation_is_acknowledged_false_and_persisted_once() {
+    let (harness, provider, _) = harness(vec![
+        FauxStep::tool_call("read", serde_json::json!({"path":"missing"})),
+        FauxStep::text("done"),
+    ])
+    .await;
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &ExecutionToolContext::new(env, Some(mut_env)),
+                None,
+            ))],
+            Some(vec!["read".into()]),
+        )
+        .await
+        .unwrap();
+    let packet = Arc::new(PacketExtension {
+        packet: PromptContext {
+            custom_type: "request-memory".into(),
+            text: "once".into(),
+            correlation_id: Some("same-id".into()),
+        },
+        acknowledgments: Mutex::new(Vec::new()),
+        every_request: true,
+    });
+    harness.set_extensions(vec![packet.clone() as Arc<dyn HarnessExtension>]);
+    harness.prompt_text("duplicate", Vec::new()).await.unwrap();
+    assert_eq!(
+        packet.acknowledgments.lock().unwrap().as_slice(),
+        &[true, false]
+    );
+    assert_eq!(provider.contexts.lock().unwrap().len(), 2);
+    let context_count = user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .filter(|text| text.contains("once"))
+        .count();
+    assert_eq!(context_count, 1);
+    let entries = harness
+        .session()
+        .view("main")
+        .find_entries(&EntryQuery {
+            order: Some(EntryOrder::OldestFirst),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    assert_eq!(entries.iter().filter(|entry| matches!(entry, Entry::Message(message) if ice_harness::messages::custom_data(&message.message).is_some_and(|d| d.custom_type == "request-memory"))).count(), 1);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn request_context_append_failure_does_not_inject_or_acknowledge() {
+    let storage = Arc::new(InMemorySessionStorage::new(
+        SessionMetadata {
+            id: "failed-request".into(),
+            created_at: 0,
+            parent_session_id: None,
+        },
+        Arc::new(SystemClock),
+        Arc::new(DefaultIdGenerator::new()),
+    ));
+    let session = Session::new(Arc::new(RejectMemoryStorage(storage)), None);
+    let faux = FauxProvider::new(FauxScript::new());
+    faux.script()
+        .set_responses(vec![FauxStep::text("main answer")]);
+    let provider = Arc::new(RecordingProvider {
+        inner: faux.clone(),
+        system_prompts: Mutex::new(Vec::new()),
+        contexts: Mutex::new(Vec::new()),
+    });
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: faux.default_model().clone(),
+        session,
+        models: vec![provider.clone() as Arc<dyn Provider>],
+        ..AgentHarnessOptions::default()
+    })
+    .await
+    .unwrap();
+    let packet = Arc::new(PacketExtension {
+        packet: PromptContext {
+            custom_type: "request-memory".into(),
+            text: "do not inject".into(),
+            correlation_id: None,
+        },
+        acknowledgments: Mutex::new(Vec::new()),
+        every_request: false,
+    });
+    harness.set_extensions(vec![packet.clone() as Arc<dyn HarnessExtension>]);
+    let result = harness.prompt_text("continues", Vec::new()).await.unwrap();
+    assert!(matches!(
+        result.outcome,
+        ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }
+    ));
+    assert_eq!(packet.acknowledgments.lock().unwrap().as_slice(), &[false]);
+    assert!(!user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .any(|text| text == "do not inject"));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn same_session_tree_navigation_increments_request_epoch() {
+    let (harness, _provider, _) = harness(vec![FauxStep::text("one"), FauxStep::text("two")]).await;
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    let session_id = harness.session().storage().metadata().id;
+    harness.prompt_text("first", Vec::new()).await.unwrap();
+    let before = probe.events.lock().unwrap()[0].3;
+    let view = harness.session().view("main");
+    let path = view
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            },
+            &BranchBounds::default(),
+        )
+        .await
+        .unwrap();
+    let target = path.first().unwrap().id().to_string();
+    let navigation = harness
+        .navigate_tree(Some(&target), false, None, None)
+        .await
+        .unwrap();
+    assert!(matches!(
+        navigation.outcome,
+        ice_harness::agent_harness::NavigationOutcome::Completed { .. }
+    ));
+    harness.prompt_text("second", Vec::new()).await.unwrap();
+    let events = probe.events.lock().unwrap();
+    assert_eq!(harness.session().storage().metadata().id, session_id);
+    assert!(events[1].3 > before);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn plain_prompt_is_raw_intent_but_expanded_or_tampered_messages_are_not() {
+    let (agent_harness, _, _) = harness(vec![FauxStep::text("done")]).await;
+    let probe = Arc::new(RequestProbe::default());
+    agent_harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    agent_harness
+        .prompt_message(AgentMessage::User(UserMessage::new(
+            "ordinary history query",
+            123,
+        )))
+        .await
+        .unwrap();
+    assert_eq!(
+        probe.events.lock().unwrap()[0].1.as_deref(),
+        Some("ordinary history query")
+    );
+
+    let expanded = AgentMessage::User(UserMessage::new(
+        "<skill name=\"x\">instructions</skill>",
+        124,
+    ));
+    assert_eq!(
+        ice_agent::message::original_user_prompt(&expanded),
+        None,
+        "legacy expanded payload must not be treated as raw invocation"
+    );
+    let mut tampered = UserMessage::new("changed expanded content", 125)
+        .with_origin("$review", "skill-expansion-v1");
+    tampered.content = UserContent::Text("changed after provenance was attached".into());
+    let tampered = AgentMessage::User(tampered);
+    assert_eq!(ice_agent::message::original_user_prompt(&tampered), None);
+    assert_eq!(
+        match &tampered {
+            AgentMessage::User(user) => user.origin.as_ref().and_then(|_| user.original_prompt()),
+            _ => None,
+        },
+        None,
+        "tampered metadata must not recover the previously claimed raw prompt"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn prompt_template_keeps_expansion_and_raw_invocation_distinct() {
+    let (harness, provider, _) = harness(vec![FauxStep::text("done")]).await;
+    harness
+        .set_resources(AgentHarnessResources {
+            prompt_templates: Some(vec![PromptTemplate {
+                name: "summarize".into(),
+                description: None,
+                content: "Summarize $1".into(),
+            }]),
+            ..AgentHarnessResources::default()
+        })
+        .await
+        .unwrap();
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    harness
+        .prompt_from_template("summarize", &["the report".into()])
+        .await
+        .unwrap();
+    assert_eq!(
+        probe.events.lock().unwrap()[0].1.as_deref(),
+        Some("summarize the report")
+    );
+    assert!(user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .any(|text| text == "Summarize the report"));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn request_context_waits_for_existing_tool_turn_and_uses_raw_origin() {
+    let steps = vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "missing.txt"})),
+        FauxStep::text("done"),
+    ];
+    let (harness, provider, _) = harness(steps).await;
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    let tool_context = ExecutionToolContext::new(env, Some(mut_env));
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &tool_context,
+                None,
+            ))],
+            Some(vec!["read".into()]),
+        )
+        .await
+        .unwrap();
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+    let prompt = AgentMessage::User(
+        UserMessage::new("expanded skill instructions", 123)
+            .with_origin("$review", "skill-expansion-v1"),
+    );
+    harness.prompt_message(prompt).await.unwrap();
+    let events = probe.events.lock().unwrap();
+    assert_eq!(events.len(), 2);
+    assert_eq!(events[0].1.as_deref(), Some("$review"));
+    assert_eq!(events[1].1.as_deref(), Some("$review"));
+    assert_eq!(events[1].5, 0);
+    assert_eq!(events[0].3, events[1].3);
+    assert_eq!(provider.contexts.lock().unwrap().len(), 2);
+    assert!(user_texts(&provider.contexts.lock().unwrap()[0])
+        .iter()
+        .all(|text| !text.contains("READY MEMORY")));
+    assert!(user_texts(&provider.contexts.lock().unwrap()[1])
+        .iter()
+        .any(|text| text.contains("READY MEMORY")));
+    assert_eq!(probe.acknowledgments.lock().unwrap().as_slice(), &[true]);
 }
 
 fn user_texts(context: &Context) -> Vec<String> {
@@ -383,7 +852,8 @@ fn user_texts(context: &Context) -> Vec<String> {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stable() {
     let (harness, provider, _) = harness(vec![FauxStep::text("one"), FauxStep::text("two")]).await;
-    harness.set_extensions(vec![Arc::new(MemoryProbe) as Arc<dyn HarnessExtension>]);
+    let memory = Arc::new(MemoryProbe::default());
+    harness.set_extensions(vec![memory.clone() as Arc<dyn HarnessExtension>]);
     harness
         .prompt_text("first question", Vec::new())
         .await
@@ -393,6 +863,7 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
         .await
         .unwrap();
 
+    assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[true, true]);
     let prompts = provider.system_prompts.lock().unwrap().clone();
     assert_eq!(prompts.len(), 2);
     assert_eq!(prompts[0], prompts[1], "the system prompt is stable");
@@ -434,6 +905,102 @@ async fn prompt_context_is_persisted_after_the_prompt_and_keeps_the_prefix_stabl
     assert!(hidden
         .iter()
         .all(|data| data.custom_type == "test-memory" && !data.display));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn failed_prompt_context_append_is_not_sent_to_provider() {
+    let storage = Arc::new(InMemorySessionStorage::new(
+        SessionMetadata {
+            id: "failed-memory".into(),
+            created_at: 0,
+            parent_session_id: None,
+        },
+        Arc::new(SystemClock),
+        Arc::new(DefaultIdGenerator::new()),
+    ));
+    let session = Session::new(Arc::new(RejectMemoryStorage(storage)), None);
+    let script = FauxScript::new();
+    script.set_responses(vec![FauxStep::text("done")]);
+    let faux = FauxProvider::new(script);
+    let provider = Arc::new(RecordingProvider {
+        inner: faux.clone(),
+        system_prompts: Mutex::new(Vec::new()),
+        contexts: Mutex::new(Vec::new()),
+    });
+    let harness = AgentHarness::create(AgentHarnessOptions {
+        model: faux.default_model().clone(),
+        session,
+        models: vec![provider.clone() as Arc<dyn Provider>],
+        system_prompt: Some("BASE".into()),
+        ..AgentHarnessOptions::default()
+    })
+    .await
+    .unwrap();
+    let memory = Arc::new(MemoryProbe::default());
+    harness.set_extensions(vec![memory.clone() as Arc<dyn HarnessExtension>]);
+    harness.prompt_text("question", Vec::new()).await.unwrap();
+    assert_eq!(memory.persisted.lock().unwrap().as_slice(), &[false]);
+    let contexts = provider.contexts.lock().unwrap();
+    assert_eq!(contexts.len(), 1);
+    assert!(!user_texts(&contexts[0])
+        .iter()
+        .any(|text| text.contains("MEMORY for:")));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn request_context_observes_midrun_compaction_once_with_bounded_context() {
+    let steps = vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "missing.txt"})),
+        FauxStep::text("done"),
+    ];
+    let (harness, provider, boundary_probe) = harness(steps).await;
+    *boundary_probe.boundary.lock().unwrap() = Some(BoundaryDecision::Compact { pause: false });
+    *boundary_probe.decision.lock().unwrap() =
+        Some(BeforeCompactDecision::Replace(CompactionOverride {
+            summary: "REQUEST CONTEXT CHECKPOINT".into(),
+            retained_tail: Some(Vec::new()),
+            details: None,
+        }));
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &ExecutionToolContext::new(env, Some(mut_env)),
+                None,
+            ))],
+            Some(vec!["read".into()]),
+        )
+        .await
+        .unwrap();
+    let probe = Arc::new(RequestProbe::default());
+    harness.set_extensions(vec![
+        probe.clone() as Arc<dyn HarnessExtension>,
+        boundary_probe.clone() as Arc<dyn HarnessExtension>,
+    ]);
+    harness
+        .prompt_text("compact boundary", Vec::new())
+        .await
+        .unwrap();
+    assert_eq!(boundary_probe.transform_times.lock().unwrap().len(), 2);
+    let events = probe.events.lock().unwrap();
+    assert_eq!(events.len(), 2);
+    assert!(
+        events[1].4.is_some(),
+        "latest compaction timestamp was not refreshed: {:?}",
+        events.iter().map(|event| event.4).collect::<Vec<_>>()
+    );
+    let contexts = provider.contexts.lock().unwrap();
+    assert_eq!(contexts.len(), 2);
+    assert!(user_texts(&contexts[1])
+        .iter()
+        .all(|text| !text.contains("OLD ")));
+    assert_eq!(
+        events.len(),
+        2,
+        "request callback is once per provider request"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

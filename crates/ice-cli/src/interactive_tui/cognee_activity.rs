@@ -247,6 +247,20 @@ impl Model {
             .unwrap_or("");
         let phase = obs.phase.as_str();
         match obs.operation.as_str() {
+            "read_gate" => {
+                if let Some(recall) = self.recalls.iter_mut().find(|recall| recall.id == id) {
+                    recall.note = format!(
+                        "read gate · {}",
+                        obs.meta
+                            .as_ref()
+                            .and_then(|meta| serde_json::to_string(meta).ok())
+                            .unwrap_or_default()
+                    );
+                    true
+                } else {
+                    false
+                }
+            }
             "recall" => self.apply_recall(obs, id, phase, preview, error),
             operation @ ("remember_entry" | "remember" | "trace") => {
                 let list = if operation == "trace" {
@@ -368,10 +382,31 @@ impl Model {
         }
         let recall = &mut self.recalls[index];
         recall.latency_ms = obs.latency_ms;
+        let gate_note = if meta("decision").is_some() {
+            format!(
+                "read gate · {}",
+                obs.meta
+                    .as_ref()
+                    .and_then(|meta| serde_json::to_string(meta).ok())
+                    .unwrap_or_default()
+            )
+        } else if recall.note.starts_with("read gate") {
+            recall.note.clone()
+        } else {
+            String::new()
+        };
         match phase {
-            "succeeded" if flag("skipped") || flag("duplicate") => {
+            "succeeded"
+                if flag("skipped")
+                    || flag("duplicate")
+                    || matches!(
+                        meta("outcome").and_then(|value| value.as_str()),
+                        Some("stale" | "skipped")
+                    ) =>
+            {
                 recall.status = Status::Skipped;
                 recall.note = match meta("reason").and_then(|value| value.as_str()) {
+                    Some("stale_session") => "discarded · session changed".into(),
                     Some("short_prompt") => "skipped · prompt too short".into(),
                     _ if flag("duplicate") => "skipped · same prompt as last time".into(),
                     _ => "skipped".into(),
@@ -397,6 +432,9 @@ impl Model {
                 recall.note = format!("failed · {}", error.unwrap_or_default());
             }
             _ => return false,
+        }
+        if !gate_note.is_empty() {
+            recall.note = format!("{} · {gate_note}", recall.note);
         }
         true
     }
@@ -616,7 +654,7 @@ impl Model {
             let detail = match (improve.status, &improve.error) {
                 (Status::Pending, _) => format!("{reason} · running"),
                 (Status::Failed, Some(error)) => format!("{reason} · failed · {error}"),
-                _ => format!("{reason}{}", seconds(improve.latency_ms)),
+                _ => format!("{reason} · accepted{}", seconds(improve.latency_ms)),
             };
             lines.extend(step_rows(improve.status, "improve", &[detail], width));
         }
@@ -976,6 +1014,24 @@ mod tests {
         model.expanded = true;
         assert!(rows(&model)[1].contains("skipped · prompt too short"));
 
+        // The judged read gate reports a skip through the outcome alone.
+        let mut judged = Model::default();
+        judged.apply(&obs(
+            "recall",
+            "started",
+            "r2",
+            Some("fix the typo"),
+            json!({}),
+        ));
+        judged.apply(&obs(
+            "recall",
+            "succeeded",
+            "r2",
+            None,
+            json!({"outcome": "skipped"}),
+        ));
+        assert_eq!(judged.status(), Status::Skipped);
+
         let mut off = Model::default();
         off.apply(&obs("recall", "started", "r1", Some("hey"), json!({})));
         off.apply(&obs(
@@ -1151,7 +1207,7 @@ mod tests {
         model.expanded = true;
         let lines = rows(&model);
         assert!(lines[1].contains("✗ improve") && lines[1].contains("dream · failed · timeout"));
-        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · 0.5s"));
+        assert!(lines[2].contains("✓ improve") && lines[2].ends_with("shutdown · accepted · 0.5s"));
     }
 
     fn user(chat: &Container, text: &str) -> Arc<UserMessageComponent> {

@@ -685,6 +685,8 @@ struct HarnessInner {
     /// B4: per-call provider hooks fired inside the `StreamFn` closure.
     provider_hooks: Option<Arc<dyn ice_ai::ProviderHooks>>,
     closed: bool,
+    /// Changes only when the active session/tree view is successfully replaced.
+    navigation_epoch: u64,
     active_run: Option<ActiveRun>,
     steering_queue: SharedMessageQueue,
     follow_up_queue: SharedMessageQueue,
@@ -705,7 +707,9 @@ impl HarnessInner {
             .supported_thinking_levels()
             .contains(&self.thinking_level)
         {
-            return Err(HarnessError::agent("Selected model does not support the current thinking level; select a supported level first"));
+            return Err(HarnessError::agent(
+                "Selected model does not support the current thinking level; select a supported level first",
+            ));
         }
         self.model = model;
         Ok(())
@@ -713,7 +717,9 @@ impl HarnessInner {
 
     fn apply_thinking_level(&mut self, level: ThinkingLevel) -> HarnessResult<()> {
         if self.active_run.is_some() {
-            return Err(HarnessError::agent("Cannot change thinking level during an active operation; cancel or wait for idle first"));
+            return Err(HarnessError::agent(
+                "Cannot change thinking level during an active operation; cancel or wait for idle first",
+            ));
         }
         if !self.model.supported_thinking_levels().contains(&level) {
             return Err(HarnessError::agent(
@@ -862,6 +868,7 @@ impl AgentHarness {
             extensions: Vec::new(),
             provider_hooks: options.provider_hooks,
             closed: false,
+            navigation_epoch: 0,
             active_run: None,
             steering_queue: Arc::new(Mutex::new(MessageQueue::new(options.steering_mode))),
             follow_up_queue: Arc::new(Mutex::new(MessageQueue::new(options.follow_up_mode))),
@@ -989,7 +996,7 @@ impl AgentHarness {
                 Some(QueueKind::Context) => continue,
                 _ => {
                     return matches!(message.message, AgentMessage::ToolResult(_))
-                        && message.terminate != Some(true)
+                        && message.terminate != Some(true);
                 }
             }
         }
@@ -2227,6 +2234,7 @@ impl AgentHarness {
             };
             queue.lock().unwrap().pending.push_back(item);
         }
+        inner.navigation_epoch = inner.navigation_epoch.wrapping_add(1);
         // Retire children of the old session, but permit new children after the swap.
         {
             let mut scope = self.child_scope.lock().unwrap();
@@ -4186,7 +4194,7 @@ impl AgentHarness {
                 Some(crate::extension::BeforeCompactDecision::Cancel) => {
                     return Some(Err(crate::compaction::CompactionError::cancelled(
                         "Compaction cancelled by an extension",
-                    )))
+                    )));
                 }
                 Some(crate::extension::BeforeCompactDecision::Replace(checkpoint)) => {
                     return Some(Ok(crate::compaction::CompactResult {
@@ -4199,7 +4207,7 @@ impl AgentHarness {
                         details: None,
                         details_json: checkpoint.details,
                         from_extension: true,
-                    }))
+                    }));
                 }
             }
         }
@@ -4649,38 +4657,6 @@ impl AgentHarness {
                         agent_context.system_prompt = next;
                     }
                 }
-                for extension in &snap.extensions {
-                    let event = crate::extension::BeforeRunEvent {
-                        prompt: &prompt,
-                        system_prompt: Some(agent_context.system_prompt.as_str()),
-                        session_id: &session_id,
-                        signal: signal.clone(),
-                    };
-                    let Some(context) = extension.prompt_context(&event).await else {
-                        continue;
-                    };
-                    if context.text.trim().is_empty() {
-                        continue;
-                    }
-                    let message = crate::messages::create_custom_message(
-                        &context.custom_type,
-                        UserContent::Text(context.text),
-                        false,
-                        None,
-                        now_ms(),
-                    );
-                    // Only context that is in the history is sent: unpersisted
-                    // text would vanish from the next request and break the
-                    // cached prefix this hook exists to keep.
-                    match self.view().append_message(message.clone()).await {
-                        Ok(_) => agent_context.messages.push(message),
-                        Err(error) => tracing::warn!(
-                            custom_type = %context.custom_type,
-                            %error,
-                            "could not persist extension prompt context; skipping it"
-                        ),
-                    }
-                }
             }
         }
 
@@ -4758,7 +4734,214 @@ impl AgentHarness {
                 .collect(),
         ));
         let context_write_error = Arc::new(Mutex::new(None));
+        let request_extensions = snap.extensions.clone();
+        // Pin the branch view and operation identity before any extension await.
+        // Session replacement and navigation acquire the active-run gate, so
+        // they cannot change this owner until this operation releases its lease.
+        let request_view = self.view();
+        let request_lane = self.lane.clone();
+        let request_inner = Arc::clone(&self.inner);
+        let request_run_id = run_id.clone();
+        let request_session_id = self.session_id();
+        let request_navigation_epoch = self.inner.lock().unwrap().navigation_epoch;
+        let request_system_prompt = agent_context.system_prompt.clone();
+        let request_harness = self.clone();
+        let request_index = Arc::new(AtomicUsize::new(0));
+        let validated_origins = Arc::new(Mutex::new(Vec::<(AgentMessage, Option<String>)>::new()));
+        let mut persisted_correlations = std::collections::BTreeSet::new();
+        for message in agent_context.messages.iter().rev().take(4096) {
+            if let AgentMessage::Custom(custom) = message {
+                if custom
+                    .data
+                    .get("source")
+                    .and_then(serde_json::Value::as_str)
+                    == Some("request_context")
+                {
+                    if let (Some(extension), Some(correlation)) = (
+                        custom
+                            .data
+                            .get("extension")
+                            .and_then(serde_json::Value::as_str),
+                        custom
+                            .data
+                            .get("correlation_id")
+                            .and_then(serde_json::Value::as_str),
+                    ) {
+                        persisted_correlations.insert(format!("{extension}\0{correlation}"));
+                    }
+                }
+            }
+        }
+        let persisted_correlations = Arc::new(Mutex::new(persisted_correlations));
+        let request_window = snap.model.context_window;
+        let request_budget = if request_window == 0 {
+            800
+        } else {
+            (request_window as usize / 100).min(800)
+        };
         let mut config = AgentLoopConfig {
+            before_request: if request_extensions.is_empty() {
+                None
+            } else {
+                Some(Arc::new(move |messages, hook_signal| {
+                    let extensions = request_extensions.clone();
+                    let view = Arc::clone(&request_view);
+                    let lane = request_lane.clone();
+                    let inner = Arc::clone(&request_inner);
+                    let run_id = request_run_id.clone();
+                    let session_id = request_session_id.clone();
+                    let system_prompt = request_system_prompt.clone();
+                    let seen = Arc::clone(&persisted_correlations);
+                    let harness = request_harness.clone();
+                    let navigation_epoch = request_navigation_epoch;
+                    let validated_origins = Arc::clone(&validated_origins);
+                    let index = request_index.fetch_add(1, Ordering::Relaxed) as u64;
+                    let budget = request_budget;
+                    let window = request_window;
+                    Box::pin(async move {
+                        let mut additions = Vec::new();
+                        let mut remaining = budget;
+                        for extension in &extensions {
+                            if hook_signal.is_cancelled() {
+                                break;
+                            }
+                            let prompt = messages
+                                .iter()
+                                .rev()
+                                .find_map(user_prompt_text)
+                                .unwrap_or_default();
+                            // Only the newest user message counts; an invalid or absent
+                            // origin there must not fall back to an older prompt.
+                            let original_prompt = messages
+                                .iter()
+                                .rev()
+                                .find(|message| matches!(message, AgentMessage::User(_)))
+                                .and_then(|message| {
+                                    let mut cache = validated_origins.lock().unwrap();
+                                    if let Some((_, raw)) =
+                                        cache.iter().find(|(cached, _)| cached == message)
+                                    {
+                                        return raw.clone();
+                                    }
+                                    let raw = match message {
+                                        AgentMessage::User(user) => {
+                                            match ice_agent::message::original_user_prompt(message)
+                                            {
+                                                Some(raw) => Some(raw.to_string()),
+                                                None if user.origin.is_some() => None,
+                                                None => user_prompt_text(message).filter(|text| {
+                                                    !contains_expansion_markup(text)
+                                                }),
+                                            }
+                                        }
+                                        _ => None,
+                                    };
+                                    if cache.len() >= 256 {
+                                        cache.remove(0);
+                                    }
+                                    cache.push((message.clone(), raw.clone()));
+                                    raw
+                                });
+                            let latest_compaction_at =
+                                harness.latest_compaction_at().await.ok().flatten();
+                            let event = crate::extension::RequestContextEvent {
+                                prompt: &prompt,
+                                original_prompt: original_prompt.as_deref(),
+                                messages: &messages,
+                                system_prompt: &system_prompt,
+                                session_id: &session_id,
+                                run_id: &run_id,
+                                lane_id: &lane,
+                                branch_generation: navigation_epoch,
+                                request_index: index,
+                                context_window: window,
+                                remaining_context_tokens: remaining,
+                                latest_compaction_at,
+                                signal: hook_signal.clone(),
+                            };
+                            let Some(packet) = extension.request_context(&event).await else {
+                                continue;
+                            };
+                            let extension_id = packet.custom_type.clone();
+                            let correlation_key = packet
+                                .correlation_id
+                                .as_ref()
+                                .map(|id| format!("{extension_id}\0{id}"));
+                            let is_duplicate = correlation_key
+                                .as_ref()
+                                .is_some_and(|key| seen.lock().unwrap().contains(key));
+                            if is_duplicate {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            // Count role and envelope framing as part of the one shared budget.
+                            let envelope = format!(
+                                "custom\n{}\n{}\n{}",
+                                packet.custom_type, packet.text, "request_context"
+                            );
+                            let token_cost = (envelope.encode_utf16().count() + 3) / 4;
+                            if packet.text.trim().is_empty()
+                                || token_cost > remaining
+                                || hook_signal.is_cancelled()
+                            {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            let details = serde_json::json!({"source": "request_context", "correlation_id": packet.correlation_id, "extension": extension_id, "run_id": &run_id, "lane_id": &lane, "session_id": &session_id});
+                            let message = crate::messages::create_custom_message(
+                                &packet.custom_type,
+                                UserContent::Text(packet.text.clone()),
+                                false,
+                                Some(details),
+                                now_ms(),
+                            );
+                            if hook_signal.is_cancelled() {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            let owner_is_current = {
+                                let state = inner.lock().unwrap();
+                                state.navigation_epoch == navigation_epoch
+                                    && state.active_run.as_ref().is_some_and(|active| {
+                                        active.run_id == run_id && active.lane == lane
+                                    })
+                            };
+                            if !owner_is_current || hook_signal.is_cancelled() {
+                                extension.prompt_context_persisted(&packet, false).await;
+                                continue;
+                            }
+                            match view.append_message(message.clone()).await {
+                                Ok(_) => {
+                                    // Persistence is the delivery acknowledgment contract: once
+                                    // appended, the packet is durable and is returned for injection
+                                    // even if cancellation races the append.
+                                    remaining = remaining.saturating_sub(token_cost);
+                                    if let Some(key) = correlation_key {
+                                        let mut seen = seen.lock().unwrap();
+                                        if seen.len() >= 4096 {
+                                            if let Some(oldest) = seen.iter().next().cloned() {
+                                                seen.remove(&oldest);
+                                            }
+                                        }
+                                        seen.insert(key);
+                                    }
+                                    additions.push(message);
+                                    extension.prompt_context_persisted(&packet, true).await;
+                                    if hook_signal.is_cancelled() {
+                                        break;
+                                    }
+                                }
+                                Err(error) => {
+                                    tracing::warn!(custom_type = %packet.custom_type, %error, "could not persist request context; skipping it");
+                                    extension.prompt_context_persisted(&packet, false).await;
+                                }
+                            }
+                        }
+                        additions
+                    }) as BoxFuture<'static, Vec<AgentMessage>>
+                }))
+            },
+
             model: snap.model.clone(),
             convert_to_llm: convert,
             transform_context: self
@@ -5952,6 +6135,10 @@ struct ConfigSnapshot {
 // ===========================================================================
 
 /// Text of a user prompt: the string, or its text blocks joined by newlines.
+fn contains_expansion_markup(text: &str) -> bool {
+    text.contains("<skill ") || text.contains("<prompt-template ")
+}
+
 fn user_prompt_text(message: &AgentMessage) -> Option<String> {
     let AgentMessage::User(user) = message else {
         return None;
@@ -6059,7 +6246,9 @@ impl AgentLane for AgentHarness {
                 HarnessError::unknown_skill(name, format!("No skill named '{name}'"))
             })?;
             let invocation = format_skill_invocation(skill, additional_instructions);
-            AgentMessage::User(UserMessage::new(invocation, now_ms()))
+            AgentMessage::User(
+                UserMessage::new(invocation, now_ms()).with_origin(name, "skill-expansion-v1"),
+            )
         };
         self.run_core(vec![message]).await
     }
@@ -6073,7 +6262,14 @@ impl AgentLane for AgentHarness {
                 HarnessError::unknown_template(name, format!("No prompt template named '{name}'"))
             })?;
             let invocation = format_prompt_template_invocation(template, args);
-            AgentMessage::User(UserMessage::new(invocation, now_ms()))
+            let raw = std::iter::once(name.to_string())
+                .chain(args.iter().cloned())
+                .collect::<Vec<_>>()
+                .join(" ");
+            AgentMessage::User(
+                UserMessage::new(invocation, now_ms())
+                    .with_origin(raw, "prompt-template-expansion-v1"),
+            )
         };
         self.run_core(vec![message]).await
     }
@@ -7186,6 +7382,12 @@ mod session_switch_tests {
         assert!(harness
             .lane("main")
             .set_thinking_level(ThinkingLevel::Low)
+            .await
+            .is_err());
+        // Tree/session navigation shares the active-run admission barrier, so
+        // the branch owner captured by request hooks cannot change mid-run.
+        assert!(harness
+            .set_session(harness.session().clone())
             .await
             .is_err());
         assert_eq!(harness.get_model().await.unwrap().id, current.id);

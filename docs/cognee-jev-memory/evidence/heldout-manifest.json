@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "git_head": "2b31a97e9c668f89e9b944dd5ded36f4af2f2d01",
+  "private_manifest_sha256": "b6464500e79c8ccef6ac407133f50e24691808b736918e37f2938632e122ec15",
+  "protocol_sha256": "dbe318a81a2b039e486782c6b8c5fb480f75b6bc630db9bd09a7332fcad57e0a",
+  "cutoff_epoch_ms": 1792443600000,
+  "cutoff_with_offset": "2026-10-20T00:00:00+03:00",
+  "seed": 20261028,
+  "remote_requests": 0,
+  "arm_d_executed": false,
+  "heldout_known_labels": 118,
+  "audit_count": 100,
+  "audit_label_counts": {"USEFUL": 59, "NOT_USEFUL": 0, "UNKNOWN": 41},
+  "session_counts": {"DEV": 132, "HELD_OUT": 122, "UNKNOWN_TIME": 0},
+  "counts": {
+    "DEV": {
+      "combined": {"total": 516, "USEFUL": 74, "NOT_USEFUL": 42, "UNKNOWN": 400, "arm_c_admit": 102, "arm_c_reject": 414},
+      "generated:signal": {"total": 258, "USEFUL": 34, "NOT_USEFUL": 21, "UNKNOWN": 203, "arm_c_admit": 62, "arm_c_reject": 196},
+      "generated:random": {"total": 258, "USEFUL": 40, "NOT_USEFUL": 21, "UNKNOWN": 197, "arm_c_admit": 40, "arm_c_reject": 218},
+      "recorded_proposals:recorded": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0}
+    },
+    "HELD_OUT": {
+      "combined": {"total": 634, "USEFUL": 118, "NOT_USEFUL": 0, "UNKNOWN": 516, "arm_c_admit": 172, "arm_c_reject": 462},
+      "generated:signal": {"total": 317, "USEFUL": 57, "NOT_USEFUL": 0, "UNKNOWN": 260, "arm_c_admit": 69, "arm_c_reject": 248},
+      "generated:random": {"total": 317, "USEFUL": 61, "NOT_USEFUL": 0, "UNKNOWN": 256, "arm_c_admit": 103, "arm_c_reject": 214},
+      "recorded_proposals:recorded": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0}
+    },
+    "UNKNOWN_TIME": {
+      "combined": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0},
+      "generated:signal": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0},
+      "generated:random": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0},
+      "recorded_proposals:recorded": {"total": 0, "USEFUL": 0, "NOT_USEFUL": 0, "UNKNOWN": 0, "arm_c_admit": 0, "arm_c_reject": 0}
+    }
+  },
+  "normalization": {
+    "date_start": 1788756094947,
+    "date_end": 1793198034824,
+    "redactions": {"api_token": 40, "bearer": 78, "email": 156, "env_assignment": 3571, "home_path": 13622, "long_base64": 16934, "long_hex": 930, "url_credentials": 4},
+    "sources": {
+      "claude": {"files": 283, "parsed_files": 283, "eligible_before_dedup": 176, "fewer_than_two_user_turns": 107, "duplicates": 8, "retained_sessions": 168, "oversize_tool_bodies": 2388, "timestamp_regressions": 164, "recorded_proposals_found": 0},
+      "codex": {"files": 72, "parsed_files": 72, "eligible_before_dedup": 69, "fewer_than_two_user_turns": 3, "duplicates": 1, "retained_sessions": 68, "oversize_tool_bodies": 1399, "timestamp_regressions": 0, "recorded_proposals_found": 0},
+      "icers": {"files": 67, "parsed_files": 67, "eligible_before_dedup": 17, "fewer_than_two_user_turns": 50, "duplicates": 0, "retained_sessions": 17, "oversize_tool_bodies": 129, "timestamp_regressions": 12, "recorded_proposals_found": 0},
+      "least": {"files": 5, "parsed_files": 5, "eligible_before_dedup": 1, "fewer_than_two_user_turns": 4, "duplicates": 0, "retained_sessions": 1, "oversize_tool_bodies": 73, "timestamp_regressions": 0, "recorded_proposals_found": 0}
+    }
+  },
+  "data_sha256": {
+    "audit-sample.json": "3b93fb7198dbbb6c8186f8819d268a00799a8471362888a3a22dff2c35c4b67b",
+    "audit.html": "b0d53b2ab01fe84502d26acd4c5ee9b5bdafa83807bacf7229198f93a6bcb7de",
+    "candidates.json": "b7ba784d9abce057a29a1c32c986beb999931ef911117613e9372808226625b9",
+    "generation-manifest.json": "5bb16e8d20eafd9abe5e868759fb82e1c1b8844144cbc38e221b304b5661f792",
+    "labeled-candidates.json": "863c7b5f2c5e25ca4532acea7d71b3368a261be1ce991c28e7c29938bd5c45fd",
+    "native-decisions.json": "bd86c259cb3869463d34c0c60705f8bc0473b15f1eeb38999cb807accee6b9a6",
+    "normalization.json": "26866868db050e49500a3b5afc184c971f474b45129e3de5f4d0fc2bccccd02e",
+    "prelabel-parser-v1/candidates.json": "8bcc5949918c06e0318b46e74933ced2ce58d203f862117e1562da6cdf6c6548",
+    "prelabel-parser-v1/generation-manifest.json": "3f2ba06b12c89eec050bb20e3845dc11d369a968f7aecf62bca758e3b6aa7652",
+    "prelabel-parser-v1/normalization.json": "d0b99c4ff9b08bba0a25285c0843c69a8552eeaaef8217cf06ac428faa93c4ac",
+    "prelabel-parser-v1/protocol.json": "dbe318a81a2b039e486782c6b8c5fb480f75b6bc630db9bd09a7332fcad57e0a",
+    "prelabel-parser-v1/sessions.json": "03465379bddec955ded232c8003a92966a96d0a0cdce1750619e15d3e9ee3b40",
+    "prelabel-parser-v1/source-inventory.json": "fd2b754806d5f7d5bc2c010021374367a70b8687527816443da08f2c596494da",
+    "protocol.json": "dbe318a81a2b039e486782c6b8c5fb480f75b6bc630db9bd09a7332fcad57e0a",
+    "sessions.json": "859c6112f938713aaad495b9f144e6558e408f020fd8a05bb6823b8f97790296",
+    "source-inventory.json": "c2d93a760daae2acb81b392af25f5d8f72cf90e7c86fc1e728c86f4730209ea1"
+  },
+  "source_hashes": {
+    "crates/ice-cli/src/cognee/candidates.rs": "932ccb29470da9debcf892bcce6a62c45dd5ce55c3b0678ca9c7fd5ebf174a93",
+    "crates/ice-cli/src/cognee/dream.rs": "1750c92bb53ad83a701bba330b68940d6f102451e2eda01cd4637f890b19f6ec",
+    "crates/ice-cli/src/cognee/evidence.rs": "3ce44516692239dc804a96849900a823c87fc529728d199fa7af9e0d23ad5558",
+    "crates/ice-cli/src/cognee/heldout_tests.rs": "0a880291df125a86c3118478646fa095a67f50d3baa5e16df42c39841f4dbe6f",
+    "crates/ice-cli/src/cognee/propose.rs": "59921b02ee17a87c3b8e891d1ee16e67d8a57030edf2a085e9bcddebfde171dc",
+    "crates/ice-cli/src/cognee/source_validation.rs": "3d2b4a8fb972b94d18d684dfe537654359612427dbb9af19b992d1fc5a68a148",
+    "crates/ice-cli/src/cognee/text.rs": "b445ce06f4cd780fd9e44b791da7362bfcf46b1ba609d6e3b3d55b5c448b7788",
+    "crates/ice-cli/src/cognee/validation.rs": "bcb2e34dc4314ac7efafdb2e0569b63f5c3b28c719646dcda9033787aafba8d5",
+    "scripts/prepare_cognee_heldout.py": "e314f903386586b76af3057c003975cd241d3e8e37c848d0ae1b37890b553eb4"
+  }
+}

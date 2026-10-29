@@ -282,6 +282,7 @@ fn resolve_with_settings(
         cli_base_url,
         settings,
         &RuntimeFactories::default(),
+        &[],
     )
 }
 
@@ -290,6 +291,18 @@ pub fn resolve_with_extensions(
     cwd: &std::path::Path,
     trusted: bool,
     session: &ice_extensions::ExtensionSession,
+) -> Result<ResolvedModel, ResolveError> {
+    resolve_with_extensions_and_models(args, cwd, trusted, session, &[])
+}
+
+/// Resolve using additional discovered models without modifying models.json.
+/// Existing configured and built-in definitions take precedence over discovery.
+pub fn resolve_with_extensions_and_models(
+    args: &crate::args::Args,
+    cwd: &std::path::Path,
+    trusted: bool,
+    session: &ice_extensions::ExtensionSession,
+    discovered: &[Model],
 ) -> Result<ResolvedModel, ResolveError> {
     let settings = settings::load_effective_model_settings(cwd, trusted)?;
     resolve_with_factories(
@@ -300,6 +313,7 @@ pub fn resolve_with_extensions(
         args.base_url.as_deref(),
         settings,
         &RuntimeFactories::from_session(session),
+        discovered,
     )
 }
 
@@ -311,6 +325,7 @@ fn resolve_with_factories(
     cli_base_url: Option<&str>,
     settings: settings::Settings,
     factories: &RuntimeFactories,
+    discovered: &[Model],
 ) -> Result<ResolvedModel, ResolveError> {
     // Load models/auth once, then resolve Anthropic-wire credentials per
     // provider id. A key belonging to `anthropic` must never make an unrelated
@@ -341,6 +356,22 @@ fn resolve_with_factories(
     // ---- Catalog: built-in + ~/.icers/models.json (merged, reusing the
     // already-loaded config) ----
     let mut catalog = build_catalog(&models_cfg, &factories.manifests);
+    for model in discovered {
+        if !catalog.iter().any(|existing| {
+            existing.provider == model.provider && existing.id.eq_ignore_ascii_case(&model.id)
+        }) {
+            let mut model = model.clone();
+            // Only provider-level headers apply to newly discovered models;
+            // never copy model-specific secrets from another descriptor.
+            model.headers = models_cfg
+                .providers
+                .get(&model.provider)
+                .and_then(|config| config.headers.as_ref())
+                .map(|headers| config::resolve_headers(headers, None))
+                .filter(|headers| !headers.is_empty());
+            catalog.push(model);
+        }
+    }
 
     // The ambient Anthropic override belongs only to the built-in identity.
     // Apply the CLI override after selection so other providers keep their
@@ -2200,6 +2231,41 @@ mod tests {
         assert_eq!(r.model.id, DEFAULT_MODEL_ID);
         assert_eq!(r.thinking_level, DEFAULT_THINKING_LEVEL);
         assert_eq!(r.provider.id(), "anthropic");
+    }
+
+    #[test]
+    fn discovered_models_are_bound_without_overriding_local_models() {
+        let _env = TestEnv::new();
+        std::fs::write(config::models_path().unwrap(), r#"{"providers":{
+            "first":{"api":"openai-completions","apiKey":"first-key","baseUrl":"https://first.example/v1","models":[{"id":"one"}]}
+        }}"#).unwrap();
+        let initial = resolve(Some("first"), Some("one"), None, None, None).unwrap();
+        let mut discovered = initial.model.clone();
+        discovered.id = "new-model".into();
+        let mut duplicate = initial.model.clone();
+        duplicate.base_url = "https://incorrect.example".into();
+        let resolved = resolve_with_factories(
+            Some("first"),
+            Some("one"),
+            None,
+            None,
+            None,
+            settings::Settings::default(),
+            &RuntimeFactories::default(),
+            &[discovered, duplicate],
+        )
+        .unwrap();
+        let models = resolved.provider.models();
+        assert!(models.iter().any(|model| model.id == "new-model"));
+        assert_eq!(
+            models
+                .iter()
+                .find(|model| model.id == "one")
+                .unwrap()
+                .base_url,
+            "https://first.example/v1"
+        );
+        assert!(models.iter().all(|model| model.headers.is_none()));
     }
 
     #[test]

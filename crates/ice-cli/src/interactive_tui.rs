@@ -294,8 +294,8 @@ struct CommandContext {
 fn submit_user_prompt(ctx: &CommandContext, text: &str) {
     let run_status = *ctx.state.status.lock().unwrap();
     if run_status != RunStatus::Idle {
-        let images = ctx.state.take_pending_images();
-        let message = user_message_with_images(text, images.clone());
+        let (message, images) =
+            queued_user_message(&ctx.state, &ctx.resources.lock().unwrap(), text);
         let lane = ctx.lane.clone();
         let chat = ctx.chat.clone();
         let tui = ctx.tui.clone();
@@ -344,7 +344,10 @@ fn submit_user_prompt(ctx: &CommandContext, text: &str) {
     // `crates/ice-harness/tests/harness_run_e2e.rs`. Queued steering /
     // follow-up prompts DO get a `message_start` (the loop drains those
     // itself), so those are deliberately rendered from the event instead.
-    add_user_message(&ctx.chat, text);
+    add_user_message(
+        &ctx.chat,
+        &display_user_prompt(&ctx.resources.lock().unwrap(), text),
+    );
     // A new prompt starts a fresh interaction at the tail even when the
     // user had scrolled up to inspect older output.
     if let Some(scroll) = ctx.tui.get_primary_scroll_view() {
@@ -358,7 +361,7 @@ fn submit_user_prompt(ctx: &CommandContext, text: &str) {
         .tx
         .send(TuiMessage::UserInput(
             text.to_string(),
-            ctx.state.take_pending_images(),
+            ctx.state.take_prompt_images(text),
         ))
         .is_err()
     {
@@ -999,6 +1002,8 @@ enum TuiMessage {
     /// mailbox) signal the main loop, which awaits
     /// `reload_extension_resources` on the async runtime.
     ReloadExtensions,
+    /// Refresh the selected provider's model catalog.
+    RefreshProviderModels(String),
     /// Request an OAuth action. The action itself runs off the main loop because
     /// provider callbacks are synchronous FFI calls and may wait for user
     /// interaction (for example, a browser/device-code exchange).
@@ -1109,7 +1114,18 @@ fn tool_result_message_text(msg: &ice_ai::types::ToolResultMessage) -> String {
         .join("\n")
 }
 
+/// Text of a user message for drafts and listings. Expanded skill blocks
+/// collapse back to the `$name` mention that was typed.
 fn user_message_text(msg: &ice_ai::types::UserMessage) -> String {
+    collapse_skill_invocations(&user_message_raw_text(msg))
+}
+
+/// Transcript bubble text of a user message (skills as highlighted names).
+fn user_message_display(msg: &ice_ai::types::UserMessage) -> String {
+    skill_display_text(&user_message_raw_text(msg))
+}
+
+fn user_message_raw_text(msg: &ice_ai::types::UserMessage) -> String {
     match &msg.content {
         ice_ai::types::UserContent::Text(s) => s.clone(),
         ice_ai::types::UserContent::Blocks(blocks) => blocks
@@ -2325,13 +2341,7 @@ pub async fn interactive_tui(
                         continue;
                     }
                     if let Some(images) = images_from_pasted_paths(&text) {
-                        for image in images {
-                            state_for_key.queue_image(image);
-                        }
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Dropped images attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, images);
                         tui_for_key.request_render(false);
                         continue;
                     }
@@ -2614,6 +2624,7 @@ pub async fn interactive_tui(
                         .clone()
                         .expect("selector_open guaranteed Some");
                     selector.handle_key(key);
+                    tui_for_key.request_render_reusing_scroll_content();
                     continue;
                 }
                 let (selector, kind) = state_for_key
@@ -2941,8 +2952,7 @@ pub async fn interactive_tui(
             // which yanks from the internal KILL RING — not the system
             // clipboard. On platforms without bracketed-paste `Event::Paste`
             // (Windows console, some remote clients) that meant Ctrl+V pasted
-            // stale/other content instead of the user's real clipboard
-            // ("不是系统的粘贴的内容").
+            // stale content instead of the user's system clipboard.
             if keybinding_matches(
                 &keybindings_for_key,
                 &key,
@@ -2951,13 +2961,7 @@ pub async fn interactive_tui(
                 if let Some(paths) = read_clipboard_file_paths() {
                     let text = paths.join("\n");
                     if let Some(images) = images_from_pasted_paths(&text) {
-                        for image in images {
-                            state_for_key.queue_image(image);
-                        }
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Clipboard images attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, images);
                     } else {
                         editor_for_key.handle_paste(&text);
                     }
@@ -2966,11 +2970,7 @@ pub async fn interactive_tui(
                 }
                 match read_clipboard_image() {
                     Ok(Some(image)) => {
-                        state_for_key.queue_image(image);
-                        add_note_message(
-                            &state_for_key.chat_container,
-                            "Clipboard image attached to the next prompt.",
-                        );
+                        attach_images_to_draft(&state_for_key, vec![image]);
                         tui_for_key.request_render(false);
                         continue;
                     }
@@ -3108,7 +3108,7 @@ pub async fn interactive_tui(
             }
 
             // 5a-bis. ↑/↓ navigate the autocomplete list while it is open
-            //     (typed `/` or `@`), then Tab accepts the highlighted row.
+            //     (typed `/`, `@` or `$`), then Tab accepts the highlighted row.
             if key.modifiers == KeyModifiers::NONE
                 && (key.code == KeyCode::Up || key.code == KeyCode::Down)
             {
@@ -3117,6 +3117,16 @@ pub async fn interactive_tui(
                     tui_for_key.request_render_reusing_scroll_content();
                     continue;
                 }
+            }
+
+            // 5a-ter. Enter on an open `$` skill list picks the skill rather
+            //     than sending the partial mention.
+            if key.modifiers == KeyModifiers::NONE
+                && key.code == KeyCode::Enter
+                && accept_skill_mention(&state_for_key, &editor_for_key)
+            {
+                tui_for_key.request_render_reusing_scroll_content();
+                continue;
             }
 
             // 5b. ↑/↓ browse submitted-message history when the editor is
@@ -3194,19 +3204,23 @@ pub async fn interactive_tui(
                         // for it, so render the bubble here (see the submit
                         // handler in `interactive_tui`).
                         state_for_key.new_message_count.other_message();
-                        add_user_message(&state_for_key.chat_container, &prompt);
+                        add_user_message(
+                            &state_for_key.chat_container,
+                            &display_user_prompt(&ctx_for_key.resources.lock().unwrap(), &prompt),
+                        );
                         push_history(&state_for_key, &prompt);
-                        let _ = tx_for_key.send(TuiMessage::UserInput(
-                            prompt,
-                            state_for_key.take_pending_images(),
-                        ));
+                        let images = state_for_key.take_prompt_images(&prompt);
+                        let _ = tx_for_key.send(TuiMessage::UserInput(prompt, images));
                     }
                 } else {
                     // Follow-ups are echoed by the loop's
                     // `AgentEvent::MessageStart` once they are consumed; while
                     // they wait, the pending-messages display shows them.
-                    let images = state_for_key.take_pending_images();
-                    let message = user_message_with_images(&prompt, images.clone());
+                    let (message, images) = queued_user_message(
+                        &state_for_key,
+                        &ctx_for_key.resources.lock().unwrap(),
+                        &prompt,
+                    );
                     let lane = lane_for_key.clone();
                     let chat = state_for_key.chat_container.clone();
                     let tui = tui_for_key.clone();
@@ -4132,6 +4146,79 @@ pub async fn interactive_tui(
                     .is_err()
                 {
                     add_error_message(&chat_container, "Could not queue credential removal.");
+                }
+                tui.request_render(false);
+            }
+            Some(TuiMessage::RefreshProviderModels(provider)) => {
+                add_note_message(
+                    &chat_container,
+                    &format!("Refreshing models for {provider}…"),
+                );
+                tui.request_render(false);
+                let manifests = current_provider_manifests(&ctx.reload_context.extension_session);
+                let offline = crate::args::offline_env_enabled() || ctx.reload_context.args.offline;
+                let discovery = async {
+                    if provider == crate::codex_auth::PROVIDER_ID {
+                        if offline {
+                            return Err("Model discovery is unavailable offline".to_string());
+                        }
+                        crate::codex_models::refresh(
+                            crate::provider::OPENAI_CODEX_BASE_URL,
+                            tokio_util::sync::CancellationToken::new(),
+                        )
+                        .await?;
+                        return Ok(None);
+                    }
+                    let config = crate::config::load_models_config().map_err(|e| e.to_string())?;
+                    let auth = crate::config::read_auth().map_err(|e| e.to_string())?;
+                    let catalog = crate::provider::catalog_with_manifests(&manifests)
+                        .map_err(|e| e.to_string())?;
+                    let models = crate::provider_model_refresh::refresh(
+                        &provider,
+                        &catalog,
+                        config.providers.get(&provider),
+                        &auth,
+                        manifests.iter().find(|m| m.id == provider),
+                        offline,
+                    )
+                    .await?;
+                    crate::provider_model_refresh::persist(&provider, &models)?;
+                    Ok(Some(models))
+                }
+                .await;
+                let (discovered, warning) = match discovery {
+                    Ok(models) => (models, None),
+                    Err(error) => (None, Some(error)),
+                };
+                match crate::session::reload_provider_catalog(
+                    &ctx.reload_context,
+                    &harness,
+                    &provider,
+                    discovered,
+                )
+                .await
+                {
+                    Ok(count) => {
+                        add_note_message(
+                            &chat_container,
+                            &format!(
+                            "Refreshed {provider}: {count} models loaded from the local catalog{}.",
+                            if warning.is_none() { " and supported remote discovery" } else { "" },
+                        ),
+                        );
+                        if let Some(error) = warning {
+                            add_note_message(
+                                &chat_container,
+                                &format!("Remote discovery for {provider}: {error}."),
+                            );
+                        }
+                    }
+                    Err(error) => add_error_message(
+                        &chat_container,
+                        &format!(
+                            "Could not refresh {provider}; the previous catalog was kept: {error}"
+                        ),
+                    ),
                 }
                 tui.request_render(false);
             }

@@ -306,6 +306,25 @@ fn observation(request_id: &str, phase: &str) -> Observation {
 }
 
 #[test]
+fn memory_title_reads_outcomes_from_every_supported_version() {
+    for version in [1, 2] {
+        let mut done = observation("r", "succeeded");
+        done.meta = serde_json::json!({"outcomeVersion": version, "outcome": "retrieved_empty"})
+            .as_object()
+            .cloned();
+        assert!(
+            memory_title(&done).contains("retrieved empty"),
+            "v{version}"
+        );
+    }
+    let mut unknown = observation("r", "succeeded");
+    unknown.meta = serde_json::json!({"outcomeVersion": 9, "outcome": "retrieved_empty"})
+        .as_object()
+        .cloned();
+    assert!(!memory_title(&unknown).contains("retrieved empty"));
+}
+
+#[test]
 fn memory_terminal_phase_updates_its_started_item() {
     let sink = Arc::new(MemorySink::default());
     let recorder = recorder_with(Some(sink.clone()));
@@ -339,6 +358,112 @@ fn memory_terminal_phase_updates_its_started_item() {
     assert!(sink.events.lock().unwrap().iter().any(
         |e| matches!(e, ObserveRecorderEvent::ActivityUpdate { item } if item.id == items[0].id)
     ));
+}
+
+#[test]
+fn memory_recorder_preserves_timeout_abort_and_late_outcomes() {
+    let recorder = recorder_with(None);
+    for (id, phase, outcome) in [
+        ("timeout", "failed", "timeout"),
+        ("abort", "failed", "aborted"),
+        ("late", "succeeded", "stale"),
+    ] {
+        recorder.handle_memory(&observation(id, "started"));
+        let mut terminal = observation(id, phase);
+        terminal.meta = serde_json::json!({"outcomeVersion": 1, "outcome": outcome})
+            .as_object()
+            .cloned();
+        if phase == "failed" {
+            terminal.error = Some(outcome.into());
+        }
+        recorder.handle_memory(&terminal);
+    }
+    let items = recorder.get_state().items;
+    assert_eq!(items.len(), 3);
+    assert_eq!(items[0].state, Some(ObserveItemState::Error));
+    assert!(items[0]
+        .result
+        .as_deref()
+        .unwrap()
+        .starts_with("error: timeout"));
+    assert_eq!(items[1].state, Some(ObserveItemState::Error));
+    assert!(items[1]
+        .result
+        .as_deref()
+        .unwrap()
+        .starts_with("error: aborted"));
+    assert!(items[2]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("discarded (session changed)"));
+}
+
+#[test]
+fn memory_operations_with_shared_correlation_do_not_finish_each_other() {
+    let recorder = recorder_with(None);
+    recorder.handle_memory(&observation("shared", "started"));
+    let mut injection = observation("shared", "succeeded");
+    injection.operation = "injection".into();
+    recorder.handle_memory(&injection);
+    recorder.handle_memory(&observation("shared", "succeeded"));
+    let items = recorder.get_state().items;
+    assert_eq!(items.len(), 2);
+    assert_eq!(items[0].tool_name.as_deref(), Some("recall"));
+    assert_eq!(items[0].state, Some(ObserveItemState::Done));
+    assert_eq!(items[1].tool_name.as_deref(), Some("injection"));
+}
+
+#[test]
+fn memory_titles_distinguish_versioned_outcomes_without_reinterpreting_legacy() {
+    let recorder = recorder_with(None);
+    for (id, operation, outcome) in [
+        ("skip", "recall", "skipped"),
+        ("empty", "recall", "retrieved_empty"),
+        ("hit", "recall", "retrieved_nonempty"),
+        ("job", "improve", "accepted"),
+        ("stored", "injection", "persisted"),
+        ("failed", "injection", "append_failed"),
+    ] {
+        let mut started = observation(id, "started");
+        started.operation = operation.into();
+        recorder.handle_memory(&started);
+        let mut terminal = observation(id, "succeeded");
+        terminal.operation = operation.into();
+        terminal.meta = serde_json::json!({"outcomeVersion": 1, "outcome": outcome})
+            .as_object()
+            .cloned();
+        recorder.handle_memory(&terminal);
+    }
+    recorder.handle_memory(&observation("legacy", "succeeded"));
+    let items = recorder.get_state().items;
+    assert!(items[0]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("skipped (no request)"));
+    assert!(items[1]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("retrieved empty"));
+    assert!(items[2]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("retrieved nonempty"));
+    assert!(items[3]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("accepted (completion unknown)"));
+    assert!(items[4]
+        .text
+        .as_deref()
+        .unwrap()
+        .contains("persisted (delivery unknown)"));
+    assert!(items[5].text.as_deref().unwrap().contains("append failed"));
+    assert_eq!(items[6].text.as_deref(), Some("Cognee recall · ice"));
 }
 
 #[test]
