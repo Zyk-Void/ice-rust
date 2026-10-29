@@ -148,7 +148,7 @@ def main():
                 "runner_sha256": hashed((ROOT / "crates/ice-cli/src/cognee/judged_eval_tests.rs").read_bytes()),
                 "prompt_builder_sha256": hashed((ROOT / "crates/ice-cli/src/cognee/helper.rs").read_bytes()),
                 "preparation_sha256": hashed(Path(__file__).read_bytes())}
-    path = ROOT / "Docs/cognee-jev-memory/evidence/judged-eval-manifest.json"
+    path = ROOT / "docs/cognee-jev-memory/evidence/judged-eval-manifest.json"
     # Manifest is hash-only: no prompt text, identifiers, labels or source paths.
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x") as stream:

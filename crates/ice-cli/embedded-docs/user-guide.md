@@ -22,7 +22,7 @@ Cancellation discards both operations. The gate uses the existing 1.5-second
 helper deadline and cannot extend the recall budget. Activity details and
 `/cognee doctor` include the decision, timing and recall disposition.
 This is opt-in external processing of prompt text, not a proven relevance or
-latency improvement. See `Docs/cognee-jev-memory/judged-recall.md` for limits
+latency improvement. See `docs/cognee-jev-memory/judged-recall.md` for limits
 and the local owner-label evaluation workflow.
 
 ## 1. Installation
