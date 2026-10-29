@@ -15,6 +15,9 @@ use tokio_util::sync::CancellationToken;
 use super::candidates::{self, Candidate, CandidateState, Category, Role, Source};
 use super::runtime::{CogneeRuntime, PROPOSE_TOOL_NAME};
 
+/// Longest candidate lifetime; the tool schema and both validators share it.
+const MAX_VALID_HOURS: u64 = 720;
+
 pub struct CogneeProposeMemoryTool {
     runtime: Weak<CogneeRuntime>,
     schema: Tool,
@@ -33,9 +36,10 @@ impl CogneeProposeMemoryTool {
                         "text": {"type": "string", "minLength": 1, "maxLength": 600},
                         "category": {"type": "string", "enum": ["constraint", "decision", "preference", "lesson", "outcome"]},
                         "source_entry_id": {"type": "string", "minLength": 1},
-                        "verified_by": {"type": "string"},
+                        "verified_by": {"type": "string", "maxLength": 160},
                         "supersedes": {"type": "string"},
-                        "valid_hours": {"type": "integer", "minimum": 1, "maximum": 8760}
+                        "valid_hours": {"type": "integer", "minimum": 1, "maximum": 720},
+                        "review": {"type": "boolean"}
                     },
                     "required": ["text", "category", "source_entry_id"]
                 })),
@@ -352,11 +356,13 @@ pub(crate) async fn propose_memory(
     let repository = sources.repository.clone();
     let volatile = matches!(category, Category::Outcome | Category::Lesson);
     let expiry = valid_hours
-        .filter(|hours| (1..=720).contains(hours))
+        .filter(|hours| (1..=MAX_VALID_HOURS).contains(hours))
         .map(|hours| now.saturating_add(hours.saturating_mul(3_600_000)))
         .or_else(|| volatile.then(|| now.saturating_add(86_400_000)));
-    if valid_hours.is_some_and(|hours| !(1..=720).contains(&hours)) {
-        return Err("Candidate expiry must be 1..720 hours".into());
+    if valid_hours.is_some_and(|hours| !(1..=MAX_VALID_HOURS).contains(&hours)) {
+        return Err(format!(
+            "Candidate expiry must be 1..{MAX_VALID_HOURS} hours"
+        ));
     }
     let mut candidate = Candidate {
         id: uuid::Uuid::new_v4().to_string(),
@@ -477,13 +483,34 @@ fn optional_valid_hours(params: &Value) -> Result<Option<u64>, AgentError> {
         None | Some(Value::Null) => Ok(None),
         Some(Value::Number(value)) => value
             .as_u64()
-            .filter(|hours| (1..=8760).contains(hours))
+            .filter(|hours| (1..=MAX_VALID_HOURS).contains(hours))
             .map(Some)
             .ok_or_else(|| {
-                AgentError::Validation("valid_hours must be an integer from 1 to 8760".into())
+                AgentError::Validation(format!(
+                    "valid_hours must be an integer from 1 to {MAX_VALID_HOURS}"
+                ))
             }),
-        Some(_) => Err(AgentError::Validation(
-            "valid_hours must be an integer from 1 to 8760".into(),
-        )),
+        Some(_) => Err(AgentError::Validation(format!(
+            "valid_hours must be an integer from 1 to {MAX_VALID_HOURS}"
+        ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn schema_and_validator_share_the_expiry_bound() {
+        let tool = CogneeProposeMemoryTool::new(Weak::new());
+        let properties = &tool.schema().parameters.as_value()["properties"];
+        assert_eq!(properties["valid_hours"]["maximum"], MAX_VALID_HOURS);
+        assert_eq!(properties["verified_by"]["maxLength"], 160);
+        assert_eq!(properties["review"]["type"], "boolean");
+        assert_eq!(
+            optional_valid_hours(&json!({"valid_hours": MAX_VALID_HOURS})).unwrap(),
+            Some(MAX_VALID_HOURS)
+        );
+        assert!(optional_valid_hours(&json!({"valid_hours": MAX_VALID_HOURS + 1})).is_err());
     }
 }

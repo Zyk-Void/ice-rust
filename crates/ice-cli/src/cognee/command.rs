@@ -444,9 +444,9 @@ pub fn settings_rows(config: &CogneeConfig) -> Vec<SettingRow> {
         SettingRow::new(
             "cognee.readPolicy",
             "Cognee read policy",
-            "legacy searches most prompts; event uses explicit history or admitted task events; on_demand never searches automatically (cognee_search remains available)",
+            "legacy searches most prompts; event uses explicit history or admitted task events; judged asks the helper whether a prompt needs older memory; on_demand never searches automatically (cognee_search remains available)",
             config.read_policy.as_str(),
-            &["legacy", "event", "on_demand"],
+            &["legacy", "event", "judged", "on_demand"],
         ),
         SettingRow::new(
             "cognee.writePolicy",

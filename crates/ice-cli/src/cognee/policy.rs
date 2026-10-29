@@ -111,7 +111,9 @@ pub fn asks_for_history(prompt: &str) -> bool {
             } else {
                 previous
             };
-            !matches!(previous, "no" | "not" | "never" | "without")
+            !(matches!(previous, "no" | "not" | "never" | "without" | "dont")
+                || previous.ends_with("n't")
+                || previous.ends_with("n\u{2019}t"))
         })
     })
 }
@@ -161,6 +163,8 @@ mod tests {
             "Implement a standalone component with no earlier decisions",
             "Proceed without the previous decision",
             "Do not remember when the cache changed",
+            "Don't remember when we changed this",
+            "Please don\u{2019}t remember when it changed",
             "No previous decision applies. What did we decide about caching?",
         ] {
             let expected = if prompt.contains("What did we") {

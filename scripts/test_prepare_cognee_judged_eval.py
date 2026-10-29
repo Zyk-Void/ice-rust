@@ -4,6 +4,7 @@ import collections
 import json
 from pathlib import Path
 import runpy
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +27,21 @@ class PreparationTests(unittest.TestCase):
         session, _ = base["normalize"]("claude", raw, "fixture", scrubber)
         self.assertEqual([turn["role"] for turn in session["turns"]], ["assistant", "tool", "user"])
         self.assertIn("[REDACTED_EMAIL]", session["turns"][-1]["text"])
+
+    def test_private_output_rejects_symlinked_components_and_source_roots(self):
+        base = PREP["BASE"]
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw).resolve()
+            (tmp / "elsewhere").mkdir()
+            (tmp / "link").symlink_to(tmp / "elsewhere")
+            with self.assertRaises(ValueError):
+                base["private_dir"](tmp / "link" / "judged-eval")
+            self.assertEqual(list((tmp / "elsewhere").iterdir()), [])
+            base["private_dir"](tmp / "real" / "judged-eval")
+            self.assertEqual((tmp / "real" / "judged-eval").stat().st_mode & 0o777, 0o700)
+            (tmp / "elsewhere" / "a.jsonl").write_text("{}")
+            self.assertEqual(len(list(base["allowed_files"](tmp / "elsewhere"))), 1)
+            self.assertEqual(list(base["allowed_files"](tmp / "link")), [])
 
     def test_prepared_sample_invariants_if_available(self):
         path = ROOT / "target/judged-eval/sample.json"

@@ -23,10 +23,7 @@ def hashed(data):
 
 
 def private_write(name, data):
-    OUT.mkdir(mode=0o700, parents=True, exist_ok=True)
-    if OUT.is_symlink():
-        raise ValueError("private output directory must not be a symlink")
-    os.chmod(OUT, 0o700)
+    BASE["private_dir"](OUT)
     fd = os.open(OUT / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "wb") as stream:
         stream.write(data)

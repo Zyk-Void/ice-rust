@@ -28,6 +28,9 @@ fn origin_validation_detects_changed_text_and_timestamp() {
     let mut changed_text = user.clone();
     changed_text.content = "changed".into();
     assert_eq!(changed_text.original_prompt(), None);
+    let mut changed_raw = user.clone();
+    changed_raw.origin.as_mut().unwrap().raw_text = "forged".into();
+    assert_eq!(changed_raw.original_prompt(), None);
     let mut changed_timestamp = user;
     changed_timestamp.timestamp += 1;
     assert_eq!(changed_timestamp.original_prompt(), None);

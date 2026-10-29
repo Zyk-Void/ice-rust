@@ -510,7 +510,9 @@ pub fn resolve_config(stored: Option<&Value>, env: &CogneeEnv) -> Result<CogneeC
         config.read_policy = raw_string(&read_policy)
             .as_deref()
             .and_then(ReadPolicy::parse)
-            .ok_or_else(|| format!("{ENV_READ_POLICY} must be legacy, on_demand, or event"))?;
+            .ok_or_else(|| {
+                format!("{ENV_READ_POLICY} must be legacy, on_demand, event, or judged")
+            })?;
     }
     let write_policy = pick(env, ENV_WRITE_POLICY, source, "writePolicy");
     if write_policy.is_some() {

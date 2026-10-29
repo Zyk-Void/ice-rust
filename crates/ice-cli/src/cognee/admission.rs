@@ -65,14 +65,15 @@ pub fn read_receipts(dir: &Path) -> Vec<AdmissionReceipt> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return out;
     };
-    for entry in entries.flatten().take(MAX_RECEIPTS) {
+    // Completion markers are bookkeeping, not receipts; they must not use up
+    // the cap and starve real receipts once many admissions have finished.
+    let receipt_files = entries.flatten().filter(|entry| {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        name.ends_with(".json") && !name.starts_with("completed-")
+    });
+    for entry in receipt_files.take(MAX_RECEIPTS) {
         let path = entry.path();
-        if !path
-            .file_name()
-            .is_some_and(|name| name.to_string_lossy().ends_with(".json"))
-        {
-            continue;
-        }
         let Ok(metadata) = std::fs::symlink_metadata(&path) else {
             continue;
         };
@@ -171,6 +172,7 @@ fn valid_operation_id(id: &str) -> bool {
     };
     !created.is_empty()
         && created.bytes().all(|b| b.is_ascii_digit())
+        && created.parse::<u64>().is_ok()
         && hash.len() == 16
         && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
@@ -325,6 +327,31 @@ pub(super) mod tests {
         conflict.committed_at += 1;
         assert!(commit(&dir, &conflict).is_err());
         assert!(receipt_path(&dir, "../victim").is_err());
+        assert_eq!(read_receipts(&dir), vec![receipt]);
+    }
+
+    #[test]
+    fn operation_ids_must_fit_the_queue_timestamp() {
+        assert!(valid_operation_id("7-0123456789abcdef"));
+        assert!(valid_operation_id("18446744073709551615-0123456789abcdef"));
+        assert!(!valid_operation_id("18446744073709551616-0123456789abcdef"));
+        assert!(!valid_operation_id("+7-0123456789abcdef"));
+    }
+
+    #[test]
+    fn completion_markers_do_not_count_against_the_receipt_cap() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = root.path().join("receipts");
+        let receipt = receipt();
+        std::fs::create_dir_all(&dir).unwrap();
+        for i in 0..(MAX_RECEIPTS + 8) {
+            std::fs::write(
+                dir.join(format!("completed-{i}-0123456789abcdef.json")),
+                r#"{"completed":true}"#,
+            )
+            .unwrap();
+        }
+        commit(&dir, &receipt).unwrap();
         assert_eq!(read_receipts(&dir), vec![receipt]);
     }
 

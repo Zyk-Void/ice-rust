@@ -1281,8 +1281,20 @@ fn clipboard_command_output(command: &str, args: &[&str]) -> Option<Vec<u8>> {
     let mut stdout = child.stdout.take()?;
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
+        // Bound the buffer: a provider may emit far more than any image we accept.
+        const MAX_CLIPBOARD_BYTES: u64 = 64 * 1024 * 1024;
         let mut bytes = Vec::new();
-        let _ = tx.send(std::io::Read::read_to_end(&mut stdout, &mut bytes).map(|_| bytes));
+        let read = std::io::Read::read_to_end(
+            &mut std::io::Read::take(&mut stdout, MAX_CLIPBOARD_BYTES + 1),
+            &mut bytes,
+        );
+        let _ = tx.send(match read {
+            Ok(_) if bytes.len() as u64 > MAX_CLIPBOARD_BYTES => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "clipboard output too large",
+            )),
+            other => other.map(|_| bytes),
+        });
     });
     match rx.recv_timeout(std::time::Duration::from_secs(2)) {
         Ok(Ok(bytes)) if child.wait().is_ok_and(|status| status.success()) => Some(bytes),

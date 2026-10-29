@@ -4810,33 +4810,38 @@ impl AgentHarness {
                                 .rev()
                                 .find_map(user_prompt_text)
                                 .unwrap_or_default();
-                            let original_prompt = messages.iter().rev().find_map(|message| {
-                                let AgentMessage::User(_) = message else {
-                                    return None;
-                                };
-                                let mut cache = validated_origins.lock().unwrap();
-                                if let Some((_, raw)) =
-                                    cache.iter().find(|(cached, _)| cached == message)
-                                {
-                                    return raw.clone();
-                                }
-                                let raw = match message {
-                                    AgentMessage::User(user) => {
-                                        match ice_agent::message::original_user_prompt(message) {
-                                            Some(raw) => Some(raw.to_string()),
-                                            None if user.origin.is_some() => None,
-                                            None => user_prompt_text(message)
-                                                .filter(|text| !contains_expansion_markup(text)),
-                                        }
+                            // Only the newest user message counts; an invalid or absent
+                            // origin there must not fall back to an older prompt.
+                            let original_prompt = messages
+                                .iter()
+                                .rev()
+                                .find(|message| matches!(message, AgentMessage::User(_)))
+                                .and_then(|message| {
+                                    let mut cache = validated_origins.lock().unwrap();
+                                    if let Some((_, raw)) =
+                                        cache.iter().find(|(cached, _)| cached == message)
+                                    {
+                                        return raw.clone();
                                     }
-                                    _ => None,
-                                };
-                                if cache.len() >= 256 {
-                                    cache.remove(0);
-                                }
-                                cache.push((message.clone(), raw.clone()));
-                                raw
-                            });
+                                    let raw = match message {
+                                        AgentMessage::User(user) => {
+                                            match ice_agent::message::original_user_prompt(message)
+                                            {
+                                                Some(raw) => Some(raw.to_string()),
+                                                None if user.origin.is_some() => None,
+                                                None => user_prompt_text(message).filter(|text| {
+                                                    !contains_expansion_markup(text)
+                                                }),
+                                            }
+                                        }
+                                        _ => None,
+                                    };
+                                    if cache.len() >= 256 {
+                                        cache.remove(0);
+                                    }
+                                    cache.push((message.clone(), raw.clone()));
+                                    raw
+                                });
                             let latest_compaction_at =
                                 harness.latest_compaction_at().await.ok().flatten();
                             let event = crate::extension::RequestContextEvent {

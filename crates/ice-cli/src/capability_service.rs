@@ -260,6 +260,11 @@ impl CapabilityService {
             suggested_ids: ids,
         };
         let mut state = self.state.lock().unwrap();
+        // The suggestion came from an earlier catalog snapshot; a refresh in
+        // between makes it stale, so it must not be delivered.
+        if state.registry_revision != revision {
+            return None;
+        }
         if state.pending.len() >= 128 {
             if let Some(key) = state.pending.keys().min().cloned() {
                 state.pending.remove(&key);

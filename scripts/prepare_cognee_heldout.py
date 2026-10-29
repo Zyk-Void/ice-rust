@@ -67,9 +67,21 @@ def encoded(value):
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()
 
 
+def private_dir(out):
+    """Create the private output directory; no component below ROOT may be a link."""
+    for part in (out, *out.parents):
+        if part == ROOT:
+            break
+        if part.is_symlink():
+            raise ValueError(f"private output path must not contain a symlink: {part.name}")
+    out.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if out.is_symlink():
+        raise ValueError("private output directory must not be a symlink")
+    os.chmod(out, 0o700)
+
+
 def private_write(name, value, raw=False):
-    OUT.mkdir(parents=True, exist_ok=True, mode=0o700)
-    os.chmod(OUT, 0o700)
+    private_dir(OUT)
     path = OUT / name
     # Never follow a planted output symlink or overwrite a previous freeze.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -174,6 +186,8 @@ def ranked(items, salt):
 
 
 def allowed_files(root):
+    if Path(root).is_symlink():
+        return
     for base, dirs, files in os.walk(root, followlinks=False):
         dirs[:] = sorted(d for d in dirs if d not in {".ice", ".git", "node_modules", "target"}
                          and not Path(base, d).is_symlink())

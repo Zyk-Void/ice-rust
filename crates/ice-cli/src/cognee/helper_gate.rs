@@ -149,6 +149,8 @@ impl Admission {
 pub(crate) trait GateOutcome: Clone {
     fn succeeded(&self) -> bool;
     fn failed(&self) -> bool;
+    /// A cancelled flight says nothing about the batch, so it is not cached.
+    fn cancelled(&self) -> bool;
 }
 impl GateOutcome for HelperOutcome {
     fn succeeded(&self) -> bool {
@@ -162,6 +164,9 @@ impl GateOutcome for HelperOutcome {
             )
         )
     }
+    fn cancelled(&self) -> bool {
+        matches!(self, Self::Abstained(AbstainReason::Cancelled))
+    }
 }
 impl GateOutcome for super::helper::ReadGateOutcome {
     fn succeeded(&self) -> bool {
@@ -174,6 +179,9 @@ impl GateOutcome for super::helper::ReadGateOutcome {
                 AbstainReason::Timeout | AbstainReason::Unavailable | AbstainReason::Malformed
             )
         )
+    }
+    fn cancelled(&self) -> bool {
+        matches!(self, Self::Abstained(AbstainReason::Cancelled))
     }
 }
 
@@ -274,6 +282,10 @@ impl<O: GateOutcome> HelperGate<O> {
             return;
         }
         self.in_flight = None;
+        if outcome.cancelled() {
+            self.batches.retain(|(k, _, _)| k != key);
+            return;
+        }
         let ttl = if outcome.succeeded() {
             POSITIVE_TTL_MS
         } else {
@@ -307,6 +319,21 @@ mod tests {
         let id = g.flight_id().unwrap();
         drop(p);
         g.finish(id, key, now, &judged());
+    }
+    #[test]
+    fn cancelled_flight_does_not_cache_the_batch() {
+        let mut g = HelperGate::with_budget(SharedHelperBudget::isolated());
+        let (a, p) = g.admit("k", "p", 0);
+        assert_eq!(a, Admission::Start);
+        let id = g.flight_id().unwrap();
+        drop(p);
+        g.finish(
+            id,
+            "k",
+            0,
+            &HelperOutcome::Abstained(AbstainReason::Cancelled),
+        );
+        assert_eq!(g.admit("k", "p", 1).0, Admission::Start);
     }
     #[test]
     fn independent_sessions_share_provider_rolling_quota() {

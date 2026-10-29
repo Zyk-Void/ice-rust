@@ -584,8 +584,8 @@ pub struct PromptOrigin {
 impl PromptOrigin {
     const MAX_RAW_TEXT_BYTES: usize = 16 * 1024;
 
-    fn fingerprint(content: &UserContent, timestamp: i64) -> Option<String> {
-        let bytes = serde_json::to_vec(&(content, timestamp)).ok()?;
+    fn fingerprint(content: &UserContent, timestamp: i64, raw_text: &str) -> Option<String> {
+        let bytes = serde_json::to_vec(&(content, timestamp, raw_text)).ok()?;
         Some(format!("{:x}", sha2::Sha256::digest(bytes)))
     }
 }
@@ -628,7 +628,9 @@ impl UserMessage {
         if raw_text.len() > PromptOrigin::MAX_RAW_TEXT_BYTES {
             return self;
         }
-        if let Some(fingerprint) = PromptOrigin::fingerprint(&self.content, self.timestamp) {
+        if let Some(fingerprint) =
+            PromptOrigin::fingerprint(&self.content, self.timestamp, &raw_text)
+        {
             self.origin = Some(PromptOrigin {
                 raw_text,
                 fingerprint,
@@ -645,7 +647,7 @@ impl UserMessage {
         if origin.version != 1 || origin.raw_text.len() > PromptOrigin::MAX_RAW_TEXT_BYTES {
             return None;
         }
-        (PromptOrigin::fingerprint(&self.content, self.timestamp).as_deref()
+        (PromptOrigin::fingerprint(&self.content, self.timestamp, &origin.raw_text).as_deref()
             == Some(origin.fingerprint.as_str()))
         .then_some(origin.raw_text.as_str())
     }

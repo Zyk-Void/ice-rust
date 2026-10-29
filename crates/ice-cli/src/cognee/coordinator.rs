@@ -19,6 +19,8 @@ const MAX_METADATA_BYTES: usize = 4096;
 const POSITIVE_TTL_MS: u64 = 300_000;
 const NEGATIVE_TTL_MS: u64 = 60_000;
 type Key = (String, String, u64);
+/// Longest normalized query that keeps a distinct cache key.
+const KEY_QUERY_CHARS: usize = 400;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(in crate::cognee) struct OperationContext {
@@ -52,10 +54,22 @@ impl EvidenceCache {
                 .collect::<Vec<_>>()
                 .join(" ")
                 .chars()
-                .take(400)
+                .take(KEY_QUERY_CHARS)
                 .collect(),
             generation,
         )
+    }
+
+    /// A longer query shares its key with every query that has the same
+    /// prefix, so its results must not be cached for another request.
+    pub(super) fn keeps_distinct_key(query: &str) -> bool {
+        query
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .chars()
+            .count()
+            <= KEY_QUERY_CHARS
     }
 
     fn fresh(entry: &Entry, now: u64) -> bool {
@@ -328,6 +342,18 @@ mod tests {
             score: None,
             provenance: None,
         }
+    }
+
+    #[test]
+    fn queries_longer_than_the_key_limit_are_not_cacheable() {
+        assert!(EvidenceCache::keeps_distinct_key(
+            &"a ".repeat(200).trim().to_owned()
+        ));
+        assert!(!EvidenceCache::keeps_distinct_key(&"a".repeat(401)));
+        assert_eq!(
+            EvidenceCache::key("d", &format!("{}x", "a".repeat(400)), 0),
+            EvidenceCache::key("d", &format!("{}y", "a".repeat(400)), 0)
+        );
     }
 
     #[test]

@@ -9,7 +9,10 @@ Cognee runtime. Only the first provider request in a user run judges recall.
 Tool-loop requests do not repeat the gate.
 
 Recall and TypeSafe judgment are polled concurrently. A completed recall is
-held until the judgment arrives. The typed request has exactly two questions:
+held until the judgment arrives. Because retrieval starts before the judgment
+returns, the prompt may already have reached Cognee when the gate answers
+`none` or `session`: `judged` saves the wait and the injection, not necessarily
+the Cognee request or the prompt's disclosure to it. The typed request has exactly two questions:
 
 - Choice `needs`: `none` (standalone), `session` (current conversation already
   available to the model), `memory` (earlier sessions, decisions or history).

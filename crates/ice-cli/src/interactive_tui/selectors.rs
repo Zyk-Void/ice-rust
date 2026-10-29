@@ -911,6 +911,10 @@ fn provider_picker_key(
                 *searching = true;
                 return ProviderPickerKey::Ignore;
             }
+            KeyCode::Char('r' | 'a') if key.kind == KeyEventKind::Repeat => {
+                // Holding a key must not queue repeated network actions.
+                return ProviderPickerKey::Ignore;
+            }
             KeyCode::Char(action @ ('r' | 'a')) => {
                 return match selected.filter(|id| {
                     !id.is_empty() && *id != ADD_PROVIDER_VALUE && *id != REMOVE_PROVIDER_VALUE
@@ -985,6 +989,18 @@ mod provider_picker_key_tests {
             provider_picker_key(&mut false, key(KeyCode::Char('a')), Some("openai")),
             ProviderPickerKey::Reauthenticate("openai".into())
         );
+    }
+
+    #[test]
+    fn held_shortcut_keys_do_not_repeat_network_actions() {
+        for action in ['r', 'a'] {
+            let mut repeat = key(KeyCode::Char(action));
+            repeat.kind = KeyEventKind::Repeat;
+            assert_eq!(
+                provider_picker_key(&mut false, repeat, Some("openai")),
+                ProviderPickerKey::Ignore
+            );
+        }
     }
 
     #[test]

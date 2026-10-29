@@ -133,8 +133,11 @@ impl CogneeRuntime {
                     let selection =
                         select_atomic_with_context(&results, &mut SeenEvidence::default(), &filter);
                     let prepared = fit_packet(&selection.lines, None, 800, max_chars);
-                    let key = EvidenceCache::key(&operation.dataset, &query, operation.generation);
-                    state.evidence_cache.put(key, results, self.now());
+                    if EvidenceCache::keeps_distinct_key(&query) {
+                        let key =
+                            EvidenceCache::key(&operation.dataset, &query, operation.generation);
+                        state.evidence_cache.put(key, results, self.now());
+                    }
                     (selection, prepared)
                 };
                 let count = prepared.lines.len();

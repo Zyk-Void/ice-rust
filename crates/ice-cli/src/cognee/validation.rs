@@ -58,7 +58,11 @@ pub(in crate::cognee) fn validate_candidate_scope(
     );
     if volatile
         && sources.repository.as_ref().is_none_or(|repository| {
-            scope.git_branch != repository.branch
+            // Unknown branch or revision on both sides is not a match: a
+            // volatile fact needs a repository state it can be fenced to.
+            repository.branch.is_none()
+                || repository.revision.is_none()
+                || scope.git_branch != repository.branch
                 || scope.git_revision != repository.revision
                 || scope.worktree_id.as_deref() != Some(repository.worktree_id.as_str())
         })
@@ -402,6 +406,17 @@ mod tests {
         assert_eq!(
             validate_candidate_scope(&current_candidate, &sources, &evidence, true),
             Ok(())
+        );
+
+        // Unknown on both sides is not a match: there is no revision to fence to.
+        let mut unfenced_sources = sources;
+        let unknown = unfenced_sources.repository.as_mut().unwrap();
+        unknown.revision = None;
+        let mut unfenced = current_candidate;
+        unfenced.source_scope.as_mut().unwrap().git_revision = None;
+        assert_eq!(
+            validate_candidate_scope(&unfenced, &unfenced_sources, &evidence, true),
+            Err("candidate repository ownership changed")
         );
     }
 }

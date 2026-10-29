@@ -399,7 +399,10 @@ impl Model {
             "succeeded"
                 if flag("skipped")
                     || flag("duplicate")
-                    || meta("outcome").and_then(|value| value.as_str()) == Some("stale") =>
+                    || matches!(
+                        meta("outcome").and_then(|value| value.as_str()),
+                        Some("stale" | "skipped")
+                    ) =>
             {
                 recall.status = Status::Skipped;
                 recall.note = match meta("reason").and_then(|value| value.as_str()) {
@@ -1010,6 +1013,24 @@ mod tests {
         assert_eq!(model.status(), Status::Skipped);
         model.expanded = true;
         assert!(rows(&model)[1].contains("skipped · prompt too short"));
+
+        // The judged read gate reports a skip through the outcome alone.
+        let mut judged = Model::default();
+        judged.apply(&obs(
+            "recall",
+            "started",
+            "r2",
+            Some("fix the typo"),
+            json!({}),
+        ));
+        judged.apply(&obs(
+            "recall",
+            "succeeded",
+            "r2",
+            None,
+            json!({"outcome": "skipped"}),
+        ));
+        assert_eq!(judged.status(), Status::Skipped);
 
         let mut off = Model::default();
         off.apply(&obs("recall", "started", "r1", Some("hey"), json!({})));

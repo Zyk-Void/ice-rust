@@ -64,7 +64,10 @@ async fn live_isolated_canary_and_rollback() {
         loaded.dataset
     );
 
-    let http = reqwest::Client::new();
+    let http = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
     let texts = || async {
         let datasets: Vec<Value> = http
             .get(format!("{url}/api/v1/datasets"))
