@@ -1297,9 +1297,13 @@ fn clipboard_command_output(command: &str, args: &[&str]) -> Option<Vec<u8>> {
         });
     });
     match rx.recv_timeout(std::time::Duration::from_secs(2)) {
-        Ok(Ok(bytes)) if child.wait().is_ok_and(|status| status.success()) => Some(bytes),
-        Ok(_) => None,
-        Err(_) => {
+        Ok(Ok(bytes)) => child
+            .wait()
+            .is_ok_and(|status| status.success())
+            .then_some(bytes),
+        // A failed or oversized read, or a timeout: never leave the child
+        // blocked on its pipe or unreaped.
+        Ok(Err(_)) | Err(_) => {
             let _ = child.kill();
             let _ = child.wait();
             None

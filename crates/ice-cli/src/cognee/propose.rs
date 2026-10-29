@@ -267,8 +267,18 @@ pub(crate) fn accept_candidate(
         Ok(false) => return Ok(None),
         Err(error) => return Err(format!("Could not reserve Cognee operation: {error}")),
     }
-    admission::commit(&receipt_dir, &receipt)
-        .map_err(|e| format!("Admission receipt not committed: {e}"))?;
+    if let Err(error) = admission::commit(&receipt_dir, &receipt) {
+        // Without a receipt nothing owns the reservation, and reconciliation
+        // leaves a Prepared operation without one blocked and unreplayable.
+        if !admission::read_receipts(&receipt_dir)
+            .iter()
+            .any(|existing| existing.id == id)
+        {
+            let _ =
+                super::queue::remove_pending_remember(&runtime.pending_dir(), &record.operation_id);
+        }
+        return Err(format!("Admission receipt not committed: {error}"));
+    }
     runtime.refresh_receipt_suppressions();
     // Everything after the atomic receipt commit is a recoverable projection.
     let _ = candidates::store_pending(&candidate_dir, &attributed, runtime.now());

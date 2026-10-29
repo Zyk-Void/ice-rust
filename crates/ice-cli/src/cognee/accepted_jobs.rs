@@ -72,14 +72,21 @@ pub(crate) fn persist(directory: &Path, record: &AcceptedJob) -> std::io::Result
             "conflicting acceptance record",
         ));
     }
-    if std::fs::read_dir(directory)?
+    // These are acknowledgments, not proof of indexing, so a full ledger
+    // retires its oldest records instead of failing every later write.
+    let mut records: Vec<_> = std::fs::read_dir(directory)?
         .filter_map(Result::ok)
         .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
-        .take(MAX_RECORDS)
-        .count()
-        >= MAX_RECORDS
-    {
-        return Err(std::io::Error::other("acceptance ledger is full"));
+        .map(|e| {
+            let modified = e.metadata().and_then(|m| m.modified()).ok();
+            (modified, e.path())
+        })
+        .collect();
+    if records.len() >= MAX_RECORDS {
+        records.sort();
+        for (_, old) in records.iter().take(records.len() + 1 - MAX_RECORDS) {
+            std::fs::remove_file(old)?;
+        }
     }
     write_private_file_atomic(&file, &body)
 }
@@ -120,5 +127,31 @@ mod tests {
             persist(dir.path(), &invalid).unwrap_err().kind(),
             std::io::ErrorKind::InvalidInput
         );
+    }
+
+    #[test]
+    fn full_ledger_retires_the_oldest_record_instead_of_failing() {
+        let dir = tempfile::tempdir().unwrap();
+        let record = |id: String| AcceptedJob {
+            version: 1,
+            operation_id: id,
+            operation: "remember".into(),
+            dataset: "d".into(),
+            session_id: None,
+            accepted_at_ms: 1,
+            receipt: AcceptedReceipt { job_id: None },
+            searchability: Searchability::Unverified,
+        };
+        for i in 0..MAX_RECORDS {
+            persist(dir.path(), &record(format!("op-{i}"))).unwrap();
+        }
+        persist(dir.path(), &record("op-new".into())).unwrap();
+        let count = std::fs::read_dir(dir.path())
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
+            .count();
+        assert_eq!(count, MAX_RECORDS);
+        assert!(dir.path().join("op-new.json").exists());
     }
 }

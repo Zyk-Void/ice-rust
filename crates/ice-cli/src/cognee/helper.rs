@@ -359,6 +359,10 @@ impl Helper {
                 Err(_) => return HelperOutcome::Abstained(AbstainReason::Timeout),
             },
         };
+        // Cancellation can win the race against a response that is already ready.
+        if signal.is_cancelled() {
+            return HelperOutcome::Abstained(AbstainReason::Cancelled);
+        }
         match decode_response(batch, &request, &response) {
             Ok(judgments) => HelperOutcome::Judged(judgments),
             Err(reason) => HelperOutcome::Abstained(reason),
@@ -1155,6 +1159,7 @@ mod tests {
         Success,
         Error,
         Slow,
+        CancelThenSucceed,
     }
 
     struct FakeDecider {
@@ -1168,11 +1173,15 @@ mod tests {
             &self,
             request: &typesafe::Request,
             _timeout: Duration,
-            _signal: &CancellationToken,
+            signal: &CancellationToken,
         ) -> Result<typesafe::Response, DecisionError> {
             self.calls.fetch_add(1, Ordering::SeqCst);
             match self.behavior {
                 FakeBehavior::Success => Ok(response_for(request)),
+                FakeBehavior::CancelThenSucceed => {
+                    signal.cancel();
+                    Ok(response_for(request))
+                }
                 FakeBehavior::Error => Err(DecisionError::Status { status: 500 }),
                 FakeBehavior::Slow => {
                     tokio::time::sleep(Duration::from_millis(200)).await;
@@ -1262,6 +1271,17 @@ mod tests {
         let result = helper.judge(&batch(&["alpha"]), signal).await;
         assert_eq!(result, HelperOutcome::Abstained(AbstainReason::Cancelled));
         assert_eq!(fake.calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn cancellation_racing_a_ready_response_still_abstains() {
+        let (helper, _) = fake_helper(FakeBehavior::CancelThenSucceed, 1_000);
+        assert_eq!(
+            helper
+                .judge(&batch(&["alpha"]), CancellationToken::new())
+                .await,
+            HelperOutcome::Abstained(AbstainReason::Cancelled)
+        );
     }
 
     #[tokio::test]

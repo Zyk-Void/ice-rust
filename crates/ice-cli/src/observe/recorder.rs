@@ -1075,10 +1075,11 @@ fn memory_title(observation: &Observation) -> String {
         .and_then(serde_json::Value::as_bool)
         == Some(true);
     let outcome = observation.meta.as_ref().and_then(|meta| {
-        (meta
-            .get("outcomeVersion")
-            .and_then(serde_json::Value::as_u64)
-            == Some(1))
+        matches!(
+            meta.get("outcomeVersion")
+                .and_then(serde_json::Value::as_u64),
+            Some(1 | 2)
+        )
         .then(|| meta.get("outcome").and_then(serde_json::Value::as_str))
         .flatten()
     });

@@ -306,6 +306,25 @@ fn observation(request_id: &str, phase: &str) -> Observation {
 }
 
 #[test]
+fn memory_title_reads_outcomes_from_every_supported_version() {
+    for version in [1, 2] {
+        let mut done = observation("r", "succeeded");
+        done.meta = serde_json::json!({"outcomeVersion": version, "outcome": "retrieved_empty"})
+            .as_object()
+            .cloned();
+        assert!(
+            memory_title(&done).contains("retrieved empty"),
+            "v{version}"
+        );
+    }
+    let mut unknown = observation("r", "succeeded");
+    unknown.meta = serde_json::json!({"outcomeVersion": 9, "outcome": "retrieved_empty"})
+        .as_object()
+        .cloned();
+    assert!(!memory_title(&unknown).contains("retrieved empty"));
+}
+
+#[test]
 fn memory_terminal_phase_updates_its_started_item() {
     let sink = Arc::new(MemorySink::default());
     let recorder = recorder_with(Some(sink.clone()));
