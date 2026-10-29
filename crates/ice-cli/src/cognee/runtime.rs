@@ -1999,17 +1999,10 @@ impl CogneeRuntime {
             let _ = self.drain.lock().await;
             return;
         };
-        let client = {
-            let state = self.state();
-            if state.shutting_down {
-                return;
-            }
-            drop(state);
-            match self.live_client() {
-                Some(client) => client,
-                None => return,
-            }
-        };
+        let shutting_down = self.state().shutting_down;
+        if shutting_down || self.live_client().is_none() {
+            return;
+        }
         let dispatch_session = self.state().session_id.clone().unwrap_or_default();
         let dir = self.pending_dir();
         let lease_dir = dir.clone();
@@ -2028,9 +2021,11 @@ impl CogneeRuntime {
         for record in records {
             // Preserve durable authorized intents while disabled, but do not
             // dispatch them until Cognee is enabled again.
-            if self.live_client().is_none() {
+            // Re-read the client: configuration may have changed while this
+            // drain waited for the lease, and the old one must not send.
+            let Some(client) = self.live_client() else {
                 return;
-            }
+            };
             if record.admission_id.is_some()
                 && super::admission::is_completed(
                     &super::admission::receipt_dir(&self.candidates_dir()),
@@ -3111,8 +3106,9 @@ impl CogneeRuntime {
             );
             return;
         }
-        let mut record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
-        record.state = PendingState::InFlight;
+        // Stays Pending until this runtime owns the dispatch lease, so a send
+        // that never starts is not mistaken for an ambiguous in-flight one.
+        let record = create_pending_remember(&safe_text, &dataset, node_set, self.now());
         match enqueue_pending_remember(&dir, &record, limit) {
             Ok(true) => {}
             Ok(false) => {
@@ -7700,6 +7696,15 @@ mod tests {
                 .unwrap()
                 .state,
             PendingState::InFlight
+        );
+        // A write this runtime never started must stay retryable.
+        assert_eq!(
+            records
+                .iter()
+                .find(|item| item.text == "new manual intent")
+                .unwrap()
+                .state,
+            PendingState::Pending
         );
         assert!(holder_transport.sent().is_empty());
         assert!(busy_transport.sent().is_empty());
