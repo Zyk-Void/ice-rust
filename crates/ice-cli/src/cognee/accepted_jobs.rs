@@ -72,23 +72,26 @@ pub(crate) fn persist(directory: &Path, record: &AcceptedJob) -> std::io::Result
             "conflicting acceptance record",
         ));
     }
-    // These are acknowledgments, not proof of indexing, so a full ledger
-    // retires its oldest records instead of failing every later write.
+    // Commit the new record first, then retire the oldest ones beyond the
+    // cap: these are acknowledgments, not proof of indexing, so a full ledger
+    // must not fail every later write, and a failed write must not lose any.
+    write_private_file_atomic(&file, &body)?;
     let mut records: Vec<_> = std::fs::read_dir(directory)?
         .filter_map(Result::ok)
-        .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
+        .filter(|e| e.path().extension().is_some_and(|x| x == "json") && e.path() != file)
         .map(|e| {
             let modified = e.metadata().and_then(|m| m.modified()).ok();
             (modified, e.path())
         })
         .collect();
-    if records.len() >= MAX_RECORDS {
+    if records.len() + 1 > MAX_RECORDS {
         records.sort();
         for (_, old) in records.iter().take(records.len() + 1 - MAX_RECORDS) {
-            std::fs::remove_file(old)?;
+            // Best effort: the new record is already durable.
+            let _ = std::fs::remove_file(old);
         }
     }
-    write_private_file_atomic(&file, &body)
+    Ok(())
 }
 
 #[cfg(test)]
