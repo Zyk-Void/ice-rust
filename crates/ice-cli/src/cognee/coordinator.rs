@@ -177,6 +177,16 @@ impl EvidenceCache {
         self.sequence = self.sequence.wrapping_add(1);
     }
 
+    /// Fresh results for exactly this key. An explicit history request must not
+    /// see results cached by other queries in the same generation.
+    pub(super) fn results_for(&mut self, key: &Key, now: u64) -> Vec<RecallResult> {
+        self.entries.retain(|_, entry| Self::fresh(entry, now));
+        self.entries
+            .get(key)
+            .map(|entry| entry.results.iter().take(128).cloned().collect())
+            .unwrap_or_default()
+    }
+
     pub(super) fn peek(&mut self, dataset: &str, generation: u64, now: u64) -> Vec<RecallResult> {
         self.entries.retain(|_, entry| Self::fresh(entry, now));
         let mut entries: Vec<_> = self
@@ -342,6 +352,29 @@ mod tests {
             score: None,
             provenance: None,
         }
+    }
+
+    #[test]
+    fn exact_key_lookup_ignores_other_queries_in_the_generation() {
+        let mut cache = EvidenceCache::default();
+        let result = |text: &str| RecallResult {
+            text: text.into(),
+            score: None,
+            metadata: None,
+        };
+        let first = EvidenceCache::key("d", "first query", 1);
+        let second = EvidenceCache::key("d", "second query", 1);
+        cache.put(first.clone(), vec![result("from first")], 10);
+        cache.put(second.clone(), vec![result("from second")], 11);
+        let texts = |results: Vec<RecallResult>| -> Vec<String> {
+            results.into_iter().map(|r| r.text).collect()
+        };
+        assert_eq!(texts(cache.results_for(&second, 12)), ["from second"]);
+        assert_eq!(texts(cache.results_for(&first, 12)), ["from first"]);
+        assert_eq!(cache.peek("d", 1, 12).len(), 2);
+        assert!(cache
+            .results_for(&EvidenceCache::key("d", "third query", 1), 12)
+            .is_empty());
     }
 
     #[test]

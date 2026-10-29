@@ -479,10 +479,17 @@ impl CogneeRuntime {
             {
                 return None;
             }
-            let mut results =
+            let now = self.now();
+            let mut results = if explicit {
+                // The search above fetched this query's results; other queries'
+                // cached results are unrelated to it.
+                let key = EvidenceCache::key(&operation.dataset, &query, operation.generation);
+                state.evidence_cache.results_for(&key, now)
+            } else {
                 state
                     .evidence_cache
-                    .peek(&operation.dataset, operation.generation, self.now());
+                    .peek(&operation.dataset, operation.generation, now)
+            };
             results.extend(resident);
             let filter = FilterContext {
                 now_ms: self.now(),
