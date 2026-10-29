@@ -186,6 +186,27 @@ async fn run(harness: &AgentHarness, params: Value) -> Result<AgentToolResult, A
 }
 
 #[tokio::test]
+async fn proxy_surfaces_remote_errors_and_timeouts() {
+    let dir = tempfile::tempdir().unwrap();
+    let command = mcp_fixture::server_executable();
+    let (harness, _manager) = proxy_manager(
+        dir.path(),
+        json!({"command":command,"env":{"ICERS_MCP_TEST_CHILD":"1"},"directTools":false,"requestTimeoutMs":50}),
+    )
+    .await;
+    for (mode, expected) in [
+        ("cognee_404", "HTTP 404"),
+        ("json_rpc_error", "fixture error"),
+        ("timeout", "timed out"),
+    ] {
+        let error = run(&harness, json!({"tool":"echo","args":{"mode":mode}}))
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains(expected), "{mode}: {error}");
+    }
+}
+
+#[tokio::test]
 async fn the_proxy_calls_tools_that_are_not_registered_directly() {
     let dir = tempfile::tempdir().unwrap();
     let command = mcp_fixture::server_executable();
@@ -245,4 +266,96 @@ async fn proxied_calls_need_approval_like_direct_ones() {
     assert!(error.to_string().contains("approval denied"), "{error}");
     let other = run(&harness, json!({"tool":"other"})).await.unwrap();
     assert!(body(&other).contains("hello"), "{}", body(&other));
+}
+
+/// A generic MCP writer is a separate trust boundary from native Cognee
+/// admission: model-authored arguments carry no source span, so only the
+/// server's `approveTools` stands between the model and the remote store. The
+/// direct, `mcp` and `mcpScript` routes all reach it by default; a named list
+/// misses forwarders such as a remote `call_tool` (`other` here); `true` closes
+/// every route, failing closed without an approval UI.
+#[tokio::test(flavor = "multi_thread")]
+async fn generic_mcp_writes_reach_the_server_on_every_route_unless_all_need_approval() {
+    use ice_ai::providers::faux::{FauxProvider, FauxScript};
+    use ice_harness::agent_harness::AgentLane;
+    use ice_harness::types::AgentHarnessOptions;
+    let script = r#"
+        await tools.call("fake_echo", { memory: "script-writer" });
+        await tools.call("fake_other", { memory: "script-forward" });
+        return "done";
+    "#;
+    for (approve, reached) in [
+        (
+            json!(false),
+            &[
+                "direct-writer",
+                "direct-forward",
+                "proxy-writer",
+                "proxy-forward",
+                "script-writer",
+                "script-forward",
+            ][..],
+        ),
+        (
+            json!(["echo"]),
+            &["direct-forward", "proxy-forward", "script-forward"][..],
+        ),
+        (json!(true), &[][..]),
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        let writes = dir.path().join("writes.jsonl");
+        let server = json!({"command":mcp_fixture::server_executable(),"env":{"ICERS_MCP_TEST_CHILD":"1","ICERS_MCP_TEST_WRITES":writes},"approveTools":approve});
+        std::fs::write(
+            dir.path().join("mcp.json"),
+            serde_json::to_vec(&json!({"mcpServers":{"fake":server}})).unwrap(),
+        )
+        .unwrap();
+        let provider = FauxProvider::new(
+            FauxScript::new()
+                .with_tool_call("fake_echo", json!({"memory":"direct-writer"}))
+                .with_tool_call("fake_other", json!({"memory":"direct-forward"}))
+                .with_tool_call(
+                    NAME,
+                    json!({"tool":"fake_echo","args":{"memory":"proxy-writer"}}),
+                )
+                .with_tool_call(
+                    NAME,
+                    json!({"tool":"fake_other","args":{"memory":"proxy-forward"}}),
+                )
+                .with_tool_call(script::NAME, json!({ "code": script }))
+                .with_text("done"),
+        );
+        let approvals = Arc::new(Mutex::new(HashSet::new()));
+        let harness = AgentHarness::create(AgentHarnessOptions {
+            model: provider.default_model().clone(),
+            models: vec![provider],
+            before_tool_call: Some(approval_hook(
+                None,
+                approvals.clone(),
+                UiDialogMailbox::new(),
+            )),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+        let manager = McpManager::new(
+            &harness,
+            &Default::default(),
+            dir.path(),
+            dir.path().into(),
+            false,
+            approvals,
+        );
+        manager.reconnect(None).await.unwrap();
+        harness.prompt_text("remember this", vec![]).await.unwrap();
+        let recorded: Vec<String> = std::fs::read_to_string(&writes)
+            .unwrap_or_default()
+            .lines()
+            .map(|line| {
+                let call: Value = serde_json::from_str(line).unwrap();
+                call["arguments"]["memory"].as_str().unwrap().to_owned()
+            })
+            .collect();
+        assert_eq!(recorded, reached, "approveTools {approve}");
+    }
 }

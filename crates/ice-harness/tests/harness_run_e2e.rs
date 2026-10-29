@@ -977,9 +977,43 @@ async fn directly_sent_prompt_emits_no_user_message_start() {
     );
 }
 
+// Opposite environment settings must not race between the two budget tests.
+static TURN_BUDGET_ENV_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+struct TurnBudgetEnvGuard {
+    previous: Option<std::ffi::OsString>,
+    _lock: tokio::sync::MutexGuard<'static, ()>,
+}
+
+impl TurnBudgetEnvGuard {
+    async fn set(value: Option<u32>) -> Self {
+        let lock = TURN_BUDGET_ENV_LOCK.lock().await;
+        let previous = std::env::var_os(ice_harness::run_budget::MAX_TURNS_ENV);
+        match value {
+            Some(value) => {
+                std::env::set_var(ice_harness::run_budget::MAX_TURNS_ENV, value.to_string())
+            }
+            None => std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV),
+        }
+        Self {
+            previous,
+            _lock: lock,
+        }
+    }
+}
+
+impl Drop for TurnBudgetEnvGuard {
+    fn drop(&mut self) {
+        match &self.previous {
+            Some(value) => std::env::set_var(ice_harness::run_budget::MAX_TURNS_ENV, value),
+            None => std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV),
+        }
+    }
+}
+
 /// The loop's only other exit is "the model stopped asking for tools", which
 /// nothing bounds — one observed session ran 112 turns / 867 s in a single run
-/// (`docs/debugging/llm-repetition-forensics.md` §二). The run budget is the backstop:
+/// (`docs/debugging/llm-repetition-forensics.md`, section 2). The run budget is the backstop:
 /// when a model keeps emitting tool calls forever, the run must end on a known
 /// ceiling and say so, so a truncated task is never mistaken for a finished one.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -987,15 +1021,9 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
     // A model that never stops asking for tools: far more scripted turns than
     // the ceiling, so only the guard can end this run.
     //
-    // The guard is off by default (upstream parity), so this test opts in for
-    // its duration. `std::env` is process-global — this is an integration-test
-    // binary whose other tests never approach the ceiling, so a parallel
-    // harness picking it up is harmless; the value is restored at the end.
-    let previous = std::env::var(ice_harness::run_budget::MAX_TURNS_ENV).ok();
-    std::env::set_var(
-        ice_harness::run_budget::MAX_TURNS_ENV,
-        ice_harness::run_budget::DEFAULT_MAX_TURNS_PER_RUN.to_string(),
-    );
+    // Hold the same panic-safe guard as the test of the opposite default.
+    let _env =
+        TurnBudgetEnvGuard::set(Some(ice_harness::run_budget::DEFAULT_MAX_TURNS_PER_RUN)).await;
 
     let script = FauxScript::new();
     let step = || FauxStep::tool_call("bash", serde_json::json!({ "command": "echo tick" }));
@@ -1079,11 +1107,6 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
         "exactly one budget notice must be recorded; got {notices:?}"
     );
 
-    // Restore the process-wide switch (see the opt-in above).
-    match &previous {
-        Some(value) => std::env::set_var(ice_harness::run_budget::MAX_TURNS_ENV, value),
-        None => std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV),
-    }
     assert!(
         notices[0].contains(&ceiling.to_string()) && notices[0].contains("unfinished"),
         "the notice must name the budget and warn the work may be incomplete: {}",
@@ -1097,8 +1120,7 @@ async fn run_budget_stops_a_looping_run_and_records_why() {
 /// guard by default.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn no_turn_ceiling_by_default_matches_native_pi() {
-    let previous = std::env::var(ice_harness::run_budget::MAX_TURNS_ENV).ok();
-    std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV);
+    let _env = TurnBudgetEnvGuard::set(None).await;
 
     // 199 tool-call turns, then a final plain answer so the loop's own exit
     // condition ("the model stopped asking for tools") is what ends the run.
@@ -1175,11 +1197,6 @@ async fn no_turn_ceiling_by_default_matches_native_pi() {
         notices.is_empty(),
         "an unbounded run must not record a budget notice: {notices:?}"
     );
-
-    match &previous {
-        Some(value) => std::env::set_var(ice_harness::run_budget::MAX_TURNS_ENV, value),
-        None => std::env::remove_var(ice_harness::run_budget::MAX_TURNS_ENV),
-    }
 }
 
 /// A crash mid-stream must not cost the whole run.

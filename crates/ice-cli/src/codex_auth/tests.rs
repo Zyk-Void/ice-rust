@@ -377,7 +377,18 @@ async fn cancellation_aborts_refresh_and_releases_the_store_lock() {
         Some(Credential::Oauth { access, refresh, .. })
             if access == "old-access" && refresh == "old-refresh"
     ));
-    let lock = config::try_lock_auth_store().unwrap().unwrap();
+    // Another process can briefly contend with the released file lock.
+    // Preserve a bounded liveness assertion instead of assuming zero delay.
+    let lock = timeout(Duration::from_secs(3), async {
+        loop {
+            if let Some(lock) = config::try_lock_auth_store().unwrap() {
+                break lock;
+            }
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("cancelled refresh must release the store lock promptly");
     drop(lock);
     let _ = release_response.send(());
 }

@@ -23,8 +23,10 @@
 //! directory drops in and works (the documented intent). Full trust gating is
 //! deferred.
 //!
-//! **Deferred (documented):** `.agents/skills` + `~/.agents/skills`;
-//! shadowed-context-file dedup (`findShadowedContextFile`); full structured
+//! **Not auto-discovered by design:** `.agents/skills` + `~/.agents/skills`.
+//! Importing another tool's skill directory is opt-in: list it in `skillDirs`
+//! (for example `"~/.agents/skills"`; a leading `~` expands to the home
+//! directory). **Deferred (documented):** shadowed-context-file dedup (`findShadowedContextFile`); full structured
 //! winner/loser collision diagnostics (icers v1 encodes collisions as a
 //! `SkillDiagnostic`/`PromptTemplateDiagnostic` with a descriptive message).
 
@@ -243,6 +245,20 @@ pub async fn load_skills_with_precedence(
     let mut structured = Vec::new();
     let raw = std::mem::take(&mut result.skills);
     let _ = dedupe_skills_structured(raw.clone(), &mut structured);
+    let losers: std::collections::HashSet<_> = structured
+        .iter()
+        .filter_map(|diagnostic| match diagnostic {
+            ice_harness::diagnostics::ResourceDiagnostic::Collision(collision) => {
+                Some(collision.loser_path.as_str())
+            }
+            _ => None,
+        })
+        .collect();
+    result.shadowed_skills = raw
+        .iter()
+        .filter(|skill| losers.contains(skill.file_path.as_str()))
+        .cloned()
+        .collect();
     result.skills = dedupe_skills(raw, &mut result.diagnostics);
     result.resource_diagnostics = structured;
     result
@@ -277,6 +293,35 @@ pub fn skill_dirs(cwd: &Path) -> Vec<PathBuf> {
     if let Some(g) = global_dir("skills") {
         dirs.extend(configured_global_dirs(g.clone(), ResourceKind::Skills));
         dirs.push(g);
+    }
+    dirs
+}
+
+/// Classify the roots already used by session discovery without adding new roots.
+pub fn skill_source_dirs(
+    cwd: &Path,
+    project: bool,
+    global: bool,
+    builtin: Vec<PathBuf>,
+) -> crate::capability_catalog::SkillSourceDirs {
+    let mut dirs = crate::capability_catalog::SkillSourceDirs {
+        builtin,
+        ..Default::default()
+    };
+    if project {
+        dirs.project.push(project_dir(cwd, "skills"));
+        dirs.package = crate::packages::project_package_dirs(cwd, "skills");
+        for (_, settings) in crate::settings::load_project_settings_with_paths(cwd) {
+            dirs.settings
+                .extend(configured_paths(&settings, cwd, ResourceKind::Skills));
+        }
+    }
+    if global {
+        if let Some(path) = global_dir("skills") {
+            dirs.settings
+                .extend(configured_global_dirs(path.clone(), ResourceKind::Skills));
+            dirs.global.push(path);
+        }
     }
     dirs
 }

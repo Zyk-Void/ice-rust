@@ -1,12 +1,15 @@
 //! Circuit breakers, the durable pending-remember queue and the session
 //! cache warmup buffer. Ports `ice-cognee.ts` (COG-031..036).
 //!
-//! The queue is not exactly-once: there is no cross-process lock, so two
-//! icers processes can replay the same record. Records marked `uncertain`
-//! (a timed-out or aborted write that may have been accepted) are only
-//! replayed by an explicit `/cognee flush`.
+//! The queue is not exactly-once. A kernel advisory dispatch lease prevents
+//! simultaneous processes from sending the same durable intent. Records marked
+//! `uncertain` (a timed-out or aborted write that may have been accepted) are
+//! only replayed by an explicit `/cognee flush`.
 
+use std::fs::{File, OpenOptions};
 use std::path::{Path, PathBuf};
+
+use fs2::FileExt;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -19,6 +22,32 @@ pub const CIRCUIT_COOLDOWN_MS: u64 = 30_000;
 pub const MAX_WARMUP_ENTRIES: usize = 256;
 pub const WARMUP_DRAIN_BATCH: usize = 16;
 pub const PENDING_DRAIN_BATCH: usize = 4;
+
+/// Exclusive process-wide ownership for dispatch and stale inflight recovery.
+pub struct DispatchLease(File);
+
+impl DispatchLease {
+    pub fn try_acquire(directory: &Path) -> std::io::Result<Option<Self>> {
+        create_private_dir(directory)?;
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(directory.join(".dispatch.lock"))?;
+        match file.try_lock_exclusive() {
+            Ok(()) => Ok(Some(Self(file))),
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+}
+
+impl Drop for DispatchLease {
+    fn drop(&mut self) {
+        let _ = FileExt::unlock(&self.0);
+    }
+}
 
 /// `CircuitState`. No half-open state: after the cooldown every eligible
 /// request may proceed.
@@ -52,6 +81,8 @@ impl CircuitState {
 pub enum PendingState {
     Pending,
     Uncertain,
+    InFlight,
+    Prepared,
 }
 
 /// One replayable permanent-memory write (`PendingRemember`).
@@ -59,6 +90,8 @@ pub enum PendingState {
 #[serde(rename_all = "camelCase")]
 pub struct PendingRemember {
     pub operation_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub admission_id: Option<String>,
     pub content_hash: String,
     pub dataset: String,
     pub node_set: String,
@@ -97,7 +130,7 @@ fn pending_record_path(directory: &Path, operation_id: &str) -> std::io::Result<
 }
 
 /// `createPendingRemember`. The operation id is `<createdAt>-<hash16>`;
-/// dataset and node set are not part of it.
+/// the hash includes the original dataset and node set.
 pub fn create_pending_remember(
     text: &str,
     dataset: &str,
@@ -105,8 +138,10 @@ pub fn create_pending_remember(
     created_at_ms: u64,
 ) -> PendingRemember {
     let content_hash = sha256_hex(text);
+    let semantic_hash = sha256_hex(&format!("{dataset}\0{node_set}\0{text}"));
     PendingRemember {
-        operation_id: format!("{created_at_ms}-{}", &content_hash[..16]),
+        operation_id: format!("{created_at_ms}-{}", &semantic_hash[..16]),
+        admission_id: None,
         content_hash,
         dataset: dataset.into(),
         node_set: node_set.into(),
@@ -143,18 +178,66 @@ pub fn enqueue_pending_remember(
 ) -> std::io::Result<bool> {
     let path = pending_record_path(directory, &record.operation_id)?;
     create_private_dir(directory)?;
-    let files = json_files(directory)?;
-    let filename = format!("{}.json", record.operation_id);
-    if path.exists() {
-        return Ok(true);
-    }
-    if files.len() >= limit {
-        return Ok(false);
-    }
-    write_private_file_atomic(&directory.join(filename), &record_line(record))?;
-    Ok(true)
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(directory.join(".enqueue.lock"))?;
+    lock.lock_exclusive()?;
+    let result = (|| {
+        let files = json_files(directory)?;
+        let filename = format!("{}.json", record.operation_id);
+        if path.exists()
+            || read_pending_remember(directory).iter().any(|existing| {
+                existing.dataset == record.dataset
+                    && existing.node_set == record.node_set
+                    && existing.text == record.text
+            })
+        {
+            return Ok(true);
+        }
+        if files.iter().filter(|name| !name.starts_with('.')).count() >= limit {
+            return Ok(false);
+        }
+        write_private_file_atomic(&directory.join(filename), &record_line(record))?;
+        Ok(true)
+    })();
+    let _ = FileExt::unlock(&lock);
+    result
 }
 
+/// Reserve a non-dispatchable admission operation under the queue capacity lock.
+pub fn reserve_prepared(
+    directory: &Path,
+    record: &PendingRemember,
+    limit: usize,
+) -> std::io::Result<bool> {
+    let path = pending_record_path(directory, &record.operation_id)?;
+    create_private_dir(directory)?;
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(directory.join(".enqueue.lock"))?;
+    lock.lock_exclusive()?;
+    let result = (|| {
+        if path.exists() {
+            return Ok(true);
+        }
+        let files = json_files(directory)?;
+        if files.iter().filter(|name| !name.starts_with('.')).count() >= limit {
+            return Ok(false);
+        }
+        let mut prepared = record.clone();
+        prepared.state = PendingState::Prepared;
+        write_private_file_atomic(&path, &record_line(&prepared))?;
+        Ok(true)
+    })();
+    let _ = FileExt::unlock(&lock);
+    result
+}
 /// Valid records in filename order; unreadable or malformed files are
 /// skipped and left in place.
 pub fn read_pending_remember(directory: &Path) -> Vec<PendingRemember> {
@@ -213,6 +296,28 @@ pub fn remove_pending_remember(directory: &Path, operation_id: &str) -> std::io:
     }
 }
 
+/// Mark interrupted writes as uncertain so they are never replayed automatically.
+pub fn recover_inflight(directory: &Path) -> usize {
+    let Ok(Some(_lease)) = DispatchLease::try_acquire(directory) else {
+        return 0;
+    };
+    let records = read_pending_remember(directory);
+    let mut recovered = 0;
+    for record in records {
+        if record.state == PendingState::InFlight
+            && update_pending_remember_state(
+                directory,
+                &record.operation_id,
+                PendingState::Uncertain,
+            )
+            .is_ok()
+        {
+            recovered += 1;
+        }
+    }
+    recovered
+}
+
 /// The records a drain would send: pending ones (and uncertain ones when
 /// allowed), first `PENDING_DRAIN_BATCH` in filename order.
 pub fn select_drain_batch(directory: &Path, allow_uncertain: bool) -> Vec<PendingRemember> {
@@ -220,7 +325,11 @@ pub fn select_drain_batch(directory: &Path, allow_uncertain: bool) -> Vec<Pendin
         .into_iter()
         .filter(|record| {
             record.state == PendingState::Pending
-                || (allow_uncertain && record.state == PendingState::Uncertain)
+                || (allow_uncertain
+                    && matches!(
+                        record.state,
+                        PendingState::Uncertain | PendingState::InFlight
+                    ))
         })
         .take(PENDING_DRAIN_BATCH)
         .collect()
@@ -233,6 +342,7 @@ pub struct WarmupRecord {
     pub session_id: String,
     pub dataset: Option<String>,
     pub entry: Map<String, Value>,
+    pub state: PendingState,
 }
 
 /// Buffer a failed cache write; silently dropped past `MAX_WARMUP_ENTRIES`
@@ -244,58 +354,108 @@ pub fn buffer_warmup_entry(
     entry: &Map<String, Value>,
     now_ms: u64,
 ) {
+    buffer_warmup_entry_with_state(
+        directory,
+        session_id,
+        dataset,
+        entry,
+        now_ms,
+        PendingState::Pending,
+    );
+}
+
+/// Keep an ambiguous cache write locally without making it automatically replayable.
+pub fn buffer_warmup_entry_with_state(
+    directory: &Path,
+    session_id: &str,
+    dataset: &str,
+    entry: &Map<String, Value>,
+    now_ms: u64,
+    state: PendingState,
+) {
     let write = || -> std::io::Result<()> {
-        std::fs::create_dir_all(directory)?;
+        create_private_dir(directory)?;
+        let lock = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(directory.join(".warmup.lock"))?;
+        lock.lock_exclusive()?;
         if json_files(directory)?.len() >= MAX_WARMUP_ENTRIES {
             return Ok(());
         }
-        let id = uuid::Uuid::new_v4().to_string();
-        let path = directory.join(format!("{now_ms}-{}.json", &id[..8]));
-        let line = format!(
-            "{}\n",
-            serde_json::json!({"sessionId": session_id, "dataset": dataset, "entry": entry})
-        );
-        let mut options = std::fs::OpenOptions::new();
-        options.write(true).create(true).truncate(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        use std::io::Write;
-        options.open(path)?.write_all(line.as_bytes())
+        let path = directory.join(format!("{now_ms}-{}.json", uuid::Uuid::new_v4()));
+        write_private_file_atomic(
+            &path,
+            &serde_json::json!({
+                "sessionId":session_id,"dataset":dataset,"entry":entry,"state":state,
+            })
+            .to_string(),
+        )
     };
     let _ = write();
+}
+
+/// Caller must hold the directory's dispatch lease when mutating replay state.
+pub fn set_warmup_state(record: &WarmupRecord, state: PendingState) -> std::io::Result<()> {
+    write_private_file_atomic(&record.path, &serde_json::json!({
+        "sessionId":record.session_id,"dataset":record.dataset,"entry":record.entry,"state":state,
+    }).to_string())
 }
 
 /// Up to `WARMUP_DRAIN_BATCH` buffered records in directory order. Files
 /// that do not parse or lack a session id or entry are skipped and kept.
 pub fn read_warmup_batch(directory: &Path) -> Vec<WarmupRecord> {
+    read_warmup_records(directory, false)
+}
+
+/// A bounded scan skips uncertain/inflight records without starving later pending work.
+pub fn read_replayable_warmup_batch(directory: &Path) -> Vec<WarmupRecord> {
+    read_warmup_records(directory, true)
+}
+
+fn read_warmup_records(directory: &Path, pending_only: bool) -> Vec<WarmupRecord> {
     let Ok(files) = json_files(directory) else {
         return Vec::new();
     };
     files
         .into_iter()
-        .take(WARMUP_DRAIN_BATCH)
+        .take(MAX_WARMUP_ENTRIES)
         .filter_map(|file| {
             let path = directory.join(file);
+            let metadata = std::fs::symlink_metadata(&path).ok()?;
+            if !metadata.file_type().is_file() || metadata.len() > 1024 * 1024 {
+                return None;
+            }
             let value: Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
             let session_id = value
                 .get("sessionId")
                 .and_then(Value::as_str)
-                .filter(|id| !id.is_empty())?
-                .to_string();
+                .filter(|s| !s.is_empty())?
+                .to_owned();
             let entry = value.get("entry").and_then(Value::as_object)?.clone();
+            let state = match value.get("state") {
+                None => PendingState::Uncertain, // legacy outcomes were not recorded; preserve, never blindly replay
+                Some(value) => {
+                    serde_json::from_value(value.clone()).unwrap_or(PendingState::Uncertain)
+                }
+            };
+            if pending_only && state != PendingState::Pending {
+                return None;
+            }
             Some(WarmupRecord {
                 path,
                 session_id,
                 dataset: value
                     .get("dataset")
                     .and_then(Value::as_str)
-                    .map(str::to_string),
+                    .map(str::to_owned),
                 entry,
+                state,
             })
         })
+        .take(WARMUP_DRAIN_BATCH)
         .collect()
 }
 
@@ -303,6 +463,56 @@ pub fn read_warmup_batch(directory: &Path) -> Vec<WarmupRecord> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    #[ignore]
+    fn dispatch_lease_child() {
+        let Ok(directory) = std::env::var("ICERS_DISPATCH_LEASE_CHILD") else {
+            return;
+        };
+        assert!(DispatchLease::try_acquire(Path::new(&directory))
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn dispatch_lease_excludes_another_process() {
+        use std::process::{Command, Stdio};
+        use std::time::{Duration, Instant};
+
+        let directory = tempfile::tempdir().unwrap();
+        let owner = DispatchLease::try_acquire(directory.path())
+            .unwrap()
+            .unwrap();
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "cognee::queue::tests::dispatch_lease_child",
+                "--ignored",
+                "--nocapture",
+            ])
+            .env("ICERS_DISPATCH_LEASE_CHILD", directory.path())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            if let Some(status) = child.try_wait().unwrap() {
+                assert!(status.success(), "child test exited with {status}");
+                break;
+            }
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                panic!("child test exceeded bounded wait");
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        drop(owner);
+        assert!(DispatchLease::try_acquire(directory.path())
+            .unwrap()
+            .is_some());
+    }
 
     #[test]
     fn circuit_opens_after_three_failures_and_resets() {
@@ -325,24 +535,94 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let pending = dir.path().join("pending");
         let first = create_pending_remember("fact", "ice", "user_context", 42);
-        assert_eq!(
-            first.operation_id,
-            format!("42-{}", &sha256_hex("fact")[..16])
-        );
+        let semantic_hash = sha256_hex("ice\0user_context\0fact");
+        assert_eq!(first.content_hash, sha256_hex("fact"));
+        assert_eq!(first.operation_id, format!("42-{}", &semantic_hash[..16]));
         assert!(enqueue_pending_remember(&pending, &first, 1).unwrap());
         assert!(enqueue_pending_remember(&pending, &first, 1).unwrap());
+        update_pending_remember_state(&pending, &first.operation_id, PendingState::Uncertain)
+            .unwrap();
         let second = create_pending_remember("other", "ice", "user_context", 43);
         assert!(!enqueue_pending_remember(&pending, &second, 1).unwrap());
+        let same_scope_new_time = create_pending_remember("fact", "ice", "user_context", 43);
+        assert!(enqueue_pending_remember(&pending, &same_scope_new_time, 1).unwrap());
+        assert_eq!(read_pending_remember(&pending).len(), 1);
+        let other_dataset = create_pending_remember("fact", "other", "user_context", 43);
+        assert!(enqueue_pending_remember(&pending, &other_dataset, 2).unwrap());
+        let other_node_set = create_pending_remember("fact", "ice", "project_docs", 43);
+        assert!(enqueue_pending_remember(&pending, &other_node_set, 3).unwrap());
+        assert_eq!(read_pending_remember(&pending).len(), 3);
         let text =
             std::fs::read_to_string(pending.join(format!("{}.json", first.operation_id))).unwrap();
         assert!(text.starts_with("{\"operationId\":\"42-"));
-        assert!(text.ends_with("\"state\":\"pending\",\"text\":\"fact\"}\n"));
+        assert!(text.ends_with("\"state\":\"uncertain\",\"text\":\"fact\"}\n"));
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             let mode = std::fs::metadata(&pending).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o700);
         }
+    }
+
+    #[test]
+    fn old_pending_and_uncertain_records_still_load() {
+        let dir = tempfile::tempdir().unwrap();
+        let pending = dir.path();
+        let legacy_pending = r#"{"operationId":"1-2d711642b726b044","contentHash":"2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881","dataset":"ice","nodeSet":"user_context","createdAt":1,"state":"pending","text":"x"}"#;
+        let legacy_uncertain = r#"{"operationId":"2-2d711642b726b044","contentHash":"2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881","dataset":"ice","nodeSet":"user_context","createdAt":2,"state":"uncertain","text":"x"}"#;
+        std::fs::write(pending.join("1-2d711642b726b044.json"), legacy_pending).unwrap();
+        std::fs::write(pending.join("2-2d711642b726b044.json"), legacy_uncertain).unwrap();
+
+        let records = read_pending_remember(pending);
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0].state, PendingState::Pending);
+        assert_eq!(records[1].state, PendingState::Uncertain);
+        assert_eq!(select_drain_batch(pending, false).len(), 1);
+        assert_eq!(select_drain_batch(pending, true).len(), 2);
+    }
+
+    #[test]
+    fn live_dispatch_owner_blocks_second_owner_and_recovery() {
+        let dir = tempfile::tempdir().unwrap();
+        let record = create_pending_remember("fact", "ice", "user_context", 1);
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        assert!(enqueue_pending_remember(dir.path(), &inflight, 4).unwrap());
+        let owner = DispatchLease::try_acquire(dir.path()).unwrap().unwrap();
+        assert!(DispatchLease::try_acquire(dir.path()).unwrap().is_none());
+        assert_eq!(recover_inflight(dir.path()), 0);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::InFlight
+        );
+        drop(owner);
+        assert_eq!(recover_inflight(dir.path()), 1);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::Uncertain
+        );
+    }
+
+    #[test]
+    fn inflight_recovery_and_flush_selection() {
+        let dir = tempfile::tempdir().unwrap();
+        let record = create_pending_remember("fact", "ice", "user_context", 1);
+        let mut inflight = record.clone();
+        inflight.state = PendingState::InFlight;
+        assert!(enqueue_pending_remember(dir.path(), &inflight, 4).unwrap());
+        assert!(select_drain_batch(dir.path(), false).is_empty());
+        assert_eq!(recover_inflight(dir.path()), 1);
+        assert_eq!(
+            read_pending_remember(dir.path())[0].state,
+            PendingState::Uncertain
+        );
+        assert!(select_drain_batch(dir.path(), false).is_empty());
+
+        update_pending_remember_state(dir.path(), &record.operation_id, PendingState::InFlight)
+            .unwrap();
+        assert!(select_drain_batch(dir.path(), true)
+            .iter()
+            .any(|entry| entry.state == PendingState::InFlight));
     }
 
     #[test]

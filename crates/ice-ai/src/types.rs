@@ -7,6 +7,7 @@
 //! only produces/consumes these.
 
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 use std::collections::BTreeMap;
 
 /// A newtype wrapping a JSON Schema value. Tools carry their parameters schema here
@@ -566,6 +567,27 @@ pub struct UserMessage {
     pub role: UserRole,
     pub content: UserContent,
     pub timestamp: i64,
+    #[serde(skip)]
+    pub origin: Option<PromptOrigin>,
+}
+
+/// Host-side provenance for prompts expanded before reaching the model.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PromptOrigin {
+    pub raw_text: String,
+    pub fingerprint: String,
+    pub expansion_kind: String,
+    pub version: u8,
+}
+
+impl PromptOrigin {
+    const MAX_RAW_TEXT_BYTES: usize = 16 * 1024;
+
+    fn fingerprint(content: &UserContent, timestamp: i64) -> Option<String> {
+        let bytes = serde_json::to_vec(&(content, timestamp)).ok()?;
+        Some(format!("{:x}", sha2::Sha256::digest(bytes)))
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -593,7 +615,39 @@ impl UserMessage {
             role: UserRole,
             content: content.into(),
             timestamp,
+            origin: None,
         }
+    }
+
+    pub fn with_origin(
+        mut self,
+        raw_text: impl Into<String>,
+        expansion_kind: impl Into<String>,
+    ) -> Self {
+        let raw_text = raw_text.into();
+        if raw_text.len() > PromptOrigin::MAX_RAW_TEXT_BYTES {
+            return self;
+        }
+        if let Some(fingerprint) = PromptOrigin::fingerprint(&self.content, self.timestamp) {
+            self.origin = Some(PromptOrigin {
+                raw_text,
+                fingerprint,
+                expansion_kind: expansion_kind.into(),
+                version: 1,
+            });
+        }
+        self
+    }
+
+    /// Return the original prompt only while this message still matches its attachment.
+    pub fn original_prompt(&self) -> Option<&str> {
+        let origin = self.origin.as_ref()?;
+        if origin.version != 1 || origin.raw_text.len() > PromptOrigin::MAX_RAW_TEXT_BYTES {
+            return None;
+        }
+        (PromptOrigin::fingerprint(&self.content, self.timestamp).as_deref()
+            == Some(origin.fingerprint.as_str()))
+        .then_some(origin.raw_text.as_str())
     }
 }
 

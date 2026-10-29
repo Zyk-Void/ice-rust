@@ -985,6 +985,7 @@ impl TuiState {
         let colors = current_theme().colors;
         container.add_child(Arc::new(Spacer::new(1)));
         for text in &messages.steering {
+            let text = skill_display_text(text);
             container.add_child(Arc::new(Text::new(
                 colors.muted.fg(&format!("Steering: {text}")),
                 1,
@@ -992,6 +993,7 @@ impl TuiState {
             )));
         }
         for text in &messages.follow_up {
+            let text = skill_display_text(text);
             container.add_child(Arc::new(Text::new(
                 colors.muted.fg(&format!("Follow-up: {text}")),
                 1,
@@ -1407,12 +1409,25 @@ impl TuiState {
         }
     }
 
-    pub(super) fn queue_image(&self, image: ice_ai::types::ImageContent) {
-        self.pending_images.lock().unwrap().push(image);
+    pub(super) fn queue_image(&self, image: ice_ai::types::ImageContent) -> usize {
+        let mut pending = self.pending_images.lock().unwrap();
+        pending.push(image);
+        pending.len()
     }
 
     pub(super) fn take_pending_images(&self) -> Vec<ice_ai::types::ImageContent> {
         std::mem::take(&mut *self.pending_images.lock().unwrap())
+    }
+
+    /// Take the pending images for a submitted prompt, dropping any whose
+    /// `[Image #N]` marker the user deleted from the draft.
+    pub(super) fn take_prompt_images(&self, prompt: &str) -> Vec<ice_ai::types::ImageContent> {
+        self.take_pending_images()
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| prompt.contains(&image_marker(i + 1)))
+            .map(|(_, image)| image)
+            .collect()
     }
 
     pub(super) fn restore_pending_images(&self, mut images: Vec<ice_ai::types::ImageContent>) {

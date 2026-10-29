@@ -246,6 +246,10 @@ impl AgentHarness {
                 }
             })?;
         self.finish_context_writes(&run_id, None).await?;
+        if matches!(outcome, NavigationOutcome::Completed { .. }) {
+            let mut inner = self.inner.lock().unwrap();
+            inner.navigation_epoch = inner.navigation_epoch.wrapping_add(1);
+        }
         Ok(NavigationResult { run_id, outcome })
     }
 

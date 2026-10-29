@@ -7,7 +7,7 @@
 //! responses without a network, as the TypeScript client injects `fetch`.
 
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use futures::{Stream, StreamExt};
@@ -22,6 +22,35 @@ pub const MAX_SETTINGS_RESPONSE_BYTES: usize = 64 * 1024;
 pub const MAX_ERROR_RESPONSE_BYTES: usize = 4 * 1024;
 const RECALL_PREREQUISITES_ERROR: &str = "Recall prerequisites not met";
 const MAX_GRAPH_NODE_CHARS: usize = 400;
+
+/// HTTP acceptance only. A returned handle is opaque; this adapter never
+/// guesses a polling endpoint or treats the job as completed/searchable.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcceptedReceipt {
+    pub job_id: Option<String>,
+}
+
+async fn read_accepted_receipt(response: &mut HttpResponse) -> AcceptedReceipt {
+    let Ok(Ok(value)) =
+        tokio::time::timeout(Duration::from_millis(250), read_json(response, 4096)).await
+    else {
+        return AcceptedReceipt::default();
+    };
+    let job_id = ["job_id", "jobId", "task_id", "taskId"]
+        .into_iter()
+        .find_map(|key| value.get(key).and_then(Value::as_str))
+        .filter(|id| {
+            !id.is_empty()
+                && id.len() <= 128
+                && id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b':'))
+                && super::text::redact_credential_text(id) == *id
+        })
+        .map(str::to_owned);
+    AcceptedReceipt { job_id }
+}
 
 /// `CogneeErrorKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -526,10 +555,13 @@ pub fn condense_graph_context(text: &str) -> String {
     }
 }
 
+/// Preserve complete graph records and their supplied metadata. The backend's
+/// result-object count and normalized record count are separate quantities.
+/// Labels are untrusted source labels, not verified IDs or applicability.
 pub fn normalize_recall(payload: &Value) -> Result<Vec<RecallResult>, CogneeError> {
     let values = match payload {
         Value::Array(items) => Some(items),
-        Value::Object(map) => match map.get("results").filter(|v| !v.is_null()) {
+        Value::Object(map) => match map.get("results").filter(|value| !value.is_null()) {
             Some(Value::Array(items)) => Some(items),
             Some(_) => None,
             None => map.get("data").and_then(Value::as_array),
@@ -542,36 +574,138 @@ pub fn normalize_recall(payload: &Value) -> Result<Vec<RecallResult>, CogneeErro
             "Cognee recall returned an unexpected shape",
         )
     })?;
-    Ok(values
-        .iter()
-        .filter_map(|value| match value {
-            Value::String(text) => Some(RecallResult {
-                text: text.clone(),
-                score: None,
-                metadata: None,
-            }),
+    let mut normalized = Vec::new();
+    for (object_index, value) in values.iter().take(128).enumerate() {
+        let (raw, score, mut metadata) = match value {
+            Value::String(text) => (text.as_str(), None, serde_json::Map::new()),
             Value::Object(item) => {
-                let raw = item
+                let Some(text) = item
                     .get("text")
                     .and_then(Value::as_str)
-                    .or_else(|| item.get("content").and_then(Value::as_str))?;
-                let text = condense_graph_context(raw);
-                if text.is_empty() {
-                    return None;
+                    .or_else(|| item.get("content").and_then(Value::as_str))
+                else {
+                    continue;
+                };
+                let mut metadata = match item.get("metadata") {
+                    Some(Value::Object(metadata)) => metadata.clone(),
+                    None | Some(Value::Null) => serde_json::Map::new(),
+                    Some(_) => {
+                        let mut metadata = serde_json::Map::new();
+                        metadata.insert("invalid_applicability_metadata".into(), json!(true));
+                        metadata
+                    }
+                };
+                for key in [
+                    "id",
+                    "source_id",
+                    "source_entry_id",
+                    "sourceEntryId",
+                    "source_uri",
+                    "dataset",
+                    "dataset_name",
+                    "datasetName",
+                    "branch",
+                    "git_branch",
+                    "revision",
+                    "git_revision",
+                    "commit_sha",
+                    "worktree_id",
+                    "worktreeId",
+                    "expires_at",
+                    "expiresAt",
+                    "valid_until_ms",
+                    "validUntilMs",
+                    "expires_at_ms",
+                    "superseded",
+                    "superseded_by",
+                    "deleted",
+                    "source_truncated",
+                ] {
+                    if let Some(value) = item.get(key) {
+                        if metadata.get(key).is_some_and(|old| old != value) {
+                            metadata.insert("invalid_applicability_metadata".into(), json!(true));
+                        } else {
+                            metadata.insert(key.into(), value.clone());
+                        }
+                    }
                 }
-                Some(RecallResult {
-                    text,
-                    score: item.get("score").and_then(Value::as_f64),
-                    metadata: item
-                        .get("metadata")
-                        .filter(|metadata| metadata.is_object() || metadata.is_array())
-                        .cloned(),
-                })
+                (text, item.get("score").and_then(Value::as_f64), metadata)
             }
-            Value::Array(_) => None,
-            _ => None,
+            _ => continue,
+        };
+        if raw.trim().is_empty() {
+            continue;
+        }
+        metadata.insert("backend_result_objects".into(), json!(values.len()));
+        metadata.insert("backend_object_index".into(), json!(object_index));
+        if raw.contains("__node_content_start__") {
+            if raw.matches("__node_content_start__").count()
+                != raw.matches("__node_content_end__").count()
+            {
+                return Err(CogneeError::new(
+                    CogneeErrorKind::Malformed,
+                    "Cognee graph record is incomplete",
+                ));
+            }
+            let nodes =
+                regex!(r"Node: ([^\n]*)\n__node_content_start__\n((?s:.)*?)\n__node_content_end__");
+            let mut found = false;
+            for (node_index, node) in nodes.captures_iter(raw).take(64).enumerate() {
+                found = true;
+                let title = node[1].trim();
+                let body = node[2].trim();
+                if body.is_empty() || body == title {
+                    continue;
+                }
+                let mut node_metadata = metadata.clone();
+                node_metadata.insert(
+                    "graph_node_label".into(),
+                    json!(title.chars().take(256).collect::<String>()),
+                );
+                node_metadata.insert("graph_node_index".into(), json!(node_index));
+                normalized.push(RecallResult {
+                    text: body.into(),
+                    score,
+                    metadata: Some(Value::Object(node_metadata)),
+                });
+                if normalized.len() >= 128 {
+                    break;
+                }
+            }
+            if !found {
+                return Err(CogneeError::new(
+                    CogneeErrorKind::Malformed,
+                    "Cognee graph record has an unsupported envelope",
+                ));
+            }
+        } else {
+            normalized.push(RecallResult {
+                text: raw.into(),
+                score,
+                metadata: Some(Value::Object(metadata)),
+            });
+        }
+        if normalized.len() >= 128 {
+            break;
+        }
+    }
+    Ok(normalized)
+}
+
+/// Unknown for synthetic/legacy empty results; do not equate graph snippets
+/// with backend result objects or imply relevant facts from this count.
+pub fn backend_object_count(results: &[RecallResult]) -> Option<usize> {
+    results
+        .iter()
+        .filter_map(|result| {
+            result
+                .metadata
+                .as_ref()?
+                .get("backend_result_objects")?
+                .as_u64()
         })
-        .collect())
+        .max()
+        .and_then(|count| usize::try_from(count).ok())
 }
 
 /// Client configuration (`CogneeClientConfig`).
@@ -607,16 +741,117 @@ pub struct ServerModel {
     pub model: Option<String>,
 }
 
+/// Last completed outcome and bounded counters for one operation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OperationOutcome {
+    pub class: &'static str,
+    pub attempts: u64,
+    pub consecutive_failures: u64,
+}
+
+impl Default for OperationOutcome {
+    fn default() -> Self {
+        Self {
+            class: "never_called",
+            attempts: 0,
+            consecutive_failures: 0,
+        }
+    }
+}
+
+impl OperationOutcome {
+    fn record<T>(&mut self, result: &Result<T, CogneeError>, not_found: bool) {
+        self.class = if not_found
+            && (result.is_ok()
+                || result
+                    .as_ref()
+                    .is_err_and(|error| error.kind == CogneeErrorKind::NotFound))
+        {
+            "not_found"
+        } else {
+            match result {
+                Ok(_) => "ok",
+                Err(error) if error.status == Some(422) => "invalid_request",
+                Err(error) if error.kind == CogneeErrorKind::ResponseTooLarge => "too_large",
+                Err(error) => error.kind.as_str(),
+            }
+        };
+        self.attempts = self.attempts.saturating_add(1);
+        self.consecutive_failures = if self.class == "ok" {
+            0
+        } else {
+            self.consecutive_failures.saturating_add(1)
+        };
+    }
+}
+
+/// A point-in-time snapshot of the four native operations.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct OperationOutcomesSnapshot {
+    pub recall: OperationOutcome,
+    pub remember: OperationOutcome,
+    pub remember_entry: OperationOutcome,
+    pub improve: OperationOutcome,
+}
+
+impl std::fmt::Display for OperationOutcomesSnapshot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, (name, outcome)) in [
+            ("recall", &self.recall),
+            ("remember", &self.remember),
+            ("remember_entry", &self.remember_entry),
+            ("improve", &self.improve),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            if index > 0 {
+                f.write_str(",")?;
+            }
+            write!(f, "{}:{}", name, outcome.class)?;
+            if outcome.attempts > 0 {
+                write!(f, "({})", outcome.attempts)?;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// The memory client used by the extension runtime.
 #[derive(Clone)]
 pub struct CogneeClient {
     pub config: ClientConfig,
     transport: Arc<dyn CogneeTransport>,
+    outcomes: Arc<Mutex<OperationOutcomesSnapshot>>,
 }
 
 impl CogneeClient {
     pub fn new(config: ClientConfig, transport: Arc<dyn CogneeTransport>) -> Self {
-        Self { config, transport }
+        Self {
+            config,
+            transport,
+            outcomes: Arc::new(Mutex::new(OperationOutcomesSnapshot::default())),
+        }
+    }
+
+    pub fn operation_outcomes(&self) -> OperationOutcomesSnapshot {
+        self.outcomes
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+
+    fn record_outcome<T>(
+        &self,
+        select: fn(&mut OperationOutcomesSnapshot) -> &mut OperationOutcome,
+        result: &Result<T, CogneeError>,
+        not_found: bool,
+    ) {
+        let mut outcomes = self
+            .outcomes
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        select(&mut outcomes).record(result, not_found);
     }
 
     fn json_post(&self, path: &str, body: Value) -> Result<HttpRequest, CogneeError> {
@@ -629,65 +864,91 @@ impl CogneeClient {
     }
 
     /// Context-only recall for one dataset, optionally including the session
-    /// cache. Text is capped cumulatively at `max_response_chars`; metadata
-    /// is not.
+    /// cache. Complete records are fitted cumulatively; oversized facts are
+    /// dropped intact rather than stripped of conditions. Metadata is bounded.
     pub async fn recall(
         &self,
         query: &str,
         options: RecallOptions,
     ) -> Result<Vec<RecallResult>, CogneeError> {
-        let scope = if options.scope.is_empty() {
-            vec!["session".to_string(), "trace".into(), "graph".into()]
-        } else {
-            options.scope.clone()
-        };
-        let top_k = options.top_k.unwrap_or(5);
-        let mut body = json!({
-            "query": query,
-            "topK": top_k,
-            "onlyContext": true,
-            "scope": scope,
-        });
-        if let Some(session) = options.session_id.as_ref().filter(|id| !id.is_empty()) {
-            body["sessionId"] = json!(session);
+        let not_found = std::sync::atomic::AtomicBool::new(false);
+        let result = async {
+            let scope = if options.scope.is_empty() {
+                vec!["session".to_string(), "trace".into(), "graph".into()]
+            } else {
+                options.scope.clone()
+            };
+            let top_k = options.top_k.unwrap_or(5);
+            let mut body = json!({
+                "query": query,
+                "topK": top_k,
+                "onlyContext": true,
+                "scope": scope,
+            });
+            if let Some(session) = options.session_id.as_ref().filter(|id| !id.is_empty()) {
+                body["sessionId"] = json!(session);
+            }
+            body["datasets"] = json!([options
+                .dataset
+                .clone()
+                .unwrap_or_else(|| self.config.dataset.clone())]);
+            let http = self.json_post("/api/v1/recall", body)?;
+            let observed_not_found = &not_found;
+            let payload = request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(self.config.recall_budget_ms),
+                |mut response| async move {
+                    observed_not_found
+                        .store(response.status == 404, std::sync::atomic::Ordering::Relaxed);
+                    if is_uncognified_dataset(&mut response).await {
+                        return Ok(Value::Array(Vec::new()));
+                    }
+                    assert_ok(&response, "recall")?;
+                    read_json(&mut response, MAX_RECALL_RESPONSE_BYTES).await
+                },
+            )
+            .await?;
+            let results = normalize_recall(&payload)?;
+            let mut remaining = self.config.max_response_chars;
+            Ok(results
+                .into_iter()
+                .filter_map(|mut result| {
+                    if remaining == 0 {
+                        return None;
+                    }
+                    let text = drop_null_lines(&result.text);
+                    if text.is_empty()
+                        || len16(&text) > remaining
+                        || result
+                            .metadata
+                            .as_ref()
+                            .is_some_and(|metadata| metadata.to_string().len() > 4096)
+                    {
+                        return None;
+                    }
+                    remaining = remaining.saturating_sub(len16(&text));
+                    result.text = text;
+                    if let Some(metadata) = result.metadata.as_mut().and_then(Value::as_object_mut)
+                    {
+                        metadata.insert(
+                            "retrieved_dataset".into(),
+                            json!(options.dataset.as_deref().unwrap_or(&self.config.dataset)),
+                        );
+                    }
+                    Some(result)
+                })
+                .take(top_k as usize)
+                .collect())
         }
-        body["datasets"] = json!([options
-            .dataset
-            .clone()
-            .unwrap_or_else(|| self.config.dataset.clone())]);
-        let http = self.json_post("/api/v1/recall", body)?;
-        let payload = request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(self.config.recall_budget_ms),
-            |mut response| async move {
-                if is_uncognified_dataset(&mut response).await {
-                    return Ok(Value::Array(Vec::new()));
-                }
-                assert_ok(&response, "recall")?;
-                read_json(&mut response, MAX_RECALL_RESPONSE_BYTES).await
-            },
-        )
-        .await?;
-        let results = normalize_recall(&payload)?;
-        let mut remaining = self.config.max_response_chars;
-        Ok(results
-            .into_iter()
-            .take(top_k as usize)
-            .filter_map(|mut result| {
-                if remaining == 0 {
-                    return None;
-                }
-                let text = prefix16(&drop_null_lines(&result.text), remaining).to_string();
-                remaining = remaining.saturating_sub(len16(&text));
-                if text.is_empty() {
-                    return None;
-                }
-                result.text = text;
-                Some(result)
-            })
-            .collect())
+        .await;
+        self.record_outcome(
+            |outcomes| &mut outcomes.recall,
+            &result,
+            not_found.load(std::sync::atomic::Ordering::Relaxed),
+        );
+        result
     }
 
     /// Background ingestion into a dataset/node set. Success means accepted.
@@ -699,56 +960,90 @@ impl CogneeClient {
         session_id: Option<&str>,
         options: CallOptions,
     ) -> Result<(), CogneeError> {
-        let mut parts = vec![
-            FormPart {
-                name: "datasetName".into(),
-                value: dataset.unwrap_or(&self.config.dataset).into(),
-                filename: None,
-                content_type: None,
-            },
-            FormPart {
-                name: "node_set".into(),
-                value: node_set.into(),
-                filename: None,
-                content_type: None,
-            },
-            FormPart {
-                name: "run_in_background".into(),
-                value: "true".into(),
-                filename: None,
-                content_type: None,
-            },
-        ];
-        if let Some(session) = session_id.filter(|id| !id.is_empty()) {
+        self.remember_with_receipt(text, node_set, dataset, session_id, options)
+            .await
+            .map(|_| ())
+    }
+
+    /// Preserve a bounded optional job handle without inferring completion.
+    pub async fn remember_with_receipt(
+        &self,
+        text: &str,
+        node_set: &str,
+        dataset: Option<&str>,
+        session_id: Option<&str>,
+        options: CallOptions,
+    ) -> Result<AcceptedReceipt, CogneeError> {
+        let accepted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let acceptance_flag = accepted.clone();
+        let result = async {
+            let mut parts = vec![
+                FormPart {
+                    name: "datasetName".into(),
+                    value: dataset.unwrap_or(&self.config.dataset).into(),
+                    filename: None,
+                    content_type: None,
+                },
+                FormPart {
+                    name: "node_set".into(),
+                    value: node_set.into(),
+                    filename: None,
+                    content_type: None,
+                },
+                FormPart {
+                    name: "run_in_background".into(),
+                    value: "true".into(),
+                    filename: None,
+                    content_type: None,
+                },
+            ];
+            if let Some(session) = session_id.filter(|id| !id.is_empty()) {
+                parts.push(FormPart {
+                    name: "session_id".into(),
+                    value: session.into(),
+                    filename: None,
+                    content_type: None,
+                });
+            }
             parts.push(FormPart {
-                name: "session_id".into(),
-                value: session.into(),
-                filename: None,
-                content_type: None,
+                name: "data".into(),
+                value: text.into(),
+                filename: Some("ice-cognee.txt".into()),
+                content_type: Some("text/plain".into()),
             });
+            let http = HttpRequest {
+                method: Method::Post,
+                url: build_url(&self.config.base_url, "/api/v1/remember")?,
+                headers: headers(self.config.api_key.as_deref(), None),
+                body: Body::Multipart(parts),
+            };
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options
+                    .timeout_ms
+                    .unwrap_or(self.config.recall_budget_ms.max(30_000)),
+                |mut response| async move {
+                    assert_ok(&response, "remember")?;
+                    acceptance_flag.store(true, std::sync::atomic::Ordering::Release);
+                    Ok(read_accepted_receipt(&mut response).await)
+                },
+            )
+            .await
         }
-        parts.push(FormPart {
-            name: "data".into(),
-            value: text.into(),
-            filename: Some("ice-cognee.txt".into()),
-            content_type: Some("text/plain".into()),
+        .await;
+        // Cancellation while reading an optional acknowledgment cannot undo
+        // observed HTTP acceptance or turn it into permission to resend.
+        let result = result.or_else(|error| {
+            if accepted.load(std::sync::atomic::Ordering::Acquire) {
+                Ok(AcceptedReceipt::default())
+            } else {
+                Err(error)
+            }
         });
-        let http = HttpRequest {
-            method: Method::Post,
-            url: build_url(&self.config.base_url, "/api/v1/remember")?,
-            headers: headers(self.config.api_key.as_deref(), None),
-            body: Body::Multipart(parts),
-        };
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options
-                .timeout_ms
-                .unwrap_or(self.config.recall_budget_ms.max(30_000)),
-            |response| async move { assert_ok(&response, "remember") },
-        )
-        .await
+        self.record_outcome(|outcomes| &mut outcomes.remember, &result, false);
+        result
     }
 
     /// Store a QA/trace entry in the session cache. A malformed or oversized
@@ -761,40 +1056,45 @@ impl CogneeClient {
         session_id: &str,
         options: CallOptions,
     ) -> Result<Option<String>, CogneeError> {
-        let http = self.json_post(
-            "/api/v1/remember/entry",
-            json!({
-                "entry": entry,
-                "dataset_name": dataset.unwrap_or(&self.config.dataset),
-                "session_id": session_id,
-            }),
-        )?;
-        let cap = self.config.max_response_chars;
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(30_000),
-            |mut response| async move {
-                assert_ok(&response, "remember/entry")?;
-                match read_json(&mut response, cap).await {
-                    Ok(payload) => Ok(payload
-                        .get("entry_id")
-                        .and_then(Value::as_str)
-                        .map(str::to_string)),
-                    Err(error)
-                        if matches!(
-                            error.kind,
-                            CogneeErrorKind::Malformed | CogneeErrorKind::ResponseTooLarge
-                        ) =>
-                    {
-                        Ok(None)
+        let result = async {
+            let http = self.json_post(
+                "/api/v1/remember/entry",
+                json!({
+                    "entry": entry,
+                    "dataset_name": dataset.unwrap_or(&self.config.dataset),
+                    "session_id": session_id,
+                }),
+            )?;
+            let cap = self.config.max_response_chars;
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(30_000),
+                |mut response| async move {
+                    assert_ok(&response, "remember/entry")?;
+                    match read_json(&mut response, cap).await {
+                        Ok(payload) => Ok(payload
+                            .get("entry_id")
+                            .and_then(Value::as_str)
+                            .map(str::to_string)),
+                        Err(error)
+                            if matches!(
+                                error.kind,
+                                CogneeErrorKind::Malformed | CogneeErrorKind::ResponseTooLarge
+                            ) =>
+                        {
+                            Ok(None)
+                        }
+                        Err(error) => Err(error),
                     }
-                    Err(error) => Err(error),
-                }
-            },
-        )
-        .await
+                },
+            )
+            .await
+        }
+        .await;
+        self.record_outcome(|outcomes| &mut outcomes.remember_entry, &result, false);
+        result
     }
 
     /// Ask Cognee to consolidate the session cache (accepted, not completed).
@@ -804,20 +1104,52 @@ impl CogneeClient {
         session_ids: &[String],
         options: CallOptions,
     ) -> Result<(), CogneeError> {
-        let mut body = json!({"datasetName": dataset.unwrap_or(&self.config.dataset)});
-        if !session_ids.is_empty() {
-            body["sessionIds"] = json!(session_ids);
+        self.improve_with_receipt(dataset, session_ids, options)
+            .await
+            .map(|_| ())
+    }
+
+    /// Preserve a bounded optional job handle without inferring completion.
+    pub async fn improve_with_receipt(
+        &self,
+        dataset: Option<&str>,
+        session_ids: &[String],
+        options: CallOptions,
+    ) -> Result<AcceptedReceipt, CogneeError> {
+        let accepted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let acceptance_flag = accepted.clone();
+        let result = async {
+            let mut body = json!({"datasetName": dataset.unwrap_or(&self.config.dataset)});
+            if !session_ids.is_empty() {
+                body["sessionIds"] = json!(session_ids);
+            }
+            body["runInBackground"] = json!(true);
+            let http = self.json_post("/api/v1/improve", body)?;
+            request(
+                self.transport.as_ref(),
+                http,
+                options.signal.as_ref(),
+                options.timeout_ms.unwrap_or(120_000),
+                |mut response| async move {
+                    assert_ok(&response, "improve")?;
+                    acceptance_flag.store(true, std::sync::atomic::Ordering::Release);
+                    Ok(read_accepted_receipt(&mut response).await)
+                },
+            )
+            .await
         }
-        body["runInBackground"] = json!(true);
-        let http = self.json_post("/api/v1/improve", body)?;
-        request(
-            self.transport.as_ref(),
-            http,
-            options.signal.as_ref(),
-            options.timeout_ms.unwrap_or(120_000),
-            |response| async move { assert_ok(&response, "improve") },
-        )
-        .await
+        .await;
+        // Cancellation while reading an optional acknowledgment cannot undo
+        // observed HTTP acceptance or turn it into permission to resend.
+        let result = result.or_else(|error| {
+            if accepted.load(std::sync::atomic::Ordering::Acquire) {
+                Ok(AcceptedReceipt::default())
+            } else {
+                Err(error)
+            }
+        });
+        self.record_outcome(|outcomes| &mut outcomes.improve, &result, false);
+        result
     }
 
     /// Register this session as a hybrid-memory API agent; a 404 counts as
@@ -1039,6 +1371,10 @@ pub(crate) mod tests {
         }
     }
 
+    include!("record_tests.rs");
+    include!("accepted_receipt_tests.rs");
+    include!("contract_tests.rs");
+
     pub(crate) fn client(transport: Arc<FakeTransport>) -> CogneeClient {
         CogneeClient::new(
             ClientConfig {
@@ -1050,6 +1386,135 @@ pub(crate) mod tests {
             },
             transport,
         )
+    }
+
+    async fn run_operation(client: &CogneeClient, operation: usize, timeout_ms: u64) {
+        let options = CallOptions {
+            timeout_ms: Some(timeout_ms),
+            ..Default::default()
+        };
+        match operation {
+            0 => {
+                let _ = client
+                    .recall(
+                        "query",
+                        RecallOptions {
+                            timeout_ms: Some(timeout_ms),
+                            ..Default::default()
+                        },
+                    )
+                    .await;
+            }
+            1 => {
+                let _ = client.remember("text", "nodes", None, None, options).await;
+            }
+            2 => {
+                let _ = client
+                    .remember_entry(&json!({}), None, "session", options)
+                    .await;
+            }
+            3 => {
+                let _ = client.improve(None, &[], options).await;
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn outcome(snapshot: &OperationOutcomesSnapshot, operation: usize) -> &OperationOutcome {
+        match operation {
+            0 => &snapshot.recall,
+            1 => &snapshot.remember,
+            2 => &snapshot.remember_entry,
+            3 => &snapshot.improve,
+            _ => unreachable!(),
+        }
+    }
+
+    #[tokio::test]
+    async fn operation_outcomes_classify_all_operations_and_share_clones() {
+        for operation in 0..4 {
+            let transport = Arc::new(FakeTransport::default());
+            let client = client(transport.clone());
+            let clone = client.clone();
+            for index in 0..4 {
+                assert_eq!(
+                    outcome(&client.operation_outcomes(), index),
+                    &OperationOutcome::default()
+                );
+            }
+            let cases = [
+                (200, "ok"),
+                (404, "not_found"),
+                (422, "invalid_request"),
+                (401, "auth_failed"),
+                (403, "auth_failed"),
+                (500, "server_error"),
+            ];
+            for (index, (status, expected)) in cases.into_iter().enumerate() {
+                transport.push(FakeResponse::json(status, json!({"results": []})));
+                let before = transport.sent().len();
+                run_operation(&clone, operation, 1000).await;
+                assert_eq!(
+                    transport.sent().len(),
+                    before + 1,
+                    "operation {operation} status {status}"
+                );
+                let snapshot = client.operation_outcomes();
+                let observed = outcome(&snapshot, operation);
+                assert_eq!(
+                    observed.class, expected,
+                    "operation {operation} status {status}"
+                );
+                assert_eq!(observed.attempts, index as u64 + 1);
+                assert_eq!(observed.consecutive_failures, index as u64);
+            }
+            transport.push(FakeResponse::Fail);
+            run_operation(&client, operation, 1000).await;
+            assert_eq!(
+                outcome(&clone.operation_outcomes(), operation).class,
+                "unreachable"
+            );
+            transport.push(FakeResponse::Ok {
+                status: 200,
+                headers: vec![],
+                chunks: vec![],
+                delay_ms: 100,
+            });
+            run_operation(&client, operation, 1).await;
+            assert_eq!(
+                outcome(&clone.operation_outcomes(), operation).class,
+                "timeout"
+            );
+            transport.push(FakeResponse::json(200, json!({"results": []})));
+            run_operation(&clone, operation, 1000).await;
+            let snapshot = client.operation_outcomes();
+            let observed = outcome(&snapshot, operation);
+            assert_eq!(
+                (
+                    observed.class,
+                    observed.attempts,
+                    observed.consecutive_failures
+                ),
+                ("ok", 9, 0)
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn recall_uncognified_404_records_not_found_without_changing_result() {
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(
+            404,
+            json!({"error": "Recall prerequisites not met"}),
+        ));
+        let client = client(transport.clone());
+        assert!(client
+            .recall("query", RecallOptions::default())
+            .await
+            .unwrap()
+            .is_empty());
+        assert_eq!(transport.sent().len(), 1);
+        assert_eq!(client.operation_outcomes().recall.class, "not_found");
     }
 
     fn body_json(request: &HttpRequest) -> Value {
@@ -1079,14 +1544,16 @@ pub(crate) mod tests {
 
     #[tokio::test]
     async fn reqwest_transport_does_not_follow_cross_origin_redirects_with_api_key() {
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
         use tokio::net::TcpListener;
 
         let redirect_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let redirect_address = redirect_listener.local_addr().unwrap();
         let sink_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let sink_address = sink_listener.local_addr().unwrap();
+        let sink_path = format!("/sink/{}", uuid::Uuid::new_v4().simple());
 
+        let redirect_sink_path = sink_path.clone();
         let redirect_server = tokio::spawn(async move {
             let (mut socket, _) = redirect_listener.accept().await.unwrap();
             let mut request = [0; 4096];
@@ -1094,18 +1561,23 @@ pub(crate) mod tests {
             socket
                 .write_all(
                     format!(
-                        "HTTP/1.1 302 Found\r\nLocation: http://{sink_address}/sink\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                        "HTTP/1.1 302 Found\r\nLocation: http://{sink_address}{redirect_sink_path}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
                     )
                     .as_bytes(),
                 )
                 .await
                 .unwrap();
         });
+        let expected_sink_line = format!("GET {sink_path} HTTP/1.1\r\n");
         let mut sink_server = tokio::spawn(async move {
-            let (mut socket, _) = sink_listener.accept().await.unwrap();
-            let mut request = [0; 4096];
-            let size = socket.read(&mut request).await.unwrap();
-            String::from_utf8_lossy(&request[..size]).into_owned()
+            loop {
+                let (socket, _) = sink_listener.accept().await?;
+                let mut request_line = String::new();
+                BufReader::new(socket).read_line(&mut request_line).await?;
+                if request_line == expected_sink_line {
+                    return Ok::<_, std::io::Error>(true);
+                }
+            }
         });
 
         let response = ReqwestTransport::new()
@@ -1121,11 +1593,16 @@ pub(crate) mod tests {
         assert_eq!(response.status, 302);
         redirect_server.await.unwrap();
         let sink_result = tokio::time::timeout(Duration::from_millis(200), &mut sink_server).await;
-        sink_server.abort();
-        assert!(
-            sink_result.is_err(),
-            "the cross-origin redirect target must not receive the API key request"
-        );
+        match sink_result {
+            Err(_) => {
+                sink_server.abort();
+                let _ = sink_server.await;
+            }
+            Ok(Ok(Ok(true))) => {
+                panic!("the cross-origin redirect target must not receive the API key request");
+            }
+            other => panic!("redirect sink failed before verification: {other:?}"),
+        }
     }
 
     #[tokio::test]
@@ -1147,9 +1624,13 @@ pub(crate) mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(results.len(), 2);
+        assert_eq!(
+            results.len(),
+            1,
+            "a partial fact must not be presented as complete"
+        );
         assert_eq!(results[0].score, Some(0.5));
-        assert_eq!(results[1].text, "pl");
+        assert_eq!(results[0].text, "x".repeat(10));
         let sent = transport.sent();
         assert_eq!(sent[0].url, "http://cognee.test/base/api/v1/recall");
         assert!(sent[0]
@@ -1197,6 +1678,34 @@ pub(crate) mod tests {
             .unwrap_err();
         assert_eq!(error.kind, CogneeErrorKind::NotFound);
         assert_eq!(error.status, Some(404));
+    }
+
+    #[tokio::test]
+    async fn unsupported_recall_and_invalid_contract_do_not_retry() {
+        let transport = Arc::new(FakeTransport::default());
+        transport.push(FakeResponse::json(404, json!({"detail": "Not Found"})));
+        transport.push(FakeResponse::json(
+            422,
+            json!({"detail": "invalid request"}),
+        ));
+        let client = client(transport.clone());
+        let missing = client
+            .recall("q", RecallOptions::default())
+            .await
+            .unwrap_err();
+        assert_eq!(missing.kind, CogneeErrorKind::NotFound);
+        assert_eq!(missing.status, Some(404));
+        let invalid = client
+            .recall("q", RecallOptions::default())
+            .await
+            .unwrap_err();
+        assert_eq!(invalid.kind, CogneeErrorKind::Malformed);
+        assert_eq!(invalid.status, Some(422));
+        let sent = transport.sent();
+        assert_eq!(sent.len(), 2);
+        assert!(sent
+            .iter()
+            .all(|request| request.url.ends_with("/api/v1/recall")));
     }
 
     #[tokio::test]

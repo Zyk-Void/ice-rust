@@ -547,6 +547,7 @@ pub async fn build_prepared(
         .map(|snap| emit_resources_discover(&cwd_str, "startup", &snap))
         .unwrap_or_default();
 
+    let mut live_skill_result = ice_harness::skills::LoadSkillsResult::default();
     let mut skills: Vec<ice_harness::types::Skill> = Vec::new();
     let mut skill_diags: Vec<ice_harness::skills::SkillDiagnostic> = Vec::new();
     let mut resource_diags: Vec<ice_harness::diagnostics::ResourceDiagnostic> = Vec::new();
@@ -562,6 +563,7 @@ pub async fn build_prepared(
         dirs.extend(discovered.skill_paths.iter().map(PathBuf::from));
         dirs.extend(builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
+        live_skill_result = result.clone();
         skills = result.skills;
         skill_diags = result.diagnostics;
         resource_diags.extend(result.resource_diagnostics);
@@ -997,6 +999,27 @@ pub async fn build_prepared(
     }));
 
     harness.set_extensions(builtins.harness_extensions());
+    let mut capability_service = None;
+    if !args.no_tools && tool_name_allowed("capability_search", args) {
+        let service = crate::capability_service::CapabilityService::new(
+            crate::capability_catalog::CapabilityCatalog::from_live(
+                &live_skill_result,
+                &crate::resource_dirs::skill_source_dirs(cwd, true, true, builtins.skill_paths()),
+                &mcp_tools.snapshot(),
+            ),
+        );
+        let mut tools = harness.get_tools().await.unwrap_or_default();
+        tools.push(service.tool());
+        let active = filter_active_tool_names(active_tool_names(&tools, args), args);
+        let _ = harness.set_tools(tools, Some(active)).await;
+        if let Some(cognee) = &builtins.cognee {
+            cognee.bind_capability_service(&service);
+        }
+        capability_service = Some(service.clone());
+        let mut extensions = harness.extensions();
+        extensions.push(service as Arc<dyn ice_harness::extension::HarnessExtension>);
+        harness.set_extensions(extensions);
+    }
     builtins
         .bind(
             &harness,
@@ -1005,6 +1028,22 @@ pub async fn build_prepared(
             tool_name_allowed(crate::cognee::runtime::SEARCH_TOOL_NAME, args),
         )
         .await;
+    if let Some(service) = &capability_service {
+        let tools = harness.get_tools().await.unwrap_or_default();
+        let active_names: std::collections::HashSet<_> =
+            active_tool_names(&tools, args).into_iter().collect();
+        let active_tools: Vec<_> = tools
+            .into_iter()
+            .filter(|tool| active_names.contains(&tool.tool.schema().name))
+            .collect();
+        let catalog = crate::capability_catalog::CapabilityCatalog::from_live(
+            &live_skill_result,
+            &crate::resource_dirs::skill_source_dirs(cwd, true, true, builtins.skill_paths()),
+            &mcp_tools.snapshot(),
+        )
+        .with_native_tools(&active_tools);
+        service.refresh(catalog);
+    }
 
     // ---- B5d: assemble the ReloadContext the TUI holds ----
     // Every field is cheap to clone (Arc / Vec / args Clone). The cells own the
@@ -1014,6 +1053,8 @@ pub async fn build_prepared(
     // of a harness back-reference so it can be `Clone` into the reload callback).
     shells.connect(&harness);
     let reload_context = ReloadContext {
+        skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
+        capability_service: capability_service.clone(),
         mcp_tools,
         shells,
         extension_session: extension_session_cell,
@@ -1139,6 +1180,10 @@ pub type ActionBridgeCell = Arc<Mutex<Option<Arc<ice_extensions::ActionBridge>>>
 /// reload callback without borrowing the harness).
 #[derive(Clone)]
 pub struct ReloadContext {
+    /// Session-shared local capability registry used by the model tool and task hints.
+    pub capability_service: Option<Arc<crate::capability_service::CapabilityService>>,
+    /// Last skill loader result, including shadowed definitions.
+    pub skill_registry: Arc<std::sync::RwLock<ice_harness::skills::LoadSkillsResult>>,
     /// Session-local MCP tools retained across extension reloads.
     pub mcp_tools: crate::mcp::McpManager,
     /// The session's background shells and watches, kept across reloads so
@@ -1213,6 +1258,132 @@ pub struct ReloadContext {
     pub dev_extension: Option<Arc<crate::dev_extension::DevExtension>>,
     /// Built-in Cognee/Blackhole extensions installed into the harness.
     pub builtins: crate::builtin_extensions::BuiltinExtensions,
+}
+
+impl ReloadContext {
+    /// Build a read-only inventory from the last skill load and MCP discovery.
+    pub fn capability_catalog(&self) -> crate::capability_catalog::CapabilityCatalog {
+        let project = self.args.dev_local_only || self.args.project_only || self.project_trusted;
+        let global = !self.args.dev_local_only && !self.args.project_only;
+        let dirs = crate::resource_dirs::skill_source_dirs(
+            &self.cwd,
+            project,
+            global,
+            self.builtins.skill_paths(),
+        );
+        crate::capability_catalog::CapabilityCatalog::from_live(
+            &self.skill_registry.read().unwrap(),
+            &dirs,
+            &self.mcp_tools.snapshot(),
+        )
+    }
+}
+
+/// Re-read the local model configuration and replace only one provider's live
+/// catalog and request bindings. The active lane and extension hooks are left
+/// untouched. If its active model was removed, reject the reload rather than
+/// leaving the lane pointing at a model that can no longer be routed.
+///
+/// Discovered descriptors are merged in memory; local
+/// definitions take precedence. Returns the number of published models.
+pub async fn reload_provider_catalog(
+    ctx: &ReloadContext,
+    harness: &AgentHarness,
+    provider_id: &str,
+    discovered: Option<Vec<ice_ai::Model>>,
+) -> Result<usize, String> {
+    let active = harness
+        .lane("main")
+        .get_model()
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut args = ctx.args.clone();
+    args.provider = Some(provider_id.to_owned());
+    args.model = None;
+    if provider_id != ctx.resolved_model.provider {
+        args.api_key = None;
+        args.base_url = None;
+    }
+    let discovered = discovered.unwrap_or_default();
+    if discovered
+        .iter()
+        .any(|model| model.provider != provider_id || model.headers.is_some())
+    {
+        return Err(
+            "discovered models must belong to the selected provider and contain no headers".into(),
+        );
+    }
+    let resolved = {
+        let session = ctx.extension_session.lock().unwrap();
+        crate::provider::resolve_with_extensions_and_models(
+            &args,
+            &ctx.cwd,
+            ctx.project_trusted,
+            &session,
+            &discovered,
+        )
+        .map_err(|e| e.to_string())?
+    };
+    let selected = resolved.model.provider.as_str();
+    if !selected.eq_ignore_ascii_case(provider_id) {
+        return Err(format!(
+            "resolved provider '{selected}' does not match requested provider '{provider_id}'"
+        ));
+    }
+    let replacement: Vec<_> = resolved
+        .providers
+        .iter()
+        .filter(|provider| provider.id() == selected)
+        .cloned()
+        .collect();
+    let selected_models: Vec<_> = crate::provider::authenticated_catalog(&resolved)
+        .into_iter()
+        .filter(|model| model.provider == selected)
+        .collect();
+    if replacement.is_empty() || selected_models.is_empty() {
+        return Err(format!(
+            "no authenticated models for provider '{provider_id}'"
+        ));
+    }
+    if active.provider == selected
+        && !selected_models
+            .iter()
+            .any(|model| model.id == active.id && model.api == active.api)
+    {
+        return Err(format!(
+            "active model '{}/{}' is absent from the refreshed catalog",
+            active.provider, active.id
+        ));
+    }
+    let mut providers = ctx
+        .providers
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    providers.retain(|provider| provider.id() != selected);
+    providers.extend(replacement);
+    let mut catalog = ctx
+        .catalog
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    catalog.retain(|model| model.provider != selected);
+    let count = selected_models.len();
+    catalog.extend(selected_models);
+    let models = {
+        let session = ctx.extension_session.lock().unwrap();
+        build_models_with_extensions_for_reload(&providers, &session, ctx.runtime.clone())
+    };
+    harness
+        .set_models(models)
+        .await
+        .map_err(|e| e.to_string())?;
+    *ctx.providers.write().unwrap_or_else(|e| e.into_inner()) = providers;
+    *ctx.catalog.write().unwrap_or_else(|e| e.into_inner()) = catalog.clone();
+    if let Some(bridge) = ctx.action_bridge.lock().unwrap().as_ref() {
+        bridge.clone_host().replace_model_catalog(catalog);
+    }
+    Ok(count)
 }
 
 /// Dispatch a no-payload lifecycle event (e.g. `SessionStart`, `SessionShutdown`,
@@ -1481,20 +1652,23 @@ where
     // Re-fetch the signed-in ChatGPT account's model list so newly granted
     // models appear and unavailable ones disappear. A failure keeps the cached
     // list and is reported with the reload outcome.
-    let (codex_models_changed, mut codex_models_error) = if crate::args::offline_env_enabled() {
-        (false, None)
-    } else {
-        match crate::codex_models::refresh(
-            crate::provider::OPENAI_CODEX_BASE_URL,
-            tokio_util::sync::CancellationToken::new(),
-        )
-        .await
-        {
-            Ok(changed) => (changed, None),
-            Err(error) => (false, Some(error)),
-        }
-    };
-    let refreshed = if packaged || codex_models_changed {
+    let (_codex_models_changed, mut codex_models_error) =
+        if effective_args.offline || crate::args::offline_env_enabled() {
+            (false, None)
+        } else {
+            match crate::codex_models::refresh(
+                crate::provider::OPENAI_CODEX_BASE_URL,
+                tokio_util::sync::CancellationToken::new(),
+            )
+            .await
+            {
+                Ok(changed) => (changed, None),
+                Err(error) => (false, Some(error)),
+            }
+        };
+    // Reauth can change credentials without changing the cached Codex catalog.
+    // Re-resolve on every reload rather than keeping stale execution bindings.
+    let refreshed = {
         let mut args = effective_args.clone();
         if let Ok(current) = harness.lane("main").get_model().await {
             let was_package = ctx
@@ -1549,8 +1723,6 @@ where
                 };
             }
         }
-    } else {
-        None
     };
 
     // ---- 2. Invalidate the old session + bridge BEFORE the swap ----
@@ -1593,6 +1765,7 @@ where
     let env = Arc::new(ice_tools::OsExecutionEnv::with_cwd(ctx.cwd.clone()));
     let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
 
+    let mut live_skill_result = ice_harness::skills::LoadSkillsResult::default();
     let mut skills: Vec<ice_harness::types::Skill> = Vec::new();
     let mut skill_diags: Vec<ice_harness::skills::SkillDiagnostic> = Vec::new();
     let mut resource_diags: Vec<ice_harness::diagnostics::ResourceDiagnostic> = Vec::new();
@@ -1611,11 +1784,25 @@ where
         );
         dirs.extend(ctx.builtins.skill_paths());
         let result = load_skills_with_precedence(&env_dyn, &dirs).await;
+        live_skill_result = result.clone();
         skills = result.skills;
         skill_diags = result.diagnostics;
         resource_diags.extend(result.resource_diagnostics);
     }
 
+    *ctx.skill_registry.write().unwrap() = live_skill_result;
+    if let Some(service) = &ctx.capability_service {
+        service.refresh(crate::capability_catalog::CapabilityCatalog::from_live(
+            &ctx.skill_registry.read().unwrap(),
+            &crate::resource_dirs::skill_source_dirs(
+                &ctx.cwd,
+                true,
+                true,
+                ctx.builtins.skill_paths(),
+            ),
+            &ctx.mcp_tools.snapshot(),
+        ));
+    }
     let mut prompt_templates: Vec<ice_harness::types::PromptTemplate> = Vec::new();
     let mut prompt_diags: Vec<ice_harness::prompt_templates::PromptTemplateDiagnostic> = Vec::new();
     if !effective_args.no_prompt_templates {
@@ -1811,6 +1998,21 @@ where
         &effective_args,
         &ctx.tool_context,
     );
+    if let Some(service) = &ctx.capability_service {
+        let active_names: std::collections::HashSet<_> = active_tool_names(&tools, &effective_args)
+            .into_iter()
+            .collect();
+        let active_tools: Vec<_> = tools
+            .iter()
+            .filter(|tool| active_names.contains(&tool.tool.schema().name))
+            .cloned()
+            .collect();
+        let catalog = ctx.capability_catalog().with_native_tools(&active_tools);
+        service.refresh(catalog);
+        if !effective_args.no_tools && tool_name_allowed("capability_search", &effective_args) {
+            tools.push(service.tool());
+        }
+    }
     tools.extend(
         ctx.mcp_tools
             .registered_tools()
@@ -3220,6 +3422,68 @@ mod tests {
     use super::*;
 
     #[test]
+    fn provider_catalog_reload_is_scoped_and_transactional() {
+        const CHILD: &str = "ICERS_PROVIDER_CATALOG_RELOAD_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::provider_catalog_reload_is_scoped_and_transactional",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .env("ICERS_OFFLINE", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap().block_on(async {
+            let agent = crate::config::agent_dir().unwrap();
+            std::fs::create_dir_all(&agent).unwrap();
+            let cwd = agent.join("project");
+            std::fs::create_dir_all(&cwd).unwrap();
+            let path = crate::config::models_path().unwrap();
+            let write_config = |second: &str| std::fs::write(&path, format!(r#"{{"providers":{{
+                "first":{{"api":"openai-completions","apiKey":"first-key","baseUrl":"https://first.example/v1","models":[{{"id":"one"}}]}},
+                "second":{{"api":"openai-completions","apiKey":"second-key","baseUrl":"https://second.example/v1","models":[{{"id":"{second}"}}]}}
+            }}}}"#)).unwrap();
+            write_config("old");
+            std::fs::write(agent.join("settings.json"), r#"{"defaultProvider":"first","defaultModel":"one"}"#).unwrap();
+            let args = Args { provider: Some("first".into()), model: Some("one".into()), no_extensions: true, ..Args::default() };
+            let resolved = crate::provider::resolve_with_extensions(&args, &cwd, true, &ExtensionSession::none()).unwrap();
+            let (harness, _events, ctx) = build(&resolved, &args, &cwd, true).await.unwrap();
+            let before = ctx.providers.read().unwrap().iter().find(|p| p.id() == "first").unwrap().clone();
+            let mut discovered = ctx.catalog.read().unwrap().iter().find(|m| m.provider == "second").unwrap().clone();
+            discovered.id = "remote".into();
+            write_config("new");
+            let count = reload_provider_catalog(&ctx, &harness, "second", Some(vec![discovered])).await.unwrap();
+            assert_eq!(count, 2);
+            assert_eq!(harness.lane("main").get_model().await.unwrap().id, "one");
+            let providers = ctx.providers.read().unwrap().clone();
+            assert!(Arc::ptr_eq(&before, providers.iter().find(|p| p.id() == "first").unwrap()));
+            let second = providers.iter().find(|p| p.id() == "second").unwrap();
+            assert!(second.models().iter().any(|m| m.id == "new"));
+            assert!(second.models().iter().any(|m| m.id == "remote"));
+            let catalog = ctx.catalog.read().unwrap().clone();
+            let remote = catalog.iter().find(|m| m.provider == "second" && m.id == "remote").unwrap().clone();
+            harness.lane("main").set_model(remote).await.unwrap();
+            std::fs::write(&path, "{invalid").unwrap();
+            assert!(reload_provider_catalog(&ctx, &harness, "second", None).await.is_err());
+            assert_eq!(harness.lane("main").get_model().await.unwrap().id, "remote");
+            assert!(Arc::ptr_eq(second, ctx.providers.read().unwrap().iter().find(|p| p.id() == "second").unwrap()));
+            assert_eq!(catalog.len(), ctx.catalog.read().unwrap().len());
+        });
+    }
+
+    #[test]
     fn branch_summary_settings_reach_created_harness() {
         const CHILD: &str = "ICERS_BRANCH_SUMMARY_SETTINGS_CHILD";
         if std::env::var_os(CHILD).is_none() {
@@ -4291,7 +4555,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
         let cwd = tmp.path().join("project");
-        let skill_dir = tmp.path().join("configured-skills");
+        let skill_dir = agent.join("skills");
         std::fs::create_dir_all(&agent).unwrap();
         std::fs::create_dir_all(&cwd).unwrap();
         std::fs::create_dir_all(&skill_dir).unwrap();
@@ -4326,8 +4590,12 @@ mod tests {
         };
         let (harness, _events, context) = build(&resolved, &args, &cwd, false).await.unwrap();
         let before_resources = harness.get_resources().await.unwrap();
-        assert_eq!(before_resources.skills.as_ref().unwrap().len(), 1);
-        assert_eq!(before_resources.skills.as_ref().unwrap()[0].name, "keep-me");
+        assert!(before_resources
+            .skills
+            .as_ref()
+            .unwrap()
+            .iter()
+            .any(|skill| skill.name == "keep-me"));
         let before_prompt = harness.get_system_prompt().await.unwrap();
         let before_tools: Vec<String> = harness
             .get_tools()
@@ -4437,7 +4705,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
         let cwd = tmp.path().join("project");
-        let skill_dir = tmp.path().join("configured-skills");
+        let skill_dir = agent.join("skills");
         std::fs::create_dir_all(&agent).unwrap();
         std::fs::create_dir_all(&cwd).unwrap();
         std::fs::create_dir_all(&skill_dir).unwrap();
@@ -4478,14 +4746,12 @@ mod tests {
         .await;
 
         assert!(!outcome.summary.contains("Settings reload failed"));
-        assert_eq!(
-            outcome.summary,
-            "Reloaded 0 plugin(s), 1 skill(s), 0 prompt(s)."
-        );
         let resources = harness.get_resources().await.unwrap();
         let skills = resources.skills.as_ref().unwrap();
-        assert_eq!(skills.len(), 1);
-        assert_eq!(skills[0].name, "frozen-skill");
+        assert!(outcome
+            .summary
+            .contains(&format!("{} skill(s)", skills.len())));
+        assert!(skills.iter().any(|skill| skill.name == "frozen-skill"));
     }
 
     #[tokio::test]

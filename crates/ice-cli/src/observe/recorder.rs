@@ -86,7 +86,7 @@ struct Inner {
     transitions: HashMap<String, String>,
     /// In-flight Cognee requests: request id to the started item's id, so
     /// the terminal phase updates that item.
-    pending_memory: IndexMap<String, u64>,
+    pending_memory: IndexMap<(String, String), u64>,
     /// Tokens of the latest assistant usage, for context occupancy.
     last_context_tokens: Option<i64>,
     context_window: Option<u64>,
@@ -984,9 +984,14 @@ impl ObserveRecorder {
         let raw = serde_json::to_value(observation)
             .map(|value| safe_json(&value))
             .unwrap_or_default();
-        let request_id = observation.request_id.as_deref();
+        let key = observation
+            .request_id
+            .as_ref()
+            .map(|id| (observation.operation.clone(), id.clone()));
         if terminal {
-            let pending = request_id.and_then(|id| inner.pending_memory.shift_remove(id));
+            let pending = key
+                .as_ref()
+                .and_then(|key| inner.pending_memory.shift_remove(key));
             if let Some(found) = pending.and_then(|id| inner.items.iter_mut().find(|i| i.id == id))
             {
                 found.state = Some(state);
@@ -1020,8 +1025,8 @@ impl ObserveRecorder {
         }
         fields.duration_ms = observation.latency_ms.map(|ms| ms as i64);
         let pushed = self.push_main(&mut inner, fields);
-        if let (Some(id), false) = (request_id, terminal) {
-            inner.pending_memory.insert(id.to_string(), pushed.id);
+        if let (Some(key), false) = (key, terminal) {
+            inner.pending_memory.insert(key, pushed.id);
             // Requests that never finish must not grow this map forever.
             if inner.pending_memory.len() > MAX_ITEMS {
                 inner.pending_memory.shift_remove_index(0);
@@ -1069,10 +1074,29 @@ fn memory_title(observation: &Observation) -> String {
         .and_then(|meta| meta.get("checkpoint"))
         .and_then(serde_json::Value::as_bool)
         == Some(true);
+    let outcome = observation.meta.as_ref().and_then(|meta| {
+        (meta
+            .get("outcomeVersion")
+            .and_then(serde_json::Value::as_u64)
+            == Some(1))
+        .then(|| meta.get("outcome").and_then(serde_json::Value::as_str))
+        .flatten()
+    });
+    let suffix = match (observation.operation.as_str(), outcome) {
+        ("recall", Some("skipped")) => " · skipped (no request)",
+        ("recall", Some("stale")) => " · discarded (session changed)",
+        ("recall", Some("retrieved_empty")) => " · retrieved empty",
+        ("recall", Some("retrieved_nonempty")) => " · retrieved nonempty",
+        ("improve", Some("accepted")) => " · accepted (completion unknown)",
+        ("injection", Some("persisted")) => " · persisted (delivery unknown)",
+        ("injection", Some("append_failed")) => " · append failed",
+        _ => "",
+    };
     let head = format!(
-        "Cognee {}{}",
+        "Cognee {}{}{}",
         observation.operation,
-        if checkpoint { " (compaction)" } else { "" }
+        if checkpoint { " (compaction)" } else { "" },
+        suffix
     );
     [
         Some(head.as_str()),

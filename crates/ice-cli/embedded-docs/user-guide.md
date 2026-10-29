@@ -2,6 +2,29 @@
 
 This is a guide to icers for users and extension authors. icers began as a Rust reimplementation of Mario Zechner’s [Pi TypeScript SDK](https://github.com/earendil-works/pi), with core capabilities provided as crates and `icers` as a ready-to-use CLI. See the NOTICE in the repository root for source and license information. This document describes the commands and behavior implemented in the current version and ships with `ice-cli`.
 
+## Optional judged Cognee recall
+
+Cognee's default `readPolicy` remains `"legacy"`. Opt in with
+`/cognee read judged` or `"readPolicy": "judged"` in the Cognee config.
+Configure an explicit TypeSafe System One decision provider and model using
+`/cognee helper provider <id>` and `/cognee helper model <id>`; the read gate
+binds independently of the write policy. No chat model or guessed provider
+is used. `/cognee doctor` reports missing binding nonfatally.
+
+For each eligible prompt, judged recall starts Cognee retrieval and the typed
+read gate concurrently. TypeSafe receives the prompt and a bounded excerpt
+(up to 800 UTF-16 units, plus a truncation marker) of the previous assistant
+turn, with the existing heuristic credential redaction. It chooses `none`,
+`session`, or `memory`; only `memory` admits retrieved context. The additional
+`incomplete` answer is recorded, not acted on. Confidence below 0.75, abstention,
+timeout, errors or missing binding fall back to the Event history-keyword rule.
+Cancellation discards both operations. The gate uses the existing 1.5-second
+helper deadline and cannot extend the recall budget. Activity details and
+`/cognee doctor` include the decision, timing and recall disposition.
+This is opt-in external processing of prompt text, not a proven relevance or
+latency improvement. See `docs/cognee-jev-memory/judged-recall.md` for limits
+and the local owner-label evaluation workflow.
+
 ## 1. Installation
 
 ### Install the CLI directly
@@ -401,6 +424,8 @@ Project-level `.icers/settings.json` can add resource directories:
 ```
 
 Paths are relative to the project root; `skills`, `prompts`, and `extensions` are shorthand for the corresponding `*Dirs` fields. Custom directories are loaded along with `.icers`, `.pi`, and the conventional global directories; `.icers` takes precedence. The global `~/.icers/agent/settings.json` supports these fields too, with relative paths resolved against the agent directory.
+
+A leading `~` or `~/` expands to your home directory. `.agents/skills` directories from other tools are not discovered automatically; to use them, list them explicitly, for example `"skillDirs": ["~/.agents/skills"]`.
 
 To load only the current project’s packages/resources and exclude global resources, use either of these equivalent options:
 

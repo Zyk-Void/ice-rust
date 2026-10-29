@@ -1,4 +1,15 @@
 use super::*;
+use sha2::{Digest, Sha256};
+
+fn schema_fingerprint(name: &str, description: &str, schema: &serde_json::Value) -> Option<String> {
+    if schema.is_null() || schema.as_object().is_some_and(serde_json::Map::is_empty) {
+        return None;
+    }
+    let value = serde_json::json!({"name":name,"description":description,"schema":schema});
+    serde_json::to_vec(&value)
+        .ok()
+        .map(|bytes| format!("{:x}", Sha256::digest(bytes)))
+}
 
 const LIFECYCLE_TICK: Duration = Duration::from_secs(15);
 const DEFAULT_IDLE_MINUTES: f64 = 10.0;
@@ -35,6 +46,8 @@ pub struct ToolInfo {
     pub description: String,
     pub tokens: usize,
     pub direct: bool,
+    /// Stable fingerprint of the exact cached/discovered JSON schema; absent when unknown.
+    pub schema_hash: Option<String>,
 }
 #[derive(Clone, Debug)]
 pub struct ServerView {
@@ -1149,6 +1162,11 @@ impl McpManager {
                     description: tool.schema.description.clone(),
                     tokens: tool.tokens,
                     direct,
+                    schema_hash: schema_fingerprint(
+                        &tool.remote_name,
+                        &tool.schema.description,
+                        &serde_json::to_value(&tool.schema.parameters).unwrap_or(Value::Null),
+                    ),
                 });
             }
             let name = tool.schema.name.clone();
@@ -1369,6 +1387,9 @@ fn cached_catalog(cached: &cache::CachedServer) -> Vec<ToolInfo> {
                 description: description.unwrap_or("MCP tool").into(),
                 tokens: tool_tokens(name, description, item.get("inputSchema")?),
                 direct: true,
+                schema_hash: item.get("inputSchema").and_then(|schema| {
+                    schema_fingerprint(name, description.unwrap_or("MCP tool"), schema)
+                }),
             })
         })
         .collect()
