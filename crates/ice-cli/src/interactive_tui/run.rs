@@ -328,54 +328,7 @@ pub(super) async fn run_initial_prompts(
     }
 }
 
-/// Characters a `$name` skill mention may contain.
-pub(super) fn is_skill_name_char(c: char) -> bool {
-    c.is_alphanumeric() || matches!(c, '-' | '_' | '.' | ':')
-}
-
-/// Expand explicit skill invocations into their full instruction blocks.
-///
-/// A prompt starting with `/skill:name args` expands like upstream
-/// `AgentSession._expandSkillCommand` (block, blank line, args). Otherwise
-/// each `$name` mention that starts a word and names a loaded skill is
-/// replaced in place; trailing `.`/`:` is read as punctuation. Unknown names
-/// (`$PATH`, `$5`, `/skill:missing`) are left as typed.
-pub(super) fn expand_skill_references(
-    resources: &ice_harness::types::AgentHarnessResources,
-    prompt: &str,
-) -> String {
-    let skills = resources.skills.as_deref().unwrap_or_default();
-    let find = |name: &str| skills.iter().find(|s| s.name == name);
-    if let Some(rest) = prompt.strip_prefix("/skill:") {
-        let (name, args) = rest.split_once(' ').unwrap_or((rest, ""));
-        return match find(name) {
-            Some(skill) => ice_harness::skills::format_skill_invocation(skill, Some(args.trim())),
-            None => prompt.to_string(),
-        };
-    }
-    let mut expanded = String::new();
-    let mut copied = 0;
-    for (start, _) in prompt.match_indices('$') {
-        if start < copied
-            || prompt[..start]
-                .chars()
-                .next_back()
-                .is_some_and(|c| !c.is_whitespace())
-        {
-            continue;
-        }
-        let rest = &prompt[start + 1..];
-        let len = rest.find(|c| !is_skill_name_char(c)).unwrap_or(rest.len());
-        let name = rest[..len].trim_end_matches(['.', ':']);
-        if let Some(skill) = find(name) {
-            expanded.push_str(&prompt[copied..start]);
-            expanded.push_str(&ice_harness::skills::format_skill_invocation(skill, None));
-            copied = start + 1 + name.len();
-        }
-    }
-    expanded.push_str(&prompt[copied..]);
-    expanded
-}
+pub(super) use crate::slash_commands::{expand_skill_references, is_skill_name_char};
 
 /// Replace each skill invocation block (and the blank line before any text
 /// that follows it) with `render(name)` plus a space separator.

@@ -32,6 +32,38 @@ mod extensions;
 use extensions::*;
 pub(crate) use extensions::{ask_user_frame, parse_ask_user_prompt, AskUserPrompt};
 mod commands;
+pub(crate) use commands::headless_context_report;
+pub(crate) use usage_panel::headless_report as headless_usage_report;
+
+/// Width headless renderings of TUI output are laid out for.
+const HEADLESS_WIDTH: usize = 100;
+
+/// Plain text from rendered TUI lines: ANSI styling removed, trailing
+/// whitespace trimmed. Used to give headless clients the TUI's own output.
+fn plain_lines(lines: &[String]) -> String {
+    let text: Vec<String> = lines
+        .iter()
+        .map(|line| ice_tui::strip_ansi(line).trim_end().to_string())
+        .collect();
+    text.join("\n").trim_matches('\n').to_string()
+}
+
+/// Render transcript messages built by a TUI command as plain text.
+fn headless_render(build: impl FnOnce(&Arc<Container>)) -> String {
+    let container = Arc::new(Container::new());
+    build(&container);
+    plain_lines(&container.render(HEADLESS_WIDTH))
+}
+
+/// `/version` output, as the TUI prints it.
+pub(crate) fn headless_version_text() -> String {
+    headless_render(add_version_message)
+}
+
+/// `/changelog [all]` output, as the TUI prints it.
+pub(crate) fn headless_changelog_text(all: bool) -> String {
+    headless_render(|container| add_changelog_message_with_scope(container, all))
+}
 use commands::*;
 mod settings;
 use settings::*;
@@ -3763,54 +3795,10 @@ pub async fn interactive_tui(
                 tui.request_render(false);
             }
             Some(TuiMessage::ShowUsage) => {
-                let stats = agent_session.usage_stats().await.ok();
-                let snapshot = agent_session.snapshot().await.ok();
-                let Some(stats) = stats else {
+                let Some(session) = usage_panel::session_section(&agent_session).await else {
                     add_error_message(&chat_container, "Could not read session usage stats.");
                     tui.request_render(false);
                     continue;
-                };
-                let all_history = agent_session
-                    .coding_session_stats()
-                    .await
-                    .ok()
-                    .map(|coding| usage_panel::AllHistory {
-                        input: coding.usage.input,
-                        output: coding.usage.output,
-                        cache_read: coding.usage.cache_read,
-                        cache_write: coding.usage.cache_write,
-                        total_tokens: coding.usage.total_tokens,
-                        cost: coding.usage.cost,
-                        context: coding
-                            .context_usage
-                            .map(|usage| usage_panel::ContextOccupancy {
-                                tokens: usage.tokens,
-                                window: usage.context_window,
-                                percent: usage.percent,
-                            }),
-                    });
-                let mut footer = Vec::new();
-                if let Some(snapshot) = snapshot {
-                    footer.push(format!(
-                        "lane {} · leaf {}",
-                        snapshot.lane,
-                        snapshot.leaf_id.clone().unwrap_or_else(|| "(empty)".into())
-                    ));
-                    if let Some(active) = &snapshot.active {
-                        footer.push(format!(
-                            "active operation: {} ({})",
-                            active.kind.as_str(),
-                            active.run_id
-                        ));
-                    }
-                }
-                let session = usage_panel::SessionSection {
-                    messages: stats.message_count,
-                    cached_tokens: stats.cached_tokens,
-                    uncached_tokens: stats.uncached_tokens,
-                    cost: stats.cost_total,
-                    all_history,
-                    footer,
                 };
                 // The plan limits come from the ChatGPT backend, so fetch them
                 // off the input loop and publish the whole panel once.
@@ -3820,22 +3808,8 @@ pub async fn interactive_tui(
                 usage_generation = usage_generation.wrapping_add(1);
                 let generation = usage_generation;
                 let tx = ctx.tx.clone();
-                let offline = crate::args::offline_env_enabled();
                 usage_task = Some(tokio::spawn(async move {
-                    let chatgpt = if offline {
-                        usage_panel::ChatGptSection::SignedOut
-                    } else {
-                        match crate::codex_usage::fetch(
-                            crate::provider::OPENAI_CODEX_BASE_URL,
-                            &tokio_util::sync::CancellationToken::new(),
-                        )
-                        .await
-                        {
-                            Ok(Some(usage)) => usage_panel::ChatGptSection::Usage(usage),
-                            Ok(None) => usage_panel::ChatGptSection::SignedOut,
-                            Err(error) => usage_panel::ChatGptSection::Failed(error),
-                        }
-                    };
+                    let chatgpt = usage_panel::chatgpt_section().await;
                     let _ = tx.send(TuiMessage::UsageReady(
                         generation,
                         usage_panel::UsagePanel { chatgpt, session },
