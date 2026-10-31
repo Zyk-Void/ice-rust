@@ -498,6 +498,56 @@ async fn delayed_agent_end_cannot_write_into_a_replacement_session() {
         .is_empty());
 }
 
+/// A run the TUI did not start (a background-shell notice woke the agent)
+/// returns the status to Idle when it settles, and an Esc that finds it
+/// already over does not leave the status on "Aborting".
+#[tokio::test]
+async fn a_run_started_outside_the_tui_returns_to_idle() {
+    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let state = test_tui_state();
+    let tui = Arc::new(TuiAltScreen::new(
+        Box::new(ProcessTerminal::new()),
+        true,
+        None,
+    ));
+    let status = || *state.status.lock().unwrap();
+    for event in [
+        AgentEvent::AgentStart,
+        AgentEvent::RunSettled {
+            run_id: "notice".into(),
+        },
+    ] {
+        handle_agent_event(event, &tui, &state, &state.chat_container, &harness).await;
+    }
+    assert!(status() == RunStatus::Idle);
+
+    // A run the TUI started stays Working until its own prompt future ends.
+    assert!(state.try_start_working());
+    for event in [
+        AgentEvent::AgentStart,
+        AgentEvent::RunSettled {
+            run_id: "prompt".into(),
+        },
+    ] {
+        handle_agent_event(event, &tui, &state, &state.chat_container, &harness).await;
+    }
+    assert!(status() == RunStatus::Working);
+    state.set_status(RunStatus::Idle);
+
+    // Esc after an outside run already ended.
+    handle_agent_event(
+        AgentEvent::AgentStart,
+        &tui,
+        &state,
+        &state.chat_container,
+        &harness,
+    )
+    .await;
+    *state.status.lock().unwrap() = RunStatus::Aborting;
+    super::events::settle_unowned_run(&state, &harness.lane("main")).await;
+    assert!(status() == RunStatus::Idle);
+}
+
 #[tokio::test]
 async fn unqueue_restores_only_selected_messages_images_after_durable_cancel() {
     let harness = AgentHarness::create(Default::default()).await.unwrap();
@@ -1381,6 +1431,7 @@ fn markdown_flag_only_comes_from_an_explicit_true() {
 pub(super) fn test_tui_state() -> Arc<TuiState> {
     Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2824,6 +2875,7 @@ fn test_agent_event_mapping_creates_assistant_and_tool() {
 
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -4255,6 +4307,7 @@ fn test_autocomplete_slash_suggestions_render() {
     // line when the editor holds a `/` prefix, and clear when it doesn't.
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -4381,6 +4434,7 @@ fn test_select_list_swap_restores_editor() {
     // active_selector flag round-trip.
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -4480,6 +4534,7 @@ fn test_message_history_browse_restores_draft() {
     // draft the user was typing.
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -4582,6 +4637,7 @@ fn test_accept_top_suggestion_replaces_prefix() {
     // `/he` + Tab → `/help ` (slash command provider inserts a space).
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -4735,6 +4791,7 @@ fn autocomplete_keeps_the_caret_inside_a_quoted_directory() {
 fn autocomplete_test_state(max_visible: usize) -> Arc<TuiState> {
     Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),

@@ -88,6 +88,20 @@ async fn run_inner() -> i32 {
         return crate::dev_extension::run_cleanup_helper(&argv[1..]);
     }
 
+    // ---- `icers --acp` — Agent Client Protocol server on stdio ----
+    // Intercepted before provider / harness / TUI work, and before anything
+    // can read stdin or print to stdout: both belong to the ACP client. Each
+    // ACP session runs a normal `icers --mode rpc` child, and this process
+    // passes every other flag (`--observe`, `--model`, …) on to those children.
+    if argv.iter().any(|arg| arg == "--acp") {
+        let child_args: Vec<String> = argv.into_iter().filter(|arg| arg != "--acp").collect();
+        if let Err(flag) = crate::acp::check_child_args(&child_args) {
+            eprintln!("icers: {flag} cannot be combined with --acp");
+            return 2;
+        }
+        return crate::acp::run_stdio(child_args).await;
+    }
+
     // ---- `icers --connect <addr>` — pure remote client ----
     // Intercepted before any provider / harness / session / extension work so
     // the client holds no local agent resources at all: it only connects to a
@@ -538,6 +552,10 @@ async fn run_inner() -> i32 {
                         model_catalog,
                         reload_context.ui_dialog.clone(),
                         extension_snapshot,
+                        crate::modes::RpcBuiltins {
+                            agent_dir: reload_context.builtins.agent_dir.clone(),
+                            cognee: reload_context.builtins.cognee.clone(),
+                        },
                     )
                     .await
                 };

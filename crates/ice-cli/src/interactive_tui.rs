@@ -32,6 +32,38 @@ mod extensions;
 use extensions::*;
 pub(crate) use extensions::{ask_user_frame, parse_ask_user_prompt, AskUserPrompt};
 mod commands;
+pub(crate) use commands::headless_context_report;
+pub(crate) use usage_panel::headless_report as headless_usage_report;
+
+/// Width headless renderings of TUI output are laid out for.
+const HEADLESS_WIDTH: usize = 100;
+
+/// Plain text from rendered TUI lines: ANSI styling removed, trailing
+/// whitespace trimmed. Used to give headless clients the TUI's own output.
+fn plain_lines(lines: &[String]) -> String {
+    let text: Vec<String> = lines
+        .iter()
+        .map(|line| ice_tui::strip_ansi(line).trim_end().to_string())
+        .collect();
+    text.join("\n").trim_matches('\n').to_string()
+}
+
+/// Render transcript messages built by a TUI command as plain text.
+fn headless_render(build: impl FnOnce(&Arc<Container>)) -> String {
+    let container = Arc::new(Container::new());
+    build(&container);
+    plain_lines(&container.render(HEADLESS_WIDTH))
+}
+
+/// `/version` output, as the TUI prints it.
+pub(crate) fn headless_version_text() -> String {
+    headless_render(add_version_message)
+}
+
+/// `/changelog [all]` output, as the TUI prints it.
+pub(crate) fn headless_changelog_text(all: bool) -> String {
+    headless_render(|container| add_changelog_message_with_scope(container, all))
+}
 use commands::*;
 mod settings;
 use settings::*;
@@ -63,6 +95,7 @@ mod mcp_panel;
 mod mcp_setup_panel;
 mod panels;
 mod pet;
+mod shells_panel;
 mod side_questions;
 mod usage_panel;
 
@@ -1357,6 +1390,14 @@ pub async fn interactive_tui(
         footer.set_context_window(m.context_window as i64);
     }
     footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
+    // Running background shells (and their watches) show in the footer.
+    {
+        let (footer, tui) = (footer.clone(), tui.clone());
+        reload_context.shells.watch_counts(move |running, watches| {
+            footer.set_background_shells(running, watches);
+            tui.request_render(false);
+        });
+    }
 
     // /context and the startup banner share a resource snapshot that the async
     // reload handler refreshes, so neither awaits the harness accessor.
@@ -1577,6 +1618,7 @@ pub async fn interactive_tui(
 
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
@@ -2229,6 +2271,24 @@ pub async fn interactive_tui(
                                     .filter(|snapshot| snapshot.generation == generation)
                                 {
                                     if !snapshot.has_capturing_overlay {
+                                        // The footer's shell count opens the
+                                        // Shells panel (ice `OPEN_SHELLS_URL`).
+                                        if snapshot
+                                            .rows
+                                            .get(origin.1)
+                                            .and_then(|row| {
+                                                ice_tui::get_osc8_link_at_column(row, origin.0)
+                                            })
+                                            .is_some_and(|url| {
+                                                url == ice_tui::footer::OPEN_SHELLS_LINK
+                                            })
+                                        {
+                                            cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                            if !state_for_key.selector_open() {
+                                                shells_panel::open_shells_panel(&ctx_for_key);
+                                            }
+                                            continue;
+                                        }
                                         if snapshot
                                             .rows
                                             .get(origin.1)
@@ -3129,6 +3189,21 @@ pub async fn interactive_tui(
                 continue;
             }
 
+            // 5a-quater. Down opens the Shells panel from an empty editor while
+            //     background shells run (ice `app.shells.open`); otherwise it
+            //     keeps moving the cursor or browsing history.
+            if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::SHELLS_OPEN,
+            ) && editor_for_key.get_text().is_empty()
+                && *state_for_key.history_index.lock().unwrap() == -1
+                && shells_for_key.registry().running_count() > 0
+            {
+                shells_panel::open_shells_panel(&ctx_for_key);
+                continue;
+            }
+
             // 5b. ↑/↓ browse submitted-message history when the editor is
             //     EMPTY (a fresh prompt) — mirrors TS historyPrevious/Next
             //     without the surprise of replacing typed text. When the
@@ -3721,54 +3796,10 @@ pub async fn interactive_tui(
                 tui.request_render(false);
             }
             Some(TuiMessage::ShowUsage) => {
-                let stats = agent_session.usage_stats().await.ok();
-                let snapshot = agent_session.snapshot().await.ok();
-                let Some(stats) = stats else {
+                let Some(session) = usage_panel::session_section(&agent_session).await else {
                     add_error_message(&chat_container, "Could not read session usage stats.");
                     tui.request_render(false);
                     continue;
-                };
-                let all_history = agent_session
-                    .coding_session_stats()
-                    .await
-                    .ok()
-                    .map(|coding| usage_panel::AllHistory {
-                        input: coding.usage.input,
-                        output: coding.usage.output,
-                        cache_read: coding.usage.cache_read,
-                        cache_write: coding.usage.cache_write,
-                        total_tokens: coding.usage.total_tokens,
-                        cost: coding.usage.cost,
-                        context: coding
-                            .context_usage
-                            .map(|usage| usage_panel::ContextOccupancy {
-                                tokens: usage.tokens,
-                                window: usage.context_window,
-                                percent: usage.percent,
-                            }),
-                    });
-                let mut footer = Vec::new();
-                if let Some(snapshot) = snapshot {
-                    footer.push(format!(
-                        "lane {} · leaf {}",
-                        snapshot.lane,
-                        snapshot.leaf_id.clone().unwrap_or_else(|| "(empty)".into())
-                    ));
-                    if let Some(active) = &snapshot.active {
-                        footer.push(format!(
-                            "active operation: {} ({})",
-                            active.kind.as_str(),
-                            active.run_id
-                        ));
-                    }
-                }
-                let session = usage_panel::SessionSection {
-                    messages: stats.message_count,
-                    cached_tokens: stats.cached_tokens,
-                    uncached_tokens: stats.uncached_tokens,
-                    cost: stats.cost_total,
-                    all_history,
-                    footer,
                 };
                 // The plan limits come from the ChatGPT backend, so fetch them
                 // off the input loop and publish the whole panel once.
@@ -3778,22 +3809,8 @@ pub async fn interactive_tui(
                 usage_generation = usage_generation.wrapping_add(1);
                 let generation = usage_generation;
                 let tx = ctx.tx.clone();
-                let offline = crate::args::offline_env_enabled();
                 usage_task = Some(tokio::spawn(async move {
-                    let chatgpt = if offline {
-                        usage_panel::ChatGptSection::SignedOut
-                    } else {
-                        match crate::codex_usage::fetch(
-                            crate::provider::OPENAI_CODEX_BASE_URL,
-                            &tokio_util::sync::CancellationToken::new(),
-                        )
-                        .await
-                        {
-                            Ok(Some(usage)) => usage_panel::ChatGptSection::Usage(usage),
-                            Ok(None) => usage_panel::ChatGptSection::SignedOut,
-                            Err(error) => usage_panel::ChatGptSection::Failed(error),
-                        }
-                    };
+                    let chatgpt = usage_panel::chatgpt_section().await;
                     let _ = tx.send(TuiMessage::UsageReady(
                         generation,
                         usage_panel::UsagePanel { chatgpt, session },

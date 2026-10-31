@@ -1335,7 +1335,7 @@ dependencies = [
 
 [[package]]
 name = "ice-agent"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "futures",
@@ -1352,7 +1352,7 @@ dependencies = [
 
 [[package]]
 name = "ice-ai"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "base64",
@@ -1376,7 +1376,7 @@ dependencies = [
 
 [[package]]
 name = "ice-cli"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "arboard",
  "async-trait",
@@ -1427,7 +1427,7 @@ dependencies = [
 
 [[package]]
 name = "ice-extensions"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "dirs",
@@ -1448,7 +1448,7 @@ dependencies = [
 
 [[package]]
 name = "ice-harness"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "fs2",
@@ -1472,7 +1472,7 @@ dependencies = [
 
 [[package]]
 name = "ice-plugin-sdk"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "ice-ai",
  "libc",
@@ -1485,7 +1485,7 @@ dependencies = [
 
 [[package]]
 name = "ice-telemetry"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "serde",
@@ -1495,7 +1495,7 @@ dependencies = [
 
 [[package]]
 name = "ice-tools"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "async-trait",
  "base64",
@@ -1524,7 +1524,7 @@ dependencies = [
 
 [[package]]
 name = "ice-tui"
-version = "0.6.1"
+version = "0.8.2"
 dependencies = [
  "base64",
  "crossterm",

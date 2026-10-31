@@ -3,21 +3,27 @@
 //! the conversation, and shutdown. Mirrors the session integration of
 //! ice's `bash-background.ts`/`bash-watch.ts` (SESSION-023/025).
 //!
-//! Completions and alerts are sent to the main lane as custom messages
-//! delivered as follow-ups with `triggerTurn`: while the agent is running
-//! they are read at the next turn boundary; when it is idle they start a
-//! turn so the model can react.
+//! Completions and alerts are sent to the main lane as custom messages that
+//! steer with `triggerTurn`: while the agent is running they are read at the
+//! next tool boundary, not only when the whole run ends; when it is idle they
+//! start a turn so the model can react. Headless sessions (`--mode rpc`, which
+//! ACP drives, `--mode json`, `-p`) only run turns their client asked for, so
+//! there an idle notice joins the conversation for the next prompt instead.
+//! A user stop is recorded for the next
+//! turn instead of waking the model. A completion whose result the model
+//! already read with `bash_output` is not sent.
 
 use std::future::Future;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 use tokio::task::JoinHandle;
 
-use ice_harness::agent_harness::AgentHarness;
+use ice_harness::agent_harness::{AgentHarness, WeakAgentHarness};
 use ice_harness::types::HarnessTool;
 use ice_harness::types::{MessageDelivery, SendMessageOptions};
 use ice_tools::bash_background::{
-    BashBackgroundCompletion, BashBackgroundRegistry, BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE,
+    BashBackgroundCompletion, BashBackgroundRegistry, SteerProbe,
+    BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE,
 };
 use ice_tools::bash_watch::{
     create_bash_watch_tool, BashWatchDefaults, BashWatchFire, BashWatchRegistry,
@@ -74,6 +80,8 @@ pub struct SessionShells {
     approval: BashInputApproval,
     auto_background_secs: Option<f64>,
     deliveries: Arc<DeliveryTasks>,
+    /// Set by `connect`; the tools are built before the harness exists.
+    harness: Arc<OnceLock<WeakAgentHarness>>,
 }
 
 impl SessionShells {
@@ -102,6 +110,7 @@ impl SessionShells {
                 .bash_auto_background_seconds
                 .filter(|s| *s > 0.0 && Duration::try_from_secs_f64(*s).is_ok()),
             deliveries: Arc::new(DeliveryTasks::default()),
+            harness: Arc::default(),
         })
     }
 
@@ -114,6 +123,49 @@ impl SessionShells {
         self.auto_background_secs
     }
 
+    /// True while a steering message waits on the connected harness: one
+    /// the user sent mid-run, or a background notice. `bash` then moves a
+    /// slow foreground command to the background and `bash_output` stops
+    /// waiting, so the model reads it at the next tool boundary.
+    pub fn steer_probe(&self) -> SteerProbe {
+        let harness = self.harness.clone();
+        Arc::new(move || {
+            harness
+                .get()
+                .and_then(WeakAgentHarness::upgrade)
+                .is_some_and(|harness| harness.has_queued_steering())
+        })
+    }
+
+    /// Call `f(running shells, watches)` now and whenever either changes, for
+    /// the footer's shell count. Only watches the model created count; the
+    /// automatic alerts every shell gets are not news. The listeners hold the
+    /// registries weakly, so they do not keep them alive.
+    pub fn watch_counts(&self, f: impl Fn(usize, usize) + Send + Sync + 'static) {
+        let (registry, watches) = (
+            Arc::downgrade(&self.registry),
+            Arc::downgrade(&self.watches),
+        );
+        // The registries also report every output chunk; only a new count
+        // reaches `f` (and the footer's repaint).
+        let last = Mutex::new(None);
+        let report = Arc::new(move || {
+            if let (Some(registry), Some(watches)) = (registry.upgrade(), watches.upgrade()) {
+                let explicit = watches.list(None).iter().filter(|w| !w.auto).count();
+                let counts = (registry.running_count(), explicit);
+                let mut last = last.lock().unwrap();
+                if *last != Some(counts) {
+                    *last = Some(counts);
+                    f(counts.0, counts.1);
+                }
+            }
+        });
+        report();
+        let on_shell = report.clone();
+        self.registry.on_change(move || on_shell());
+        self.watches.on_change(move || report());
+    }
+
     /// `bash_output`, `bash_kill`, `bash_input` and `bash_watch`, named for
     /// the session's tool filters.
     pub fn tools(&self) -> Vec<(&'static str, HarnessTool)> {
@@ -121,6 +173,7 @@ impl SessionShells {
             self.registry.clone(),
             BashShellToolOptions {
                 input_approval: self.approval,
+                steer_probe: Some(self.steer_probe()),
                 ..Default::default()
             },
         )
@@ -137,13 +190,32 @@ impl SessionShells {
 
     /// Deliver completions and watch alerts to `harness`'s main lane. Holds
     /// only a weak reference, so the harness can still be dropped.
-    pub fn connect(&self, harness: &AgentHarness) {
+    /// `wake_idle` lets a notice start a turn when the agent is idle; a
+    /// headless client (`--mode rpc`, ACP) only expects turns it asked for,
+    /// so there the notice joins the conversation for its next prompt.
+    pub fn connect(&self, harness: &AgentHarness, wake_idle: bool) {
+        let _ = self.harness.set(harness.downgrade());
         let weak = harness.downgrade();
         let deliveries = self.deliveries.clone();
+        // Weak: the registry owns this listener.
+        let registry = Arc::downgrade(&self.registry);
         self.registry.on_complete(move |completion| {
             if let Some(harness) = weak.upgrade() {
-                let message = completion_message(completion);
-                deliveries.spawn(deliver(harness, message));
+                let completion = completion.clone();
+                let registry = registry.clone();
+                deliveries.spawn(async move {
+                    // Checked at send time, after any `bash_output` call in
+                    // flight finishes, so a read between the shell's end and
+                    // now still counts.
+                    let Some(registry) = registry.upgrade() else {
+                        return;
+                    };
+                    if !registry.completion_due(&completion.task_id).await {
+                        return;
+                    }
+                    let options = completion_delivery(&completion, wake_idle);
+                    deliver(harness, completion_message(&completion), options).await;
+                });
             }
         });
         let weak = harness.downgrade();
@@ -151,7 +223,7 @@ impl SessionShells {
         self.watches.on_fire(move |fire| {
             if let Some(harness) = weak.upgrade() {
                 let message = fire_message(fire);
-                deliveries.spawn(deliver(harness, message));
+                deliveries.spawn(deliver(harness, message, steer(wake_idle)));
             }
         });
     }
@@ -171,13 +243,37 @@ impl SessionShells {
     }
 }
 
-async fn deliver(harness: AgentHarness, message: ice_agent::AgentMessage) {
-    let options = SendMessageOptions {
-        trigger_turn: Some(true),
-        deliver_as: MessageDelivery::FollowUp,
-    };
+async fn deliver(
+    harness: AgentHarness,
+    message: ice_agent::AgentMessage,
+    options: SendMessageOptions,
+) {
     if let Err(error) = harness.lane("main").send_message(message, options).await {
         tracing::warn!("background shell notice was not delivered: {error}");
+    }
+}
+
+/// Steer, not follow-up: a busy agent (often waiting on another shell) learns
+/// at the next tool boundary instead of only when its whole run ends, after it
+/// may have answered already. An idle agent starts a turn when `wake_idle`;
+/// otherwise the notice is added to the conversation for the next prompt.
+fn steer(wake_idle: bool) -> SendMessageOptions {
+    SendMessageOptions {
+        trigger_turn: wake_idle.then_some(true),
+        deliver_as: MessageDelivery::Steer,
+    }
+}
+
+/// A user stop is deliberate: record it for the next turn instead of waking
+/// the model to react. Mirrors ice's `deliverAs: "nextTurn"`.
+fn completion_delivery(c: &BashBackgroundCompletion, wake_idle: bool) -> SendMessageOptions {
+    if c.stopped_by_user {
+        SendMessageOptions {
+            trigger_turn: None,
+            deliver_as: MessageDelivery::NextTurn,
+        }
+    } else {
+        steer(wake_idle)
     }
 }
 
@@ -196,15 +292,17 @@ fn completion_message(c: &BashBackgroundCompletion) -> ice_agent::AgentMessage {
     } else {
         "completed".to_string()
     };
+    // Named "bash" like every shell; the description says which one.
+    let command = ice_tools::bash_background::summarize_shell_command(&c.command);
+    let what = match c.description.as_deref().filter(|d| !d.is_empty()) {
+        Some(description) => format!("{description} ({command})"),
+        None => command,
+    };
     let mut text = format!(
-        "Background shell {} {status} after {}s: {}",
+        "Background bash {} {status} after {}s: {what}",
         c.task_id,
         c.duration_ms / 1000,
-        ice_tools::bash_background::summarize_shell_command(&c.command)
     );
-    if let Some(description) = &c.description {
-        text.push_str(&format!(" ({description})"));
-    }
     if c.lingering {
         text.push_str(&format!(
             "\nIt left processes running; stop them with bash_kill (id \"{}\").",
@@ -226,7 +324,7 @@ fn completion_message(c: &BashBackgroundCompletion) -> ice_agent::AgentMessage {
 
 fn fire_message(fire: &BashWatchFire) -> ice_agent::AgentMessage {
     let mut text = format!(
-        "Watch {} on background shell {} ({}{}): {}",
+        "Watch {} on background bash {} ({}{}): {}",
         fire.watch_id,
         fire.target,
         fire.kind.as_str(),
@@ -271,6 +369,60 @@ mod tests {
 
         deliveries.spawn(async {});
         assert!(deliveries.0.lock().unwrap().tasks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn watch_counts_reports_each_new_count_once() {
+        let shells = SessionShells::new(&Default::default());
+        let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let sink = seen.clone();
+        shells.watch_counts(move |running, watches| sink.lock().unwrap().push((running, watches)));
+        assert_eq!(*seen.lock().unwrap(), [(0, 0)]);
+
+        let env = Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/w".into()));
+        env.register_shell("server", ice_tools::ShellScript::long_running("", 60_000))
+            .await;
+        // Prints while it runs and as it ends: output alone changes no count.
+        env.register_shell(
+            "build",
+            ice_tools::ShellScript {
+                stdout: "done\n".into(),
+                ..ice_tools::ShellScript::long_running("compiling\n", 100)
+            },
+        )
+        .await;
+        let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env;
+        let bash = ice_tools::create_bash_tool(
+            &ice_tools::ExecutionToolContext::new(env_dyn, None),
+            Some(ice_tools::BashToolOptions {
+                background: Some(shells.registry()),
+                ..Default::default()
+            }),
+        );
+        let start = |command: &'static str| {
+            bash.execute(
+                "c",
+                serde_json::json!({ "command": command, "run_in_background": true }),
+                tokio_util::sync::CancellationToken::new(),
+                Arc::new(|_| ()),
+            )
+        };
+        let server = start("server").await.unwrap();
+        assert_eq!(seen.lock().unwrap().last(), Some(&(1, 0)));
+        start("build").await.unwrap();
+        for _ in 0..200 {
+            if shells.registry().running_count() == 1 {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        let id = server.details["background_task_id"].as_str().unwrap();
+        shells.registry().kill(id, false).await.unwrap();
+        assert_eq!(
+            *seen.lock().unwrap(),
+            [(0, 0), (1, 0), (2, 0), (1, 0), (0, 0)]
+        );
+        shells.dispose().await;
     }
 
     #[test]
@@ -321,7 +473,7 @@ mod tests {
     #[test]
     fn completion_and_fire_messages() {
         let completion = BashBackgroundCompletion {
-            task_id: "bash-2".into(),
+            task_id: "b0tests42".into(),
             command: "npm test\nnpm run lint".into(),
             text: "3 passed".into(),
             is_error: false,
@@ -336,7 +488,7 @@ mod tests {
         let text = text_of(&completion_message(&completion));
         assert!(
             text.starts_with(
-                "Background shell bash-2 completed after 4s: npm test (+1 more lines) (tests)"
+                "Background bash b0tests42 completed after 4s: tests (npm test (+1 more lines))"
             ),
             "{text}"
         );
@@ -344,7 +496,7 @@ mod tests {
         assert!(text.ends_with("\n\n3 passed"), "{text}");
         let fire = BashWatchFire {
             watch_id: "watch-1".into(),
-            target: "bash-2".into(),
+            target: "b0tests42".into(),
             kind: ice_tools::bash_watch::BashWatchKind::Pattern,
             reason: "Output matched \"ready\": ready on :3000".into(),
             tail: "ready on :3000".into(),
@@ -354,9 +506,257 @@ mod tests {
         };
         let text = text_of(&fire_message(&fire));
         assert!(
-            text.starts_with("Watch watch-1 on background shell bash-2 (pattern): Output matched"),
+            text.starts_with(
+                "Watch watch-1 on background bash b0tests42 (pattern): Output matched"
+            ),
             "{text}"
         );
         assert!(text.ends_with("Recent output:\nready on :3000"), "{text}");
+    }
+}
+
+#[cfg(test)]
+mod delivery_tests {
+    use super::*;
+    use ice_ai::providers::faux::{
+        faux_assistant_message, FauxBlock, FauxProvider, FauxScript, FauxStep,
+    };
+    use ice_harness::agent_harness::AgentLane;
+    use ice_harness::types::AgentHarnessOptions;
+    use serde_json::json;
+    use std::time::Instant;
+
+    /// The model's turns, in order.
+    fn script(steps: Vec<FauxStep>) -> FauxScript {
+        let script = FauxScript::new();
+        script.set_responses(steps);
+        script
+    }
+
+    fn launch(command: &str) -> FauxStep {
+        FauxStep::tool_call(
+            "bash",
+            json!({"command": command, "run_in_background": true}),
+        )
+    }
+
+    /// `bash_output` waiting on the shell that the `nth` launch started; the
+    /// id is random, so it is read from that launch's result.
+    fn wait_on(nth: usize) -> FauxStep {
+        FauxStep::factory(move |context| {
+            let id = context
+                .messages
+                .iter()
+                .filter_map(|message| match message {
+                    ice_ai::types::Message::ToolResult(result) => {
+                        result.content.iter().find_map(|content| match content {
+                            ice_ai::types::Content::Text(text) => text
+                                .text
+                                .strip_prefix("Started background bash ")
+                                .and_then(|rest| rest.split(':').next())
+                                .map(str::to_string),
+                            _ => None,
+                        })
+                    }
+                    _ => None,
+                })
+                .nth(nth)
+                .expect("the shell was launched");
+            faux_assistant_message(
+                vec![FauxBlock::tool_call(
+                    "bash_output",
+                    json!({"id": id, "wait_seconds": 30}),
+                )],
+                ice_ai::types::StopReason::ToolUse,
+            )
+        })
+    }
+
+    /// Run `script` with `bash` and the shell tools. Commands: `slow` runs
+    /// 200 ms, `busy` 600 ms, `long` 3 s. Returns the conversation as
+    /// `user`, `assistant`, `tool:<name>` or `notice`, the number of model
+    /// calls, and how long the run took. `wake_idle` is passed to `connect`;
+    /// with `outlive_run`, shells still running when the run ends finish
+    /// before the session is disposed.
+    async fn conversation(
+        script: FauxScript,
+        wake_idle: bool,
+        outlive_run: bool,
+    ) -> (Vec<String>, usize, Duration) {
+        let provider = FauxProvider::new(script);
+        let env = Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/w".into()));
+        for (name, ms) in [("slow", 200), ("busy", 600), ("long", 3_000)] {
+            env.register_shell(name, ice_tools::ShellScript::long_running("working\n", ms))
+                .await;
+        }
+        let shells = SessionShells::new(&Default::default());
+        let context = ice_tools::ExecutionToolContext::new(env, None);
+        let bash = ice_tools::create_bash_tool(
+            &context,
+            Some(ice_tools::BashToolOptions {
+                background: Some(shells.registry()),
+                steer_probe: Some(shells.steer_probe()),
+                ..Default::default()
+            }),
+        );
+        let mut tools = vec![HarnessTool::new(bash)];
+        tools.extend(shells.tools().into_iter().map(|(_, tool)| tool));
+        let options = AgentHarnessOptions {
+            model: provider.default_model().clone(),
+            models: vec![provider.clone()],
+            active_tool_names: tools
+                .iter()
+                .map(|tool| tool.tool.schema().name.clone())
+                .collect(),
+            tools,
+            ..Default::default()
+        };
+        let harness = AgentHarness::create(options).await.unwrap();
+        shells.connect(&harness, wake_idle);
+        let started = Instant::now();
+        harness.prompt_text("go", vec![]).await.unwrap();
+        let elapsed = started.elapsed();
+        if outlive_run {
+            for _ in 0..500 {
+                if shells.registry().running_count() == 0 {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        }
+        // Lets every notice finish sending, including one that would start
+        // another run.
+        shells.dispose().await;
+        let messages = harness.context_snapshot().await.unwrap().context.messages;
+        let labels = messages
+            .iter()
+            .map(|message| match message {
+                ice_agent::AgentMessage::User(_) => "user".to_string(),
+                ice_agent::AgentMessage::Assistant(_) => "assistant".to_string(),
+                ice_agent::AgentMessage::ToolResult(result) => format!("tool:{}", result.tool_name),
+                ice_agent::AgentMessage::Custom(_) => "notice".to_string(),
+            })
+            .collect();
+        let calls = provider
+            .state()
+            .call_count
+            .load(std::sync::atomic::Ordering::SeqCst);
+        (labels, calls, elapsed)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_result_the_model_waited_for_is_not_sent_again() {
+        let (labels, calls, _) = conversation(
+            script(vec![launch("slow"), wait_on(0), FauxStep::text("done")]),
+            true,
+            false,
+        )
+        .await;
+        assert_eq!(
+            labels,
+            [
+                "user",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "tool:bash_output",
+                "assistant"
+            ]
+        );
+        assert_eq!(calls, 3, "no turn was started for a repeated result");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn an_unread_result_arrives_at_the_next_tool_boundary() {
+        let (labels, calls, _) = conversation(
+            script(vec![
+                launch("slow"),
+                FauxStep::tool_call("bash", json!({"command": "busy"})),
+                FauxStep::text("done"),
+            ]),
+            true,
+            false,
+        )
+        .await;
+        assert_eq!(
+            labels,
+            [
+                "user",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "tool:bash",
+                "notice",
+                "assistant"
+            ]
+        );
+        assert_eq!(calls, 3, "the notice did not start another turn");
+    }
+
+    /// The steer probe is wired: another shell's notice ends a long wait, so
+    /// the model reads it instead of blocking until the waited-on shell ends.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_finished_shell_ends_a_wait_on_another() {
+        let (labels, calls, elapsed) = conversation(
+            script(vec![
+                launch("long"),
+                launch("slow"),
+                wait_on(0),
+                FauxStep::text("done"),
+            ]),
+            true,
+            false,
+        )
+        .await;
+        assert_eq!(
+            labels,
+            [
+                "user",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "tool:bash_output",
+                "notice",
+                "assistant"
+            ]
+        );
+        assert_eq!(calls, 4);
+        assert!(elapsed < Duration::from_secs(2), "waited {elapsed:?}");
+    }
+
+    /// A shell that ends after the run: a TUI is woken for a turn to react;
+    /// a headless client (ACP) gets the notice with its next prompt instead
+    /// of a turn it never asked for.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn an_idle_notice_wakes_only_a_tui() {
+        let steps = || {
+            script(vec![
+                launch("slow"),
+                FauxStep::text("started"),
+                FauxStep::text("noted"),
+            ])
+        };
+        let (labels, calls, _) = conversation(steps(), true, true).await;
+        assert_eq!(
+            labels,
+            [
+                "user",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "notice",
+                "assistant"
+            ]
+        );
+        assert_eq!(calls, 3);
+
+        let (labels, calls, _) = conversation(steps(), false, true).await;
+        assert_eq!(
+            labels,
+            ["user", "assistant", "tool:bash", "assistant", "notice"]
+        );
+        assert_eq!(calls, 2, "no turn was started");
     }
 }

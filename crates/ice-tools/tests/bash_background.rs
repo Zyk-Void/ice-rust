@@ -125,31 +125,48 @@ async fn explicit_launch_returns_at_once_and_reports_one_completion() {
         started.elapsed() < Duration::from_millis(150),
         "did not wait"
     );
-    assert_eq!(r.details["background_task_id"], "bash-1");
+    let id = r.details["background_task_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    // `b` and eight base-36 characters, not a per-session counter.
+    assert_eq!(id.len(), 9, "{id}");
+    assert!(id.starts_with('b'), "{id}");
+    assert!(
+        id[1..]
+            .chars()
+            .all(|c| c.is_ascii_digit() || c.is_ascii_lowercase()),
+        "{id}"
+    );
     assert_eq!(r.details["background_origin"], "model");
     let log = r.details["full_output_path"]
         .as_str()
         .expect("log path")
         .to_string();
-    assert!(text(&r).starts_with("Started background shell bash-1: server"));
+    // Every shell is named "bash"; its description tells them apart.
+    assert!(
+        text(&r).starts_with(&format!("Started background bash {id}: dev server")),
+        "{}",
+        text(&r)
+    );
     assert!(text(&r).contains("bash_output"));
 
     // Wait for exit: the final result is reported.
     let out = run(
         &h.output,
         "o",
-        serde_json::json!({ "id": "bash-1", "wait_seconds": 5 }),
+        serde_json::json!({ "id": id, "wait_seconds": 5 }),
     )
     .await
     .expect("read ok");
     let out = text(&out);
-    assert!(out.starts_with("bash-1: completed"), "{out}");
+    assert!(out.starts_with(&format!("{id}: completed")), "{out}");
     assert!(out.contains("listening"), "{out}");
     assert!(out.contains("Final result:"), "{out}");
 
     let completions = h.completions.lock().unwrap().clone();
     assert_eq!(completions.len(), 1);
-    assert_eq!(completions[0].task_id, "bash-1");
+    assert_eq!(completions[0].task_id, id);
     assert!(!completions[0].is_error);
     assert_eq!(completions[0].exit_code, Some(0));
     assert_eq!(completions[0].description.as_deref(), Some("dev server"));
@@ -486,7 +503,10 @@ async fn user_release_moves_a_running_foreground_call_without_restarting_it() {
     assert!(h.registry.has_releasable());
     assert_eq!(h.registry.release_all(), 1);
     let r = call.await.unwrap().expect("released ok");
-    assert_eq!(r.details["background_task_id"], "bash-1");
+    let id = r.details["background_task_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
     assert_eq!(r.details["background_origin"], "user");
     let shown = text(&r);
     assert!(
@@ -498,12 +518,12 @@ async fn user_release_moves_a_running_foreground_call_without_restarting_it() {
     let out = run(
         &h.output,
         "o",
-        serde_json::json!({ "id": "bash-1", "wait_seconds": 5 }),
+        serde_json::json!({ "id": id, "wait_seconds": 5 }),
     )
     .await
     .unwrap();
     let out = text(&out);
-    assert!(out.contains("bash-1: completed"), "{out}");
+    assert!(out.contains(&format!("{id}: completed")), "{out}");
     let (new_part, final_part) = out.split_once("Final result:").expect("final block");
     assert!(new_part.contains("finished"), "{out}");
     assert!(
@@ -513,6 +533,218 @@ async fn user_release_moves_a_running_foreground_call_without_restarting_it() {
     // One process: its full result spans before and after the release.
     assert!(final_part.contains("working\nfinished"), "{out}");
     assert!(!h.registry.has_releasable());
+}
+
+#[tokio::test]
+async fn the_default_timeout_moves_a_foreground_call_to_the_background() {
+    let h = harness_with(
+        BashToolOptions {
+            default_timeout: Some(0.2),
+            ..Default::default()
+        },
+        BashShellToolOptions::default(),
+    );
+    h.env
+        .register_shell(
+            "slow",
+            ShellScript {
+                stdout: "finished\n".into(),
+                ..ShellScript::long_running("working\n", 500)
+            },
+        )
+        .await;
+    // Where shells can run in the background, the default moves the call
+    // there instead of stopping it.
+    let r = run(&h.bash, "fg", serde_json::json!({ "command": "slow" }))
+        .await
+        .unwrap();
+    assert_eq!(r.details["background_origin"], "model");
+    assert!(
+        text(&r).starts_with("Still running after 0s, so this command moved to the background."),
+        "{}",
+        text(&r)
+    );
+    let id = r.details["background_task_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let out = text(
+        &run(
+            &h.output,
+            "o",
+            serde_json::json!({ "id": id, "wait_seconds": 5 }),
+        )
+        .await
+        .unwrap(),
+    );
+    assert!(out.contains(": completed"), "{out}");
+    assert!(out.contains("finished"), "{out}");
+
+    // Without background shells it stops the call, as a timeout.
+    let env: Arc<dyn ice_tools::ExecutionEnv> = h.env.clone();
+    let plain = ice_tools::create_bash_tool(
+        &ExecutionToolContext::new(env, None),
+        Some(BashToolOptions {
+            default_timeout: Some(0.2),
+            ..Default::default()
+        }),
+    );
+    let e = err(run(&plain, "fg2", serde_json::json!({ "command": "slow" }))
+        .await
+        .unwrap_err());
+    assert!(
+        e.ends_with("working\n\n\nCommand timed out after 0.2 seconds"),
+        "{e:?}"
+    );
+
+    // A background shell is not subject to the default, but its own
+    // timeout stops it, and the launch says so.
+    let id = start(&h, "slow", serde_json::json!({})).await;
+    let out = text(
+        &run(
+            &h.output,
+            "o2",
+            serde_json::json!({ "id": id, "wait_seconds": 5 }),
+        )
+        .await
+        .unwrap(),
+    );
+    assert!(out.contains(": completed"), "{out}");
+    let r = run(
+        &h.bash,
+        "bg",
+        serde_json::json!({ "command": "slow", "run_in_background": true, "timeout": 0.1 }),
+    )
+    .await
+    .unwrap();
+    assert!(
+        text(&r).contains("Its timeout stops it 0.1 seconds after it started."),
+        "{}",
+        text(&r)
+    );
+    let id = r.details["background_task_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let out = text(
+        &run(
+            &h.output,
+            "o3",
+            serde_json::json!({ "id": id, "wait_seconds": 5 }),
+        )
+        .await
+        .unwrap(),
+    );
+    assert!(out.contains(": failed"), "{out}");
+    assert!(
+        out.ends_with("Command timed out after 0.1 seconds"),
+        "{out}"
+    );
+    h.registry.dispose().await;
+}
+
+#[tokio::test]
+async fn a_call_moved_to_the_background_outlives_the_default_timeout() {
+    let h = harness_with(
+        BashToolOptions {
+            default_timeout: Some(0.3),
+            ..Default::default()
+        },
+        BashShellToolOptions::default(),
+    );
+    h.env
+        .register_shell("slow", ShellScript::long_running("working\n", 600))
+        .await;
+    let bash = h.bash.clone();
+    let call = tokio::spawn(async move {
+        bash.execute(
+            "fg",
+            serde_json::json!({ "command": "slow" }),
+            CancellationToken::new(),
+            Arc::new(|_| ()),
+        )
+        .await
+    });
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(h.registry.release_all(), 1);
+    let released = call.await.unwrap().unwrap();
+    assert!(
+        !text(&released).contains("Its timeout"),
+        "{}",
+        text(&released)
+    );
+    let id = released.details["background_task_id"].as_str().unwrap();
+    let out = run(
+        &h.output,
+        "o",
+        serde_json::json!({ "id": id, "wait_seconds": 5 }),
+    )
+    .await
+    .unwrap();
+    assert!(
+        text(&out).starts_with(&format!("{id}: completed")),
+        "{}",
+        text(&out)
+    );
+}
+
+#[tokio::test]
+async fn reading_the_final_result_makes_the_completion_notice_moot() {
+    let h = harness();
+    // Whether a host would still send each completion notice.
+    let decisions = Arc::new(Mutex::new(Vec::new()));
+    let (sink, registry) = (decisions.clone(), Arc::downgrade(&h.registry));
+    h.registry.on_complete(move |c| {
+        let (registry, id) = (registry.upgrade().unwrap(), c.task_id.clone());
+        let decision =
+            tokio::spawn(async move { (id.clone(), registry.completion_due(&id).await) });
+        sink.lock().unwrap().push(decision);
+    });
+    let decided = |nth: usize| {
+        let decision = decisions.lock().unwrap().remove(nth);
+        async move { decision.await.unwrap() }
+    };
+    for (name, ms) in [("quick", 50), ("slow", 300), ("dropped", 50)] {
+        h.env
+            .register_shell(name, ShellScript::long_running("", ms))
+            .await;
+    }
+
+    // Ended before anyone read it: a completion notice is still due, until
+    // a read returns the final result.
+    let quick = start(&h, "quick", serde_json::json!({})).await;
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert_eq!(decided(0).await, (quick.clone(), true));
+    let out = run(&h.output, "o", serde_json::json!({ "id": quick }))
+        .await
+        .unwrap();
+    assert!(text(&out).contains("Final result:"), "{}", text(&out));
+    assert!(!h.registry.completion_due(&quick).await);
+
+    // A read waiting when the shell ends hands the result over, so the
+    // notice is not sent.
+    let slow = start(&h, "slow", serde_json::json!({})).await;
+    let out = run(
+        &h.output,
+        "w",
+        serde_json::json!({ "id": slow, "wait_seconds": 5 }),
+    )
+    .await
+    .unwrap();
+    assert!(text(&out).contains("Final result:"), "{}", text(&out));
+    assert_eq!(decided(0).await, (slow, false));
+
+    // A read in flight when the shell ends that never returns the result
+    // (the call was cancelled) leaves the notice due.
+    let dropped = start(&h, "dropped", serde_json::json!({})).await;
+    let reading = h.registry.reading(&dropped);
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    drop(reading);
+    assert_eq!(decided(0).await, (dropped.clone(), true));
+
+    // Once the session is disposed, no notice is due.
+    h.registry.dispose().await;
+    assert!(!h.registry.completion_due(&dropped).await);
 }
 
 #[tokio::test]
@@ -575,8 +807,10 @@ async fn finished_shells_are_pruned_to_twenty_in_launch_order() {
     h.env
         .register_shell("quick", ShellScript::success("ok\n"))
         .await;
+    let mut launched = Vec::new();
     for _ in 0..22 {
         let id = start(&h, "quick", serde_json::json!({})).await;
+        launched.push(id.clone());
         run(
             &h.output,
             "o",
@@ -591,9 +825,7 @@ async fn finished_shells_are_pruned_to_twenty_in_launch_order() {
         .into_iter()
         .map(|s| s.task_id)
         .collect();
-    assert_eq!(ids.len(), 20);
-    assert_eq!(ids.first().map(String::as_str), Some("bash-3"));
-    assert_eq!(ids.last().map(String::as_str), Some("bash-22"));
+    assert_eq!(ids, launched[2..]);
 }
 
 #[cfg(unix)]
@@ -694,4 +926,24 @@ async fn real_shell_lingering_group_is_stopped_by_bash_kill() {
     );
     assert!(!registry.get(&id).unwrap().lingering);
     registry.dispose().await;
+}
+
+/// Without a registry the release channel is closed from the start; output
+/// that arrives in separate bursts must not poll it again.
+#[cfg(unix)]
+#[tokio::test]
+async fn a_foreground_call_without_background_shells_survives_output_bursts() {
+    let dir = tempfile::tempdir().unwrap();
+    let env: Arc<dyn ice_tools::ExecutionEnv> = Arc::new(ice_tools::OsExecutionEnv::with_cwd(
+        dir.path().to_path_buf(),
+    ));
+    let bash = ice_tools::create_bash_tool(&ExecutionToolContext::new(env, None), None);
+    let r = run(
+        &bash,
+        "fg",
+        serde_json::json!({ "command": "printf a; sleep 0.2; printf b; sleep 0.2; printf c" }),
+    )
+    .await
+    .unwrap();
+    assert_eq!(text(&r), "abc");
 }

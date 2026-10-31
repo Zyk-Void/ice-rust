@@ -1051,7 +1051,10 @@ pub async fn build_prepared(
     // NOT held here (the TUI already owns a `&AgentHarness` / clone at the call
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
-    shells.connect(&harness);
+    // Only a TUI (local, or remote through `--server`) may be woken by a
+    // background notice; headless clients run just the turns they ask for.
+    let wake_idle = args.mode == crate::args::Mode::Text && !args.print;
+    shells.connect(&harness, wake_idle);
     let reload_context = ReloadContext {
         skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
         capability_service: capability_service.clone(),
@@ -2363,9 +2366,11 @@ fn merge_extension_tools(
 /// Build the tool list per `--tools`/`--exclude-tools`/`--no-tools`/
 /// `--no-builtin-tools`. Mirrors the TS `tools`/`excludeTools`/`noTools`
 /// resolution in `createAgentSession`.
-/// Default bash timeout: 120s when the model doesn't pass one (prevents a
-/// forgotten `timeout` from hanging the run forever — the "卡住" report).
-/// `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
+/// Default bash timeout: 120s for a foreground call when the model doesn't
+/// pass one (prevents a forgotten `timeout` from hanging the run forever — the
+/// "stuck" report). With background shells the call then moves to the
+/// background instead of being stopped; background shells are not subject to
+/// it. `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
 pub fn bash_options(
     shells: Option<&crate::background_shells::SessionShells>,
 ) -> ice_tools::tools::bash::BashToolOptions {
@@ -2385,6 +2390,7 @@ pub fn bash_options(
         default_timeout: Some(default),
         background: shells.map(|s| s.registry()),
         auto_background_secs: shells.and_then(|s| s.auto_background_secs()),
+        steer_probe: shells.map(|s| s.steer_probe()),
         ..Default::default()
     }
 }
@@ -2677,7 +2683,7 @@ pub(crate) async fn discover_session_metadata(
     discover_session_metadata_in_dir(cwd, &session_dir(Path::new(cwd))).await
 }
 
-async fn discover_session_metadata_in_dir(
+pub(crate) async fn discover_session_metadata_in_dir(
     cwd: &str,
     dir: &Path,
 ) -> Result<ice_harness::session::jsonl::repo::JsonlSessionDiscovery, BuildError> {

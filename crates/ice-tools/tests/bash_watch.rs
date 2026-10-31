@@ -112,7 +112,9 @@ async fn pattern_matches_across_chunks_once_and_spends_its_budget() {
     )
     .await
     .expect("created");
-    assert!(text(&r).starts_with("Created watch-1 on bash-1: pattern \"ready\", fired 0/1"));
+    assert!(text(&r).starts_with(&format!(
+        "Created watch-1 on {id}: pattern \"ready\", fired 0/1"
+    )));
     tokio::time::sleep(Duration::from_millis(400)).await;
     let fires = h.fires.lock().unwrap().clone();
     // Two occurrences in one chunk still produce one alert; the budget of 1
@@ -197,7 +199,7 @@ async fn automatic_prompt_and_silence_defaults() {
             ShellScript::long_running("Overwrite file? [y/N] ", 5_000),
         )
         .await;
-    start(&h, "ask").await;
+    let id = start(&h, "ask").await;
     let auto: Vec<_> = h.watches.list(None);
     assert_eq!(auto.len(), 2);
     assert_eq!(auto[0].kind, BashWatchKind::Prompt);
@@ -217,7 +219,9 @@ async fn automatic_prompt_and_silence_defaults() {
         fires[0].reason
     );
     assert!(
-        fires[1].reason.starts_with("No output from bash-1 for"),
+        fires[1]
+            .reason
+            .starts_with(&format!("No output from {id} for")),
         "{}",
         fires[1].reason
     );
@@ -333,7 +337,7 @@ async fn bash_watch_tool_validation_and_listing() {
         .unwrap();
     assert_eq!(
         text(&r),
-        "watch-1 on bash-1: silence 60s, fired 0/3, armed, rearms on activity"
+        format!("watch-1 on {id}: silence 60s, fired 0/3, armed, rearms on activity")
     );
     let r = watch_tool(
         &h,

@@ -306,3 +306,84 @@ impl Component for UsagePanel {
 #[cfg(test)]
 #[path = "usage_panel_tests.rs"]
 mod tests;
+
+/// This session's totals for the panel, read through the product-layer
+/// session. `None` when the usage stats cannot be read.
+pub(super) async fn session_section(
+    agent_session: &crate::agent_session::AgentSession,
+) -> Option<SessionSection> {
+    let stats = agent_session.usage_stats().await.ok()?;
+    let snapshot = agent_session.snapshot().await.ok();
+    let all_history = agent_session
+        .coding_session_stats()
+        .await
+        .ok()
+        .map(|coding| AllHistory {
+            input: coding.usage.input,
+            output: coding.usage.output,
+            cache_read: coding.usage.cache_read,
+            cache_write: coding.usage.cache_write,
+            total_tokens: coding.usage.total_tokens,
+            cost: coding.usage.cost,
+            context: coding.context_usage.map(|usage| ContextOccupancy {
+                tokens: usage.tokens,
+                window: usage.context_window,
+                percent: usage.percent,
+            }),
+        });
+    let mut footer = Vec::new();
+    if let Some(snapshot) = snapshot {
+        footer.push(format!(
+            "lane {} · leaf {}",
+            snapshot.lane,
+            snapshot.leaf_id.clone().unwrap_or_else(|| "(empty)".into())
+        ));
+        if let Some(active) = &snapshot.active {
+            footer.push(format!(
+                "active operation: {} ({})",
+                active.kind.as_str(),
+                active.run_id
+            ));
+        }
+    }
+    Some(SessionSection {
+        messages: stats.message_count,
+        cached_tokens: stats.cached_tokens,
+        uncached_tokens: stats.uncached_tokens,
+        cost: stats.cost_total,
+        all_history,
+        footer,
+    })
+}
+
+/// ChatGPT plan limits from the backend (signed out when offline).
+pub(super) async fn chatgpt_section() -> ChatGptSection {
+    if crate::args::offline_env_enabled() {
+        return ChatGptSection::SignedOut;
+    }
+    match crate::codex_usage::fetch(
+        crate::provider::OPENAI_CODEX_BASE_URL,
+        &tokio_util::sync::CancellationToken::new(),
+    )
+    .await
+    {
+        Ok(Some(usage)) => ChatGptSection::Usage(usage),
+        Ok(None) => ChatGptSection::SignedOut,
+        Err(error) => ChatGptSection::Failed(error),
+    }
+}
+
+/// The `/usage` panel as plain text, for headless sessions.
+pub(crate) async fn headless_report(
+    agent_session: &crate::agent_session::AgentSession,
+    width: usize,
+) -> Result<String, String> {
+    let session = session_section(agent_session)
+        .await
+        .ok_or("Could not read session usage stats.")?;
+    let panel = UsagePanel {
+        chatgpt: chatgpt_section().await,
+        session,
+    };
+    Ok(super::plain_lines(&panel.render(width)))
+}

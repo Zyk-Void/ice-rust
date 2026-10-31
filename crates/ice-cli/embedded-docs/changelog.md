@@ -11,6 +11,30 @@ from; the matching [GitHub Release](../../releases) carries the same notes.
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-10-31
+
+First ice-rust version number of its own. It moves past upstream pi-rust's
+0.8.1 so fork versions never collide with upstream releases. Not published.
+
+### Added
+
+- *(cli)* `icers --acp` serves the Agent Client Protocol on stdio, so T3 Code
+  and Zed can drive icers (#88)
+- *(cli)* Shells panel for background shells: list, details, follow, stop (#87)
+
+### Fixed
+
+- *(tools)* a foreground bash call without `timeout` moves to the background
+  at 120 s instead of being killed; completion notices arrive at the next tool
+  boundary and are not repeated after `bash_output`; shells get random ids and
+  are named by their description (#87)
+- *(cli)* the TUI returns to idle after a run it did not start, instead of
+  sticking on "Aborting…" (#89)
+- *(cli)* background notices no longer start turns in headless modes
+  (`--mode rpc`, ACP, `-p`) (#90)
+- *(harness)* a custom message that starts a run is announced, so a notice
+  that wakes the agent shows in the transcript (#91)
+
 ## [0.8.0](https://github.com/bigfish1913/pi-rust/compare/v0.7.1...v0.8.0) - 2026-10-22
 
 ### Fixed
