@@ -20,6 +20,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 use rusqlite::{params, Connection, OptionalExtension};
 
+use super::analytics::{AnalyticsSource, ItemFact, RunFact};
 use super::recorder::{now_ms, ObservePersistence};
 use super::types::*;
 
@@ -54,6 +55,8 @@ CREATE TABLE IF NOT EXISTS observe_events (
 );
 CREATE INDEX IF NOT EXISTS observe_events_run_ts_idx
 	ON observe_events (run_id, ts_ms, sequence);
+CREATE INDEX IF NOT EXISTS observe_events_ts_idx
+	ON observe_events (ts_ms);
 ";
 
 fn sensitive_key() -> &'static Regex {
@@ -406,27 +409,7 @@ impl ObserveRunStore {
         let Some(run) = self.get_run(run_id)? else {
             return Ok(None);
         };
-        let mut header = ObserveHeader {
-            run_id: run.run_id.clone(),
-            session_id: run.session_id.clone(),
-            main_thread_id: run.main_thread_id.clone(),
-            main_thread_name: match run.session_name.as_deref().filter(|s| !s.is_empty()) {
-                Some(name) => name.to_string(),
-                None => format!(
-                    "main · {}",
-                    run.session_id.chars().take(10).collect::<String>()
-                ),
-            },
-            session_name: run.session_name.clone(),
-            model: run.model.clone(),
-            thinking_level: run.thinking_level.clone(),
-            context: None,
-            usage: ObserveUsage::default(),
-            started_at: run.started_at,
-        };
-        let mut items: IndexMap<u64, ObserveItem> = IndexMap::new();
-        let mut lanes: IndexMap<String, ObserveLane> = IndexMap::new();
-        let mut threads: IndexMap<String, ObserveThread> = IndexMap::new();
+        let mut fold = StateFold::new(&run);
         let mut after = 0.0;
         loop {
             let page = self.get_events(
@@ -439,33 +422,200 @@ impl ObserveRunStore {
             };
             after = last.sequence as f64;
             for event in page {
-                match event.payload {
-                    ObserveRecorderEvent::Header { header: h } => header = h,
-                    ObserveRecorderEvent::Activity { mut item }
-                    | ObserveRecorderEvent::ActivityUpdate { mut item } => {
-                        if item.run_id.is_empty() {
-                            item.run_id = run_id.to_string();
-                        }
-                        items.insert(item.id, item);
-                    }
-                    ObserveRecorderEvent::Lane { lane } => {
-                        lanes.insert(lane.stream_key.clone(), lane);
-                    }
-                    ObserveRecorderEvent::Thread { thread } => {
-                        threads.insert(thread.identity.thread_key.clone(), thread);
-                    }
-                }
+                fold.apply(event.payload);
             }
             if limit.is_some() {
                 break;
             }
         }
-        Ok(Some(ObserveState {
-            header,
-            items: items.into_values().collect(),
-            lanes: lanes.into_values().collect(),
-            threads: threads.into_values().collect(),
-        }))
+        Ok(Some(fold.finish()))
+    }
+
+    /// The highest stored sequence of every run.
+    pub fn latest_sequences(&self) -> Result<HashMap<String, i64>, String> {
+        self.with_conn(|conn, _| {
+            let mut stmt = conn
+                .prepare("SELECT run_id, MAX(sequence) FROM observe_events GROUP BY run_id")
+                .map_err(sql_err)?;
+            let rows = stmt
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+                .map_err(sql_err)?;
+            rows.collect::<Result<_, _>>().map_err(sql_err)
+        })
+    }
+
+    /// Stored events with `sequence > after`, ascending, with the payload
+    /// left as the stored (redacted) JSON text.
+    pub fn get_stored_events(
+        &self,
+        run_id: &str,
+        after: i64,
+        limit: i64,
+    ) -> Result<Vec<StoredEvent>, String> {
+        self.with_conn(|conn, _| {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT sequence, ts_ms, event_type, payload_json FROM observe_events \
+                     WHERE run_id = ?1 AND sequence > ?2 ORDER BY sequence ASC LIMIT ?3",
+                )
+                .map_err(sql_err)?;
+            let rows = stmt
+                .query_map(
+                    params![run_id, after, limit.clamp(1, MAX_QUERY_LIMIT)],
+                    |row| {
+                        Ok(StoredEvent {
+                            sequence: row.get(0)?,
+                            ts: row.get(1)?,
+                            event_type: row.get(2)?,
+                            payload: row.get(3)?,
+                        })
+                    },
+                )
+                .map_err(sql_err)?;
+            rows.collect::<Result<_, _>>().map_err(sql_err)
+        })
+    }
+}
+
+impl AnalyticsSource for ObserveRunStore {
+    fn name(&self) -> &'static str {
+        "sqlite"
+    }
+
+    /// Runs started in `[since, until)`, with the time of their latest event.
+    fn runs_between(&self, since: i64, until: i64) -> Result<Vec<RunFact>, String> {
+        self.with_conn(|conn, _| {
+            let mut stmt = conn
+                .prepare(&format!(
+                    "SELECT {RUN_COLUMNS}, (SELECT MAX(ts_ms) FROM observe_events e \
+                     WHERE e.run_id = r.run_id) FROM observe_runs r \
+                     WHERE started_at_ms >= ?1 AND started_at_ms < ?2 \
+                     ORDER BY started_at_ms DESC"
+                ))
+                .map_err(sql_err)?;
+            let rows = stmt
+                .query_map(params![since, until], |row| {
+                    Ok(RunFact {
+                        summary: row_summary(row)?,
+                        last_activity: row.get(9)?,
+                    })
+                })
+                .map_err(sql_err)?;
+            rows.collect::<Result<_, _>>().map_err(sql_err)
+        })
+    }
+
+    /// The final state of every activity whose start time is in
+    /// `[since, until)`, reduced to analytics facts. Payloads are decoded
+    /// here rather than with SQLite JSON functions, which fail a whole query
+    /// on one truncated (invalid) nested JSON string.
+    fn items_between(&self, since: i64, until: i64) -> Result<Vec<ItemFact>, String> {
+        #[derive(serde::Deserialize)]
+        struct Envelope {
+            item: ObserveItem,
+        }
+        self.with_conn(|conn, _| {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT run_id, payload_json FROM observe_events \
+                     WHERE event_type IN ('activity', 'activity_update') \
+                     AND ts_ms >= ?1 AND ts_ms < ?2 ORDER BY run_id, sequence",
+                )
+                .map_err(sql_err)?;
+            let mut rows = stmt.query(params![since, until]).map_err(sql_err)?;
+            let mut latest: IndexMap<(String, u64), ItemFact> = IndexMap::new();
+            while let Some(row) = rows.next().map_err(sql_err)? {
+                let run_id: String = row.get(0).map_err(sql_err)?;
+                let payload: String = row.get(1).map_err(sql_err)?;
+                // A corrupt row is skipped: one bad event must not hide the rest.
+                let Ok(Envelope { item }) = serde_json::from_str(&payload) else {
+                    continue;
+                };
+                let fact = ItemFact::from_item(&run_id, &item);
+                latest.insert((run_id, item.id), fact);
+            }
+            Ok(latest.into_values().collect())
+        })
+    }
+
+    fn run_state(&self, run_id: &str) -> Result<Option<ObserveState>, String> {
+        self.get_state(run_id, None)
+    }
+}
+
+/// One stored event with its payload as stored JSON text.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StoredEvent {
+    pub sequence: i64,
+    pub ts: i64,
+    pub event_type: String,
+    pub payload: String,
+}
+
+/// Folds a run's events, in sequence order, into its [`ObserveState`].
+pub(crate) struct StateFold {
+    run_id: String,
+    header: ObserveHeader,
+    items: IndexMap<u64, ObserveItem>,
+    lanes: IndexMap<String, ObserveLane>,
+    threads: IndexMap<String, ObserveThread>,
+}
+
+impl StateFold {
+    pub(crate) fn new(run: &ObserveRunSummary) -> Self {
+        Self {
+            run_id: run.run_id.clone(),
+            header: ObserveHeader {
+                run_id: run.run_id.clone(),
+                session_id: run.session_id.clone(),
+                main_thread_id: run.main_thread_id.clone(),
+                main_thread_name: match run.session_name.as_deref().filter(|s| !s.is_empty()) {
+                    Some(name) => name.to_string(),
+                    None => format!(
+                        "main · {}",
+                        run.session_id.chars().take(10).collect::<String>()
+                    ),
+                },
+                session_name: run.session_name.clone(),
+                model: run.model.clone(),
+                thinking_level: run.thinking_level.clone(),
+                context: None,
+                usage: ObserveUsage::default(),
+                started_at: run.started_at,
+            },
+            items: IndexMap::new(),
+            lanes: IndexMap::new(),
+            threads: IndexMap::new(),
+        }
+    }
+
+    pub(crate) fn apply(&mut self, event: ObserveRecorderEvent) {
+        match event {
+            ObserveRecorderEvent::Header { header } => self.header = header,
+            ObserveRecorderEvent::Activity { mut item }
+            | ObserveRecorderEvent::ActivityUpdate { mut item } => {
+                if item.run_id.is_empty() {
+                    item.run_id = self.run_id.clone();
+                }
+                self.items.insert(item.id, item);
+            }
+            ObserveRecorderEvent::Lane { lane } => {
+                self.lanes.insert(lane.stream_key.clone(), lane);
+            }
+            ObserveRecorderEvent::Thread { thread } => {
+                self.threads
+                    .insert(thread.identity.thread_key.clone(), thread);
+            }
+        }
+    }
+
+    pub(crate) fn finish(self) -> ObserveState {
+        ObserveState {
+            header: self.header,
+            items: self.items.into_values().collect(),
+            lanes: self.lanes.into_values().collect(),
+            threads: self.threads.into_values().collect(),
+        }
     }
 }
 

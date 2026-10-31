@@ -595,8 +595,23 @@ async fn start_observability(
     i32,
 > {
     let agent_dir = crate::config::agent_dir().ok();
-    let (runtime, warning) =
-        crate::observe::start(harness, event_rx.resubscribe(), agent_dir.as_deref()).await;
+    let clickhouse = match crate::observe::clickhouse::ClickHouseConfig::from_env() {
+        None => None,
+        Some(config) => match config.and_then(crate::observe::clickhouse::ClickHouse::new) {
+            Ok(clickhouse) => Some(std::sync::Arc::new(clickhouse)),
+            Err(error) => {
+                eprintln!("Warning: ClickHouse observability mirror disabled: {error}");
+                None
+            }
+        },
+    };
+    let (runtime, warning) = crate::observe::start(
+        harness,
+        event_rx.resubscribe(),
+        agent_dir.as_deref(),
+        clickhouse,
+    )
+    .await;
     if let Some(warning) = warning {
         eprintln!("{warning}");
     }
@@ -621,6 +636,7 @@ async fn start_observability(
             port,
             recorder: runtime.recorder.clone(),
             store: runtime.store.clone(),
+            clickhouse: runtime.clickhouse.clone(),
             token,
         },
     )

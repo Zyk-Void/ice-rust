@@ -351,6 +351,12 @@ Knowledge tab and its `/cognee/*` routes (OBS-017..019, OBS-024..029), queue-upd
 harness reports only start/finish) and the install-telemetry gate and startup
 timing items (OBS-001, OBS-002).
 
+icers-only additions, beyond TS: cross-run analytics (`/api/overview`,
+`/api/runs`, `observe/analytics.rs`), a rebuilt Angular + spartan/ui dashboard
+(`web/observe-ui`; overview, run list, run detail with waterfall and file
+diffs, run comparison) and an optional ClickHouse mirror
+(`ICERS_OBSERVE_CLICKHOUSE_URL`, `observe/clickhouse.rs`).
+
 - **Recorder** (`observe-recorder.ts`, always on): subscribes to the session
   event stream. It projects tool calls (args, result preview, duration, error),
   messages, compaction, retries, skills, extension messages, goal/verifier

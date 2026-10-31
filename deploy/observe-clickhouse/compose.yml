@@ -1,0 +1,29 @@
+# Local ClickHouse for the icers observability mirror
+# (docs/guides/observability.md, "ClickHouse mirror").
+#
+#   docker compose -f deploy/observe-clickhouse/compose.yml up -d
+#   export ICERS_OBSERVE_CLICKHOUSE_URL=http://127.0.0.1:8123
+#   export ICERS_OBSERVE_CLICKHOUSE_USER=icers
+#   export ICERS_OBSERVE_CLICKHOUSE_PASSWORD=icers   # change both here and below
+#
+# icers creates the `icers` database and tables on first use. The port is
+# bound to loopback only.
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: icers
+      CLICKHOUSE_PASSWORD: icers
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - icers-observe-clickhouse:/var/lib/clickhouse
+
+volumes:
+  icers-observe-clickhouse:

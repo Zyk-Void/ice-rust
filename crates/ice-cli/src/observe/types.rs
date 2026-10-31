@@ -20,6 +20,22 @@ pub enum ObserveItemKind {
     Goal,
 }
 
+impl ObserveItemKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ObserveItemKind::Message => "message",
+            ObserveItemKind::Tool => "tool",
+            ObserveItemKind::Subagent => "subagent",
+            ObserveItemKind::Compaction => "compaction",
+            ObserveItemKind::Retry => "retry",
+            ObserveItemKind::Skill => "skill",
+            ObserveItemKind::Queue => "queue",
+            ObserveItemKind::Memory => "memory",
+            ObserveItemKind::Goal => "goal",
+        }
+    }
+}
+
 /// Mirrors TS `ObserveThreadKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
