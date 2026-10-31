@@ -27,6 +27,7 @@ async fn server(recorder: ObserveRecorder, store: Option<Arc<ObserveRunStore>>) 
         port: 0,
         recorder,
         store,
+        clickhouse: None,
         token: Some(TOKEN.into()),
     })
     .await
@@ -102,6 +103,29 @@ fn request_parsing() {
     assert!(parse_request("GET / HTTP/2.0\r\nHost: localhost").is_none());
 }
 
+#[tokio::test]
+async fn invalid_analytics_windows_return_bad_request() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = Arc::new(ObserveRunStore::open(&dir.path().join("o.sqlite")).unwrap());
+    let srv = server(recorder(Some(&store), "s1"), Some(store)).await;
+    let auth = format!("Authorization: Bearer {TOKEN}\r\n");
+    for route in ["/api/runs", "/api/overview"] {
+        for query in [
+            "until=-1",
+            "until=-1e100",
+            "since=9223372036854775807&until=9223372036854775807",
+            "since=0&until=9223372036854775807",
+            "since=10&until=5",
+            "since=-1&until=5",
+        ] {
+            let path = format!("{route}?{query}");
+            let (status, _, _) = request(srv.port, &path, &auth).await;
+            assert_eq!(status, 400, "{path}");
+        }
+    }
+    srv.close().await;
+}
+
 #[test]
 fn token_file_is_created_once_and_private() {
     let dir = tempfile::tempdir().unwrap();
@@ -158,6 +182,7 @@ async fn auth_host_and_dashboard_cookie() {
     assert_eq!(status, 200);
     assert!(head.contains("text/html"));
     assert!(head.contains("Referrer-Policy: no-referrer"));
+    assert!(head.contains("Content-Security-Policy: default-src 'none'; script-src 'self';"));
     assert!(head.contains(&format!(
         "Set-Cookie: {OBSERVE_COOKIE}={TOKEN}; HttpOnly; SameSite=Strict; Path=/"
     )));
@@ -181,7 +206,75 @@ async fn auth_host_and_dashboard_cookie() {
     // No store: history routes do not exist.
     let (status, _, _) = request(port, "/runs", &bearer).await;
     assert_eq!(status, 404);
+    let (status, _, body) = request(port, "/api/runs", &bearer).await;
+    assert_eq!(
+        (status, body.as_str()),
+        (404, r#"{"error":"no history store"}"#)
+    );
+    for (asset, content_type) in [
+        ("/main.js", "text/javascript"),
+        ("/styles.css", "text/css"),
+        ("/licenses.txt", "text/plain"),
+    ] {
+        let (status, head, _) = request(port, asset, &bearer).await;
+        assert_eq!(status, 200, "{asset}");
+        assert!(head.contains(content_type), "{asset}: {head}");
+    }
+    let (status, _, _) = request(port, "/main.js", "").await;
+    assert_eq!(status, 401, "assets need the token too");
     srv.close().await;
+}
+
+#[tokio::test]
+async fn analytics_routes_read_the_sqlite_history() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = Arc::new(ObserveRunStore::open(&dir.path().join("o.sqlite")).unwrap());
+    let rec = recorder(Some(&store), "s1");
+    rec.handle_agent_event(&user("hello"));
+    rec.handle_agent_event(&AgentEvent::ToolExecutionStart {
+        tool_call_id: "c1".into(),
+        tool_name: "write".into(),
+        args: serde_json::json!({ "path": "notes.md", "content": "x" }),
+    });
+    let run_id = rec.run_id();
+    let srv = server(rec.clone(), Some(Arc::clone(&store))).await;
+    let bearer = format!("Authorization: Bearer {TOKEN}\r\n");
+
+    let (status, _, body) = request(srv.port, "/api/meta", &bearer).await;
+    assert_eq!(status, 200);
+    let meta: serde_json::Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(meta["sources"], serde_json::json!(["sqlite"]));
+    assert_eq!(meta["defaultSource"], "sqlite");
+    assert_eq!(meta["liveRunId"], run_id.as_str());
+    assert!(meta["clickhouse"].is_null());
+
+    let (status, _, body) = request(srv.port, "/api/runs?since=0", &bearer).await;
+    assert_eq!(status, 200, "{body}");
+    let list: serde_json::Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(list["source"], "sqlite");
+    assert!(list.get("sourceError").is_none());
+    let row = &list["runs"][0];
+    assert_eq!(row["runId"], run_id.as_str());
+    assert_eq!(
+        (row["toolCalls"].as_u64(), row["files"].as_u64()),
+        (Some(1), Some(1))
+    );
+
+    let (status, _, body) = request(srv.port, "/api/overview?since=0&tz=60", &bearer).await;
+    assert_eq!(status, 200, "{body}");
+    let overview: serde_json::Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(overview["totals"]["runs"], 1);
+    assert_eq!(overview["totals"]["toolCalls"], 1);
+    assert_eq!(overview["files"][0]["path"], "notes.md");
+    assert_eq!(overview["heatmap"].as_array().unwrap().len(), 7);
+
+    let (status, _, body) = request(srv.port, "/api/overview?source=clickhouse", &bearer).await;
+    assert_eq!(
+        (status, body.as_str()),
+        (404, r#"{"error":"source clickhouse is not configured"}"#)
+    );
+    srv.close().await;
+    rec.stop();
 }
 
 #[tokio::test]
@@ -284,6 +377,7 @@ async fn a_busy_port_is_reported_as_shared() {
         port: first.port,
         recorder: recorder(None, "b"),
         store: None,
+        clickhouse: None,
         token: Some(TOKEN.into()),
     })
     .await
@@ -301,6 +395,7 @@ async fn a_busy_port_without_a_persistent_token_fails_closed() {
         port: first.port,
         recorder: recorder(None, "b"),
         store: None,
+        clickhouse: None,
         token: None,
     })
     .await;
@@ -311,16 +406,46 @@ async fn a_busy_port_without_a_persistent_token_fails_closed() {
 }
 
 #[test]
-fn dashboard_is_self_contained_and_avoids_html_injection() {
+fn dashboard_bundle_is_self_contained() {
     // No external scripts, styles or fonts: the page must work offline and
     // never leak the token-bearing URL to a third party.
-    for needle in ["src=\"http", "href=\"http", "@import", "url(http"] {
+    let bundle: Vec<(&str, String)> = std::iter::once(("/", DASHBOARD_HTML.to_string()))
+        .chain(
+            UI_ASSETS
+                .iter()
+                .filter(|(path, _, _)| path.ends_with(".js") || path.ends_with(".css"))
+                .map(|(path, _, body)| (*path, String::from_utf8_lossy(body).into_owned())),
+        )
+        .collect();
+    for (path, text) in &bundle {
         assert!(
-            !DASHBOARD_HTML.contains(needle),
-            "dashboard references {needle}"
+            !text.is_empty(),
+            "{path} is empty; run scripts/build-observe-ui.sh"
+        );
+        for needle in [
+            "src=\"http",
+            "href=\"http",
+            "@import",
+            "url(http",
+            "url(\"http",
+        ] {
+            assert!(!text.contains(needle), "{path} references {needle}");
+        }
+    }
+    // The page loads the served script and styles, with no inline script
+    // that the CSP would block.
+    for path in ["main.js", "styles.css"] {
+        assert!(
+            DASHBOARD_HTML.contains(path),
+            "index.html does not load {path}"
         );
     }
-    // Untrusted event strings are rendered with textContent only.
-    assert!(!DASHBOARD_HTML.contains("innerHTML"));
-    assert!(DASHBOARD_HTML.contains("new EventSource(\"events\")"));
+    assert!(
+        !DASHBOARD_HTML.contains("<script>"),
+        "inline scripts violate the CSP"
+    );
+    assert!(
+        !DASHBOARD_HTML.contains("onload="),
+        "inline handlers violate the CSP"
+    );
 }

@@ -2,9 +2,10 @@
 //! (`startObserveServer`, `loadObserveToken`; OBS-014..OBS-016): a read-only
 //! HTTP + Server-Sent Events service on `127.0.0.1`, behind a per-user token.
 //!
-//! It accepts no agent commands. Routes: `/` (dashboard), `/state`, `/runs`,
-//! `/replay[/<run id>|/events]` and `/events` (SSE). The Cognee `/knowledge`
-//! routes are not ported yet.
+//! It accepts no agent commands. Routes: `/` (dashboard) and its assets,
+//! `/state`, `/runs`, `/replay[/<run id>|/events]`, `/events` (SSE) and the
+//! icers-only analytics under `/api/`. The Cognee `/knowledge` routes are not
+//! ported yet.
 //!
 //! Rust differences, deliberately:
 //!
@@ -20,6 +21,10 @@
 //! - A port already in use is reported as `shared` without checking who owns
 //!   it when a persistent token is available; the local recorder keeps
 //!   recording into the shared store.
+//! - The dashboard is an Angular bundle built from `web/observe-ui`
+//!   (`scripts/build-observe-ui.sh`) and served with a strict CSP.
+//! - `/api/meta`, `/api/overview` and `/api/runs` add cross-run analytics,
+//!   read from ClickHouse when it is configured and from SQLite otherwise.
 
 use std::collections::{BTreeMap, HashMap};
 use std::net::SocketAddr;
@@ -32,8 +37,10 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 
+use super::analytics::{self, AnalyticsSource, OverviewQuery, DAY_MS};
+use super::clickhouse::ClickHouse;
 use super::recorder::{now_ms, ObserveRecorder};
-use super::store::ObserveRunStore;
+use super::store::{ObserveRunStore, OBSERVE_RETENTION_MS};
 use super::types::*;
 
 pub const OBSERVE_DEFAULT_PORT: u16 = 4659;
@@ -51,7 +58,37 @@ pub const FOREIGN_PAGE_LIMIT: f64 = 500.0;
 const HEARTBEAT: Duration = Duration::from_secs(15);
 const MAX_REQUEST_HEAD: usize = 16 * 1024;
 
-static DASHBOARD_HTML: &str = include_str!("dashboard.html");
+/// Default analytics windows.
+const OVERVIEW_WINDOW_MS: i64 = 7 * DAY_MS;
+const RUN_LIST_WINDOW_MS: i64 = 30 * DAY_MS;
+
+/// The dashboard bundle, built from `web/observe-ui` by
+/// `scripts/build-observe-ui.sh`.
+static DASHBOARD_HTML: &str = include_str!("ui/index.html");
+static UI_ASSETS: &[(&str, &str, &[u8])] = &[
+    (
+        "/main.js",
+        "text/javascript; charset=utf-8",
+        include_bytes!("ui/main.js"),
+    ),
+    (
+        "/styles.css",
+        "text/css; charset=utf-8",
+        include_bytes!("ui/styles.css"),
+    ),
+    // License notices of the bundled npm packages.
+    (
+        "/licenses.txt",
+        "text/plain; charset=utf-8",
+        include_bytes!("ui/licenses.txt"),
+    ),
+];
+/// The page renders untrusted tool output; allow nothing but this origin.
+/// Inline styles are needed by Angular component styles and charts.
+const DASHBOARD_CSP: &str =
+    "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; \
+     img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; \
+     form-action 'none'; frame-ancestors 'none'";
 
 /// Read or create the persistent dashboard token. Mirrors TS
 /// `loadObserveToken`: an existing nonempty token is reused; otherwise 32
@@ -167,6 +204,8 @@ pub struct ObserveServerOptions {
     pub port: u16,
     pub recorder: ObserveRecorder,
     pub store: Option<Arc<ObserveRunStore>>,
+    /// Analytics backend preferred over `store` when configured.
+    pub clickhouse: Option<Arc<ClickHouse>>,
     /// `None` generates a per-process token.
     pub token: Option<String>,
 }
@@ -195,6 +234,7 @@ impl ObserveServer {
 struct ServerState {
     recorder: ObserveRecorder,
     store: Option<Arc<ObserveRunStore>>,
+    clickhouse: Option<Arc<ClickHouse>>,
     token: String,
     cancel: CancellationToken,
 }
@@ -232,6 +272,7 @@ pub async fn start_observe_server(options: ObserveServerOptions) -> Result<Obser
     let state = Arc::new(ServerState {
         recorder: options.recorder,
         store: options.store,
+        clickhouse: options.clickhouse,
         token: token.clone(),
         cancel: cancel.clone(),
     });
@@ -354,6 +395,7 @@ fn status_text(status: u16) -> &'static str {
     match status {
         200 => "OK",
         400 => "Bad Request",
+        502 => "Bad Gateway",
         401 => "Unauthorized",
         403 => "Forbidden",
         404 => "Not Found",
@@ -477,7 +519,10 @@ fn route(state: &ServerState, request: &Request) -> Routed {
             let mut response = Response {
                 status: 200,
                 content_type: "text/html; charset=utf-8",
-                headers: vec![("Referrer-Policy", "no-referrer".into())],
+                headers: vec![
+                    ("Referrer-Policy", "no-referrer".into()),
+                    ("Content-Security-Policy", DASHBOARD_CSP.into()),
+                ],
                 body: DASHBOARD_HTML.as_bytes().to_vec(),
             };
             if via_query {
@@ -500,8 +545,123 @@ fn route(state: &ServerState, request: &Request) -> Routed {
             None => text(404, "not found"),
         },
         "/events" => return Routed::Events,
+        "/api/meta" => json(200, &meta(state)),
+        "/api/overview" => overview_route(state, request),
+        "/api/runs" => run_list_route(state, request),
         _ if path == "/replay" || path.starts_with("/replay/") => replay_route(state, request),
-        _ => text(404, "not found"),
+        _ => match UI_ASSETS.iter().find(|(asset, _, _)| *asset == path) {
+            Some((_, content_type, body)) => Response {
+                status: 200,
+                content_type,
+                headers: Vec::new(),
+                body: body.to_vec(),
+            },
+            None => text(404, "not found"),
+        },
+    })
+}
+
+fn sources(state: &ServerState) -> Vec<&dyn AnalyticsSource> {
+    let mut sources: Vec<&dyn AnalyticsSource> = Vec::new();
+    // The mirror is eventually consistent; prefer freshly persisted local
+    // facts unless the caller explicitly selects shared ClickHouse history.
+    if let Some(store) = &state.store {
+        sources.push(store.as_ref());
+    }
+    if let Some(clickhouse) = &state.clickhouse {
+        sources.push(clickhouse.as_ref());
+    }
+    sources
+}
+
+fn meta(state: &ServerState) -> serde_json::Value {
+    let names: Vec<&str> = sources(state).iter().map(|s| s.name()).collect();
+    serde_json::json!({
+        "version": env!("CARGO_PKG_VERSION"),
+        "liveRunId": state.recorder.run_id(),
+        "retentionMs": OBSERVE_RETENTION_MS,
+        "sources": names,
+        "defaultSource": names.first(),
+        "clickhouse": state.clickhouse.as_ref().map(|c| c.status()),
+    })
+}
+
+/// Run `query` on the requested source, or on each configured source in
+/// preference order until one answers. A fallback names the failed source
+/// in `sourceError`.
+fn with_source<T: serde::Serialize>(
+    state: &ServerState,
+    request: &Request,
+    query: impl Fn(&dyn AnalyticsSource) -> Result<T, String>,
+) -> Response {
+    let mut candidates = sources(state);
+    if let Some(wanted) = request.query.get("source").filter(|s| !s.is_empty()) {
+        candidates.retain(|s| s.name() == wanted);
+        if candidates.is_empty() {
+            return json_error(404, &format!("source {wanted} is not configured"));
+        }
+    }
+    let mut failure: Option<String> = None;
+    for source in candidates {
+        match query(source) {
+            Ok(value) => {
+                let mut value = serde_json::to_value(value).unwrap_or_default();
+                if let (Some(error), Some(object)) = (failure, value.as_object_mut()) {
+                    object.insert("sourceError".into(), error.into());
+                }
+                return json(200, &value);
+            }
+            Err(error) => failure = Some(format!("{}: {error}", source.name())),
+        }
+    }
+    match failure {
+        Some(error) => json_error(502, &error),
+        None => json_error(404, "no history store"),
+    }
+}
+
+/// `since`/`until` in epoch ms, restricted to years 1970 through 9999 so
+/// bucket alignment and previous-period arithmetic cannot overflow.
+fn window(request: &Request, default_span: i64) -> Result<(i64, i64), &'static str> {
+    let timestamp = |key: &str, default: i64| -> Result<i64, &'static str> {
+        if !request.query.contains_key(key) {
+            return Ok(default);
+        }
+        let value = request.query_number(key).ok_or("invalid time window")?;
+        if !(0.0..=analytics::MAX_TIMESTAMP as f64).contains(&value) {
+            return Err("invalid time window");
+        }
+        Ok(value as i64)
+    };
+    let until = timestamp("until", now_ms())?;
+    let since = timestamp("since", until.saturating_sub(default_span).max(0))?;
+    if since >= until {
+        return Err("since must be earlier than until");
+    }
+    Ok((since, until))
+}
+
+fn overview_route(state: &ServerState, request: &Request) -> Response {
+    let (since, until) = match window(request, OVERVIEW_WINDOW_MS) {
+        Ok(window) => window,
+        Err(error) => return json_error(400, error),
+    };
+    let query = OverviewQuery {
+        since,
+        until,
+        bucket_ms: request.query_number("bucket").map(|n| n as i64),
+        tz_offset_min: request.query_number("tz").map(|n| n as i64).unwrap_or(0),
+    };
+    with_source(state, request, |source| analytics::overview(source, &query))
+}
+
+fn run_list_route(state: &ServerState, request: &Request) -> Response {
+    let (since, until) = match window(request, RUN_LIST_WINDOW_MS) {
+        Ok(window) => window,
+        Err(error) => return json_error(400, error),
+    };
+    with_source(state, request, |source| {
+        analytics::run_list(source, since, until)
     })
 }
 
@@ -509,14 +669,24 @@ fn state_route(state: &ServerState, request: &Request) -> Response {
     if request.query.get("view").map(String::as_str) == Some("all") {
         return json(200, &combined_state(state));
     }
-    let run_id = request.query.get("runId").filter(|s| !s.is_empty());
-    match (run_id, &state.store) {
-        (Some(run_id), Some(store)) => match store.get_state(run_id, None) {
-            Ok(Some(run_state)) => json(200, &run_state),
-            Ok(None) => json_error(404, "run not found"),
-            Err(e) => json_error(500, &e),
-        },
-        _ => json(200, &state.recorder.get_state()),
+    let Some(run_id) = request.query.get("runId").filter(|s| !s.is_empty()) else {
+        return json(200, &state.recorder.get_state());
+    };
+    if state.store.is_none() && state.clickhouse.is_none() {
+        return json(200, &state.recorder.get_state());
+    }
+    // Local history first; ClickHouse can hold runs past the retention.
+    let mut failure = None;
+    for source in sources(state) {
+        match source.run_state(run_id) {
+            Ok(Some(run_state)) => return json(200, &run_state),
+            Ok(None) => {}
+            Err(e) => failure = Some(e),
+        }
+    }
+    match failure {
+        Some(e) => json_error(500, &e),
+        None => json_error(404, "run not found"),
     }
 }
 

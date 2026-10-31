@@ -141,6 +141,7 @@ hash. Verify that before committing. The script runs `cargo fmt` and
 | `packages/provider-runtime` | C ABI bridge for provider packages |
 | `examples/*` | SDK, tools, TUI and plugin examples (built in CI) |
 | `crates/ice-cli/embedded-docs/` | Generated copy of docs. Edit the source docs, then run `sh scripts/sync-embedded-docs.sh`. |
+| `web/observe-ui` | Source of the `icers --observe` dashboard (Angular + spartan/ui). Its built bundle in `crates/ice-cli/src/observe/ui/` is generated: edit the source, then run `sh scripts/build-observe-ui.sh` and commit both. |
 
 When porting from ice, the TypeScript reference lives in
 `~/Zks/ice/packages/*/src`. `ICE_PORTING.md` gives the exact source paths for

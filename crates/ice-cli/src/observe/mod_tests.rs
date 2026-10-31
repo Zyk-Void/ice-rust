@@ -33,7 +33,7 @@ async fn a_run_is_recorded_with_prompts_custom_entries_and_finish() {
         .await
         .unwrap();
 
-    let (runtime, warning) = start(&harness, events, Some(dir.path())).await;
+    let (runtime, warning) = start(&harness, events, Some(dir.path()), None).await;
     assert!(warning.is_none(), "{warning:?}");
     let store = runtime.store.clone().unwrap();
     let run_id = runtime.recorder.run_id();
@@ -110,7 +110,7 @@ async fn an_unopenable_store_only_warns() {
     })
     .await
     .unwrap();
-    let (runtime, warning) = start(&harness, events, Some(&blocker)).await;
+    let (runtime, warning) = start(&harness, events, Some(&blocker), None).await;
     assert!(warning
         .unwrap()
         .starts_with("Warning: observability history unavailable: "));

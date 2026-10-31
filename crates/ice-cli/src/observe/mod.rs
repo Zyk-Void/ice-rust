@@ -7,12 +7,17 @@
 //!   timeline (read-only; it never drives the agent).
 //! - [`store`] persists that projection to `<agent dir>/observability.sqlite`,
 //!   separate from session storage.
-//! - [`server`] serves the dashboard, JSON state/replay and SSE on
-//!   `127.0.0.1` behind a per-user token (`icers --observe[=port]`).
+//! - [`server`] serves the dashboard, JSON state/replay, analytics and SSE
+//!   on `127.0.0.1` behind a per-user token (`icers --observe[=port]`).
+//! - [`analytics`] aggregates run lists and overviews from history facts.
+//! - [`clickhouse`] optionally mirrors the history into ClickHouse
+//!   (`ICERS_OBSERVE_CLICKHOUSE_URL`) and serves analytics from it.
 //!
 //! Cognee memory operations reach the timeline as `memory` items (OBS-008).
 //! The Cognee knowledge views (OBS-017..019, OBS-024..029) are not ported.
 
+pub mod analytics;
+pub mod clickhouse;
 pub mod recorder;
 pub mod server;
 pub mod store;
@@ -82,6 +87,8 @@ enum Command {
 pub struct ObserveRuntime {
     pub recorder: ObserveRecorder,
     pub store: Option<Arc<ObserveRunStore>>,
+    pub clickhouse: Option<Arc<clickhouse::ClickHouse>>,
+    mirror: Option<clickhouse::ClickHouseMirror>,
     tx: std::sync::mpsc::Sender<Command>,
     worker: Option<std::thread::JoinHandle<()>>,
     forward: Option<tokio::task::JoinHandle<()>>,
@@ -162,11 +169,13 @@ async fn forward_new_entries(
 
 /// Open the history store and attach a recorder to the live event stream.
 /// Mirrors TS `main.ts` observability startup. Never fails: a store that
-/// cannot be opened yields a warning and a live-only recorder.
+/// cannot be opened yields a warning and a live-only recorder. With
+/// `clickhouse`, the store is mirrored there while the run lasts.
 pub async fn start(
     harness: &AgentHarness,
     events: broadcast::Receiver<AgentEvent>,
     agent_dir: Option<&Path>,
+    clickhouse: Option<Arc<clickhouse::ClickHouse>>,
 ) -> (ObserveRuntime, Option<String>) {
     let mut warning = None;
     let store = match agent_dir {
@@ -196,7 +205,16 @@ pub async fn start(
         persistence: store.clone().map(|s| s as Arc<dyn ObservePersistence>),
     });
     let watermark = entry_watermark(harness).await;
-    (spawn(harness, events, recorder, store, watermark), warning)
+    let mut runtime = spawn(harness, events, recorder, store, watermark);
+    if let (Some(clickhouse), Some(store)) = (&clickhouse, &runtime.store) {
+        runtime.mirror = Some(clickhouse::ClickHouseMirror::spawn(
+            Arc::clone(clickhouse),
+            Arc::clone(store),
+            runtime.recorder.run_id(),
+        ));
+    }
+    runtime.clickhouse = clickhouse;
+    (runtime, warning)
 }
 
 fn spawn(
@@ -331,6 +349,8 @@ fn spawn(
     ObserveRuntime {
         recorder,
         store,
+        clickhouse: None,
+        mirror: None,
         tx,
         worker,
         forward: Some(forward),
@@ -356,6 +376,10 @@ impl ObserveRuntime {
             let _ = tokio::task::spawn_blocking(move || worker.join()).await;
         }
         self.recorder.stop();
+        // After the run is finished locally, so the mirror copies that too.
+        if let Some(mirror) = self.mirror.take() {
+            mirror.finish().await;
+        }
     }
 }
 

@@ -1,0 +1,4 @@
+# The observe dashboard bundle, built from web/observe-ui by
+# scripts/build-observe-ui.sh.
+crates/ice-cli/src/observe/ui/** linguist-generated=true -diff
+web/observe-ui/package-lock.json linguist-generated=true -diff
