@@ -103,6 +103,29 @@ fn request_parsing() {
     assert!(parse_request("GET / HTTP/2.0\r\nHost: localhost").is_none());
 }
 
+#[tokio::test]
+async fn invalid_analytics_windows_return_bad_request() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = Arc::new(ObserveRunStore::open(&dir.path().join("o.sqlite")).unwrap());
+    let srv = server(recorder(Some(&store), "s1"), Some(store)).await;
+    let auth = format!("Authorization: Bearer {TOKEN}\r\n");
+    for route in ["/api/runs", "/api/overview"] {
+        for query in [
+            "until=-1",
+            "until=-1e100",
+            "since=9223372036854775807&until=9223372036854775807",
+            "since=0&until=9223372036854775807",
+            "since=10&until=5",
+            "since=-1&until=5",
+        ] {
+            let path = format!("{route}?{query}");
+            let (status, _, _) = request(srv.port, &path, &auth).await;
+            assert_eq!(status, 400, "{path}");
+        }
+    }
+    srv.close().await;
+}
+
 #[test]
 fn token_file_is_created_once_and_private() {
     let dir = tempfile::tempdir().unwrap();

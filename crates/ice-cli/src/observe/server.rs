@@ -563,11 +563,13 @@ fn route(state: &ServerState, request: &Request) -> Routed {
 
 fn sources(state: &ServerState) -> Vec<&dyn AnalyticsSource> {
     let mut sources: Vec<&dyn AnalyticsSource> = Vec::new();
-    if let Some(clickhouse) = &state.clickhouse {
-        sources.push(clickhouse.as_ref());
-    }
+    // The mirror is eventually consistent; prefer freshly persisted local
+    // facts unless the caller explicitly selects shared ClickHouse history.
     if let Some(store) = &state.store {
         sources.push(store.as_ref());
+    }
+    if let Some(clickhouse) = &state.clickhouse {
+        sources.push(clickhouse.as_ref());
     }
     sources
 }
@@ -618,23 +620,32 @@ fn with_source<T: serde::Serialize>(
     }
 }
 
-/// `since`/`until` in epoch ms; `until` defaults to now and `since` to
-/// `default_span` before it.
-fn window(request: &Request, default_span: i64) -> (i64, i64) {
-    let until = request
-        .query_number("until")
-        .map(|n| n as i64)
-        .unwrap_or_else(now_ms);
-    let since = request
-        .query_number("since")
-        .map(|n| n as i64)
-        .unwrap_or(until - default_span)
-        .clamp(0, until);
-    (since, until.max(since + 1))
+/// `since`/`until` in epoch ms, restricted to years 1970 through 9999 so
+/// bucket alignment and previous-period arithmetic cannot overflow.
+fn window(request: &Request, default_span: i64) -> Result<(i64, i64), &'static str> {
+    let timestamp = |key: &str, default: i64| -> Result<i64, &'static str> {
+        if !request.query.contains_key(key) {
+            return Ok(default);
+        }
+        let value = request.query_number(key).ok_or("invalid time window")?;
+        if !(0.0..=analytics::MAX_TIMESTAMP as f64).contains(&value) {
+            return Err("invalid time window");
+        }
+        Ok(value as i64)
+    };
+    let until = timestamp("until", now_ms())?;
+    let since = timestamp("since", until.saturating_sub(default_span).max(0))?;
+    if since >= until {
+        return Err("since must be earlier than until");
+    }
+    Ok((since, until))
 }
 
 fn overview_route(state: &ServerState, request: &Request) -> Response {
-    let (since, until) = window(request, OVERVIEW_WINDOW_MS);
+    let (since, until) = match window(request, OVERVIEW_WINDOW_MS) {
+        Ok(window) => window,
+        Err(error) => return json_error(400, error),
+    };
     let query = OverviewQuery {
         since,
         until,
@@ -645,7 +656,10 @@ fn overview_route(state: &ServerState, request: &Request) -> Response {
 }
 
 fn run_list_route(state: &ServerState, request: &Request) -> Response {
-    let (since, until) = window(request, RUN_LIST_WINDOW_MS);
+    let (since, until) = match window(request, RUN_LIST_WINDOW_MS) {
+        Ok(window) => window,
+        Err(error) => return json_error(400, error),
+    };
     with_source(state, request, |source| {
         analytics::run_list(source, since, until)
     })
@@ -663,7 +677,7 @@ fn state_route(state: &ServerState, request: &Request) -> Response {
     }
     // Local history first; ClickHouse can hold runs past the retention.
     let mut failure = None;
-    for source in sources(state).into_iter().rev() {
+    for source in sources(state) {
         match source.run_state(run_id) {
             Ok(Some(run_state)) => return json(200, &run_state),
             Ok(None) => {}

@@ -287,6 +287,40 @@ fn bucket_width_is_bounded() {
 }
 
 #[test]
+fn overview_rejects_extreme_windows_and_bounds_aligned_series() {
+    let source = FakeSource {
+        runs: Vec::new(),
+        items: Vec::new(),
+    };
+    for (since, until) in [(0, i64::MAX), (i64::MAX, i64::MAX), (-1, 1), (10, 5)] {
+        assert!(overview(
+            &source,
+            &OverviewQuery {
+                since,
+                until,
+                bucket_ms: None,
+                tz_offset_min: 0,
+            }
+        )
+        .is_err());
+    }
+    for (since, until, bucket) in [(1, 400 * 60_000 + 1, 60_000), (0, MAX_TIMESTAMP, i64::MAX)] {
+        let result = overview(
+            &source,
+            &OverviewQuery {
+                since,
+                until,
+                bucket_ms: Some(bucket),
+                tz_offset_min: -1440,
+            },
+        )
+        .unwrap();
+        assert!(result.series.len() <= MAX_BUCKETS as usize);
+        assert!(!result.series.is_empty());
+    }
+}
+
+#[test]
 fn run_list_rolls_up_each_run() {
     let source = fixture();
     let list = run_list(&source, T0, T0 + DAY_MS).unwrap();

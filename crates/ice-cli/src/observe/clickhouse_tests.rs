@@ -425,6 +425,30 @@ fn analytics_fake() -> Responder {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn oversized_remote_replay_is_rejected_instead_of_truncated() {
+    let responder = analytics_fake();
+    let fake = FakeClickHouse::start(Arc::new(move |request| {
+        if request.statement().contains("SELECT sequence, payload") {
+            assert!(request
+                .statement()
+                .contains(&format!("LIMIT {}", MAX_STATE_EVENTS + 1)));
+            return (
+                200,
+                "{\"sequence\":1,\"payload\":\"{}\"}\n".repeat((MAX_STATE_EVENTS + 1) as usize),
+            );
+        }
+        responder(request)
+    }))
+    .await;
+    let clickhouse = Arc::new(ClickHouse::new(fake.config()).unwrap());
+    let error = tokio::task::spawn_blocking(move || clickhouse.run_state("r1"))
+        .await
+        .unwrap()
+        .unwrap_err();
+    assert!(error.contains("exceeds the replay limit"), "{error}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn clickhouse_facts_feed_the_shared_analytics() {
     let fake = FakeClickHouse::start(analytics_fake()).await;
     let clickhouse = Arc::new(ClickHouse::new(fake.config()).unwrap());
@@ -499,7 +523,7 @@ async fn http_get(port: u16, path: &str) -> (u16, String) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn dashboard_falls_back_to_sqlite_when_clickhouse_fails() {
+async fn dashboard_prefers_fresh_sqlite_and_allows_explicit_clickhouse() {
     let dir = tempfile::tempdir().unwrap();
     let store = Arc::new(ObserveRunStore::open(&dir.path().join("o.sqlite")).unwrap());
     let live = recorder(&store, "live");
@@ -518,7 +542,8 @@ async fn dashboard_falls_back_to_sqlite_when_clickhouse_fails() {
     let (status, body) = http_get(server.port, "/api/meta").await;
     assert_eq!(status, 200);
     let meta: serde_json::Value = serde_json::from_str(&body).unwrap();
-    assert_eq!(meta["sources"], serde_json::json!(["clickhouse", "sqlite"]));
+    assert_eq!(meta["sources"], serde_json::json!(["sqlite", "clickhouse"]));
+    assert_eq!(meta["defaultSource"], "sqlite");
     assert_eq!(meta["clickhouse"]["database"], "obs");
     assert!(!body.contains("hunter2"), "meta never exposes the password");
 
@@ -526,7 +551,11 @@ async fn dashboard_falls_back_to_sqlite_when_clickhouse_fails() {
     assert_eq!(status, 200, "{body}");
     let list: serde_json::Value = serde_json::from_str(&body).unwrap();
     assert_eq!(list["source"], "sqlite");
-    assert_eq!(list["sourceError"], "clickhouse: ClickHouse HTTP 503: down");
+    assert!(list.get("sourceError").is_none());
+    assert!(
+        fake.requests().is_empty(),
+        "local analytics never waits for the mirror"
+    );
     assert_eq!(list["runs"].as_array().unwrap().len(), 1);
 
     let (status, body) = http_get(server.port, "/api/overview?source=clickhouse").await;

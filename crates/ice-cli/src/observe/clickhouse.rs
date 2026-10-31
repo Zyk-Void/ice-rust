@@ -632,15 +632,21 @@ impl ClickHouse {
         else {
             return Ok(None);
         };
+        let limit = MAX_STATE_EVENTS + 1;
         let events: Vec<EventPayload> = self
             .select(
                 &self.sql(&format!(
                     "SELECT sequence, payload FROM {{db}}.observe_events FINAL \
-                     WHERE run_id = {{run:String}} ORDER BY sequence LIMIT {MAX_STATE_EVENTS}"
+                     WHERE run_id = {{run:String}} ORDER BY sequence LIMIT {limit}"
                 )),
                 &run,
             )
             .await?;
+        if events.len() > MAX_STATE_EVENTS as usize {
+            return Err(format!(
+                "run {run_id} exceeds the replay limit of {MAX_STATE_EVENTS} events"
+            ));
+        }
         let mut fold = StateFold::new(&row.into_summary());
         for event in events {
             let payload = serde_json::from_str(&event.payload)

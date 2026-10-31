@@ -133,9 +133,12 @@ The `/api/` routes take `since` and `until` (epoch milliseconds; defaults: the
 last 7 days for `/api/overview`, 30 days for `/api/runs`), and
 `/api/overview` also takes `bucket` (milliseconds) and `tz` (the viewer's UTC
 offset in minutes, for day buckets and the heatmap). `source=sqlite` or
-`source=clickhouse` picks a backend; without it ClickHouse is preferred when
-configured, and a failure falls back to SQLite with the reason in
-`sourceError`. These routes are icers additions; TypeScript ice has none.
+`source=clickhouse` picks a backend; without it SQLite is preferred so recent
+local events remain visible while the asynchronous mirror catches up. If the
+preferred backend fails, the other configured backend is tried and the reason
+appears in `sourceError`. Invalid or reversed time windows return HTTP 400;
+timestamps must be between 1970 and 9999. These routes are icers additions;
+TypeScript ice has none.
 
 Payloads use the camelCase field names of the TypeScript `observe-recorder.ts`
 types, so tools written against the ice dashboard can read them.
@@ -144,7 +147,13 @@ types, so tools written against the ice dashboard can read them.
 
 SQLite keeps 30 days of history on each machine. To keep history longer,
 collect it from several machines, or query it with SQL or Grafana, point icers
-at a ClickHouse server:
+at a ClickHouse server.
+
+**Privacy:** setting the ClickHouse URL opts in to uploading full persisted
+observation payloads, including prompts, tool arguments/results and assistant
+messages. Credential-pattern filtering is best effort, not content anonymization;
+private source code and conversation text may remain. Use only a trusted server
+and configure transport security and access controls as appropriate.
 
 ```bash
 docker compose -f deploy/observe-clickhouse/compose.yml up -d   # local ClickHouse
@@ -166,9 +175,11 @@ export ICERS_OBSERVE_CLICKHOUSE_DATABASE=icers           # optional, default ice
   backoff up to 60 seconds. The sidebar and `/api/meta` show whether the mirror
   is connected, when it last synced and the last error. A run recorded while
   ClickHouse was down is copied by the next icers process that starts.
-- **Reading.** With ClickHouse configured the dashboard's analytics read from
-  it, and runs older than the local retention open from it. The source picker
-  switches to the local SQLite history.
+- **Reading.** Analytics default to fresh local SQLite history. Select
+  ClickHouse in the source picker for shared history or older runs; mirrored
+  data can lag behind current activity. Individual runs older than local
+  retention also open from ClickHouse. Remote replays over 100,000 events return
+  an explicit error rather than silently displaying incomplete history.
 - **Retention.** ClickHouse keeps everything; add a TTL yourself if needed,
   e.g. `ALTER TABLE icers.observe_events MODIFY TTL toDateTime(intDiv(ts_ms, 1000)) + INTERVAL 1 YEAR`.
 - **Schema.** `observe_events` stores `run_id`, `sequence`, `ts_ms`,

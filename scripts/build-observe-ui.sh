@@ -9,7 +9,7 @@ app="$root/web/observe-ui"
 out="$root/crates/ice-cli/src/observe/ui"
 
 cd "$app"
-[ -d node_modules ] || npm ci
+npm ci
 npx ng build --configuration production
 
 # The server embeds exactly these files; anything else (a lazy chunk, a font

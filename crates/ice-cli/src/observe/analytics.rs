@@ -16,6 +16,8 @@ pub const HOUR_MS: i64 = 3_600_000;
 pub const DAY_MS: i64 = 24 * HOUR_MS;
 /// Upper bound on series points; wider windows get wider buckets.
 pub const MAX_BUCKETS: i64 = 400;
+/// Last epoch millisecond in year 9999; leaves room for bucket arithmetic.
+pub const MAX_TIMESTAMP: i64 = 253_402_300_799_999;
 const TOP_FILES: usize = 25;
 const TOP_RUN_TOOLS: usize = 3;
 /// Characters of a user prompt kept as a run label.
@@ -335,8 +337,13 @@ pub fn bucket_for(span_ms: i64, requested: Option<i64>) -> i64 {
         s if s <= 120 * DAY_MS => DAY_MS,
         _ => 7 * DAY_MS,
     };
-    let bucket = requested.filter(|b| *b >= 60_000).unwrap_or(auto);
-    let min = (span_ms.max(1) + MAX_BUCKETS - 1) / MAX_BUCKETS;
+    let bucket = requested
+        .filter(|b| *b >= 60_000)
+        .unwrap_or(auto)
+        .min(span_ms.max(60_000));
+    // Reserve one point for alignment before the start of the window.
+    let span = span_ms.max(1);
+    let min = span / (MAX_BUCKETS - 1) + i64::from(span % (MAX_BUCKETS - 1) != 0);
     bucket.max(min)
 }
 
@@ -395,7 +402,10 @@ fn totals(runs: &[RunFact], items: &[ItemFact]) -> Totals {
 
 /// Aggregate an overview from the backend's facts.
 pub fn overview(source: &dyn AnalyticsSource, query: &OverviewQuery) -> Result<Overview, String> {
-    let until = query.until.max(query.since + 1);
+    if query.since < 0 || query.since >= query.until || query.until > MAX_TIMESTAMP {
+        return Err("invalid time window".into());
+    }
+    let until = query.until;
     let span = until - query.since;
     let runs = source.runs_between(query.since, until)?;
     let items = source.items_between(query.since, until)?;
