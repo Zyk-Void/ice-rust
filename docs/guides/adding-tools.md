@@ -169,7 +169,7 @@ Derived from `build_tools`, `background_shells.rs`, `mcp/*`, and
 | Name | Source | Active by default | Replay | Notes |
 |---|---|---|---|---|
 | `read` | `ice-tools/src/tools/read.rs` | yes | `Safe` | Text and images. Inline image processor is attached in `build_tools`. Truncates by lines and bytes. |
-| `bash` | `ice-tools/src/tools/bash.rs` | yes | `Never` | Default timeout 120 s (`ICERS_BASH_TIMEOUT` overrides). Auto-backgrounds after `bashAutoBackgroundSeconds`. `shellCommandPrefix` from settings. |
+| `bash` | `ice-tools/src/tools/bash.rs` | yes | `Never` | A foreground call without `timeout` moves to the background after 120 s (`ICERS_BASH_TIMEOUT` overrides), or stops where there are no background shells; background shells have no default timeout. Auto-backgrounds after `bashAutoBackgroundSeconds`. `shellCommandPrefix` from settings. |
 | `edit` | `ice-tools/src/tools/edit.rs` | yes | `Never` | Needs a mutation-capable context. Fuzzy matching in `edit_diff.rs`. |
 | `write` | `ice-tools/src/tools/write.rs` | yes | `Never` | Needs a mutation-capable context. Goes through the file-mutation queue. |
 | `docs` | `ice-cli/src/docs_tool.rs` | yes | `Safe` | Read-only lookup over the **embedded** docs (see 12.9). |
@@ -1101,7 +1101,10 @@ Run through this for any new or changed tool, regardless of route.
 
 - Honor the `CancellationToken`.
 - Give any external call a deadline. The bash default of 120 s exists because a
-  forgotten timeout "hung the run forever" (comment in `bash_options`).
+  forgotten timeout "hung the run forever" (comment in `bash_options`). It
+  guards only the foreground, and moves the call to the background rather
+  than losing the command: a background shell does not block the run, so it
+  keeps just its own timeout.
 
 ### 12.5 Replay and idempotence
 

@@ -66,6 +66,8 @@ pub(super) enum SelectorKind {
     Fork,
     /// Extension-provided selector; uses the same keyboard contract.
     Extension,
+    /// `/shells` — live view over the background shells.
+    Shells,
 }
 
 /// The component receiving keys while a selector is open.

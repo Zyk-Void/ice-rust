@@ -126,7 +126,13 @@ pub struct FooterComponent {
     context_window: Mutex<i64>,
     /// Whether auto-compaction is enabled (renders the `(auto)` suffix).
     auto_compact: Mutex<bool>,
+    /// Running background shells and active watches on them.
+    background_shells: Mutex<(usize, usize)>,
 }
+
+/// Internal link on the footer's shell count; the host routes a click on it
+/// to the Shells panel. Mirrors ice `OPEN_SHELLS_URL`.
+pub const OPEN_SHELLS_LINK: &str = "ice://open-shells";
 
 impl FooterComponent {
     /// Create a new footer component.
@@ -152,7 +158,37 @@ impl FooterComponent {
             context_estimated: Mutex::new(false),
             context_window: Mutex::new(0),
             auto_compact: Mutex::new(true),
+            background_shells: Mutex::new((0, 0)),
         }
+    }
+
+    /// Set the running background shell and watch counts; zero shells hides
+    /// the segment.
+    pub fn set_background_shells(&self, running: usize, watches: usize) {
+        if let Ok(mut counts) = self.background_shells.lock() {
+            *counts = (running, watches);
+        }
+    }
+
+    /// `2 shells 1 watch`, linked to the Shells panel, or empty.
+    fn shells_segment(&self) -> String {
+        let (running, watches) = *self.background_shells.lock().unwrap();
+        if running == 0 {
+            return String::new();
+        }
+        let colors = theme().colors;
+        let plural = |n: usize, word: &str, suffix: &str| {
+            format!("{n} {word}{}", if n == 1 { "" } else { suffix })
+        };
+        let mut text = colors.accent.fg(&plural(running, "shell", "s"));
+        if watches > 0 {
+            text.push_str(
+                &colors
+                    .dim
+                    .fg(&format!(" {}", plural(watches, "watch", "es"))),
+            );
+        }
+        format!("\x1b]8;;{OPEN_SHELLS_LINK}\x07{text}\x1b]8;;\x07")
     }
 
     /// Set the status text.
@@ -501,7 +537,14 @@ impl Component for FooterComponent {
         } else {
             format!("{}{status_word}{extension_word}", colors.dim.fg(&hints))
         };
-        let right_styled = model_label;
+        // Running shells lead the right side; when space runs out the model
+        // is cut first (ice gives the shell segment the higher priority).
+        let shells = self.shells_segment();
+        let right_styled = match (shells.is_empty(), model_label.is_empty()) {
+            (true, _) => model_label,
+            (false, true) => shells,
+            (false, false) => format!("{shells}  {model_label}"),
+        };
 
         let left_w = visible_width(&left_styled);
         let right_w = visible_width(&right_styled);
@@ -593,6 +636,35 @@ mod tests {
         footer.set_extension_status("");
         let row = strip_ansi(&footer.render(120).join(" "));
         assert!(!row.contains("langfuse"), "ext status not cleared: {row}");
+    }
+
+    #[test]
+    fn running_shells_show_a_linked_count_that_outlasts_the_model() {
+        let footer = FooterComponent::new();
+        footer.set_model("a-rather-long-model-name");
+        let idle = footer.render(120).join("\n");
+        assert!(!strip_ansi(&idle).contains("shell"), "{idle}");
+        assert!(!idle.contains(OPEN_SHELLS_LINK));
+
+        footer.set_background_shells(1, 0);
+        let one = strip_ansi(&footer.render(120).join("\n"));
+        assert!(one.contains("1 shell  a-rather-long-model-name"), "{one}");
+
+        footer.set_background_shells(2, 1);
+        let raw = footer.render(120).join("\n");
+        assert!(raw.contains(&format!("\x1b]8;;{OPEN_SHELLS_LINK}\x07")));
+        assert!(strip_ansi(&raw).contains("2 shells 1 watch"), "{raw}");
+        footer.set_background_shells(3, 2);
+        assert!(strip_ansi(&footer.render(120).join("\n")).contains("3 shells 2 watches"));
+
+        // A narrow footer cuts the model before the shell count.
+        footer.set_hints("hints");
+        let narrow = strip_ansi(&footer.render(30).join("\n"));
+        assert!(narrow.contains("3 shells"), "{narrow}");
+        assert!(!narrow.contains("a-rather-long-model-name"), "{narrow}");
+        for line in footer.render(30) {
+            assert!(visible_width(&line) <= 30, "{line}");
+        }
     }
 
     #[test]

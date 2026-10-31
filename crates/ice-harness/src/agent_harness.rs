@@ -1191,6 +1191,16 @@ impl AgentHarness {
         &self.lane
     }
 
+    /// Whether a steering message waits on this lane. Synchronous, so a
+    /// running tool can poll it and stop blocking (a long wait ends, a slow
+    /// command moves to the background) for the model to read the message.
+    /// Mirrors ice's `hasQueuedSteering`.
+    pub fn has_queued_steering(&self) -> bool {
+        let queue = Arc::clone(&self.inner.lock().unwrap().steering_queue);
+        let queue = queue.lock().unwrap();
+        queue.pending.iter().any(|item| item.lane == self.lane)
+    }
+
     // -- durable-session read/write surface (TS `AgentHarness` getTipId /
     //    findEntries / appendMessage / …). Each delegates to the lane-scoped
     //    `SessionTree` view so non-main lanes behave identically. -----------
@@ -7481,6 +7491,19 @@ mod session_switch_tests {
         assert_eq!(restored.follow_up, vec!["follow"]);
         assert_eq!(restored.images, vec![image.clone(), image]);
         assert!(harness.queued_messages().await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn has_queued_steering_sees_only_this_lanes_steers() {
+        let harness = AgentHarness::create(opts()).await.unwrap();
+        let message = || AgentMessage::User(UserMessage::new(UserContent::Text("x".into()), 0));
+        assert!(!harness.has_queued_steering());
+        harness.follow_up(message()).await.unwrap();
+        assert!(!harness.has_queued_steering(), "follow-ups do not count");
+        harness.steer(message()).await.unwrap();
+        assert!(harness.has_queued_steering());
+        harness.clear_queue().await.unwrap();
+        assert!(!harness.has_queued_steering());
     }
 
     #[tokio::test]

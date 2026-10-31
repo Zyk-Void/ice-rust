@@ -475,6 +475,7 @@ impl ToolExecutionComponent {
                     .map(str::to_string)
                     .unwrap_or_else(|| tools::tool_label(&name)),
                 summary: tools::parse_args_summary(&name, &args),
+                description: None,
                 status: *status,
                 result: result.as_deref(),
                 diff: diff_lines.as_deref(),
@@ -945,6 +946,9 @@ pub(crate) struct CompactTool<'a> {
     pub(crate) name: &'a str,
     pub(crate) label: String,
     pub(crate) summary: String,
+    /// For bash: what the command does, in the model's words. It leads the
+    /// row so concurrent commands are easy to tell apart.
+    pub(crate) description: Option<&'a str>,
     pub(crate) status: ToolStatus,
     pub(crate) result: Option<&'a str>,
     pub(crate) diff: Option<&'a [String]>,
@@ -1068,11 +1072,16 @@ fn compact_title(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<Str
         } else {
             "Ran"
         });
+        let row = |command: &str| match t.description.filter(|d| !d.is_empty()) {
+            Some(description) => format!(
+                "{verb} {} {}",
+                colors.tool_title.fg(description),
+                colors.dim.fg(&format!("· {command}"))
+            ),
+            None => format!("{verb} {}", colors.tool_title.fg(command)),
+        };
         if t.expanded {
-            return wrap_text_with_ansi(
-                &format!("{verb} {}", colors.tool_title.fg(command)),
-                width,
-            );
+            return wrap_text_with_ansi(&row(command), width);
         }
         let mut rows = command.split('\n');
         let first = rows.next().unwrap_or("");
@@ -1081,11 +1090,7 @@ fn compact_title(colors: &ThemeColors, t: &CompactTool, width: usize) -> Vec<Str
         } else {
             first.to_string()
         };
-        return vec![truncate_to_width(
-            &format!("{verb} {}", colors.tool_title.fg(&text)),
-            width,
-            "…",
-        )];
+        return vec![truncate_to_width(&row(&text), width, "…")];
     }
     let row = if t.summary.is_empty() {
         title(&t.label)

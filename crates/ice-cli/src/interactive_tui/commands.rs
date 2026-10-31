@@ -901,6 +901,23 @@ impl SlashCommand for UsageCommand {
     }
 }
 
+/// `/shells` — the live Shells panel over the session's background shells.
+pub(super) struct ShellsCommand;
+impl SlashCommand for ShellsCommand {
+    fn name(&self) -> &'static str {
+        "/shells"
+    }
+    fn aliases(&self) -> &'static [&'static str] {
+        &["/tasks"]
+    }
+    fn description(&self) -> &'static str {
+        "Open the Shells panel: background commands, their output, stop and follow"
+    }
+    fn execute(&self, ctx: &CommandContext, _args: &str) {
+        super::shells_panel::open_shells_panel(ctx);
+    }
+}
+
 /// `/reload` — re-run extension + resource discovery into the LIVE harness
 /// (B5d): reload the cdylib plugins, invalidate the old `ActionBridge` +
 /// registry snapshot, rebuild skills/prompts/context/SYSTEM.md/APPEND_SYSTEM.md
@@ -956,6 +973,7 @@ pub(super) fn build_builtin_registry() -> CommandRegistry {
     r.register(Arc::new(HotkeysCommand));
     r.register(Arc::new(ContextCommand));
     r.register(Arc::new(UsageCommand));
+    r.register(Arc::new(ShellsCommand));
     // Recognized but inert in v1 (one struct backs them all). The TS builtins
     // out of v1 scope; each carries a description so autocomplete surfaces its
     // existence even though running it reports "not supported".

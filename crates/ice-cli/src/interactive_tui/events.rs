@@ -583,6 +583,8 @@ pub(super) async fn handle_agent_event(
                     chat.add_child(component);
                     chat.add_child(Arc::new(Spacer::new(1)));
                     tui.request_render(false);
+                } else if super::shells_panel::add_completion_message(chat, &custom) {
+                    tui.request_render(false);
                 } else {
                     add_note_message(chat, &custom_message_fallback(&custom));
                     tui.request_render(false);

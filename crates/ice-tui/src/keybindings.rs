@@ -227,6 +227,33 @@ impl Keybindings {
             },
         );
         map.insert(
+            "app.shells.open",
+            KeybindingDefinition {
+                // Shares Down with cursor movement: the TUI only claims it
+                // from an empty editor while background shells run.
+                default_keys: vec![KeyCombo::new(Down, M::NONE)],
+                description: Some(
+                    "Open the Shells panel from an empty editor while background shells run (otherwise moves the cursor)",
+                ),
+            },
+        );
+        map.insert(
+            "app.shells.stop",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('x'), M::NONE)],
+                description: Some("Shells panel: stop the selected background shell"),
+            },
+        );
+        map.insert(
+            "app.shells.follow",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Char('f'), M::NONE)],
+                description: Some(
+                    "Shells panel: follow the selected shell's live output in the foreground",
+                ),
+            },
+        );
+        map.insert(
             "app.tools.collapse",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(Char('o'), M::ALT)],
@@ -668,6 +695,20 @@ impl Keybindings {
             },
         );
         map.insert(
+            "tui.select.left",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Left, M::NONE)],
+                description: Some("Decrease the selected value"),
+            },
+        );
+        map.insert(
+            "tui.select.right",
+            KeybindingDefinition {
+                default_keys: vec![KeyCombo::new(Right, M::NONE)],
+                description: Some("Increase the selected value"),
+            },
+        );
+        map.insert(
             "tui.select.pageUp",
             KeybindingDefinition {
                 default_keys: vec![KeyCombo::new(PageUp, M::NONE)],
@@ -1060,6 +1101,9 @@ pub mod keys {
     pub const TOOLS_EXPAND: KeybindingId = "app.tools.expand";
     pub const TOOLS_COLLAPSE: KeybindingId = "app.tools.collapse";
     pub const BASH_BACKGROUND: KeybindingId = "app.bash.background";
+    pub const SHELLS_OPEN: KeybindingId = "app.shells.open";
+    pub const SHELLS_STOP: KeybindingId = "app.shells.stop";
+    pub const SHELLS_FOLLOW: KeybindingId = "app.shells.follow";
     pub const TOOLS_EXPAND_LAST: KeybindingId = "app.tools.expandLast";
     pub const THINKING_TOGGLE: KeybindingId = "app.thinking.toggle";
     pub const EXTERNAL_EDITOR: KeybindingId = "app.editor.external";
@@ -1098,6 +1142,8 @@ pub mod keys {
     // Select
     pub const SELECT_UP: KeybindingId = "tui.select.up";
     pub const SELECT_DOWN: KeybindingId = "tui.select.down";
+    pub const SELECT_LEFT: KeybindingId = "tui.select.left";
+    pub const SELECT_RIGHT: KeybindingId = "tui.select.right";
     pub const SELECT_PAGE_UP: KeybindingId = "tui.select.pageUp";
     pub const SELECT_PAGE_DOWN: KeybindingId = "tui.select.pageDown";
     pub const SELECT_CONFIRM: KeybindingId = "tui.select.confirm";

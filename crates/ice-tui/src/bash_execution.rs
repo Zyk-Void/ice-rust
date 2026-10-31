@@ -66,6 +66,8 @@ struct BashRenderCache {
 /// Component that displays a bash command execution with streaming output.
 pub struct BashExecutionComponent {
     command: Mutex<String>,
+    /// The agent's description of the command, shown first when set.
+    description: Mutex<Option<String>>,
     output_lines: Mutex<Vec<String>>,
     status: Mutex<BashStatus>,
     exit_code: Mutex<Option<i32>>,
@@ -105,6 +107,7 @@ impl BashExecutionComponent {
     pub fn new_with_context(command: impl Into<String>, exclude_from_context: bool) -> Self {
         Self {
             command: Mutex::new(command.into()),
+            description: Mutex::new(None),
             output_lines: Mutex::new(Vec::new()),
             status: Mutex::new(BashStatus::Running),
             exit_code: Mutex::new(None),
@@ -165,6 +168,25 @@ impl BashExecutionComponent {
     /// Whether this command is excluded from the model context.
     pub fn is_excluded_from_context(&self) -> bool {
         *self.exclude_from_context.lock().unwrap()
+    }
+
+    /// Name the command by what it does (the bash tool's `description`).
+    /// Model text: kept to one line without control characters.
+    pub fn set_description(&self, description: &str) {
+        let clean: String = description
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .chars()
+            .filter(|c| !c.is_control())
+            .collect();
+        let clean = Some(clean).filter(|d| !d.is_empty());
+        let mut current = self.description.lock().unwrap();
+        if *current != clean {
+            *current = clean;
+            drop(current);
+            self.bump();
+        }
     }
 
     /// Apply the authoritative command from `ToolExecutionStart`. A panel may
@@ -321,6 +343,7 @@ impl BashExecutionComponent {
     /// preview, with the exit/truncation outcome appended to the output.
     fn render_compact_panel(&self, width: usize, status: BashStatus, theme: &Theme) -> Vec<String> {
         let command = self.command.lock().unwrap().clone();
+        let description = self.description.lock().unwrap().clone();
         let mut text = self.output_lines.lock().unwrap().join("\n");
         let hidden = 0;
         for line in self.status_line(hidden, &theme.colors) {
@@ -338,6 +361,7 @@ impl BashExecutionComponent {
                 name: "bash",
                 label: "bash".to_string(),
                 summary: command,
+                description: description.as_deref(),
                 status: tool_status,
                 result: Some(text.as_str()).filter(|t| !t.trim().is_empty()),
                 diff: None,
@@ -374,6 +398,11 @@ impl BashExecutionComponent {
         } else {
             colors.bash_mode
         };
+        if let Some(description) = self.description.lock().unwrap().clone() {
+            for part in wrap_text_with_ansi(&description, content_width) {
+                lines.push(panel_line(&colors.tool_title.fg(&bold(&part))));
+            }
+        }
         let command = self.command.lock().unwrap().clone();
         for part in wrap_text_with_ansi(&format!("$ {command}"), content_width) {
             lines.push(panel_line(&color_key.fg(&bold(&part))));
@@ -533,6 +562,25 @@ mod tests {
             text.contains("✗ Ran make") && text.contains("(exit 2)"),
             "{text}"
         );
+    }
+
+    /// Several commands run at once: each row leads with its description,
+    /// then the command, dimmed. Model text cannot break the row.
+    #[test]
+    fn compact_agent_bash_leads_with_its_description() {
+        let theme = Theme::default();
+        let c = BashExecutionComponent::new("cargo test -p ice-cli\ncargo fmt");
+        c.set_description("Run CLI tests\n\x1b[31mnow");
+        let status = *c.status.lock().unwrap();
+        let rows = c.render_compact_panel(100, status, &theme);
+        let title = strip_ansi(&rows[1]);
+        assert_eq!(
+            title.trim_end(),
+            "› Running Run CLI tests [31mnow · cargo test -p ice-cli …"
+        );
+        c.set_description("  ");
+        let rows = c.render_compact_panel(100, status, &theme);
+        assert!(strip_ansi(&rows[1]).starts_with("› Running cargo test -p ice-cli"));
     }
 
     #[test]

@@ -715,7 +715,9 @@ pub(super) async fn render_session_history(
                             continue;
                         }
                     }
-                    add_note_message(chat, &custom_message_fallback(&custom));
+                    if !super::shells_panel::add_completion_message(chat, custom) {
+                        add_note_message(chat, &custom_message_fallback(custom));
+                    }
                     rendered_any = true;
                 }
             },
