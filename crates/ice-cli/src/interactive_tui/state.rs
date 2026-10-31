@@ -189,6 +189,10 @@ pub(super) fn auto_send_step(
 pub(super) struct TuiState {
     /// Tree navigation cancellation must not move source-session queues into the draft.
     pub(super) tree_navigation_active: std::sync::atomic::AtomicBool,
+    /// The running run was not started by the TUI (a background-shell notice
+    /// or an extension woke the agent), so no prompt future will return the
+    /// status to Idle when it ends; the event drain does.
+    pub(super) unowned_run: std::sync::atomic::AtomicBool,
     /// Serializes a session replacement after the old run's UI events.
     pub(super) event_drain: AgentEventDrain,
     /// The in-flight streaming assistant message (cleared on finalize).
@@ -1029,6 +1033,9 @@ impl TuiState {
             return false;
         }
         *status = RunStatus::Working;
+        // This run is the TUI's; its prompt future returns the status to Idle.
+        self.unowned_run
+            .store(false, std::sync::atomic::Ordering::Release);
         drop(status);
         self.apply_status(RunStatus::Working);
         true

@@ -1618,6 +1618,7 @@ pub async fn interactive_tui(
 
     let state = Arc::new(TuiState {
         tree_navigation_active: std::sync::atomic::AtomicBool::new(false),
+        unowned_run: std::sync::atomic::AtomicBool::new(false),
         event_drain: AgentEventDrain::default(),
         current_assistant: Arc::new(std::sync::Mutex::new(None)),
         tool_components: Arc::new(std::sync::Mutex::new(HashMap::new())),
