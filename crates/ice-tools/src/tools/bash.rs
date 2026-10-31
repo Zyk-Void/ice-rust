@@ -293,11 +293,17 @@ fn timeout_description(options: &BashToolOptions) -> String {
             " A foreground command still running after {secs} seconds moves to the background and keeps running; you are told when it finishes."
         ));
     }
-    if let Some(max) = options.max_timeout.filter(|m| *m > 0.0) {
+    let max = options.max_timeout.filter(|m| *m > 0.0);
+    if let Some(max) = max {
         text.push_str(&format!(" At most {max} seconds."));
     }
-    if options.background.is_some() {
-        text.push_str(" It also stops a background shell, so omit it for servers and watchers.");
+    // Under a host maximum, omitting it does not let a server run on.
+    match (options.background.is_some(), max) {
+        (true, None) => {
+            text.push_str(" It also stops a background shell, so omit it for servers and watchers.")
+        }
+        (true, Some(_)) => text.push_str(" It also stops a background shell."),
+        (false, _) => {}
     }
     text
 }
@@ -1041,6 +1047,15 @@ mod tests {
         assert_eq!(
             text,
             "Timeout in seconds. Omit it (or pass 0) and the command stops after 30 seconds. At most 30 seconds."
+        );
+        // Under a maximum, omitting it does not keep a server running.
+        let capped = BashToolOptions {
+            max_timeout: Some(30.0),
+            ..with_background(Some(120.0), None)
+        };
+        assert_eq!(
+            describe(capped),
+            "Timeout in seconds. Omit it (or pass 0) and the command stops after 30 seconds. At most 30 seconds. It also stops a background shell."
         );
     }
 }

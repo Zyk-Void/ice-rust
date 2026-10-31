@@ -43,6 +43,11 @@ pub const BASH_BACKGROUND_COMPLETED_CUSTOM_TYPE: &str = "bash_background_complet
 const STDIN_DRAIN_WAIT: Duration = Duration::from_secs(5);
 /// Queued-steer polling interval during waits. Mirrors `USER_MESSAGE_POLL_MS`.
 pub const USER_MESSAGE_POLL: Duration = Duration::from_millis(250);
+/// How long a completion notice waits for `bash_output` calls in flight to
+/// finish before deciding whether one already returned the result. A call
+/// on a finished shell returns at once, so this is only a backstop.
+const READ_HANDOFF: Duration = Duration::from_secs(2);
+const READ_HANDOFF_POLL: Duration = Duration::from_millis(10);
 
 /// Lifecycle state. Mirrors `BackgroundShellStatus`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -257,10 +262,10 @@ struct ShellRecord {
     input_bytes: usize,
     pid: Arc<std::sync::Mutex<Option<u32>>>,
     env: Arc<dyn ExecutionEnv>,
-    /// `bash_output` calls waiting on this shell right now.
+    /// `bash_output` calls on this shell in flight right now.
     readers: usize,
-    /// The model has the final result from a tool call, or a waiting read
-    /// will return it, so a completion notice would repeat it.
+    /// A tool call returned the final result to the model, so a completion
+    /// notice would repeat it.
     result_delivered: bool,
 }
 
@@ -581,7 +586,6 @@ impl BashBackgroundRegistry {
                 record.log_issue = log_issue;
             }
             record.stdin = None;
-            record.result_delivered |= record.readers > 0;
             record.bump();
             let completion = BashBackgroundCompletion {
                 task_id: record.id.clone(),
@@ -702,13 +706,7 @@ impl BashBackgroundRegistry {
                 !running || (until == WaitUntil::Output && total > cursor)
             }
         };
-        if wait.is_zero() {
-            return Ok(());
-        }
-        // Registered before the check, so a shell that ends at any point of
-        // this wait hands its result to this read, not to a completion notice.
-        let _reader = Reader::new(self, id);
-        if !satisfied(self.state(id)) {
+        if !wait.is_zero() && !satisfied(self.state(id)) {
             let deadline = tokio::time::sleep(wait);
             tokio::pin!(deadline);
             let mut poll = tokio::time::interval(USER_MESSAGE_POLL);
@@ -735,6 +733,17 @@ impl BashBackgroundRegistry {
         Ok(())
     }
 
+    /// Count a `bash_output` call on `id` until the guard drops. Held for the
+    /// whole call, from before its wait until its result is built, so
+    /// [`Self::completion_due`] can tell whether that call hands the model
+    /// the final result.
+    pub fn reading<'a>(&'a self, id: &'a str) -> ShellReader<'a> {
+        if let Some(record) = self.lock().shells.iter_mut().find(|s| s.id == id) {
+            record.readers += 1;
+        }
+        ShellReader { registry: self, id }
+    }
+
     /// Record that the model received the shell's final result from a tool
     /// call, so no completion notice repeats it.
     pub fn mark_result_delivered(&self, id: &str) {
@@ -743,14 +752,30 @@ impl BashBackgroundRegistry {
         }
     }
 
-    /// Whether the model already has the shell's final result (see
-    /// [`Self::mark_result_delivered`]). Hosts check it before sending a
-    /// completion notice. A pruned shell reports false.
-    pub fn result_delivered(&self, id: &str) -> bool {
-        self.lock()
-            .shells
-            .iter()
-            .any(|s| s.id == id && s.result_delivered)
+    /// Whether a completion notice for `id` is still due. Hosts check it
+    /// before sending one. It is not once a tool call returned the final
+    /// result (see [`Self::mark_result_delivered`]), nor once the shell is
+    /// gone (the session was disposed, or it was pruned). A `bash_output`
+    /// call in flight may be about to return the result, so this first waits
+    /// (briefly) for those calls to finish; a call that is cancelled instead
+    /// leaves the notice due.
+    pub async fn completion_due(&self, id: &str) -> bool {
+        let deadline = Instant::now() + READ_HANDOFF;
+        loop {
+            let Some((delivered, readers)) = self
+                .lock()
+                .shells
+                .iter()
+                .find(|s| s.id == id)
+                .map(|s| (s.result_delivered, s.readers))
+            else {
+                return false;
+            };
+            if delivered || readers == 0 || Instant::now() >= deadline {
+                return !delivered;
+            }
+            tokio::time::sleep(READ_HANDOFF_POLL).await;
+        }
     }
 
     /// Return the output not previously returned and advance the cursor.
@@ -801,7 +826,6 @@ impl BashBackgroundRegistry {
                 });
                 record.stdin = None;
                 record.abort.cancel();
-                record.result_delivered |= record.readers > 0;
                 record.bump();
                 let completion = notify.then(|| BashBackgroundCompletion {
                     task_id: record.id.clone(),
@@ -1078,22 +1102,14 @@ impl BashBackgroundRegistry {
     }
 }
 
-/// Counts a `bash_output` wait on one shell for as long as it lasts.
-struct Reader<'a> {
+/// Counts one `bash_output` call on a shell for as long as it lasts; see
+/// [`BashBackgroundRegistry::reading`].
+pub struct ShellReader<'a> {
     registry: &'a BashBackgroundRegistry,
     id: &'a str,
 }
 
-impl<'a> Reader<'a> {
-    fn new(registry: &'a BashBackgroundRegistry, id: &'a str) -> Self {
-        if let Some(record) = registry.lock().shells.iter_mut().find(|s| s.id == id) {
-            record.readers += 1;
-        }
-        Self { registry, id }
-    }
-}
-
-impl Drop for Reader<'_> {
+impl Drop for ShellReader<'_> {
     fn drop(&mut self) {
         let mut inner = self.registry.lock();
         if let Some(record) = inner.shells.iter_mut().find(|s| s.id == self.id) {

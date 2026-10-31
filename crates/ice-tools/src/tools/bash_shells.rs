@@ -307,6 +307,10 @@ impl AgentTool for BashOutputTool {
             Some(UntilArg::Output) => WaitUntil::Output,
             _ => WaitUntil::Exit,
         };
+        // Counted until the result is built, so a completion notice for a
+        // shell that ends meanwhile waits to see whether this call returns
+        // its final result.
+        let _reading = self.registry.reading(&id);
 
         // Wait (and consume new output) only for the incremental mode; log
         // queries leave the read cursor alone.

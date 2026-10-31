@@ -689,37 +689,40 @@ async fn a_call_moved_to_the_background_outlives_the_default_timeout() {
 }
 
 #[tokio::test]
-async fn reading_the_final_result_marks_it_delivered() {
+async fn reading_the_final_result_makes_the_completion_notice_moot() {
     let h = harness();
-    // Whether the result counted as delivered when each completion fired.
-    let at_completion = Arc::new(Mutex::new(Vec::new()));
-    let (sink, registry) = (at_completion.clone(), Arc::downgrade(&h.registry));
+    // Whether a host would still send each completion notice.
+    let decisions = Arc::new(Mutex::new(Vec::new()));
+    let (sink, registry) = (decisions.clone(), Arc::downgrade(&h.registry));
     h.registry.on_complete(move |c| {
-        let delivered = registry
-            .upgrade()
-            .is_some_and(|r| r.result_delivered(&c.task_id));
-        sink.lock().unwrap().push((c.task_id.clone(), delivered));
+        let (registry, id) = (registry.upgrade().unwrap(), c.task_id.clone());
+        let decision =
+            tokio::spawn(async move { (id.clone(), registry.completion_due(&id).await) });
+        sink.lock().unwrap().push(decision);
     });
-    h.env
-        .register_shell("quick", ShellScript::long_running("", 50))
-        .await;
-    h.env
-        .register_shell("slow", ShellScript::long_running("", 300))
-        .await;
+    let decided = |nth: usize| {
+        let decision = decisions.lock().unwrap().remove(nth);
+        async move { decision.await.unwrap() }
+    };
+    for (name, ms) in [("quick", 50), ("slow", 300), ("dropped", 50)] {
+        h.env
+            .register_shell(name, ShellScript::long_running("", ms))
+            .await;
+    }
 
     // Ended before anyone read it: a completion notice is still due, until
     // a read returns the final result.
     let quick = start(&h, "quick", serde_json::json!({})).await;
     tokio::time::sleep(Duration::from_millis(200)).await;
-    assert_eq!(*at_completion.lock().unwrap(), [(quick.clone(), false)]);
+    assert_eq!(decided(0).await, (quick.clone(), true));
     let out = run(&h.output, "o", serde_json::json!({ "id": quick }))
         .await
         .unwrap();
     assert!(text(&out).contains("Final result:"), "{}", text(&out));
-    assert!(h.registry.result_delivered(&quick));
+    assert!(!h.registry.completion_due(&quick).await);
 
-    // A read waiting when the shell ends takes the result before the
-    // completion fires.
+    // A read waiting when the shell ends hands the result over, so the
+    // notice is not sent.
     let slow = start(&h, "slow", serde_json::json!({})).await;
     let out = run(
         &h.output,
@@ -729,7 +732,19 @@ async fn reading_the_final_result_marks_it_delivered() {
     .await
     .unwrap();
     assert!(text(&out).contains("Final result:"), "{}", text(&out));
-    assert_eq!(at_completion.lock().unwrap()[1], (slow, true));
+    assert_eq!(decided(0).await, (slow, false));
+
+    // A read in flight when the shell ends that never returns the result
+    // (the call was cancelled) leaves the notice due.
+    let dropped = start(&h, "dropped", serde_json::json!({})).await;
+    let reading = h.registry.reading(&dropped);
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    drop(reading);
+    assert_eq!(decided(0).await, (dropped.clone(), true));
+
+    // Once the session is disposed, no notice is due.
+    h.registry.dispose().await;
+    assert!(!h.registry.completion_due(&dropped).await);
 }
 
 #[tokio::test]

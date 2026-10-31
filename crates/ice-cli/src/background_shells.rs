@@ -143,10 +143,18 @@ impl SessionShells {
             Arc::downgrade(&self.registry),
             Arc::downgrade(&self.watches),
         );
+        // The registries also report every output chunk; only a new count
+        // reaches `f` (and the footer's repaint).
+        let last = Mutex::new(None);
         let report = Arc::new(move || {
             if let (Some(registry), Some(watches)) = (registry.upgrade(), watches.upgrade()) {
                 let explicit = watches.list(None).iter().filter(|w| !w.auto).count();
-                f(registry.running_count(), explicit);
+                let counts = (registry.running_count(), explicit);
+                let mut last = last.lock().unwrap();
+                if *last != Some(counts) {
+                    *last = Some(counts);
+                    f(counts.0, counts.1);
+                }
             }
         });
         report();
@@ -190,12 +198,13 @@ impl SessionShells {
                 let completion = completion.clone();
                 let registry = registry.clone();
                 deliveries.spawn(async move {
-                    // Checked at send time, so a read between the shell's end
-                    // and now still counts.
-                    if registry
-                        .upgrade()
-                        .is_some_and(|r| r.result_delivered(&completion.task_id))
-                    {
+                    // Checked at send time, after any `bash_output` call in
+                    // flight finishes, so a read between the shell's end and
+                    // now still counts.
+                    let Some(registry) = registry.upgrade() else {
+                        return;
+                    };
+                    if !registry.completion_due(&completion.task_id).await {
                         return;
                     }
                     let options = completion_delivery(&completion);
@@ -356,7 +365,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn watch_counts_reports_now_and_on_every_shell_change() {
+    async fn watch_counts_reports_each_new_count_once() {
         let shells = SessionShells::new(&Default::default());
         let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
         let sink = seen.clone();
@@ -366,6 +375,15 @@ mod tests {
         let env = Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/w".into()));
         env.register_shell("server", ice_tools::ShellScript::long_running("", 60_000))
             .await;
+        // Prints while it runs and as it ends: output alone changes no count.
+        env.register_shell(
+            "build",
+            ice_tools::ShellScript {
+                stdout: "done\n".into(),
+                ..ice_tools::ShellScript::long_running("compiling\n", 100)
+            },
+        )
+        .await;
         let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env;
         let bash = ice_tools::create_bash_tool(
             &ice_tools::ExecutionToolContext::new(env_dyn, None),
@@ -374,19 +392,29 @@ mod tests {
                 ..Default::default()
             }),
         );
-        let started = bash
-            .execute(
+        let start = |command: &'static str| {
+            bash.execute(
                 "c",
-                serde_json::json!({ "command": "server", "run_in_background": true }),
+                serde_json::json!({ "command": command, "run_in_background": true }),
                 tokio_util::sync::CancellationToken::new(),
                 Arc::new(|_| ()),
             )
-            .await
-            .unwrap();
+        };
+        let server = start("server").await.unwrap();
         assert_eq!(seen.lock().unwrap().last(), Some(&(1, 0)));
-        let id = started.details["background_task_id"].as_str().unwrap();
+        start("build").await.unwrap();
+        for _ in 0..200 {
+            if shells.registry().running_count() == 1 {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        let id = server.details["background_task_id"].as_str().unwrap();
         shells.registry().kill(id, false).await.unwrap();
-        assert_eq!(seen.lock().unwrap().last(), Some(&(0, 0)));
+        assert_eq!(
+            *seen.lock().unwrap(),
+            [(0, 0), (1, 0), (2, 0), (1, 0), (0, 0)]
+        );
         shells.dispose().await;
     }
 
