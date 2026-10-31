@@ -1012,7 +1012,7 @@ mod tests {
         let shells = BashBackgroundRegistry::new();
         let registry = BashWatchRegistry::new(shells, None);
         let spec = || BashWatchSpec {
-            target: "bash-1".into(),
+            target: "b1j6p9uvw".into(),
             kind: BashWatchKind::Pattern,
             pattern: Some("ready".into()),
             period: None,

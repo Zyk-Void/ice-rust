@@ -24,9 +24,8 @@ use serde::Deserialize;
 use tokio_util::sync::CancellationToken;
 
 use crate::bash_background::{
-    now_ms, summarize_shell_command, Adoption, BashBackgroundRegistry, ReleaseReason,
-    SettleFormatter, SettledOutcome, ShellOrigin, SteerProbe, MAX_RUNNING_SHELLS,
-    USER_MESSAGE_POLL,
+    now_ms, shell_label, Adoption, BashBackgroundRegistry, ReleaseReason, SettleFormatter,
+    SettledOutcome, ShellOrigin, SteerProbe, MAX_RUNNING_SHELLS, USER_MESSAGE_POLL,
 };
 use crate::env::ExecutionEnv;
 use crate::error::{ExecutionError, ExecutionErrorCode};
@@ -45,7 +44,8 @@ const BASH_UPDATE_THROTTLE_MS: u64 = 100;
 pub struct BashInput {
     /// Bash command to execute.
     pub command: String,
-    /// Timeout in seconds. Omit it or pass 0 for no timeout.
+    /// Timeout in seconds. Omit it (or pass 0) for no timeout. The tool's
+    /// schema replaces this text with the host's actual defaults.
     #[serde(default)]
     pub timeout: Option<f64>,
     /// Short description of what the command does (5-10 words), shown to the user.
@@ -95,9 +95,12 @@ pub type BashPrepare =
 pub struct BashToolOptions {
     /// Prepended to the command (separated by `\n`) before execution.
     pub command_prefix: Option<String>,
-    /// Fallback timeout in seconds applied when the model doesn't pass one.
-    /// ice has no default, but a model that forgets `timeout` can hang the run
-    /// forever, so icers injects this at the harness build site. A
+    /// Fallback timeout in seconds for a foreground call when the model
+    /// doesn't pass one. ice has no default, but a model that forgets
+    /// `timeout` can hang the run forever, so icers injects this at the
+    /// harness build site. It only guards the foreground: a background shell,
+    /// or a call once it moves to the background, runs until it exits. It is
+    /// also unused when `auto_background_secs` moves the call first. A
     /// model-supplied timeout still wins; use `max_timeout` for a limit the
     /// model cannot raise.
     pub default_timeout: Option<f64>,
@@ -128,8 +131,49 @@ pub struct BashToolOptions {
     pub session_environment: Option<SessionEnvProvider>,
 }
 
+/// When a bash call ends, in seconds.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Deadlines {
+    /// The model's timeout under the host ceiling. It stays with the process
+    /// when the call moves to the background.
+    own: Option<f64>,
+    /// The host default for an omitted timeout where the call cannot move to
+    /// the background. It stops the call if it ends before `own`.
+    foreground: Option<f64>,
+    /// When a foreground call moves to the background, if before `own`: the
+    /// auto-background setting, or else the host default for an omitted
+    /// timeout (ending the wait without losing the command).
+    auto_background: Option<f64>,
+}
+
 /// Supplies host-known session variables for each bash call.
 impl BashToolOptions {
+    /// When a call with this requested timeout (already validated) ends.
+    fn deadlines(&self, requested: Option<f64>) -> Deadlines {
+        let own = match self.max_timeout.filter(|m| *m > 0.0) {
+            Some(max) => Some(requested.map_or(max, |t| t.min(max))),
+            None => requested,
+        };
+        let representable = |secs: &f64| *secs > 0.0 && Duration::try_from_secs_f64(*secs).is_ok();
+        let default = self
+            .default_timeout
+            .filter(|_| requested.is_none())
+            .filter(representable);
+        let auto_background = self
+            .background
+            .as_ref()
+            .and(self.auto_background_secs.filter(representable).or(default))
+            .filter(|secs| own.is_none_or(|t| t > *secs));
+        let foreground = default
+            .filter(|_| self.background.is_none())
+            .filter(|secs| own.is_none_or(|t| *secs < t));
+        Deadlines {
+            own,
+            foreground,
+            auto_background,
+        }
+    }
+
     /// Build the execution for `command` in `cwd`: the command prefix,
     /// session variables (unless turned off) and then the prepare hook. The
     /// model tool and the user `!command` helper share this, so both run
@@ -211,8 +255,11 @@ pub struct BashTool {
 }
 
 impl BashTool {
-    fn schema() -> Tool {
-        let params = schemars::schema_for!(BashInput);
+    fn schema(options: &BashToolOptions) -> Tool {
+        let mut params = serde_json::to_value(schemars::schema_for!(BashInput)).unwrap_or_default();
+        if let Some(timeout) = params.pointer_mut("/properties/timeout") {
+            timeout["description"] = timeout_description(options).into();
+        }
         Tool {
             name: "bash".to_string(),
             description: format!(
@@ -222,9 +269,7 @@ impl BashTool {
                  Optionally provide a timeout in seconds.",
                 kb = DEFAULT_MAX_BYTES / 1024
             ),
-            parameters: ice_ai::types::Schema::new(
-                serde_json::to_value(params).unwrap_or_default(),
-            ),
+            parameters: ice_ai::types::Schema::new(params),
             constrained_sampling: Some(ConstrainedSamplingConfig::JsonSchema {
                 strict: ConstrainedStrictness::Prefer,
             }),
@@ -232,15 +277,41 @@ impl BashTool {
     }
 }
 
+/// What `timeout` does under these options, so the model is never told
+/// "no timeout" where a host default or ceiling would stop the command.
+fn timeout_description(options: &BashToolOptions) -> String {
+    let omitted = options.deadlines(None);
+    let mut text = String::from("Timeout in seconds.");
+    match omitted.foreground.or(omitted.own) {
+        Some(secs) => text.push_str(&format!(
+            " Omit it (or pass 0) and the command stops after {secs} seconds."
+        )),
+        None => text.push_str(" Omit it (or pass 0) for no timeout."),
+    }
+    if let Some(secs) = omitted.auto_background {
+        text.push_str(&format!(
+            " A foreground command still running after {secs} seconds moves to the background and keeps running; you are told when it finishes."
+        ));
+    }
+    if let Some(max) = options.max_timeout.filter(|m| *m > 0.0) {
+        text.push_str(&format!(" At most {max} seconds."));
+    }
+    if options.background.is_some() {
+        text.push_str(" It also stops a background shell, so omit it for servers and watchers.");
+    }
+    text
+}
+
 /// Build the `bash` tool from a context. Mirrors TS `createBashTool`.
 pub fn create_bash_tool(
     context: &ExecutionToolContext,
     options: Option<BashToolOptions>,
 ) -> Arc<dyn AgentTool> {
+    let options = options.unwrap_or_default();
     Arc::new(BashTool {
-        schema: BashTool::schema(),
+        schema: BashTool::schema(&options),
         env: context.env().clone(),
-        options: options.unwrap_or_default(),
+        options,
     })
 }
 
@@ -290,11 +361,10 @@ impl AgentTool for BashTool {
             .prepare_execution(input.command, self.env.cwd().to_path_buf())
             .await
             .map_err(AgentError::Tool)?;
-        let timeout = apply_timeout_limits(
-            requested,
-            self.options.default_timeout,
-            self.options.max_timeout,
-        );
+        let deadlines = self.options.deadlines(requested);
+        // The process carries only its own deadline; the host default is
+        // applied below, and only to the foreground call.
+        let timeout = deadlines.own;
         if signal.is_cancelled() {
             return Err(AgentError::Tool("Command aborted".into()));
         }
@@ -341,9 +411,9 @@ impl AgentTool for BashTool {
                 })
                 .map_err(AgentError::Tool)?;
             let text = format!(
-                "Started background shell {id}: {}\n{}",
-                summarize_shell_command(&original_command),
-                background_guidance(&id, want_stdin)
+                "Started background bash {id}: {}\n{}",
+                shell_label(input.description.as_deref(), &original_command),
+                background_guidance(&id, want_stdin, timeout)
             );
             return Ok(background_result(
                 text,
@@ -363,22 +433,24 @@ impl AgentTool for BashTool {
                 let _ = release_tx.send(reason);
             })
         });
-        let auto_after = registry
-            .as_ref()
-            .and(self.options.auto_background_secs)
-            .filter(|secs| *secs > 0.0)
-            .filter(|secs| timeout.is_none_or(|t| t > *secs))
+        let auto_after = deadlines
+            .auto_background
             .and_then(|secs| Duration::try_from_secs_f64(secs).ok());
-        let auto_timer = async move {
-            match auto_after {
-                Some(duration) => tokio::time::sleep(duration).await,
-                None => std::future::pending::<()>().await,
-            }
-        };
+        let auto_timer = sleep_or_pending(auto_after);
         tokio::pin!(auto_timer);
+        // Without background shells the host default stops the call; with
+        // them it is `auto_after`, and a released shell runs until it exits
+        // or reaches `timeout`.
+        let foreground_after = deadlines
+            .foreground
+            .and_then(|secs| Duration::try_from_secs_f64(secs).ok());
+        let foreground_timer = sleep_or_pending(foreground_after);
+        tokio::pin!(foreground_timer);
         let steer = registry.as_ref().and(self.options.steer_probe.clone());
         let mut steer_poll = tokio::time::interval(USER_MESSAGE_POLL);
         let mut cancel_sent = false;
+        let mut timed_out = false;
+        let mut release_closed = false;
 
         enum Ending {
             Done(Result<crate::env::ShellOutput, ExecutionError>),
@@ -399,7 +471,17 @@ impl AgentTool for BashTool {
                     cancel_sent = true;
                     live.cancel.cancel();
                 }
-                Ok(reason) = &mut release_rx, if !cancel_sent => break Ending::Released(reason),
+                _ = &mut foreground_timer, if !cancel_sent => {
+                    cancel_sent = true;
+                    timed_out = true;
+                    live.cancel.cancel();
+                }
+                // Without a registry the sender is already gone; a receiver
+                // that has completed must not be polled again.
+                reason = &mut release_rx, if !cancel_sent && !release_closed => match reason {
+                    Ok(reason) => break Ending::Released(reason),
+                    Err(_) => release_closed = true,
+                },
                 _ = &mut auto_timer, if !cancel_sent => break Ending::Released(ReleaseReason::Timer),
                 _ = steer_poll.tick(), if steer.is_some() && !cancel_sent => {
                     if started.elapsed() >= FOREGROUND_MESSAGE_GRACE
@@ -413,6 +495,17 @@ impl AgentTool for BashTool {
 
         match ending {
             Ending::Done(exec) => {
+                // A stop by the foreground default is a timeout, not an abort.
+                let (exec, timeout) = match exec {
+                    Err(e) if timed_out && e.code == ExecutionErrorCode::Aborted => {
+                        let secs = deadlines.foreground.unwrap_or_default();
+                        (
+                            Err(ExecutionError::timeout(secs as u64)),
+                            deadlines.foreground,
+                        )
+                    }
+                    exec => (exec, timeout),
+                };
                 while let Ok(raw) = live.chunks.try_recv() {
                     capture.push(&raw).await;
                 }
@@ -491,11 +584,11 @@ impl AgentTool for BashTool {
                         auto_after.map_or(0, |duration| duration.as_secs())
                     ),
                 };
-                let mut text = format!("{why} It continues as background shell {id}.");
+                let mut text = format!("{why} It continues as background bash {id}.");
                 if !shown.is_empty() {
                     text.push_str(&format!("\n\nOutput so far:\n{shown}"));
                 }
-                text.push_str(&format!("\n\n{}", background_guidance(&id, false)));
+                text.push_str(&format!("\n\n{}", background_guidance(&id, false, timeout)));
                 Ok(background_result(text, &id, origin, log_path, truncation))
             }
         }
@@ -503,15 +596,26 @@ impl AgentTool for BashTool {
 }
 
 /// Tell the model how to follow a background shell.
-fn background_guidance(id: &str, stdin: bool) -> String {
+fn background_guidance(id: &str, stdin: bool, timeout: Option<f64>) -> String {
+    let deadline = match timeout {
+        Some(secs) => format!(" Its timeout stops it {secs} seconds after it started."),
+        None => String::new(),
+    };
     let input = if stdin {
         format!(" Send it input with bash_input (id \"{id}\").")
     } else {
         String::new()
     };
     format!(
-        "It keeps running after this call returns: continue with other work or end your turn; you will be told when it finishes. Read new output with bash_output (id \"{id}\"; set wait_seconds to wait for it).{input} Stop it with bash_kill."
+        "It keeps running after this call returns: continue with other work or end your turn; you will be told when it finishes.{deadline} Read new output with bash_output (id \"{id}\"; set wait_seconds to wait for it).{input} Stop it with bash_kill."
     )
+}
+
+async fn sleep_or_pending(duration: Option<Duration>) {
+    match duration {
+        Some(duration) => tokio::time::sleep(duration).await,
+        None => std::future::pending::<()>().await,
+    }
 }
 
 fn background_result(
@@ -804,20 +908,6 @@ pub(crate) fn resolve_timeout(timeout: Option<f64>) -> Result<Option<f64>, Agent
     Ok(Some(secs))
 }
 
-/// Combine the validated request with the host fallback and hard ceiling.
-/// The fallback only fills an omitted request; the ceiling caps everything.
-pub(crate) fn apply_timeout_limits(
-    requested: Option<f64>,
-    default_timeout: Option<f64>,
-    max_timeout: Option<f64>,
-) -> Option<f64> {
-    let timeout = requested.or(default_timeout.filter(|t| *t > 0.0));
-    match max_timeout.filter(|m| *m > 0.0) {
-        Some(max) => Some(timeout.map_or(max, |t| t.min(max))),
-        None => timeout,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -840,28 +930,118 @@ mod tests {
         assert!(resolve_timeout(Some(2_147_483.647)).is_ok());
     }
 
+    fn options(default: Option<f64>, max: Option<f64>) -> BashToolOptions {
+        BashToolOptions {
+            default_timeout: default,
+            max_timeout: max,
+            ..Default::default()
+        }
+    }
+
+    fn deadlines(own: Option<f64>, foreground: Option<f64>) -> Deadlines {
+        Deadlines {
+            own,
+            foreground,
+            auto_background: None,
+        }
+    }
+
     #[test]
     fn max_timeout_is_a_ceiling_the_model_cannot_raise() {
         // Omitted request takes the ceiling; longer requests are capped;
         // shorter requests are kept.
-        assert_eq!(apply_timeout_limits(None, None, Some(30.0)), Some(30.0));
+        let capped = options(None, Some(30.0));
+        assert_eq!(capped.deadlines(None), deadlines(Some(30.0), None));
+        assert_eq!(capped.deadlines(Some(600.0)), deadlines(Some(30.0), None));
+        assert_eq!(capped.deadlines(Some(5.0)), deadlines(Some(5.0), None));
+        // The default only fills an omitted request, and never outlasts the
+        // ceiling.
         assert_eq!(
-            apply_timeout_limits(Some(600.0), None, Some(30.0)),
-            Some(30.0)
+            options(Some(120.0), Some(30.0)).deadlines(None),
+            deadlines(Some(30.0), None)
         );
-        assert_eq!(apply_timeout_limits(Some(5.0), None, Some(30.0)), Some(5.0));
-        // The fallback fills an omitted request but is still capped.
         assert_eq!(
-            apply_timeout_limits(None, Some(120.0), Some(30.0)),
-            Some(30.0)
+            options(Some(20.0), Some(30.0)).deadlines(None),
+            deadlines(Some(30.0), Some(20.0))
         );
-        assert_eq!(apply_timeout_limits(None, Some(120.0), None), Some(120.0));
         assert_eq!(
-            apply_timeout_limits(Some(600.0), Some(120.0), None),
-            Some(600.0)
+            options(Some(600.0), None).deadlines(Some(120.0)),
+            deadlines(Some(120.0), None)
         );
         // Zero host values mean unset, like TS `maxTimeoutMs || undefined`.
-        assert_eq!(apply_timeout_limits(None, Some(0.0), Some(0.0)), None);
+        assert_eq!(
+            options(Some(0.0), Some(0.0)).deadlines(None),
+            deadlines(None, None)
+        );
+    }
+
+    fn with_background(default: Option<f64>, auto: Option<f64>) -> BashToolOptions {
+        BashToolOptions {
+            default_timeout: default,
+            background: Some(crate::bash_background::BashBackgroundRegistry::new()),
+            auto_background_secs: auto,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn the_default_timeout_moves_the_call_to_the_background_when_it_can() {
+        // Without background shells, the default stops the call.
+        assert_eq!(
+            options(Some(120.0), None).deadlines(None),
+            deadlines(None, Some(120.0))
+        );
+        // With them, it moves the call to the background instead, and is
+        // never the process's own deadline.
+        let released = |own, after| Deadlines {
+            own,
+            foreground: None,
+            auto_background: after,
+        };
+        let shells = with_background(Some(120.0), None);
+        assert_eq!(shells.deadlines(None), released(None, Some(120.0)));
+        // A requested timeout is the model's choice: no default applies.
+        assert_eq!(shells.deadlines(Some(600.0)), released(Some(600.0), None));
+        // The auto-background setting wins over the default, and applies to
+        // any call whose own timeout ends later.
+        let auto = with_background(Some(120.0), Some(90.0));
+        assert_eq!(auto.deadlines(None), released(None, Some(90.0)));
+        assert_eq!(
+            auto.deadlines(Some(600.0)),
+            released(Some(600.0), Some(90.0))
+        );
+        assert_eq!(auto.deadlines(Some(60.0)), released(Some(60.0), None));
+    }
+
+    #[test]
+    fn the_timeout_description_states_the_hosts_defaults() {
+        let describe = |options: BashToolOptions| {
+            BashTool::schema(&options).parameters.as_value()["properties"]["timeout"]["description"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+        assert_eq!(
+            describe(BashToolOptions::default()),
+            "Timeout in seconds. Omit it (or pass 0) for no timeout."
+        );
+        let text = describe(with_background(Some(120.0), None));
+        assert!(
+            text.starts_with(
+                "Timeout in seconds. Omit it (or pass 0) for no timeout. A foreground command still running after 120 seconds moves to the background and keeps running"
+            ),
+            "{text}"
+        );
+        assert!(text.contains("omit it for servers and watchers"), "{text}");
+        assert_eq!(
+            describe(options(Some(120.0), None)),
+            "Timeout in seconds. Omit it (or pass 0) and the command stops after 120 seconds."
+        );
+        let text = describe(options(Some(120.0), Some(30.0)));
+        assert_eq!(
+            text,
+            "Timeout in seconds. Omit it (or pass 0) and the command stops after 30 seconds. At most 30 seconds."
+        );
     }
 }
 

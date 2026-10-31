@@ -45,7 +45,7 @@ fn approval_preview(text: &str) -> (String, bool) {
 /// Input for `bash_output`. Mirrors `BashOutputInput`.
 #[derive(Debug, Clone, JsonSchema, Deserialize)]
 pub struct BashOutputInput {
-    /// Background shell id (for example bash-1). Omit to list all shells.
+    /// Background shell id (for example b4k2x9m1q). Omit to list all shells.
     #[serde(default)]
     pub id: Option<String>,
     /// Seconds to wait for the shell to exit (or, with until "output", for new
@@ -74,7 +74,7 @@ pub enum UntilArg {
 /// Input for `bash_kill`. Mirrors `BashKillInput`.
 #[derive(Debug, Clone, JsonSchema, Deserialize)]
 pub struct BashKillInput {
-    /// Background shell id to stop (for example bash-1).
+    /// Background shell id to stop (for example b4k2x9m1q).
     pub id: String,
 }
 
@@ -357,7 +357,10 @@ impl AgentTool for BashOutputTool {
                 .as_ref()
                 .is_some_and(|probe| probe())
         {
-            parts.push("[Wait ended early: a new user message is waiting.]".into());
+            parts.push(
+                "[Stopped waiting because a message arrived (from the user, a finished background shell, or an alert); read it now. This shell keeps running, and you are told when it finishes.]"
+                    .into(),
+            );
         }
         if let Some(path) = &shell.log_path {
             parts.push(format!("Full log: {path}"));
@@ -415,6 +418,7 @@ impl AgentTool for BashOutputTool {
         if !still_running {
             if let Some(final_text) = &shell.final_text {
                 parts.push(format!("Final result:\n{}", tail(final_text)));
+                self.registry.mark_result_delivered(&id);
             }
         }
         Ok(text_result(parts.join("\n"), shells_details(&[shell])))

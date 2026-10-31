@@ -63,6 +63,7 @@ mod mcp_panel;
 mod mcp_setup_panel;
 mod panels;
 mod pet;
+mod shells_panel;
 mod side_questions;
 mod usage_panel;
 
@@ -1357,6 +1358,14 @@ pub async fn interactive_tui(
         footer.set_context_window(m.context_window as i64);
     }
     footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
+    // Running background shells (and their watches) show in the footer.
+    {
+        let (footer, tui) = (footer.clone(), tui.clone());
+        reload_context.shells.watch_counts(move |running, watches| {
+            footer.set_background_shells(running, watches);
+            tui.request_render(false);
+        });
+    }
 
     // /context and the startup banner share a resource snapshot that the async
     // reload handler refreshes, so neither awaits the harness accessor.
@@ -2229,6 +2238,24 @@ pub async fn interactive_tui(
                                     .filter(|snapshot| snapshot.generation == generation)
                                 {
                                     if !snapshot.has_capturing_overlay {
+                                        // The footer's shell count opens the
+                                        // Shells panel (ice `OPEN_SHELLS_URL`).
+                                        if snapshot
+                                            .rows
+                                            .get(origin.1)
+                                            .and_then(|row| {
+                                                ice_tui::get_osc8_link_at_column(row, origin.0)
+                                            })
+                                            .is_some_and(|url| {
+                                                url == ice_tui::footer::OPEN_SHELLS_LINK
+                                            })
+                                        {
+                                            cancel_mouse_selection(&state_for_key, &tui_for_key);
+                                            if !state_for_key.selector_open() {
+                                                shells_panel::open_shells_panel(&ctx_for_key);
+                                            }
+                                            continue;
+                                        }
                                         if snapshot
                                             .rows
                                             .get(origin.1)
@@ -3126,6 +3153,21 @@ pub async fn interactive_tui(
                 && accept_skill_mention(&state_for_key, &editor_for_key)
             {
                 tui_for_key.request_render_reusing_scroll_content();
+                continue;
+            }
+
+            // 5a-quater. Down opens the Shells panel from an empty editor while
+            //     background shells run (ice `app.shells.open`); otherwise it
+            //     keeps moving the cursor or browsing history.
+            if keybinding_matches(
+                &keybindings_for_key,
+                &key,
+                ice_tui::keybindings::keys::SHELLS_OPEN,
+            ) && editor_for_key.get_text().is_empty()
+                && *state_for_key.history_index.lock().unwrap() == -1
+                && shells_for_key.registry().running_count() > 0
+            {
+                shells_panel::open_shells_panel(&ctx_for_key);
                 continue;
             }
 

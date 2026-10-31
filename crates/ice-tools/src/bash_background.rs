@@ -257,6 +257,11 @@ struct ShellRecord {
     input_bytes: usize,
     pid: Arc<std::sync::Mutex<Option<u32>>>,
     env: Arc<dyn ExecutionEnv>,
+    /// `bash_output` calls waiting on this shell right now.
+    readers: usize,
+    /// The model has the final result from a tool call, or a waiting read
+    /// will return it, so a completion notice would repeat it.
+    result_delivered: bool,
 }
 
 impl ShellRecord {
@@ -314,7 +319,6 @@ struct Foreground {
 #[derive(Default)]
 struct Inner {
     shells: Vec<ShellRecord>,
-    next_id: u64,
     next_listener: u64,
     listeners: Vec<(u64, Listener)>,
     foreground: HashMap<String, (u64, Foreground)>,
@@ -398,7 +402,8 @@ impl BashBackgroundRegistry {
         self.lock().shells.iter().filter(|s| s.running()).count()
     }
 
-    /// Take ownership of a running shell and return its id (`bash-N`). If
+    /// Take ownership of a running shell and return its id (see
+    /// [`new_shell_id`]). If
     /// disposal already started, cancel the shell and remove its log after it
     /// exits instead of adding an un-settleable record.
     pub fn adopt(self: &Arc<Self>, adoption: Adoption) -> Result<String, String> {
@@ -428,8 +433,7 @@ impl BashBackgroundRegistry {
             if inner.disposed {
                 None
             } else {
-                inner.next_id += 1;
-                let id = format!("bash-{}", inner.next_id);
+                let id = new_shell_id(&inner);
                 let mut record = ShellRecord {
                     id: id.clone(),
                     command,
@@ -456,6 +460,8 @@ impl BashBackgroundRegistry {
                     input_bytes: 0,
                     pid,
                     env: env.clone(),
+                    readers: 0,
+                    result_delivered: false,
                 };
                 append_chunk(&mut record, &initial_output);
                 record.read_cursor = record.total_chars;
@@ -575,6 +581,7 @@ impl BashBackgroundRegistry {
                 record.log_issue = log_issue;
             }
             record.stdin = None;
+            record.result_delivered |= record.readers > 0;
             record.bump();
             let completion = BashBackgroundCompletion {
                 task_id: record.id.clone(),
@@ -695,7 +702,13 @@ impl BashBackgroundRegistry {
                 !running || (until == WaitUntil::Output && total > cursor)
             }
         };
-        if !wait.is_zero() && !satisfied(self.state(id)) {
+        if wait.is_zero() {
+            return Ok(());
+        }
+        // Registered before the check, so a shell that ends at any point of
+        // this wait hands its result to this read, not to a completion notice.
+        let _reader = Reader::new(self, id);
+        if !satisfied(self.state(id)) {
             let deadline = tokio::time::sleep(wait);
             tokio::pin!(deadline);
             let mut poll = tokio::time::interval(USER_MESSAGE_POLL);
@@ -720,6 +733,24 @@ impl BashBackgroundRegistry {
             }
         }
         Ok(())
+    }
+
+    /// Record that the model received the shell's final result from a tool
+    /// call, so no completion notice repeats it.
+    pub fn mark_result_delivered(&self, id: &str) {
+        if let Some(record) = self.lock().shells.iter_mut().find(|s| s.id == id) {
+            record.result_delivered = true;
+        }
+    }
+
+    /// Whether the model already has the shell's final result (see
+    /// [`Self::mark_result_delivered`]). Hosts check it before sending a
+    /// completion notice. A pruned shell reports false.
+    pub fn result_delivered(&self, id: &str) -> bool {
+        self.lock()
+            .shells
+            .iter()
+            .any(|s| s.id == id && s.result_delivered)
     }
 
     /// Return the output not previously returned and advance the cursor.
@@ -770,6 +801,7 @@ impl BashBackgroundRegistry {
                 });
                 record.stdin = None;
                 record.abort.cancel();
+                record.result_delivered |= record.readers > 0;
                 record.bump();
                 let completion = notify.then(|| BashBackgroundCompletion {
                     task_id: record.id.clone(),
@@ -1046,6 +1078,51 @@ impl BashBackgroundRegistry {
     }
 }
 
+/// Counts a `bash_output` wait on one shell for as long as it lasts.
+struct Reader<'a> {
+    registry: &'a BashBackgroundRegistry,
+    id: &'a str,
+}
+
+impl<'a> Reader<'a> {
+    fn new(registry: &'a BashBackgroundRegistry, id: &'a str) -> Self {
+        if let Some(record) = registry.lock().shells.iter_mut().find(|s| s.id == id) {
+            record.readers += 1;
+        }
+        Self { registry, id }
+    }
+}
+
+impl Drop for Reader<'_> {
+    fn drop(&mut self) {
+        let mut inner = self.registry.lock();
+        if let Some(record) = inner.shells.iter_mut().find(|s| s.id == self.id) {
+            record.readers = record.readers.saturating_sub(1);
+        }
+    }
+}
+
+/// A new shell id: `b` and eight random base-36 characters, unique among the
+/// retained shells. Unlike a per-session counter, an id names one command
+/// across every session of a conversation, so a resumed transcript's ids
+/// never point at a newer shell.
+fn new_shell_id(inner: &Inner) -> String {
+    const ALPHABET: &[u8; 36] = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    loop {
+        let bytes = uuid::Uuid::new_v4().into_bytes();
+        let id: String = std::iter::once('b')
+            .chain(
+                bytes[..8]
+                    .iter()
+                    .map(|b| ALPHABET[*b as usize % 36] as char),
+            )
+            .collect();
+        if !inner.shells.iter().any(|shell| shell.id == id) {
+            return id;
+        }
+    }
+}
+
 /// Unregisters a foreground call on drop. Mirrors the `registerForeground`
 /// unregister closure: it only removes the matching registration.
 pub struct ForegroundGuard {
@@ -1155,6 +1232,15 @@ fn prune_finished(inner: &mut Inner) {
     });
     for (env, path) in removed {
         tokio::spawn(remove_log(env, path));
+    }
+}
+
+/// What a person reads for a shell: its description, or else its command
+/// (first line). Every shell is named "bash"; this tells them apart.
+pub fn shell_label(description: Option<&str>, command: &str) -> String {
+    match description.map(str::trim).filter(|d| !d.is_empty()) {
+        Some(description) => description.to_string(),
+        None => summarize_shell_command(command),
     }
 }
 

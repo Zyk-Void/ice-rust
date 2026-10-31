@@ -379,7 +379,24 @@ When `bash` is active, the session also registers the following tools. `--exclud
 - `bash_input` writes to a shell's stdin.
 - `bash_watch` sets an alert for a pattern, for silence, for a prompt, or on an interval.
 
-The model starts a background shell with `run_in_background: true`. Press `Ctrl+B` to move a running foreground command to the background. The agent is told when a shell finishes or a watch fires.
+The model starts a background shell with `run_in_background: true`. Press `Ctrl+B` to move a running foreground command to the background. Every shell is named `bash` and has a unique id, such as `b4k2x9m1q`, that the agent passes to `bash_output` and `bash_kill`; its description tells shells apart, in the transcript and in the Shells panel.
+
+The agent is told when a shell finishes or a watch fires: while it is working, as soon as its current tool calls finish; when it is idle, in a new turn. It is not told again about a result it already read with `bash_output`. A shell you stop is reported at the start of the next turn instead of waking the agent. A message for the agent (one you send, or a finished shell's) ends a `bash_output` wait at once, and moves a foreground command that has run for 5 seconds to the background, so the agent can read it. The transcript shows a finished shell as one line, such as `✓ Background bash "Run tests" completed (exit code 0) · 4s`, with the last lines of its output.
+
+A foreground command without a `timeout` moves to the background after 120 seconds and keeps running (`ICERS_BASH_TIMEOUT` changes this; `bashAutoBackgroundSeconds` sets it for every command). Where background shells are unavailable, it stops instead. A background shell has no default timeout. It runs until it exits, its own `timeout` passes, it is stopped, or the session ends.
+
+While shells run, the footer shows their count (for example `2 shells 1 watch`; only watches the agent created are counted). Open the Shells panel by clicking that count, pressing `Down` in an empty editor, or running `/shells` (also `/tasks`). The panel lists running shells as `bash` with their description or command, and the id dimmed.
+
+| Key | Shells panel |
+|---|---|
+| `Up` / `Down` | Select a shell |
+| `Enter` / `Right` | Details: status, runtime, command, log path and the latest output |
+| `f` | Follow the selected shell's live output |
+| `x` | Stop the selected shell (the agent is told) |
+| `Left` | Back: follow → details → list |
+| `Esc` | Close |
+
+The keys are configurable as `app.shells.open`, `app.shells.follow`, `app.shells.stop`, `tui.select.left` and `tui.select.right`.
 
 Model bash calls receive the session's identity in `ICERS_SESSION_ID`, `ICERS_PROVIDER`, `ICERS_MODEL` and `ICERS_REASONING_LEVEL`. Commands you type as `!cmd` run with the same `shellCommandPrefix` as the model's bash tool.
 
@@ -388,7 +405,7 @@ Settings (in `settings.json`):
 | Key | Default | Meaning |
 |---|---|---|
 | `bashInputApproval` | `"ask"` | `"allow"` lets `bash_input` write without asking |
-| `bashAutoBackgroundSeconds` | unset | Move a foreground command to the background after this many seconds |
+| `bashAutoBackgroundSeconds` | unset | Move a foreground command to the background after this many seconds. Unset: after 120 s, for a command without a `timeout` |
 | `bashPromptAlertSeconds` | `30` | Alert when a quiet shell's last line looks like a prompt; `0` disables |
 | `bashSilenceAlertSeconds` | `0` | Alert when a shell produces no output for this long; `0` disables |
 

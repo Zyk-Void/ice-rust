@@ -561,8 +561,10 @@ impl TranscriptView {
                 let mut bash = self.bash_components.lock().unwrap();
                 if let Some(existing) = bash.get(&call.id) {
                     existing.set_command(command);
+                    describe_bash(existing, &call.args);
                 } else {
                     let comp = Arc::new(BashExecutionComponent::new(command));
+                    describe_bash(&comp, &call.args);
                     comp.set_expanded(self.expanded());
                     append_bash_panel(&self.chat, comp.clone(), self.expanded());
                     bash.insert(call.id.clone(), comp);
@@ -613,8 +615,10 @@ impl TranscriptView {
             let mut bash = self.bash_components.lock().unwrap();
             if let Some(existing) = bash.get(id) {
                 existing.set_command(command);
+                describe_bash(existing, args);
             } else {
                 let comp = Arc::new(BashExecutionComponent::new(command));
+                describe_bash(&comp, args);
                 comp.set_expanded(self.expanded());
                 append_bash_panel(&self.chat, comp.clone(), self.expanded());
                 bash.insert(id.to_string(), comp);
@@ -1214,6 +1218,14 @@ fn apply_edit_diff(
     comp.set_diff(render_diff(diff_text, width));
 }
 
+/// A bash row names its command by the agent's description, when given, so
+/// commands running at once are easy to tell apart.
+fn describe_bash(comp: &BashExecutionComponent, args: &Value) {
+    if let Some(description) = args.get("description").and_then(Value::as_str) {
+        comp.set_description(description);
+    }
+}
+
 /// Mark a bash panel complete from the wire result payload. The exit code is
 /// derived from `is_error`; truncation info is read from `details`.
 fn finalize_bash(comp: &Arc<BashExecutionComponent>, result: &Value, is_error: bool) {
@@ -1681,6 +1693,25 @@ mod exploration_tests {
                 args,
             },
             80,
+        );
+    }
+
+    #[test]
+    fn a_running_bash_row_leads_with_its_description() {
+        let chat = Arc::new(Container::new());
+        let view = TranscriptView::new(chat.clone());
+        start(
+            &view,
+            "t",
+            "bash",
+            serde_json::json!({"command": "npm test", "description": "Run the tests"}),
+        );
+        let rows = strip_ansi(&chat.render(80).join("\n"));
+        let description = rows.find("Run the tests").expect("description shown");
+        assert!(
+            rows.find("npm test")
+                .is_some_and(|command| description < command),
+            "{rows}"
         );
     }
 

@@ -2363,9 +2363,11 @@ fn merge_extension_tools(
 /// Build the tool list per `--tools`/`--exclude-tools`/`--no-tools`/
 /// `--no-builtin-tools`. Mirrors the TS `tools`/`excludeTools`/`noTools`
 /// resolution in `createAgentSession`.
-/// Default bash timeout: 120s when the model doesn't pass one (prevents a
-/// forgotten `timeout` from hanging the run forever — the "卡住" report).
-/// `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
+/// Default bash timeout: 120s for a foreground call when the model doesn't
+/// pass one (prevents a forgotten `timeout` from hanging the run forever — the
+/// "stuck" report). With background shells the call then moves to the
+/// background instead of being stopped; background shells are not subject to
+/// it. `ICERS_BASH_TIMEOUT` overrides; a model-supplied timeout always wins.
 pub fn bash_options(
     shells: Option<&crate::background_shells::SessionShells>,
 ) -> ice_tools::tools::bash::BashToolOptions {
@@ -2385,6 +2387,7 @@ pub fn bash_options(
         default_timeout: Some(default),
         background: shells.map(|s| s.registry()),
         auto_background_secs: shells.and_then(|s| s.auto_background_secs()),
+        steer_probe: shells.map(|s| s.steer_probe()),
         ..Default::default()
     }
 }

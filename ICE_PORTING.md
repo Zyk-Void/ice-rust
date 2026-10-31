@@ -318,6 +318,17 @@ it has no `run_in_background` or `stdin` parameters.
   When a shell exits by itself, a `bash_background_completed` custom message is
   delivered once. Finished shells stay listed for a while. All processes are
   killed on dispose, and logs are deleted when a shell drops from the list.
+  **ice-rust:** completions steer while the agent is busy and a user stop
+  waits for the next turn, as in ice; a queued message ends a `bash_output`
+  wait and releases a foreground call after 5 s (the steer probe). icers also
+  skips a completion whose result `bash_output` already returned.
+  Deliberate differences: a foreground call without `timeout` moves to the
+  background after 120 s (`ICERS_BASH_TIMEOUT`; ice auto-backgrounds every
+  call after 60 s), as Claude Code does at its default timeout, and stops
+  only where there is no registry. Shell ids are random (`b` and eight
+  base-36 characters, as in Claude Code) instead of `bash-N`, so they stay
+  unique across the sessions of a conversation. Background shells have no
+  default timeout, as in ice.
 - **Tools** (`bash-shells.ts`, active exactly when `bash` is active):
   - `bash_output`: status plus new output. It can wait up to 300 s, or tail/grep
     the full log. With no id it lists all shells.
@@ -335,6 +346,17 @@ it has no `run_in_background` or `stdin` parameters.
 - **UI/RPC:** `modes/interactive/components/shells-panel.ts` (live shells view).
   RPC `background_bash`, `get_shells`, `get_shell`, `kill_shell`, `abort_bash`,
   plus `shells_update` events.
+  **ice-rust:** the Shells panel is ported
+  (`crates/ice-cli/src/interactive_tui/shells_panel.rs`): list, details and
+  follow views, stop with model notification, opened by `Down` on an empty
+  editor, `/shells` (or `/tasks`) or a click on the footer's shell count, with
+  the `app.shells.*` keybindings. The footer shows running shells and explicit
+  watches, and a finished shell renders as one status line. Every shell is
+  named `bash`; rows and transcript bash rows lead with the description (or
+  command), with the id dimmed. Not yet: click-to-expand on the completion
+  line (it shows the last output lines instead), keeping `\r` redraws in
+  captured output (the capture drops CRs, so progress bars merge), and the
+  RPC shell methods.
 
 ---
 
@@ -646,7 +668,8 @@ From `CA/modes/interactive/components/`:
   assistant turns (ignoring blank/tool-only entries); Rust's `jump_to_end.rs`
   displays that count with the configured bottom-navigation key.
 - **Panels:** `notices-view.ts` (NoticeCenter panel with a filter bar),
-  `shells-panel.ts` (§3), `subagent-view-switcher.ts` and the Agent Hub (§1.9).
+  `shells-panel.ts` (§3, ported), `subagent-view-switcher.ts` and the Agent
+  Hub (§1.9).
 - **Status:** `run-summary.ts` (dim "worked for …" line after a run),
   `session-header.ts`, `skill-invocation-message.ts` (collapsible).
 - **Selectors:** `config-selector.ts` (§6.3), `user-message-selector.ts`
