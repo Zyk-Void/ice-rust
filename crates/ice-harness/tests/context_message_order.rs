@@ -2594,3 +2594,41 @@ async fn restored_legacy_run_bound_queues_can_be_cancelled_after_their_run_finis
         }
     }
 }
+
+/// A custom message that starts a run (a background-shell notice waking an
+/// idle agent) is announced, so a TUI can show it. A user prompt is still
+/// left to the caller, which echoes it itself.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_custom_message_that_starts_a_run_is_announced() {
+    let emitter = Arc::new(AppendDuringEvent::new(|_| false));
+    let script = FauxScript::new();
+    script.set_responses(vec![FauxStep::text("noted"), FauxStep::text("hi")]);
+    let (h, _) = harness(fresh_session(), script, Some(emitter.clone()), false).await;
+    let sent = h
+        .send_message(
+            context_message(),
+            SendMessageOptions {
+                trigger_turn: Some(true),
+                deliver_as: MessageDelivery::Steer,
+            },
+        )
+        .await
+        .unwrap();
+    assert!(matches!(sent, SendMessageResult::Run(_)));
+    h.prompt_text("hello", vec![]).await.unwrap();
+    let announced: Vec<AgentMessage> = emitter
+        .observed
+        .lock()
+        .unwrap()
+        .iter()
+        .filter_map(|event| match event {
+            AgentEvent::MessageStart { message }
+                if !matches!(message, AgentMessage::Assistant(_)) =>
+            {
+                Some(message.clone())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(announced, vec![context_message()]);
+}
