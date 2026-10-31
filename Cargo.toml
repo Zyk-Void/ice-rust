@@ -29,7 +29,7 @@ rust-version = "1.88"
 license = "MIT"
 repository = "https://github.com/Zyk-Void/ice-rust"
 homepage = "https://rpi.laofu.online/"
-version = "0.6.1"
+version = "0.8.2"
 authors = ["BigFish <fuwei201473@gmail.com>"]
 
 [workspace.dependencies]
@@ -71,16 +71,16 @@ dirs = "5"
 rpassword = "7"
 
 # icers internal crates (package names and directories both use the `ice-` prefix).
-ice-telemetry = { path = "crates/ice-telemetry", version = "0.6.1" }
-ice-ai = { path = "crates/ice-ai", version = "0.6.1" }
-ice-agent = { path = "crates/ice-agent", version = "0.6.1" }
-ice-tools = { path = "crates/ice-tools", version = "0.6.1" }
-ice-harness = { path = "crates/ice-harness", version = "0.6.1" }
+ice-telemetry = { path = "crates/ice-telemetry", version = "0.8.2" }
+ice-ai = { path = "crates/ice-ai", version = "0.8.2" }
+ice-agent = { path = "crates/ice-agent", version = "0.8.2" }
+ice-tools = { path = "crates/ice-tools", version = "0.8.2" }
+ice-harness = { path = "crates/ice-harness", version = "0.8.2" }
 
-ice-tui = { path = "crates/ice-tui", version = "0.6.1" }
+ice-tui = { path = "crates/ice-tui", version = "0.8.2" }
 
-ice-plugin-sdk = { path = "crates/ice-plugin-sdk", version = "0.6.1" }
-ice-extensions = { path = "crates/ice-extensions", version = "0.6.1" }
+ice-plugin-sdk = { path = "crates/ice-plugin-sdk", version = "0.8.2" }
+ice-extensions = { path = "crates/ice-extensions", version = "0.8.2" }
 
 [profile.release]
 lto = "thin"
