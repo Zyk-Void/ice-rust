@@ -54,6 +54,9 @@ struct IgnoreFile {
 #[derive(Clone, Default)]
 pub(crate) struct IgnoreStack {
     files: Vec<Arc<IgnoreFile>>,
+    /// The walk root. rg and fd search an explicitly named root even when
+    /// it sits inside an ignored directory, so only ancestors below it count.
+    root: PathBuf,
 }
 
 impl IgnoreStack {
@@ -62,6 +65,7 @@ impl IgnoreStack {
         if path
             .ancestors()
             .skip(1)
+            .take_while(|ancestor| *ancestor != self.root && ancestor.starts_with(&self.root))
             .any(|ancestor| self.matches_rules(ancestor, true))
         {
             return true;
@@ -142,7 +146,10 @@ impl IgnoreStack {
             }
             current = dir.parent();
         }
-        let mut stack = IgnoreStack::default();
+        let mut stack = IgnoreStack {
+            root: root.to_path_buf(),
+            ..IgnoreStack::default()
+        };
         if let Some(repo_root) = repo_root {
             if let Some(file) =
                 load(env, &repo_root.join(".git").join("info"), "exclude", cancel).await?
@@ -271,6 +278,7 @@ mod tests {
                 git: true,
                 rules: parse(text),
             })],
+            root: PathBuf::new(),
         }
     }
 
@@ -319,5 +327,13 @@ mod tests {
         let s = stack("/r", "build/\n!build/keep.txt\n");
         assert!(s.is_ignored(Path::new("/r/build"), true));
         assert!(s.is_ignored(Path::new("/r/build/keep.txt"), false));
+    }
+
+    #[test]
+    fn an_explicit_root_inside_an_ignored_directory_is_searched() {
+        let mut s = stack("/r", "build/\n");
+        s.root = PathBuf::from("/r/build");
+        assert!(!s.is_ignored(Path::new("/r/build/keep.txt"), false));
+        assert!(s.is_ignored(Path::new("/r/build/build/x.txt"), false));
     }
 }

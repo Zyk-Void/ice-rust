@@ -20,10 +20,9 @@
 //! - **No `ModelRuntime`/multi-provider registry.** The resolver supports the
 //!   built-in Anthropic/OpenAI-compatible providers and `models.json`, but
 //!   runtime catalog mutation remains outside this layer.
-//! - **Built-in tools**: `read`, `bash`, `edit`, `write`, and the read-only
-//!   `docs` lookup tool. The former ice-only `grep`, `find`, `ls`, and
-//!   `powershell` tools remain library modules but are not registered by the
-//!   CLI.
+//! - **Built-in tools**: `read`, `bash`, `edit`, `write`, `grep`, and the
+//!   read-only `docs` lookup tool. `find` and `ls` remain library modules;
+//!   PowerShell is registered on Windows.
 //! - **Session restore (`-c`/`-r`/`--session`)** is *partially* supported: a
 //!   fresh session is always created. The harness's `create` rejects sessions
 //!   that already have records unless `allow_existing_session` is enabled.
@@ -49,8 +48,8 @@ use ice_harness::types::{
 #[cfg(windows)]
 use ice_tools::create_powershell_tool;
 use ice_tools::{
-    create_bash_tool, create_edit_tool, create_read_tool, create_write_tool, ExecutionToolContext,
-    MutationQueueRegistry, OsExecutionEnv,
+    create_bash_tool, create_edit_tool, create_grep_tool, create_read_tool, create_write_tool,
+    ExecutionToolContext, MutationQueueRegistry, OsExecutionEnv,
 };
 
 use crate::args::Args;
@@ -68,7 +67,7 @@ use ice_extensions::{
 };
 
 /// The coding tools registered by the CLI by default.
-pub const BUILTIN_TOOL_NAMES: &[&str] = &["read", "bash", "edit", "write", "docs"];
+pub const BUILTIN_TOOL_NAMES: &[&str] = &["read", "bash", "edit", "write", "grep", "docs"];
 
 /// Await extension observers before exposing the same lifecycle event publicly.
 /// Streaming tool updates still use the emitter's non-blocking `try_emit` path.
@@ -114,6 +113,7 @@ Available tools:
 - bash  — Execute Bash commands using Bash/POSIX syntax, including on Windows
 - edit  — Find/replace edits to existing files
 - write — Create or overwrite files
+- grep  — Search text, archives, or code structure; use mode ast for syntax patterns
 - docs  — Look up icers usage, extension, package, and compatibility documentation
 
 Guidelines:
@@ -2432,6 +2432,10 @@ fn build_tools(
         ("edit", HarnessTool::new(create_edit_tool(ctx))),
         ("write", HarnessTool::new(create_write_tool(ctx))),
         (
+            "grep",
+            HarnessTool::new(create_grep_tool(ctx, None)).with_replay(ToolReplay::Safe),
+        ),
+        (
             "docs",
             HarnessTool::new(create_docs_tool()).with_replay(ToolReplay::Safe),
         ),
@@ -4349,7 +4353,7 @@ mod tests {
         assert!(p.contains("edit"));
         assert!(p.contains("write"));
         assert!(p.contains("docs"));
-        assert!(!p.contains("- grep"));
+        assert!(p.contains("- grep"));
         assert!(!p.contains("- find"));
         assert!(!p.contains("- ls"));
         assert!(!p.contains("- powershell"));
@@ -4457,7 +4461,7 @@ mod tests {
                 .map(|tool| tool.replay)
         };
 
-        for read_only in ["read", "docs"] {
+        for read_only in ["read", "grep", "docs"] {
             assert_eq!(
                 replay_of(read_only),
                 Some(ToolReplay::Safe),
@@ -4486,17 +4490,39 @@ mod tests {
             .map(|tool| tool.tool.schema().name.clone())
             .collect();
 
-        // `docs` is a default capability; the legacy ice-only lookup tools stay
-        // unregistered. Asserted by membership (not exact equality) because
-        // `powershell` is Windows-only and `settings.json#defaultTools` may
-        // narrow the set in a developer's environment.
+        // `grep` and `docs` are default capabilities; find and ls remain
+        // library-only. PowerShell is Windows-only.
         assert!(names.contains(&"docs".to_string()));
-        for legacy in ["grep", "find", "ls"] {
+        assert!(names.contains(&"grep".to_string()));
+        for legacy in ["find", "ls"] {
             assert!(
                 !names.contains(&legacy.to_string()),
                 "legacy tool {legacy} should not be registered by default"
             );
         }
+    }
+
+    #[test]
+    fn grep_respects_explicit_tool_filters() {
+        let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(".")));
+        let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
+        let mut_env: Arc<dyn ice_tools::MutatingEnv> = env;
+        let context = ExecutionToolContext::new(env_dyn, Some(mut_env));
+        let args = Args {
+            tools: Some(vec!["grep".into()]),
+            ..Args::default()
+        };
+        let names: Vec<_> = build_tools(&context, &args, None)
+            .iter()
+            .map(|tool| tool.tool.schema().name.clone())
+            .collect();
+        assert_eq!(names, ["grep"]);
+        let args = Args {
+            tools: Some(vec!["grep".into()]),
+            exclude_tools: Some(vec!["grep".into()]),
+            ..Args::default()
+        };
+        assert!(build_tools(&context, &args, None).is_empty());
     }
 
     #[test]

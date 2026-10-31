@@ -86,11 +86,22 @@ Rules of thumb:
 This is the traced path. Every later section refers back to it. Read it once
 before choosing a route.
 
+The built-in `grep` tool defaults to text search with `rg` (ripgrep), falling
+back to the in-process search for virtual environments or when `rg` is absent.
+Set `mode` to `archive` to search compressed files with `ugrep`, or `ast` and
+`language` to search syntax patterns with `ast-grep`. These modes require their
+respective executables on `PATH`; AST patterns are not text regexes. External
+searches have a 30-second deadline and bounded output, and the engine is
+stopped as soon as the match `limit` is exceeded. `path` takes one path or a
+list, `before`/`after` set asymmetric context, results show paths relative to
+the working directory, and unreadable paths are reported as skipped instead
+of failing the search.
+
 ```
                         ┌──────────────────────────────────────────────┐
   built-ins             │ ice-cli/src/session.rs  build_tools()        │
   read bash edit write  │   builds Vec<(name, HarnessTool)>            │
-  docs [powershell]  ──►│   applies settings.defaultTools, --tools,    │
+  grep docs [powershell]►│   applies settings.defaultTools, --tools,    │
                         │   --no-builtin-tools, adds bash_* shells,    │
                         │   then --exclude-tools                       │
                         └──────────────────────┬───────────────────────┘
@@ -206,20 +217,19 @@ Constructed in `ice-cli/src/background_shells.rs`, implemented in
 
 These compile, have tests, and are exported from `ice-tools`, but nothing in
 `ice-cli` calls them. Verified by grepping `ice-cli`, `ice-harness`,
-`ice-extensions` and `examples` for `create_grep_tool`, `create_find_tool`,
+`ice-extensions` and `examples` for `create_find_tool`,
 `create_ls_tool`, `create_image_tool`, `create_all_tools`,
 `create_coding_tools`, `create_read_only_tools`: zero hits.
 
 | Name | File | Why it matters |
 |---|---|---|
-| `grep` | `ice-tools/src/tools/grep.rs` | In-process regex search honoring `.gitignore`. No `rg` needed. |
 | `find` | `ice-tools/src/tools/find.rs` | In-process glob search. No `fd` needed. |
 | `ls` | `ice-tools/src/tools/ls.rs` | Directory listing. |
 | `image` | `ice-tools/src/tools/image.rs` | resize/convert/info. Takes **base64 in the parameters**; see 5.1. |
 
-A consequence worth knowing: `icers --tools read,grep` does not work today,
+A consequence worth knowing: `icers --tools read,find` does not work today,
 because `--tools` is an allowlist over what `build_tools` constructed, and
-`grep` was never constructed.
+`find` was never constructed. `grep` is registered by default (section 3).
 
 ### 4.5 Name of the other "image tool"
 
@@ -254,8 +264,8 @@ but inactive until asked for.
 
 | Tool | ice behavior | icers status | Work |
 |---|---|---|---|
-| `grep` | registered, inactive by default | built, tested, unwired | Wire in `build_tools`; decide default-active (see 6.5); add to the system prompt list; mark `ToolReplay::Safe`. |
-| `find` | same | same | same |
+| `grep` | registered, inactive by default | registered and active by default, `ToolReplay::Safe` | Done. |
+| `find` | registered, inactive by default | built, tested, unwired | Wire in `build_tools`; decide default-active (see 6.5); add to the system prompt list; mark `ToolReplay::Safe`. |
 | `ls` | same | same | same |
 | `image` | **no such tool in ice's tool list** | Rust-only, unwired | **Recommend not wiring as-is.** It takes `image_data` as base64 *in the model's parameters*, so the model would have to emit the whole image as tokens. A path-based variant would be useful; the current one is not. |
 

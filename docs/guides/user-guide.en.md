@@ -212,7 +212,7 @@ The server prints a token at startup and enables token authentication by default
 
 ## 4. Built-in tools and safety boundaries
 
-The default tool set contains Pi-compatible `read`, `bash`, `edit`, and `write`, plus icers's read-only `docs` lookup tool. Windows also registers `powershell` by default. The library includes `grep`, `find`, and `ls` implementations, but the CLI does not register them by default.
+The default tool set contains Pi-compatible `read`, `bash`, `edit`, and `write`, plus icers's read-only `grep` search tool and `docs` lookup tool. Windows also registers `powershell` by default. The library includes `find` and `ls` implementations, but the CLI does not register them by default.
 
 Restrict the default tool set in `.icers/settings.json`:
 
