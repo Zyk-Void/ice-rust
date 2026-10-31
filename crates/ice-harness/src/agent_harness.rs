@@ -3730,7 +3730,7 @@ impl AgentHarness {
             })
             .await?;
         }
-        self.emit_appended_messages(prompts.iter().take(queued_ids.len()).cloned().collect())
+        self.emit_appended_messages(announced_prompts(prompts, queued_ids.len()))
             .await;
         let aborted = signal.is_cancelled() || error.code.as_str() == "aborted";
         let current_leaf = self
@@ -4488,7 +4488,7 @@ impl AgentHarness {
             }
         }
 
-        self.emit_appended_messages(prompts.iter().take(queued_ids.len()).cloned().collect())
+        self.emit_appended_messages(announced_prompts(&prompts, queued_ids.len()))
             .await;
 
         if snap.models.is_empty() {
@@ -7133,6 +7133,19 @@ impl AgentLane for LaneHandle {
     async fn resume(&self, suspended_id: &str) -> HarnessResult<RunResult> {
         self.runner().resume(suspended_id).await
     }
+}
+
+/// The prompts a run announces with `message_start`/`message_end`: queued
+/// ones and custom ones (a background-shell notice or an extension message
+/// that starts the run) have no caller that echoes them. A user's own prompt
+/// is echoed by its caller, so it is not.
+fn announced_prompts(prompts: &[AgentMessage], queued: usize) -> Vec<AgentMessage> {
+    prompts
+        .iter()
+        .enumerate()
+        .filter(|(index, message)| *index < queued || matches!(message, AgentMessage::Custom(_)))
+        .map(|(_, message)| message.clone())
+        .collect()
 }
 
 #[cfg(test)]
