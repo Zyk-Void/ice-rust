@@ -389,8 +389,34 @@ pub(super) fn abort_interrupted_run(
                 _ => break,
             }
         }
+        // Esc on a run that already ended: nothing will report its end.
+        settle_unowned_run(&state, &lane).await;
         tui.request_render(false);
     }
+}
+
+/// Return the status to Idle after a run the TUI did not start (see
+/// [`TuiState::unowned_run`]) once the lane has no active run. Runs the TUI
+/// started return to Idle in their own prompt future instead.
+pub(super) async fn settle_unowned_run(state: &Arc<TuiState>, lane: &Arc<dyn AgentLane>) {
+    use std::sync::atomic::Ordering;
+    if !state.unowned_run.load(Ordering::Acquire) {
+        return;
+    }
+    if lane
+        .snapshot()
+        .await
+        .is_ok_and(|snapshot| snapshot.active.is_some())
+    {
+        return;
+    }
+    let mut status = state.status.lock().unwrap();
+    if !state.unowned_run.swap(false, Ordering::AcqRel) || *status == RunStatus::Idle {
+        return;
+    }
+    *status = RunStatus::Idle;
+    drop(status);
+    state.apply_status(RunStatus::Idle);
 }
 
 /// The actual key-loop interrupt seam, also used by navigation cancellation
@@ -489,8 +515,17 @@ pub(super) async fn handle_agent_event(
                     tui.request_render(false);
                 }
             }
+            settle_unowned_run(state, &harness.lane("main")).await;
+            tui.request_render(false);
         }
         AgentEvent::AgentStart => {
+            // The TUI claims Working before it starts a run, so a run that
+            // starts while Idle came from elsewhere.
+            if *state.status.lock().unwrap() == RunStatus::Idle {
+                state
+                    .unowned_run
+                    .store(true, std::sync::atomic::Ordering::Release);
+            }
             state.set_status(RunStatus::Working);
             tui.request_render(false);
         }
