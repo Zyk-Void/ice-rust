@@ -6,7 +6,10 @@
 //! Completions and alerts are sent to the main lane as custom messages that
 //! steer with `triggerTurn`: while the agent is running they are read at the
 //! next tool boundary, not only when the whole run ends; when it is idle they
-//! start a turn so the model can react. A user stop is recorded for the next
+//! start a turn so the model can react. Headless sessions (`--mode rpc`, which
+//! ACP drives, `--mode json`, `-p`) only run turns their client asked for, so
+//! there an idle notice joins the conversation for the next prompt instead.
+//! A user stop is recorded for the next
 //! turn instead of waking the model. A completion whose result the model
 //! already read with `bash_output` is not sent.
 
@@ -187,7 +190,10 @@ impl SessionShells {
 
     /// Deliver completions and watch alerts to `harness`'s main lane. Holds
     /// only a weak reference, so the harness can still be dropped.
-    pub fn connect(&self, harness: &AgentHarness) {
+    /// `wake_idle` lets a notice start a turn when the agent is idle; a
+    /// headless client (`--mode rpc`, ACP) only expects turns it asked for,
+    /// so there the notice joins the conversation for its next prompt.
+    pub fn connect(&self, harness: &AgentHarness, wake_idle: bool) {
         let _ = self.harness.set(harness.downgrade());
         let weak = harness.downgrade();
         let deliveries = self.deliveries.clone();
@@ -207,7 +213,7 @@ impl SessionShells {
                     if !registry.completion_due(&completion.task_id).await {
                         return;
                     }
-                    let options = completion_delivery(&completion);
+                    let options = completion_delivery(&completion, wake_idle);
                     deliver(harness, completion_message(&completion), options).await;
                 });
             }
@@ -217,7 +223,7 @@ impl SessionShells {
         self.watches.on_fire(move |fire| {
             if let Some(harness) = weak.upgrade() {
                 let message = fire_message(fire);
-                deliveries.spawn(deliver(harness, message, steer()));
+                deliveries.spawn(deliver(harness, message, steer(wake_idle)));
             }
         });
     }
@@ -249,24 +255,25 @@ async fn deliver(
 
 /// Steer, not follow-up: a busy agent (often waiting on another shell) learns
 /// at the next tool boundary instead of only when its whole run ends, after it
-/// may have answered already. An idle agent starts a turn.
-fn steer() -> SendMessageOptions {
+/// may have answered already. An idle agent starts a turn when `wake_idle`;
+/// otherwise the notice is added to the conversation for the next prompt.
+fn steer(wake_idle: bool) -> SendMessageOptions {
     SendMessageOptions {
-        trigger_turn: Some(true),
+        trigger_turn: wake_idle.then_some(true),
         deliver_as: MessageDelivery::Steer,
     }
 }
 
 /// A user stop is deliberate: record it for the next turn instead of waking
 /// the model to react. Mirrors ice's `deliverAs: "nextTurn"`.
-fn completion_delivery(c: &BashBackgroundCompletion) -> SendMessageOptions {
+fn completion_delivery(c: &BashBackgroundCompletion, wake_idle: bool) -> SendMessageOptions {
     if c.stopped_by_user {
         SendMessageOptions {
             trigger_turn: None,
             deliver_as: MessageDelivery::NextTurn,
         }
     } else {
-        steer()
+        steer(wake_idle)
     }
 }
 
@@ -568,8 +575,14 @@ mod delivery_tests {
     /// Run `script` with `bash` and the shell tools. Commands: `slow` runs
     /// 200 ms, `busy` 600 ms, `long` 3 s. Returns the conversation as
     /// `user`, `assistant`, `tool:<name>` or `notice`, the number of model
-    /// calls, and how long the run took.
-    async fn conversation(script: FauxScript) -> (Vec<String>, usize, Duration) {
+    /// calls, and how long the run took. `wake_idle` is passed to `connect`;
+    /// with `outlive_run`, shells still running when the run ends finish
+    /// before the session is disposed.
+    async fn conversation(
+        script: FauxScript,
+        wake_idle: bool,
+        outlive_run: bool,
+    ) -> (Vec<String>, usize, Duration) {
         let provider = FauxProvider::new(script);
         let env = Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/w".into()));
         for (name, ms) in [("slow", 200), ("busy", 600), ("long", 3_000)] {
@@ -599,10 +612,18 @@ mod delivery_tests {
             ..Default::default()
         };
         let harness = AgentHarness::create(options).await.unwrap();
-        shells.connect(&harness);
+        shells.connect(&harness, wake_idle);
         let started = Instant::now();
         harness.prompt_text("go", vec![]).await.unwrap();
         let elapsed = started.elapsed();
+        if outlive_run {
+            for _ in 0..500 {
+                if shells.registry().running_count() == 0 {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        }
         // Lets every notice finish sending, including one that would start
         // another run.
         shells.dispose().await;
@@ -625,11 +646,11 @@ mod delivery_tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn a_result_the_model_waited_for_is_not_sent_again() {
-        let (labels, calls, _) = conversation(script(vec![
-            launch("slow"),
-            wait_on(0),
-            FauxStep::text("done"),
-        ]))
+        let (labels, calls, _) = conversation(
+            script(vec![launch("slow"), wait_on(0), FauxStep::text("done")]),
+            true,
+            false,
+        )
         .await;
         assert_eq!(
             labels,
@@ -647,11 +668,15 @@ mod delivery_tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn an_unread_result_arrives_at_the_next_tool_boundary() {
-        let (labels, calls, _) = conversation(script(vec![
-            launch("slow"),
-            FauxStep::tool_call("bash", json!({"command": "busy"})),
-            FauxStep::text("done"),
-        ]))
+        let (labels, calls, _) = conversation(
+            script(vec![
+                launch("slow"),
+                FauxStep::tool_call("bash", json!({"command": "busy"})),
+                FauxStep::text("done"),
+            ]),
+            true,
+            false,
+        )
         .await;
         assert_eq!(
             labels,
@@ -672,12 +697,16 @@ mod delivery_tests {
     /// the model reads it instead of blocking until the waited-on shell ends.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn a_finished_shell_ends_a_wait_on_another() {
-        let (labels, calls, elapsed) = conversation(script(vec![
-            launch("long"),
-            launch("slow"),
-            wait_on(0),
-            FauxStep::text("done"),
-        ]))
+        let (labels, calls, elapsed) = conversation(
+            script(vec![
+                launch("long"),
+                launch("slow"),
+                wait_on(0),
+                FauxStep::text("done"),
+            ]),
+            true,
+            false,
+        )
         .await;
         assert_eq!(
             labels,
@@ -695,5 +724,39 @@ mod delivery_tests {
         );
         assert_eq!(calls, 4);
         assert!(elapsed < Duration::from_secs(2), "waited {elapsed:?}");
+    }
+
+    /// A shell that ends after the run: a TUI is woken for a turn to react;
+    /// a headless client (ACP) gets the notice with its next prompt instead
+    /// of a turn it never asked for.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn an_idle_notice_wakes_only_a_tui() {
+        let steps = || {
+            script(vec![
+                launch("slow"),
+                FauxStep::text("started"),
+                FauxStep::text("noted"),
+            ])
+        };
+        let (labels, calls, _) = conversation(steps(), true, true).await;
+        assert_eq!(
+            labels,
+            [
+                "user",
+                "assistant",
+                "tool:bash",
+                "assistant",
+                "notice",
+                "assistant"
+            ]
+        );
+        assert_eq!(calls, 3);
+
+        let (labels, calls, _) = conversation(steps(), false, true).await;
+        assert_eq!(
+            labels,
+            ["user", "assistant", "tool:bash", "assistant", "notice"]
+        );
+        assert_eq!(calls, 2, "no turn was started");
     }
 }
