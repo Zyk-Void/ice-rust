@@ -3,6 +3,7 @@
 use super::*;
 
 mod context_usage;
+pub(crate) use context_usage::headless_report as headless_context_report;
 pub(super) mod mcp;
 use mcp::{McpAuthCommand, McpCommand};
 

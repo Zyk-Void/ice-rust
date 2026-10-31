@@ -1,7 +1,32 @@
 //! Minimal P0 JSONL protocol for the native icers RPC host.
 use serde_json::{json, Value};
 
-pub const MAX_FRAME_BYTES: usize = 1_048_576;
+/// Allow bounded base64 image attachments as well as text/editor context.
+pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
+
+/// Decode and validate inline images before a run is accepted. Never resolve
+/// image URLs here: only bytes explicitly supplied by the client are trusted.
+pub(crate) fn prompt_images(
+    value: Option<&Value>,
+) -> Result<Vec<ice_ai::types::ImageContent>, String> {
+    use base64::Engine as _;
+    let Some(value) = value else {
+        return Ok(Vec::new());
+    };
+    let images: Vec<ice_ai::types::ImageContent> = serde_json::from_value(value.clone())
+        .map_err(|_| "images must be an array of base64 images with mimeType".to_string())?;
+    for image in &images {
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(&image.data)
+            .map_err(|_| "image data must be valid base64".to_string())?;
+        let detected = ice_tools::detect_supported_image_mime_type(&bytes)
+            .ok_or("unsupported or empty image data")?;
+        if detected != image.mime_type {
+            return Err(format!("image mimeType must match its data ({detected})"));
+        }
+    }
+    Ok(images)
+}
 pub const PI_BASELINE: &str = "1.2.0";
 
 #[allow(dead_code)]
@@ -25,6 +50,7 @@ pub enum Command {
     },
     Abort,
     GetState,
+    GetCommands,
     /// Read-only snapshot of the current branch's message entries.
     GetMessages {
         limit: Option<u64>,
@@ -99,6 +125,7 @@ pub enum Command {
 
 pub const SUPPORTED_COMMANDS: &[&str] = &[
     "get_state",
+    "get_commands",
     "get_messages",
     "get_history",
     "get_stats",

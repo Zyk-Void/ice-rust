@@ -36,42 +36,8 @@ pub(super) fn invoke_extension_command(
     name: &str,
     args: &str,
 ) -> Option<serde_json::Value> {
-    let command = session
-        .lock()
-        .ok()
-        .and_then(|s| s.snapshot_arc())
-        .and_then(|snap| {
-            snap.commands()
-                .iter()
-                .find(|c| c.name.trim_start_matches('/') == name.trim_start_matches('/'))
-                .cloned()
-        })?;
-    let input = serde_json::json!({ "args": args, "command": name });
-    let input = serde_json::to_string(&input).ok()?;
-    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let mut out = ice_plugin_sdk::StbString::empty();
-        let rc = (command.handler)(
-            ice_plugin_sdk::StbStringRef::from_str(&input),
-            &mut out as *mut ice_plugin_sdk::StbString,
-            command.user_data,
-        );
-        // SAFETY: the callback transfers a live output to its producer.
-        let out = unsafe {
-            ice_plugin_sdk::callbacks::OwnedString::from_raw(
-                out,
-                Some(ice_extensions::host_free_string),
-            )
-        };
-        let text = if rc == 0 {
-            Some(out.to_string_lossy())
-        } else {
-            None
-        };
-        text
-    }))
-    .ok()
-    .flatten()?;
-    serde_json::from_str(&outcome).ok()
+    let snapshot = session.lock().ok().and_then(|s| s.snapshot_arc())?;
+    crate::slash_commands::invoke_extension_command(&snapshot, name, args)
 }
 
 pub(super) fn handle_extension_ui_result(

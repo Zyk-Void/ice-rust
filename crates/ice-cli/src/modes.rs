@@ -313,25 +313,63 @@ pub async fn rpc(
     model_catalog: Vec<ice_ai::Model>,
     ui_dialog: ice_extensions::UiDialogMailbox,
     oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
+    builtins: RpcBuiltins,
 ) -> i32 {
-    rpc_with_io(
+    rpc_with_builtins(
         harness,
         agent_events.take(),
         model_catalog,
         ui_dialog,
         oauth_snapshot,
+        builtins,
         tokio::io::BufReader::new(tokio::io::stdin()),
         std::io::stdout(),
     )
     .await
 }
 
+/// Built-in extensions the `/cognee` and `/blackhole` commands drive.
+#[derive(Clone, Default)]
+pub struct RpcBuiltins {
+    pub agent_dir: Option<std::path::PathBuf>,
+    pub cognee: Option<Arc<crate::cognee::runtime::CogneeRuntime>>,
+}
+
+#[cfg(test)]
 async fn rpc_with_io<R, W>(
+    harness: &AgentHarness,
+    agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
+    model_catalog: Vec<ice_ai::Model>,
+    ui_dialog: ice_extensions::UiDialogMailbox,
+    oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
+    input: R,
+    output: W,
+) -> i32
+where
+    R: tokio::io::AsyncBufRead + Unpin,
+    W: Write + Send + 'static,
+{
+    rpc_with_builtins(
+        harness,
+        agent_events,
+        model_catalog,
+        ui_dialog,
+        oauth_snapshot,
+        RpcBuiltins::default(),
+        input,
+        output,
+    )
+    .await
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn rpc_with_builtins<R, W>(
     harness: &AgentHarness,
     mut agent_events: Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
     model_catalog: Vec<ice_ai::Model>,
     ui_dialog: ice_extensions::UiDialogMailbox,
     oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
+    builtins: RpcBuiltins,
     input: R,
     output: W,
 ) -> i32
@@ -543,18 +581,25 @@ where
                 break;
             }
             "prompt" | "resume_pending" | "compact" => {
-                if kind == "prompt" && msg.get("images").is_some() {
-                    write_line(
-                        &stdout,
-                        &rpc_protocol::response(
-                            Some(id.clone()),
-                            &kind,
-                            Err("RPC prompts do not support image attachments".to_string()),
-                        ),
-                    )
-                    .await;
-                    continue;
-                }
+                // Only a prompt carries images; compaction and resume would
+                // drop them.
+                let images = match rpc_protocol::prompt_images(msg.get("images")) {
+                    Ok(images) if kind != "prompt" && !images.is_empty() => {
+                        Err(format!("{kind} does not take image attachments"))
+                    }
+                    images => images,
+                };
+                let images = match images {
+                    Ok(images) => images,
+                    Err(error) => {
+                        write_line(
+                            &stdout,
+                            &rpc_protocol::response(Some(id.clone()), &kind, Err(error)),
+                        )
+                        .await;
+                        continue;
+                    }
+                };
                 let resume = kind == "resume_pending";
                 let compact = kind == "compact";
                 if run_active.swap(true, std::sync::atomic::Ordering::AcqRel) {
@@ -616,6 +661,142 @@ where
                     .await;
                     continue;
                 };
+                // Slash commands resolve exactly as in the TUI: text-only
+                // commands answer at once; skills, templates and `/compact`
+                // run as a normal settled turn.
+                let mut compact = compact;
+                let mut slash_instructions = None;
+                let mut slash_run = None;
+                if kind == "prompt" {
+                    use crate::slash_commands::Slash;
+                    let resources = harness.get_resources().await.unwrap_or_default();
+                    let snapshot = oauth_snapshot.as_deref();
+                    let slash = crate::slash_commands::resolve(&content, &resources, snapshot);
+                    if !images.is_empty()
+                        && matches!(&slash, Some(Slash::Builtin(..) | Slash::Extension(..)))
+                    {
+                        active_task.store(false, std::sync::atomic::Ordering::Release);
+                        let error =
+                            "image attachments cannot be used with built-in or extension commands";
+                        write_line(
+                            &stdout,
+                            &rpc_protocol::response(Some(id), &kind, Err(error.to_string())),
+                        )
+                        .await;
+                        continue;
+                    }
+                    match slash {
+                        Some(Slash::Builtin("compact", args)) => {
+                            compact = true;
+                            slash_instructions = (!args.is_empty()).then_some(args);
+                        }
+                        Some(slash @ (Slash::Builtin(..) | Slash::Extension(..))) => {
+                            let text = rpc_inline_command(
+                                slash,
+                                &lane,
+                                harness,
+                                &model_catalog,
+                                snapshot,
+                                &resources,
+                                &builtins,
+                            )
+                            .await;
+                            active_task.store(false, std::sync::atomic::Ordering::Release);
+                            if !legacy_prompt {
+                                write_line(
+                                    &stdout,
+                                    &rpc_protocol::response(
+                                        Some(id.clone()),
+                                        &kind,
+                                        Ok(Some(serde_json::json!({"accepted": true}))),
+                                    ),
+                                )
+                                .await;
+                            }
+                            write_line(
+                                &stdout,
+                                &serde_json::json!({"type": "command_output", "text": text}),
+                            )
+                            .await;
+                            write_line(
+                                &stdout,
+                                &serde_json::json!({
+                                    "type": "agent_settled",
+                                    "runId": null,
+                                    "outcome": "completed",
+                                    "aborted": false,
+                                    "error": null,
+                                    "summary": null,
+                                    "pendingResume": false,
+                                }),
+                            )
+                            .await;
+                            if legacy_prompt {
+                                write_line(
+                                    &stdout,
+                                    &rpc_protocol::response(
+                                        Some(id),
+                                        &kind,
+                                        Ok(Some(serde_json::json!({
+                                            "outcome": "completed",
+                                            "finalText": text,
+                                        }))),
+                                    ),
+                                )
+                                .await;
+                            }
+                            continue;
+                        }
+                        Some(Slash::Skill(name, args)) if !images.is_empty() => {
+                            if let Some(skill) = resources
+                                .skills
+                                .as_deref()
+                                .unwrap_or_default()
+                                .iter()
+                                .find(|skill| skill.name == name)
+                            {
+                                slash_run = Some(RpcRun::Expanded {
+                                    text: ice_harness::skills::format_skill_invocation(
+                                        skill,
+                                        args.as_deref(),
+                                    ),
+                                    raw: content.clone(),
+                                });
+                            }
+                        }
+                        Some(Slash::Template(name, args)) if !images.is_empty() => {
+                            if let Some(template) = resources
+                                .prompt_templates
+                                .as_deref()
+                                .unwrap_or_default()
+                                .iter()
+                                .find(|template| template.name == name)
+                            {
+                                slash_run = Some(RpcRun::Expanded {
+                                    text: ice_harness::prompt_templates::format_prompt_template_invocation(template, &args),
+                                    raw: content.clone(),
+                                });
+                            }
+                        }
+                        Some(Slash::Skill(name, args)) => {
+                            slash_run = Some(RpcRun::Skill(name, args))
+                        }
+                        Some(Slash::Template(name, args)) => {
+                            slash_run = Some(RpcRun::Template(name, args))
+                        }
+                        None => {
+                            let expanded = crate::slash_commands::expand_skill_references(
+                                &resources, &content,
+                            );
+                            if expanded != content {
+                                slash_run = Some(RpcRun::Expanded {
+                                    text: expanded,
+                                    raw: content.clone(),
+                                });
+                            }
+                        }
+                    }
+                }
                 if !legacy_prompt {
                     write_line(
                         &stdout,
@@ -630,14 +811,18 @@ where
                 let instructions = msg
                     .get("customInstructions")
                     .and_then(|v| v.as_str())
-                    .map(str::to_owned);
+                    .map(str::to_owned)
+                    .or(slash_instructions);
                 run_task = Some(tokio::spawn(async move {
                     let result = if compact {
                         rpc_compact_cancellable(&lane_task, instructions, cancel_task).await
                     } else if resume {
                         rpc_resume_cancellable(&lane_task, cancel_task).await
+                    } else if let Some(run) = slash_run {
+                        rpc_slash_run_cancellable(&lane_task, run, images, cancel_task).await
                     } else {
-                        rpc_prompt_cancellable(&lane_task, &content, cancel_task).await
+                        rpc_prompt_images_cancellable(&lane_task, &content, images, cancel_task)
+                            .await
                     };
                     if let Some(flush) = flush_events {
                         let (done, drained) = tokio::sync::oneshot::channel();
@@ -705,6 +890,11 @@ where
                 .map(|_| serde_json::json!({"aborted": true}))
                 .map_err(|e| e.to_string()),
             "get_state" => Ok(rpc_get_state(&lane, harness).await),
+            "get_commands" => {
+                let resources = harness.get_resources().await.unwrap_or_default();
+                let commands = crate::slash_commands::list(&resources, oauth_snapshot.as_deref());
+                Ok(serde_json::json!({"commands": commands}))
+            }
             "get_messages" => rpc_get_messages(&lane, harness, &msg).await,
             "get_history" => rpc_get_history(&lane, harness, &msg).await,
             "get_stats" => rpc_get_stats(&lane, harness).await,
@@ -717,9 +907,9 @@ where
             "get_auth_status" => Ok(rpc_get_auth_status(&model_catalog, oauth_snapshot.as_ref())),
             "oauth" => rpc_oauth(&oauth_snapshot, &msg).await,
             "set_api_key" => rpc_set_api_key(&msg).await,
-            "set_model" => rpc_set_model(&lane, &model_catalog, &msg).await,
+            "set_model" => rpc_set_model(&lane, harness, &model_catalog, &msg).await,
             "get_available_thinking_levels" => Ok(rpc_get_available_thinking_levels(&lane).await),
-            "set_thinking_level" => rpc_set_thinking_level(&lane, &msg).await,
+            "set_thinking_level" => rpc_set_thinking_level(&lane, harness, &msg).await,
             "get_available_tools" => Ok(rpc_get_available_tools(&lane, harness).await),
             "set_active_tools" => rpc_set_active_tools(&lane, &msg).await,
             "ping" => Ok(serde_json::json!({"pong": true})),
@@ -785,7 +975,16 @@ pub(crate) async fn rpc_prompt_cancellable(
     content: &str,
     cancel: tokio_util::sync::CancellationToken,
 ) -> Result<serde_json::Value, String> {
-    let prompt = rpc_prompt_text(lane, content);
+    rpc_prompt_images_cancellable(lane, content, Vec::new(), cancel).await
+}
+
+async fn rpc_prompt_images_cancellable(
+    lane: &Arc<dyn AgentLane>,
+    content: &str,
+    images: Vec<ImageContent>,
+    cancel: tokio_util::sync::CancellationToken,
+) -> Result<serde_json::Value, String> {
+    let prompt = rpc_prompt_text(lane, content, images);
     tokio::pin!(prompt);
     tokio::select! {
         biased;
@@ -927,12 +1126,274 @@ fn rpc_outcome_str(outcome: &HarnessRunOutcome) -> (&'static str, Option<String>
     }
 }
 
+/// A slash command that runs as a normal agent turn.
+enum RpcRun {
+    Skill(String, Option<String>),
+    Template(String, Vec<String>),
+    /// A prompt whose `$skill` mentions were expanded, with the typed text.
+    Expanded {
+        text: String,
+        raw: String,
+    },
+}
+
+/// Run a skill, template or skill-expanded prompt, unless cancelled first.
+async fn rpc_slash_run_cancellable(
+    lane: &Arc<dyn AgentLane>,
+    run: RpcRun,
+    images: Vec<ImageContent>,
+    cancel: tokio_util::sync::CancellationToken,
+) -> Result<serde_json::Value, String> {
+    let turn = async {
+        let result = match run {
+            RpcRun::Skill(name, args) => lane.skill(&name, args.as_deref()).await,
+            RpcRun::Template(name, args) => lane.prompt_from_template(&name, &args).await,
+            RpcRun::Expanded { text, raw } => {
+                let content = if images.is_empty() {
+                    ice_ai::types::UserContent::Text(text)
+                } else {
+                    let mut blocks = vec![Content::Text(ice_ai::types::TextContent {
+                        kind: Default::default(),
+                        text,
+                        text_signature: None,
+                    })];
+                    blocks.extend(images.into_iter().map(Content::Image));
+                    ice_ai::types::UserContent::Blocks(blocks)
+                };
+                let user =
+                    UserMessage::new(content, rpc_now_ms()).with_origin(raw, "skill-expansion-v1");
+                lane.prompt_message(ice_agent::message::AgentMessage::User(user))
+                    .await
+            }
+        };
+        let result = result.map_err(|e| e.to_string())?;
+        let (outcome, final_text, error) = rpc_outcome_str(&result.outcome);
+        Ok(
+            serde_json::json!({"runId": result.run_id, "outcome": outcome, "finalText": final_text, "error": error}),
+        )
+    };
+    tokio::pin!(turn);
+    tokio::select! {
+        biased;
+        _ = cancel.cancelled() => {
+            match lane.abort().await {
+                Ok(_) => turn.await,
+                Err(_) => Err("Operation aborted".to_string()),
+            }
+        }
+        result = &mut turn => result,
+    }
+}
+
+/// Run a text-only slash command and return what it prints.
+async fn rpc_inline_command(
+    slash: crate::slash_commands::Slash,
+    lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
+    catalog: &[ice_ai::Model],
+    snapshot: Option<&ice_extensions::RegistrySnapshot>,
+    resources: &ice_harness::types::AgentHarnessResources,
+    builtins: &RpcBuiltins,
+) -> String {
+    use crate::slash_commands::Slash;
+    match slash {
+        Slash::Extension(name, args) => {
+            let Some(snapshot) = snapshot else {
+                return format!("/{name}: extensions are not loaded");
+            };
+            let result = crate::slash_commands::invoke_extension_command(snapshot, &name, &args);
+            crate::slash_commands::extension_result_text(&name, result)
+        }
+        Slash::Builtin("model", args) if args.is_empty() => match lane.get_model().await {
+            Ok(model) => format!(
+                "Current model: {}/{}\nSwitch with /model <provider/model-id>.",
+                model.provider, model.id
+            ),
+            Err(error) => error.to_string(),
+        },
+        Slash::Builtin("model", args) => {
+            let msg = match args.split_once('/') {
+                Some((provider, id))
+                    if catalog
+                        .iter()
+                        .any(|m| m.provider.eq_ignore_ascii_case(provider)) =>
+                {
+                    serde_json::json!({"modelId": id, "provider": provider})
+                }
+                _ => serde_json::json!({"modelId": args}),
+            };
+            match rpc_set_model(lane, harness, catalog, &msg).await {
+                Ok(_) => format!("Model set to {args}."),
+                Err(error) => error,
+            }
+        }
+        Slash::Builtin("thinking", args) if args.is_empty() => {
+            let current = lane
+                .get_thinking_level()
+                .await
+                .ok()
+                .and_then(|level| serde_json::to_value(level).ok())
+                .and_then(|level| level.as_str().map(str::to_owned))
+                .unwrap_or_else(|| "unknown".to_string());
+            let levels = rpc_get_available_thinking_levels(lane).await;
+            let levels: Vec<&str> = levels["levels"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|level| level.as_str())
+                .collect();
+            format!(
+                "Thinking level: {current}\nAvailable: {}\nSet with /thinking <level>.",
+                levels.join(", ")
+            )
+        }
+        Slash::Builtin("thinking", args) => {
+            match rpc_set_thinking_level(lane, harness, &serde_json::json!({"level": args})).await {
+                Ok(_) => format!("Thinking level set to {args}."),
+                Err(error) => error,
+            }
+        }
+        Slash::Builtin("tools", _) => {
+            let tools = rpc_get_available_tools(lane, harness).await;
+            let active: Vec<&str> = tools["activeTools"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|tool| tool.as_str())
+                .collect();
+            let lines: Vec<String> = tools["tools"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|tool| tool.as_str())
+                .map(|tool| {
+                    let mark = if active.contains(&tool) { "✓" } else { " " };
+                    format!("{mark} {tool}")
+                })
+                .collect();
+            format!(
+                "Tools ({} active of {})\n\n```text\n{}\n```",
+                active.len(),
+                lines.len(),
+                lines.join("\n")
+            )
+        }
+        // The TUI's own report, as a fenced block so the grid stays aligned.
+        Slash::Builtin("context", _) => {
+            match crate::interactive_tui::headless_context_report(harness, lane, 104).await {
+                Ok(report) => format!("```text\n{report}\n```"),
+                Err(error) => format!("Could not read context usage: {error}"),
+            }
+        }
+        // The TUI's own panel, read through the same product-layer session.
+        Slash::Builtin("usage", _) => {
+            let cwd = std::env::current_dir().unwrap_or_default();
+            let session = crate::agent_session::AgentSession::new(
+                harness.clone(),
+                catalog.to_vec(),
+                Vec::new(),
+                cwd,
+            );
+            match crate::interactive_tui::headless_usage_report(&session, 100).await {
+                Ok(report) => format!("```text\n{report}\n```"),
+                Err(error) => error,
+            }
+        }
+        Slash::Builtin("session", _) => {
+            let metadata = harness.session().storage().metadata();
+            let name = harness.session().get_name().await.ok().flatten();
+            let stats = rpc_get_stats(lane, harness).await.ok();
+            let mut lines = vec![format!("Session {}", metadata.id)];
+            if let Some(name) = name {
+                lines.push(format!("Name: {name}"));
+            }
+            if let Ok(cwd) = std::env::current_dir() {
+                lines.push(format!("Directory: {}", cwd.display()));
+            }
+            if let Some(count) = stats
+                .as_ref()
+                .and_then(|stats| stats["messageCount"].as_u64())
+            {
+                lines.push(format!("Messages: {count}"));
+            }
+            lines.push("Resume it in a terminal with `icers --resume`.".to_string());
+            lines.join("\n")
+        }
+        Slash::Builtin("blackhole", args) => match &builtins.agent_dir {
+            Some(dir) => {
+                crate::blackhole::command::run_command(
+                    dir,
+                    &crate::blackhole::config::process_env,
+                    &args,
+                )
+                .1
+            }
+            None => "Blackhole is unavailable without an agent directory.".to_string(),
+        },
+        Slash::Builtin("cognee", args) => match &builtins.cognee {
+            // The command reports through Cognee's notice mailbox, which is
+            // detached headless; attach it just long enough to capture them.
+            Some(cognee) => {
+                let notices = cognee.notices();
+                notices.attach();
+                crate::cognee::command::run_command(cognee, &args).await;
+                let text = notices
+                    .drain()
+                    .into_iter()
+                    .map(|(_, text)| text)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                notices.detach();
+                if text.is_empty() {
+                    "/cognee finished.".to_string()
+                } else {
+                    text
+                }
+            }
+            None => "Cognee is unavailable without an agent directory.".to_string(),
+        },
+        Slash::Builtin("name", args) if args.is_empty() => {
+            "Usage: /name <display name> — sets this session's name.".to_string()
+        }
+        Slash::Builtin("name", args) => match harness.session().set_name(Some(&args)).await {
+            Ok(_) => format!("Session name set to {args}."),
+            Err(error) => format!("Could not set the session name: {error}"),
+        },
+        Slash::Builtin("version", _) => crate::interactive_tui::headless_version_text(),
+        Slash::Builtin("changelog", args) => {
+            crate::interactive_tui::headless_changelog_text(args.trim() == "all")
+        }
+        Slash::Builtin("help", _) => {
+            let rows: Vec<String> = crate::slash_commands::list(resources, snapshot)
+                .iter()
+                .map(|command| {
+                    format!(
+                        "| `/{}` | {} |",
+                        command["name"].as_str().unwrap_or_default(),
+                        command["description"]
+                            .as_str()
+                            .unwrap_or_default()
+                            .replace('|', "\\|")
+                    )
+                })
+                .collect();
+            format!(
+                "**Available commands**\n\n| Command | Description |\n| --- | --- |\n{}",
+                rows.join("\n")
+            )
+        }
+        Slash::Builtin(name, _) => format!("/{name} is not available here."),
+        Slash::Skill(..) | Slash::Template(..) => String::new(),
+    }
+}
+
 async fn rpc_prompt_text(
     lane: &Arc<dyn AgentLane>,
     content: &str,
+    images: Vec<ImageContent>,
 ) -> Result<serde_json::Value, String> {
     let result = lane
-        .prompt_text(content, Vec::new())
+        .prompt_text(content, images)
         .await
         .map_err(|e| e.to_string())?;
     let (outcome, final_text, error) = rpc_outcome_str(&result.outcome);
@@ -1391,9 +1852,23 @@ async fn rpc_get_messages(
         .await
         .map_err(|error| error.to_string())?;
     let mut items: Vec<(String, serde_json::Value)> = Vec::new();
+    let mut saved_config = serde_json::json!({});
     for entry in entries {
         match entry {
+            Entry::ModelChange(entry) => {
+                saved_config["provider"] = serde_json::json!(entry.provider);
+                saved_config["modelId"] = serde_json::json!(entry.model_id);
+            }
+            Entry::ThinkingLevel(entry) => {
+                saved_config["thinkingLevel"] = serde_json::json!(entry.thinking_level);
+            }
             Entry::Message(entry) => {
+                // Older ACP sessions predate durable selection commands, but
+                // assistant messages still record the model actually used.
+                if let ice_agent::message::AgentMessage::Assistant(message) = &entry.message {
+                    saved_config["provider"] = serde_json::json!(message.provider);
+                    saved_config["modelId"] = serde_json::json!(message.model);
+                }
                 let mut value = serde_json::to_value(&entry.message).map_err(|e| e.to_string())?;
                 // The session entry id, not the message's own id: it is what
                 // `beforeId` keys on, and what makes rows stable across reloads.
@@ -1447,6 +1922,7 @@ async fn rpc_get_messages(
         "beforeId": before_id,
         "leafId": leaf_id,
         "pendingResume": pending_resume,
+        "savedConfig": saved_config,
     }))
 }
 
@@ -1651,6 +2127,7 @@ async fn rpc_get_available_tools(
 
 async fn rpc_set_model(
     lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
     catalog: &[ice_ai::Model],
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
@@ -1668,12 +2145,37 @@ async fn rpc_set_model(
         })
         .cloned()
         .ok_or_else(|| format!("unknown model: {id}"))?;
-    lane.set_model(model).await.map_err(|e| e.to_string())?;
-    Ok(serde_json::json!({"modelId": id, "provider": provider}))
+    let previous = lane.get_model().await.map_err(|e| e.to_string())?;
+    lane.set_model(model.clone())
+        .await
+        .map_err(|e| e.to_string())?;
+    // ACP restoration applies persisted state without recording a new choice.
+    if msg.get("persist").and_then(|value| value.as_bool()) == Some(false) {
+        return Ok(serde_json::json!({"modelId": model.id, "provider": model.provider}));
+    }
+    if let Err(error) = harness
+        .session()
+        .append_entry(
+            ice_harness::session::types::ProvisionedEntry {
+                id: uuid::Uuid::new_v4().to_string(),
+                kind: ice_harness::session::types::ProvisionedKind::ModelChange {
+                    provider: model.provider.clone(),
+                    model_id: model.id.clone(),
+                },
+            },
+            "main",
+        )
+        .await
+    {
+        let _ = lane.set_model(previous).await;
+        return Err(format!("could not persist model selection: {error}"));
+    }
+    Ok(serde_json::json!({"modelId": model.id, "provider": model.provider}))
 }
 
 async fn rpc_set_thinking_level(
     lane: &Arc<dyn AgentLane>,
+    harness: &AgentHarness,
     msg: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
     let value = msg
@@ -1684,9 +2186,33 @@ async fn rpc_set_thinking_level(
         serde_json::from_value(value.clone()).map_err(|_| {
             "invalid thinking level (off|minimal|low|medium|high|xhigh|max)".to_string()
         })?;
+    let previous = lane.get_thinking_level().await.map_err(|e| e.to_string())?;
     lane.set_thinking_level(level)
         .await
         .map_err(|e| e.to_string())?;
+    if msg.get("persist").and_then(|value| value.as_bool()) == Some(false) {
+        return Ok(serde_json::json!({"thinkingLevel": level}));
+    }
+    if let Err(error) = harness
+        .session()
+        .append_entry(
+            ice_harness::session::types::ProvisionedEntry {
+                id: uuid::Uuid::new_v4().to_string(),
+                kind: ice_harness::session::types::ProvisionedKind::ThinkingLevel {
+                    thinking_level: serde_json::to_value(level)
+                        .unwrap()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
+                },
+            },
+            "main",
+        )
+        .await
+    {
+        let _ = lane.set_thinking_level(previous).await;
+        return Err(format!("could not persist thinking selection: {error}"));
+    }
     Ok(serde_json::json!({"thinkingLevel": level}))
 }
 
@@ -2677,8 +3203,291 @@ mod tests {
         );
     }
 
+    async fn rpc_slash_harness() -> (AgentHarness, Arc<ice_ai::providers::faux::FauxProvider>) {
+        let (harness, provider) = rpc_test_harness("done", 1000.0).await;
+        harness
+            .set_resources(ice_harness::types::AgentHarnessResources {
+                prompt_templates: Some(vec![ice_harness::types::PromptTemplate {
+                    name: "greet".into(),
+                    description: Some("Say hello".into()),
+                    content: "Hello $1, from the template".into(),
+                }]),
+                skills: Some(vec![ice_harness::types::Skill {
+                    name: "review".into(),
+                    description: "Review code".into(),
+                    content: "Review carefully.".into(),
+                    file_path: "/skills/review/SKILL.md".into(),
+                    disable_model_invocation: None,
+                }]),
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+        (harness, provider)
+    }
+
+    async fn rpc_user_texts(harness: &AgentHarness) -> String {
+        let entries = harness
+            .session()
+            .find_entries(&ice_harness::session::types::EntryQuery::default())
+            .await
+            .unwrap();
+        serde_json::to_string(&entries).unwrap()
+    }
+
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn rpc_rejects_image_prompt_without_starting_a_run() {
+    async fn rpc_get_commands_lists_builtins_templates_and_skills() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, _provider) = rpc_slash_harness().await;
+        let (mut client, output, _task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(b"{\"type\":\"get_commands\",\"id\":1}\n")
+            .await
+            .unwrap();
+        let response = output.wait_for(|message| message["id"] == 1).await;
+        let names: Vec<&str> = response["data"]["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|command| command["name"].as_str().unwrap())
+            .collect();
+        for expected in [
+            "compact",
+            "model",
+            "cognee",
+            "blackhole",
+            "greet",
+            "skill:review",
+        ] {
+            assert!(
+                names.contains(&expected),
+                "{expected} missing from {names:?}"
+            );
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_text_slash_command_answers_without_a_model_call() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_slash_harness().await;
+        let (mut client, output, _task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"/version\"}\n")
+            .await
+            .unwrap();
+        let accepted = output.wait_for(|message| message["id"] == 1).await;
+        assert_eq!(accepted["data"]["accepted"], true);
+        let printed = output
+            .wait_for(|message| message["type"] == "command_output")
+            .await;
+        assert!(
+            printed["text"]
+                .as_str()
+                .unwrap()
+                .contains(&format!("v{}", crate::VERSION)),
+            "{printed}"
+        );
+        let settled = output
+            .wait_for(|message| message["type"] == "agent_settled")
+            .await;
+        assert_eq!(settled["outcome"], "completed");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_session_command_reports_the_display_name_without_a_model_call() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_slash_harness().await;
+        let (mut client, output, _task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"/name ACP regression\"}\n")
+            .await
+            .unwrap();
+        output
+            .wait_for(|message| message["type"] == "agent_settled")
+            .await;
+        output.0.lock().unwrap().clear();
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":2,\"message\":\"/session\"}\n")
+            .await
+            .unwrap();
+        let printed = output
+            .wait_for(|message| {
+                message["type"] == "command_output"
+                    && message["text"]
+                        .as_str()
+                        .is_some_and(|text| text.contains("Name: ACP regression"))
+            })
+            .await;
+        let text = printed["text"].as_str().unwrap();
+        assert!(text.contains(&harness.session().storage().metadata().id));
+        assert!(text.contains("icers --resume"));
+        let settled = output
+            .wait_for(|message| message["type"] == "agent_settled")
+            .await;
+        assert_eq!(settled["outcome"], "completed");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_template_and_skill_commands_expand_like_the_tui() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_slash_harness().await;
+        let (mut client, output, _task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"/greet World\"}\n")
+            .await
+            .unwrap();
+        let settled = output
+            .wait_for(|message| message["type"] == "agent_settled")
+            .await;
+        assert_eq!(settled["outcome"], "completed");
+        client
+            .write_all(
+                b"{\"type\":\"prompt\",\"id\":2,\"message\":\"/skill:review check main.rs\"}\n",
+            )
+            .await
+            .unwrap();
+        output
+            .wait_for(|message| message["type"] == "agent_settled" && message != &settled)
+            .await;
+        let transcript = rpc_user_texts(&harness).await;
+        assert!(
+            transcript.contains("Hello World, from the template"),
+            "{transcript}"
+        );
+        assert!(transcript.contains("Review carefully."), "{transcript}");
+        assert!(transcript.contains("check main.rs"), "{transcript}");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            2
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_preserves_images_for_plain_image_only_skill_and_template_prompts() {
+        use tokio::io::AsyncWriteExt;
+        let data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+        for text in [
+            "look at this",
+            "",
+            "/skill:review check image",
+            "/greet World",
+            "$review check image",
+        ] {
+            let (harness, provider) = rpc_slash_harness().await;
+            let (mut client, output, task) =
+                start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+            let prompt = serde_json::json!({"type": "prompt", "id": 1, "message": text,
+                "images": [{"type": "image", "mimeType": "image/png", "data": data}]})
+            .to_string()
+                + "\n";
+            client.write_all(prompt.as_bytes()).await.unwrap();
+            let accepted = output.wait_for(|message| message["id"] == 1).await;
+            assert_eq!(accepted["success"], true, "{accepted}");
+            let settled = output
+                .wait_for(|message| message["type"] == "agent_settled")
+                .await;
+            assert_eq!(settled["outcome"], "completed", "{text}: {settled}");
+            let serialized = rpc_user_texts(&harness).await;
+            assert!(
+                serialized.contains(data),
+                "image lost for {text}: {serialized}"
+            );
+            if text.starts_with("/skill:") || text.starts_with('$') {
+                assert!(serialized.contains("Review carefully."));
+            }
+            if text.starts_with("/greet") {
+                assert!(serialized.contains("Hello World, from the template"));
+            }
+            assert_eq!(
+                provider
+                    .state()
+                    .call_count
+                    .load(std::sync::atomic::Ordering::SeqCst),
+                1
+            );
+            client.shutdown().await.unwrap();
+            assert_eq!(task.await.unwrap(), 0);
+        }
+    }
+
+    /// Images go only with a prompt that runs a turn. Rejecting one, with a
+    /// built-in command or with `compact`/`resume_pending`, leaves the session
+    /// free for the next prompt.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_rejected_image_attachments_leave_the_session_usable() {
+        use tokio::io::AsyncWriteExt;
+        let data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+        let images = serde_json::json!([{"type": "image", "mimeType": "image/png", "data": data}]);
+        let (harness, provider) = rpc_test_harness("done", 100.0).await;
+        let (mut client, output, task) =
+            start_test_rpc(harness.clone(), ice_extensions::UiDialogMailbox::new());
+        for (id, frame, error) in [
+            (
+                1,
+                serde_json::json!({"type": "prompt", "id": 1, "message": "/model", "images": images}),
+                "image attachments cannot be used with built-in or extension commands",
+            ),
+            (
+                2,
+                serde_json::json!({"type": "compact", "id": 2, "images": images}),
+                "compact does not take image attachments",
+            ),
+            (
+                3,
+                serde_json::json!({"type": "resume_pending", "id": 3, "images": images}),
+                "resume_pending does not take image attachments",
+            ),
+        ] {
+            client
+                .write_all(format!("{frame}\n").as_bytes())
+                .await
+                .unwrap();
+            let rejected = output.wait_for(|message| message["id"] == id).await;
+            assert_eq!(rejected["success"], false, "{rejected}");
+            assert_eq!(rejected["error"], error, "{rejected}");
+        }
+
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":4,\"content\":\"text still works\"}\n")
+            .await
+            .unwrap();
+        let accepted = output.wait_for(|message| message["id"] == 4).await;
+        assert_eq!(accepted["status"], "ok", "{accepted}");
+        assert_eq!(accepted["result"]["outcome"], "completed");
+        assert_eq!(
+            provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            1
+        );
+        client.shutdown().await.unwrap();
+        assert_eq!(task.await.unwrap(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_rejects_invalid_image_prompt_without_starting_a_run() {
         use tokio::io::AsyncWriteExt;
         let (harness, provider) = rpc_test_harness("must not run", 100.0).await;
         let lane = harness.lane("main");
@@ -2696,10 +3505,7 @@ mod tests {
         client.write_all(prompt.as_bytes()).await.unwrap();
         let rejected = output.wait_for(|message| message["id"] == 1).await;
         assert_eq!(rejected["success"], false);
-        assert_eq!(
-            rejected["error"],
-            "RPC prompts do not support image attachments"
-        );
+        assert_eq!(rejected["error"], "image data must be valid base64");
         assert_eq!(
             provider
                 .state()

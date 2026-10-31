@@ -660,6 +660,7 @@ pub fn print_help() {
   --approve, -a                  Force-enable current-project resources
   --no-approve, -na              Disable current-project resources
   --print, -p                    Non-interactive: process prompt(s) and exit
+  --acp                          Serve the Agent Client Protocol on stdio (T3 Code, Zed)
   --continue, -c                 Continue the most recent session
   --resume, -r                   Browse and select a session to resume
   --session <id|path>            Use a specific session (partial UUID or file)

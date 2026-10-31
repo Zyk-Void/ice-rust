@@ -27,6 +27,7 @@
 //! Resources load from `.icers/` and `~/.icers/agent/`; extensions are Rust
 //! `cdylib` plugins installed and developed with `icers install` / `icers dev`.
 
+pub mod acp;
 pub mod agent_session;
 pub mod app;
 pub mod args;
@@ -87,6 +88,7 @@ mod session_search;
 pub mod settings;
 mod side_questions;
 pub mod skill_coverage;
+mod slash_commands;
 pub mod source_info;
 mod terminal_theme;
 pub mod timings;

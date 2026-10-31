@@ -2680,7 +2680,7 @@ pub(crate) async fn discover_session_metadata(
     discover_session_metadata_in_dir(cwd, &session_dir(Path::new(cwd))).await
 }
 
-async fn discover_session_metadata_in_dir(
+pub(crate) async fn discover_session_metadata_in_dir(
     cwd: &str,
     dir: &Path,
 ) -> Result<ice_harness::session::jsonl::repo::JsonlSessionDiscovery, BuildError> {

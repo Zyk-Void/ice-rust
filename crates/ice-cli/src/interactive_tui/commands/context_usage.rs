@@ -519,8 +519,21 @@ async fn collect_at(
     if !fence.current(session, lane).await {
         return Err("Context changed".into());
     }
-    let harness = session.harness();
     let model = session.model().await.map_err(|e| e.to_string())?;
+    let snapshot = collect_from(session.harness(), lane, &model, fence.tip.clone()).await?;
+    if !fence.current(session, lane).await {
+        return Err("Context changed".into());
+    }
+    Ok(snapshot)
+}
+
+/// Build the report for `model` from the branch ending at `tip`.
+async fn collect_from(
+    harness: &ice_harness::agent_harness::AgentHarness,
+    lane: &Arc<dyn AgentLane>,
+    model: &ice_ai::Model,
+    tip: Option<String>,
+) -> Result<Snapshot, String> {
     let active = lane.get_active_tools().await.map_err(|e| e.to_string())?;
     let base = harness
         .get_system_prompt()
@@ -528,7 +541,6 @@ async fn collect_at(
         .map_err(|e| e.to_string())?;
     let resources = harness.get_resources().await.map_err(|e| e.to_string())?;
     let tools = harness.get_tools().await.map_err(|e| e.to_string())?;
-    let tip = fence.tip.clone();
     let entries = if tip.is_some() {
         harness
             .find_entries_on_branch(
@@ -559,10 +571,24 @@ async fn collect_at(
     snapshot.prompt(base.as_deref(), skills);
     snapshot.tools(&tools, &active)?;
     snapshot.messages(&entries);
-    if !fence.current(session, lane).await {
-        return Err("Context changed".into());
-    }
     Ok(snapshot)
+}
+
+/// The `/context` report as plain text, for headless sessions (`--mode rpc`,
+/// `--acp`): the same snapshot and layout the TUI renders, without ANSI styling.
+pub(crate) async fn headless_report(
+    harness: &ice_harness::agent_harness::AgentHarness,
+    lane: &Arc<dyn AgentLane>,
+    width: usize,
+) -> Result<String, String> {
+    let model = lane.get_model().await.map_err(|e| e.to_string())?;
+    let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
+    let snapshot = collect_from(harness, lane, &model, tip).await?;
+    Ok(render_report(&snapshot, width)
+        .iter()
+        .map(|line| ice_tui::utils::strip_ansi(line).trim_end().to_string())
+        .collect::<Vec<_>>()
+        .join("\n"))
 }
 
 pub(super) fn show(ctx: &CommandContext) {
