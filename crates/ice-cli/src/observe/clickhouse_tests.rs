@@ -490,6 +490,9 @@ async fn clickhouse_facts_feed_the_shared_analytics() {
         .find(|r| r.statement().contains("argMax(ts_ms"))
         .unwrap();
     assert!(items_query.statement().contains("FROM obs.observe_events"));
+    assert!(items_query
+        .statement()
+        .contains("ORDER BY run_id, ts, item_id"));
     assert_eq!(
         items_query.params.get("param_since").map(String::as_str),
         Some("0")

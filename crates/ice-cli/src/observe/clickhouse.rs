@@ -340,7 +340,8 @@ const ITEMS_SQL: &str = "SELECT run_id, item_id,
 FROM {db}.observe_events
 WHERE event_type IN ('activity', 'activity_update')
   AND ts_ms >= {since:Int64} AND ts_ms < {until:Int64}
-GROUP BY run_id, item_id";
+GROUP BY run_id, item_id
+ORDER BY run_id, ts, item_id";
 
 const RUN_SELECT: &str = "SELECT run_id, session_id, main_thread_id, session_name, model, \
      thinking_level, started_at_ms, ended_at_ms, status, version FROM {db}.observe_runs FINAL";
