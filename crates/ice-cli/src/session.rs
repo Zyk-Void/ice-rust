@@ -1051,7 +1051,10 @@ pub async fn build_prepared(
     // NOT held here (the TUI already owns a `&AgentHarness` / clone at the call
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
-    shells.connect(&harness);
+    // Only a TUI (local, or remote through `--server`) may be woken by a
+    // background notice; headless clients run just the turns they ask for.
+    let wake_idle = args.mode == crate::args::Mode::Text && !args.print;
+    shells.connect(&harness, wake_idle);
     let reload_context = ReloadContext {
         skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
         capability_service: capability_service.clone(),
