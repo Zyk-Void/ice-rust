@@ -36,3 +36,10 @@ publish-*.log
 # local secrets / env
 .env
 .env.*
+
+# Local agent and worktree artifacts
+/.agents/
+/.least/
+/.target-shells-ocr/
+/skills-lock.json
+/zks-visuals/
