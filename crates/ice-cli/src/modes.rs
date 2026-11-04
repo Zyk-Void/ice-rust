@@ -315,6 +315,20 @@ pub async fn rpc(
     oauth_snapshot: Option<Arc<ice_extensions::RegistrySnapshot>>,
     builtins: RpcBuiltins,
 ) -> i32 {
+    // Hosts (ACP, ice-server, T3) and closed terminals end this process with a
+    // signal. Without a handler it dies before SessionShutdown, the durable
+    // observe finish and background-shell cleanup; treat the first signal as
+    // `stop`. A second signal still forces exit if graceful shutdown hangs.
+    let terminate = tokio_util::sync::CancellationToken::new();
+    let signalled = terminate.clone();
+    // Detached: teardown after the loop must stay force-exitable.
+    tokio::spawn(async move {
+        termination_signal().await;
+        signalled.cancel();
+        termination_signal().await;
+        eprintln!("[icers] second termination signal; exiting without cleanup");
+        std::process::exit(143);
+    });
     rpc_with_builtins(
         harness,
         agent_events.take(),
@@ -324,8 +338,45 @@ pub async fn rpc(
         builtins,
         tokio::io::BufReader::new(tokio::io::stdin()),
         std::io::stdout(),
+        terminate,
     )
     .await
+}
+
+/// Resolves on SIGTERM or SIGHUP (Unix), or a console close/shutdown event
+/// (Windows). Registration failure keeps the platform default (never resolves).
+/// Registering replaces the default terminate action for the process.
+pub(crate) async fn termination_signal() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{signal, Signal, SignalKind};
+        async fn recv(signal: Option<Signal>) {
+            if let Some(mut signal) = signal {
+                if signal.recv().await.is_some() {
+                    return;
+                }
+            }
+            std::future::pending().await
+        }
+        let term = signal(SignalKind::terminate()).ok();
+        let hup = signal(SignalKind::hangup()).ok();
+        tokio::select! {
+            _ = recv(term) => {}
+            _ = recv(hup) => {}
+        }
+    }
+    #[cfg(windows)]
+    {
+        use tokio::signal::windows::{ctrl_close, ctrl_shutdown};
+        let close = ctrl_close().ok();
+        let shutdown = ctrl_shutdown().ok();
+        tokio::select! {
+            _ = async { match close { Some(mut s) => { s.recv().await; } None => std::future::pending().await } } => {}
+            _ = async { match shutdown { Some(mut s) => { s.recv().await; } None => std::future::pending().await } } => {}
+        }
+    }
+    #[cfg(not(any(unix, windows)))]
+    std::future::pending::<()>().await;
 }
 
 /// Built-in extensions the `/cognee` and `/blackhole` commands drive.
@@ -358,10 +409,12 @@ where
         RpcBuiltins::default(),
         input,
         output,
+        tokio_util::sync::CancellationToken::new(),
     )
     .await
 }
 
+/// `terminate` ends the loop exactly like a `stop` command (without a reply).
 #[allow(clippy::too_many_arguments)]
 async fn rpc_with_builtins<R, W>(
     harness: &AgentHarness,
@@ -372,6 +425,7 @@ async fn rpc_with_builtins<R, W>(
     builtins: RpcBuiltins,
     input: R,
     output: W,
+    terminate: tokio_util::sync::CancellationToken,
 ) -> i32
 where
     R: tokio::io::AsyncBufRead + Unpin,
@@ -474,6 +528,11 @@ where
     loop {
         let incoming = tokio::select! {
             _ = writer_failed.cancelled() => {
+                cancel_on_exit = true;
+                break;
+            }
+            _ = terminate.cancelled() => {
+                eprintln!("[icers] termination signal; stopping");
                 cancel_on_exit = true;
                 break;
             }
@@ -3152,6 +3211,64 @@ mod tests {
         .unwrap();
         assert_eq!(code, 1);
         assert!(!ui.is_attached());
+    }
+
+    /// SIGTERM/SIGHUP from a host must end the loop like `stop`: abort and
+    /// join the active run while stdin is still open, so SessionShutdown and
+    /// the durable observe finish can run instead of leaving phantom runs.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_termination_signal_aborts_and_joins_active_prompt() {
+        use tokio::io::AsyncWriteExt;
+        let (harness, provider) = rpc_test_harness("still streaming the response", 20.0).await;
+        let lane = harness.lane("main");
+        let (mut client, input) = tokio::io::duplex(4096);
+        let output = RpcOutput::default();
+        let captured = output.clone();
+        let terminate = tokio_util::sync::CancellationToken::new();
+        let signal = terminate.clone();
+        let task = tokio::spawn(async move {
+            rpc_with_builtins(
+                &harness,
+                None,
+                vec![],
+                ice_extensions::UiDialogMailbox::new(),
+                None,
+                RpcBuiltins::default(),
+                tokio::io::BufReader::new(input),
+                captured,
+                signal,
+            )
+            .await
+        });
+        client
+            .write_all(b"{\"type\":\"prompt\",\"id\":1,\"message\":\"test\"}\n")
+            .await
+            .unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while provider
+                .state()
+                .call_count
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == 0
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        terminate.cancel();
+        // `client` stays open: only the signal may end the loop.
+        let code = tokio::time::timeout(std::time::Duration::from_secs(3), task).await;
+        drop(client);
+        assert_eq!(code.expect("termination must end the rpc loop").unwrap(), 0);
+        assert!(output.messages().iter().any(|message| {
+            message["type"] == "agent_settled"
+                && (message["outcome"] == "aborted" || message["outcome"] == "failed")
+        }));
+        assert!(
+            lane.abort().await.is_err(),
+            "RPC returned with an active lane"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
