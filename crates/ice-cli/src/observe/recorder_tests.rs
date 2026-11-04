@@ -149,6 +149,66 @@ fn ring_keeps_the_newest_500_items_with_increasing_ids() {
 }
 
 #[test]
+fn retained_activity_bytes_evict_oldest_unicode_payloads_and_recover() {
+    let recorder = recorder_with(None);
+    let payload = "🧊".repeat(300_000);
+    for _ in 0..12 {
+        recorder.handle_agent_event(&user(&payload));
+    }
+    let inner = recorder.lock();
+    let retained_bytes: usize = inner.items.iter().map(activity_bytes).sum();
+    assert!(
+        retained_bytes <= MAX_RETAINED_ACTIVITY_BYTES,
+        "retained {retained_bytes} bytes"
+    );
+    assert!(inner.items.len() < 12);
+    assert_eq!(inner.items.back().unwrap().id, 12);
+    drop(inner);
+    let health = recorder.retention_health();
+    assert!(health.evicted_items > 0);
+    assert_eq!(health.retained_bytes, retained_bytes);
+    recorder.note("pressure subsided");
+    assert_eq!(
+        recorder.get_state().items.last().unwrap().text.as_deref(),
+        Some("pressure subsided")
+    );
+    assert!(recorder.retention_health().retained_bytes <= MAX_RETAINED_ACTIVITY_BYTES);
+}
+
+#[test]
+fn retained_activity_budget_applies_to_growing_updates_and_oversize_items() {
+    let recorder = recorder_with(None);
+    for _ in 0..5 {
+        recorder.handle_agent_event(&user(&"x".repeat(600_000)));
+    }
+    recorder.handle_agent_event(&AgentEvent::ToolExecutionStart {
+        tool_call_id: "large-result".into(),
+        tool_name: "synthetic".into(),
+        args: serde_json::json!({}),
+    });
+    recorder.handle_agent_event(&AgentEvent::ToolExecutionEnd {
+        tool_call_id: "large-result".into(),
+        tool_name: "synthetic".into(),
+        result: text_result(&"🧊".repeat(1_000_000)),
+        is_error: true,
+    });
+    assert!(recorder.retention_health().retained_bytes <= MAX_RETAINED_ACTIVITY_BYTES);
+    let state = recorder.get_state();
+    let terminal = state.items.last().unwrap();
+    assert_eq!(terminal.state, Some(ObserveItemState::Error));
+    assert_eq!(terminal.event_type.as_deref(), Some("tool_execution_end"));
+    let mut inner = recorder.lock();
+    let mut fields = item(ObserveItemKind::Message, "synthetic_oversize");
+    fields.text = Some("x".repeat(MAX_RETAINED_ACTIVITY_BYTES + 1));
+    let identity = inner.main.clone();
+    inner.push(fields, identity);
+    assert!(inner.items.is_empty());
+    drop(inner);
+    assert_eq!(recorder.retention_health().retained_bytes, 0);
+    assert!(recorder.retention_health().evicted_items > 0);
+}
+
+#[test]
 fn long_strings_are_bounded_with_an_omitted_suffix() {
     let long = "x".repeat(MAX_PAYLOAD_CHARS + 10);
     let bounded = limit_payload(long);
@@ -303,6 +363,64 @@ fn observation(request_id: &str, phase: &str) -> Observation {
         dataset: Some("ice".into()),
         ..Default::default()
     }
+}
+
+#[test]
+fn completed_memory_is_terminal_and_unknown_phases_are_not_running() {
+    let recorder = recorder_with(None);
+    recorder.handle_memory(&observation("replay", "started"));
+    recorder.handle_memory(&observation("replay", "completed"));
+    let state = recorder.get_state();
+    assert_eq!(state.items.len(), 1);
+    assert_eq!(state.items[0].state, Some(ObserveItemState::Done));
+    recorder.handle_memory(&observation("replay", "completed"));
+    recorder.handle_memory(&observation("replay", "started"));
+    assert_eq!(
+        recorder.get_state().items,
+        state.items,
+        "late and duplicate events cannot reopen completed work"
+    );
+    recorder.handle_memory(&observation("future", "unrecognized_phase"));
+    assert_eq!(recorder.get_state().items[1].state, None);
+}
+
+#[test]
+fn first_terminal_memory_phase_wins_and_raw_unknown_phase_is_preserved() {
+    let recorder = recorder_with(None);
+    recorder.handle_memory(&observation("terminal-first", "failed"));
+    let first = recorder.get_state().items;
+    for phase in ["started", "completed", "succeeded", "cancelled"] {
+        recorder.handle_memory(&observation("terminal-first", phase));
+        assert_eq!(recorder.get_state().items, first);
+    }
+    recorder.handle_memory(&observation("future", "future_phase"));
+    let unknown = recorder.get_state().items.pop().unwrap();
+    assert_eq!(unknown.state, None);
+    assert!(unknown.raw.unwrap().contains("future_phase"));
+    recorder.handle_memory(&observation("future", "started"));
+    recorder.handle_memory(&observation("future", "skipped"));
+    assert_eq!(
+        recorder.get_state().items.last().unwrap().state,
+        Some(ObserveItemState::Done)
+    );
+}
+
+#[test]
+fn live_events_and_snapshots_redact_credential_text() {
+    let recorder = recorder_with(None);
+    let mut rx = recorder.subscribe();
+    recorder.handle_agent_event(&user(
+        "EXAMPLE_API_KEY=DUMMY_SECRET Cookie: session=DUMMY_COOKIE",
+    ));
+    let snapshot = serde_json::to_string(&recorder.get_state()).unwrap();
+    assert!(!snapshot.contains("DUMMY_"), "{snapshot}");
+    let mut events = 0;
+    while let Ok(event) = rx.try_recv() {
+        events += 1;
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(!json.contains("DUMMY_"), "{json}");
+    }
+    assert!(events > 0);
 }
 
 #[test]
@@ -600,6 +718,91 @@ fn persistence_failures_do_not_block_live_delivery() {
         live.try_recv(),
         Ok(ObserveRecorderEvent::Activity { .. })
     ));
+}
+
+#[derive(Default)]
+struct FailingTerminalSink;
+
+impl ObservePersistence for FailingTerminalSink {
+    fn record_run(&self, _: &ObserveHeader) -> Result<(), String> {
+        Ok(())
+    }
+    fn record_event(&self, _: &ObserveRecorderEvent, _: &ObserveHeader) -> Result<(), String> {
+        Ok(())
+    }
+    fn finish_run(&self, _: &str, _: i64) -> Result<(), String> {
+        Err("synthetic secret must not be retained".into())
+    }
+    fn close(&self) -> Result<(), String> {
+        Err("synthetic close error".into())
+    }
+}
+
+#[test]
+fn terminal_persistence_failures_have_independent_payload_free_health() {
+    let recorder = ObserveRecorder::new(ObserveRecorderOptions {
+        session_id: "synthetic".into(),
+        info: ObserveSessionInfo::default(),
+        persistence: Some(Arc::new(FailingTerminalSink)),
+    });
+    recorder.stop();
+    recorder.stop();
+    assert_eq!(
+        recorder.persistence_health(),
+        PersistenceHealth {
+            failed_writes: 2,
+            terminal_failed: true,
+            close_failed: true,
+            terminal_persisted: false,
+        }
+    );
+}
+
+#[test]
+fn failed_header_write_is_retried_until_persisted() {
+    struct RetrySink(AtomicU64);
+    impl ObservePersistence for RetrySink {
+        fn record_run(&self, _: &ObserveHeader) -> Result<(), String> {
+            Ok(())
+        }
+        fn record_event(
+            &self,
+            event: &ObserveRecorderEvent,
+            _: &ObserveHeader,
+        ) -> Result<(), String> {
+            if matches!(event, ObserveRecorderEvent::Header { .. })
+                && self.0.fetch_add(1, Ordering::Relaxed) == 0
+            {
+                return Err("synthetic failure".into());
+            }
+            Ok(())
+        }
+        fn finish_run(&self, _: &str, _: i64) -> Result<(), String> {
+            Ok(())
+        }
+        fn close(&self) -> Result<(), String> {
+            Ok(())
+        }
+    }
+    let sink = Arc::new(RetrySink(AtomicU64::new(0)));
+    let recorder = ObserveRecorder::new(ObserveRecorderOptions {
+        session_id: "synthetic".into(),
+        info: ObserveSessionInfo::default(),
+        persistence: Some(sink.clone()),
+    });
+    for _ in 0..3 {
+        let mut inner = recorder.lock();
+        let event = inner.header_event();
+        inner.persist(&event);
+    }
+    assert_eq!(
+        sink.0.load(Ordering::Relaxed),
+        2,
+        "failed header retried; successful header deduplicated"
+    );
+    assert_eq!(recorder.persistence_health().failed_writes, 1);
+    recorder.stop();
+    assert!(recorder.persistence_health().terminal_persisted);
 }
 
 #[test]

@@ -705,20 +705,57 @@ async fn blocking<T: Send + 'static>(
 pub struct ClickHouseMirror {
     cancel: CancellationToken,
     task: tokio::task::JoinHandle<()>,
+    clickhouse: Arc<ClickHouse>,
 }
 
 impl ClickHouseMirror {
     /// Backfill, then tail `run_id` until [`Self::finish`].
     pub fn spawn(clickhouse: Arc<ClickHouse>, store: Arc<ObserveRunStore>, run_id: String) -> Self {
         let cancel = CancellationToken::new();
-        let task = tokio::spawn(mirror_loop(clickhouse, store, run_id, cancel.clone()));
-        Self { cancel, task }
+        let task = tokio::spawn(mirror_loop(
+            clickhouse.clone(),
+            store,
+            run_id,
+            cancel.clone(),
+        ));
+        Self {
+            cancel,
+            task,
+            clickhouse,
+        }
     }
 
-    /// Stop syncing and send what is left, waiting at most `FINAL_FLUSH`.
+    /// Stop syncing within a budget covering both active and final sync.
     pub async fn finish(self) {
+        self.finish_until(tokio::time::Instant::now() + FINAL_FLUSH)
+            .await;
+    }
+
+    pub(super) async fn finish_until(mut self, deadline: tokio::time::Instant) -> bool {
         self.cancel.cancel();
-        let _ = self.task.await;
+        match tokio::time::timeout_at(deadline, &mut self.task).await {
+            Ok(Ok(())) => true,
+            Ok(Err(_)) => {
+                self.clickhouse.record(
+                    &Err("ClickHouse mirror task failed during shutdown".into()),
+                    0,
+                );
+                false
+            }
+            Err(_) => {
+                self.clickhouse
+                    .record(&Err("final ClickHouse sync timed out".into()), 0);
+                false
+            }
+        }
+    }
+}
+
+impl Drop for ClickHouseMirror {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+        // Also covers cancellation of a caller waiting in finish_until.
+        self.task.abort();
     }
 }
 

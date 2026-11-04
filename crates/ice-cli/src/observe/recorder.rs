@@ -16,6 +16,7 @@
 //! - Snapshots return owned copies; TS shares item objects with the ring.
 
 use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use ice_agent::types::{AgentToolResult, TextContentOrImage};
@@ -29,6 +30,42 @@ use crate::cognee::observer::Observation;
 
 /// Maximum retained activity items. Mirrors TS `MAX_ITEMS`.
 pub const MAX_ITEMS: usize = 500;
+/// Retained activity item storage plus owned string capacities. Excludes the
+/// deque's spare slots, other projections, fan-out copies and transient inputs.
+pub const MAX_RETAINED_ACTIVITY_BYTES: usize = 8 * 1024 * 1024;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RetentionHealth {
+    pub retained_bytes: usize,
+    pub evicted_items: u64,
+}
+
+fn activity_bytes(item: &ObserveItem) -> usize {
+    let identity = &item.identity;
+    let strings = [
+        Some(&identity.thread_key),
+        Some(&identity.thread_id),
+        identity.parent_thread_id.as_ref(),
+        Some(&identity.main_thread_id),
+        Some(&identity.thread_name),
+        Some(&item.run_id),
+        item.event_type.as_ref(),
+        item.text.as_ref(),
+        item.raw.as_ref(),
+        item.tool_call_id.as_ref(),
+        item.tool_name.as_ref(),
+        item.args.as_ref(),
+        item.result.as_ref(),
+        item.delegation_tool_name.as_ref(),
+    ];
+    strings
+        .into_iter()
+        .flatten()
+        .fold(std::mem::size_of::<ObserveItem>(), |bytes, text| {
+            bytes.saturating_add(text.capacity())
+        })
+}
+
 /// Per-string retention ceiling. Mirrors TS `MAX_PAYLOAD_CHARS` (counted in
 /// chars here, UTF-16 code units in TS).
 pub const MAX_PAYLOAD_CHARS: usize = 1_048_576;
@@ -74,18 +111,64 @@ pub struct ObserveRecorderOptions {
     pub persistence: Option<Arc<dyn ObservePersistence>>,
 }
 
+/// Bounded, payload-free diagnostics independent of the persistence/recorder
+/// lock. A failed terminal write must remain visible even if the sink is down.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct PersistenceHealth {
+    pub failed_writes: u64,
+    pub terminal_failed: bool,
+    pub close_failed: bool,
+    pub terminal_persisted: bool,
+}
+
+#[derive(Default)]
+struct PersistenceDiagnostics {
+    failed_writes: AtomicU64,
+    terminal_failed: AtomicBool,
+    close_failed: AtomicBool,
+    terminal_persisted: AtomicBool,
+}
+
+impl PersistenceDiagnostics {
+    fn failed_write(&self) {
+        let mut count = self.failed_writes.load(Ordering::Relaxed);
+        while count != u64::MAX {
+            match self.failed_writes.compare_exchange_weak(
+                count,
+                count + 1,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => break,
+                Err(current) => count = current,
+            }
+        }
+    }
+
+    fn snapshot(&self) -> PersistenceHealth {
+        PersistenceHealth {
+            failed_writes: self.failed_writes.load(Ordering::Relaxed),
+            terminal_failed: self.terminal_failed.load(Ordering::Relaxed),
+            close_failed: self.close_failed.load(Ordering::Relaxed),
+            terminal_persisted: self.terminal_persisted.load(Ordering::Relaxed),
+        }
+    }
+}
+
 struct Inner {
+    diagnostics: Arc<PersistenceDiagnostics>,
     header: ObserveHeader,
     main: ObserveThreadIdentity,
     items: VecDeque<ObserveItem>,
+    evicted_items: u64,
     threads: IndexMap<String, ObserveThread>,
     lanes: IndexMap<String, ObserveLane>,
     next_item_id: u64,
     next_child_color: usize,
     /// Exact dedup summaries for goal/verifier/child transitions.
     transitions: HashMap<String, String>,
-    /// In-flight Cognee requests: request id to the started item's id, so
-    /// the terminal phase updates that item.
+    /// Recent Cognee lifecycles: (operation, request id) to item id. Retaining
+    /// terminal IDs prevents duplicate/late notifications reopening an item.
     pending_memory: IndexMap<(String, String), u64>,
     /// Tokens of the latest assistant usage, for context occupancy.
     last_context_tokens: Option<i64>,
@@ -100,6 +183,7 @@ struct Inner {
 pub struct ObserveRecorder {
     inner: Arc<Mutex<Inner>>,
     tx: broadcast::Sender<ObserveRecorderEvent>,
+    diagnostics: Arc<PersistenceDiagnostics>,
 }
 
 pub(crate) fn now_ms() -> i64 {
@@ -330,15 +414,29 @@ impl Inner {
         let Some(persistence) = self.persistence.clone() else {
             return;
         };
-        if let ObserveRecorderEvent::Header { header } = event {
+        let serialized_header = if let ObserveRecorderEvent::Header { header } = event {
             let serialized = serde_json::to_string(header).unwrap_or_default();
             if self.last_persisted_header.as_deref() == Some(serialized.as_str()) {
                 return;
             }
-            self.last_persisted_header = Some(serialized);
-        }
-        if let Err(error) = persistence.record_event(event, &self.header) {
-            tracing::debug!("observe: persist {} failed: {error}", event.type_tag());
+            Some(serialized)
+        } else {
+            None
+        };
+        use super::redaction::Redact;
+        match persistence.record_event(&event.clone().redacted(), &self.header.clone().redacted()) {
+            Ok(()) => {
+                if let Some(serialized) = serialized_header {
+                    self.last_persisted_header = Some(serialized);
+                }
+            }
+            Err(_) => {
+                self.diagnostics.failed_write();
+                tracing::warn!(
+                    "observe: {} persistence failed; history may be incomplete",
+                    event.type_tag()
+                );
+            }
         }
     }
 
@@ -355,10 +453,22 @@ impl Inner {
         fields.id = self.next_item_id;
         fields.ts = now_ms();
         self.items.push_back(fields.clone());
-        while self.items.len() > MAX_ITEMS {
-            self.items.pop_front();
-        }
+        self.trim_activity();
         fields
+    }
+
+    fn trim_activity(&mut self) {
+        let mut bytes: usize = self.items.iter().map(activity_bytes).sum();
+        while self.items.len() > MAX_ITEMS || bytes > MAX_RETAINED_ACTIVITY_BYTES {
+            let Some(removed) = self.items.pop_front() else {
+                break;
+            };
+            bytes = bytes.saturating_sub(activity_bytes(&removed));
+            if self.evicted_items == 0 {
+                eprintln!("observe: live activity retention limit reached; snapshot omits older items (durable history is separate)");
+            }
+            self.evicted_items = self.evicted_items.saturating_add(1);
+        }
     }
 
     fn refresh_context(&mut self) {
@@ -448,10 +558,13 @@ impl ObserveRecorder {
         };
         let mut threads = IndexMap::new();
         threads.insert(main.thread_key.clone(), main_thread.clone());
+        let diagnostics = Arc::new(PersistenceDiagnostics::default());
         let mut inner = Inner {
+            diagnostics: diagnostics.clone(),
             header,
             main,
             items: VecDeque::new(),
+            evicted_items: 0,
             threads,
             lanes: IndexMap::new(),
             next_item_id: 0,
@@ -466,8 +579,15 @@ impl ObserveRecorder {
         };
         inner.refresh_context();
         if let Some(persistence) = inner.persistence.clone() {
-            if let Err(error) = persistence.record_run(&inner.header) {
-                tracing::debug!("observe: record_run failed: {error}");
+            use super::redaction::Redact;
+            if persistence
+                .record_run(&inner.header.clone().redacted())
+                .is_err()
+            {
+                diagnostics.failed_write();
+                tracing::warn!(
+                    "observe: initial run persistence failed; history may be incomplete"
+                );
             }
             inner.persist(&ObserveRecorderEvent::Thread {
                 thread: main_thread,
@@ -477,7 +597,14 @@ impl ObserveRecorder {
         Self {
             inner: Arc::new(Mutex::new(inner)),
             tx,
+            diagnostics,
         }
+    }
+
+    /// Does not acquire the recorder or storage lock; safe to inspect during a
+    /// stalled write. No raw sink errors or user payloads are retained.
+    pub fn persistence_health(&self) -> PersistenceHealth {
+        self.diagnostics.snapshot()
     }
 
     /// Subscribe to live projection changes. Mirrors TS `subscribe`.
@@ -486,16 +613,30 @@ impl ObserveRecorder {
     }
 
     pub fn get_header(&self) -> ObserveHeader {
-        self.lock().header.clone()
+        use super::redaction::Redact;
+        self.lock().header.clone().redacted()
     }
 
     pub fn get_state(&self) -> ObserveState {
+        use super::redaction::Redact;
         let inner = self.lock();
-        ObserveState {
+        let state = ObserveState {
             header: inner.header.clone(),
             items: inner.items.iter().cloned().collect(),
             lanes: inner.lanes.values().cloned().collect(),
             threads: inner.threads.values().cloned().collect(),
+        };
+        drop(inner);
+        state.redacted()
+    }
+
+    /// Retention loss is distinct from persistence failure: an evicted live
+    /// activity may still exist in durable history. Counters contain no payloads.
+    pub fn retention_health(&self) -> RetentionHealth {
+        let inner = self.lock();
+        RetentionHealth {
+            retained_bytes: inner.items.iter().map(activity_bytes).sum(),
+            evicted_items: inner.evicted_items,
         }
     }
 
@@ -510,10 +651,15 @@ impl ObserveRecorder {
     /// Persist (optionally) and then fan out, mirroring TS `emit`: durable
     /// writes are attempted before live delivery and their failures swallowed.
     fn emit(&self, inner: &mut Inner, event: ObserveRecorderEvent, persist: bool) {
+        // Tool and memory terminal updates may grow an item without pushing it.
+        if matches!(&event, ObserveRecorderEvent::ActivityUpdate { .. }) {
+            inner.trim_activity();
+        }
         if persist {
             inner.persist(&event);
         }
-        let _ = self.tx.send(event);
+        use super::redaction::Redact;
+        let _ = self.tx.send(event.redacted());
     }
 
     fn emit_header(&self, inner: &mut Inner) {
@@ -969,17 +1115,21 @@ impl ObserveRecorder {
 
     /// Project one Cognee memory operation. Mirrors TS `handleMemory`
     /// (OBS-008): a started request is a running item that its terminal
-    /// phase (succeeded/failed) updates in place.
+    /// phase updates in place. Unknown phases have no execution-state chip.
     pub fn handle_memory(&self, observation: &Observation) {
         let mut inner = self.lock();
         if inner.stopped {
             return;
         }
-        let terminal = matches!(observation.phase.as_str(), "succeeded" | "failed");
+        let terminal = matches!(
+            observation.phase.as_str(),
+            "succeeded" | "completed" | "failed" | "cancelled" | "skipped"
+        );
         let state = match observation.phase.as_str() {
-            "failed" => ObserveItemState::Error,
-            "succeeded" => ObserveItemState::Done,
-            _ => ObserveItemState::Running,
+            "failed" | "cancelled" => Some(ObserveItemState::Error),
+            "succeeded" | "completed" | "skipped" => Some(ObserveItemState::Done),
+            "started" => Some(ObserveItemState::Running),
+            _ => None,
         };
         let raw = serde_json::to_value(observation)
             .map(|value| safe_json(&value))
@@ -988,13 +1138,22 @@ impl ObserveRecorder {
             .request_id
             .as_ref()
             .map(|id| (observation.operation.clone(), id.clone()));
+        let existing = key
+            .as_ref()
+            .and_then(|key| inner.pending_memory.get(key))
+            .copied();
+        if let Some(found) = existing.and_then(|id| inner.items.iter().find(|item| item.id == id)) {
+            // Request IDs identify one lifecycle. Late starts and duplicate terminal
+            // notifications must not reopen or duplicate an already settled item.
+            if found.state != Some(ObserveItemState::Running) || !terminal {
+                return;
+            }
+        }
         if terminal {
-            let pending = key
-                .as_ref()
-                .and_then(|key| inner.pending_memory.shift_remove(key));
+            let pending = existing;
             if let Some(found) = pending.and_then(|id| inner.items.iter_mut().find(|i| i.id == id))
             {
-                found.state = Some(state);
+                found.state = state;
                 found.text = Some(memory_title(observation));
                 found.result = Some(memory_result(observation));
                 found.raw = Some(raw);
@@ -1015,19 +1174,19 @@ impl ObserveRecorder {
         }
         let mut fields = item(ObserveItemKind::Memory, "cognee_observation");
         fields.tool_name = Some(observation.operation.clone());
-        fields.state = Some(state);
+        fields.state = state;
         fields.text = Some(memory_title(observation));
         fields.result = Some(memory_result(observation));
         fields.raw = Some(raw);
         // A started request's preview is its input (the recall query).
-        if !terminal {
+        if state == Some(ObserveItemState::Running) {
             fields.args = observation.preview.clone().map(limit_payload);
         }
         fields.duration_ms = observation.latency_ms.map(|ms| ms as i64);
         let pushed = self.push_main(&mut inner, fields);
-        if let (Some(key), false) = (key, terminal) {
+        if let (Some(key), Some(_)) = (key, state) {
             inner.pending_memory.insert(key, pushed.id);
-            // Requests that never finish must not grow this map forever.
+            // Keep recent terminal IDs too, without unbounded deduplication state.
             if inner.pending_memory.len() > MAX_ITEMS {
                 inner.pending_memory.shift_remove_index(0);
             }
@@ -1057,10 +1216,24 @@ impl ObserveRecorder {
         inner.stopped = true;
         if let Some(persistence) = inner.persistence.take() {
             let run_id = inner.header.run_id.clone();
-            if let Err(error) = persistence.finish_run(&run_id, now_ms()) {
-                tracing::debug!("observe: finish_run failed: {error}");
+            if persistence.finish_run(&run_id, now_ms()).is_err() {
+                self.diagnostics.failed_write();
+                self.diagnostics
+                    .terminal_failed
+                    .store(true, Ordering::Relaxed);
+                tracing::warn!(
+                    "observe: terminal persistence failed; durable run outcome is unknown"
+                );
+            } else {
+                self.diagnostics
+                    .terminal_persisted
+                    .store(true, Ordering::Relaxed);
             }
-            let _ = persistence.close();
+            if persistence.close().is_err() {
+                self.diagnostics.failed_write();
+                self.diagnostics.close_failed.store(true, Ordering::Relaxed);
+                tracing::warn!("observe: persistence close failed; shutdown durability is unknown");
+            }
         }
     }
 }

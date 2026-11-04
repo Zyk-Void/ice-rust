@@ -103,7 +103,7 @@ export function oneLine(text: string, max = 160): string {
   return line.length > max ? `${line.slice(0, max)}…` : line;
 }
 
-/** Server window for "recently live" runs (LIVE_RUN_ACTIVITY_MS). */
+/** Activity recency window, not a process-liveness lease (LIVE_RUN_ACTIVITY_MS). */
 export const LIVE_WINDOW_MS = 600_000;
 
 export interface RunLike {
@@ -120,13 +120,18 @@ export function runLabel(run: RunLike): string {
   return run.sessionName || run.prompt || `run ${shortId(run.runId)}`;
 }
 
-/**
- * `live` while a running run has recent activity; a running run that went
- * quiet probably ended without finishing (a crash or kill), so it is `stale`.
+/** Activity recency only: neither recent nor quiet proves process ownership.
+ * Recorded completion is separate; invalid/future clocks cannot prove recency.
  */
-export function runActivity(run: RunLike, now = Date.now()): 'live' | 'stale' | 'finished' {
-  if (run.status !== 'running') return 'finished';
-  return now - (run.lastActivity ?? run.startedAt) < LIVE_WINDOW_MS ? 'live' : 'stale';
+export function runActivity(
+  run: RunLike,
+  now = Date.now(),
+): 'recent' | 'quiet' | 'finished' | 'unknown' {
+  if (run.status === 'finished') return 'finished';
+  if (run.status !== 'running') return 'unknown';
+  const age = now - (run.lastActivity ?? run.startedAt);
+  if (!Number.isFinite(age) || age < 0) return 'unknown';
+  return age < LIVE_WINDOW_MS ? 'recent' : 'quiet';
 }
 
 /** Last two path segments. */

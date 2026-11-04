@@ -308,6 +308,37 @@ pub struct ObserveReplayEvent {
     pub payload: ObserveRecorderEvent,
 }
 
+/// Versioned local-observe analysis page. Each page is one SQLite read snapshot;
+/// the sequence boundary excludes later appends, not mutations between pages.
+/// It is not an atomic snapshot of sessions, Cognee, or remote mirrors.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObserveAnalysisPage {
+    pub schema_version: u32,
+    pub source: String,
+    pub timestamp_unit: String,
+    pub captured_at_ms: i64,
+    pub run: ObserveRunSummary,
+    pub through_sequence: i64,
+    pub next_after: i64,
+    pub has_more: bool,
+    pub events: Vec<ObserveAnalysisEvent>,
+}
+
+/// Sequence identifies a source row, while item_id identifies activity updates.
+/// Consumers folding an activity projection replace by (run_id, item_id) in
+/// sequence order; other event populations must not be counted as activities.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObserveAnalysisEvent {
+    pub sequence: i64,
+    pub ts_ms: i64,
+    pub item_id: Option<u64>,
+    pub payload: Option<ObserveRecorderEvent>,
+    /// Payload-free reason: malformed, type_mismatch, or payload_too_large.
+    pub unavailable: Option<String>,
+}
+
 /// Mirrors TS `CombinedObserveState`: the current recorder header plus the
 /// merged recent items of every live run.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

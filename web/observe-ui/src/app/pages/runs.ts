@@ -135,8 +135,14 @@ function tokens(r: RunRow) {
           aria-label="Status"
         >
           <button hlmToggleGroupItem value="all">All</button>
-          <button hlmToggleGroupItem value="running">Running</button>
-          <button hlmToggleGroupItem value="finished">Finished</button>
+          <button
+            hlmToggleGroupItem
+            value="running"
+            title="Recorded running status; process liveness unknown"
+          >
+            Recorded running
+          </button>
+          <button hlmToggleGroupItem value="finished">Recorded finished</button>
           <button hlmToggleGroupItem value="errors">With errors</button>
         </hlm-toggle-group>
         <label class="text-muted-foreground flex items-center gap-2 text-xs">
@@ -350,8 +356,8 @@ export class RunsPage {
       .runs()
       .filter((r) => {
         if (model && r.model !== model && !r.models.includes(model)) return false;
-        if (status === 'running' && runActivity(r) !== 'live') return false;
-        if (status === 'finished' && runActivity(r) === 'live') return false;
+        if (status === 'running' && r.status !== 'running') return false;
+        if (status === 'finished' && r.status !== 'finished') return false;
         if (this.hideEmpty() && !r.turns && !r.toolCalls) return false;
         if (status === 'errors' && !r.toolErrors && !r.turnErrors) return false;
         if (!q) return true;
@@ -384,18 +390,14 @@ export class RunsPage {
 
   protected activityDot(run: RunRow) {
     const state = runActivity(run);
-    return state === 'live'
-      ? 'bg-success animate-pulse'
-      : state === 'stale'
-        ? 'bg-warning'
-        : 'bg-muted-foreground/40';
+    return state === 'recent' ? 'bg-primary' : 'bg-muted-foreground/40';
   }
 
   protected activityTitle(run: RunRow) {
     const state = runActivity(run);
-    return state === 'stale'
-      ? 'Never finished: no activity for over 10 minutes (crashed or killed?)'
-      : state;
+    return state === 'finished'
+      ? 'Recorded finished status; task success is separate'
+      : `${state} activity; process liveness unknown`;
   }
 
   protected sortBy(key: SortKey) {

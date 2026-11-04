@@ -24,12 +24,17 @@ describe('format', () => {
     expect(oneLine('abcdefghijk', 4)).toBe('abcd…');
   });
 
-  it('treats a quiet running run as stale', () => {
+  it('reports activity recency without claiming process liveness or a crash', () => {
     const now = 10_000_000;
     const run = { runId: 'r', status: 'running', startedAt: now - 3_600_000 };
-    expect(runActivity({ ...run, lastActivity: now - 60_000 }, now)).toBe('live');
-    expect(runActivity({ ...run, lastActivity: now - 900_000 }, now)).toBe('stale');
+    expect(runActivity({ ...run, lastActivity: now - 60_000 }, now)).toBe('recent');
+    expect(runActivity({ ...run, lastActivity: now - 900_000 }, now)).toBe('quiet');
+    expect(runActivity({ ...run, lastActivity: now - 600_000 }, now)).toBe('quiet');
     expect(runActivity({ ...run, status: 'finished' }, now)).toBe('finished');
+    // A backwards wall clock is not evidence of recent activity or ownership.
+    expect(runActivity({ ...run, lastActivity: now + 1 }, now)).toBe('unknown');
+    expect(runActivity({ ...run, lastActivity: Number.NaN }, now)).toBe('unknown');
+    expect(runActivity({ ...run, status: 'unknown' }, now)).toBe('unknown');
   });
 });
 
