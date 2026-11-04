@@ -282,9 +282,9 @@ Blackhole is off until you configure it. Run `/blackhole percent 85` (or any oth
 
 [Cognee](https://github.com/topoteretes/cognee) is an external memory service. When it is configured, icers:
 
-- recalls memory for each prompt of four or more words and stores it, marked as untrusted reference data, as a hidden message right after that prompt, so the system prompt never changes and the provider can keep caching the conversation;
+- recalls memory for each prompt of four or more words and stores it, marked as untrusted reference data, as a hidden message right after that prompt, so the system prompt never changes and the provider can keep caching the conversation. The first model request waits at most 300 ms for recall; a slower recall keeps running in the background (within `recallBudgetMs`) and its memory joins the next model request of the same run, or is dropped if the run has ended;
 - stores each prompt with its final answer, and traces of the built-in coding tools (at most 24 per prompt), in the Cognee session cache. A trace records the action: tool, arguments, status, errors and at most 600 characters of a command's output, never the contents of files that were read or searched;
-- asks Cognee to improve (consolidate) the session cache once the agent settles (at most every 5 minutes) and at shutdown, and improves up to two older sessions per idle pass;
+- asks Cognee to improve (consolidate) the session cache once the agent settles (at most every 5 minutes) and at shutdown, and improves up to two older sessions per idle pass. After an improve fails, every icers process sharing the agent directory skips automatic improve (including at shutdown) for 5 minutes, doubling to at most an hour, until one succeeds; `/cognee improve now` still runs;
 - queues each compaction checkpoint as permanent memory (`agent_actions`) and shows it once to the next prompt.
 
 The session only gains small `ice-cognee` operation records (IDs and hashes, no memory text). Credential-like text (`Bearer …`, `api_key=…`, `token: …`) is redacted before it leaves the machine. This is a heuristic, not data-loss prevention: other secrets in prompts or tool output can still be sent.
