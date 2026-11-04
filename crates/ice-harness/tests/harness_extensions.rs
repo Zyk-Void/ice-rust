@@ -325,6 +325,14 @@ async fn compaction_entries(
     .collect()
 }
 
+/// Exercise post-tool hooks without preflight compaction of the read schema.
+async fn allow_tool_request(harness: &AgentHarness, provider: &RecordingProvider) {
+    let mut model = provider.inner.default_model().clone();
+    model.context_window = 16_000;
+    model.max_tokens = 1200;
+    harness.set_model(model).await.unwrap();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn manual_compaction_persists_the_extension_checkpoint_without_a_model_call() {
     let (harness, provider, probe) = harness(Vec::new()).await;
@@ -582,6 +590,7 @@ async fn duplicate_correlation_is_acknowledged_false_and_persisted_once() {
         FauxStep::text("done"),
     ])
     .await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -788,6 +797,7 @@ async fn request_context_waits_for_existing_tool_turn_and_uses_raw_origin() {
         FauxStep::text("done"),
     ];
     let (harness, provider, _) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -954,6 +964,7 @@ async fn request_context_observes_midrun_compaction_once_with_bounded_context() 
         FauxStep::text("done"),
     ];
     let (harness, provider, boundary_probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     *boundary_probe.boundary.lock().unwrap() = Some(BoundaryDecision::Compact { pause: false });
     *boundary_probe.decision.lock().unwrap() =
         Some(BeforeCompactDecision::Replace(CompactionOverride {
@@ -1010,6 +1021,7 @@ async fn boundary_request_compacts_mid_run_and_pauses() {
         FauxStep::Message(faux_assistant_message("unreachable", StopReason::Stop)),
     ];
     let (harness, provider, probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -1053,6 +1065,7 @@ async fn cancelled_extension_midrun_checkpoint_stops_before_the_next_request() {
         FauxStep::text("must not run after cancelled checkpoint"),
     ];
     let (harness, provider, probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -1099,6 +1112,7 @@ async fn extension_boundary_can_compact_when_generic_compaction_is_disabled() {
         },
     )
     .await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
