@@ -1389,7 +1389,6 @@ pub async fn interactive_tui(
     if let Some(m) = model_catalog.iter().find(|m| m.id == lane_model_id) {
         footer.set_context_window(m.context_window as i64);
     }
-    footer.set_hints("Enter: Send | Shift+Enter: New line | Ctrl+C: Clear/Exit | Esc: Abort | Ctrl+L: Model | Ctrl+P: Cycle | Ctrl+O: Expand/collapse tools | Ctrl+T: Show/hide thinking | /help");
     // Running background shells (and their watches) show in the footer.
     {
         let (footer, tui) = (footer.clone(), tui.clone());
