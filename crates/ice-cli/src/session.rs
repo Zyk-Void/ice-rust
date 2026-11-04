@@ -129,8 +129,10 @@ Guidelines:
   do not pass PowerShell cmdlets such as Get-ChildItem, Select-Object, or Select-String.
   If a powershell tool is available, use it for PowerShell commands.
 {working_state_rule}
-- Track multi-step work with the todo tool instead of re-listing the plan in prose: add the
-  steps once, then mark them done as you go. Re-stating the same plan without acting on it is
+- Use the todo tool for multi-step work only when it is advertised and enabled.
+  Otherwise maintain a durable checklist in a permitted project file, or a short visible
+  checklist if file writes are unavailable. Never install a plugin just to obtain a todo tool.
+  Add steps once and mark them done as you go. Re-stating the same plan without acting on it is
   a bug, not progress.
 - Read only what you need. If a file or search result was already shown earlier in this
   conversation, use it instead of fetching it again.
@@ -4355,6 +4357,16 @@ mod tests {
         assert!(!p.contains("- powershell"));
         assert!(p.contains("Bash/POSIX syntax, including on Windows"));
         assert!(p.contains("do not pass PowerShell cmdlets"));
+    }
+
+    #[test]
+    fn default_prompt_has_an_explicit_unavailable_todo_fallback() {
+        for replayed in [false, true] {
+            let prompt = default_system_prompt("/tmp/proj", replayed);
+            assert!(prompt.contains("only when it is advertised and enabled"));
+            assert!(prompt.contains("Otherwise maintain a durable checklist"));
+            assert!(!prompt.contains("- Track multi-step work with the todo tool instead"));
+        }
     }
 
     #[test]
