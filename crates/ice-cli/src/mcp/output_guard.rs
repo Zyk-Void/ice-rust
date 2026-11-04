@@ -15,8 +15,9 @@ use serde_json::{json, Value};
 
 const DEFAULT_DETAILS_MAX_BYTES: usize = 16 * 1024;
 const MAX_BLOB_BYTES: usize = 10 * 1024 * 1024;
+// Text, structured details, and blobs share these session-wide disk limits.
 const MAX_SESSION_BLOB_BYTES: usize = 100 * 1024 * 1024;
-/// Bounds metadata from empty or tiny blobs.
+/// Bounds metadata from empty or tiny artifacts as well as blobs.
 const MAX_SESSION_BLOB_FILES: usize = 10_000;
 const SUMMARY_ITEMS: usize = 20;
 /// Room for the truncation notice, which names a spill path.
@@ -84,7 +85,8 @@ struct Spill {
     blob_files: usize,
 }
 impl SpillStore {
-    /// Writes a new mode-600 file; `blob` counts toward the session blob caps.
+    /// Writes a new mode-600 file; all artifacts count toward session caps.
+    /// `blob` additionally enforces the per-resource decoded-size limit.
     fn write(&self, name: &str, bytes: &[u8], blob: bool) -> Result<PathBuf, String> {
         // Held through the write, so `cleanup` cannot delete the directory under a
         // write in progress, and the quota is charged only for a file that exists.
@@ -92,15 +94,13 @@ impl SpillStore {
         if spill.closed {
             return Err("session ended".into());
         }
-        if blob {
-            if bytes.len() > MAX_BLOB_BYTES {
-                return Err("decoded size exceeds 10 MiB".into());
-            }
-            if spill.blob_files >= MAX_SESSION_BLOB_FILES
-                || spill.blob_bytes + bytes.len() > MAX_SESSION_BLOB_BYTES
-            {
-                return Err("session resource limit reached".into());
-            }
+        if blob && bytes.len() > MAX_BLOB_BYTES {
+            return Err("decoded size exceeds 10 MiB".into());
+        }
+        if spill.blob_files >= MAX_SESSION_BLOB_FILES
+            || spill.blob_bytes.saturating_add(bytes.len()) > MAX_SESSION_BLOB_BYTES
+        {
+            return Err("session resource limit reached".into());
         }
         if spill.dir.is_none() {
             let mut builder = tempfile::Builder::new();
@@ -122,10 +122,8 @@ impl SpillStore {
             let _ = std::fs::remove_file(&path);
             return Err(error.to_string());
         }
-        if blob {
-            spill.blob_bytes += bytes.len();
-            spill.blob_files += 1;
-        }
+        spill.blob_bytes += bytes.len();
+        spill.blob_files += 1;
         Ok(path)
     }
 
@@ -382,6 +380,27 @@ mod tests {
         let start = text.find(marker).expect(text) + marker.len();
         let end = text[start..].find(" — ").unwrap_or(text.len() - start);
         PathBuf::from(&text[start..start + end])
+    }
+
+    #[test]
+    fn text_and_details_spills_share_session_resource_caps() {
+        let store = SpillStore::default();
+        store.0.lock().unwrap().blob_bytes = MAX_SESSION_BLOB_BYTES - 4;
+        assert!(store.write("output", b"12345", false).is_err());
+        {
+            let mut spill = store.0.lock().unwrap();
+            spill.blob_bytes = 0;
+            spill.blob_files = MAX_SESSION_BLOB_FILES;
+        }
+        assert!(store.write("mcp-result", b"{}", false).is_err());
+        store.0.lock().unwrap().blob_files = 0;
+        let path = store.write("output", b"safe evidence", false).unwrap();
+        assert_eq!(store.0.lock().unwrap().blob_bytes, 13);
+        assert_eq!(store.0.lock().unwrap().blob_files, 1);
+        assert_eq!(std::fs::read(&path).unwrap(), b"safe evidence");
+        store.cleanup();
+        assert!(!path.exists());
+        assert!(store.write("output", b"later", false).is_err());
     }
 
     #[test]
