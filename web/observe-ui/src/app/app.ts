@@ -123,12 +123,9 @@ interface Command {
                     >
                       <span
                         class="size-2 shrink-0 rounded-full"
+                        [title]="activity(run) + ' activity; process liveness unknown'"
                         [class]="
-                          activity(run) === 'live'
-                            ? 'bg-success'
-                            : activity(run) === 'stale'
-                              ? 'bg-warning'
-                              : 'bg-muted-foreground/40'
+                          activity(run) === 'recent' ? 'bg-primary' : 'bg-muted-foreground/40'
                         "
                       ></span>
                       <span class="flex min-w-0 flex-col">
@@ -333,7 +330,7 @@ export class App {
         id: `run:${run.runId}`,
         label: runLabel(run),
         hint: `${run.model ?? ''} · ${fmtAgo(run.startedAt)}`,
-        icon: runActivity(run) === 'live' ? 'lucideRadio' : 'lucideCircle',
+        icon: runActivity(run) === 'recent' ? 'lucideRadio' : 'lucideCircle',
         run: () => void this.router.navigate(['/runs', run.runId]),
       }));
     const actions: Command[] = [

@@ -63,7 +63,7 @@ fn sensitive_key() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r"(?i)^(?:api[_-]?key|(?:access[_-]?|refresh[_-]?)?token|secret|password|authorization)$",
+            r"(?i)^(?:[a-z0-9]+[_-])*(?:api[_-]?key|(?:access[_-]?|refresh[_-]?)?token|secret|password|authorization|cookie)$",
         )
         .expect("valid regex")
     })
@@ -78,7 +78,7 @@ fn assignment() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"(?i)\b((?:api[_-]?key|(?:access[_-]?|refresh[_-]?)?token|secret|password|authorization)["']?\s*[:=]\s*["']?)([^\s"',;}]+)"#,
+            r#"(?i)\b((?:[a-z0-9]+[_-])*(?:api[_-]?key|(?:access[_-]?|refresh[_-]?)?token|secret|password|authorization)\\*["']?\s*[:=]\s*\\*["']?)([^\s"',;}\\]+)"#,
         )
         .expect("valid regex")
     })
@@ -89,7 +89,55 @@ fn assignment() -> &'static Regex {
 /// tokens, secrets, passwords and authorization values. This is a best-effort
 /// filter, not a guarantee that arbitrary secrets are removed.
 pub fn redact_credential_text(text: &str) -> String {
-    let text = bearer().replace_all(text, "Bearer [REDACTED]");
+    // Redact the entire cookie header, not just its first name/value pair.
+    static COOKIE: OnceLock<Regex> = OnceLock::new();
+    static USERINFO: OnceLock<Regex> = OnceLock::new();
+    let cookie = COOKIE.get_or_init(|| {
+        Regex::new(r#"(?i)\b((?:set-)?cookie\s*:\s*)(?:[^\r\n"\\]|"[^"\r\n]*")*"#)
+            .expect("valid regex")
+    });
+    let userinfo =
+        USERINFO.get_or_init(|| Regex::new(r#"(?i)(https?://)[^\s/@]+@"#).expect("valid regex"));
+    let text = cookie.replace_all(text, "${1}[REDACTED]");
+    let text = userinfo.replace_all(&text, "${1}[REDACTED]@");
+    let text = bearer().replace_all(&text, "Bearer [REDACTED]");
+    // Unlabelled provider-shaped keys. Requiring a digit keeps hyphenated words
+    // such as `sk-learn-compatible-...` readable.
+    static PROVIDER_TOKEN: OnceLock<Regex> = OnceLock::new();
+    let provider_token = PROVIDER_TOKEN.get_or_init(|| {
+        Regex::new(concat!(
+            r"\bsk-[A-Za-z0-9_-]{20,}|\bgh[pousr]_[A-Za-z0-9]{30,}|\bgithub_pat_[A-Za-z0-9_]{30,}|",
+            r"\bAKIA[0-9A-Z]{16}\b|\bxox[abposr]-[A-Za-z0-9-]{10,}|\bAIza[0-9A-Za-z_-]{35}|",
+            r"\bglpat-[A-Za-z0-9_-]{20,}"
+        ))
+        .expect("valid regex")
+    });
+    let text = provider_token.replace_all(&text, |caps: &regex::Captures<'_>| {
+        if caps[0].bytes().any(|byte| byte.is_ascii_digit()) {
+            REDACTED.to_string()
+        } else {
+            caps[0].to_string()
+        }
+    });
+    // Mask complete quoted values before the unquoted fallback. Otherwise a
+    // space in a password exposes the rest of the value. Include stringified
+    // JSON (escaped quotes), not just JSON objects and shell assignments.
+    static QUOTED: OnceLock<Vec<Regex>> = OnceLock::new();
+    let quoted = QUOTED.get_or_init(|| {
+        let key = r#"(?i)\b((?:[a-z0-9]+[_-])*(?:api[_-]?key|(?:access[_-]?|refresh[_-]?)?token|secret|password|authorization)\\*["']?\s*[:=]\s*)"#;
+        [r#"(\\")(.*?)(\\")"#, r#"(")((?:\\.|[^"\\])*)(")"#, r#"(')([^']*)(')"#]
+            .into_iter()
+            .map(|value| Regex::new(&format!("{key}{value}")).expect("valid regex"))
+            .collect()
+    });
+    let mut text = text.into_owned();
+    for pattern in quoted {
+        text = pattern
+            .replace_all(&text, |caps: &regex::Captures<'_>| {
+                format!("{}{}{REDACTED}{}", &caps[1], &caps[2], &caps[4])
+            })
+            .into_owned();
+    }
     assignment()
         .replace_all(&text, |caps: &regex::Captures<'_>| {
             if caps[2].eq_ignore_ascii_case("bearer") || &caps[2] == REDACTED {
@@ -166,6 +214,7 @@ fn sql_err(e: rusqlite::Error) -> String {
 }
 
 fn row_summary(row: &rusqlite::Row<'_>) -> rusqlite::Result<ObserveRunSummary> {
+    use super::redaction::Redact;
     let status: String = row.get(8)?;
     Ok(ObserveRunSummary {
         run_id: row.get(0)?,
@@ -181,7 +230,8 @@ fn row_summary(row: &rusqlite::Row<'_>) -> rusqlite::Result<ObserveRunSummary> {
         } else {
             ObserveRunStatus::Running
         },
-    })
+    }
+    .redacted())
 }
 
 const RUN_COLUMNS: &str = "run_id, session_id, main_thread_id, session_name, model, \
@@ -345,6 +395,83 @@ impl ObserveRunStore {
         })
     }
 
+    /// Sanitized analysis page from one read transaction. Pass the first page's
+    /// through_sequence on subsequent calls to exclude later appends. Historical
+    /// mutations/retention between calls are not a cross-page atomic snapshot.
+    pub fn analysis_page(
+        &self,
+        run_id: &str,
+        after: i64,
+        through: Option<i64>,
+        limit: usize,
+    ) -> Result<Option<ObserveAnalysisPage>, String> {
+        const MAX_PAYLOAD: usize = 256 * 1024;
+        const MAX_PAGE_BYTES: usize = 2 * 1024 * 1024;
+        self.with_conn(|conn, _| {
+            use super::redaction::Redact;
+            let tx = conn.unchecked_transaction().map_err(sql_err)?;
+            let run = tx.query_row(
+                &format!("SELECT {RUN_COLUMNS} FROM observe_runs WHERE run_id = ?1"),
+                params![run_id], row_summary,
+            ).optional().map_err(sql_err)?;
+            let Some(run) = run else { return Ok(None) };
+            let latest: i64 = tx.query_row(
+                "SELECT COALESCE(MAX(sequence), 0) FROM observe_events WHERE run_id = ?1",
+                params![run_id], |row| row.get(0),
+            ).map_err(sql_err)?;
+            let through = through.unwrap_or(latest).max(0);
+            let after = after.max(0);
+            let mut next_after = after;
+            let mut events = Vec::new();
+            let mut bytes = 0usize;
+            {
+                let mut stmt = tx.prepare(
+                    "SELECT sequence, ts_ms, event_type, length(CAST(payload_json AS BLOB)), \
+                     CASE WHEN length(CAST(payload_json AS BLOB)) <= ?4 THEN payload_json ELSE NULL END \
+                     FROM observe_events WHERE run_id = ?1 AND sequence > ?2 AND sequence <= ?3 \
+                     ORDER BY sequence LIMIT ?5",
+                ).map_err(sql_err)?;
+                let mut rows = stmt.query(params![run_id, after, through, MAX_PAYLOAD as i64, limit.clamp(1, 1000) as i64]).map_err(sql_err)?;
+                while let Some(row) = rows.next().map_err(sql_err)? {
+                    let sequence: i64 = row.get(0).map_err(sql_err)?;
+                    let ts_ms: i64 = row.get(1).map_err(sql_err)?;
+                    let kind: String = row.get(2).map_err(sql_err)?;
+                    let size: usize = row.get(3).map_err(sql_err)?;
+                    // Conservative charge: an oversize marker reserves a full
+                    // per-row allowance despite not loading its source payload.
+                    let charged = size.min(MAX_PAYLOAD);
+                    if !events.is_empty() && bytes.saturating_add(charged) > MAX_PAGE_BYTES { break }
+                    bytes = bytes.saturating_add(charged);
+                    let raw: Option<String> = row.get(4).map_err(sql_err)?;
+                    let (payload, unavailable) = match raw {
+                        None => (None, Some("payload_too_large".into())),
+                        Some(raw) => match serde_json::from_str::<ObserveRecorderEvent>(&raw) {
+                            Ok(event) if event.type_tag() == kind => (Some(event.redacted()), None),
+                            Ok(_) => (None, Some("type_mismatch".into())),
+                            Err(_) => (None, Some("malformed".into())),
+                        },
+                    };
+                    let item_id = match &payload {
+                        Some(ObserveRecorderEvent::Activity { item } | ObserveRecorderEvent::ActivityUpdate { item }) => Some(item.id),
+                        _ => None,
+                    };
+                    events.push(ObserveAnalysisEvent { sequence, ts_ms, item_id, payload, unavailable });
+                    next_after = sequence;
+                }
+            }
+            let has_more = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM observe_events WHERE run_id = ?1 AND sequence > ?2 AND sequence <= ?3)",
+                params![run_id, next_after, through], |row| row.get(0),
+            ).map_err(sql_err)?;
+            let page = ObserveAnalysisPage {
+                schema_version: 1, source: "local-observe".into(), timestamp_unit: "unix_ms".into(),
+                captured_at_ms: now_ms(), run, through_sequence: through, next_after, has_more, events,
+            };
+            tx.commit().map_err(sql_err)?;
+            Ok(Some(page))
+        })
+    }
+
     /// Events with `sequence > after`, ascending.
     pub fn get_events(
         &self,
@@ -374,8 +501,10 @@ impl ObserveRunStore {
             let mut events = Vec::new();
             for row in rows {
                 let (sequence, ts, event_type, payload) = row.map_err(sql_err)?;
-                let payload = serde_json::from_str(&payload)
+                use super::redaction::Redact;
+                let payload: ObserveRecorderEvent = serde_json::from_str(&payload)
                     .map_err(|e| format!("corrupt observe event {run_id}#{sequence}: {e}"))?;
+                let payload = payload.redacted();
                 events.push(ObserveReplayEvent {
                     sequence,
                     ts,
@@ -444,8 +573,8 @@ impl ObserveRunStore {
         })
     }
 
-    /// Stored events with `sequence > after`, ascending, with the payload
-    /// left as the stored (redacted) JSON text.
+    /// Stored events with `sequence > after`, ascending. Re-sanitize legacy
+    /// payloads on export/mirroring without rewriting historical storage.
     pub fn get_stored_events(
         &self,
         run_id: &str,
@@ -467,7 +596,18 @@ impl ObserveRunStore {
                             sequence: row.get(0)?,
                             ts: row.get(1)?,
                             event_type: row.get(2)?,
-                            payload: row.get(3)?,
+                            payload: {
+                                let text: String = row.get(3)?;
+                                let value: serde_json::Value = serde_json::from_str(&text)
+                                    .map_err(|error| {
+                                        rusqlite::Error::FromSqlConversionFailure(
+                                            3,
+                                            rusqlite::types::Type::Text,
+                                            Box::new(error),
+                                        )
+                                    })?;
+                                redact_value(&value).to_string()
+                            },
                         })
                     },
                 )
@@ -610,17 +750,21 @@ impl StateFold {
     }
 
     pub(crate) fn finish(self) -> ObserveState {
+        use super::redaction::Redact;
         ObserveState {
             header: self.header,
             items: self.items.into_values().collect(),
             lanes: self.lanes.into_values().collect(),
             threads: self.threads.into_values().collect(),
         }
+        .redacted()
     }
 }
 
 impl ObservePersistence for ObserveRunStore {
     fn record_run(&self, header: &ObserveHeader) -> Result<(), String> {
+        use super::redaction::Redact;
+        let header = header.clone().redacted();
         self.with_conn(|conn, seq| {
             conn.execute(
                 "INSERT INTO observe_runs (run_id, session_id, main_thread_id, session_name, \

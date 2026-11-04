@@ -222,11 +222,40 @@ pub struct ObserveServer {
 }
 
 impl ObserveServer {
-    /// Stop accepting and end every client stream.
-    pub async fn close(mut self) {
+    /// Stop accepting and end every client stream within the component budget.
+    pub async fn close(self) {
+        if !self
+            .close_until(tokio::time::Instant::now() + Duration::from_secs(2))
+            .await
+        {
+            eprintln!("Warning: observe server shutdown incomplete");
+        }
+    }
+
+    /// Use the caller's absolute deadline. False means the server task did not
+    /// complete successfully; aborting it does not establish durable completion.
+    pub async fn close_until(mut self, deadline: tokio::time::Instant) -> bool {
         self.cancel.cancel();
-        if let Some(task) = self.task.take() {
-            let _ = task.await;
+        let Some(task) = self.task.as_mut() else {
+            return true;
+        };
+        // Keep the handle owned by self across the await: cancellation must
+        // abort it through Drop rather than silently detach it.
+        match tokio::time::timeout_at(deadline, task).await {
+            Ok(result) => {
+                self.task.take();
+                result.is_ok()
+            }
+            Err(_) => false,
+        }
+    }
+}
+
+impl Drop for ObserveServer {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+        if let Some(task) = &self.task {
+            task.abort();
         }
     }
 }
@@ -419,7 +448,10 @@ fn json(status: u16, value: &impl serde::Serialize) -> Response {
         status,
         content_type: "application/json; charset=utf-8",
         headers: Vec::new(),
-        body: serde_json::to_vec(value).unwrap_or_default(),
+        body: serde_json::to_value(value)
+            .map(|value| super::store::redact_value(&value))
+            .and_then(|value| serde_json::to_vec(&value))
+            .unwrap_or_else(|_| b"null".to_vec()),
     }
 }
 
@@ -837,7 +869,10 @@ fn combined_state(state: &ServerState) -> CombinedObserveState {
 pub fn sse_frame(event: &str, data: &impl serde::Serialize) -> String {
     format!(
         "event: {event}\ndata: {}\n\n",
-        serde_json::to_string(data).unwrap_or_else(|_| "null".into())
+        serde_json::to_value(data)
+            .map(|value| super::store::redact_value(&value))
+            .and_then(|value| serde_json::to_string(&value))
+            .unwrap_or_else(|_| "null".into())
     )
 }
 

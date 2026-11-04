@@ -18,12 +18,15 @@
 
 pub mod analytics;
 pub mod clickhouse;
+mod queue;
 pub mod recorder;
+mod redaction;
 pub mod server;
 pub mod store;
 pub mod types;
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::cognee::observer::Observation;
@@ -69,6 +72,7 @@ pub fn take_startup_notices() -> Vec<String> {
         .unwrap_or_default()
 }
 
+#[derive(Debug)]
 enum Command {
     Agent(AgentEvent),
     CustomEntry {
@@ -79,7 +83,18 @@ enum Command {
     Info(ObserveSessionInfo),
     Memory(Observation),
     Lagged(u64),
-    Stop,
+}
+
+/// Observer-only shutdown budget. The caller may supply a stricter shared
+/// deadline with `stop_until`; this does not extend any outer transport grace.
+pub const DEFAULT_STOP_BUDGET: std::time::Duration = std::time::Duration::from_secs(2);
+
+#[derive(Debug, Clone, Copy)]
+pub struct ObserveStopReport {
+    pub drained: bool,
+    pub worker_finished: bool,
+    pub mirror_finished: bool,
+    pub persistence: recorder::PersistenceHealth,
 }
 
 /// A running observation pipeline. Dropping it without [`Self::stop`] leaves
@@ -89,8 +104,9 @@ pub struct ObserveRuntime {
     pub store: Option<Arc<ObserveRunStore>>,
     pub clickhouse: Option<Arc<clickhouse::ClickHouse>>,
     mirror: Option<clickhouse::ClickHouseMirror>,
-    tx: std::sync::mpsc::Sender<Command>,
-    worker: Option<std::thread::JoinHandle<()>>,
+    tx: queue::Sender,
+    worker: Option<tokio::sync::oneshot::Receiver<bool>>,
+    finish_allowed: Arc<AtomicBool>,
     forward: Option<tokio::task::JoinHandle<()>>,
     drain: Arc<tokio::sync::Notify>,
     poll: Option<tokio::task::JoinHandle<()>>,
@@ -125,6 +141,15 @@ async fn branch_entries(harness: &AgentHarness) -> Vec<Entry> {
 }
 
 /// Highest session entry sequence on the active branch.
+/// Projection position in the session, and how many assistant entries versus
+/// assistant `message_end` events have been forwarded.
+#[derive(Debug, Default)]
+struct EntryCursor {
+    watermark: u64,
+    assistant_entries: u64,
+    assistant_events: u64,
+}
+
 async fn entry_watermark(harness: &AgentHarness) -> u64 {
     branch_entries(harness)
         .await
@@ -140,17 +165,31 @@ async fn entry_watermark(harness: &AgentHarness) -> u64 {
 /// stream, so they are read from the session — the Rust stand-in for the TS
 /// session-manager `entry_appended` subscription. Like TS, entries present
 /// when the recorder starts are not projected.
+///
+/// A lagging forwarder reads entries persisted after later turns. Unless
+/// `flush`, the read stops before an assistant entry whose `message_end` the
+/// event stream has not reached, so a later prompt or custom entry is not
+/// projected ahead of an earlier answer. `AgentEnd` flushes: an assistant
+/// entry without a matching event can delay entries by one run at most.
 async fn forward_new_entries(
     harness: &AgentHarness,
-    watermark: &mut u64,
-    tx: &std::sync::mpsc::Sender<Command>,
+    cursor: &mut EntryCursor,
+    tx: &queue::Sender,
+    flush: bool,
 ) {
     for entry in branch_entries(harness).await {
         let seq = entry.base().seq;
-        if seq <= *watermark {
+        if seq <= cursor.watermark {
             continue;
         }
-        *watermark = seq;
+        if matches!(&entry, Entry::Message(message) if matches!(message.message, AgentMessage::Assistant(_)))
+        {
+            if !flush && cursor.assistant_entries >= cursor.assistant_events {
+                break;
+            }
+            cursor.assistant_entries += 1;
+        }
+        cursor.watermark = seq;
         let command = match entry {
             Entry::Message(message) if matches!(message.message, AgentMessage::User(_)) => {
                 Command::Agent(AgentEvent::MessageStart {
@@ -222,16 +261,27 @@ fn spawn(
     mut events: broadcast::Receiver<AgentEvent>,
     recorder: ObserveRecorder,
     store: Option<Arc<ObserveRunStore>>,
-    mut watermark: u64,
+    watermark: u64,
 ) -> ObserveRuntime {
-    let (tx, rx) = std::sync::mpsc::channel::<Command>();
+    let (tx, rx) = queue::channel();
     let worker_recorder = recorder.clone();
+    let finish_allowed = Arc::new(AtomicBool::new(false));
+    let worker_finish_allowed = finish_allowed.clone();
+    let (worker_done, worker_result) = tokio::sync::oneshot::channel();
     let worker = std::thread::Builder::new()
         .name("icers-observe".into())
         .spawn(move || {
-            while let Ok(command) = rx.recv() {
+            let mut healthy = true;
+            while let Some(received) = rx.recv() {
                 let recorder = &worker_recorder;
                 let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let command = match received {
+                        queue::Received::Command(command) => command,
+                        queue::Received::Gap(n) => {
+                            recorder.note(&format!("observer queue lost {n} events; telemetry is incomplete and affected outcomes are unknown"));
+                            return;
+                        }
+                    };
                     match command {
                         Command::Agent(event) => recorder.handle_agent_event(&event),
                         Command::Harness(HarnessEvent::CompactionProgress(progress)) => {
@@ -246,16 +296,24 @@ fn spawn(
                         Command::Lagged(n) => recorder.note(&format!(
                             "observer fell behind; {n} agent events were not recorded"
                         )),
-                        Command::Stop => return false,
                     }
-                    true
                 }));
-                if !matches!(outcome, Ok(true)) {
+                if outcome.is_err() {
+                    healthy = false;
                     break;
                 }
             }
+            if healthy && worker_finish_allowed.load(Ordering::Acquire) {
+                healthy = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    worker_recorder.stop();
+                })).is_ok();
+            } else {
+                healthy = false;
+            }
+            let _ = worker_done.send(healthy);
         })
-        .ok();
+        .ok()
+        .map(|_thread| worker_result);
 
     let forward_tx = tx.clone();
     let drain = Arc::new(tokio::sync::Notify::new());
@@ -264,6 +322,10 @@ fn spawn(
     let forward = tokio::spawn(async move {
         let harness = forward_harness;
         let tx = forward_tx;
+        let mut cursor = EntryCursor {
+            watermark,
+            ..EntryCursor::default()
+        };
         let mut forward_one = async |event: AgentEvent| -> bool {
             // Streaming deltas are not projected (TS parity); skip the copy.
             if matches!(event, AgentEvent::MessageUpdate { .. }) {
@@ -275,7 +337,16 @@ fn spawn(
                 event,
                 AgentEvent::AgentStart | AgentEvent::TurnEnd { .. } | AgentEvent::AgentEnd { .. }
             ) {
-                forward_new_entries(&harness, &mut watermark, &tx).await;
+                let flush = matches!(event, AgentEvent::AgentEnd { .. });
+                forward_new_entries(&harness, &mut cursor, &tx, flush).await;
+            }
+            if matches!(
+                event,
+                AgentEvent::MessageEnd {
+                    message: AgentMessage::Assistant(_)
+                }
+            ) {
+                cursor.assistant_events += 1;
             }
             tx.send(Command::Agent(event)).is_ok()
         };
@@ -353,6 +424,7 @@ fn spawn(
         mirror: None,
         tx,
         worker,
+        finish_allowed,
         forward: Some(forward),
         drain,
         poll: Some(poll),
@@ -362,24 +434,102 @@ fn spawn(
 }
 
 impl ObserveRuntime {
-    /// Drain pending events, finish the run and close the store.
-    pub async fn stop(mut self) {
+    /// Close the optional dashboard and drain recording concurrently under one
+    /// absolute deadline. The server outcome is separate from persistence health.
+    pub async fn stop_with_server_until(
+        self,
+        server: Option<server::ObserveServer>,
+        deadline: tokio::time::Instant,
+    ) -> (bool, ObserveStopReport) {
+        tokio::join!(
+            async move {
+                match server {
+                    Some(server) => server.close_until(deadline).await,
+                    None => true,
+                }
+            },
+            self.stop_until(deadline),
+        )
+    }
+
+    /// Drain/finalize within the observer budget. Timeout is not a durable
+    /// finish: any in-flight synchronous write remains explicitly unresolved.
+    pub async fn stop(self) {
+        self.stop_until(tokio::time::Instant::now() + DEFAULT_STOP_BUDGET)
+            .await;
+    }
+
+    pub async fn stop_until(mut self, deadline: tokio::time::Instant) -> ObserveStopReport {
         if let Some(poll) = self.poll.take() {
             poll.abort();
         }
         self.drain.notify_one();
-        if let Some(forward) = self.forward.take() {
-            let _ = forward.await;
+        let mut drained = true;
+        if let Some(forward) = self.forward.as_mut() {
+            drained = matches!(
+                tokio::time::timeout_at(deadline, &mut *forward).await,
+                Ok(Ok(()))
+            );
+            if !drained {
+                forward.abort();
+            }
         }
-        let _ = self.tx.send(Command::Stop);
-        if let Some(worker) = self.worker.take() {
-            let _ = tokio::task::spawn_blocking(move || worker.join()).await;
+        self.forward.take();
+        self.finish_allowed.store(drained, Ordering::Release);
+        if drained {
+            self.tx.close();
+        } else {
+            self.tx.abandon();
         }
-        self.recorder.stop();
-        // After the run is finished locally, so the mirror copies that too.
-        if let Some(mirror) = self.mirror.take() {
-            mirror.finish().await;
+        let worker_finished = if let Some(worker) = self.worker.take() {
+            matches!(
+                tokio::time::timeout_at(deadline, worker).await,
+                Ok(Ok(true))
+            )
+        } else {
+            false
+        };
+        if !worker_finished {
+            self.finish_allowed.store(false, Ordering::Release);
+            self.tx.abandon();
         }
+        let mirror_finished = if let Some(mirror) = self.mirror.take() {
+            mirror.finish_until(deadline).await
+        } else {
+            true
+        };
+        let persistence = self.recorder.persistence_health();
+        if !drained
+            || !worker_finished
+            || !mirror_finished
+            || persistence.terminal_failed
+            || persistence.close_failed
+            || persistence.failed_writes != 0
+        {
+            // Independent of the failed store. Never include sink errors or payloads.
+            eprintln!("Warning: observer shutdown incomplete: drained={drained}, worker_finished={worker_finished}, mirror_finished={mirror_finished}, persistence={persistence:?}; unresolved writes/outcomes are unknown");
+        }
+        ObserveStopReport {
+            drained,
+            worker_finished,
+            mirror_finished,
+            persistence,
+        }
+    }
+}
+
+impl Drop for ObserveRuntime {
+    fn drop(&mut self) {
+        self.finish_allowed.store(false, Ordering::Release);
+        self.tx.abandon();
+        if let Some(forward) = &self.forward {
+            forward.abort();
+        }
+        if let Some(poll) = &self.poll {
+            poll.abort();
+        }
+        // A synchronous write already in progress cannot be cancelled. The
+        // worker observes the disabled finish flag once that write returns.
     }
 }
 

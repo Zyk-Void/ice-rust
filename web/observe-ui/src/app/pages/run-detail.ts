@@ -33,7 +33,6 @@ import {
   fmtMs,
   fmtPercent,
   fmtTime,
-  LIVE_WINDOW_MS,
   oneLine,
   runActivity,
   shortId,
@@ -118,16 +117,14 @@ function percentile(sorted: number[], p: number): number | undefined {
               <h1 class="truncate text-xl font-semibold tracking-tight">{{ name() }}</h1>
               <span
                 hlmBadge
-                [variant]="activity() === 'live' ? 'default' : 'secondary'"
+                [variant]="activity() === 'recent' ? 'default' : 'secondary'"
                 [title]="
-                  activity() === 'stale' ? 'Never finished: no activity for over 10 minutes' : ''
+                  activity() === 'finished'
+                    ? 'Recorded finished status; task success is separate'
+                    : 'Activity recency only; process liveness unknown'
                 "
                 >{{
-                  activity() === 'live'
-                    ? 'running'
-                    : activity() === 'stale'
-                      ? 'never finished'
-                      : 'finished'
+                  activity() === 'finished' ? 'recorded finished' : activity() + ' activity'
                 }}</span
               >
             </div>
@@ -516,17 +513,23 @@ export class RunDetailPage {
   });
   protected readonly run = computed(() => (this.state.hasValue() ? this.state.value() : undefined));
   private readonly row = computed(() => this.runs.runs().find((r) => r.runId === this.runId()));
-  /** `live`, `stale` (never finished) or `finished`. */
+  /** Activity is not ownership; item states cannot establish run completion. */
   protected readonly activity = computed(() => {
     const row = this.row();
     if (row) return runActivity(row);
-    // Outside the selected range: judge from the run's own activity.
-    const items = this.run()?.items ?? [];
-    const last = Math.max(0, ...items.map((i) => i.ts));
-    const running = items.some((i) => i.state === 'running');
-    return running ? (Date.now() - last < LIVE_WINDOW_MS ? 'live' : 'stale') : 'finished';
+    const run = this.run();
+    if (!run) return 'unknown';
+    // Outside the selected range no recorded run status is available. Do not
+    // infer completion from the absence of running items in a truncated tape.
+    const last = Math.max(run.startedAt, ...run.items.map((i) => i.ts));
+    return runActivity({
+      runId: run.runId,
+      status: 'running',
+      startedAt: run.startedAt,
+      lastActivity: last,
+    });
   });
-  protected readonly live = computed(() => this.activity() === 'live');
+  protected readonly live = computed(() => this.activity() === 'recent');
   protected readonly name = computed(() => {
     const run = this.run();
     const prompt = run?.items.find((i) => i.kind === 'message' && i.role === 'user')?.text;

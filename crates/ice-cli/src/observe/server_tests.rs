@@ -8,6 +8,129 @@ use ice_ai::types::UserMessage;
 
 const TOKEN: &str = "test-token-0123";
 
+async fn stalled_server() -> (ObserveServer, tokio::sync::oneshot::Receiver<()>) {
+    let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
+    let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel();
+    let task = tokio::spawn(async move {
+        let _owned = dropped_tx;
+        let _ = ready_tx.send(());
+        std::future::pending::<()>().await;
+    });
+    ready_rx.await.unwrap();
+    (
+        ObserveServer {
+            url: String::new(),
+            dashboard_url: String::new(),
+            port: 0,
+            shared: false,
+            cancel: CancellationToken::new(),
+            task: Some(task),
+        },
+        dropped_rx,
+    )
+}
+
+#[tokio::test]
+async fn cancelling_server_close_does_not_detach_server_task() {
+    let (server, dropped) = stalled_server().await;
+    let cancellation = server.cancel.clone();
+    let waiter = tokio::spawn(server.close());
+    cancellation.cancelled().await;
+    waiter.abort();
+    let _ = waiter.await;
+    assert!(
+        tokio::time::timeout(Duration::from_millis(100), dropped)
+            .await
+            .is_ok(),
+        "cancelling close detached the server task"
+    );
+}
+
+#[tokio::test]
+async fn server_close_deadline_aborts_hung_task_and_reports_incomplete() {
+    let (server, dropped) = stalled_server().await;
+    let start = tokio::time::Instant::now();
+    assert!(!server.close_until(start + Duration::from_millis(20)).await);
+    assert!(start.elapsed() < Duration::from_secs(1));
+    assert!(tokio::time::timeout(Duration::from_millis(100), dropped)
+        .await
+        .is_ok());
+}
+
+#[tokio::test]
+async fn hung_server_does_not_delay_observer_drain_under_shared_deadline() {
+    let (emitter, events) = ice_agent::events::BroadcastEmitter::new(32);
+    let harness =
+        ice_harness::agent_harness::AgentHarness::create(ice_harness::types::AgentHarnessOptions {
+            model: ice_ai::Model::new("m", "m", ice_ai::Api::Faux, "faux", "http://x"),
+            models: vec![ice_ai::providers::faux::FauxProvider::new(
+                ice_ai::providers::faux::FauxScript::new(),
+            )],
+            agent_emitter: Some(Arc::new(emitter)),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../target/harness-hardening-checks");
+    std::fs::create_dir_all(&root).unwrap();
+    let dir = tempfile::Builder::new()
+        .prefix("shared-observe-")
+        .tempdir_in(root)
+        .unwrap();
+    let (runtime, warning) = crate::observe::start(&harness, events, Some(dir.path()), None).await;
+    assert!(warning.is_none(), "{warning:?}");
+    let (server, dropped) = stalled_server().await;
+    let start = tokio::time::Instant::now();
+    let (server_finished, report) = runtime
+        .stop_with_server_until(Some(server), start + Duration::from_millis(500))
+        .await;
+    assert!(!server_finished);
+    assert!(report.drained && report.worker_finished && report.mirror_finished);
+    assert!(report.persistence.terminal_persisted);
+    assert_eq!(report.persistence.failed_writes, 0);
+    assert!(start.elapsed() < Duration::from_secs(2));
+    assert!(tokio::time::timeout(Duration::from_millis(100), dropped)
+        .await
+        .is_ok());
+}
+
+#[tokio::test]
+async fn dropping_server_aborts_its_task() {
+    let (server, dropped) = stalled_server().await;
+    let cancellation = server.cancel.clone();
+    drop(server);
+    assert!(cancellation.is_cancelled());
+    assert!(tokio::time::timeout(Duration::from_millis(100), dropped)
+        .await
+        .is_ok());
+}
+
+#[tokio::test]
+async fn server_task_panic_is_not_successful_close() {
+    let (mut server, dropped) = stalled_server().await;
+    server.task.take().unwrap().abort();
+    let _ = dropped.await;
+    server.task = Some(tokio::spawn(async {
+        panic!("synthetic server task panic");
+    }));
+    assert!(
+        !server
+            .close_until(tokio::time::Instant::now() + Duration::from_secs(1))
+            .await
+    );
+}
+
+#[test]
+fn json_and_sse_sanitize_raw_legacy_payloads() {
+    let value = serde_json::json!({"text": "EXAMPLE_API_KEY=DUMMY_WIRE"});
+    let response = json(200, &value);
+    assert!(!String::from_utf8(response.body)
+        .unwrap()
+        .contains("DUMMY_WIRE"));
+    assert!(!sse_frame("snapshot", &value).contains("DUMMY_WIRE"));
+}
+
 fn user(text: &str) -> AgentEvent {
     AgentEvent::MessageStart {
         message: AgentMessage::User(UserMessage::new(text.to_string(), 0)),
@@ -275,6 +398,53 @@ async fn analytics_routes_read_the_sqlite_history() {
     );
     srv.close().await;
     rec.stop();
+}
+
+#[tokio::test]
+async fn credential_text_is_private_across_http_history_and_live_sse() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = Arc::new(ObserveRunStore::open(&dir.path().join("o.sqlite")).unwrap());
+    let current = recorder(Some(&store), "privacy-fixture");
+    let original = user("password=\"prefix DUMMY_HTTP_SECRET\" safe-before");
+    current.handle_agent_event(&original);
+    // Observability must never mutate the authoritative provider/tool input.
+    assert!(format!("{original:?}").contains("DUMMY_HTTP_SECRET"));
+    let srv = server(current.clone(), Some(store)).await;
+    let auth = format!("Authorization: Bearer {TOKEN}\r\n");
+    let run = current.run_id();
+    for path in [
+        "/state".to_string(),
+        "/state?view=all".to_string(),
+        format!("/state?runId={run}"),
+        format!("/replay/{run}"),
+    ] {
+        let (status, _, body) = request(srv.port, &path, &auth).await;
+        assert_eq!(status, 200, "{path}");
+        assert!(
+            body.contains("safe-before"),
+            "{path}: preserve ordinary text"
+        );
+        assert!(!body.contains("DUMMY_HTTP_SECRET"), "{path}: {body}");
+    }
+    let mut stream = TcpStream::connect(("127.0.0.1", srv.port)).await.unwrap();
+    stream
+        .write_all(
+            format!(
+                "GET /events?token={TOKEN} HTTP/1.1\r\nHost: localhost:{}\r\n\r\n",
+                srv.port
+            )
+            .as_bytes(),
+        )
+        .await
+        .unwrap();
+    let mut received = String::new();
+    read_until(&mut stream, &mut received, "safe-before").await;
+    current.handle_agent_event(&user("API_KEY=DUMMY_SSE_SECRET safe-after"));
+    read_until(&mut stream, &mut received, "safe-after").await;
+    assert!(!received.contains("DUMMY_"), "{received}");
+    assert!(received.contains("[REDACTED]"));
+    drop(stream);
+    srv.close().await;
 }
 
 #[tokio::test]

@@ -575,10 +575,15 @@ async fn run_inner() -> i32 {
         }
     };
 
-    if let Some(server) = observe_server {
-        server.close().await;
+    // Observability cleanup shares one budget, rather than serial component
+    // budgets. Session hooks above and remaining CLI teardown are not covered.
+    let observe_deadline = tokio::time::Instant::now() + crate::observe::DEFAULT_STOP_BUDGET;
+    let (server_finished, _) = observe
+        .stop_with_server_until(observe_server, observe_deadline)
+        .await;
+    if !server_finished {
+        eprintln!("Warning: observe server shutdown incomplete");
     }
-    observe.stop().await;
 
     if let Some(dev) = &dev_cleanup {
         dev.stop_watcher();

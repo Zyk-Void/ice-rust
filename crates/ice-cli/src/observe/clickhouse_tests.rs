@@ -351,6 +351,15 @@ async fn an_unreachable_clickhouse_is_reported_without_blocking_stop() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn stopping_abandons_a_hung_sync() {
+    assert_hung_sync_stops(None).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn mirror_respects_callers_short_shared_deadline() {
+    assert_hung_sync_stops(Some(Duration::from_millis(20))).await;
+}
+
+async fn assert_hung_sync_stops(budget: Option<Duration>) {
     // A server that accepts connections and never answers: without
     // cancellation, stop would wait out the 10 s request timeout first.
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -378,10 +387,18 @@ async fn stopping_abandons_a_hung_sync() {
     tokio::time::sleep(Duration::from_millis(200)).await;
     live.stop();
     let started = std::time::Instant::now();
-    mirror.finish().await;
+    if let Some(budget) = budget {
+        assert!(
+            !mirror
+                .finish_until(tokio::time::Instant::now() + budget)
+                .await
+        );
+    } else {
+        mirror.finish().await;
+    }
     let waited = started.elapsed();
     assert!(
-        waited < FINAL_FLUSH + Duration::from_secs(1),
+        waited < budget.unwrap_or(FINAL_FLUSH) + Duration::from_secs(1),
         "stop took {waited:?}"
     );
     assert_eq!(
