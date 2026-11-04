@@ -32,7 +32,7 @@ use sha2::{Digest, Sha256};
 use ice_agent::{AgentEvent, AgentMessage};
 use ice_harness::extension::{
     AfterCompactEvent, BeforeCompactDecision, BeforeCompactEvent, BeforeRunEvent,
-    CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext,
+    CompactionOverride, CompactionTrigger, HarnessExtension, PromptContext, PromptContextOutcome,
 };
 use serde_json::{json, Map, Value};
 use tokio::task::JoinHandle;
@@ -92,9 +92,21 @@ const RECALL_MIN_WORDS: usize = 4;
 /// has no model-window information, so a model-window-relative cap is unavailable.
 const AUTO_INJECT_TOKEN_CAP: usize = 800;
 const RECALL_DEDUP_TTL_MS: u64 = 15_000;
+/// How long a provider request waits for legacy recall before it proceeds
+/// without memory; the recall keeps running and reaches a later request.
+const FOREGROUND_RECALL_GRACE_MS: u64 = 300;
+
+struct LateRecall {
+    run_id: String,
+    session_id: String,
+    context: PromptContext,
+}
 const MAX_TRACES_PER_TURN: u32 = 24;
 const IDLE_IMPROVE_COOLDOWN_MS: u64 = 300_000;
 const DREAM_IMPROVE_TIMEOUT_MS: u64 = 30_000;
+/// Cross-process improve backoff after a failure: 5 min, doubling, at most 1 h.
+const IMPROVE_CIRCUIT_BASE_MS: u64 = 300_000;
+const IMPROVE_CIRCUIT_MAX_MS: u64 = 3_600_000;
 const DREAM_MAX_SESSIONS: usize = 2;
 /// Custom message type of the memory stored after each prompt.
 pub const MEMORY_CUSTOM_TYPE: &str = "ice-cognee-memory";
@@ -420,6 +432,9 @@ pub(crate) struct State {
     remember_circuit: CircuitState,
     last_error: Option<String>,
     last_recall_key: Option<String>,
+    /// Legacy recall that missed its run's first request: delivered once to a
+    /// later request of the same run, otherwise dropped.
+    late_recall: Option<LateRecall>,
     last_recall_at: u64,
     last_compact_summary: Option<String>,
     /// Recall lines already in the active context (non-legacy read policies).
@@ -487,6 +502,7 @@ impl State {
             remember_circuit: CircuitState::default(),
             last_error: None,
             last_recall_key: None,
+            late_recall: None,
             last_recall_at: 0,
             last_compact_summary: None,
             seen_evidence: SeenEvidence::default(),
@@ -674,6 +690,36 @@ impl Drop for HelperFlightGuard {
     }
 }
 
+/// Cancel owned async tasks when their waiter is dropped. Tokio cannot abort
+/// blocking filesystem writes which have already started.
+struct OwnedTasks(Vec<JoinHandle<()>>);
+
+impl OwnedTasks {
+    async fn wait(&mut self) -> bool {
+        let mut complete = true;
+        for task in &mut self.0 {
+            complete &= task.await.is_ok();
+        }
+        complete
+    }
+}
+
+impl Drop for OwnedTasks {
+    fn drop(&mut self) {
+        for task in &self.0 {
+            task.abort();
+        }
+    }
+}
+
+struct ShutdownTasks<'a>(&'a CogneeRuntime);
+
+impl Drop for ShutdownTasks<'_> {
+    fn drop(&mut self) {
+        self.0.close_background_tasks();
+    }
+}
+
 pub struct CogneeRuntime {
     me: Weak<CogneeRuntime>,
     agent_dir: PathBuf,
@@ -691,6 +737,7 @@ pub struct CogneeRuntime {
     state: Mutex<State>,
     read_coordinator: Mutex<request::ReadCoordinator>,
     background: Mutex<Vec<JoinHandle<()>>>,
+    tasks_closed: std::sync::atomic::AtomicBool,
     helper_tasks: Mutex<Vec<JoinHandle<()>>>,
     settle: Mutex<Option<JoinHandle<()>>>,
     tool_args: Mutex<HashMap<String, Value>>,
@@ -725,6 +772,7 @@ impl CogneeRuntime {
             state: Mutex::new(State::new()),
             read_coordinator: Mutex::new(request::ReadCoordinator::default()),
             background: Mutex::new(Vec::new()),
+            tasks_closed: std::sync::atomic::AtomicBool::new(false),
             helper_tasks: Mutex::new(Vec::new()),
             settle: Mutex::new(None),
             tool_args: Mutex::new(HashMap::new()),
@@ -1023,10 +1071,7 @@ impl CogneeRuntime {
     // ── background work ──
 
     fn track_helper(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
-        let handle = tokio::spawn(work);
-        let mut tasks = self.helper_tasks.lock().unwrap();
-        tasks.retain(|task| !task.is_finished());
-        tasks.push(handle);
+        self.track_handle(&self.helper_tasks, tokio::spawn(work));
     }
 
     fn observe_helper(
@@ -1590,16 +1635,49 @@ impl CogneeRuntime {
         super::candidates::store_pending(&self.candidates_dir(), candidate, self.now()).unwrap();
     }
 
+    fn track_handle(&self, registry: &Mutex<Vec<JoinHandle<()>>>, handle: JoinHandle<()>) {
+        let mut tasks = registry.lock().unwrap();
+        if self.tasks_closed.load(std::sync::atomic::Ordering::Acquire) {
+            handle.abort();
+        } else {
+            tasks.retain(|task| !task.is_finished());
+            tasks.push(handle);
+        }
+    }
+
     fn track(&self, work: impl std::future::Future<Output = ()> + Send + 'static) {
-        let handle = tokio::spawn(work);
-        let mut background = self.background.lock().unwrap();
-        background.retain(|handle| !handle.is_finished());
-        background.push(handle);
+        self.track_handle(&self.background, tokio::spawn(work));
+    }
+
+    fn close_background_tasks(&self) {
+        self.tasks_closed
+            .store(true, std::sync::atomic::Ordering::Release);
+        {
+            let state = self.state();
+            state.helper_cancel.cancel();
+            state.automatic_write_cancel.cancel();
+        }
+        // Admission checks happen under each registry lock: racing producers
+        // are either drained here or see closed and abort their own handles.
+        drop(OwnedTasks(std::mem::take(
+            &mut *self.background.lock().unwrap(),
+        )));
+        drop(OwnedTasks(std::mem::take(
+            &mut *self.helper_tasks.lock().unwrap(),
+        )));
+        if let Some(task) = self.settle.lock().unwrap().take() {
+            task.abort();
+        }
     }
 
     /// Await tracked work until none remains, including work added while
     /// waiting.
     pub async fn wait_for_background(&self) {
+        self.drain_background().await;
+    }
+
+    async fn drain_background(&self) -> bool {
+        let mut complete = true;
         loop {
             let handles: Vec<JoinHandle<()>> =
                 std::mem::take(&mut *self.background.lock().unwrap());
@@ -1608,10 +1686,11 @@ impl CogneeRuntime {
             if handles.is_empty() && helper_handles.is_empty() {
                 break;
             }
-            for handle in handles.into_iter().chain(helper_handles) {
-                let _ = handle.await;
-            }
+            complete &= OwnedTasks(handles.into_iter().chain(helper_handles).collect())
+                .wait()
+                .await;
         }
+        complete
     }
 
     fn queue_dream_write(&self, write: impl FnOnce() + Send + 'static) {
@@ -1743,7 +1822,7 @@ impl CogneeRuntime {
         let safe = publish_observation(observation);
         let storage = self.storage_dir.clone();
         let handle = tokio::task::spawn_blocking(move || persist_observation(&storage, &safe));
-        self.background.lock().unwrap().push(handle);
+        self.track_handle(&self.background, handle);
     }
 
     fn append_operation(&self, data: Value) {
@@ -2229,6 +2308,9 @@ impl CogneeRuntime {
         let key = (session.to_string(), dataset.to_string());
         if accepted {
             state.improve_backoff.remove(&key);
+            drop(state);
+            self.note_improve_service(None);
+            return;
         } else {
             let failures = state
                 .improve_backoff
@@ -2242,6 +2324,49 @@ impl CogneeRuntime {
         }
     }
 
+    fn improve_circuit_path(&self) -> PathBuf {
+        self.storage_dir.join("improve-circuit.json")
+    }
+
+    /// Whether a recent improve/dream failure, recorded by any process sharing
+    /// this agent directory, still suppresses automatic improve work.
+    fn improve_circuit_open(&self, now: u64) -> bool {
+        std::fs::read(self.improve_circuit_path())
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+            .and_then(|value| value.get("retryAtMs").and_then(Value::as_u64))
+            .is_some_and(|retry_at| retry_at > now)
+    }
+
+    /// Record the improve service's last outcome for every process: `None` is
+    /// success and clears the circuit; a failure (other than cancellation)
+    /// backs off 5 min, doubling to at most 1 h. Best effort: an unwritable
+    /// file only loses the cross-process hint.
+    fn note_improve_service(&self, failure: Option<&str>) {
+        let path = self.improve_circuit_path();
+        let Some(kind) = failure else {
+            let _ = std::fs::remove_file(&path);
+            return;
+        };
+        if kind == "aborted" {
+            return;
+        }
+        let failures = std::fs::read(&path)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+            .and_then(|value| value.get("failures").and_then(Value::as_u64))
+            .unwrap_or(0)
+            .saturating_add(1);
+        let delay = (IMPROVE_CIRCUIT_BASE_MS << (failures - 1).min(4)).min(IMPROVE_CIRCUIT_MAX_MS);
+        let body = json!({"failures": failures, "retryAtMs": self.now().saturating_add(delay), "lastError": kind});
+        let tmp = path.with_extension("json.tmp");
+        if std::fs::create_dir_all(&self.storage_dir).is_ok()
+            && std::fs::write(&tmp, body.to_string()).is_ok()
+        {
+            let _ = std::fs::rename(&tmp, &path);
+        }
+    }
+
     /// `runImprove`: one current-session improve, claim-fenced.
     pub fn run_improve(&self, reason: &'static str) -> Option<JoinHandle<()>> {
         let now = self.now();
@@ -2250,6 +2375,7 @@ impl CogneeRuntime {
             if !Self::enabled(&state, self.offline)
                 || !state.config.improves()
                 || state.improve_in_flight
+                || self.improve_circuit_open(now)
             {
                 return None;
             }
@@ -2439,6 +2565,7 @@ impl CogneeRuntime {
                     .map_or(revision, |record| record.capture_revision);
                 self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
+                self.note_improve_service(Some(&kind));
                 self.state().last_error = Some(kind.clone());
                 self.observe_for(
                     "improve",
@@ -2470,6 +2597,7 @@ impl CogneeRuntime {
                 || !state.config.improves()
                 || state.dream_in_flight
                 || state.shutting_down
+                || self.improve_circuit_open(now)
             {
                 return None;
             }
@@ -2668,6 +2796,7 @@ impl CogneeRuntime {
                         false,
                     );
                     let kind = error_kind(&error);
+                    self.note_improve_service(Some(&kind));
                     self.state().last_error = Some(kind.clone());
                     self.observe_for(
                         "improve",
@@ -3330,6 +3459,7 @@ impl CogneeRuntime {
             Err(error) => {
                 self.improve_result(&session_id, &dataset, revision, false);
                 let kind = error_kind(&error);
+                self.note_improve_service(Some(&kind));
                 self.state().last_error = Some(kind.clone());
                 self.observe_for(
                     "improve",
@@ -3492,8 +3622,29 @@ impl CogneeRuntime {
         self.drain_warmup();
     }
 
-    /// `session_shutdown`: drain, improve once more, then unregister.
+    /// `session_shutdown`: drain, improve once more, then unregister, sharing
+    /// one budget. Timeout does not prove rollback of accepted remote work.
     pub async fn session_shutdown(&self) {
+        self.session_shutdown_until(tokio::time::Instant::now() + Duration::from_secs(2))
+            .await;
+    }
+
+    /// False means cleanup is incomplete. Already-running blocking writes may
+    /// finish after the deadline; accepted remote delivery remains unknown.
+    pub async fn session_shutdown_until(&self, deadline: tokio::time::Instant) -> bool {
+        let _tasks = ShutdownTasks(self);
+        let complete = matches!(
+            tokio::time::timeout_at(deadline, self.shutdown_inner()).await,
+            Ok(true)
+        );
+        if !complete {
+            self.state().last_error = Some("shutdown_incomplete".into());
+            eprintln!("warning: Cognee shutdown incomplete; pending remote work may have unknown outcomes");
+        }
+        complete
+    }
+
+    async fn shutdown_inner(&self) -> bool {
         let (client, session_id) = {
             let mut state = self.state();
             state.shutting_down = true;
@@ -3501,30 +3652,23 @@ impl CogneeRuntime {
             state.evidence_cache.clear();
             (state.client.clone(), state.session_id.clone())
         };
-        let helper_tasks = std::mem::take(&mut *self.helper_tasks.lock().unwrap());
-        for mut task in helper_tasks {
-            if tokio::time::timeout(Duration::from_secs(1), &mut task)
-                .await
-                .is_err()
-            {
-                task.abort();
-            }
-        }
+        let mut helpers = OwnedTasks(std::mem::take(&mut *self.helper_tasks.lock().unwrap()));
+        let mut complete = helpers.wait().await;
         let settle = self.settle.lock().unwrap().take();
         if let Some(settle) = settle {
-            let _ = settle.await;
+            complete &= OwnedTasks(vec![settle]).wait().await;
         }
-        self.wait_for_background().await;
+        complete &= self.drain_background().await;
         let (enabled, auto_improve) = {
             let state = self.state();
             (Self::enabled(&state, self.offline), state.config.improves())
         };
         if client.is_some() && session_id.is_some() && enabled && auto_improve {
             if let Some(handle) = self.run_improve("shutdown") {
-                let _ = handle.await;
+                complete &= OwnedTasks(vec![handle]).wait().await;
             }
         }
-        self.wait_for_background().await;
+        complete &= self.drain_background().await;
         let registered = self.state().agent_registered;
         if let (Some(client), Some(session_id), true) = (client, session_id, registered) {
             if let Err(error) = client
@@ -3532,8 +3676,10 @@ impl CogneeRuntime {
                 .await
             {
                 self.state().last_error = Some(error_kind(&error));
+                return false;
             }
         }
+        complete
     }
 
     // ── agent events ──
@@ -3665,24 +3811,33 @@ impl CogneeRuntime {
         self.schedule_helper();
         let ready = {
             let state = self.state();
-            state.loaded && Self::enabled(&state, self.offline) && state.config.improves()
+            state.loaded
+                && !state.shutting_down
+                && Self::enabled(&state, self.offline)
+                && state.config.improves()
         };
         if !ready {
+            return;
+        }
+        let mut settle = self.settle.lock().unwrap();
+        if self.tasks_closed.load(std::sync::atomic::Ordering::Acquire)
+            || settle.as_ref().is_some_and(|task| !task.is_finished())
+        {
             return;
         }
         let this = self.arc();
         let task = tokio::spawn(async move {
             this.wait_for_background().await;
             if let Some(handle) = this.run_improve("idle") {
-                this.background.lock().unwrap().push(handle);
+                this.track_handle(&this.background, handle);
             }
             if let Some(handle) = this.run_dream() {
-                this.background.lock().unwrap().push(handle);
+                this.track_handle(&this.background, handle);
             }
             this.update_status_line();
             this.drain_warmup();
         });
-        *self.settle.lock().unwrap() = Some(task);
+        *settle = Some(task);
     }
 
     /// Feed one agent event.
@@ -4433,7 +4588,12 @@ impl HarnessExtension for CogneeRuntime {
         if context.custom_type != MEMORY_CUSTOM_TYPE {
             return;
         }
-        if self.acknowledge_request_memory(context, persisted) {
+        let outcome = if persisted {
+            PromptContextOutcome::Persisted
+        } else {
+            PromptContextOutcome::RejectedUnknown
+        };
+        if self.acknowledge_request_memory(context, outcome) {
             return;
         }
         let estimated_tokens = if persisted {
@@ -4455,9 +4615,36 @@ impl HarnessExtension for CogneeRuntime {
                 request_id: context.correlation_id.clone(),
                 meta: meta(json!({
                     "outcomeVersion": 1,
-                    "outcome": if persisted { "persisted" } else { "append_failed" },
+                    "outcome": outcome.as_str(),
                     "persistedBytes": if persisted { context.text.len() } else { 0 },
                     "estimatedPersistedTokens": estimated_tokens,
+                })),
+                ..ObserveFields::default()
+            },
+        );
+    }
+
+    async fn prompt_context_acknowledged(
+        &self,
+        context: &PromptContext,
+        outcome: PromptContextOutcome,
+    ) {
+        if context.custom_type != MEMORY_CUSTOM_TYPE {
+            return;
+        }
+        if self.acknowledge_request_memory(context, outcome) {
+            return;
+        }
+        let persisted = outcome == PromptContextOutcome::Persisted;
+        self.observe(
+            "injection",
+            if persisted { "succeeded" } else { "failed" },
+            ObserveFields {
+                request_id: context.correlation_id.clone(),
+                meta: meta(json!({
+                    "outcomeVersion": 2, "outcome": outcome.as_str(),
+                    "persisted": persisted, "delivery": "unknown",
+                    "persistedBytes": if persisted { context.text.len() } else { 0 },
                 })),
                 ..ObserveFields::default()
             },
@@ -6529,7 +6716,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn injection_observation_distinguishes_persistence_failure() {
+    async fn legacy_injection_acknowledgment_does_not_invent_append_failure() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
         let rt = runtime(dir.path(), &transport, Some(json!({})), false);
@@ -6560,8 +6747,61 @@ mod tests {
         outcomes.sort();
         assert_eq!(
             outcomes,
-            vec![("append_failed".into(), 0, 0), ("persisted".into(), 9, 2)]
+            vec![
+                ("persisted".into(), 9, 2),
+                ("rejected_unknown".into(), 0, 0)
+            ]
         );
+    }
+
+    #[tokio::test]
+    async fn typed_injection_acknowledgments_preserve_reasons_and_unknown_delivery() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        let outcomes = [
+            PromptContextOutcome::Persisted,
+            PromptContextOutcome::Duplicate,
+            PromptContextOutcome::Empty,
+            PromptContextOutcome::BudgetRejected,
+            PromptContextOutcome::Cancelled,
+            PromptContextOutcome::Stale,
+            PromptContextOutcome::AppendFailed,
+            PromptContextOutcome::RejectedUnknown,
+        ];
+        for outcome in outcomes {
+            rt.prompt_context_acknowledged(
+                &PromptContext {
+                    custom_type: MEMORY_CUSTOM_TYPE.into(),
+                    text: "synthetic memory".into(),
+                    correlation_id: Some(outcome.as_str().into()),
+                },
+                outcome,
+            )
+            .await;
+        }
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let injections: Vec<_> = observations
+            .iter()
+            .filter(|event| event.operation == "injection")
+            .collect();
+        assert_eq!(injections.len(), outcomes.len());
+        for outcome in outcomes {
+            let event = injections
+                .iter()
+                .find(|event| event.request_id.as_deref() == Some(outcome.as_str()))
+                .unwrap();
+            let persisted = outcome == PromptContextOutcome::Persisted;
+            assert_eq!(event.phase, if persisted { "succeeded" } else { "failed" });
+            let meta = event.meta.as_ref().unwrap();
+            assert_eq!(meta["outcomeVersion"], 2);
+            assert_eq!(meta["outcome"], outcome.as_str());
+            assert_eq!(meta["persisted"], persisted);
+            assert_eq!(meta["delivery"], "unknown");
+            assert_eq!(meta["persistedBytes"], if persisted { 16 } else { 0 });
+        }
     }
 
     fn run_event<'a>(prompt: &'a str, system_prompt: Option<&'a str>) -> BeforeRunEvent<'a> {
@@ -7871,6 +8111,126 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn cancelling_background_wait_aborts_owned_tasks() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, None, true);
+        let task = tokio::spawn(std::future::pending::<()>());
+        let abort = task.abort_handle();
+        rt.background.lock().unwrap().push(task);
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), rt.wait_for_background())
+                .await
+                .is_err()
+        );
+        let stopped = tokio::time::timeout(Duration::from_millis(100), async {
+            while !abort.is_finished() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await;
+        // Clean up on the old implementation too, preserving a bounded red test.
+        abort.abort();
+        assert!(
+            stopped.is_ok(),
+            "cancelling the owner detached its background task"
+        );
+    }
+
+    #[tokio::test]
+    async fn repeated_settle_events_keep_one_owned_waiter() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({})), false);
+        rt.ensure_loaded();
+        rt.track(std::future::pending::<()>());
+        rt.on_run_settled();
+        let first = rt.settle.lock().unwrap().as_ref().unwrap().id();
+        for _ in 0..8 {
+            rt.on_run_settled();
+        }
+        assert_eq!(rt.settle.lock().unwrap().as_ref().unwrap().id(), first);
+        rt.close_background_tasks();
+    }
+
+    #[tokio::test]
+    async fn shutdown_deadline_aborts_settle_and_rejects_late_tasks() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, None, true);
+        let task = tokio::spawn(std::future::pending::<()>());
+        let abort = task.abort_handle();
+        *rt.settle.lock().unwrap() = Some(task);
+        let start = tokio::time::Instant::now();
+        assert!(
+            !rt.session_shutdown_until(start + Duration::from_millis(20))
+                .await
+        );
+        assert!(start.elapsed() < Duration::from_secs(1));
+        assert_eq!(
+            rt.state().last_error.as_deref(),
+            Some("shutdown_incomplete")
+        );
+        let late = tokio::spawn(std::future::pending::<()>());
+        let late_abort = late.abort_handle();
+        rt.track_handle(&rt.background, late);
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while !abort.is_finished() || !late_abort.is_finished() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(rt.background.lock().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn shutdown_does_not_report_success_after_owned_task_panics() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, None, true);
+        rt.background
+            .lock()
+            .unwrap()
+            .push(tokio::spawn(async { panic!("synthetic task failure") }));
+        assert!(
+            !rt.session_shutdown_until(tokio::time::Instant::now() + Duration::from_secs(1))
+                .await
+        );
+        assert_eq!(
+            rt.state().last_error.as_deref(),
+            Some("shutdown_incomplete")
+        );
+    }
+
+    #[tokio::test]
+    async fn cancelling_shutdown_cleans_all_task_registries() {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, None, true);
+        let mut aborts = Vec::new();
+        for registry in [&rt.helper_tasks, &rt.background] {
+            let task = tokio::spawn(std::future::pending::<()>());
+            aborts.push(task.abort_handle());
+            registry.lock().unwrap().push(task);
+        }
+        assert!(tokio::time::timeout(
+            Duration::from_millis(20),
+            rt.session_shutdown_until(tokio::time::Instant::now() + Duration::from_secs(60))
+        )
+        .await
+        .is_err());
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while aborts.iter().any(|task| !task.is_finished()) {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(rt.tasks_closed.load(std::sync::atomic::Ordering::Acquire));
+    }
+
+    #[tokio::test]
     async fn shutdown_improves_then_unregisters() {
         let dir = tempfile::tempdir().unwrap();
         let transport = Arc::new(FakeTransport::default());
@@ -7895,5 +8255,86 @@ mod tests {
             .unwrap();
         assert!(improve < unregister);
         assert!(rt.state().shutting_down);
+    }
+
+    /// A failed improve makes later processes (another runtime over the same
+    /// agent directory) skip improve, including at shutdown, until the backoff
+    /// expires, so short-lived processes do not each wait on a failing service.
+    #[tokio::test]
+    async fn improve_failure_backs_off_across_processes_and_at_shutdown() {
+        let dir = tempfile::tempdir().unwrap();
+        let clock = Arc::new(std::sync::atomic::AtomicU64::new(NOW));
+        let now = {
+            let clock = clock.clone();
+            Arc::new(move || clock.load(std::sync::atomic::Ordering::Relaxed))
+        };
+        let transport = Arc::new(FakeTransport::default());
+        let start = |rt: &Arc<CogneeRuntime>| {
+            transport.push(FakeResponse::json(200, json!({"status": "ok"}))); // health
+            transport.push(FakeResponse::json(200, json!({}))); // register
+            transport.push(FakeResponse::json(200, json!({}))); // settings
+            let rt = rt.clone();
+            async move {
+                rt.session_start_for("host1").await;
+                rt.wait_for_background().await;
+            }
+        };
+        let improves = || {
+            transport
+                .sent()
+                .iter()
+                .filter(|request| request.url.ends_with("/api/v1/improve"))
+                .count()
+        };
+        let first = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"autoImprove": true})),
+            false,
+            now.clone(),
+        );
+        start(&first).await;
+        transport.push(FakeResponse::json(503, json!({"error": "overloaded"})));
+        first.run_improve("idle").unwrap().await.unwrap();
+        let after_failure = improves();
+        assert!(after_failure >= 1);
+
+        let second = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"autoImprove": true})),
+            false,
+            now.clone(),
+        );
+        start(&second).await;
+        assert!(
+            second.run_improve("idle").is_none(),
+            "another process must honour the backoff"
+        );
+        transport.push(FakeResponse::json(200, json!({}))); // unregister
+        assert!(
+            second
+                .session_shutdown_until(tokio::time::Instant::now() + Duration::from_secs(2))
+                .await
+        );
+        assert_eq!(
+            improves(),
+            after_failure,
+            "shutdown skipped the doomed improve"
+        );
+
+        // After the backoff a new process may try again.
+        clock.fetch_add(60 * 60 * 1000 + 1, std::sync::atomic::Ordering::Relaxed);
+        let third = runtime_with_clock(
+            dir.path(),
+            &transport,
+            Some(json!({"autoImprove": true})),
+            false,
+            now,
+        );
+        start(&third).await;
+        transport.push(FakeResponse::json(202, json!({})));
+        third.run_improve("idle").unwrap().await.unwrap();
+        assert_eq!(improves(), after_failure + 1);
     }
 }

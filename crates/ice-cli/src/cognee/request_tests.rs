@@ -101,6 +101,31 @@ async fn request_boundary_prefetch_is_same_task_and_consumed_only_after_ack() {
 }
 
 #[tokio::test]
+async fn request_acknowledgments_preserve_reasons_and_separate_persistence_from_delivery() {
+    for acknowledgment in [PromptContextOutcome::BudgetRejected, PromptContextOutcome::AppendFailed,
+        PromptContextOutcome::Cancelled, PromptContextOutcome::Stale,
+        PromptContextOutcome::RejectedUnknown, PromptContextOutcome::Persisted] {
+        let dir = tempfile::tempdir().unwrap();
+        let transport = Arc::new(FakeTransport::default());
+        let rt = runtime(dir.path(), &transport, Some(json!({"readPolicy":"event","writePolicy":"manual"})), false);
+        let prompt = "Repair cache eviction";
+        rt.request_context(&request_event(prompt, &[], "r1", 0)).await;
+        seed_request_cache(&rt, "cache", vec![request_hit("Cache uses LRU eviction")]);
+        let packet = rt.request_context(&request_event(prompt, &[], "r1", 1)).await.unwrap();
+        rt.prompt_context_acknowledged(&packet, acknowledgment).await;
+        rt.wait_for_background().await;
+        let observations = super::super::observer::read_observations(&rt.storage_dir);
+        let event = observations.iter().find(|event| event.operation == "injection").unwrap();
+        let meta = event.meta.as_ref().unwrap();
+        assert_eq!(meta["outcome"], acknowledgment.as_str());
+        assert_eq!(meta["outcomeVersion"], 2);
+        assert_eq!(meta["delivery"], "unknown");
+        assert_eq!(meta["persisted"], acknowledgment == PromptContextOutcome::Persisted);
+        assert!(transport.sent().is_empty(), "acknowledgment must not start remote work");
+    }
+}
+
+#[tokio::test]
 async fn request_boundary_plain_prompts_and_unknown_skill_origin_have_no_network_work() {
     let dir = tempfile::tempdir().unwrap();
     let transport = Arc::new(FakeTransport::default());
@@ -337,6 +362,10 @@ async fn request_boundary_cancellation_keeps_evidence_unconsumed() {
     let packet = rt.request_context(&event).await.unwrap();
     event.signal.cancel();
     rt.prompt_context_persisted(&packet, false).await;
+    rt.wait_for_background().await;
+    let observations = super::super::observer::read_observations(&rt.storage_dir);
+    let rejected = observations.iter().find(|event| event.operation == "injection").unwrap();
+    assert_eq!(rejected.meta.as_ref().unwrap()["outcome"], "cancelled");
     assert!(rt
         .request_context(&request_event(prompt, &[], "r2", 0))
         .await
@@ -403,4 +432,86 @@ async fn resident_snapshot_observes_another_writer_at_a_bounded_local_boundary()
     assert!(ready.text.contains("bounded allocation"));
     assert!(transport.sent().is_empty());
     assert_eq!(rt.state().helper_requests, 0);
+}
+
+/// Legacy recall must not hold the run's first provider request for the
+/// remote round trip: a slow recall continues in the background and its
+/// memory reaches a later request of the same run, exactly once.
+#[tokio::test]
+async fn legacy_recall_never_holds_the_first_request_and_arrives_later_once() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    transport.push(FakeResponse::Ok {
+        status: 200,
+        headers: vec![],
+        chunks: vec![json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]})
+            .to_string()
+            .into_bytes()],
+        delay_ms: 1_500,
+    });
+    let rt = runtime(
+        dir.path(),
+        &transport,
+        Some(json!({"readPolicy": "legacy"})),
+        false,
+    );
+    let prompt = "What eviction policy does the cache layer use for stale entries?";
+    let started = std::time::Instant::now();
+    let first = rt
+        .request_context(&request_event(prompt, &[], "run-1", 0))
+        .await;
+    assert!(first.is_none(), "the slow recall was not ready yet");
+    assert!(
+        started.elapsed() < Duration::from_millis(1_000),
+        "first request waited {:?}",
+        started.elapsed()
+    );
+    tokio::time::timeout(Duration::from_secs(5), rt.wait_for_background())
+        .await
+        .expect("background recall finished");
+    let later = rt
+        .request_context(&request_event(prompt, &[], "run-1", 1))
+        .await
+        .expect("late memory delivered to the next request of the run");
+    assert_eq!(later.custom_type, MEMORY_CUSTOM_TYPE);
+    assert!(later.text.contains("LRU eviction"), "{}", later.text);
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "run-1", 2))
+        .await
+        .is_none());
+    assert_eq!(transport.sent().len(), 1);
+}
+
+/// Memory that arrives after its run ended belongs to that run's prompt, not
+/// to whatever the next run asks.
+#[tokio::test]
+async fn late_legacy_recall_is_not_delivered_to_another_run() {
+    let dir = tempfile::tempdir().unwrap();
+    let transport = Arc::new(FakeTransport::default());
+    transport.push(FakeResponse::Ok {
+        status: 200,
+        headers: vec![],
+        chunks: vec![json!({"results": [{"text": "Cache uses LRU eviction", "score": 0.9}]})
+            .to_string()
+            .into_bytes()],
+        delay_ms: 1_500,
+    });
+    let rt = runtime(
+        dir.path(),
+        &transport,
+        Some(json!({"readPolicy": "legacy"})),
+        false,
+    );
+    let prompt = "What eviction policy does the cache layer use for stale entries?";
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "run-1", 0))
+        .await
+        .is_none());
+    tokio::time::timeout(Duration::from_secs(5), rt.wait_for_background())
+        .await
+        .expect("background recall finished");
+    assert!(rt
+        .request_context(&request_event(prompt, &[], "run-2", 1))
+        .await
+        .is_none());
 }
