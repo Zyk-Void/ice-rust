@@ -36,6 +36,9 @@ impl ProviderRequestError {
     /// - missing status → retry (transport-level).
     /// - status 408/409/429 or >=500 → retry.
     pub fn is_retryable(&self) -> bool {
+        if crate::retry::is_permanent_account_error(&self.message) {
+            return false;
+        }
         match self.x_should_retry.as_deref() {
             Some("true") => return true,
             Some("false") => return false,
@@ -243,6 +246,31 @@ mod tests {
         .unwrap();
         assert_eq!(v, 42);
         assert_eq!(attempts.load(Ordering::SeqCst), 3);
+    }
+
+    #[tokio::test]
+    async fn billing_429_is_not_retried_at_transport_layer() {
+        let calls = Arc::new(AtomicU32::new(0));
+        let count = calls.clone();
+        let error = retry_provider_request::<(), _, _>(
+            move || {
+                count.fetch_add(1, Ordering::SeqCst);
+                async {
+                    Err(AiError::Http {
+                        status: Some(429),
+                        message: "Insufficient balance or no resource package. Please recharge."
+                            .into(),
+                    })
+                }
+            },
+            Some(5),
+            None,
+            &CancellationToken::new(),
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert!(error.to_string().contains("Please recharge"));
     }
 
     #[tokio::test]

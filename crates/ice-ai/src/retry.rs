@@ -200,16 +200,8 @@ pub fn is_retryable_assistant_error(message: &AssistantMessage) -> bool {
         return false;
     };
 
-    static NON_RETRYABLE: OnceLock<Regex> = OnceLock::new();
     static RETRYABLE: OnceLock<Regex> = OnceLock::new();
-    let non_retryable = NON_RETRYABLE.get_or_init(|| {
-        Regex::new(concat!(
-            "(?i)(GoUsageLimitError|FreeUsageLimitError|Monthly usage limit reached|",
-            "available balance|insufficient_quota|out of budget|quota exceeded|billing)"
-        ))
-        .expect("static non-retryable assistant error pattern is valid")
-    });
-    if non_retryable.is_match(error) {
+    if is_permanent_account_error(error) {
         return false;
     }
     let retryable = RETRYABLE.get_or_init(|| {
@@ -227,6 +219,65 @@ pub fn is_retryable_assistant_error(message: &AssistantMessage) -> bool {
         .expect("static retryable assistant error pattern is valid")
     });
     retryable.is_match(error)
+}
+
+/// Conservative text fallback shared with transport retry. Numeric provider
+/// codes alone are not globally meaningful and deliberately are not matched.
+///
+/// Usage-limit/quota-threshold errors are not retried when they state no reset
+/// or a reset beyond the default backoff cap: an hours-long reset cannot be
+/// reached by bounded retries, so retrying only delays the actionable error.
+pub(crate) fn is_permanent_account_error(error: &str) -> bool {
+    static NON_RETRYABLE: OnceLock<Regex> = OnceLock::new();
+    let permanent = NON_RETRYABLE
+        .get_or_init(|| {
+            Regex::new(concat!(
+                "(?i)(GoUsageLimitError|FreeUsageLimitError|Monthly usage limit reached|",
+                "available balance|insufficient[ _-](?:quota|balance|credits?)|",
+                "no resource package|out of budget|quota exceeded|billing)"
+            ))
+            .expect("static non-retryable account error pattern is valid")
+        })
+        .is_match(error);
+    permanent
+        || usage_limit_reset_ms(error)
+            .is_some_and(|reset| reset.is_none_or(|ms| ms > DEFAULT_MAX_RETRY_DELAY_MS))
+}
+
+/// `None` when `error` is not a usage-limit/quota-threshold error; otherwise its
+/// stated `reset after|in <N>h <N>m <N>s` delay, if one can be parsed.
+fn usage_limit_reset_ms(error: &str) -> Option<Option<u64>> {
+    static LIMIT: OnceLock<Regex> = OnceLock::new();
+    static RESET: OnceLock<Regex> = OnceLock::new();
+    static PART: OnceLock<Regex> = OnceLock::new();
+    let limit = LIMIT.get_or_init(|| {
+        Regex::new(
+            r"(?i)usage[ _-]limit(?:[ _-]has[ _-]been|[ _-]was)?[ _-]reached|quota[ _-]threshold",
+        )
+        .expect("static usage-limit pattern is valid")
+    });
+    if !limit.is_match(error) {
+        return None;
+    }
+    let reset = RESET.get_or_init(|| {
+        Regex::new(r"(?i)\bresets?[ _-](?:after|in)[ _-]((?:\d+[ ]*[hms][ ]*)+)")
+            .expect("static reset pattern is valid")
+    });
+    let part = PART
+        .get_or_init(|| Regex::new(r"(?i)(\d+)[ ]*([hms])").expect("static reset part is valid"));
+    Some(reset.captures(error).map(|caps| {
+        part.captures_iter(&caps[1])
+            .map(|unit| {
+                let value: u64 = unit[1].parse().unwrap_or(u64::MAX);
+                let scale = match unit[2].to_ascii_lowercase().as_str() {
+                    "h" => 3_600_000,
+                    "m" => 60_000,
+                    _ => 1_000,
+                };
+                value.saturating_mul(scale)
+            })
+            .fold(0u64, u64::saturating_add)
+    }))
 }
 
 /// Run an assistant-producing operation with transient-error retry and awaited
@@ -413,6 +464,119 @@ mod tests {
         assert!(!is_retryable_assistant_error(&error_message(
             "billing server error 500"
         )));
+    }
+
+    #[tokio::test]
+    async fn billing_failure_does_not_schedule_or_execute_retries() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let produce_calls = calls.clone();
+        let result = retry_assistant_call_with_options(
+            move || {
+                produce_calls.fetch_add(1, Ordering::SeqCst);
+                async {
+                    error_message(
+                        "HTTP 429: Insufficient balance or no resource package. Please recharge.",
+                    )
+                }
+            },
+            AssistantRetryOptions {
+                policy: Some(AssistantRetryPolicy {
+                    enabled: true,
+                    max_retries: 5,
+                    base_delay_ms: 0,
+                    max_delay_ms: None,
+                }),
+                signal: CancellationToken::new(),
+                callbacks: AssistantRetryCallbacks::default()
+                    .on_retry_scheduled(|_| async { panic!("billing must not schedule a retry") }),
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert_eq!(result.stop_reason, StopReason::Error);
+        assert!(result.error_message.unwrap().contains("Please recharge"));
+    }
+
+    #[test]
+    fn billing_balance_errors_are_not_transient_rate_limits() {
+        for text in [
+            r#"http error 429: {"error":{"code":"1113","message":"Insufficient balance or no resource package. Please recharge."}}"#,
+            "429 insufficient balance",
+            "HTTP 429 insufficient credits",
+            "429 no resource package. Please recharge.",
+        ] {
+            assert!(
+                !is_retryable_assistant_error(&error_message(text)),
+                "{text}"
+            );
+        }
+        assert!(is_retryable_assistant_error(&error_message(
+            "HTTP 429 rate limit; retry after 2 seconds"
+        )));
+        assert!(is_retryable_assistant_error(&error_message(
+            r#"HTTP 429 {"code":"1113","message":"rate limited"}"#
+        )));
+    }
+
+    /// Shapes observed in local telemetry on 2026-11-04: a proxy and Codex
+    /// both report quota exhaustion as HTTP 429 with an hours-long reset.
+    #[test]
+    fn usage_limits_with_distant_reset_are_not_retried() {
+        for text in [
+            "[codex/gpt-6-astra] [429]: The usage limit has been reached (reset after 2h 14s)",
+            r#"http error 429: {"error":{"message":"[codex/gpt-6-astra] All codex accounts reached configured quota threshold (reset after 2h 12s)"}}"#,
+            r#"http error 429: {"error":{"message":"[codex/gpt-6.1-sol] All codex accounts reached configured quota threshold (reset after 1h 59m 44s)"}}"#,
+            "429: The usage limit has been reached (reset after 2h)",
+            "429 usage limit has been reached",
+            "429 quota threshold reached (resets in 5m)",
+        ] {
+            assert!(
+                !is_retryable_assistant_error(&error_message(text)),
+                "{text}"
+            );
+        }
+        // A reset within the backoff cap is still worth one bounded retry.
+        for text in [
+            "[codex/gpt-6-astra] [429]: The usage limit has been reached (reset after 45s)",
+            "429 quota threshold reached (reset after 1m)",
+            // Unrelated reset wording is not a quota hint.
+            "HTTP 503: connection reset after 2h idle",
+        ] {
+            assert!(is_retryable_assistant_error(&error_message(text)), "{text}");
+        }
+    }
+
+    #[tokio::test]
+    async fn distant_usage_limit_reset_executes_once() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let produce_calls = calls.clone();
+        let result = retry_assistant_call_with_options(
+            move || {
+                produce_calls.fetch_add(1, Ordering::SeqCst);
+                async {
+                    error_message(
+                        "[codex/gpt-6-astra] [429]: The usage limit has been reached (reset after 2h 14s)",
+                    )
+                }
+            },
+            AssistantRetryOptions {
+                policy: Some(AssistantRetryPolicy {
+                    enabled: true,
+                    max_retries: 10,
+                    base_delay_ms: 0,
+                    max_delay_ms: None,
+                }),
+                signal: CancellationToken::new(),
+                callbacks: AssistantRetryCallbacks::default().on_retry_scheduled(|_| async {
+                    panic!("a distant quota reset must not schedule a retry")
+                }),
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert!(result.error_message.unwrap().contains("reset after 2h 14s"));
     }
 
     #[test]

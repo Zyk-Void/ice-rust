@@ -1582,17 +1582,22 @@ fn build_request_with_hard_max_tokens(
     ctx: &Context,
     opts: &SimpleStreamOptions,
 ) -> Result<Value, String> {
-    let Some(hard_max_output_tokens) = opts.hard_max_output_tokens else {
-        return Ok(build_request(model, ctx, opts));
-    };
-
     // Mirrors TS OPENAI_RESPONSES_MIN_OUTPUT_TOKENS: the final clamped value,
     // not just the raw authority, must clear the provider floor.
     const MIN_OUTPUT_TOKENS: u64 = 16;
     const FLOOR_ERROR: &str = "hardMaxOutputTokens is below the provider minimum output floor.";
 
     let max_tokens = request_max_tokens(model, ctx, opts)?;
-    if max_tokens < MIN_OUTPUT_TOKENS {
+    let mut context_options = opts.clone();
+    context_options.max_tokens = Some(u64::MAX);
+    context_options.hard_max_output_tokens = None;
+    let context_limit = request_max_tokens(model, ctx, &context_options)? as f64;
+    let hard_max_output_tokens = opts
+        .hard_max_output_tokens
+        .map_or(context_limit, |hard| hard.min(context_limit));
+    if (opts.hard_max_output_tokens.is_some() && max_tokens < MIN_OUTPUT_TOKENS)
+        || context_limit < MIN_OUTPUT_TOKENS as f64
+    {
         return Err(FLOOR_ERROR.into());
     }
 
@@ -3449,6 +3454,35 @@ mod tests {
                 "limit={limit}: {error}"
             );
         }
+    }
+
+    #[test]
+    fn ordinary_request_enforces_context_after_sampling_overrides() {
+        let mut model = model();
+        model.context_window = 8192;
+        model.sampling_params = Some(
+            json!({"max_output_tokens":90000})
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut ctx = Context::default();
+        ctx.system_prompt = Some("x".repeat(8000));
+        let body =
+            build_request_with_hard_max_tokens(&model, &ctx, &SimpleStreamOptions::default())
+                .unwrap();
+        assert!(
+            body["max_output_tokens"].as_u64().unwrap()
+                + crate::simple_options::estimate_request_tokens(&ctx)
+                + 4096
+                <= model.context_window
+        );
+        ctx.system_prompt = Some("x".repeat(40000));
+        // Estimated exhaustion defers to the provider with the output floor (H18).
+        let body =
+            build_request_with_hard_max_tokens(&model, &ctx, &SimpleStreamOptions::default())
+                .unwrap();
+        assert_eq!(body["max_output_tokens"].as_u64(), Some(4096));
     }
 
     #[test]
