@@ -97,7 +97,8 @@ pub struct FooterComponent {
     extension_status: Mutex<String>,
     /// Model name.
     model: Mutex<String>,
-    /// Keybinding hints (shown only when there is no stats content).
+    /// Keybinding hints, shown only when there is no stats content. Empty by
+    /// default: the interactive TUI lists shortcuts in its header instead.
     hints: Mutex<String>,
     /// Optional thinking-level suffix shown after the model (pi parity:
     /// `model • thinking off` / `model • medium`). `None` → not shown.
@@ -141,7 +142,7 @@ impl FooterComponent {
             status: Mutex::new(String::new()),
             extension_status: Mutex::new(String::new()),
             model: Mutex::new("claude-sonnet-5".to_string()),
-            hints: Mutex::new("Enter send · Ctrl+C abort · /help".to_string()),
+            hints: Mutex::new(String::new()),
             thinking_level: Mutex::new(None),
             cwd: Mutex::new(None),
             home: Mutex::new(
@@ -673,7 +674,20 @@ mod tests {
         let lines = footer.render(80);
         // No cwd set ⇒ single stats row.
         assert_eq!(lines.len(), 1);
-        assert!(strip_ansi(&lines[0]).contains("Ctrl+C"));
+        // No hints by default: a model without a known context window must not
+        // fall back to a keybinding list.
+        assert!(!strip_ansi(&lines[0]).contains("Ctrl+C"), "{}", lines[0]);
+    }
+
+    #[test]
+    fn test_footer_shows_set_hints_without_stats() {
+        let footer = FooterComponent::new();
+        footer.set_hints("Enter: Send | /help");
+        assert!(strip_ansi(&footer.render(80)[0]).contains("Enter: Send"));
+        footer.set_context_window(272_000);
+        let row = strip_ansi(&footer.render(80)[0]);
+        assert!(!row.contains("Enter: Send"), "{row}");
+        assert!(row.contains("?/272k"), "{row}");
     }
 
     #[test]
