@@ -3750,7 +3750,9 @@ fn remove_provider_deletes_from_models_json() {
 /// Isolate the config dir (and serialize against other env-touching tests)
 /// while `body` runs, then restore the previous value.
 pub(super) fn with_isolated_config_dir<T>(body: impl FnOnce() -> T) -> T {
-    let _guard = crate::config::test_support::env_lock().lock().unwrap();
+    let _guard = crate::config::test_support::env_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
     let tmp = tempfile::tempdir().unwrap();
     std::env::set_var(crate::config::CONFIG_DIR_ENV, tmp.path());

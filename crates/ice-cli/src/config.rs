@@ -1245,7 +1245,9 @@ mod tests {
     }
     impl TempConfig {
         fn new() -> Self {
-            let guard = env_lock().lock().unwrap();
+            let guard = env_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             let prev = std::env::var_os(CONFIG_DIR_ENV);
             let tmp = tempfile::TempDir::new().unwrap();
             std::env::set_var(CONFIG_DIR_ENV, tmp.path());
@@ -1399,6 +1401,22 @@ mod tests {
     fn auth_store_transaction_guard_is_send() {
         fn assert_send<T: Send>() {}
         assert_send::<AuthStoreTransaction>();
+    }
+
+    /// CI 2026-11-04: one flaky env test panicked while holding the shared
+    /// env lock and 164 later tests failed on `PoisonError`. A panic while
+    /// holding the lock must not fail the env tests that follow.
+    #[test]
+    fn a_panic_while_holding_the_env_lock_does_not_fail_later_env_tests() {
+        let poisoned = std::thread::spawn(|| {
+            let _guard = env_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            panic!("simulated failing env test (expected in this test's output)");
+        })
+        .join();
+        assert!(poisoned.is_err());
+        let _cfg = TempConfig::new();
     }
 
     #[test]
@@ -1826,7 +1844,9 @@ mod tests {
 
     #[test]
     fn custom_openai_provider_resolves_explicit_api_key_environment_reference() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let env_name = "ICERS_FAKE_PROVIDER_API_KEY";
         std::env::set_var(env_name, "env-secret");
         let cfg = ProviderConfig {
@@ -1864,7 +1884,9 @@ mod tests {
 
     #[test]
     fn openai_protocol_ids_do_not_inherit_the_official_env_key() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev_openai = std::env::var_os("OPENAI_API_KEY");
         let prev_completions = std::env::var_os("OPENAI_COMPLETIONS_API_KEY");
         let prev_responses = std::env::var_os("OPENAI_RESPONSES_API_KEY");
@@ -1930,7 +1952,9 @@ mod tests {
         // With no env override, agent_dir() must end in `.../.icers/agent`
         // (mirrors pi's `getAgentDir`). We can't assertion the home prefix
         // portably, but the leaf two segments are stable.
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os(CONFIG_DIR_ENV);
         std::env::remove_var(CONFIG_DIR_ENV);
         let dir = agent_dir().unwrap();
@@ -2026,7 +2050,9 @@ mod tests {
 
     #[test]
     fn resolve_config_value_env_var() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os("ICERS_TEST_CFG_KEY");
         let prev2 = std::env::var_os("ICERS_TEST_CFG_KEY2");
         std::env::set_var("ICERS_TEST_CFG_KEY", "secret-from-env");
@@ -2057,7 +2083,9 @@ mod tests {
 
     #[test]
     fn resolve_config_value_unset_env_is_none() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os("ICERS_TEST_CFG_ABSENT");
         std::env::remove_var("ICERS_TEST_CFG_ABSENT");
         // Any referenced unset var ⇒ the whole value is None (pi semantics).
@@ -2091,7 +2119,9 @@ mod tests {
 
     #[test]
     fn resolve_headers_drops_unresolvable() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os("ICERS_TEST_HDR_SET");
         std::env::set_var("ICERS_TEST_HDR_SET", "set-value");
         let mut h = BTreeMap::new();
@@ -2111,7 +2141,9 @@ mod tests {
 
     #[test]
     fn agent_dir_respects_env_override() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os(CONFIG_DIR_ENV);
         let tmp = tempfile::TempDir::new().unwrap();
         std::env::set_var(CONFIG_DIR_ENV, tmp.path());
@@ -2122,7 +2154,9 @@ mod tests {
 
     #[test]
     fn relative_override_is_rejected() {
-        let _guard = env_lock().lock().unwrap();
+        let _guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os(CONFIG_DIR_ENV);
         std::env::set_var(CONFIG_DIR_ENV, "relative/path");
         let err = agent_dir().unwrap_err();

@@ -290,7 +290,9 @@ mod tests {
 
     #[test]
     fn persist_appends_only_new_ids_to_configured_providers() {
-        let _lock = config::test_support::env_lock().lock().unwrap();
+        let _lock = config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let dir = tempfile::tempdir().unwrap();
         let prev = std::env::var_os(config::CONFIG_DIR_ENV);
         std::env::set_var(config::CONFIG_DIR_ENV, dir.path());

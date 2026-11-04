@@ -1782,7 +1782,9 @@ mod tests {
     }
     impl TestEnv {
         fn new() -> Self {
-            let guard = env_lock().lock().unwrap();
+            let guard = env_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             let prev_key = std::env::var_os(ANTHROPIC_API_KEY_ENV);
             let prev_tok = std::env::var_os(ANTHROPIC_AUTH_TOKEN_ENV);
             let prev_base = std::env::var_os(ANTHROPIC_BASE_URL_ENV);

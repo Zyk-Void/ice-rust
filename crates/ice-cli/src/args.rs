@@ -963,7 +963,9 @@ mod tests {
 
     #[test]
     fn pi_offline_env_and_cli_flag_share_one_normalized_gate() {
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreOfflineEnv(std::env::var_os(ICERS_OFFLINE_ENV));
 
         std::env::set_var(ICERS_OFFLINE_ENV, "YeS");

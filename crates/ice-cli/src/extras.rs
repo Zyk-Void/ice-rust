@@ -161,7 +161,9 @@ mod tests {
     fn test_sentinel_paths_under_agent_dir() {
         // The sentinel lives directly under the resolved agent dir and honors
         // the `ICERS_CODING_AGENT_DIR` override (delegated to `config::agent_dir`).
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var_os(crate::config::CONFIG_DIR_ENV);
         let tmp = tempfile::TempDir::new().unwrap();
         std::env::set_var(crate::config::CONFIG_DIR_ENV, tmp.path());

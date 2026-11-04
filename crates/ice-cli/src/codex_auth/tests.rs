@@ -21,7 +21,9 @@ struct TempConfig {
 
 impl TempConfig {
     fn new() -> Self {
-        let env_guard = config::test_support::env_lock().lock().unwrap();
+        let env_guard = config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let previous = std::env::var_os(config::CONFIG_DIR_ENV);
         let temp = tempfile::TempDir::new().unwrap();
         std::env::set_var(config::CONFIG_DIR_ENV, temp.path());
