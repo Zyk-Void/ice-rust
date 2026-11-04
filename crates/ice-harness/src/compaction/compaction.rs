@@ -51,11 +51,11 @@ use crate::types::{CompactionSettings, RetryPolicy};
 
 pub const SUMMARIZATION_SYSTEM_PROMPT: &str = "You are a context summarization assistant. Your task is to read a conversation between a user and an AI assistant, then produce a structured summary following the exact format specified.\n\nDo NOT continue the conversation. Do NOT respond to any questions in the conversation. ONLY output the structured summary.";
 
-const SUMMARIZATION_PROMPT: &str = "The messages above are a conversation to summarize. Create a structured context checkpoint summary that another LLM will use to continue the work.\n\nUse this EXACT format:\n\n## Goal\n[What is the user trying to accomplish? Can be multiple items if the session covers different tasks.]\n\n## Constraints & Preferences\n- [Any constraints, preferences, or requirements mentioned by user]\n- [Or \"(none)\" if none were mentioned]\n\n## Progress\n### Done\n- [x] [Completed tasks/changes]\n\n### In Progress\n- [ ] [Current work]\n\n### Blocked\n- [Issues preventing progress, if any]\n\n## Key Decisions\n- **[Decision]**: [Brief rationale]\n\n## Next Steps\n1. [Ordered list of what should happen next]\n\n## Critical Context\n- [Any data, examples, or references needed to continue]\n- [Or \"(none)\" if not applicable]\n\nKeep each section concise. Preserve exact file paths, function names, and error messages.";
+const SUMMARIZATION_PROMPT: &str = "The messages above are a conversation to summarize. Create a structured context checkpoint summary that another LLM will use to continue the work.\n\nRules:\n- Report each item's LATEST status from the conversation: a test that later passed is passing, work that was later committed or merged is committed or merged, a failure that was fixed is done.\n- Copy the user's instructions, constraints, do-not rules, literal commands and acceptance criteria verbatim.\n- Record verification as the exact command and its actual outcome (counts, pass/fail). Never turn a plan into a result.\n\nUse this EXACT format:\n\n## Current State\n- Latest user request: [verbatim or near-verbatim]\n- Just done: [the most recent completed step]\n- Latest verification: [`command` -> actual result, or \"(none)\"]\n- Repository state: [branch, uncommitted / committed / pushed / PR / merged, or \"(none)\"]\n- Running now: [background jobs or pending operations, or \"(none)\"]\n\n## Goal\n[What is the user trying to accomplish? Can be multiple items if the session covers different tasks.]\n\n## Constraints & Preferences\n- [Instructions, do-not rules and acceptance criteria from the user, verbatim]\n- [Or \"(none)\" if none were mentioned]\n\n## Progress\n### Done\n- [x] [Completed tasks/changes]\n\n### In Progress\n- [ ] [Current work]\n\n### Blocked\n- [Issues preventing progress, if any]\n\n## Key Decisions\n- **[Decision]**: [Brief rationale and evidence]\n\n## Next Steps\n1. [Ordered list of what should happen next; never repeat completed work]\n\n## Critical Context\n- [Any data, examples, or references needed to continue]\n- [Or \"(none)\" if not applicable]\n\nKeep each section concise. Preserve exact file paths, function names, and error messages.";
 
-const UPDATE_SUMMARIZATION_PROMPT: &str = "The messages above are NEW conversation messages to incorporate into the existing summary provided in <previous-summary> tags.\n\nUpdate the existing structured summary with new information. RULES:\n- PRESERVE all existing information from the previous summary\n- ADD new progress, decisions, and context from the new messages\n- UPDATE the Progress section: move items from \"In Progress\" to \"Done\" when completed\n- UPDATE \"Next Steps\" based on what was accomplished\n- PRESERVE exact file paths, function names, and error messages\n- If something is no longer relevant, you may remove it\n\nUse this EXACT format:\n\n## Goal\n[Preserve existing goals, add new ones if the task expanded]\n\n## Constraints & Preferences\n- [Preserve existing, add new ones discovered]\n\n## Progress\n### Done\n- [x] [Include previously done items AND newly completed items]\n\n### In Progress\n- [ ] [Current work - update based on progress]\n\n### Blocked\n- [Current blockers - remove if resolved]\n\n## Key Decisions\n- **[Decision]**: [Brief rationale] (preserve all previous, add new)\n\n## Next Steps\n1. [Update based on current state]\n\n## Critical Context\n- [Preserve important context, add new if needed]\n\nKeep each section concise. Preserve exact file paths, function names, and error messages.";
+const UPDATE_SUMMARIZATION_PROMPT: &str = "The <previous-summary> is an OLDER checkpoint. The conversation that follows it is NEWER and wins wherever they disagree. Produce one updated structured summary.\n\nRULES:\n- Reconcile, do not append: every item keeps only its LATEST status. Tests that later passed are passing; work later committed, pushed or merged is recorded that way; failures that were fixed move to Done in one line and leave In Progress and Blocked.\n- Carry forward verbatim, unless the user explicitly changed or revoked them: the user's instructions, constraints, do-not rules, literal commands and acceptance criteria.\n- Keep previous decisions and findings that are still true, with their reasons. Drop details that are superseded or no longer affect the next step.\n- Record verification as the exact command and its actual outcome. Never turn a plan into a result.\n- Rewrite Current State from the newest messages only.\n- PRESERVE exact file paths, function names, and error messages.\n\nUse this EXACT format:\n\n## Current State\n- Latest user request: [verbatim or near-verbatim]\n- Just done: [the most recent completed step]\n- Latest verification: [`command` -> actual result, or \"(none)\"]\n- Repository state: [branch, uncommitted / committed / pushed / PR / merged, or \"(none)\"]\n- Running now: [background jobs or pending operations, or \"(none)\"]\n\n## Goal\n[Preserve existing goals, add new ones if the task expanded]\n\n## Constraints & Preferences\n- [Previous and new instructions, do-not rules and acceptance criteria, verbatim]\n\n## Progress\n### Done\n- [x] [Previously done items AND newly completed items]\n\n### In Progress\n- [ ] [Current work only]\n\n### Blocked\n- [Current blockers; remove resolved ones]\n\n## Key Decisions\n- **[Decision]**: [Brief rationale and evidence] (keep those still valid, add new)\n\n## Next Steps\n1. [Based on the current state; never repeat completed work]\n\n## Critical Context\n- [Important context still needed, add new if needed]\n\nKeep each section concise. Preserve exact file paths, function names, and error messages.";
 
-const TURN_PREFIX_SUMMARIZATION_PROMPT: &str = "This is the PREFIX of a turn that was too large to keep. The SUFFIX (recent work) is retained.\n\nSummarize the prefix to provide context for the retained suffix:\n\n## Original Request\n[What did the user ask for in this turn?]\n\n## Early Progress\n- [Key decisions and work done in the prefix]\n\n## Context for Suffix\n- [Information needed to understand the retained recent work]\n\nBe concise. Focus on what's needed to understand the kept suffix.";
+const TURN_PREFIX_SUMMARIZATION_PROMPT: &str = "This is the PREFIX of a turn that was too large to keep. The SUFFIX (recent work) is retained and is newer than anything here.\n\nSummarize the prefix to provide context for the retained suffix:\n\n## Original Request\n[What did the user ask for in this turn? Keep instructions, do-not rules, literal commands and acceptance criteria verbatim.]\n\n## Early Progress\n- [Key decisions and work done in the prefix, with the latest status reached within the prefix]\n\n## Context for Suffix\n- [Information needed to understand the retained recent work]\n\nBe concise. Focus on what's needed to understand the kept suffix.";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -720,10 +720,13 @@ async fn generate_summary_with_usage_impl(
 
     let llm_messages = convert_to_llm(current_messages.to_vec());
     let conversation_text = serialize_conversation(&llm_messages);
-    let mut prompt_text = format!("<conversation>\n{conversation_text}\n</conversation>\n\n");
+    // The older checkpoint comes first and the newer conversation last, so the
+    // newest state is what the summarizer reads immediately before the rules.
+    let mut prompt_text = String::new();
     if let Some(prev) = previous_summary {
         prompt_text += &format!("<previous-summary>\n{prev}\n</previous-summary>\n\n");
     }
+    prompt_text += &format!("<conversation>\n{conversation_text}\n</conversation>\n\n");
     prompt_text += &base_prompt;
 
     let summarization_messages = vec![Message::User(UserMessage::new(
@@ -884,35 +887,31 @@ async fn compact_impl(
     opts: &CompactionLlmOptions,
     coding_options: Option<&CodingSummaryCompletionOptions>,
 ) -> Result<CompactResult, CompactionError> {
-    let (summary, usage) =
-        if preparation.is_split_turn && !preparation.turn_prefix_messages.is_empty() {
-            let (history_text, history_usage) = if preparation.messages_to_summarize.is_empty() {
-                ("No prior history.".to_string(), None)
-            } else {
-                let (t, u) = generate_summary_with_usage_impl(
-                    &preparation.messages_to_summarize,
-                    preparation.settings.reserve_tokens,
-                    preparation.previous_summary.as_deref(),
-                    opts,
-                    coding_options,
-                )
-                .await?;
-                (t, Some(u))
-            };
-            let (turn_text, turn_usage) = generate_turn_prefix_summary_impl(
-                &preparation.turn_prefix_messages,
-                preparation.settings.reserve_tokens,
-                opts,
-                coding_options,
-            )
-            .await?;
-            let combined =
-                format!("{history_text}\n\n---\n\n**Turn Context (split turn):**\n\n{turn_text}");
-            let combined_usage = match history_usage {
-                Some(hu) => Some(combine_usage(&hu, &turn_usage)),
-                None => Some(turn_usage),
-            };
-            (combined, combined_usage)
+    let previous = preparation
+        .previous_summary
+        .as_deref()
+        .filter(|summary| !summary.is_empty());
+    let (summary, usage) = if preparation.is_split_turn
+        && !preparation.turn_prefix_messages.is_empty()
+        && preparation.messages_to_summarize.is_empty()
+        && previous.is_some()
+    {
+        // A turn that began before the previous compaction leaves no history
+        // to summarise, but the previous summary still holds everything
+        // before this prefix. Update it with the prefix as one reconciled
+        // summary instead of dropping it for "No prior history.".
+        let (t, u) = generate_summary_with_usage_impl(
+            &preparation.turn_prefix_messages,
+            preparation.settings.reserve_tokens,
+            previous,
+            opts,
+            coding_options,
+        )
+        .await?;
+        (t, Some(u))
+    } else if preparation.is_split_turn && !preparation.turn_prefix_messages.is_empty() {
+        let (history_text, history_usage) = if preparation.messages_to_summarize.is_empty() {
+            ("No prior history.".to_string(), None)
         } else {
             let (t, u) = generate_summary_with_usage_impl(
                 &preparation.messages_to_summarize,
@@ -924,6 +923,31 @@ async fn compact_impl(
             .await?;
             (t, Some(u))
         };
+        let (turn_text, turn_usage) = generate_turn_prefix_summary_impl(
+            &preparation.turn_prefix_messages,
+            preparation.settings.reserve_tokens,
+            opts,
+            coding_options,
+        )
+        .await?;
+        let combined =
+            format!("{history_text}\n\n---\n\n**Turn Context (split turn):**\n\n{turn_text}");
+        let combined_usage = match history_usage {
+            Some(hu) => Some(combine_usage(&hu, &turn_usage)),
+            None => Some(turn_usage),
+        };
+        (combined, combined_usage)
+    } else {
+        let (t, u) = generate_summary_with_usage_impl(
+            &preparation.messages_to_summarize,
+            preparation.settings.reserve_tokens,
+            preparation.previous_summary.as_deref(),
+            opts,
+            coding_options,
+        )
+        .await?;
+        (t, Some(u))
+    };
 
     let (read_files, modified_files) = compute_file_lists(&preparation.file_ops);
     let file_ops_text = format_file_operations(&read_files, &modified_files);
@@ -1029,6 +1053,66 @@ mod tests {
         assert!(!prompt.contains(UPDATE_SUMMARIZATION_PROMPT));
         assert!(!prompt.contains("<previous-summary>"));
         assert!(!prompt.contains("Additional focus:"));
+    }
+
+    /// H17 (2026-11-04): in one long turn every compaction is a split turn with
+    /// no history before it, and the previous summary was dropped ("No prior
+    /// history."), so each checkpoint forgot the one before. The previous
+    /// summary must reach the request and be reconciled into one summary.
+    #[tokio::test]
+    async fn split_turn_without_history_keeps_and_updates_the_previous_summary() {
+        use ice_ai::providers::faux::{FauxProvider, FauxScript, FauxStep};
+        use std::sync::Mutex;
+
+        let prompts = Arc::new(Mutex::new(Vec::<String>::new()));
+        let seen = Arc::clone(&prompts);
+        let script = FauxScript::new();
+        let step = move |context: &Context| {
+            let text = match context.messages.first() {
+                Some(Message::User(user)) => match &user.content {
+                    UserContent::Text(text) => text.clone(),
+                    UserContent::Blocks(blocks) => Content::text_only(blocks, ""),
+                },
+                _ => String::new(),
+            };
+            seen.lock().unwrap().push(text);
+            ice_ai::providers::faux::faux_assistant_message("## Goal\nupdated", StopReason::Stop)
+        };
+        script.set_responses(vec![
+            FauxStep::factory(step.clone()),
+            FauxStep::factory(step),
+        ]);
+        let provider = FauxProvider::new(script);
+        let model = provider.default_model().clone();
+        let options = CompactionLlmOptions {
+            provider,
+            model,
+            api_key: None,
+            signal: CancellationToken::new(),
+            thinking_level: None,
+            retry: None,
+            custom_instructions: None,
+        };
+        let mut preparation = test_preparation(
+            Vec::new(),
+            vec![agent_user_msg("latest work in the same long turn")],
+            true,
+        );
+        preparation.previous_summary =
+            Some("## Constraints & Preferences\n- PREVIOUS-SENTINEL: never push".into());
+        let result = compact(&preparation, &options).await.unwrap();
+        let prompts = prompts.lock().unwrap().clone();
+        assert!(
+            prompts.iter().any(|p| p.contains("PREVIOUS-SENTINEL")),
+            "previous summary must be part of a summarization request: {prompts:?}"
+        );
+        assert!(
+            !result.summary.contains("No prior history."),
+            "{}",
+            result.summary
+        );
+        assert_eq!(prompts.len(), 1, "one reconciled update, not two snapshots");
+        assert!(prompts[0].contains(UPDATE_SUMMARIZATION_PROMPT));
     }
 
     #[tokio::test]
