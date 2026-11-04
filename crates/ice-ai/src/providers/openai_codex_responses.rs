@@ -806,12 +806,13 @@ mod tests {
     }
 
     #[test]
-    fn exhausted_input_is_rejected_even_without_an_output_option() {
+    fn estimated_exhaustion_defers_to_the_provider_without_an_output_option() {
         let mut model = model();
         model.context_window = 8192;
         let mut ctx = Context::default();
         ctx.system_prompt = Some("x".repeat(40000));
-        assert!(build_codex_request(&model, &ctx, &SimpleStreamOptions::default()).is_err());
+        // Estimated exhaustion defers to the provider with the output floor (H18).
+        assert!(build_codex_request(&model, &ctx, &SimpleStreamOptions::default()).is_ok());
         ctx.system_prompt = Some("x".repeat(4000));
         let opts = SimpleStreamOptions {
             max_tokens: Some(90000),

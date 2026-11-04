@@ -3478,10 +3478,11 @@ mod tests {
                 <= model.context_window
         );
         ctx.system_prompt = Some("x".repeat(40000));
-        assert!(
+        // Estimated exhaustion defers to the provider with the output floor (H18).
+        let body =
             build_request_with_hard_max_tokens(&model, &ctx, &SimpleStreamOptions::default())
-                .is_err()
-        );
+                .unwrap();
+        assert_eq!(body["max_output_tokens"].as_u64(), Some(4096));
     }
 
     #[test]
