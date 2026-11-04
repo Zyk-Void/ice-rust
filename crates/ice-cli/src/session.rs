@@ -2650,6 +2650,17 @@ pub enum OpenError {
     Other(String),
 }
 
+impl OpenError {
+    /// `open_session` renders as "Could not open the saved session: <reason>"
+    /// via `BuildError`. Carry the bare reason so `Display` prefixes it once.
+    fn from_build(error: BuildError) -> Self {
+        OpenError::Other(match error {
+            BuildError::SessionOpen(reason) => reason,
+            other => other.to_string(),
+        })
+    }
+}
+
 impl std::fmt::Display for OpenError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -2931,23 +2942,16 @@ pub(crate) fn discover_session_files_sync(dir: &Path) -> (Vec<PathBuf>, Vec<Stri
         if path.extension().and_then(|e| e.to_str()) != Some("jsonl") {
             return;
         }
-        let header = std::fs::File::open(&path)
-            .and_then(|file| {
-                std::io::BufReader::new(file)
-                    .lines()
-                    .next()
-                    .unwrap_or_else(|| {
-                        Err(std::io::Error::new(
-                            std::io::ErrorKind::UnexpectedEof,
-                            "empty header",
-                        ))
-                    })
-            })
-            .map_err(|error| format!("unreadable header ({error})"))
-            .and_then(|line| {
-                ice_harness::session::jsonl::parse_header(&line)
-                    .map_err(|error| format!("malformed header ({error})"))
-            });
+        let first_line = std::fs::File::open(&path)
+            .and_then(|file| std::io::BufReader::new(file).lines().next().transpose())
+            .map_err(|error| format!("unreadable header ({error})"));
+        // A 0-byte file holds no session; skip it silently, as discovery does.
+        let header = match first_line {
+            Ok(None) => return,
+            Ok(Some(line)) => ice_harness::session::jsonl::parse_header(&line)
+                .map_err(|error| format!("malformed header ({error})")),
+            Err(error) => Err(error),
+        };
         if let Err(error) = header {
             skipped.push(format!("{path:?}: {error}"));
             return;
@@ -3002,6 +3006,9 @@ async fn discovery_keeps_good_sessions_and_reports_malformed_headers() {
     let header = JsonlV4Header::new("good".into(), 0, "/project".into(), None, None, None);
     std::fs::write(&good, encode_header(&header)).unwrap();
     std::fs::write(&bad, "not a session header\n").unwrap();
+    // A 0-byte file (a create killed mid-write) holds no session: skipped
+    // without a warning, so only the malformed file is reported below.
+    std::fs::write(directory.join("empty.jsonl"), "").unwrap();
 
     assert_eq!(list_session_files_sync(root.path()), vec![good.clone()]);
     let (files, skipped) = discover_session_files_sync(root.path());
@@ -3023,6 +3030,46 @@ async fn discovery_keeps_good_sessions_and_reports_malformed_headers() {
             .len(),
         1
     );
+}
+
+/// A session held by another process explains who holds it, once, without
+/// the stacked "Could not open the saved session" prefixes it used to repeat.
+#[cfg(test)]
+#[tokio::test]
+async fn opening_a_session_held_elsewhere_names_the_holder_once() {
+    let root = tempfile::tempdir().unwrap();
+    let cwd = root.path().to_string_lossy().into_owned();
+    let directory = root.path().join("sessions");
+    std::fs::create_dir_all(&directory).unwrap();
+    let held = create_jsonl_session_with_id(&directory, &cwd, Some("held-session".into()))
+        .await
+        .unwrap();
+    let path = held.storage().persistence_path().unwrap();
+
+    let by_path = open_session_by_id(&path, &cwd).await.err().expect("held");
+    let by_id = open_session_by_id_in_dir("held-session", &cwd, &directory)
+        .await
+        .err()
+        .expect("held");
+    for error in [by_path, by_id] {
+        assert!(matches!(error, OpenError::Other(_)), "{error}");
+        let message = error.to_string();
+        assert_eq!(
+            message.matches("Could not open").count(),
+            1,
+            "prefixed once: {message}"
+        );
+        assert!(message.contains("is open in another process"), "{message}");
+        if cfg!(unix) {
+            assert!(
+                message.contains(&format!("(pid {})", std::process::id())),
+                "{message}"
+            );
+        }
+        assert!(message.contains("close that thread first"), "{message}");
+    }
+    drop(held);
+    assert!(open_session_by_id(&path, &cwd).await.is_ok(), "released");
 }
 
 /// Pick the session `--continue`/`-c` should open: the newest session that has
@@ -3078,7 +3125,7 @@ pub async fn open_session_by_id(id: &str, cwd: &str) -> Result<Session, OpenErro
         let meta = metadata_from_header(&header, path, modified_at);
         return open_session(&meta, cwd)
             .await
-            .map_err(|error| OpenError::Other(error.to_string()));
+            .map_err(OpenError::from_build);
     }
     let dir = session_dir(Path::new(cwd));
     open_session_by_id_in_dir(id, cwd, &dir).await
@@ -3096,15 +3143,19 @@ async fn open_session_by_id_in_dir(id: &str, cwd: &str, dir: &Path) -> Result<Se
             requested: format!("session {id}"),
         });
     };
-    open_session(meta, cwd).await.map_err(|e| {
-        OpenError::Other(match e {
-            // `open_session` renders as "Could not open the saved session:
-            // <reason>" via `BuildError`. Carry the bare reason so it is not
-            // prefixed twice (once here, once by the CLI/TUI).
-            BuildError::SessionOpen(reason) => reason,
-            other => other.to_string(),
-        })
-    })
+    open_session(meta, cwd).await.map_err(OpenError::from_build)
+}
+
+/// Why a matched session file could not be opened. A session held by another
+/// process already names its path and the holder; other failures get the path.
+fn session_open_reason(path: &str, error: ice_harness::error::SessionError) -> String {
+    if error.code == ice_harness::error::SessionErrorCode::InUse {
+        return format!(
+            "{} If an editor integration (ACP) has it open, close that thread first.",
+            error.message
+        );
+    }
+    format!("open {path}: {error}")
 }
 
 /// Publish the active session's id to plugins, on both channels that carry it.
@@ -3289,7 +3340,7 @@ async fn open_session(
     let storage = repo
         .open_by_jsonl_metadata(meta)
         .await
-        .map_err(|e| BuildError::SessionOpen(format!("open {}: {e}", meta.path)))?;
+        .map_err(|e| BuildError::SessionOpen(session_open_reason(&meta.path, e)))?;
     // A session records the cwd it was created in. When that directory has
     // since been removed, continuing silently in it is confusing; warn the
     // user that we fell back to the process cwd (pi `getMissingSessionCwdIssue`).

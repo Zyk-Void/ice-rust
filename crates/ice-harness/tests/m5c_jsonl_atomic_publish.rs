@@ -148,6 +148,9 @@ async fn tmp_files_in_sessions_dir(fs: &Arc<dyn FileSystem>) -> Vec<String> {
 enum FaultTarget {
     /// Inject an error on the next `write_file`.
     WriteFile,
+    /// Create the target empty, then fail the next `write_file` (a process
+    /// killed after opening the file but before writing it).
+    TornWriteFile,
     /// Inject an error on the next `rename_file`.
     RenameFile,
     /// Fail the required final operation record, not prior accepted history.
@@ -183,13 +186,13 @@ impl FaultyFs {
     /// Take the fault if armed + matching; returns `Some(error)` to inject.
     fn take_if_matching(&self, is_write: bool) -> Option<FileError> {
         let matches = match self.target {
-            FaultTarget::WriteFile => is_write,
+            FaultTarget::WriteFile | FaultTarget::TornWriteFile => is_write,
             FaultTarget::RenameFile => !is_write,
             FaultTarget::OperationFinished | FaultTarget::DisappearingHeader => false,
         };
         if matches && self.armed.swap(false, Ordering::SeqCst) {
             Some(Self::fault_error(match self.target {
-                FaultTarget::WriteFile => "write_file",
+                FaultTarget::WriteFile | FaultTarget::TornWriteFile => "write_file",
                 FaultTarget::RenameFile => "rename_file",
                 FaultTarget::OperationFinished | FaultTarget::DisappearingHeader => unreachable!(),
             }))
@@ -259,6 +262,11 @@ impl FileSystem for FaultyFs {
     ) -> Result<(), FileError> {
         self.write_calls.fetch_add(1, Ordering::SeqCst);
         if let Some(err) = self.take_if_matching(true) {
+            if matches!(self.target, FaultTarget::TornWriteFile) {
+                self.inner
+                    .write_file(path, FileContent::Text(String::new()), cancel)
+                    .await?;
+            }
             return Err(err.with_path(path));
         }
         self.inner.write_file(path, content, cancel).await
@@ -1005,4 +1013,72 @@ fn _anchor_traits() {
         parent_session_id: None,
     };
     let _ = FileKind::File;
+}
+
+async fn files_in_sessions_dir(fs: &Arc<dyn FileSystem>) -> Vec<String> {
+    let mut names = Vec::new();
+    for dir in fs.list_dir("/sessions", None).await.unwrap() {
+        for file in fs
+            .list_dir(&dir.path.to_string_lossy(), None)
+            .await
+            .unwrap()
+        {
+            names.push(file.name);
+        }
+    }
+    names
+}
+
+/// A create interrupted after the file was opened but before the header
+/// landed must not leave a 0-byte `.jsonl` that every later listing reports.
+#[tokio::test]
+async fn interrupted_create_leaves_no_empty_session_file() {
+    let (faulty, r) = faulty_repo(FaultTarget::TornWriteFile);
+    let err = r
+        .create_typed(&create_options("torn"))
+        .await
+        .err()
+        .expect("create fails");
+    assert_eq!(err.code, SessionErrorCode::Storage);
+    assert!(!faulty.armed.load(Ordering::SeqCst), "fault consumed");
+    let fs: Arc<dyn FileSystem> = faulty.clone();
+    let names = files_in_sessions_dir(&fs).await;
+    assert!(
+        names
+            .iter()
+            .all(|name| !name.ends_with(".jsonl") && !name.ends_with(".tmp")),
+        "no partial session file left behind: {names:?}"
+    );
+}
+
+/// An empty `.jsonl` (left by an older build) holds no session; listing skips
+/// it without reporting a malformed header to the user.
+#[tokio::test]
+async fn empty_session_file_is_skipped_without_a_diagnostic() {
+    let base: Arc<dyn FileSystem> =
+        Arc::new(ice_tools::InMemoryExecutionEnv::with_cwd("/proj".into()));
+    let r = repo(base.clone());
+    let kept = r.create_typed(&create_options("kept")).await.unwrap();
+    let dir = std::path::Path::new(&kept.jsonl_metadata().path)
+        .parent()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
+    base.write_file(
+        &format!("{dir}/2026-01-01T00-00-00-000Z_empty.jsonl"),
+        FileContent::Text(String::new()),
+        None,
+    )
+    .await
+    .unwrap();
+    let discovery = r.list_with_diagnostics(&Default::default()).await.unwrap();
+    assert_eq!(discovery.skipped, Vec::<String>::new());
+    assert_eq!(
+        discovery
+            .sessions
+            .iter()
+            .map(|meta| meta.id.as_str())
+            .collect::<Vec<_>>(),
+        vec!["kept"]
+    );
 }

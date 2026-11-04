@@ -120,19 +120,52 @@ pub(super) fn claim_ownership(
     .map_err(|e| SessionError::storage(format!("Resolve session ownership: {e}")))?;
     let mut lock_path = path.as_os_str().to_os_string();
     lock_path.push(".lock");
-    let file = std::fs::OpenOptions::new()
+    let mut file = std::fs::OpenOptions::new()
         .create(true)
+        .read(true)
         .write(true)
         .truncate(false)
         .open(&lock_path)
         .map_err(|e| SessionError::storage(format!("Open session lock {}: {e}", path.display())))?;
-    fs2::FileExt::try_lock_exclusive(&file).map_err(|e| {
-        SessionError::storage(format!(
-            "Session {} is already open or cannot be locked: {e}",
+    if let Err(error) = fs2::FileExt::try_lock_exclusive(&file) {
+        if error.raw_os_error() != fs2::lock_contended_error().raw_os_error() {
+            return Err(SessionError::storage(format!(
+                "Could not lock session {}: {error}",
+                path.display()
+            )));
+        }
+        let holder = read_lock_holder(&mut file)
+            .map(|pid| format!(" (pid {pid})"))
+            .unwrap_or_default();
+        return Err(SessionError::in_use(format!(
+            "Session {} is open in another process{holder}. Close it there, then try again.",
             path.display()
-        ))
-    })?;
+        )));
+    }
+    record_lock_holder(&mut file);
     Ok(Some(OwnershipGuard(file)))
+}
+
+/// Record the owning pid so a contending process can name it. Best effort:
+/// the lock itself, not this content, is what grants ownership. Only the pid
+/// is written; command lines can carry credentials.
+fn record_lock_holder(file: &mut std::fs::File) {
+    use std::io::{Seek, Write};
+    let _ = file
+        .set_len(0)
+        .and_then(|()| file.seek(std::io::SeekFrom::Start(0)))
+        .and_then(|_| write!(file, "{}", std::process::id()))
+        .and_then(|()| file.flush());
+}
+
+/// Read the pid recorded by the current owner. `None` when it is unreadable
+/// (Windows locks block reads) or not yet written.
+fn read_lock_holder(file: &mut std::fs::File) -> Option<u32> {
+    use std::io::{Read, Seek};
+    let mut content = String::new();
+    file.seek(std::io::SeekFrom::Start(0)).ok()?;
+    file.take(32).read_to_string(&mut content).ok()?;
+    content.trim().parse().ok()
 }
 
 impl JsonlSessionStorage {
@@ -172,11 +205,20 @@ impl JsonlSessionStorage {
                 "Session already exists: {path}"
             )));
         }
-        file_result(
-            fs.write_file(path, FileContent::Text(encode_header(&header)), None)
-                .await,
-            &format!("Failed to initialize session {path}"),
-        )?;
+        // Stage the header and rename it into place: a crash mid-write must not
+        // leave a 0-byte `.jsonl` that every later session listing warns about.
+        let header_line = encode_header(&header);
+        let context = format!("Failed to initialize session {path}");
+        publish_file_atomically(&fs, path, |fs, temp_path| {
+            Box::pin(async move {
+                file_result(
+                    fs.write_file(temp_path, FileContent::Text(header_line), None)
+                        .await,
+                    &context,
+                )
+            })
+        })
+        .await?;
         let info = file_result(
             fs.file_info(path, None).await,
             &format!("Failed to read session metadata {path}"),

@@ -745,8 +745,10 @@ async fn list_jsonl_session_metadata(
             };
             let first_line = match lines.first() {
                 Some(line) => line,
+                // A 0-byte file holds no session (older builds could leave one
+                // when killed mid-create); skip it without a user-facing warning.
                 None => {
-                    skipped.push(format!("{:?}: empty header", file.path));
+                    tracing::debug!(path = %file.path.display(), "Skipping empty session file");
                     continue;
                 }
             };

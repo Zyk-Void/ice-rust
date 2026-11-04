@@ -2095,6 +2095,44 @@ fn verbose_overrides_quiet_startup_listing() {
 }
 
 #[test]
+fn exit_hint_skips_a_session_without_messages() {
+    let cwd = std::path::Path::new("/proj/demo");
+    assert_eq!(resume_hint_command(0, "abc-123", cwd, None), None);
+    assert_eq!(
+        resume_hint_command(1, "abc-123", cwd, None).as_deref(),
+        Some("icers --session abc-123")
+    );
+}
+
+#[test]
+fn a_lone_command_abbreviation_is_caught_instead_of_sent() {
+    let names: Vec<String> = ["/resume", "/reload", "/review", "/model"]
+        .iter()
+        .map(|name| name.to_string())
+        .collect();
+    assert_eq!(abbreviated_command_matches("/res", &names), vec!["/resume"]);
+    assert_eq!(
+        abbreviated_command_matches("/re", &names),
+        vec!["/reload", "/resume", "/review"]
+    );
+    // Everything else keeps reaching the prompt path unchanged.
+    for text in [
+        "/resume",
+        "/res now",
+        "/skill:res",
+        "/usr/bin/time is missing",
+        "/zzz",
+        "/",
+        "plain text",
+    ] {
+        assert!(
+            abbreviated_command_matches(text, &names).is_empty(),
+            "{text}"
+        );
+    }
+}
+
+#[test]
 fn resume_command_omits_the_default_session_dir() {
     let cwd = std::path::Path::new("/proj/demo");
     assert_eq!(format_resume_command("", cwd, None), None);

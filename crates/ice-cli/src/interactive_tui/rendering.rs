@@ -292,6 +292,20 @@ pub(super) fn collect_transcript_lines(chat_container: &Arc<Container>) -> Vec<S
 /// `None` when there is nothing to resume. Mirrors upstream's
 /// `formatResumeCommand`: `icers --session <id>`, prefixing
 /// `--session-dir <dir>` only when a non-default directory was requested.
+/// The exit hint's resume command, or `None` when the session holds no
+/// messages (resuming it would only reopen an empty session).
+pub(super) fn resume_hint_command(
+    message_count: u64,
+    session_id: &str,
+    cwd: &std::path::Path,
+    session_dir: Option<&std::path::Path>,
+) -> Option<String> {
+    if message_count == 0 {
+        return None;
+    }
+    format_resume_command(session_id, cwd, session_dir)
+}
+
 pub(super) fn format_resume_command(
     session_id: &str,
     cwd: &std::path::Path,

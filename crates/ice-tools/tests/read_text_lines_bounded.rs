@@ -40,3 +40,40 @@ async fn bounded_read_rejects_a_single_oversized_line() {
         .unwrap_err();
     assert!(error.to_string().contains("limit"), "{error}");
 }
+
+/// An empty file has no lines on every reader. The unbounded readers used to
+/// return one empty line, so session discovery reported 0-byte files as
+/// malformed while the bounded reader skipped them.
+#[tokio::test]
+async fn empty_file_has_no_lines_on_every_reader() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("empty.jsonl");
+    std::fs::write(&path, b"").unwrap();
+    let path = path.to_string_lossy().into_owned();
+    let os = OsExecutionEnv::with_cwd(dir.path().to_path_buf());
+    assert!(os
+        .read_text_lines(&path, Some(1), None)
+        .await
+        .unwrap()
+        .is_empty());
+    assert!(os
+        .read_text_lines(&path, None, None)
+        .await
+        .unwrap()
+        .is_empty());
+
+    let memory = ice_tools::InMemoryExecutionEnv::with_cwd("/proj".into());
+    memory
+        .write_file(
+            "/proj/empty.jsonl",
+            ice_tools::FileContent::Text(String::new()),
+            None,
+        )
+        .await
+        .unwrap();
+    assert!(memory
+        .read_text_lines("/proj/empty.jsonl", None, None)
+        .await
+        .unwrap()
+        .is_empty());
+}
