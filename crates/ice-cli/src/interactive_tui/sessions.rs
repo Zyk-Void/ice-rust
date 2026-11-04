@@ -130,7 +130,14 @@ async fn activate_saved_session(
         }
         Err(e) => {
             state.set_status(RunStatus::Idle);
-            add_error_message(chat, &format!("Could not open session {id}: {e}"));
+            // `Other` already reads "Could not open the saved session: …".
+            let message = match e {
+                crate::session::OpenError::NotFound { .. } => {
+                    format!("Could not open session {id}: {e}")
+                }
+                crate::session::OpenError::Other(_) => e.to_string(),
+            };
+            add_error_message(chat, &message);
             false
         }
     }

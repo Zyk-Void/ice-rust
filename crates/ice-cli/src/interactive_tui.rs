@@ -660,6 +660,58 @@ fn dispatch_slash(text: &str, ctx: &CommandContext, registry: &CommandRegistry) 
     }
 }
 
+/// Every slash name a user can complete: commands, surfaced aliases and
+/// prompt templates (the names autocomplete offers, minus `/skill:` entries).
+fn slash_command_names(
+    registry: &CommandRegistry,
+    resources: &ice_harness::types::AgentHarnessResources,
+) -> Vec<String> {
+    let mut names: Vec<String> = registry
+        .visible_entries()
+        .into_iter()
+        .map(|entry| entry.name)
+        .collect();
+    names.extend(
+        resources
+            .prompt_templates
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .map(|template| format!("/{}", template.name)),
+    );
+    names
+}
+
+/// Commands that a lone `/word` abbreviates, such as `/res` for `/resume`.
+///
+/// Such input is a typo, and sending it spends a model call on a fragment.
+/// Everything else keeps the upstream behavior of reaching the prompt path
+/// (see [`dispatch_slash`]): input with arguments, `/skill:` and other
+/// namespaced forms, paths, exact template names, and words that abbreviate
+/// nothing. At most five suggestions are returned, sorted.
+fn abbreviated_command_matches(text: &str, names: &[String]) -> Vec<String> {
+    let text = text.trim();
+    let Some(word) = text.strip_prefix('/') else {
+        return Vec::new();
+    };
+    let is_word = !word.is_empty()
+        && word
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if !is_word || names.iter().any(|name| name == text) {
+        return Vec::new();
+    }
+    let mut matches: Vec<String> = names
+        .iter()
+        .filter(|name| name.len() > text.len() && name.starts_with(text))
+        .cloned()
+        .collect();
+    matches.sort();
+    matches.dedup();
+    matches.truncate(5);
+    matches
+}
+
 /// Current wall-clock time in milliseconds since the Unix epoch. Used for
 /// `bashExecution` message timestamps (agent-loop messages carry real times, so
 /// the transcript record must too).
@@ -1852,8 +1904,26 @@ pub async fn interactive_tui(
             return;
         }
 
-        if text.starts_with('/') && dispatch_slash(text, &ctx_for_cb, &registry_for_cb) {
-            return;
+        if text.starts_with('/') {
+            if dispatch_slash(text, &ctx_for_cb, &registry_for_cb) {
+                return;
+            }
+            let names = slash_command_names(
+                &registry_for_cb,
+                &ctx_for_cb.resources.lock().unwrap(),
+            );
+            let matches = abbreviated_command_matches(text, &names);
+            if !matches.is_empty() {
+                add_error_message(
+                    &ctx_for_cb.chat,
+                    &format!(
+                        "Unknown command {text}. Did you mean {}? It was not sent; press ↑ to edit it.",
+                        matches.join(", ")
+                    ),
+                );
+                ctx_for_cb.tui.request_render(false);
+                return;
+            }
         }
 
         // User-initiated shell mode: `!command` runs in the background and is
@@ -4366,8 +4436,20 @@ pub async fn interactive_tui(
     // upstream prints how to resume the session after an interactive exit so
     // a terminal that scrolled away can be recovered. Mirrors
     // `formatResumeCommand` (id + `--session-dir` only when non-default).
-    let session_id = harness.session().storage().metadata().id;
-    if let Some(command) = format_resume_command(&session_id, &cwd, args.session_dir.as_deref()) {
+    // upstream only writes the file once the session has content, so it never
+    // offers to resume an empty session; this port writes the header eagerly.
+    let storage = harness.session().storage();
+    let message_count = storage
+        .get_stats()
+        .await
+        .map_or(1, |stats| stats.message_count);
+    let session_id = storage.metadata().id;
+    if let Some(command) = resume_hint_command(
+        message_count,
+        &session_id,
+        &cwd,
+        args.session_dir.as_deref(),
+    ) {
         println!("\x1b[2mTo resume this session:\x1b[0m {command}");
     }
     println!("\nGoodbye!");

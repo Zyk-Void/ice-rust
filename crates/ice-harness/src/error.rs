@@ -17,6 +17,9 @@ pub enum SessionErrorCode {
     InvalidLane,
     InvalidQuery,
     InvalidForkTarget,
+    /// Another process holds the session's ownership lock. Rust-only: TS
+    /// sessions have no cross-process lock.
+    InUse,
     Storage,
 }
 
@@ -30,6 +33,7 @@ impl SessionErrorCode {
             SessionErrorCode::InvalidLane => "invalid_lane",
             SessionErrorCode::InvalidQuery => "invalid_query",
             SessionErrorCode::InvalidForkTarget => "invalid_fork_target",
+            SessionErrorCode::InUse => "in_use",
             SessionErrorCode::Storage => "storage",
         }
     }
@@ -71,6 +75,9 @@ impl SessionError {
     }
     pub fn invalid_fork_target(message: impl Into<String>) -> Self {
         Self::new(SessionErrorCode::InvalidForkTarget, message)
+    }
+    pub fn in_use(message: impl Into<String>) -> Self {
+        Self::new(SessionErrorCode::InUse, message)
     }
     pub fn storage(message: impl Into<String>) -> Self {
         Self::new(SessionErrorCode::Storage, message)

@@ -550,6 +550,11 @@ impl FileSystem for OsExecutionEnv {
             return read_lines_bounded(&abs, max, cancel).await;
         }
         let text = self.read_text_file(path, cancel).await?;
+        // An empty file has no lines (as the bounded reader reports), not one
+        // empty line.
+        if text.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut lines: Vec<String> = text.split('\n').map(|s| s.to_string()).collect();
         if text.ends_with('\n') {
             if lines.last().map(|s| s.is_empty()).unwrap_or(false) {

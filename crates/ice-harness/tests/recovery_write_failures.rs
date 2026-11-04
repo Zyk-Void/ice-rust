@@ -733,8 +733,17 @@ async fn jsonl_lock_probe_child() {
     let result = disk_storage(std::path::Path::new(&path), false).await;
     if std::env::var_os("ICERS_RECOVERY_LOCK_TEST_HELD").is_some() {
         let error = result.err().expect("another process owns this session");
-        assert_eq!(error.code, ice_harness::error::SessionErrorCode::Storage);
-        assert!(error.message.contains("already open or cannot be locked"));
+        assert_eq!(error.code, ice_harness::error::SessionErrorCode::InUse);
+        assert!(error.message.contains("is open in another process"));
+        // Windows byte-range locks block reading the recorded owner.
+        if cfg!(unix) {
+            let owner = std::env::var("ICERS_RECOVERY_LOCK_TEST_OWNER").unwrap();
+            assert!(
+                error.message.contains(&format!("(pid {owner})")),
+                "names the owning process: {}",
+                error.message
+            );
+        }
     } else {
         drop(result.expect("lock is released after owner drop"));
     }
@@ -745,6 +754,10 @@ fn probe_process(path: &std::path::Path, held: bool) {
     command
         .args(["--exact", "jsonl_lock_probe_child", "--nocapture"])
         .env("ICERS_RECOVERY_LOCK_TEST_PATH", path)
+        .env(
+            "ICERS_RECOVERY_LOCK_TEST_OWNER",
+            std::process::id().to_string(),
+        )
         .env_remove("ICERS_RECOVERY_LOCK_TEST_HELD");
     if held {
         command.env("ICERS_RECOVERY_LOCK_TEST_HELD", "1");
