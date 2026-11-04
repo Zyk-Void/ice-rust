@@ -852,7 +852,9 @@ mod tests {
     }
     impl TempConfig {
         fn new() -> Self {
-            let guard = env_lock().lock().unwrap();
+            let guard = env_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             let prev = std::env::var_os(config::CONFIG_DIR_ENV);
             let tmp = tempfile::TempDir::new().unwrap();
             std::env::set_var(config::CONFIG_DIR_ENV, tmp.path());
@@ -1011,7 +1013,9 @@ mod scoped_tests {
     use crate::config::test_support::env_lock;
 
     fn with_temp_env() -> (tempfile::TempDir, std::sync::MutexGuard<'static, ()>) {
-        let guard = env_lock().lock().unwrap();
+        let guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let tmp = tempfile::TempDir::new().unwrap();
         std::env::set_var(config::CONFIG_DIR_ENV, tmp.path());
         (tmp, guard)

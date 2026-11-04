@@ -650,7 +650,9 @@ mod tests {
     }
     impl TempConfig {
         fn new() -> Self {
-            let guard = env_lock().lock().unwrap();
+            let guard = env_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             let prev_dir = std::env::var_os(crate::config::CONFIG_DIR_ENV);
             let prev_key = std::env::var_os(crate::provider::ANTHROPIC_API_KEY_ENV);
             let prev_tok = std::env::var_os(crate::provider::ANTHROPIC_AUTH_TOKEN_ENV);

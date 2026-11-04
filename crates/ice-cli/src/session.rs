@@ -4524,7 +4524,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
@@ -4568,7 +4570,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
@@ -4669,7 +4673,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
@@ -4718,7 +4724,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
@@ -4890,7 +4898,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");
@@ -4938,7 +4948,9 @@ mod tests {
             }
         }
 
-        let _guard = crate::config::test_support::env_lock().lock().unwrap();
+        let _guard = crate::config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _restore = RestoreConfigDir(std::env::var_os(crate::config::CONFIG_DIR_ENV));
         let tmp = tempfile::tempdir().unwrap();
         let agent = tmp.path().join("agent");

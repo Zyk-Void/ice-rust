@@ -111,7 +111,9 @@ fn models_url_accepts_every_base_shape() {
 
 #[test]
 fn cache_round_trips_and_an_empty_cache_is_ignored() {
-    let _guard = crate::config::test_support::env_lock().lock().unwrap();
+    let _guard = crate::config::test_support::env_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let previous = std::env::var_os(config::CONFIG_DIR_ENV);
     let dir = tempfile::TempDir::new().unwrap();
     std::env::set_var(config::CONFIG_DIR_ENV, dir.path());

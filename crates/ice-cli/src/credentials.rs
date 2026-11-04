@@ -172,7 +172,9 @@ mod tests {
 
     #[test]
     fn deepseek_environment_requires_an_explicit_package_declaration() {
-        let _guard = config::test_support::env_lock().lock().unwrap();
+        let _guard = config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let previous = std::env::var_os("DEEPSEEK_API_KEY");
         std::env::set_var("DEEPSEEK_API_KEY", "fixture-package-key");
         let store = AuthStore::new();
@@ -199,7 +201,9 @@ mod tests {
 
     #[test]
     fn package_policy_can_disable_a_builtin_environment_fallback() {
-        let _guard = config::test_support::env_lock().lock().unwrap();
+        let _guard = config::test_support::env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let previous = std::env::var_os("OPENAI_API_KEY");
         std::env::set_var("OPENAI_API_KEY", "unrelated-builtin-key");
         let manifest = ProviderManifest {
