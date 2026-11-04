@@ -1918,6 +1918,104 @@ async fn overflow_budget_refuses_irreducible_system_overhead_before_summary() {
     );
 }
 
+/// H14/H18 (2026-11-04): one turn of large tool output exceeded the window
+/// and overflow recovery could not reduce the latest turn, failing the run.
+/// After a real overflow the retry now carries the turn's tool results shrunk
+/// to fit (head, tail and an omission marker); the stored result is complete.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn overflow_with_oversized_latest_tool_output_shrinks_it_and_retries() {
+    let (harness, provider) = oversized_read_harness().await;
+    provider.inner.script().set_responses(vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "big.txt"})),
+        overflow_step(),
+        FauxStep::text("answered from the shrunk read"),
+    ]);
+    let result = harness.prompt_text("READ_BIG_FILE", vec![]).await.unwrap();
+    assert!(
+        matches!(
+            result.outcome,
+            ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }
+        ),
+        "{:?}",
+        result.outcome
+    );
+    let requests = provider.requests();
+    assert_eq!(requests.len(), 3, "tool turn, rejected request, one retry");
+    assert!(!requests.iter().any(is_summary_request));
+    let retry = &requests[2].context;
+    assert!(retry.contains("characters omitted to fit the context window"));
+    assert!(retry.contains("line 0000") && retry.contains("line 0699"));
+    assert!(!retry.contains("line 0350"), "the middle was omitted");
+    let stored = branch_entries(&harness)
+        .await
+        .into_iter()
+        .any(|entry| matches!(entry, Entry::Message(message)
+            if matches!(&message.message, AgentMessage::ToolResult(r)
+                if r.content.iter().any(|block| matches!(block, ice_ai::types::Content::Text(t) if t.text.contains("line 0350"))))));
+    assert!(stored, "the persisted tool result stays complete");
+}
+
+/// A 12k-token window with a `read` tool over a ~49k-character file.
+async fn oversized_read_harness() -> (AgentHarness, Arc<RecordingProvider>) {
+    use ice_tools::FileSystem;
+    let (harness, provider) = overflow_harness().await;
+    harness
+        .set_coding_compaction_policy(Some(CodingAgentCompactionPolicy {
+            threshold_percent: 99.0,
+            ..small_recent_policy()
+        }))
+        .await
+        .unwrap();
+    let mut model = provider.inner.default_model().clone();
+    model.context_window = 12_000;
+    model.max_tokens = 1200;
+    harness.set_model(model).await.unwrap();
+    let execution = Arc::new(InMemoryExecutionEnv::new());
+    let big: String = (0..700)
+        .map(|i| format!("line {i:04} {}\n", "x".repeat(60)))
+        .collect();
+    execution
+        .write_file("big.txt", big.into(), None)
+        .await
+        .unwrap();
+    let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
+    let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
+    let tool_context = ExecutionToolContext::new(env, Some(mut_env));
+    harness
+        .set_tools(
+            vec![HarnessTool::new(ice_tools::create_read_tool(
+                &tool_context,
+                None,
+            ))],
+            Some(vec!["read".into()]),
+        )
+        .await
+        .unwrap();
+    (harness, provider)
+}
+
+/// A second overflow after the shrunk retry stops instead of looping.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn overflow_after_shrunk_retry_stops_after_one_recovery() {
+    let (harness, provider) = oversized_read_harness().await;
+    provider.inner.script().set_responses(vec![
+        FauxStep::tool_call("read", serde_json::json!({"path": "big.txt"})),
+        overflow_step(),
+        overflow_step(),
+        FauxStep::text("must not run"),
+    ]);
+    let result = harness.prompt_text("READ_BIG_FILE", vec![]).await.unwrap();
+    assert!(
+        matches!(
+            result.outcome,
+            ice_harness::agent_harness::HarnessRunOutcome::Failed { .. }
+        ),
+        "{:?}",
+        result.outcome
+    );
+    assert_eq!(provider.requests().len(), 3, "one shrunk retry only");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn disabled_coding_compaction_does_not_recover_overflow_implicitly() {
     let (harness, provider) = overflow_harness().await;
