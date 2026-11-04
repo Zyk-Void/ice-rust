@@ -278,12 +278,22 @@ fn build_request_with_hard_max_tokens(
     ctx: &Context,
     opts: &SimpleStreamOptions,
 ) -> Result<Value, String> {
-    let Some(hard_max_output_tokens) = opts.hard_max_output_tokens else {
-        return Ok(build_request(model, ctx, opts));
-    };
-
-    let max_tokens = request_max_tokens(model, ctx, opts)?;
     let mut effective_opts = opts.clone();
+    // Shared-budget models reserve reasoning above the default answer allowance.
+    // Preserve that default before context fitting pins max_tokens explicitly.
+    if opts.max_tokens.is_none() && opts.hard_max_output_tokens.is_none() {
+        effective_opts.max_tokens = Some(resolve_max_tokens(model, opts));
+    }
+    let max_tokens = request_max_tokens(model, ctx, &effective_opts)?;
+    // Preserve compatible-provider sampling overrides within the available
+    // context, even when the caller did not supply a hard output authority.
+    let mut context_options = opts.clone();
+    context_options.max_tokens = Some(u64::MAX);
+    context_options.hard_max_output_tokens = None;
+    let context_limit = request_max_tokens(model, ctx, &context_options)? as f64;
+    let hard_max_output_tokens = opts
+        .hard_max_output_tokens
+        .map_or(context_limit, |hard| hard.min(context_limit));
     effective_opts.max_tokens = Some(max_tokens);
     let mut body = build_request(model, ctx, &effective_opts);
     let Some(payload) = body.as_object_mut() else {
@@ -1728,6 +1738,33 @@ mod tests {
             .unwrap_err();
 
         assert!(error.contains("max_completion_tokens"));
+    }
+
+    #[test]
+    fn ordinary_request_enforces_context_after_sampling_overrides() {
+        let mut model = model();
+        model.context_window = 8192;
+        model.sampling_params = Some(
+            json!({"max_tokens": 90000, "max_completion_tokens": 90000})
+                .as_object()
+                .unwrap()
+                .clone(),
+        );
+        let mut ctx = Context::default();
+        ctx.system_prompt = Some("x".repeat(4000));
+        ctx.tools.push(serde_json::from_value(json!({"name":"tool", "description":"x".repeat(4000), "parameters":{"type":"object"}})).unwrap());
+        let body =
+            build_request_with_hard_max_tokens(&model, &ctx, &SimpleStreamOptions::default())
+                .unwrap();
+        let input = crate::simple_options::estimate_request_tokens(&ctx);
+        for field in ["max_tokens", "max_completion_tokens"] {
+            assert!(body[field].as_u64().unwrap() + input + 4096 <= model.context_window);
+        }
+        ctx.system_prompt = Some("x".repeat(40000));
+        assert!(
+            build_request_with_hard_max_tokens(&model, &ctx, &SimpleStreamOptions::default())
+                .is_err()
+        );
     }
 
     #[test]

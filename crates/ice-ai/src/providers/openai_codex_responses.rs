@@ -213,8 +213,11 @@ fn build_codex_request(
         return Err("temperature must be a finite number".into());
     }
 
+    // Validate input even when Codex's wire contract omits the optional output
+    // field. Omitting that field must not bypass overfull-input detection.
+    let allowance = request_max_tokens(model, ctx, opts)?;
     let max_output_tokens = if opts.max_tokens.is_some() || opts.hard_max_output_tokens.is_some() {
-        Some(request_max_tokens(model, ctx, opts)?)
+        Some(allowance)
     } else {
         None
     };
@@ -800,6 +803,27 @@ mod tests {
         assert_eq!(request["stream"], true);
         assert!(request.get("top_p").is_none());
         assert!(request.get("custom_sampling_parameter").is_none());
+    }
+
+    #[test]
+    fn exhausted_input_is_rejected_even_without_an_output_option() {
+        let mut model = model();
+        model.context_window = 8192;
+        let mut ctx = Context::default();
+        ctx.system_prompt = Some("x".repeat(40000));
+        assert!(build_codex_request(&model, &ctx, &SimpleStreamOptions::default()).is_err());
+        ctx.system_prompt = Some("x".repeat(4000));
+        let opts = SimpleStreamOptions {
+            max_tokens: Some(90000),
+            ..Default::default()
+        };
+        let body = build_codex_request(&model, &ctx, &opts).unwrap();
+        assert!(
+            body["max_output_tokens"].as_u64().unwrap()
+                + crate::simple_options::estimate_request_tokens(&ctx)
+                + 4096
+                <= model.context_window
+        );
     }
 
     #[test]

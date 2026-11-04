@@ -1758,6 +1758,29 @@ mod tests {
     }
 
     #[test]
+    fn request_context_budget_includes_schema_with_thinking_enabled() {
+        let mut model = model_with_compat(AnthropicMessagesCompat::default());
+        model.reasoning = true;
+        model.context_window = 16384;
+        let mut ctx = crate::types::Context::default();
+        ctx.system_prompt = Some("x".repeat(4000));
+        ctx.tools.push(serde_json::from_value(serde_json::json!({"name":"test", "description":"x".repeat(16000), "parameters":{"type":"object"}})).unwrap());
+        let opts = SimpleStreamOptions {
+            reasoning: Some(ThinkingLevel::High),
+            max_tokens: Some(90000),
+            ..Default::default()
+        };
+        let built = build_params(&model, &ctx, false, &opts).unwrap();
+        let body = serde_json::to_value(&built.request).unwrap();
+        assert!(
+            body["max_tokens"].as_u64().unwrap()
+                + crate::simple_options::estimate_request_tokens(&ctx)
+                + 4096
+                <= model.context_window
+        );
+    }
+
+    #[test]
     fn checked_builder_applies_hard_and_missing_authority_cases() {
         let compat = AnthropicMessagesCompat::default();
         let mut model = model_with_compat(compat);
