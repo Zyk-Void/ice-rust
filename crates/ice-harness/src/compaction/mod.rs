@@ -21,6 +21,7 @@
 pub mod branch_summary;
 pub mod compaction;
 pub mod cut_point;
+pub mod fit;
 pub mod settings;
 pub mod tokens;
 

@@ -5508,9 +5508,25 @@ impl AgentHarness {
                     let (tail_tokens, input_ceiling) = Self::coding_request_budget(&snap, &tail, 100.0);
                     let window = snap.model.context_window.min(i64::MAX as u64) as i64;
                     if latest_user == 0 || (window > 0 && tail_tokens >= input_ceiling) {
-                        return Err(crate::compaction::CompactionError::summarization_failed(
+                        // The latest turn alone does not fit and is never
+                        // summarised. After this real overflow, retry with its
+                        // tool results shrunk to fit; stored entries stay
+                        // complete. Give up if even that cannot fit.
+                        let mut messages = build_session_context(&path, &build_opts).messages;
+                        let target = input_ceiling.saturating_mul(85) / 100;
+                        let report = crate::compaction::fit::fit_latest_turn_tool_results(
+                            &mut messages,
+                            |candidate| Self::coding_request_budget(&snap, candidate, 100.0).0 <= target,
+                        )
+                        .ok_or_else(|| crate::compaction::CompactionError::summarization_failed(
                             "The latest user turn cannot be reduced safely. Shorten the prompt, select a larger-context model, or start a new session.",
-                        ));
+                        ))?;
+                        tracing::warn!(
+                            results_shrunk = report.results_shrunk,
+                            chars_omitted = report.chars_omitted,
+                            "context overflow: retrying with the latest turn's tool results shrunk"
+                        );
+                        return Ok(Some(messages));
                     }
                     let mut settings = snap.compaction;
                     settings.keep_recent_tokens = 0;
@@ -5543,12 +5559,18 @@ impl AgentHarness {
                     }
                     self.persist_compaction_entry(&run_id, &compacted, crate::extension::CompactionTrigger::Overflow)
                         .await.map_err(|error| crate::compaction::CompactionError::summarization_failed(error.to_string()))?;
-                    Ok(())
+                    Ok(None)
                 }.await;
-                if let Err(error) = recovery {
-                    Self::record_product_midrun_compaction_error(&midrun_compaction_error, error);
-                    break attempt_result;
-                }
+                let fitted = match recovery {
+                    Ok(fitted) => fitted,
+                    Err(error) => {
+                        Self::record_product_midrun_compaction_error(
+                            &midrun_compaction_error,
+                            error,
+                        );
+                        break attempt_result;
+                    }
+                };
                 // The checkpoint append is the commit boundary. If cancellation
                 // was acknowledged while storage was completing that write,
                 // keep the durable checkpoint and settle as aborted instead of
@@ -5581,8 +5603,13 @@ impl AgentHarness {
                 }
                 settle_state.set_attempt(retry_attempt);
                 post_compaction_cut.store(0, Ordering::Release);
-                let path = self.branch_path_oldest_first().await?;
-                agent_context.messages = build_session_context(&path, &build_opts).messages;
+                agent_context.messages = match fitted {
+                    Some(messages) => messages,
+                    None => {
+                        let path = self.branch_path_oldest_first().await?;
+                        build_session_context(&path, &build_opts).messages
+                    }
+                };
                 continue;
             }
             let mut retry_refused: Option<String> = None;
