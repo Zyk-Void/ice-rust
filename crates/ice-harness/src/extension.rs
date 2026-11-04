@@ -82,6 +82,37 @@ pub struct PromptContext {
     pub correlation_id: Option<String>,
 }
 
+/// Result of admitting a context packet at a provider request boundary.
+/// Persistence is not proof of provider delivery or useful completion.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum PromptContextOutcome {
+    Persisted,
+    Duplicate,
+    Empty,
+    BudgetRejected,
+    Cancelled,
+    Stale,
+    AppendFailed,
+    /// Legacy boolean rejection has no reliable cause attached.
+    RejectedUnknown,
+}
+
+impl PromptContextOutcome {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Persisted => "persisted",
+            Self::Duplicate => "duplicate",
+            Self::Empty => "empty",
+            Self::BudgetRejected => "budget_rejected",
+            Self::Cancelled => "cancelled",
+            Self::Stale => "stale",
+            Self::AppendFailed => "append_failed",
+            Self::RejectedUnknown => "rejected_unknown",
+        }
+    }
+}
+
 /// Everything known before the summarizer runs (`session_before_compact`).
 #[derive(Clone)]
 pub struct BeforeCompactEvent {
@@ -187,6 +218,18 @@ pub trait HarnessExtension: Send + Sync {
     /// run context; it does not guarantee delivery to a model provider.
     async fn prompt_context_persisted(&self, _context: &PromptContext, _persisted: bool) {}
 
+    /// Typed acknowledgment; the default preserves the legacy boolean callback.
+    /// New extensions should use this hook to distinguish admission rejection
+    /// from append I/O failure. Exactly one acknowledgment is made per packet.
+    async fn prompt_context_acknowledged(
+        &self,
+        context: &PromptContext,
+        outcome: PromptContextOutcome,
+    ) {
+        self.prompt_context_persisted(context, outcome == PromptContextOutcome::Persisted)
+            .await;
+    }
+
     async fn before_compact(&self, _event: &BeforeCompactEvent) -> Option<BeforeCompactDecision> {
         None
     }
@@ -211,3 +254,46 @@ pub trait HarnessExtension: Send + Sync {
 
 /// An ordered list of extensions.
 pub type HarnessExtensions = Vec<Arc<dyn HarnessExtension>>;
+
+#[cfg(test)]
+mod acknowledgment_tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    #[derive(Default)]
+    struct Legacy(Mutex<Vec<bool>>);
+    #[async_trait::async_trait]
+    impl HarnessExtension for Legacy {
+        async fn prompt_context_persisted(&self, _: &PromptContext, persisted: bool) {
+            self.0.lock().unwrap().push(persisted);
+        }
+    }
+
+    #[tokio::test]
+    async fn typed_outcomes_bridge_once_to_legacy_boolean_without_claiming_delivery() {
+        let extension = Legacy::default();
+        let context = PromptContext {
+            custom_type: "fixture".into(),
+            text: "safe".into(),
+            correlation_id: None,
+        };
+        for outcome in [
+            PromptContextOutcome::Persisted,
+            PromptContextOutcome::Duplicate,
+            PromptContextOutcome::Empty,
+            PromptContextOutcome::BudgetRejected,
+            PromptContextOutcome::Cancelled,
+            PromptContextOutcome::Stale,
+            PromptContextOutcome::AppendFailed,
+            PromptContextOutcome::RejectedUnknown,
+        ] {
+            extension
+                .prompt_context_acknowledged(&context, outcome)
+                .await;
+        }
+        assert_eq!(
+            *extension.0.lock().unwrap(),
+            [true, false, false, false, false, false, false, false]
+        );
+    }
+}

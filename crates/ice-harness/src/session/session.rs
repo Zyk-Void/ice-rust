@@ -12,7 +12,8 @@
 //! that lane. Lane resolution goes through `get_leaf_id_for_lane`, which throws
 //! `invalid_lane` when the lane does not exist — matching TS.
 
-use std::sync::{Arc, RwLock};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock, RwLock, Weak};
 
 use async_trait::async_trait;
 use serde_json::Value;
@@ -124,6 +125,25 @@ pub struct Session {
     id_generator: Arc<dyn IdGenerator>,
 }
 
+// Storage owners already exclude independent file/lease owners. Facades built
+// independently over the same storage Arc must also serialize recovery's
+// read/repair/finish sequence, not merely its individual appends. Weak entries
+// retain neither sessions nor idle locks; key by object identity, not metadata
+// IDs (unrelated repositories may legitimately use the same session ID).
+fn recovery_lock(storage: &Arc<dyn SessionStorage>) -> Arc<tokio::sync::Mutex<()>> {
+    type Locks = HashMap<usize, Weak<tokio::sync::Mutex<()>>>;
+    static LOCKS: OnceLock<Mutex<Locks>> = OnceLock::new();
+    let key = Arc::as_ptr(storage) as *const () as usize;
+    let mut locks = LOCKS.get_or_init(Mutex::default).lock().unwrap();
+    locks.retain(|_, lock| lock.strong_count() != 0);
+    if let Some(lock) = locks.get(&key).and_then(Weak::upgrade) {
+        return lock;
+    }
+    let lock = Arc::new(tokio::sync::Mutex::new(()));
+    locks.insert(key, Arc::downgrade(&lock));
+    lock
+}
+
 impl Clone for Session {
     fn clone(&self) -> Self {
         Self {
@@ -144,6 +164,14 @@ impl Session {
             storage: Arc::new(RwLock::new(storage)),
             id_generator: id_generator.unwrap_or_else(|| Arc::new(DefaultIdGenerator::new())),
         }
+    }
+
+    /// Serialize repair through all facades sharing a storage object. Separate
+    /// storage objects/processes still require their backend's ownership lock or
+    /// writer lease. As with an active run, callers must not rebind storage while
+    /// repair is in flight.
+    pub(crate) async fn lock_recovery(&self) -> tokio::sync::OwnedMutexGuard<()> {
+        recovery_lock(&self.storage_arc()).lock_owned().await
     }
 
     /// Atomically swap the backing storage (TUI `/session` hot-switch). The
@@ -912,6 +940,44 @@ mod tests {
         // itself rejected by serde_json.
         let nan = serde_json::Number::from_f64(f64::NAN);
         assert!(nan.is_none());
+    }
+
+    #[tokio::test]
+    async fn recovery_locks_follow_storage_identity_and_release_idle_entries() {
+        let first = fixture_session();
+        let shared = Session::new(first.storage(), None);
+        let unrelated = fixture_session();
+        assert_eq!(
+            first.storage().metadata().id,
+            unrelated.storage().metadata().id
+        );
+        let lock = recovery_lock(&first.storage());
+        assert!(Arc::ptr_eq(&lock, &recovery_lock(&shared.storage())));
+        assert!(!Arc::ptr_eq(&lock, &recovery_lock(&unrelated.storage())));
+        let guard = first.lock_recovery().await;
+        assert!(recovery_lock(&shared.storage()).try_lock_owned().is_err());
+        assert!(recovery_lock(&unrelated.storage()).try_lock_owned().is_ok());
+        drop(guard);
+        let weak = Arc::downgrade(&lock);
+        drop(lock);
+        assert!(
+            weak.upgrade().is_none(),
+            "registry must not retain an idle lock"
+        );
+        let _guard = shared.lock_recovery().await;
+        assert!(recovery_lock(&first.storage()).try_lock_owned().is_err());
+    }
+
+    #[tokio::test]
+    async fn recovery_lock_uses_rebound_storage() {
+        let session = fixture_session();
+        let replacement = fixture_session();
+        // Rebind only while no repair/run is in flight, as required by the API.
+        session.set_storage(replacement.storage());
+        let guard = replacement.lock_recovery().await;
+        assert!(recovery_lock(&session.storage()).try_lock_owned().is_err());
+        drop(guard);
+        assert!(recovery_lock(&session.storage()).try_lock_owned().is_ok());
     }
 
     #[tokio::test]

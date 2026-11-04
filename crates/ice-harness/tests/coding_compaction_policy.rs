@@ -611,13 +611,14 @@ fn is_summary_request(request: &RecordedRequest) -> bool {
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn coding_policy_does_not_trigger_at_exactly_85_percent() {
     // 750 + 50 + 25 + 25 = 850 tokens against a 1,000-token window.
+    // Output headroom must not independently lower the 85% input ceiling.
     let (harness, provider) = harness_with_history(
         3000,
         200,
         100,
         100,
         1000,
-        800,
+        100,
         CompactionSettings {
             enabled: false,
             ..CompactionSettings::default()
@@ -628,6 +629,13 @@ async fn coding_policy_does_not_trigger_at_exactly_85_percent() {
         .set_coding_compaction_policy(Some(small_recent_policy()))
         .await
         .expect("set policy");
+    let snapshot = harness.context_snapshot().await.unwrap();
+    assert_eq!(snapshot.compact_at_tokens, Some(850));
+    assert_eq!(
+        ice_harness::compaction::estimate_context_tokens(&snapshot.context.messages).tokens,
+        850,
+        "fixture must exercise equality, not merely a below-threshold request"
+    );
 
     harness
         .prompt_text("NEW_PROMPT_SENTINEL", Vec::new())
@@ -1231,13 +1239,15 @@ async fn late_cancellation_after_coding_summary_prevents_checkpoint() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn coding_midrun_summary_failure_stops_the_turn_and_fails_the_run() {
+    // Admit history and the read schema before the new prompt crosses the
+    // mid-run threshold; a large output reserve instead triggers preflight.
     let (harness, provider) = harness_with_history(
         3000,
         200,
         100,
         100,
         2000,
-        1200,
+        100,
         CompactionSettings::default(),
     )
     .await;
