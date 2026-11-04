@@ -7,6 +7,45 @@ Tracks [the implementation plan](harness-improvement-plan-2026-11-03.md).
 No production data/configuration changes, pushes, PRs, or releases are authorized
 by this execution. Tests use synthetic data and isolated agent directories.
 
+## H17/H18 evaluation and follow-up fixes (2026-11-04)
+
+**H17 (compaction semantics).** The owner picked 10 sessions (30 compactions).
+A second model (gpt-6.1-sol) labelled each with a pre-compaction ledger; all
+85 evidence quotes were verified verbatim against the sessions. First-pass
+result: 27 lost something, 3 kept; dominant class "latest progress replaced by
+an earlier snapshot" (17 cards); 2 critical (stale session/port directions);
+every summary above 12k characters lost something. Labels are provisional
+until the owner spot-checks them in the private review page. A comparison with
+the TypeScript reference found the prompts identical, so the causes are
+inherited. Code review found a structural bug: in one long turn every
+compaction is a split turn with no prior history and the previous summary was
+dropped ("No prior history."). PR #103 fixes it (test red before, green after)
+and changes the prompts (older checkpoint first, reconcile to latest status,
+Current State section, verbatim instructions and acceptance criteria). Live
+summary eval on cx/gpt-6.1-terra: long-turn case 0/2 old, 2/2 new; four
+shorter synthetic classes 12/12 on both (they do not separate the wordings).
+File lists are only 8% of summary text and were left uncapped.
+
+**H18 (task comparison).** Old (`main`) vs new build, 6 tasks x 3 reps on
+cx/gpt-6.1-terra, isolated agent dirs outside any checkout. A first run was
+invalid (run dirs inside the repo made icers load the repo's AGENTS.md; the
+repo was not modified) and is archived. Valid run: fix-test, refactor, log
+triage, resume after SIGKILL and denied write were equivalent (old 15/15, new
+14/15, timing within noise at n=3). Compaction under a 48k window: old 3/3,
+new 0/3. Cause: PR #96's request check refused a request its estimate put at
+71k tokens; the provider measured 49k and accepted it on the old build. PR #96
+commit 53b01ecc sends with a 4,096-token output floor instead of refusing;
+recheck 2/3 complete and all compacted (the partial lost codewords across
+compaction, an H17 class). Remaining gap: one turn of tool output can exceed
+the window and overflow recovery cannot reduce the latest turn; a design is in
+`target/harness-hardening-checks/research/h14-latest-turn-overflow-design.md`.
+
+**Usage research (read-only mining of local sessions and telemetry).** Beyond
+known issues: 656 re-reads of unchanged files (context cost), 84 still-running
+`bash_output` polls (54 min blocked), 125 failed bash calls (6.4%), 11 edit
+misses. Five "Unsupported content type" failures all fell in one hour on
+2026-10-22 and have not recurred (historical Codex content-type incident).
+
 ## Telemetry-driven follow-up (2026-11-04, second agent)
 
 The first agent stopped when its compaction summary hit the same Codex quota
@@ -630,8 +669,8 @@ This closes the current blocker-removal pass, not the eighteen-item program.
 - [ ] H14 output budgeting
 - [ ] H15 observer pressure
 - [ ] H16 analysis export
-- [ ] H17 compaction semantics (owner picking sessions in the private picker artifact, 2026-11-04; review not started)
-- [ ] H18 task evaluation (blocked: no provider quota on 2026-11-04; resume when quota returns, owner to supply task list)
+- [ ] H17 compaction semantics (30 compactions labelled, owner spot-check pending; fix in PR #103)
+- [ ] H18 task evaluation (6-task suite run; regression found and fixed in PR #96; latest-turn overflow open)
 - [ ] Full CI gates and final review
 
 Completion requires the plan's acceptance criteria, not merely an existing test
