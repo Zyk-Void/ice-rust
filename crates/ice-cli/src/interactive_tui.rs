@@ -1359,6 +1359,22 @@ pub async fn interactive_tui(
     // Channel between the key/callback threads and the main async loop.
     let (tx, mut rx) = mpsc::unbounded_channel::<TuiMessage>();
 
+    // Closing the terminal (SIGHUP) or a host's SIGTERM would otherwise kill
+    // the process before SessionShutdown and the durable observe finish. Exit is
+    // not read while a run is in flight, so abort that run first. A second
+    // signal still forces exit if the graceful path hangs.
+    {
+        let tx = tx.clone();
+        let lane = lane.clone();
+        tokio::spawn(async move {
+            crate::modes::termination_signal().await;
+            let _ = lane.abort().await;
+            let _ = tx.send(TuiMessage::Exit);
+            crate::modes::termination_signal().await;
+            std::process::exit(143);
+        });
+    }
+
     // Apply the saved theme before constructing transcript components. Some
     // components keep styled text, so doing this after the welcome banner left
     // the first screen in the dark palette until it was rebuilt.
