@@ -112,10 +112,14 @@ pub async fn unknown_tool_outcomes(
     }
 
     let entries = session
-        .find_entries(&EntryQuery {
-            order: Some(EntryOrder::OldestFirst),
-            ..Default::default()
-        })
+        .view(lane)
+        .find_entries_on_branch(
+            &EntryQuery {
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            },
+            &crate::session::types::BranchBounds::default(),
+        )
         .await
         .map_err(|error| HarnessError::io(error.to_string()))?;
     let landed: std::collections::BTreeSet<&str> = entries
@@ -128,8 +132,6 @@ pub async fn unknown_tool_outcomes(
             _ => None,
         })
         .collect();
-    let _ = lane; // entries are session-wide; kept for call-site clarity.
-
     Ok(calls
         .into_iter()
         .filter(|call| !landed.contains(call.id.as_str()))
@@ -165,6 +167,18 @@ pub(crate) async fn replay_run_frames(
     session: &Session,
     run_id: &str,
 ) -> HarnessResult<Vec<AssistantMessage>> {
+    Ok(replay_run_streams(session, run_id)
+        .await?
+        .into_iter()
+        .map(|(_, message)| message)
+        .collect())
+}
+
+/// Retain stream identity so recovery can bind a salvage entry before writing it.
+pub(crate) async fn replay_run_streams(
+    session: &Session,
+    run_id: &str,
+) -> HarnessResult<Vec<(usize, AssistantMessage)>> {
     let records = session
         .find_records(&RecordQuery {
             record_type: Some(ASSISTANT_FRAME_RECORD_TYPE),
@@ -243,7 +257,7 @@ pub(crate) async fn replay_run_frames(
             continue;
         }
         match reduce_frames(&frames) {
-            Ok(Some(partial)) => replayed.push(partial),
+            Ok(Some(partial)) => replayed.push((index, partial)),
             Ok(None) => {}
             Err(error) => tracing::warn!(
                 %error,

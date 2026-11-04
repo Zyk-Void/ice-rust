@@ -3063,6 +3063,115 @@ impl AgentHarness {
         }
     }
 
+    /// Finish the last assistant's tool batch, including a batch whose first
+    /// results landed before another crash. Stop at a non-result boundary so
+    /// recovery cannot answer calls on an unrelated historical turn.
+    async fn persist_interrupted_tools(
+        session: &Session,
+        lane: &str,
+        tools: &[HarnessTool],
+        signal: &CancellationToken,
+        recorded: &std::collections::BTreeMap<String, ToolStartedRecord>,
+    ) -> HarnessResult<()> {
+        let entries = session
+            .view(lane)
+            .find_entries_on_branch(
+                &EntryQuery {
+                    order: Some(EntryOrder::NewestFirst),
+                    ..Default::default()
+                },
+                &BranchBounds::default(),
+            )
+            .await
+            .map_err(session_to_harness_err)?;
+        for entry in entries {
+            match entry {
+                Entry::Message(message) => match message.message {
+                    AgentMessage::ToolResult(_) => continue,
+                    AgentMessage::Assistant(partial) => {
+                        for outcome in
+                            crate::frame_progress::unknown_tool_outcomes(session, lane, &partial)
+                                .await?
+                        {
+                            let result = Self::resolve_tool_call(
+                                tools,
+                                signal,
+                                recorded,
+                                &outcome,
+                                partial.timestamp,
+                            )
+                            .await;
+                            session
+                                .view(lane)
+                                .append_message(result)
+                                .await
+                                .map_err(session_to_harness_err)?;
+                        }
+                        break;
+                    }
+                    _ => break,
+                },
+                _ => break,
+            }
+        }
+        Ok(())
+    }
+
+    /// Persist salvage before publishing the terminal operation record. Binding
+    /// each stream first makes an ambiguous append retryable: a landed entry
+    /// suppresses replay, while a missing entry leaves its frames available.
+    async fn persist_interrupted_run(
+        session: &Session,
+        lane: &str,
+        run_id: &str,
+        tools: &[HarnessTool],
+        signal: &CancellationToken,
+        salvage_failed_attempts: bool,
+    ) -> HarnessResult<()> {
+        let recorded = session
+            .find_records(&RecordQuery {
+                record_type: Some("tool_started"),
+                run_id: Some(run_id.to_string()),
+                order: Some(EntryOrder::OldestFirst),
+                ..Default::default()
+            })
+            .await
+            .map_err(session_to_harness_err)?
+            .into_iter()
+            .filter_map(|record| match record {
+                LaneRecord::ToolStarted(record) => Some((record.tool_call_id.clone(), record)),
+                _ => None,
+            })
+            .collect();
+        // Repair a previously committed batch before appending another stream.
+        Self::persist_interrupted_tools(session, lane, tools, signal, &recorded).await?;
+        if salvage_failed_attempts {
+            for (index, partial) in
+                crate::frame_progress::replay_run_streams(session, run_id).await?
+            {
+                let id = session.id_generator().next();
+                crate::frame_progress::bind_stream_entry(session, lane, run_id, index, &id).await?;
+                session
+                    .append_entry(
+                        ProvisionedEntry {
+                            id,
+                            kind: ProvisionedKind::Message {
+                                message: AgentMessage::Assistant(Box::new(
+                                    crate::frame_progress::interrupted_message(partial),
+                                )),
+                                terminate: None,
+                            },
+                        },
+                        lane,
+                    )
+                    .await
+                    .map_err(session_to_harness_err)?;
+                Self::persist_interrupted_tools(session, lane, tools, signal, &recorded).await?;
+            }
+        }
+        Ok(())
+    }
+
     /// Settle an operation left open by a process that died, repairing what it
     /// left behind.
     ///
@@ -3077,6 +3186,7 @@ impl AgentHarness {
         signal: &CancellationToken,
         salvage_failed_attempts: bool,
     ) -> HarnessResult<()> {
+        let _recovery = session.lock_recovery().await;
         let open = session
             .find_open_operations(lane, Some(2))
             .await
@@ -3094,6 +3204,17 @@ impl AgentHarness {
         }
         let run_id = operation.base.id.clone();
 
+        // Do not hide failed salvage behind a terminal marker. A second reopen
+        // must see this operation as unfinished until every required write lands.
+        Self::persist_interrupted_run(
+            session,
+            lane,
+            &run_id,
+            tools,
+            signal,
+            salvage_failed_attempts,
+        )
+        .await?;
         session
             .append_record(LaneRecord::OperationFinished(OperationFinishedRecord {
                 base: RecordBase {
@@ -3112,47 +3233,6 @@ impl AgentHarness {
             .await
             .map_err(session_to_harness_err)?;
 
-        // The run never got to persist its messages, so replay whatever
-        // assistant frames committed before the process died and record them as
-        // interrupted. Without this the whole run's output is lost and only the
-        // user's prompt remains — see `docs/debugging/llm-repetition-forensics.md` §十一.
-        // Mirrors upstream's `recoverAssistantGeneration`.
-        //
-        // Every unresolved tool call gets a result: a real one when the call may
-        // be replayed, otherwise the unknown-outcome stand-in. That pairing is
-        // required, not cosmetic — a crash most often lands *during* tool
-        // execution, so the committed partial usually carries tool calls, and an
-        // assistant message whose tool calls have no results is rejected by every
-        // provider on the next request.
-        match Self::resolve_interrupted_run(
-            session,
-            lane,
-            &run_id,
-            tools,
-            signal,
-            salvage_failed_attempts,
-        )
-        .await
-        {
-            Ok(salvaged) => {
-                for message in salvaged {
-                    if let Err(error) = session.view(lane).append_message(message).await {
-                        tracing::warn!(
-                            lane,
-                            %error,
-                            "could not persist a salvaged assistant message after an interrupted run"
-                        );
-                    }
-                }
-            }
-            Err(error) => {
-                tracing::warn!(
-                    lane,
-                    %error,
-                    "could not salvage assistant frames for an interrupted run"
-                );
-            }
-        }
         Ok(())
     }
 
@@ -4872,6 +4952,7 @@ impl AgentHarness {
                             let Some(packet) = extension.request_context(&event).await else {
                                 continue;
                             };
+                            use crate::extension::PromptContextOutcome as Outcome;
                             let extension_id = packet.custom_type.clone();
                             let correlation_key = packet
                                 .correlation_id
@@ -4881,7 +4962,9 @@ impl AgentHarness {
                                 .as_ref()
                                 .is_some_and(|key| seen.lock().unwrap().contains(key));
                             if is_duplicate {
-                                extension.prompt_context_persisted(&packet, false).await;
+                                extension
+                                    .prompt_context_acknowledged(&packet, Outcome::Duplicate)
+                                    .await;
                                 continue;
                             }
                             // Count role and envelope framing as part of the one shared budget.
@@ -4890,11 +4973,19 @@ impl AgentHarness {
                                 packet.custom_type, packet.text, "request_context"
                             );
                             let token_cost = (envelope.encode_utf16().count() + 3) / 4;
-                            if packet.text.trim().is_empty()
-                                || token_cost > remaining
-                                || hook_signal.is_cancelled()
-                            {
-                                extension.prompt_context_persisted(&packet, false).await;
+                            let rejection = if hook_signal.is_cancelled() {
+                                Some(Outcome::Cancelled)
+                            } else if packet.text.trim().is_empty() {
+                                Some(Outcome::Empty)
+                            } else if token_cost > remaining {
+                                Some(Outcome::BudgetRejected)
+                            } else {
+                                None
+                            };
+                            if let Some(outcome) = rejection {
+                                extension
+                                    .prompt_context_acknowledged(&packet, outcome)
+                                    .await;
                                 continue;
                             }
                             let details = serde_json::json!({"source": "request_context", "correlation_id": packet.correlation_id, "extension": extension_id, "run_id": &run_id, "lane_id": &lane, "session_id": &session_id});
@@ -4906,7 +4997,9 @@ impl AgentHarness {
                                 now_ms(),
                             );
                             if hook_signal.is_cancelled() {
-                                extension.prompt_context_persisted(&packet, false).await;
+                                extension
+                                    .prompt_context_acknowledged(&packet, Outcome::Cancelled)
+                                    .await;
                                 continue;
                             }
                             let owner_is_current = {
@@ -4917,14 +5010,20 @@ impl AgentHarness {
                                     })
                             };
                             if !owner_is_current || hook_signal.is_cancelled() {
-                                extension.prompt_context_persisted(&packet, false).await;
+                                let outcome = if hook_signal.is_cancelled() {
+                                    Outcome::Cancelled
+                                } else {
+                                    Outcome::Stale
+                                };
+                                extension
+                                    .prompt_context_acknowledged(&packet, outcome)
+                                    .await;
                                 continue;
                             }
                             match view.append_message(message.clone()).await {
                                 Ok(_) => {
-                                    // Persistence is the delivery acknowledgment contract: once
-                                    // appended, the packet is durable and is returned for injection
-                                    // even if cancellation races the append.
+                                    // The packet is durable and returned for injection even if
+                                    // cancellation races the append. This is not proof of delivery.
                                     remaining = remaining.saturating_sub(token_cost);
                                     if let Some(key) = correlation_key {
                                         let mut seen = seen.lock().unwrap();
@@ -4936,14 +5035,18 @@ impl AgentHarness {
                                         seen.insert(key);
                                     }
                                     additions.push(message);
-                                    extension.prompt_context_persisted(&packet, true).await;
+                                    extension
+                                        .prompt_context_acknowledged(&packet, Outcome::Persisted)
+                                        .await;
                                     if hook_signal.is_cancelled() {
                                         break;
                                     }
                                 }
                                 Err(error) => {
                                     tracing::warn!(custom_type = %packet.custom_type, %error, "could not persist request context; skipping it");
-                                    extension.prompt_context_persisted(&packet, false).await;
+                                    extension
+                                        .prompt_context_acknowledged(&packet, Outcome::AppendFailed)
+                                        .await;
                                 }
                             }
                         }

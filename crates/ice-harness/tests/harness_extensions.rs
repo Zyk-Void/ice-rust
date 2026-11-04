@@ -325,6 +325,14 @@ async fn compaction_entries(
     .collect()
 }
 
+/// Exercise post-tool hooks without preflight compaction of the read schema.
+async fn allow_tool_request(harness: &AgentHarness, provider: &RecordingProvider) {
+    let mut model = provider.inner.default_model().clone();
+    model.context_window = 16_000;
+    model.max_tokens = 1200;
+    harness.set_model(model).await.unwrap();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn manual_compaction_persists_the_extension_checkpoint_without_a_model_call() {
     let (harness, provider, probe) = harness(Vec::new()).await;
@@ -538,6 +546,57 @@ impl HarnessExtension for PacketExtension {
     }
 }
 
+struct ReasonProbe {
+    text: String,
+    cancel: bool,
+    outcomes: Mutex<Vec<ice_harness::extension::PromptContextOutcome>>,
+}
+
+#[async_trait]
+impl HarnessExtension for ReasonProbe {
+    async fn request_context(
+        &self,
+        event: &ice_harness::extension::RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        if self.cancel {
+            event.signal.cancel();
+        }
+        Some(PromptContext {
+            custom_type: "request-memory".into(),
+            text: self.text.clone(),
+            correlation_id: None,
+        })
+    }
+    async fn prompt_context_acknowledged(
+        &self,
+        _: &PromptContext,
+        outcome: ice_harness::extension::PromptContextOutcome,
+    ) {
+        self.outcomes.lock().unwrap().push(outcome);
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn context_acknowledgment_reports_admission_reason_not_append_failure() {
+    use ice_harness::extension::PromptContextOutcome as Outcome;
+    for (text, cancel, expected) in [
+        ("short".into(), false, Outcome::Persisted),
+        (" ".into(), false, Outcome::Empty),
+        ("x".repeat(1_000_000), false, Outcome::BudgetRejected),
+        ("short".into(), true, Outcome::Cancelled),
+    ] {
+        let (harness, _, _) = harness(vec![FauxStep::text("done")]).await;
+        let probe = Arc::new(ReasonProbe {
+            text,
+            cancel,
+            outcomes: Mutex::default(),
+        });
+        harness.set_extensions(vec![probe.clone() as Arc<dyn HarnessExtension>]);
+        let _result = harness.prompt_text("fixture", Vec::new()).await.unwrap();
+        assert_eq!(*probe.outcomes.lock().unwrap(), [expected]);
+    }
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn shared_request_budget_rejects_second_packet_intact() {
     let (agent_harness, provider, _) = harness(vec![FauxStep::text("done")]).await;
@@ -582,6 +641,7 @@ async fn duplicate_correlation_is_acknowledged_false_and_persisted_once() {
         FauxStep::text("done"),
     ])
     .await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -629,7 +689,7 @@ async fn duplicate_correlation_is_acknowledged_false_and_persisted_once() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn request_context_append_failure_does_not_inject_or_acknowledge() {
+async fn request_context_append_failure_reports_reason_without_injection_and_run_can_repeat() {
     let storage = Arc::new(InMemorySessionStorage::new(
         SessionMetadata {
             id: "failed-request".into(),
@@ -641,8 +701,10 @@ async fn request_context_append_failure_does_not_inject_or_acknowledge() {
     ));
     let session = Session::new(Arc::new(RejectMemoryStorage(storage)), None);
     let faux = FauxProvider::new(FauxScript::new());
-    faux.script()
-        .set_responses(vec![FauxStep::text("main answer")]);
+    faux.script().set_responses(vec![
+        FauxStep::text("main answer"),
+        FauxStep::text("next answer"),
+    ]);
     let provider = Arc::new(RecordingProvider {
         inner: faux.clone(),
         system_prompts: Mutex::new(Vec::new()),
@@ -656,25 +718,39 @@ async fn request_context_append_failure_does_not_inject_or_acknowledge() {
     })
     .await
     .unwrap();
-    let packet = Arc::new(PacketExtension {
-        packet: PromptContext {
-            custom_type: "request-memory".into(),
-            text: "do not inject".into(),
-            correlation_id: None,
-        },
-        acknowledgments: Mutex::new(Vec::new()),
-        every_request: false,
+    let packet = Arc::new(ReasonProbe {
+        text: "do not inject".into(),
+        cancel: false,
+        outcomes: Mutex::default(),
     });
     harness.set_extensions(vec![packet.clone() as Arc<dyn HarnessExtension>]);
-    let result = harness.prompt_text("continues", Vec::new()).await.unwrap();
-    assert!(matches!(
-        result.outcome,
-        ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }
-    ));
-    assert_eq!(packet.acknowledgments.lock().unwrap().as_slice(), &[false]);
-    assert!(!user_texts(&provider.contexts.lock().unwrap()[0])
+    for prompt in ["continues", "can run again"] {
+        let result = harness.prompt_text(prompt, Vec::new()).await.unwrap();
+        assert!(matches!(
+            result.outcome,
+            ice_harness::agent_harness::HarnessRunOutcome::Completed { .. }
+        ));
+    }
+    assert_eq!(
+        packet.outcomes.lock().unwrap().as_slice(),
+        &[
+            ice_harness::extension::PromptContextOutcome::AppendFailed,
+            ice_harness::extension::PromptContextOutcome::AppendFailed,
+        ]
+    );
+    let contexts = provider.contexts.lock().unwrap();
+    assert_eq!(contexts.len(), 2);
+    assert!(contexts.iter().all(|context| !user_texts(context)
         .iter()
-        .any(|text| text == "do not inject"));
+        .any(|text| text == "do not inject")));
+    drop(contexts);
+    let entries = harness
+        .session()
+        .find_entries(&EntryQuery::default())
+        .await
+        .unwrap();
+    assert!(entries.iter().all(|entry| !matches!(entry, Entry::Message(message)
+        if ice_harness::messages::custom_data(&message.message).is_some_and(|data| data.custom_type == "request-memory"))));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -788,6 +864,7 @@ async fn request_context_waits_for_existing_tool_turn_and_uses_raw_origin() {
         FauxStep::text("done"),
     ];
     let (harness, provider, _) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -954,6 +1031,7 @@ async fn request_context_observes_midrun_compaction_once_with_bounded_context() 
         FauxStep::text("done"),
     ];
     let (harness, provider, boundary_probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     *boundary_probe.boundary.lock().unwrap() = Some(BoundaryDecision::Compact { pause: false });
     *boundary_probe.decision.lock().unwrap() =
         Some(BeforeCompactDecision::Replace(CompactionOverride {
@@ -1010,6 +1088,7 @@ async fn boundary_request_compacts_mid_run_and_pauses() {
         FauxStep::Message(faux_assistant_message("unreachable", StopReason::Stop)),
     ];
     let (harness, provider, probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -1053,6 +1132,7 @@ async fn cancelled_extension_midrun_checkpoint_stops_before_the_next_request() {
         FauxStep::text("must not run after cancelled checkpoint"),
     ];
     let (harness, provider, probe) = harness(steps).await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
@@ -1099,6 +1179,7 @@ async fn extension_boundary_can_compact_when_generic_compaction_is_disabled() {
         },
     )
     .await;
+    allow_tool_request(&harness, &provider).await;
     let execution = Arc::new(InMemoryExecutionEnv::new());
     let env: Arc<dyn ice_tools::ExecutionEnv> = execution.clone();
     let mut_env: Arc<dyn ice_tools::MutatingEnv> = execution;
