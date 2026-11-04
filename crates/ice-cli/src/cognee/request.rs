@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use std::path::Path;
 
 use ice_harness::extension::{
-    BeforeRunEvent, HarnessExtension, PromptContext, RequestContextEvent,
+    BeforeRunEvent, HarnessExtension, PromptContext, PromptContextOutcome, RequestContextEvent,
 };
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -209,6 +209,61 @@ impl CogneeRuntime {
         accepted
     }
 
+    /// Legacy recall for the run's first request, waiting at most
+    /// [`FOREGROUND_RECALL_GRACE_MS`]. A slower recall keeps running as tracked
+    /// background work (shutdown aborts it) and its memory is delivered once to
+    /// a later request of the same run; a different run never receives it.
+    async fn legacy_request_context(
+        &self,
+        event: &RequestContextEvent<'_>,
+    ) -> Option<PromptContext> {
+        if event.request_index != 0 {
+            let mut state = self.state();
+            let late = state.late_recall.take()?;
+            if late.run_id == event.run_id && late.session_id == event.session_id {
+                return Some(late.context);
+            }
+            return None;
+        }
+        let prompt = event.original_prompt?.to_owned();
+        self.state().late_recall = None;
+        let this = self.arc();
+        let system_prompt = event.system_prompt.to_owned();
+        let session_id = event.session_id.to_owned();
+        let signal = event.signal.clone();
+        let mut recall = tokio::spawn(async move {
+            this.prompt_context(&BeforeRunEvent {
+                prompt: &prompt,
+                system_prompt: Some(&system_prompt),
+                session_id: &session_id,
+                signal,
+            })
+            .await
+        });
+        let grace = std::time::Duration::from_millis(super::FOREGROUND_RECALL_GRACE_MS);
+        match tokio::time::timeout(grace, &mut recall).await {
+            Ok(context) => context.ok().flatten(),
+            Err(_) => {
+                let this = self.arc();
+                let run_id = event.run_id.to_owned();
+                let session_id = event.session_id.to_owned();
+                // Abort the recall with its tracker, e.g. at shutdown.
+                let recall = AbortOnDrop(recall);
+                self.track(async move {
+                    let mut recall = recall;
+                    if let Ok(Some(context)) = (&mut recall.0).await {
+                        this.state().late_recall = Some(super::LateRecall {
+                            run_id,
+                            session_id,
+                            context,
+                        });
+                    }
+                });
+                None
+            }
+        }
+    }
+
     pub(super) async fn context_for_request(
         &self,
         event: &RequestContextEvent<'_>,
@@ -263,18 +318,7 @@ impl CogneeRuntime {
             });
         }
         if policy == ReadPolicy::Legacy {
-            if event.request_index != 0 {
-                return None;
-            }
-            let original = event.original_prompt?;
-            return self
-                .prompt_context(&BeforeRunEvent {
-                    prompt: original,
-                    system_prompt: Some(event.system_prompt),
-                    session_id: event.session_id,
-                    signal: event.signal.clone(),
-                })
-                .await;
+            return self.legacy_request_context(event).await;
         }
         let cwd = self.cwd.lock().unwrap().clone();
         let now = self.now();
@@ -560,7 +604,7 @@ impl CogneeRuntime {
     pub(super) fn acknowledge_request_memory(
         &self,
         context: &PromptContext,
-        persisted: bool,
+        acknowledgment: PromptContextOutcome,
     ) -> bool {
         let Some(id) = context.correlation_id.as_deref() else {
             return false;
@@ -591,7 +635,25 @@ impl CogneeRuntime {
             && self.now().saturating_sub(packet.created_at) < PACKET_TTL_MS
             && Self::enabled(&state, self.offline)
             && !state.shutting_down;
+        let persisted = acknowledgment == PromptContextOutcome::Persisted;
         let committed = persisted && valid;
+        // Durable append and current ownership are independent facts. A late
+        // cancellation must not erase a successful append from diagnostics.
+        let outcome = if persisted {
+            if valid {
+                "persisted"
+            } else {
+                "persisted_stale"
+            }
+        } else if packet.signal.is_cancelled() {
+            "cancelled"
+        } else if body_hash(&context.text) != packet.body_hash {
+            "provenance_rejected"
+        } else if !valid {
+            "stale"
+        } else {
+            acknowledgment.as_str()
+        };
         if committed {
             state.seen_evidence.remember_lines(&packet.prepared.lines);
             if packet.prepared.checkpoint.is_some()
@@ -603,11 +665,22 @@ impl CogneeRuntime {
         drop(state);
         self.observe_for("injection", if committed {"succeeded"} else {"failed"}, ObserveFields {
             request_id: Some(id.into()),
-            meta: meta(json!({"outcomeVersion":2,"outcome":if committed {"persisted"} else if valid {"append_failed"} else {"stale"},
-                "persistedBytes":if committed {context.text.len()} else {0},"estimatedPersistedTokens":if committed {packet.prepared.estimated_tokens} else {0},
+            meta: meta(json!({"outcomeVersion":2,"outcome":outcome,"acknowledgment":acknowledgment.as_str(),
+                "persisted":persisted,"current":valid,"delivery":"unknown",
+                "persistedBytes":if persisted {context.text.len()} else {0},"estimatedPersistedTokens":if persisted {packet.prepared.estimated_tokens} else {0},
                 "retainedRecords":if committed {packet.prepared.lines.len()} else {0},"taskId":packet.task_id,"runId":packet.run_id})),
             ..ObserveFields::default()
         }, Some((packet.operation.session_id.as_deref().unwrap_or_default(), &packet.operation.dataset)));
         true
+    }
+}
+
+/// Aborts a spawned task when its owner is dropped or aborted, so cancelling
+/// tracked work also stops the task it was waiting on.
+struct AbortOnDrop<T>(tokio::task::JoinHandle<T>);
+
+impl<T> Drop for AbortOnDrop<T> {
+    fn drop(&mut self) {
+        self.0.abort();
     }
 }
