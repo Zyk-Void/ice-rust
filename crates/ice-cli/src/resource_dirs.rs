@@ -26,7 +26,8 @@
 //! **Not auto-discovered by design:** `.agents/skills` + `~/.agents/skills`.
 //! Importing another tool's skill directory is opt-in: list it in `skillDirs`
 //! (for example `"~/.agents/skills"`; a leading `~` expands to the home
-//! directory). **Deferred (documented):** shadowed-context-file dedup (`findShadowedContextFile`); full structured
+//! directory). Nested-worktree context-file dedup (`findShadowedContextFile`) lives in
+//! `ice_harness::context_files`. **Deferred (documented):** full structured
 //! winner/loser collision diagnostics (icers v1 encodes collisions as a
 //! `SkillDiagnostic`/`PromptTemplateDiagnostic` with a descriptive message).
 
