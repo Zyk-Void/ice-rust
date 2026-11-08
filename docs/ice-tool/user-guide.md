@@ -439,7 +439,7 @@ The built-in system prompt is a Markdown file, `crates/ice-cli/prompts/system.md
 3. `~/.icers/agent/SYSTEM.md`
 4. the built-in template
 
-When project resources are disabled (`--no-approve` or a stored negative trust decision), steps 2 and 3 are skipped.
+When project resources are disabled (`--no-approve` or a stored negative trust decision), step 2 is skipped and the project's `APPEND_SYSTEM.md` is ignored; your global `SYSTEM.md` and `APPEND_SYSTEM.md` still apply.
 
 Text is then added after the base: each `--append-system-prompt` value (literal text or a file path), or, when there are none, the project or global `APPEND_SYSTEM.md`. `AGENTS.md`/`CLAUDE.md` instructions and the skill list follow. `/reload` re-reads all of these files, so you can edit them during a session.
 
@@ -471,7 +471,7 @@ Each file is processed as follows:
 - `@path` references outside code (`@docs/style.md`, `@./notes.md`, `@/abs/path.md`; a `#heading` suffix is ignored) load that file as its own entry, right after the file that names it. References are followed up to 5 levels deep, only to text files, and each file loads once. A global file may reference any path. A project or local file may reference only paths inside its repository, after symlinks are resolved, so a cloned repository cannot pull in files such as `~/.ssh` keys.
 - A file longer than 64 KiB is cut off, with a notice telling the model to read the rest.
 
-In a git worktree nested inside its main checkout (for example `.worktrees/feature`), checked-in files from the main checkout are skipped, because the worktree has its own copies. `AGENTS.local.md` files there still load. Instruction files are not loaded when project resources are disabled or with `--no-context-files`.
+In a git worktree nested inside its main checkout (for example `.worktrees/feature`), checked-in files from the main checkout are skipped, because the worktree has its own copies. `AGENTS.local.md` files there still load. When project resources are disabled, only the global instruction files (step 1) load. `--no-context-files` loads none.
 
 Project-level `.icers/settings.json` can add resource directories:
 

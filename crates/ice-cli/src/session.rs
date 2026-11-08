@@ -37,7 +37,9 @@ use std::sync::{Arc, Mutex};
 
 use ice_ai::Provider;
 use ice_harness::agent_harness::AgentHarness;
-use ice_harness::context_files::{format_project_context, load_project_context_files};
+use ice_harness::context_files::{
+    format_project_context, load_global_context_files, load_project_context_files,
+};
 use ice_harness::session::memory::{InMemorySessionStorage, SystemClock};
 use ice_harness::session::session::DefaultIdGenerator;
 use ice_harness::session::types::SessionMetadata;
@@ -58,8 +60,8 @@ use crate::args::Args;
 use crate::docs_tool::create_docs_tool;
 use crate::provider::ResolvedModel;
 use crate::resource_dirs::{
-    discover_append_system_prompt_file, discover_system_prompt_file, extension_dirs,
-    global_extension_dirs, global_prompt_template_dirs, global_skill_dirs,
+    discover_append_system_prompt_file_with_trust, discover_system_prompt_file_with_trust,
+    extension_dirs, global_extension_dirs, global_prompt_template_dirs, global_skill_dirs,
     load_prompt_templates_with_precedence, load_skills_with_precedence, project_extension_dirs,
     project_prompt_template_dirs, project_skill_dirs, prompt_template_dirs, skill_dirs,
 };
@@ -89,7 +91,8 @@ fn compose_agent_emitter(
 /// a discovered `SYSTEM.md` (project `.icers/` before the global agent dir,
 /// mirroring pi `discoverSystemPromptFile`, `resource-loader.ts:1022-1034`),
 /// then the built-in Markdown template (`crates/ice-cli/prompts/system.md`).
-/// Project files count only when the project is trusted.
+/// An untrusted project skips its own `SYSTEM.md`; the global one still
+/// applies, as in TS ice.
 ///
 /// Every source goes through the same placeholder pass, so a `SYSTEM.md`
 /// copied from the built-in template keeps its live environment section. The
@@ -106,10 +109,8 @@ async fn resolve_base_prompt(
     };
     let custom = match explicit {
         Some(explicit) => Some(explicit.to_string()),
-        None if project_trusted => {
-            discover_system_prompt_file(cwd).and_then(|path| read_prompt_source(&path, sources))
-        }
-        None => None,
+        None => discover_system_prompt_file_with_trust(cwd, project_trusted)
+            .and_then(|path| read_prompt_source(&path, sources)),
     };
     let template = custom.as_deref().unwrap_or(DEFAULT_SYSTEM_PROMPT_TEMPLATE);
     if !template.contains("{{") {
@@ -125,6 +126,30 @@ async fn resolve_base_prompt(
     let replayed = ice_ai::model::prior_reasoning_is_replayed(model);
     // `compose_system_prompt` trims the base, so trailing newlines do not matter.
     render_prompt_template(template, &env, replayed)
+}
+
+/// The `AGENTS.md`-family instruction files for this launch. An untrusted
+/// project loads only the user's own global files; `--no-context-files`
+/// loads none.
+async fn load_instruction_files(
+    env: &Arc<dyn ice_tools::env::ExecutionEnv>,
+    cwd: &Path,
+    project_trusted: bool,
+    args: &Args,
+) -> Vec<ice_harness::context_files::ContextFile> {
+    if args.no_context_files {
+        return Vec::new();
+    }
+    let agent_dir = crate::config::agent_dir().ok();
+    match (project_trusted, agent_dir) {
+        (true, agent_dir) => {
+            // Without a resolvable agent dir only the ancestor walk runs.
+            let agent_dir = agent_dir.unwrap_or_else(|| cwd.to_path_buf());
+            load_project_context_files(env, cwd, &agent_dir).await
+        }
+        (false, Some(agent_dir)) => load_global_context_files(env, &agent_dir).await,
+        (false, None) => Vec::new(),
+    }
 }
 
 /// How the user asked to select a session. v1 honors `NoSession` (ephemeral
@@ -476,10 +501,7 @@ pub async fn build_prepared(
         append_texts.push(text);
     }
     if args.append_system_prompt.is_empty() {
-        if let Some(path) = project_trusted
-            .then(|| discover_append_system_prompt_file(cwd))
-            .flatten()
-        {
+        if let Some(path) = discover_append_system_prompt_file_with_trust(cwd, project_trusted) {
             if let Some(text) = read_prompt_source(&path, &mut context_paths) {
                 append_texts.push(text);
             }
@@ -502,7 +524,6 @@ pub async fn build_prepared(
     // `isProjectTrusted()` (global resources are unconditional). icers v1 has no
     // trust prompt — project resources are discovered unconditionally (a copied
     // `.icers/` dir drops in and works). Full trust gating is deferred.
-    let agent_dir = crate::config::agent_dir().ok();
 
     // ---- B5b: extension resources_discover ----
     // If any plugin registered a `resources_discover` handler, fan the event out
@@ -564,22 +585,13 @@ pub async fn build_prepared(
         resource_diags.extend(result.resource_diagnostics);
     }
 
-    let context_block = if args.no_context_files || !project_trusted {
-        String::new()
-    } else {
-        // `load_project_context_files` walks the global agentDir first then
-        // ancestor-walks cwd→root (deepest last). It needs a real agent_dir; if
-        // none is resolvable, pass the cwd dir so only the ancestor-walk runs
-        // (the global step returns None anyway).
-        let agent_dir_path = agent_dir.clone().unwrap_or_else(|| cwd.to_path_buf());
-        let files = load_project_context_files(&env_dyn, cwd, &agent_dir_path).await;
-        context_paths.extend(
-            files
-                .iter()
-                .map(|file| file.path.to_string_lossy().into_owned()),
-        );
-        format_project_context(&files)
-    };
+    let context_files = load_instruction_files(&env_dyn, cwd, project_trusted, args).await;
+    context_paths.extend(
+        context_files
+            .iter()
+            .map(|file| file.path.to_string_lossy().into_owned()),
+    );
+    let context_block = format_project_context(&context_files);
 
     // Surface resource-discovery diagnostics as startup warnings (verbose-only).
     if args.verbose {
@@ -644,7 +656,7 @@ pub async fn build_prepared(
         eprintln!("=== --debug-system-prompt ===");
         let base_src = if args.system_prompt.is_some() {
             "--system-prompt"
-        } else if discover_system_prompt_file(cwd).is_some() {
+        } else if discover_system_prompt_file_with_trust(cwd, project_trusted).is_some() {
             "SYSTEM.md"
         } else {
             "default"
@@ -1801,13 +1813,8 @@ where
         resource_diags.extend(result.resource_diagnostics);
     }
 
-    let context_files = if effective_args.no_context_files || !project_trusted {
-        Vec::new()
-    } else {
-        let agent_dir = crate::config::agent_dir().ok();
-        let agent_dir_path = agent_dir.unwrap_or_else(|| ctx.cwd.clone());
-        load_project_context_files(&env_dyn, &ctx.cwd, &agent_dir_path).await
-    };
+    let context_files =
+        load_instruction_files(&env_dyn, &ctx.cwd, project_trusted, &effective_args).await;
     let context_block = format_project_context(&context_files);
 
     let mut details: Vec<String> = Vec::new();
@@ -1866,9 +1873,7 @@ where
         append_texts.push(text);
     }
     if effective_args.append_system_prompt.is_empty() {
-        if let Some(path) = project_trusted
-            .then(|| discover_append_system_prompt_file(&ctx.cwd))
-            .flatten()
+        if let Some(path) = discover_append_system_prompt_file_with_trust(&ctx.cwd, project_trusted)
         {
             if let Some(text) = read_prompt_source(&path, &mut context_paths) {
                 append_texts.push(text);
@@ -3954,6 +3959,91 @@ mod tests {
     }
 
     #[test]
+    fn untrusted_project_keeps_only_global_prompt_files() {
+        const CHILD: &str = "ICERS_UNTRUSTED_GLOBAL_PROMPT_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            let dir = tempfile::tempdir().unwrap();
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "session::tests::untrusted_project_keeps_only_global_prompt_files",
+                    "--nocapture",
+                ])
+                .env(CHILD, "1")
+                .env(crate::config::CONFIG_DIR_ENV, dir.path())
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let agent = crate::config::agent_dir().unwrap();
+                let cwd = agent.join("project");
+                let project_config = cwd.join(".icers");
+                std::fs::create_dir_all(&project_config).unwrap();
+                for (path, content) in [
+                    (agent.join("SYSTEM.md"), "GLOBAL_BASE"),
+                    (agent.join("APPEND_SYSTEM.md"), "GLOBAL_APPEND"),
+                    (agent.join("AGENTS.md"), "GLOBAL_INSTRUCTIONS"),
+                    (project_config.join("SYSTEM.md"), "PROJECT_BASE"),
+                    (project_config.join("APPEND_SYSTEM.md"), "PROJECT_APPEND"),
+                    (cwd.join("AGENTS.md"), "PROJECT_INSTRUCTIONS"),
+                ] {
+                    std::fs::write(path, content).unwrap();
+                }
+                let resolved = crate::provider::resolve(
+                    Some("anthropic"),
+                    Some(crate::provider::DEFAULT_MODEL_ID),
+                    None,
+                    Some("test-key"),
+                    None,
+                )
+                .unwrap();
+                let mut args = Args {
+                    no_session: true,
+                    no_extensions: true,
+                    no_skills: true,
+                    no_prompt_templates: true,
+                    trust_override: Some(false),
+                    ..Default::default()
+                };
+                let (harness, _events, context) =
+                    build(&resolved, &args, &cwd, false).await.unwrap();
+                let check = |prompt: String| {
+                    for wanted in ["GLOBAL_BASE", "GLOBAL_APPEND", "GLOBAL_INSTRUCTIONS"] {
+                        assert!(prompt.contains(wanted), "{wanted} missing: {prompt}");
+                    }
+                    for unwanted in ["PROJECT_BASE", "PROJECT_APPEND", "PROJECT_INSTRUCTIONS"] {
+                        assert!(!prompt.contains(unwanted), "{unwanted} loaded: {prompt}");
+                    }
+                };
+                check(harness.get_system_prompt().await.unwrap().unwrap());
+                // `/reload` applies the same rule.
+                assert!(
+                    !reload_extension_resources(&harness, &context)
+                        .await
+                        .had_errors
+                );
+                check(harness.get_system_prompt().await.unwrap().unwrap());
+                // `--no-context-files` still drops the global instructions.
+                args.no_context_files = true;
+                let (harness, _events, _context) =
+                    build(&resolved, &args, &cwd, false).await.unwrap();
+                let prompt = harness.get_system_prompt().await.unwrap().unwrap();
+                assert!(prompt.contains("GLOBAL_BASE") && !prompt.contains("GLOBAL_INSTRUCTIONS"));
+            });
+    }
+
+    #[test]
     fn loaded_context_paths_track_precedence_and_reload() {
         const CHILD: &str = "ICERS_CONTEXT_PATHS_REGRESSION_CHILD";
         if std::env::var_os(CHILD).is_none() {
@@ -4098,7 +4188,8 @@ mod tests {
                     vec![path(explicit)]
                 );
 
-                // The reload must honor the startup opt-out from project context.
+                // The reload must honor the startup opt-out from project
+                // context, while the user's own global files still apply.
                 context.args.system_prompt = None;
                 context.args.append_system_prompt.clear();
                 context.args.no_context_files = false;
@@ -4108,15 +4199,17 @@ mod tests {
                         .await
                         .had_errors
                 );
-                assert!(harness
-                    .get_resources()
-                    .await
-                    .unwrap()
-                    .context_files
-                    .is_empty());
+                assert_eq!(
+                    harness.get_resources().await.unwrap().context_files,
+                    vec![
+                        path(agent.join("SYSTEM.md")),
+                        path(agent.join("APPEND_SYSTEM.md")),
+                        path(agent.join("AGENTS.md")),
+                    ]
+                );
                 let prompt = harness.get_system_prompt().await.unwrap().unwrap();
                 assert!(
-                    !prompt.contains("SHADOWED_CLAUDE") && !prompt.contains("GLOBAL_INSTRUCTIONS")
+                    !prompt.contains("SHADOWED_CLAUDE") && prompt.contains("GLOBAL_INSTRUCTIONS")
                 );
             });
     }
