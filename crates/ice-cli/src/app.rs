@@ -699,6 +699,10 @@ fn handle_parse_short_circuits(parsed: &Args) -> Option<i32> {
         print_version();
         return Some(0);
     }
+    if parsed.print_system_template {
+        print!("{}", crate::system_prompt::DEFAULT_SYSTEM_PROMPT_TEMPLATE);
+        return Some(0);
+    }
 
     // ---- Parse errors → help + usage exit ----
     if !parsed.errors.is_empty() {

@@ -218,6 +218,7 @@ Common global options:
 --system-prompt <text>  Replace the default system prompt
 --append-system-prompt <text>  Append to the system prompt (repeatable)
 --debug-system-prompt   Print each parsed system-prompt section to stderr
+--print-system-template Print the built-in system prompt template and exit
 --verbose               Show startup warnings (such as ignored flags)
 --server [--port <n>] [--bind <ip>]
                         Headless server (prints a token at startup)
@@ -431,7 +432,7 @@ Project `.icers` takes precedence over project `.pi`. Global resources are locat
 
 ### System prompt
 
-The built-in system prompt is a Markdown file, `crates/ice-cli/prompts/system.md` in the source tree, compiled into `icers`. `icers --debug-system-prompt` prints the prompt that is actually in use. The base prompt comes from the first of these:
+The built-in system prompt is a Markdown file, `crates/ice-cli/prompts/system.md` in the source tree, compiled into `icers`. `icers --print-system-template` prints it, placeholders included, and `icers --debug-system-prompt` prints the prompt that is actually in use. The base prompt comes from the first of these:
 
 1. `--system-prompt <text>`
 2. `.icers/SYSTEM.md` in the project
@@ -451,7 +452,7 @@ Every base prompt, including your own `SYSTEM.md`, can use these placeholders. A
 | `{{cwd}}` | The working directory |
 | `{{date}}` | Today's UTC date, `YYYY-MM-DD` |
 
-To customize the default, copy the built-in template into `SYSTEM.md` and edit it. Keep `{{environment}}` if you want the environment and git sections. The prompt does not list tools, because the tool definitions sent with each request already describe the live tool set.
+To customize the default, save the built-in template and edit it: `icers --print-system-template > ~/.icers/agent/SYSTEM.md` (or `.icers/SYSTEM.md` for one project). Keep `{{environment}}` if you want the environment and git sections. The prompt does not list tools, because the tool definitions sent with each request already describe the live tool set.
 
 ### Instruction files (AGENTS.md)
 

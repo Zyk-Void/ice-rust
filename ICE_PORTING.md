@@ -568,7 +568,6 @@ Missing from `crates/ice-cli/src/args.rs`:
 |---|---|---|
 | `--fast` / `--no-fast` | `CA/cli/args.ts:159` | Requests the priority service tier on capable Responses models (`fastMode`). |
 | `--observe[=port]` | `:91` | §4 dashboard. |
-| `--print-system-template` | `:84` | Prints the system prompt template and exits. |
 | `--ui-mode regular\|fullscreen` | `:201` | Fullscreen renderer that owns the mouse (`fullscreenScrollbar`). |
 | `--ice-mode`, `--ice-verify`, `--ice-allow-bash`, `--allow-external`, `--ice-plan-model`, `--ice-build-model`, `--ice-workgraph-dispatch` | §2 | |
 | `--agents`, `--sub-yolo`, `--import-agent-pack`, `ice agents …` | §1.9 | |
