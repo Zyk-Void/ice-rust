@@ -21,7 +21,8 @@
 //!   built-in Anthropic/OpenAI-compatible providers and `models.json`, but
 //!   runtime catalog mutation remains outside this layer.
 //! - **Built-in tools**: `read`, `bash`, `edit`, `write`, and the read-only
-//!   `docs` lookup tool. The former ice-only `grep`, `find`, `ls`, and
+//!   `docs` lookup tool (the system prompt does not list them; the request's
+//!   tool schemas do). The former ice-only `grep`, `find`, `ls`, and
 //!   `powershell` tools remain library modules but are not registered by the
 //!   CLI.
 //! - **Session restore (`-c`/`-r`/`--session`)** is *partially* supported: a
@@ -84,62 +85,46 @@ fn compose_agent_emitter(
     }
 }
 
-/// The default coding system prompt. A condensed port of the TS
-/// `packages/coding-agent/src/core/system-prompt.ts` base prompt.
-pub fn default_system_prompt(cwd: &str, prior_reasoning_replayed: bool) -> String {
-    // The working-state rule must match what actually comes back on the next
-    // request. With `compat.requiresThinkingAsText` (or the native thinking
-    // channels of anthropic/responses) the model *does* see its own reasoning
-    // again, and claiming otherwise makes it re-derive and restate the plan
-    // every turn — the re-plan symptom in `docs/llm-repetition-forensics.md`.
-    let working_state_rule = if prior_reasoning_replayed {
-        "- Keep a SHORT working plan visible (a few bullets, or the todo tool) and update it as you go.
-  Your own reasoning is carried back to you on the next turn, so do not re-derive it or restate
-  the whole plan: continue from the last unfinished step, and when a step lands, say which one.
-  Re-listing the same plan without acting on it is a bug, not progress."
-    } else {
-        "- Keep your working state in your VISIBLE replies, not only in reasoning. Reasoning is not
-  carried into your next turn: only the text you write and the tool output you produce come
-  back. Before each batch of tool calls, write one short line naming the task you are on and
-  what remains. When you finish a step, say which one is done. If you keep the plan only in
-  your head you will re-derive it from scratch every turn."
+/// The base system prompt, by precedence: an explicit `--system-prompt`, then
+/// a discovered `SYSTEM.md` (project `.icers/` before the global agent dir,
+/// mirroring pi `discoverSystemPromptFile`, `resource-loader.ts:1022-1034`),
+/// then the built-in Markdown template (`crates/ice-cli/prompts/system.md`).
+/// Project files count only when the project is trusted.
+///
+/// Every source goes through the same placeholder pass, so a `SYSTEM.md`
+/// copied from the built-in template keeps its live environment section. The
+/// environment (which spawns git) is gathered only when the text asks for it.
+async fn resolve_base_prompt(
+    explicit: Option<&str>,
+    cwd: &Path,
+    project_trusted: bool,
+    model: &ice_ai::Model,
+    sources: &mut Vec<String>,
+) -> String {
+    use crate::system_prompt::{
+        render_prompt_template, template_uses, PromptEnvironment, DEFAULT_SYSTEM_PROMPT_TEMPLATE,
     };
-
-    format!(
-        "You are an expert coding assistant operating inside icers, a coding agent harness. \
-You help users by reading files, executing commands, editing code, and writing new files.
-
-Available tools:
-- read  — Read file contents
-- bash  — Execute Bash commands using Bash/POSIX syntax, including on Windows
-- edit  — Find/replace edits to existing files
-- write — Create or overwrite files
-- docs  — Look up icers usage, extension, package, and compatibility documentation
-
-Guidelines:
-- Reply in the SAME language the user is writing in. Detect the language of the user's
-  latest message (and, when it is too short to be sure, the working language of the
-  conversation so far) and use it for your prose replies. Mirror it unless the user
-  explicitly asks for a different language; only fall back to English when the
-  user's language cannot be determined.
-- Be concise in your responses
-- Show file paths clearly when working with files
-- Prefer the smallest change that solves the problem
-- The bash tool runs Bash, even on Windows. Use ls, find, rg, and POSIX pipelines;
-  do not pass PowerShell cmdlets such as Get-ChildItem, Select-Object, or Select-String.
-  If a powershell tool is available, use it for PowerShell commands.
-{working_state_rule}
-- Use the todo tool for multi-step work only when it is advertised and enabled.
-  Otherwise maintain a durable checklist in a permitted project file, or a short visible
-  checklist if file writes are unavailable. Never install a plugin just to obtain a todo tool.
-  Add steps once and mark them done as you go. Re-stating the same plan without acting on it is
-  a bug, not progress.
-- Read only what you need. If a file or search result was already shown earlier in this
-  conversation, use it instead of fetching it again.
-- When unsure about icers commands, extensions, Pi package compatibility, or .icers configuration, consult the project documentation before guessing
-
-Current working directory: {cwd}"
-    )
+    let custom = match explicit {
+        Some(explicit) => Some(explicit.to_string()),
+        None if project_trusted => {
+            discover_system_prompt_file(cwd).and_then(|path| read_prompt_source(&path, sources))
+        }
+        None => None,
+    };
+    let template = custom.as_deref().unwrap_or(DEFAULT_SYSTEM_PROMPT_TEMPLATE);
+    if !template.contains("{{") {
+        return template.to_string();
+    }
+    let env = if template_uses(template, "environment") {
+        PromptEnvironment::collect(cwd).await
+    } else {
+        PromptEnvironment::minimal(&cwd.to_string_lossy())
+    };
+    // Whether this model sees its own prior reasoning again decides how the
+    // `{{working_state}}` rule is worded.
+    let replayed = ice_ai::model::prior_reasoning_is_replayed(model);
+    // `compose_system_prompt` trims the base, so trailing newlines do not matter.
+    render_prompt_template(template, &env, replayed)
 }
 
 /// How the user asked to select a session. v1 honors `NoSession` (ephemeral
@@ -469,25 +454,15 @@ pub async fn build_prepared(
         }
     }
     // ---- System prompt base (precedence: --system-prompt > SYSTEM.md > default) ----
-    // Mirrors pi `discoverSystemPromptFile` (`resource-loader.ts:1022-1034`):
-    // an explicit `--system-prompt` flag wins; otherwise a discovered
-    // `<cwd>/.icers/SYSTEM.md` wins, then
-    // `<agent_dir>/SYSTEM.md`.
-    // (global); otherwise the built-in default. **Project-wins** — the same
-    // direction as skills/prompts precedence.
-    // Whether this model sees its own prior reasoning again decides how the
-    // working-state rule is worded (see `default_system_prompt`).
-    let prior_reasoning_replayed = ice_ai::model::prior_reasoning_is_replayed(&resolved.model);
     let mut context_paths = Vec::new();
-    let base_prompt = match args.system_prompt.as_deref() {
-        Some(explicit) => explicit.to_string(),
-        None if project_trusted => match discover_system_prompt_file(cwd) {
-            Some(path) => read_prompt_source(&path, &mut context_paths)
-                .unwrap_or_else(|| default_system_prompt(&cwd_str, prior_reasoning_replayed)),
-            None => default_system_prompt(&cwd_str, prior_reasoning_replayed),
-        },
-        None => default_system_prompt(&cwd_str, prior_reasoning_replayed),
-    };
+    let base_prompt = resolve_base_prompt(
+        args.system_prompt.as_deref(),
+        cwd,
+        project_trusted,
+        &resolved.model,
+        &mut context_paths,
+    )
+    .await;
 
     // ---- Append-text sources (precedence: --append-system-prompt > APPEND_SYSTEM.md) ----
     // Mirrors pi `appendSystemPrompt` (`resource-loader.ts:525-542`). Explicit
@@ -1873,20 +1848,18 @@ where
     }
 
     // ---- Re-compose the system prompt (same precedence as build) ----
-    // Same working-state wording rule as `build`; a mid-session `/model` switch
-    // re-composes the prompt on the next reload, which is the same staleness the
-    // rest of this path already has (provider resolution is a startup concern).
-    let prior_reasoning_replayed = ice_ai::model::prior_reasoning_is_replayed(&ctx.resolved_model);
+    // A mid-session `/model` switch re-composes the prompt on the next reload,
+    // which is the same staleness the rest of this path already has (provider
+    // resolution is a startup concern).
     let mut context_paths = Vec::new();
-    let base_prompt = match effective_args.system_prompt.as_deref() {
-        Some(explicit) => explicit.to_string(),
-        None if project_trusted => match discover_system_prompt_file(&ctx.cwd) {
-            Some(path) => read_prompt_source(&path, &mut context_paths)
-                .unwrap_or_else(|| default_system_prompt(&cwd_str, prior_reasoning_replayed)),
-            None => default_system_prompt(&cwd_str, prior_reasoning_replayed),
-        },
-        None => default_system_prompt(&cwd_str, prior_reasoning_replayed),
-    };
+    let base_prompt = resolve_base_prompt(
+        effective_args.system_prompt.as_deref(),
+        &ctx.cwd,
+        project_trusted,
+        &ctx.resolved_model,
+        &mut context_paths,
+    )
+    .await;
     let mut append_texts: Vec<String> = Vec::new();
     for extra in &effective_args.append_system_prompt {
         let text = read_append_target(extra, &mut context_paths).unwrap_or_else(|| extra.clone());
@@ -4013,10 +3986,13 @@ mod tests {
                 let project_config = cwd.join(".icers");
                 std::fs::create_dir_all(&project_config).unwrap();
                 for (path, content) in [
-                    (agent.join("SYSTEM.md"), "GLOBAL_BASE"),
+                    (agent.join("SYSTEM.md"), "GLOBAL_BASE\n{{working_state}}"),
                     (agent.join("APPEND_SYSTEM.md"), "GLOBAL_APPEND"),
                     (agent.join("AGENTS.md"), "GLOBAL_INSTRUCTIONS"),
-                    (project_config.join("SYSTEM.md"), "PROJECT_BASE"),
+                    (
+                        project_config.join("SYSTEM.md"),
+                        "PROJECT_BASE cwd={{cwd}} {{unknown}}",
+                    ),
                     (project_config.join("APPEND_SYSTEM.md"), "PROJECT_APPEND"),
                     (cwd.join("AGENTS.md"), "PROJECT_INSTRUCTIONS"),
                     (cwd.join("CLAUDE.md"), "SHADOWED_CLAUDE"),
@@ -4065,6 +4041,15 @@ mod tests {
                 let prompt = harness.get_system_prompt().await.unwrap().unwrap();
                 assert!(prompt.contains("PROJECT_BASE") && prompt.contains("PROJECT_APPEND"));
                 assert!(!prompt.contains("GLOBAL_BASE") && !prompt.contains("SHADOWED_CLAUDE"));
+                // A user's SYSTEM.md gets the same placeholder pass as the
+                // built-in template; unknown placeholders stay visible.
+                assert!(
+                    prompt.contains(&format!(
+                        "PROJECT_BASE cwd={} {{{{unknown}}}}",
+                        cwd.to_string_lossy().replace('\\', "/")
+                    )),
+                    "{prompt}"
+                );
 
                 // Removing the selected project files makes reload fall back to
                 // globals; removed instruction paths must disappear as well.
@@ -4090,6 +4075,10 @@ mod tests {
                 assert!(!resources
                     .context_files
                     .contains(&path(project_config.join("SYSTEM.md"))));
+                // Reload re-reads the edited Markdown and fills it again.
+                let prompt = harness.get_system_prompt().await.unwrap().unwrap();
+                assert!(prompt.contains("GLOBAL_BASE\n- Keep"), "{prompt}");
+                assert!(!prompt.contains("{{working_state}}"));
 
                 // Explicit append files are listed; literal text and overridden
                 // discovered base/append files are not invented as file sources.
@@ -4391,111 +4380,6 @@ mod tests {
             vec![paths[2].clone(), paths[1].clone(), paths[0].clone()]
         );
         std::fs::remove_dir_all(&root).ok();
-    }
-
-    #[test]
-    fn default_prompt_mentions_cwd_and_tools() {
-        let p = default_system_prompt("/tmp/proj", false);
-        assert!(p.contains("/tmp/proj"));
-        assert!(p.contains("read"));
-        assert!(p.contains("bash"));
-        assert!(p.contains("edit"));
-        assert!(p.contains("write"));
-        assert!(p.contains("docs"));
-        assert!(!p.contains("- grep"));
-        assert!(!p.contains("- find"));
-        assert!(!p.contains("- ls"));
-        assert!(!p.contains("- powershell"));
-        assert!(p.contains("Bash/POSIX syntax, including on Windows"));
-        assert!(p.contains("do not pass PowerShell cmdlets"));
-    }
-
-    #[test]
-    fn default_prompt_has_an_explicit_unavailable_todo_fallback() {
-        for replayed in [false, true] {
-            let prompt = default_system_prompt("/tmp/proj", replayed);
-            assert!(prompt.contains("only when it is advertised and enabled"));
-            assert!(prompt.contains("Otherwise maintain a durable checklist"));
-            assert!(!prompt.contains("- Track multi-step work with the todo tool instead"));
-        }
-    }
-
-    #[test]
-    fn default_prompt_instructs_language_matching() {
-        // The model must detect the user's language and answer in it, so a
-        // Chinese (or any non-English) user gets a same-language reply without
-        // having to ask every turn.
-        let p = default_system_prompt("/tmp/proj", false);
-        let lower = p.to_lowercase();
-        assert!(
-            lower.contains("same language") && lower.contains("detect"),
-            "the prompt must tell the model to detect and mirror the user's language: {p}"
-        );
-    }
-
-    #[test]
-    fn default_prompt_keeps_working_state_in_the_visible_channel() {
-        // Regression guard for the re-plan loop: on openai-compatible providers
-        // the assistant's `thinking` blocks are dropped when the next request is
-        // built (`providers/openai_completions.rs`: `Content::text_only`), so a
-        // plan that lives only in reasoning is re-derived every turn. One
-        // observed session paid for that 112 times in a single run, and twice
-        // hallucinated the user's input ("The user is greeting me with hello",
-        // with no such message). See `docs/llm-repetition-forensics.md` §八.
-        let p = default_system_prompt("/tmp/proj", false);
-        let lower = p.to_lowercase();
-        // The rule must state the mechanism, not just "be clear".
-        assert!(
-            lower.contains("reasoning is not") && lower.contains("carried into your next turn"),
-            "the prompt must explain that reasoning does not survive the turn: {p}"
-        );
-        // …and the remedy: keep state visible, use the todo tool.
-        assert!(
-            lower.contains("visible") && lower.contains("todo tool"),
-            "the prompt must point at visible text and the todo tool: {p}"
-        );
-        // …plus the anti-repetition rule itself.
-        assert!(
-            lower.contains("re-stating the same plan"),
-            "the prompt must call out plan re-statement as a bug: {p}"
-        );
-        // And the guidance must not instruct re-reading what is already shown.
-        assert!(
-            lower.contains("already shown earlier"),
-            "the prompt must discourage re-fetching known content: {p}"
-        );
-    }
-
-    #[test]
-    fn default_prompt_does_not_claim_reasoning_is_lost_when_it_is_replayed() {
-        // `compat.requiresThinkingAsText` (and the native thinking channels of
-        // anthropic-messages / openai-responses) DO carry the model's reasoning
-        // back on the next request. Telling such a model "reasoning is not
-        // carried into your next turn" is false, and the instruction to restate
-        // the plan every turn is exactly the busy-work the re-plan analysis
-        // measured. The wording must flip with the mechanism.
-        let p = default_system_prompt("/tmp/proj", true);
-        let lower = p.to_lowercase();
-        assert!(
-            lower.contains("carried back"),
-            "a replaying model must be told its reasoning survives: {p}"
-        );
-        assert!(
-            !lower.contains("reasoning is not"),
-            "the replayed variant must not claim reasoning is dropped: {p}"
-        );
-        assert!(
-            lower.contains("do not re-derive"),
-            "the replayed variant must forbid re-deriving the plan: {p}"
-        );
-        assert!(
-            lower.contains("do not re-derive") && lower.contains("re-listing the same plan"),
-            "the anti-repetition rule must survive the flip: {p}"
-        );
-        assert!(
-            lower.contains("already shown earlier"),
-            "the re-read rule must survive the flip: {p}"
-        );
     }
 
     /// Only side-effect-free tools may be replayed after a crash.

@@ -90,6 +90,7 @@ mod side_questions;
 pub mod skill_coverage;
 mod slash_commands;
 pub mod source_info;
+pub mod system_prompt;
 mod terminal_theme;
 pub mod timings;
 mod transcript_navigation;
