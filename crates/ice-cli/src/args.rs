@@ -237,6 +237,11 @@ pub struct Args {
     /// round-trip parse. Mirrors the plan's "add --debug-system-prompt if absent".
     pub debug_system_prompt: bool,
 
+    /// `--print-system-template`: print the built-in system prompt template
+    /// (Markdown, with its `{{placeholders}}`) to stdout and exit, so it can
+    /// be saved as a `SYSTEM.md` and edited. Mirrors TS ice.
+    pub print_system_template: bool,
+
     /// Positional prompt text (one or more messages). Mirrors TS `messages`.
     pub messages: Vec<String>,
     /// `@file` attachments (prefix stripped), as raw paths for the caller to
@@ -408,6 +413,7 @@ pub fn parse_args(args: &[String]) -> Args {
             }
             "--verbose" => result.verbose = true,
             "--debug-system-prompt" => result.debug_system_prompt = true,
+            "--print-system-template" => result.print_system_template = true,
             "--provider" => result.provider = take_value(&mut result, "--provider"),
             "--model" => result.model = take_value(&mut result, "--model"),
             "--api-key" => result.api_key = take_value(&mut result, "--api-key"),
@@ -685,6 +691,7 @@ pub fn print_help() {
   --observe[=port]               Serve the read-only run dashboard on 127.0.0.1
                                  (default port 4659); history is always recorded
   --debug-system-prompt          Print the resolved system-prompt sections to stderr (verification)
+  --print-system-template        Print the built-in system prompt template (for SYSTEM.md) and exit
   --verbose                      Show startup warnings (e.g. ignored flags)
   --help, -h                     Show this help
   --version, -v                  Show version
@@ -898,6 +905,8 @@ mod tests {
 
     #[test]
     fn list_models_accepts_bare_and_search_forms() {
+        assert!(parse_args(&s(&["--print-system-template"])).print_system_template);
+        assert!(!parse_args(&s(&[])).print_system_template);
         let bare = parse_args(&s(&["--list-models"]));
         assert_eq!(bare.list_models.as_deref(), Some(""));
         assert!(bare.ignored.is_empty());

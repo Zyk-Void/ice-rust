@@ -164,6 +164,7 @@ Frequently used global options:
 --no-skills            skip skill discovery
 --no-prompt-templates  skip prompt-template discovery
 --no-context-files     skip AGENTS.md/CLAUDE.md discovery
+--print-system-template print the built-in system prompt template and exit
 --no-extensions        disable extension loading
 --extensions-dir <dir> scan an extra extension directory
 --package-only         load only project package/resources
@@ -249,7 +250,7 @@ project/
 
 Global resources normally live under `~/.icers/agent/`. Project resources take precedence over global resources with the same name.
 
-The built-in system prompt is the Markdown template `crates/ice-cli/prompts/system.md`. A `SYSTEM.md` replaces it and `APPEND_SYSTEM.md` adds to it; both are re-read on `/reload`. Any base prompt can use the placeholders `{{environment}}` (environment and git snapshot), `{{working_state}}`, `{{cwd}}` and `{{date}}`. See the "System prompt" section of the model-facing user guide (`docs/ice-tool/user-guide.md`) for details.
+The built-in system prompt is the Markdown template `crates/ice-cli/prompts/system.md`; `icers --print-system-template > ~/.icers/agent/SYSTEM.md` saves a copy to edit. A `SYSTEM.md` replaces it and `APPEND_SYSTEM.md` adds to it; both are re-read on `/reload`. Any base prompt can use the placeholders `{{environment}}` (environment and git snapshot), `{{working_state}}`, `{{cwd}}` and `{{date}}`. See the "System prompt" section of the model-facing user guide (`docs/ice-tool/user-guide.md`) for details.
 
 Instruction files load from `~/.icers/agent/` (`AGENTS.md`, `rules/*.md`) and from each directory between the filesystem root and the working directory (`AGENTS.md` or `CLAUDE.md`, `.icers/rules/*.md`, and the private `AGENTS.local.md`). They support `@path` references to other text files, and their HTML comments are removed. The "Instruction files" section of the same guide lists the exact rules.
 
