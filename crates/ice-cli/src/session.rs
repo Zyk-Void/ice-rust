@@ -808,6 +808,21 @@ pub async fn build_prepared(
         ui_dialog_mailbox.clone(),
     ));
     let after_tool_call = hooks_enabled.then(|| command_hooks.after(None));
+    // Subdirectory instructions and `paths:` rules join the tool result of the
+    // first read/edit/write that touches a matching file.
+    let after_tool_call = if args.no_context_files {
+        after_tool_call
+    } else {
+        Some(crate::nested_instructions::hook(
+            after_tool_call,
+            Arc::new(crate::nested_instructions::NestedInstructions {
+                env: env_dyn.clone(),
+                cwd: cwd.to_path_buf(),
+                agent_dir: crate::config::agent_dir().ok(),
+                project_trusted,
+            }),
+        ))
+    };
 
     let options = AgentHarnessOptions {
         model: resolved.model.clone(),

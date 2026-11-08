@@ -18,7 +18,9 @@
 //!
 //! Each file is processed the same way:
 //! - YAML frontmatter is removed. A rule file whose frontmatter has `paths:`
-//!   applies only to matching files, so it is not loaded here.
+//!   applies only to matching files; [`load_context_files_for_path`] loads it,
+//!   together with the instruction files of directories below `cwd`, when the
+//!   model touches such a file.
 //! - Block-level HTML comments (`<!-- ... -->` on their own lines, outside
 //!   code fences) are removed, so authors can leave notes for humans.
 //! - `@path` references (`@file.md`, `@./file.md`, `@/abs/file.md`) outside
@@ -223,8 +225,16 @@ earlier ones. scope=\"global\" is the user's own instructions for every project,
 scope=\"project\" is checked into the repository, and scope=\"local\" is the user's private \
 notes for this project.\n\n",
     );
+    out.push_str(&format_instruction_entries(files));
+    out.push_str("</project_context>\n");
+    out
+}
+
+/// One `<project_instructions>` element per file, as used inside
+/// `<project_context>` and in instructions added later for a touched path.
+pub fn format_instruction_entries(files: &[ContextFile]) -> String {
+    let mut out = String::new();
     for file in files {
-        let path = escape_path(&file.path.to_string_lossy());
         let included = file
             .included_from
             .as_ref()
@@ -236,13 +246,115 @@ notes for this project.\n\n",
             })
             .unwrap_or_default();
         out.push_str(&format!(
-            "<project_instructions path=\"{path}\" scope=\"{}\"{included}>\n{}\n</project_instructions>\n\n",
+            "{} scope=\"{}\"{included}>\n{}\n</project_instructions>\n\n",
+            instruction_marker(&file.path),
             file.scope.as_str(),
             file.content
         ));
     }
-    out.push_str("</project_context>\n");
     out
+}
+
+/// The opening of a file's `<project_instructions>` element. Its presence in
+/// the prompt or the conversation means the model has that file's content.
+pub fn instruction_marker(path: &Path) -> String {
+    format!(
+        "<project_instructions path=\"{}\"",
+        escape_path(&path.to_string_lossy())
+    )
+}
+
+/// Instruction files that apply to `target` (a file the model is reading or
+/// changing) but are not part of the startup set:
+///
+/// - for each directory strictly below `cwd` on the way to `target`: its
+///   first [`CONTEXT_FILE_CANDIDATES`] match, `.icers/rules/*.md` and
+///   `AGENTS.local.md`;
+/// - every rule whose frontmatter `paths:` globs match `target`. Global rules
+///   (`<agent_dir>/rules`) match against the path relative to `cwd`, project
+///   rules against the path relative to the directory holding `.icers/`.
+///
+/// Project directories are considered only when `project_trusted`, and only
+/// on the path from the filesystem root through `cwd` and below it, so
+/// touching `/tmp/x` never reads rules from `/tmp`. Results are in load
+/// order, each path once; the caller drops files the model already has.
+pub async fn load_context_files_for_path(
+    env: &Arc<dyn ExecutionEnv>,
+    cwd: &Path,
+    agent_dir: Option<&Path>,
+    target: &Path,
+    project_trusted: bool,
+) -> Vec<ContextFile> {
+    let mut loader = Loader {
+        env,
+        cancel: CancellationToken::new(),
+        seen: HashSet::new(),
+        out: Vec::new(),
+    };
+    let cwd = normalize(cwd);
+    let target = normalize(&cwd.join(target));
+    if let Some(agent_dir) = agent_dir {
+        for rule in loader.rule_files(&agent_dir.join("rules")).await {
+            loader
+                .load_if_matches(rule, ContextScope::Global, None, &cwd, &target)
+                .await;
+        }
+    }
+    if !project_trusted {
+        return loader.out;
+    }
+    let repo = loader.repo_layout(&loader.resolve(&cwd).await).await;
+    let Some(target_dir) = target.parent() else {
+        return loader.out;
+    };
+    let mut dirs: Vec<PathBuf> = target_dir
+        .ancestors()
+        .filter(|dir| cwd.starts_with(dir) || dir.starts_with(&cwd))
+        .map(Path::to_path_buf)
+        .collect();
+    dirs.reverse();
+    for dir in dirs {
+        let resolved = loader.resolve(&dir).await;
+        let boundary = match &repo {
+            Some(repo) if resolved.starts_with(&repo.root) => repo.root.clone(),
+            _ => resolved.clone(),
+        };
+        let shadowed = repo.as_ref().is_some_and(|repo| repo.shadows(&resolved));
+        let rules_dir = dir.join(".icers").join("rules");
+        let rules = if shadowed {
+            Vec::new()
+        } else {
+            loader.rule_files(&rules_dir).await
+        };
+        if dir != cwd && dir.starts_with(&cwd) {
+            if !shadowed {
+                if let Some(file) = load_context_file_from_dir(env, &dir).await {
+                    loader
+                        .load(file.path, ContextScope::Project, Some(&boundary), false)
+                        .await;
+                }
+                for rule in &rules {
+                    loader
+                        .load(rule.clone(), ContextScope::Project, Some(&boundary), true)
+                        .await;
+                }
+            }
+            loader
+                .load(
+                    dir.join(LOCAL_CONTEXT_FILE),
+                    ContextScope::Local,
+                    Some(&boundary),
+                    false,
+                )
+                .await;
+        }
+        for rule in rules {
+            loader
+                .load_if_matches(rule, ContextScope::Project, Some(&boundary), &dir, &target)
+                .await;
+        }
+    }
+    loader.out
 }
 
 struct Loader<'a> {
@@ -270,6 +382,31 @@ impl RepoLayout {
 }
 
 impl Loader<'_> {
+    /// Load `rule` when its `paths:` globs match `target` relative to `base`.
+    /// Rules without `paths:` are skipped here; they load at startup.
+    async fn load_if_matches(
+        &mut self,
+        rule: PathBuf,
+        scope: ContextScope,
+        boundary: Option<&Path>,
+        base: &Path,
+        target: &Path,
+    ) {
+        let Ok(relative) = target.strip_prefix(base) else {
+            return;
+        };
+        let Some(raw) = read_regular_file(self.env, &rule, &self.cancel).await else {
+            return;
+        };
+        let Some(globs) = split_frontmatter(&raw).1 else {
+            return;
+        };
+        let relative = relative.to_string_lossy().replace('\\', "/");
+        if globs.is_match(relative.as_str()) {
+            self.load(rule, scope, boundary, false).await;
+        }
+    }
+
     async fn load_global(&mut self, agent_dir: &Path) {
         if let Some(file) = load_context_file_from_dir(self.env, agent_dir).await {
             self.load(file.path, ContextScope::Global, None, false)
@@ -294,16 +431,22 @@ impl Loader<'_> {
         };
         let mut stack: Vec<(PathBuf, Option<PathBuf>, usize)> = vec![(path, None, 0)];
         while let Some((path, parent, depth)) = stack.pop() {
-            let key = self.resolve(&path).await;
-            if !self.seen.insert(key.to_string_lossy().into_owned()) {
+            let key = self.resolve(&path).await.to_string_lossy().into_owned();
+            if self.seen.contains(&key) {
                 continue;
             }
             let Some(raw) = read_regular_file(self.env, &path, &self.cancel).await else {
                 continue;
             };
-            let Some(body) = strip_frontmatter(&raw, is_rule && parent.is_none()) else {
+            let (body, scope_globs) = split_frontmatter(&raw);
+            // A top-level rule scoped with `paths:` loads only through
+            // `load_context_files_for_path`, which calls this with
+            // `is_rule = false` once the globs match. It is not marked seen,
+            // so that later call can still load it.
+            if is_rule && parent.is_none() && scope_globs.is_some() {
                 continue;
-            };
+            }
+            self.seen.insert(key);
             let body = strip_html_comments(&body);
             let base_dir = path.parent().unwrap_or(Path::new("/")).to_path_buf();
             let mut includes = Vec::new();
@@ -445,22 +588,93 @@ async fn read_regular_file(
     env.read_text_file(&path_str, Some(cancel)).await.ok()
 }
 
-/// Drop YAML frontmatter. Returns `None` for a rule whose frontmatter scopes it
-/// to `paths:`; such rules are loaded only for matching files. Malformed
-/// frontmatter leaves the content untouched.
-fn strip_frontmatter(raw: &str, is_rule: bool) -> Option<String> {
+/// Split off YAML frontmatter, returning the body and the `paths:` globs
+/// when the file is scoped to some paths. Malformed frontmatter leaves the
+/// content untouched and unscoped.
+fn split_frontmatter(raw: &str) -> (String, Option<globset::GlobSet>) {
     if !raw.starts_with("---") {
-        return Some(raw.to_string());
+        return (raw.to_string(), None);
     }
     match crate::frontmatter::parse_frontmatter(raw) {
         Ok((frontmatter, body)) => {
-            let scoped = frontmatter
-                .get("paths")
-                .is_some_and(|paths| !paths.is_null());
-            (!(is_rule && scoped)).then_some(body)
+            let globs = frontmatter.get("paths").and_then(scope_globs);
+            (body, globs)
         }
-        Err(_) => Some(raw.to_string()),
+        Err(_) => (raw.to_string(), None),
     }
+}
+
+/// Build the matcher for a `paths:` value: a YAML list, or one string of
+/// comma-separated patterns (commas inside `{a,b}` belong to the pattern).
+/// Matching follows `.gitignore` habits: `src` also covers everything under
+/// `src/`, and a pattern without `/` (`*.rs`) matches at any depth. `None`
+/// when nothing is scoped (empty, or only `**`), so the rule always applies.
+fn scope_globs(value: &serde_json::Value) -> Option<globset::GlobSet> {
+    let mut patterns: Vec<String> = Vec::new();
+    let mut push_split = |text: &str| {
+        let mut depth = 0usize;
+        let mut current = String::new();
+        for ch in text.chars() {
+            match ch {
+                '{' => depth += 1,
+                '}' => depth = depth.saturating_sub(1),
+                ',' if depth == 0 => {
+                    patterns.push(std::mem::take(&mut current));
+                    continue;
+                }
+                _ => {}
+            }
+            current.push(ch);
+        }
+        patterns.push(current);
+    };
+    match value {
+        serde_json::Value::String(text) => push_split(text),
+        serde_json::Value::Array(items) => {
+            for item in items.iter().filter_map(|item| item.as_str()) {
+                push_split(item);
+            }
+        }
+        _ => return None,
+    }
+    let patterns: Vec<String> = patterns
+        .iter()
+        .map(|pattern| {
+            let pattern = pattern.trim();
+            let pattern = pattern.strip_prefix("./").unwrap_or(pattern);
+            let pattern = pattern.strip_suffix("/**").unwrap_or(pattern);
+            pattern.trim_end_matches('/').to_string()
+        })
+        .filter(|pattern| !pattern.is_empty())
+        .collect();
+    if patterns.is_empty() || patterns.iter().all(|pattern| pattern == "**") {
+        return None;
+    }
+    let mut builder = globset::GlobSetBuilder::new();
+    let mut added = false;
+    for pattern in &patterns {
+        let anchored = pattern.trim_start_matches('/');
+        let mut variants = vec![anchored.to_string(), format!("{anchored}/**")];
+        if !pattern.contains('/') {
+            variants.push(format!("**/{anchored}"));
+            variants.push(format!("**/{anchored}/**"));
+        }
+        for variant in variants {
+            if let Ok(glob) = globset::GlobBuilder::new(&variant)
+                .literal_separator(true)
+                .build()
+            {
+                builder.add(glob);
+                added = true;
+            }
+        }
+    }
+    if !added {
+        // Every pattern was invalid: keep the rule scoped (it never matches)
+        // rather than silently applying it everywhere.
+        return Some(globset::GlobSet::empty());
+    }
+    builder.build().ok()
 }
 
 /// Remove `<!-- ... -->` comments that start a line outside fenced code. An
@@ -979,6 +1193,157 @@ mod tests {
         let files = load_global_context_files(&env, Path::new("/agent")).await;
         let got: Vec<String> = summary(&files).into_iter().map(|(_, _, c)| c).collect();
         assert_eq!(got, ["GLOBAL", "GLOBAL_RULE"]);
+    }
+
+    #[test]
+    fn scope_globs_follow_gitignore_habits() {
+        let matcher = |value: serde_json::Value| scope_globs(&value).expect("scoped");
+        let rust = matcher(serde_json::json!("*.rs"));
+        assert!(rust.is_match("main.rs") && rust.is_match("src/deep/lib.rs"));
+        assert!(!rust.is_match("src/lib.rs.bak"));
+        let dir = matcher(serde_json::json!("src"));
+        assert!(dir.is_match("src/a.ts") && dir.is_match("src") && !dir.is_match("lib/src.ts"));
+        let anchored = matcher(serde_json::json!("src/**/*.ts, docs/*.md"));
+        assert!(anchored.is_match("src/a/b.ts") && anchored.is_match("docs/x.md"));
+        assert!(!anchored.is_match("docs/a/x.md") && !anchored.is_match("lib/src/a.ts"));
+        let braces = matcher(serde_json::json!(["web/**/*.{ts,tsx}"]));
+        assert!(braces.is_match("web/a.tsx") && braces.is_match("web/b/c.ts"));
+        assert!(scope_globs(&serde_json::json!("**")).is_none());
+        assert!(scope_globs(&serde_json::json!("")).is_none());
+        assert!(scope_globs(&serde_json::json!(7)).is_none());
+    }
+
+    #[tokio::test]
+    async fn touched_path_loads_nested_dirs_and_matching_rules() {
+        let env = mem_env(
+            "/proj",
+            &[
+                "/agent/rules",
+                "/proj/.icers/rules",
+                "/proj/web/.icers/rules",
+                "/proj/web/src",
+            ],
+            &[
+                (
+                    "/agent/rules/rust.md",
+                    "---\npaths: \"*.rs\"\n---\nGLOBAL_RUST",
+                ),
+                ("/agent/rules/always.md", "GLOBAL_ALWAYS"),
+                ("/proj/AGENTS.md", "ROOT"),
+                (
+                    "/proj/.icers/rules/web.md",
+                    "---\npaths: web/**/*.ts\n---\nROOT_WEB_RULE",
+                ),
+                (
+                    "/proj/.icers/rules/docs.md",
+                    "---\npaths: docs\n---\nROOT_DOCS_RULE",
+                ),
+                ("/proj/web/AGENTS.md", "WEB @notes.md"),
+                ("/proj/web/notes.md", "WEB_NOTES"),
+                ("/proj/web/AGENTS.local.md", "WEB_LOCAL"),
+                ("/proj/web/.icers/rules/style.md", "WEB_STYLE"),
+                (
+                    "/proj/web/.icers/rules/ts.md",
+                    "---\npaths: [\"src/*.ts\"]\n---\nWEB_TS_RULE",
+                ),
+                ("/proj/web/src/AGENTS.md", "WEB_SRC"),
+            ],
+        )
+        .await;
+        let got = |files: Vec<ContextFile>| -> Vec<String> {
+            files
+                .into_iter()
+                .map(|file| format!("{}:{}", file.scope.as_str(), file.content))
+                .collect()
+        };
+        let ts = load_context_files_for_path(
+            &env,
+            Path::new("/proj"),
+            Some(Path::new("/agent")),
+            Path::new("web/src/app.ts"),
+            true,
+        )
+        .await;
+        assert_eq!(
+            got(ts),
+            [
+                "project:ROOT_WEB_RULE",
+                "project:WEB @notes.md",
+                "project:WEB_NOTES",
+                "project:WEB_STYLE",
+                "local:WEB_LOCAL",
+                "project:WEB_TS_RULE",
+                "project:WEB_SRC",
+            ]
+        );
+        // A global rule matches relative to cwd; the startup set (ROOT,
+        // GLOBAL_ALWAYS) is never repeated.
+        let rs = load_context_files_for_path(
+            &env,
+            Path::new("/proj"),
+            Some(Path::new("/agent")),
+            Path::new("/proj/tools/build.rs"),
+            true,
+        )
+        .await;
+        assert_eq!(got(rs), ["global:GLOBAL_RUST"]);
+        // An untrusted project only gets the user's global rules.
+        let untrusted = load_context_files_for_path(
+            &env,
+            Path::new("/proj"),
+            Some(Path::new("/agent")),
+            Path::new("web/src/app.rs"),
+            false,
+        )
+        .await;
+        assert_eq!(got(untrusted), ["global:GLOBAL_RUST"]);
+    }
+
+    #[tokio::test]
+    async fn touched_path_outside_cwd_reads_no_foreign_rules() {
+        let env = mem_env(
+            "/proj",
+            &["/tmp/.icers/rules", "/tmp/x"],
+            &[
+                (
+                    "/tmp/.icers/rules/evil.md",
+                    "---\npaths: \"**/*\"\n---\nEVIL",
+                ),
+                ("/tmp/x/AGENTS.md", "FOREIGN"),
+            ],
+        )
+        .await;
+        let files = load_context_files_for_path(
+            &env,
+            Path::new("/proj"),
+            None,
+            Path::new("/tmp/x/file.md"),
+            true,
+        )
+        .await;
+        assert!(files.is_empty(), "{files:?}");
+    }
+
+    #[tokio::test]
+    async fn scoped_rules_are_not_loaded_at_startup() {
+        let env = mem_env(
+            "/proj",
+            &["/proj/.icers/rules"],
+            &[
+                (
+                    "/proj/.icers/rules/scoped.md",
+                    "---\npaths: src/**\n---\nSCOPED",
+                ),
+                (
+                    "/proj/.icers/rules/everywhere.md",
+                    "---\npaths: \"**\"\n---\nEVERYWHERE",
+                ),
+            ],
+        )
+        .await;
+        let files = load_project_context_files(&env, Path::new("/proj"), Path::new("/agent")).await;
+        let got: Vec<String> = summary(&files).into_iter().map(|(_, _, c)| c).collect();
+        assert_eq!(got, ["EVERYWHERE"]);
     }
 
     #[test]

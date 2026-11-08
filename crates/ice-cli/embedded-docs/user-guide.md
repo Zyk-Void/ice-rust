@@ -466,12 +466,28 @@ Instruction files are added to the system prompt in this order. When files disag
 
 Each file is processed as follows:
 
-- YAML frontmatter is removed. A rule file whose frontmatter has `paths:` is skipped, because it applies only to matching files.
+- YAML frontmatter is removed. A rule file whose frontmatter has `paths:` is not loaded at startup; see "Instructions for touched files" below.
 - HTML comments on their own lines (`<!-- ... -->`) are removed, so you can leave notes for people that the model never sees. Comments inside code fences stay.
 - `@path` references outside code (`@docs/style.md`, `@./notes.md`, `@/abs/path.md`; a `#heading` suffix is ignored) load that file as its own entry, right after the file that names it. References are followed up to 5 levels deep, only to text files, and each file loads once. A global file may reference any path. A project or local file may reference only paths inside its repository, after symlinks are resolved, so a cloned repository cannot pull in files such as `~/.ssh` keys.
 - A file longer than 64 KiB is cut off, with a notice telling the model to read the rest.
 
 In a git worktree nested inside its main checkout (for example `.worktrees/feature`), checked-in files from the main checkout are skipped, because the worktree has its own copies. `AGENTS.local.md` files there still load. When project resources are disabled, only the global instruction files (step 1) load. `--no-context-files` loads none.
+
+#### Instructions for touched files
+
+Some instructions apply only to part of a project. They load the first time the model reads, edits or writes a matching file, and are appended to that tool result inside `<system-reminder>`:
+
+- for each directory below the working directory on the way to the file: its `AGENTS.md` (or `CLAUDE.md`), `.icers/rules/*.md` and `AGENTS.local.md`
+- every rule file with `paths:` frontmatter that matches the file
+
+```markdown
+---
+paths: src/**/*.ts, tests/**
+---
+Use the project's test helpers; never mock the network layer.
+```
+
+`paths:` takes one comma-separated string or a YAML list. Matching follows `.gitignore` habits: `src` also covers everything under `src/`, and a pattern without `/` (such as `*.rs`) matches at any depth. Project rules match against the path relative to the directory that holds `.icers/`; global rules (`~/.icers/agent/rules/`) match against the path relative to the working directory. A file whose instructions are already visible to the model is not added again. If compaction summarizes them away, the next touch adds them back. Touching a file outside the project never reads rules from that file's directories. For an untrusted project, only global rules apply.
 
 Project-level `.icers/settings.json` can add resource directories:
 
