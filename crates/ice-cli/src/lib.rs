@@ -67,6 +67,7 @@ pub mod key_trace;
 pub mod mcp;
 pub mod model_registry;
 pub mod modes;
+mod nested_instructions;
 mod oauth_codex;
 pub mod observe;
 pub mod packages;
