@@ -139,10 +139,7 @@ mod tests {
     }
 
     fn ctx(content: &str, path: &str) -> String {
-        crate::context_files::format_project_context(&[ContextFile {
-            path: std::path::PathBuf::from(path),
-            content: content.to_string(),
-        }])
+        crate::context_files::format_project_context(&[ContextFile::project(path, content)])
     }
 
     #[test]

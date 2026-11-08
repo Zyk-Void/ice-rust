@@ -453,6 +453,25 @@ Every base prompt, including your own `SYSTEM.md`, can use these placeholders. A
 
 To customize the default, copy the built-in template into `SYSTEM.md` and edit it. Keep `{{environment}}` if you want the environment and git sections. The prompt does not list tools, because the tool definitions sent with each request already describe the live tool set.
 
+### Instruction files (AGENTS.md)
+
+Instruction files are added to the system prompt in this order. When files disagree, the later, more specific one wins.
+
+1. Global: the first of `AGENTS.override.md`, `AGENTS.md`, `CLAUDE.md` in `~/.icers/agent/`, then `~/.icers/agent/rules/*.md`.
+2. For each directory from the filesystem root down to the working directory:
+   - the first of `AGENTS.override.md`, `AGENTS.md`, `CLAUDE.md` (checked in)
+   - `.icers/rules/*.md`, sorted by name (checked in)
+   - `AGENTS.local.md`: your private notes for that directory. Add it to `.gitignore`.
+
+Each file is processed as follows:
+
+- YAML frontmatter is removed. A rule file whose frontmatter has `paths:` is skipped, because it applies only to matching files.
+- HTML comments on their own lines (`<!-- ... -->`) are removed, so you can leave notes for people that the model never sees. Comments inside code fences stay.
+- `@path` references outside code (`@docs/style.md`, `@./notes.md`, `@/abs/path.md`; a `#heading` suffix is ignored) load that file as its own entry, right after the file that names it. References are followed up to 5 levels deep, only to text files, and each file loads once. A global file may reference any path. A project or local file may reference only paths inside its repository, after symlinks are resolved, so a cloned repository cannot pull in files such as `~/.ssh` keys.
+- A file longer than 64 KiB is cut off, with a notice telling the model to read the rest.
+
+In a git worktree nested inside its main checkout (for example `.worktrees/feature`), checked-in files from the main checkout are skipped, because the worktree has its own copies. `AGENTS.local.md` files there still load. Instruction files are not loaded when project resources are disabled or with `--no-context-files`.
+
 Project-level `.icers/settings.json` can add resource directories:
 
 ```json
