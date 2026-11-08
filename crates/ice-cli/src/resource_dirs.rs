@@ -101,9 +101,20 @@ pub fn discover_system_prompt_file_with_trust(
 
 /// Discover `APPEND_SYSTEM.md` using project-over-global precedence.
 pub fn discover_append_system_prompt_file(cwd: &Path) -> Option<PathBuf> {
-    for project in project_config_files(cwd, "APPEND_SYSTEM.md") {
-        if project.is_file() {
-            return Some(project);
+    discover_append_system_prompt_file_with_trust(cwd, true)
+}
+
+/// Discover `APPEND_SYSTEM.md` with explicit project trust control. An
+/// untrusted project skips its own file; the global one still applies.
+pub fn discover_append_system_prompt_file_with_trust(
+    cwd: &Path,
+    project_trusted: bool,
+) -> Option<PathBuf> {
+    if project_trusted {
+        for project in project_config_files(cwd, "APPEND_SYSTEM.md") {
+            if project.is_file() {
+                return Some(project);
+            }
         }
     }
     global_config_file("APPEND_SYSTEM.md").filter(|p| p.is_file())

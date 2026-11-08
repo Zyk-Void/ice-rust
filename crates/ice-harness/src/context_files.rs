@@ -150,14 +150,7 @@ pub async fn load_project_context_files(
     };
 
     // 1. Global.
-    if let Some(file) = load_context_file_from_dir(env, agent_dir).await {
-        loader
-            .load(file.path, ContextScope::Global, None, false)
-            .await;
-    }
-    for rule in loader.rule_files(&agent_dir.join("rules")).await {
-        loader.load(rule, ContextScope::Global, None, true).await;
-    }
+    loader.load_global(agent_dir).await;
 
     // 2. Ancestors, root first. Paths shown to the model keep the spelling of
     // `cwd`; the symlink-resolved forms are only used for the comparisons.
@@ -192,6 +185,22 @@ pub async fn load_project_context_files(
             )
             .await;
     }
+    loader.out
+}
+
+/// Only the user's own global instruction files (step 1 of the load order),
+/// for a project whose own files must not be read.
+pub async fn load_global_context_files(
+    env: &Arc<dyn ExecutionEnv>,
+    agent_dir: &Path,
+) -> Vec<ContextFile> {
+    let mut loader = Loader {
+        env,
+        cancel: CancellationToken::new(),
+        seen: HashSet::new(),
+        out: Vec::new(),
+    };
+    loader.load_global(agent_dir).await;
     loader.out
 }
 
@@ -261,6 +270,16 @@ impl RepoLayout {
 }
 
 impl Loader<'_> {
+    async fn load_global(&mut self, agent_dir: &Path) {
+        if let Some(file) = load_context_file_from_dir(self.env, agent_dir).await {
+            self.load(file.path, ContextScope::Global, None, false)
+                .await;
+        }
+        for rule in self.rule_files(&agent_dir.join("rules")).await {
+            self.load(rule, ContextScope::Global, None, true).await;
+        }
+    }
+
     /// Load `path` and, depth first, the files it references with `@path`.
     async fn load(
         &mut self,
@@ -942,6 +961,24 @@ mod tests {
                 .await;
         let got: Vec<String> = summary(&loaded).into_iter().map(|(_, _, c)| c).collect();
         assert_eq!(got, vec!["ABOVE_REPO", "MAIN_LOCAL", "WORKTREE_COPY"]);
+    }
+
+    #[tokio::test]
+    async fn global_only_load_skips_every_project_file() {
+        let env = mem_env(
+            "/proj",
+            &["/agent/rules"],
+            &[
+                ("/agent/AGENTS.md", "GLOBAL"),
+                ("/agent/rules/r.md", "GLOBAL_RULE"),
+                ("/proj/AGENTS.md", "PROJECT"),
+                ("/proj/AGENTS.local.md", "LOCAL"),
+            ],
+        )
+        .await;
+        let files = load_global_context_files(&env, Path::new("/agent")).await;
+        let got: Vec<String> = summary(&files).into_iter().map(|(_, _, c)| c).collect();
+        assert_eq!(got, ["GLOBAL", "GLOBAL_RULE"]);
     }
 
     #[test]
