@@ -109,7 +109,7 @@ fn timestamp() -> String {
 
 /// Days-from-civil inverse (Howard Hinnant's algorithm) — avoids a date crate
 /// dependency for a diagnostic timestamp.
-fn civil_from_unix(secs: i64) -> (i64, u32, u32, u32, u32, u32) {
+pub(crate) fn civil_from_unix(secs: i64) -> (i64, u32, u32, u32, u32, u32) {
     let days = secs.div_euclid(86_400);
     let secs_of_day = secs.rem_euclid(86_400);
     let z = days + 719_468;

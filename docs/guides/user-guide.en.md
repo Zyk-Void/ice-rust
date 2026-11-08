@@ -247,7 +247,11 @@ project/
     └── extensions/
 ```
 
-Global resources normally live under `~/.icers/agent/`. Project resources take precedence over global resources with the same name. Additional directories can be declared in `.icers/settings.json`:
+Global resources normally live under `~/.icers/agent/`. Project resources take precedence over global resources with the same name.
+
+The built-in system prompt is the Markdown template `crates/ice-cli/prompts/system.md`. A `SYSTEM.md` replaces it and `APPEND_SYSTEM.md` adds to it; both are re-read on `/reload`. Any base prompt can use the placeholders `{{environment}}` (environment and git snapshot), `{{working_state}}`, `{{cwd}}` and `{{date}}`. See the "System prompt" section of the model-facing user guide (`docs/ice-tool/user-guide.md`) for details.
+
+Additional directories can be declared in `.icers/settings.json`:
 
 ```json
 {

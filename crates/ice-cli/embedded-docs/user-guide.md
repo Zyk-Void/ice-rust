@@ -429,6 +429,30 @@ Project/
 
 Project `.icers` takes precedence over project `.pi`. Global resources are located in `~/.icers/agent/` by default and include `settings.json`, `models.json`, `skills/`, `prompts/`, `themes/`, `extensions/`, and `packages/`. When resources have the same name, project resources take precedence over global resources, and `.icers` takes precedence over `.pi`.
 
+### System prompt
+
+The built-in system prompt is a Markdown file, `crates/ice-cli/prompts/system.md` in the source tree, compiled into `icers`. `icers --debug-system-prompt` prints the prompt that is actually in use. The base prompt comes from the first of these:
+
+1. `--system-prompt <text>`
+2. `.icers/SYSTEM.md` in the project
+3. `~/.icers/agent/SYSTEM.md`
+4. the built-in template
+
+When project resources are disabled (`--no-approve` or a stored negative trust decision), steps 2 and 3 are skipped.
+
+Text is then added after the base: each `--append-system-prompt` value (literal text or a file path), or, when there are none, the project or global `APPEND_SYSTEM.md`. `AGENTS.md`/`CLAUDE.md` instructions and the skill list follow. `/reload` re-reads all of these files, so you can edit them during a session.
+
+Every base prompt, including your own `SYSTEM.md`, can use these placeholders. An unknown placeholder is left as written.
+
+| Placeholder | Replaced with |
+|---|---|
+| `{{environment}}` | The `# Environment` section: working directory, platform, OS version, UTC date, plus a git snapshot (branch, main branch, `git status --short`, last 5 commits) |
+| `{{working_state}}` | The rule on keeping the working plan visible, worded for whether the model gets its own reasoning back |
+| `{{cwd}}` | The working directory |
+| `{{date}}` | Today's UTC date, `YYYY-MM-DD` |
+
+To customize the default, copy the built-in template into `SYSTEM.md` and edit it. Keep `{{environment}}` if you want the environment and git sections. The prompt does not list tools, because the tool definitions sent with each request already describe the live tool set.
+
 Project-level `.icers/settings.json` can add resource directories:
 
 ```json
