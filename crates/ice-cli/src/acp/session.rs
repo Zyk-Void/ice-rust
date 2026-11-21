@@ -263,6 +263,8 @@ impl Session {
             return Err(error);
         }
         let response = tokio::select! {
+            // Honor an already-received frame before a simultaneous EOF.
+            biased;
             response = rx => response.map_err(|_| "icers process exited".to_string())?,
             _ = self.closed.cancelled() => {
                 self.pending.lock().unwrap().remove(&id);
@@ -410,6 +412,8 @@ impl Session {
             let _ = self.send(&json!({"type": "abort"})).await;
         }
         tokio::select! {
+            // A child may exit immediately after its final settlement frame.
+            biased;
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string()),
             _ = self.closed.cancelled() => Err("icers process exited during the turn".to_string()),
         }
