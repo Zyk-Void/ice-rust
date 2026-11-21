@@ -392,6 +392,37 @@ impl Session {
             }
             before = cursor;
         }
+        self.apply_saved_config(&saved_config).await?;
+        // Use a separate translator: replay must not leave a historical stop
+        // reason or partial text in the live prompt's streaming state.
+        let mut translator = self.translator.lock().unwrap().clone_for_replay();
+        for messages in pages.into_iter().rev() {
+            for message in messages {
+                for update in translator.replay_message(&message) {
+                    self.writer
+                        .notify(
+                            "session/update",
+                            json!({"sessionId": self.id, "update": update}),
+                        )
+                        .await;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Restore only persisted selections; resume must not replay transcript updates.
+    pub(crate) async fn restore_saved_config(&self) -> Result<(), String> {
+        let page = self
+            .command(json!({"type": "get_messages", "limit": 1}))
+            .await?;
+        if !page["messages"].is_array() {
+            return Err("invalid native history response".to_string());
+        }
+        self.apply_saved_config(&page["savedConfig"]).await
+    }
+
+    async fn apply_saved_config(&self, saved_config: &Value) -> Result<(), String> {
         if saved_config.is_object() {
             let state = self.command(json!({"type": "get_state"})).await?;
             if let (Some(provider), Some(model)) = (
@@ -413,21 +444,6 @@ impl Session {
                     json!({"type": "set_thinking_level", "level": level, "persist": false}),
                 )
                 .await?;
-            }
-        }
-        // Use a separate translator: replay must not leave a historical stop
-        // reason or partial text in the live prompt's streaming state.
-        let mut translator = self.translator.lock().unwrap().clone_for_replay();
-        for messages in pages.into_iter().rev() {
-            for message in messages {
-                for update in translator.replay_message(&message) {
-                    self.writer
-                        .notify(
-                            "session/update",
-                            json!({"sessionId": self.id, "update": update}),
-                        )
-                        .await;
-                }
             }
         }
         Ok(())
