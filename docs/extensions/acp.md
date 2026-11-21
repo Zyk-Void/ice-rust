@@ -78,6 +78,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | Client `mcpServers` | Accepted but **not started yet** (a warning is printed to stderr) |
 | `session/load` | Supported across process restarts. Opens the exact native saved session in its original `cwd`, replays the active branch (including paginated history and tool results) before responding, and restores the saved model and thinking level before returning configuration. Older sessions without selection records use their latest assistant's model. Missing, unreadable, already-open or unrestorable sessions return an error; loading never creates an empty replacement |
 | `session/resume` | Not implemented; clients should use the advertised `session/load` capability |
+| `session/fork` | Supported for an open, idle session in the same `cwd`. Captures the live source's JSONL branch, facts and configuration coherently, creates a new native session ID with the source as parent, then replays the fork before returning. The original child and session file remain unchanged and usable |
 | Images | Supported (`promptCapabilities.image: true`). Inline base64 PNG/JPEG/GIF/WebP supported by the native image detector; malformed data or mismatched MIME types are rejected. The selected provider/model must support vision |
 | Audio | Not supported |
 | Client fs/terminal methods | Not used. icers runs its own tools |

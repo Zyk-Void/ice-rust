@@ -65,6 +65,8 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
 
 pub(crate) struct Session {
     id: String,
+    cwd: PathBuf,
+    operation: tokio::sync::Mutex<()>,
     writer: Arc<Writer>,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     process: Mutex<Option<tokio::process::Child>>,
@@ -90,8 +92,10 @@ impl Session {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
         let session = Arc::new(Self {
-            translator: Mutex::new(Translator::new(cwd)),
+            translator: Mutex::new(Translator::new(cwd.clone())),
             id,
+            cwd,
+            operation: tokio::sync::Mutex::new(()),
             writer,
             stdin: tokio::sync::Mutex::new(io.stdin),
             process: Mutex::new(io.process),
@@ -253,12 +257,29 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "another operation is running in this session".to_string())?;
         if self.prompt_running.swap(true, Ordering::AcqRel) {
             return Err("a prompt is already running in this session".to_string());
         }
         let result = self.prompt_inner(text, images).await;
         self.prompt_running.store(false, Ordering::Release);
         result
+    }
+
+    pub(crate) fn cwd(&self) -> &Path {
+        &self.cwd
+    }
+
+    /// Capture the live source through its owning child; never reopen its file.
+    pub(crate) async fn fork_native(&self) -> Result<Value, String> {
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "wait for the current operation to finish before forking".to_string())?;
+        self.command(json!({"type": "fork_session"})).await
     }
 
     async fn prompt_inner(

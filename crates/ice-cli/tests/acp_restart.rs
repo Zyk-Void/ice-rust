@@ -132,6 +132,128 @@ async fn acp_load_legacy_session_recovers_model_from_assistant() {
     restart_roundtrip(true).await;
 }
 
+#[tokio::test]
+async fn acp_fork_keeps_the_live_source_and_copies_context_without_rewriting_it() {
+    let temp = tempfile::tempdir().unwrap();
+    let agent = temp.path().join("agent");
+    std::fs::create_dir(&agent).unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    std::fs::write(agent.join("models.json"), json!({"providers": {"restart": {
+        "api": "openai-completions", "baseUrl": format!("http://{address}/v1"), "apiKey": "test-only",
+        "models": [{"id": "default", "contextWindow": 32000, "maxTokens": 1024},
+                   {"id": "selected", "contextWindow": 32000, "maxTokens": 1024}]
+    }}}).to_string()).unwrap();
+    std::fs::write(
+        agent.join("settings.json"),
+        json!({"sessionDir": "saved-sessions"}).to_string(),
+    )
+    .unwrap();
+    let provider = tokio::spawn(mock_provider(listener));
+    let mut client = Client::start(&temp);
+    let (_, init) = client
+        .call(
+            "initialize",
+            json!({"protocolVersion": 1, "clientCapabilities": {}}),
+        )
+        .await;
+    assert!(init["agentCapabilities"]["sessionCapabilities"]["fork"].is_object());
+    let (_, source) = client
+        .call("session/new", json!({"cwd": temp.path()}))
+        .await;
+    let source_id = source["sessionId"].as_str().unwrap();
+    client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": source_id, "configId": "model", "value": "restart/selected"}),
+        )
+        .await;
+    client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": source_id, "configId": "thinking", "value": "low"}),
+        )
+        .await;
+    client.call("session/prompt", json!({"sessionId": source_id, "prompt": [{"type": "text", "text": "/name Fork source"}]})).await;
+    client.call("session/prompt", json!({"sessionId": source_id, "prompt": [{"type": "text", "text": "remember fork-marker-721"}]})).await;
+
+    fn path_for_id(root: &std::path::Path, id: &str) -> Option<std::path::PathBuf> {
+        for entry in std::fs::read_dir(root).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                if let Some(found) = path_for_id(&path, id) {
+                    return Some(found);
+                }
+            } else if path
+                .extension()
+                .is_some_and(|extension| extension == "jsonl")
+            {
+                let text = std::fs::read_to_string(&path).unwrap();
+                let header: Value = serde_json::from_str(text.lines().next().unwrap()).unwrap();
+                if header["id"] == id {
+                    return Some(path);
+                }
+            }
+        }
+        None
+    }
+    let directory = temp.path().join("saved-sessions");
+    let source_path = path_for_id(&directory, source_id).unwrap();
+    let source_bytes = std::fs::read(&source_path).unwrap();
+    let (frames, fork) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": source_id, "cwd": temp.path()}),
+        )
+        .await;
+    let fork_id = fork["sessionId"].as_str().unwrap();
+    assert_ne!(fork_id, source_id);
+    assert!(uuid::Uuid::parse_str(fork_id).is_ok());
+    assert_eq!(std::fs::read(&source_path).unwrap(), source_bytes);
+    assert_eq!(
+        replay_text(&frames, "user_message_chunk"),
+        "remember fork-marker-721"
+    );
+    assert_eq!(
+        replay_text(&frames, "agent_message_chunk"),
+        "persisted answer"
+    );
+    for (id, value) in [("model", "restart/selected"), ("thinking", "low")] {
+        let option = fork["configOptions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|option| option["id"] == id)
+            .unwrap();
+        assert_eq!(option["currentValue"], value);
+    }
+    let fork_path = path_for_id(&directory, fork_id).unwrap();
+    let fork_text = std::fs::read_to_string(&fork_path).unwrap();
+    let header: Value = serde_json::from_str(fork_text.lines().next().unwrap()).unwrap();
+    assert_eq!(header["parentSessionId"], source_id);
+    let (_, result) = client.call("session/prompt", json!({"sessionId": source_id, "prompt": [{"type": "text", "text": "/name Source still alive"}]})).await;
+    assert_eq!(result["stopReason"], "end_turn");
+    assert_eq!(
+        std::fs::read_to_string(&fork_path).unwrap(),
+        fork_text,
+        "source writes cannot mutate the fork"
+    );
+    let (_, result) = client.call("session/prompt", json!({"sessionId": fork_id, "prompt": [{"type": "text", "text": "continue on the fork"}]})).await;
+    assert_eq!(result["stopReason"], "end_turn");
+    client.stop().await;
+    let requests = tokio::time::timeout(Duration::from_secs(10), provider)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(requests[1]["model"], "selected");
+    let messages = requests[1]["messages"].as_array().unwrap();
+    assert!(messages
+        .iter()
+        .any(|message| message["content"].to_string().contains("fork-marker-721")));
+    assert!(messages.iter().any(|message| message["role"] == "assistant"
+        && message["content"].to_string().contains("persisted answer")));
+}
+
 async fn restart_roundtrip(legacy: bool) {
     let temp = tempfile::tempdir().unwrap();
     let agent = temp.path().join("agent");
