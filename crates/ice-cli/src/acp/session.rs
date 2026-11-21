@@ -69,6 +69,7 @@ pub(crate) struct Session {
     operation: tokio::sync::Mutex<()>,
     writer: Arc<Writer>,
     elicitation_form: bool,
+    compaction: bool,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     process: Mutex<Option<tokio::process::Child>>,
     next_id: AtomicU64,
@@ -91,6 +92,7 @@ impl Session {
         spawner: &Spawner,
         writer: Arc<Writer>,
         elicitation_form: bool,
+        compaction: bool,
     ) -> Result<Arc<Self>, String> {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
@@ -101,6 +103,7 @@ impl Session {
             operation: tokio::sync::Mutex::new(()),
             writer,
             elicitation_form,
+            compaction,
             stdin: tokio::sync::Mutex::new(io.stdin),
             process: Mutex::new(io.process),
             next_id: AtomicU64::new(1),
@@ -352,6 +355,64 @@ impl Session {
                     let name = args.trim();
                     (command == "/name" && !name.is_empty()).then(|| name.to_string())
                 });
+        let compaction_id = (self.compaction && text.split_whitespace().next() == Some("/compact"))
+            .then(|| uuid::Uuid::new_v4().to_string());
+        if let Some(id) = &compaction_id {
+            self.notify_update(json!({
+                "sessionUpdate": "compaction_update", "compactionId": id,
+                "status": "in_progress",
+            }))
+            .await;
+        }
+        let settled = self.prompt_settlement(text, images, gate).await;
+        let stop = self.translator.lock().unwrap().take_stop_reason();
+        let result = match &settled {
+            Ok(settled) => translate::stop_reason(settled, cancel.is_cancelled(), stop.as_deref()),
+            Err(error) => Err(error.clone()),
+        };
+        let summary = settled
+            .as_ref()
+            .ok()
+            .and_then(|settled| settled["summary"].as_str())
+            .filter(|text| !text.is_empty());
+        if let Some(id) = compaction_id {
+            let status = match &result {
+                Ok("cancelled") => "cancelled",
+                Ok(_) => "completed",
+                Err(_) => "failed",
+            };
+            let mut update = json!({
+                "sessionUpdate": "compaction_update", "compactionId": id, "status": status,
+            });
+            if let Some(summary) = summary {
+                update["summary"] = json!([{"type": "text", "text": summary}]);
+            }
+            if let Err(error) = &result {
+                update["error"] = json!(error);
+            }
+            self.notify_update(update).await;
+        } else if let Some(summary) = summary {
+            // Clients without compaction support still receive the native summary.
+            self.notify_update(json!({
+                "sessionUpdate": "agent_message_chunk",
+                "content": {"type": "text", "text": summary},
+            }))
+            .await;
+        }
+        if result == Ok("end_turn") {
+            if let Some(name) = requested_name.as_deref() {
+                self.publish_title(Some(name)).await;
+            }
+        }
+        result
+    }
+
+    async fn prompt_settlement(
+        &self,
+        text: String,
+        images: Vec<ice_ai::types::ImageContent>,
+        gate: tokio::sync::MutexGuard<'_, ()>,
+    ) -> Result<Value, String> {
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
         if let Err(error) = self
@@ -362,26 +423,10 @@ impl Session {
             return Err(error);
         }
         drop(gate);
-        let settled = tokio::select! {
-            settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string())?,
-            _ = self.closed.cancelled() => return Err("icers process exited during the turn".to_string()),
-        };
-        // `/compact` reports its result as a settlement summary.
-        if let Some(summary) = settled["summary"].as_str().filter(|text| !text.is_empty()) {
-            self.notify_update(json!({
-                "sessionUpdate": "agent_message_chunk",
-                "content": {"type": "text", "text": summary},
-            }))
-            .await;
+        tokio::select! {
+            settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string()),
+            _ = self.closed.cancelled() => Err("icers process exited during the turn".to_string()),
         }
-        let stop = self.translator.lock().unwrap().take_stop_reason();
-        let result = translate::stop_reason(&settled, cancel.is_cancelled(), stop.as_deref());
-        if result == Ok("end_turn") {
-            if let Some(name) = requested_name.as_deref() {
-                self.publish_title(Some(name)).await;
-            }
-        }
-        result
     }
 
     /// Publish the actual persisted name. With an expected name, a failed
@@ -661,6 +706,7 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -743,6 +789,7 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -785,6 +832,7 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -844,4 +892,71 @@ mod turn_tests {
 /// providers). The first `/` splits, so model ids may contain slashes.
 fn model_value(provider: &str, id: &str) -> String {
     format!("{provider}/{id}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::io::BufReader;
+
+    #[tokio::test]
+    async fn compaction_cancel_before_native_admission_is_not_lost() {
+        let (bridge_stdin, native_stdin) = tokio::io::duplex(4096);
+        let (mut native_stdout, bridge_stdout) = tokio::io::duplex(4096);
+        let io = Mutex::new(Some(ChildIo {
+            stdin: Box::new(bridge_stdin),
+            stdout: Box::new(BufReader::new(bridge_stdout)),
+            process: None,
+        }));
+        let spawner: Spawner = Arc::new(move |_, _, _| Ok(io.lock().unwrap().take().unwrap()));
+        let peer = tokio::spawn(async move {
+            native_stdout
+                .write_all(b"{\"type\":\"ready\"}\n")
+                .await
+                .unwrap();
+            let mut input = BufReader::new(native_stdin).lines();
+            let prompt: Value =
+                serde_json::from_str(&input.next_line().await.unwrap().unwrap()).unwrap();
+            assert_eq!(prompt["type"], "prompt");
+            let response = json!({"type": "response", "id": prompt["id"], "success": true, "data": {"accepted": true}});
+            native_stdout
+                .write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+            let abort: Value =
+                serde_json::from_str(&input.next_line().await.unwrap().unwrap()).unwrap();
+            assert_eq!(abort["type"], "abort");
+            native_stdout
+                .write_all(b"{\"type\":\"agent_settled\",\"outcome\":\"aborted\"}\n")
+                .await
+                .unwrap();
+        });
+        let session = Session::start(
+            "early-cancel".to_string(),
+            std::env::temp_dir(),
+            None,
+            &spawner,
+            Arc::new(Writer::new(Box::new(tokio::io::sink()))),
+            false,
+            true,
+        )
+        .await
+        .unwrap();
+        // A cancel can arrive after the progress notification, before the
+        // child's prompt command is accepted. The turn gate must carry it
+        // across admission instead of dropping it.
+        let cancel = async {
+            while session.turn.lock().unwrap().is_none() {
+                tokio::task::yield_now().await;
+            }
+            session.cancel().await;
+        };
+        let (result, ()) = tokio::time::timeout(Duration::from_secs(5), async {
+            tokio::join!(session.prompt("/compact".to_string(), Vec::new()), cancel)
+        })
+        .await
+        .expect("pre-admission cancel reaches the accepted prompt");
+        assert_eq!(result.unwrap(), "cancelled");
+        peer.await.unwrap();
+    }
 }

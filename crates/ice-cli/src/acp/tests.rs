@@ -545,6 +545,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
     let mut history_pages = 0;
     let mut session_name = None::<String>;
     let mut state_unavailable = false;
+    let mut compacting = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
@@ -617,6 +618,10 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                 emit(&mut stdout, ok(json!({}))).await
             }
             "prompt" => {
+                if msg["message"].as_str().unwrap().trim() == "/compact reject" {
+                    emit(&mut stdout, json!({"type": "response", "id": id, "success": false, "error": "cannot compact now"})).await;
+                    continue;
+                }
                 if msg["message"] == "image regression" || msg["message"] == "" {
                     assert_eq!(msg["images"].as_array().unwrap().len(), 1);
                     assert_eq!(msg["images"][0]["mimeType"], "image/png");
@@ -644,6 +649,19 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                         }
                         emit(&mut stdout, json!({"type": "command_output", "text": "name command finished"})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
+                    }
+                    text if text.split_whitespace().next() == Some("/compact") => {
+                        match text.split_whitespace().nth(1) {
+                            Some("wait") => {
+                                waiting = true;
+                                compacting = true;
+                                emit(&mut stdout, json!({"type": "command_output", "text": "compacting"})).await;
+                            }
+                            Some("exit") => break,
+                            Some("fail") => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "failed", "error": "compactor failed", "summary": "Compaction failed: compactor failed"})).await,
+                            Some("decline") => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "declined", "summary": "Nothing to compact yet."})).await,
+                            _ => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "compacted", "summary": "Conversation compacted."})).await,
+                        }
                     }
                     "wait" => waiting = true,
                     "/version" => {
@@ -690,7 +708,11 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
             "abort" if waiting || asked_question => {
                 asked_question = false;
                 waiting = false;
-                emit(&mut stdout, json!({"type": "agent_settled", "outcome": "aborted", "aborted": true})).await;
+                let mut settled = json!({"type": "agent_settled", "outcome": "aborted", "aborted": true});
+                if compacting {
+                    settled["summary"] = json!("Compaction aborted.");
+                }
+                emit(&mut stdout, settled).await;
             }
             "stop" => break,
             _ => {}
@@ -877,6 +899,151 @@ async fn session_title_does_not_invent_requested_name_after_failure() {
             !update_kinds(&frames).contains(&"session_info_update".to_string()),
             "{frames:?}"
         );
+    }
+}
+
+async fn compaction_client(capability: Value) -> (Client, String) {
+    let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"clientCapabilities": {"session": {"compaction": capability}}}),
+        )
+        .await;
+    let (id, _) = client.new_session().await;
+    (client, id)
+}
+
+fn compaction_updates(frames: &[Value]) -> Vec<&Value> {
+    frames
+        .iter()
+        .filter_map(|frame| {
+            let update = &frame["params"]["update"];
+            (update["sessionUpdate"] == "compaction_update").then_some(update)
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn compaction_reports_started_and_completed_before_prompt_response() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    let mut previous_id = None;
+    for (prompt, summary) in [
+        ("/compact focus on tests", "Conversation compacted."),
+        ("  /compact decline  ", "Nothing to compact yet."),
+    ] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn", "{response}");
+        let updates = compaction_updates(&frames);
+        assert_eq!(updates.len(), 2, "{frames:?}");
+        assert_eq!(updates[0]["status"], "in_progress");
+        assert_eq!(updates[1]["status"], "completed");
+        assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+        let compact_id = updates[0]["compactionId"].as_str().unwrap();
+        assert!(uuid::Uuid::parse_str(compact_id).is_ok());
+        assert_ne!(previous_id.as_deref(), Some(compact_id));
+        previous_id = Some(compact_id.to_owned());
+        assert_eq!(
+            updates[1]["summary"],
+            json!([{"type": "text", "text": summary}])
+        );
+        assert!(!update_kinds(&frames).contains(&"agent_message_chunk".to_string()));
+    }
+}
+
+#[tokio::test]
+async fn compaction_failure_and_child_exit_always_close_the_progress_row() {
+    for (prompt, error) in [
+        ("/compact fail", "compactor failed"),
+        ("/compact reject", "cannot compact now"),
+        ("/compact exit", "icers process exited during the turn"),
+    ] {
+        let (mut client, id) = compaction_client(json!({})).await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["error"]["message"], error, "{response}");
+        let updates = compaction_updates(&frames);
+        assert_eq!(updates.len(), 2, "{frames:?}");
+        assert_eq!(updates[0]["status"], "in_progress");
+        assert_eq!(updates[1]["status"], "failed");
+        assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+        assert_eq!(updates[1]["error"], error);
+    }
+}
+
+#[tokio::test]
+async fn compaction_cancellation_closes_the_same_progress_row() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    let request = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "/compact wait"}]}),
+        )
+        .await;
+    let mut frames = Vec::new();
+    loop {
+        let frame = client.next().await;
+        let ready = frame["params"]["update"]["content"]["text"] == "compacting";
+        frames.push(frame);
+        if ready {
+            break;
+        }
+    }
+    client
+        .send(json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": id}}))
+        .await;
+    let (terminal, response) = client.until_response(request).await;
+    frames.extend(terminal);
+    assert_eq!(response["result"]["stopReason"], "cancelled");
+    let updates = compaction_updates(&frames);
+    assert_eq!(updates.len(), 2);
+    assert_eq!(updates[1]["status"], "cancelled");
+    assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+    assert_eq!(updates[1]["summary"][0]["text"], "Compaction aborted.");
+}
+
+#[tokio::test]
+async fn compaction_without_negotiation_keeps_the_text_summary() {
+    for capability in [Value::Null, json!(true)] {
+        let (mut client, id) = compaction_client(capability).await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": "/compact"}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(compaction_updates(&frames).is_empty());
+        assert!(
+            frames
+                .iter()
+                .any(|frame| frame["params"]["update"]["content"]["text"]
+                    == "Conversation compacted.")
+        );
+    }
+}
+
+#[tokio::test]
+async fn compaction_requires_the_exact_slash_command_token() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    for prompt in ["/compaction", "please /compact", "/compact-extra"] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(compaction_updates(&frames).is_empty());
     }
 }
 

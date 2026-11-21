@@ -244,6 +244,7 @@ struct Server {
     sessions: Mutex<HashMap<String, Arc<Session>>>,
     loading: tokio::sync::Mutex<()>,
     session_dir: Option<PathBuf>,
+    compaction: AtomicBool,
 }
 
 /// Run the ACP server over the given streams. Generic so tests can drive it
@@ -265,6 +266,7 @@ where
         sessions: Mutex::new(HashMap::new()),
         loading: tokio::sync::Mutex::new(()),
         session_dir,
+        compaction: AtomicBool::new(false),
     });
     let mut tasks = tokio::task::JoinSet::new();
     loop {
@@ -375,6 +377,10 @@ impl Server {
                     params["clientCapabilities"]["elicitation"]["form"].is_object(),
                     Ordering::Release,
                 );
+                self.compaction.store(
+                    params["clientCapabilities"]["session"]["compaction"].is_object(),
+                    Ordering::Release,
+                );
                 Ok(initialize_result())
             }
             "authenticate" => Ok(json!({})),
@@ -473,6 +479,7 @@ impl Server {
             &self.spawner,
             Arc::clone(&self.writer),
             self.elicitation_form.load(Ordering::Acquire),
+            self.compaction.load(Ordering::Acquire),
         )
         .await
         .map_err(|e| (INTERNAL_ERROR, e))?;
@@ -545,6 +552,7 @@ impl Server {
             &self.spawner,
             Arc::clone(&self.writer),
             self.elicitation_form.load(Ordering::Acquire),
+            self.compaction.load(Ordering::Acquire),
         )
         .await
         .map_err(|error| {
@@ -655,6 +663,7 @@ impl Server {
             &self.spawner,
             Arc::clone(&self.writer),
             self.elicitation_form.load(Ordering::Acquire),
+            self.compaction.load(Ordering::Acquire),
         )
         .await
         .map_err(|error| (INTERNAL_ERROR, error))?;
