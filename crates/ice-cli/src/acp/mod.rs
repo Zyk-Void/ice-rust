@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 use session::{Session, Spawner};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufRead, AsyncWrite, AsyncWriteExt};
 use tokio::sync::oneshot;
@@ -184,6 +184,7 @@ impl Writer {
 
 struct Server {
     writer: Arc<Writer>,
+    compaction: AtomicBool,
     spawner: Spawner,
     sessions: Mutex<HashMap<String, Arc<Session>>>,
     loading: tokio::sync::Mutex<()>,
@@ -204,6 +205,7 @@ where
 {
     let server = Arc::new(Server {
         writer: Arc::new(Writer::new(Box::new(output))),
+        compaction: AtomicBool::new(false),
         spawner,
         sessions: Mutex::new(HashMap::new()),
         loading: tokio::sync::Mutex::new(()),
@@ -306,7 +308,13 @@ impl Server {
 
     async fn handle(&self, method: &str, params: Value) -> Result<Value, (i64, String)> {
         match method {
-            "initialize" => Ok(initialize_result()),
+            "initialize" => {
+                self.compaction.store(
+                    params["clientCapabilities"]["session"]["compaction"].is_object(),
+                    Ordering::Release,
+                );
+                Ok(initialize_result())
+            }
             "authenticate" => Ok(json!({})),
             "session/new" => self.new_session(params).await,
             "session/load" => self.load_session(params).await,
@@ -398,6 +406,7 @@ impl Server {
             None,
             &self.spawner,
             Arc::clone(&self.writer),
+            self.compaction.load(Ordering::Acquire),
         )
         .await
         .map_err(|e| (INTERNAL_ERROR, e))?;
@@ -465,6 +474,7 @@ impl Server {
             Some(&saved_path),
             &self.spawner,
             Arc::clone(&self.writer),
+            self.compaction.load(Ordering::Acquire),
         )
         .await
         .map_err(|error| {

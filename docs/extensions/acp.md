@@ -23,6 +23,12 @@ background shells and subagents. Sessions are stored in the project's normal
 `.icers/sessions/` directory, so `icers --resume` in that project also lists
 sessions started from an ACP client.
 
+The bridge sets `ICERS_ACP_RPC=1` only for its dedicated native child. This
+opt-in adds `compaction_status` RPC events with a per-attempt `compactionId`
+and `in_progress`, `completed`, `failed` or `cancelled` status. Completion
+comes from the persisted-checkpoint hook, not the legacy JSON-mode activity
+flag. Ordinary RPC, JSON mode and the TUI keep their existing event shapes.
+
 ## Setup
 
 Build the binary:
@@ -71,6 +77,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
 | `session/cancel` | Supported (aborts the running turn) |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
+| Automatic compaction | Negotiated with `clientCapabilities.session.compaction: {}`. Progress completes only after the native checkpoint and its step record are saved; provider/storage failures, cancellation, extension vetoes and process exit close the same progress item. Manual compaction remains a separate prompt operation |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
 | Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only. `session/set_model` is also supported. The current model is listed first |

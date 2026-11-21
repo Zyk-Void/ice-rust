@@ -207,6 +207,30 @@ impl Translator {
     }
 }
 
+pub(crate) fn compaction_update(event: &Value) -> Option<Value> {
+    let crate::remote::protocol::RemoteEvent::CompactionStatus {
+        compaction_id,
+        status,
+        summary,
+        error,
+    } = serde_json::from_value(event.clone()).ok()?
+    else {
+        return None;
+    };
+    if compaction_id.trim().is_empty() {
+        return None;
+    }
+    let mut update = json!({"sessionUpdate": "compaction_update",
+        "compactionId": compaction_id, "status": status});
+    if let Some(summary) = summary.filter(|text| !text.is_empty()) {
+        update["summary"] = json!([{"type": "text", "text": summary}]);
+    }
+    if let Some(error) = error.filter(|text| !text.is_empty()) {
+        update["error"] = json!(error);
+    }
+    Some(update)
+}
+
 fn is_assistant(event: &Value) -> bool {
     event["message"].get("kind").and_then(Value::as_str) == Some("assistant")
 }

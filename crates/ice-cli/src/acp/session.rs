@@ -6,7 +6,7 @@
 use super::translate::{self, Translator};
 use super::Writer;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -39,6 +39,7 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
     Arc::new(move |cwd, session_id, saved_path| {
         let mut command = tokio::process::Command::new(&program);
         command.args(["--mode", "rpc"]).args(&extra_args);
+        command.env("ICERS_ACP_RPC", "1");
         if let Some(path) = saved_path {
             // Open-only: never recreate a missing or unreadable saved session.
             command.arg("--session").arg(path);
@@ -65,6 +66,8 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
 
 pub(crate) struct Session {
     id: String,
+    compaction: bool,
+    pending_compactions: Mutex<HashSet<String>>,
     writer: Arc<Writer>,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     process: Mutex<Option<tokio::process::Child>>,
@@ -86,12 +89,15 @@ impl Session {
         saved_path: Option<&Path>,
         spawner: &Spawner,
         writer: Arc<Writer>,
+        compaction: bool,
     ) -> Result<Arc<Self>, String> {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
         let session = Arc::new(Self {
             translator: Mutex::new(Translator::new(cwd)),
             id,
+            compaction,
+            pending_compactions: Mutex::new(HashSet::new()),
             writer,
             stdin: tokio::sync::Mutex::new(io.stdin),
             process: Mutex::new(io.process),
@@ -144,6 +150,24 @@ impl Session {
                         let _ = waiter.send(frame);
                     }
                 }
+                Some("compaction_status") => {
+                    if self.compaction {
+                        if let Some(update) = translate::compaction_update(&frame) {
+                            let id = update["compactionId"].as_str().unwrap().to_string();
+                            let accepted = {
+                                let mut pending = self.pending_compactions.lock().unwrap();
+                                if update["status"] == "in_progress" {
+                                    pending.insert(id)
+                                } else {
+                                    pending.remove(&id)
+                                }
+                            };
+                            if accepted {
+                                self.notify_update(update).await;
+                            }
+                        }
+                    }
+                }
                 Some("agent_settled") => {
                     if let Some(settled) = self.settled.lock().unwrap().take() {
                         let _ = settled.send(frame);
@@ -161,6 +185,13 @@ impl Session {
                     }
                 }
             }
+        }
+        let unfinished: Vec<_> = self.pending_compactions.lock().unwrap().drain().collect();
+        for id in unfinished {
+            self.notify_update(json!({"sessionUpdate": "compaction_update",
+                "compactionId": id, "status": "failed",
+                "error": "icers process exited during compaction"}))
+                .await;
         }
         self.closed.cancel();
         self.pending.lock().unwrap().clear();

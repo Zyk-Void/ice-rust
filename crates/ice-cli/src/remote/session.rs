@@ -274,7 +274,8 @@ impl RemoteSession {
             }
             RemoteEvent::TurnStart
             | RemoteEvent::TurnEnd { .. }
-            | RemoteEvent::RunSettled { .. } => {}
+            | RemoteEvent::RunSettled { .. }
+            | RemoteEvent::CompactionStatus { .. } => {}
             RemoteEvent::MessageStart { message } => {
                 match message_role(message) {
                     "assistant" => {

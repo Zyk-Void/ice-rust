@@ -364,7 +364,7 @@ pub fn map_remote_event(event: &RemoteEvent) -> Option<UiEvent> {
         RemoteEvent::AgentStart => Some(UiEvent::AgentStart),
         RemoteEvent::AgentEnd { .. } => Some(UiEvent::AgentEnd),
         // This normalized driver has no run-summary presentation layer.
-        RemoteEvent::RunSettled { .. } => None,
+        RemoteEvent::RunSettled { .. } | RemoteEvent::CompactionStatus { .. } => None,
         RemoteEvent::RetryScheduled {
             attempt,
             max_retries,
