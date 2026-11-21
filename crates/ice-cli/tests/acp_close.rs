@@ -102,6 +102,7 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
         json!({"sessionDir":"saved-sessions"}).to_string(),
     )
     .unwrap();
+    let (provider_stop, mut provider_stopped) = tokio::sync::oneshot::channel::<()>();
     let provider = tokio::spawn(async move {
         let (mut socket, _) = listener.accept().await.unwrap();
         let args = json!({
@@ -117,8 +118,16 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
             "tool_calls",
         )
         .await;
-        let (mut socket, _) = listener.accept().await.unwrap();
-        reply(&mut socket, json!({"content":"Shell is running."}), "stop").await;
+        // The outer shell can complete while its owned descendant lingers.
+        // Its notice may need a late foreground reply or an ACP wake reply;
+        // this cleanup test must keep the mock alive through either ordering.
+        loop {
+            let (mut socket, _) = tokio::select! {
+                _ = &mut provider_stopped => break,
+                next = listener.accept() => next.unwrap(),
+            };
+            reply(&mut socket, json!({"content":"Shell is running."}), "stop").await;
+        }
     });
     let program = std::env::var_os("ICERS_ACP_TEST_BINARY")
         .unwrap_or_else(|| env!("CARGO_BIN_EXE_icers").into());
@@ -220,5 +229,6 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
         .unwrap()
         .unwrap();
     assert!(status.success(), "{status}");
+    let _ = provider_stop.send(());
     provider.await.unwrap();
 }
