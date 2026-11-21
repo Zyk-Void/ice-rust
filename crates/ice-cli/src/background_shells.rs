@@ -238,6 +238,18 @@ impl SessionShells {
     /// outlive icers.
     pub async fn dispose(&self) {
         self.watches.dispose();
+        // Start lingering group stops together: each has
+        // a TERM grace period, which must not accumulate across the session.
+        let mut stops = tokio::task::JoinSet::new();
+        for shell in self.registry.snapshots().into_iter().filter(|shell| {
+            shell.status != ice_tools::bash_background::BackgroundShellStatus::Running
+        }) {
+            let registry = self.registry.clone();
+            stops.spawn(async move {
+                let _ = registry.kill(&shell.task_id, false).await;
+            });
+        }
+        while stops.join_next().await.is_some() {}
         self.registry.dispose().await;
         self.deliveries.close_and_drain().await;
     }
