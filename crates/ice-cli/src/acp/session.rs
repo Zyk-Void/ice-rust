@@ -289,11 +289,13 @@ impl Session {
             .await;
         }
         let stop = self.translator.lock().unwrap().take_stop_reason();
-        translate::stop_reason(
+        let result = translate::stop_reason(
             &settled,
             self.cancelled.load(Ordering::Acquire),
             stop.as_deref(),
-        )
+        );
+        self.publish_usage().await;
+        result
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
@@ -376,7 +378,21 @@ impl Session {
                 }
             }
         }
+        self.publish_usage().await;
         Ok(())
+    }
+
+    /// Publish an available context snapshot without making usage-query failures
+    /// fail the turn. Call outside the child reader, which resolves the query.
+    pub(crate) async fn publish_usage(&self) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// ACP `configOptions` for model and thinking level, built from the
