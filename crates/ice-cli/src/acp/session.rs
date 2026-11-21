@@ -293,6 +293,13 @@ impl Session {
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
         self.cancelled.store(false, Ordering::Release);
+        let requested_name =
+            text.trim()
+                .split_once(char::is_whitespace)
+                .and_then(|(command, args)| {
+                    let name = args.trim();
+                    (command == "/name" && !name.is_empty()).then(|| name.to_string())
+                });
         let compaction_id = (self.compaction && text.split_whitespace().next() == Some("/compact"))
             .then(|| uuid::Uuid::new_v4().to_string());
         if let Some(id) = &compaction_id {
@@ -341,6 +348,11 @@ impl Session {
             }))
             .await;
         }
+        if result == Ok("end_turn") {
+            if let Some(name) = requested_name.as_deref() {
+                self.publish_title(Some(name)).await;
+            }
+        }
         if settled.is_ok() {
             self.publish_usage().await;
         }
@@ -370,6 +382,27 @@ impl Session {
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string()),
             _ = self.closed.cancelled() => Err("icers process exited during the turn".to_string()),
         }
+    }
+
+    /// Publish the actual persisted name. With an expected name, a failed
+    /// `/name` command must not announce its requested (but unsaved) title.
+    /// Missing names and state-query failures leave the operation unchanged.
+    pub(crate) async fn publish_title(&self, expected: Option<&str>) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(name) = state["sessionName"]
+            .as_str()
+            .filter(|name| !name.trim().is_empty())
+        else {
+            return false;
+        };
+        if expected.is_some_and(|expected| expected != name) {
+            return false;
+        }
+        self.notify_update(json!({"sessionUpdate": "session_info_update", "title": name}))
+            .await;
+        true
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
@@ -452,6 +485,7 @@ impl Session {
                 }
             }
         }
+        self.publish_title(None).await;
         self.publish_usage().await;
         Ok(())
     }

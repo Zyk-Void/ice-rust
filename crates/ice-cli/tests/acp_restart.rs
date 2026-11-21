@@ -168,6 +168,21 @@ async fn restart_roundtrip(legacy: bool) {
         .call("session/new", json!({"cwd": temp.path(), "mcpServers": []}))
         .await;
     let id = session["sessionId"].as_str().unwrap().to_string();
+    let (named, _) = first
+        .call(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "/name Restart title"}]}),
+        )
+        .await;
+    assert!(
+        named
+            .iter()
+            .any(
+                |frame| frame["params"]["update"]["sessionUpdate"] == "session_info_update"
+                    && frame["params"]["update"]["title"] == "Restart title"
+            ),
+        "{named:?}"
+    );
     first
         .call(
             "session/set_config_option",
@@ -233,6 +248,15 @@ async fn restart_roundtrip(legacy: bool) {
             json!({"sessionId": id, "cwd": temp.path(), "mcpServers": []}),
         )
         .await;
+    assert!(
+        frames
+            .iter()
+            .any(
+                |frame| frame["params"]["update"]["sessionUpdate"] == "session_info_update"
+                    && frame["params"]["update"]["title"] == "Restart title"
+            ),
+        "{frames:?}"
+    );
     assert_eq!(
         replay_text(&frames, "user_message_chunk"),
         "remember restart-marker-721"
