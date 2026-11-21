@@ -102,6 +102,9 @@ pub struct Settings {
     /// high/xhigh/max). Parsed by the caller via `args::parse_thinking_level`.
     #[serde(default)]
     pub default_thinking_level: Option<String>,
+    /// Saved fast-mode default: request the priority service tier on models that list it.
+    #[serde(default)]
+    pub fast_mode: Option<bool>,
     /// Saved theme name. Surfaced for best-effort TUI theme application.
     #[serde(default)]
     pub theme: Option<String>,

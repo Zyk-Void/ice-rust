@@ -588,6 +588,9 @@ pub struct ModelDefinition {
     pub headers: Option<BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compat: Option<serde_json::Value>,
+    /// Request service tiers the model accepts, for example `["priority"]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub service_tiers: Vec<String>,
 }
 
 /// Load `~/.icers/models.json`. Missing file ⇒ empty config (no error).
@@ -1043,6 +1046,7 @@ pub fn provider_to_models(provider_id: &str, cfg: &ProviderConfig) -> Option<Vec
         );
         m.reasoning = def.reasoning.unwrap_or(false);
         m.thinking_level_map = def.thinking_level_map.clone();
+        m.service_tiers = def.service_tiers.clone();
         m.context_window = def.context_window.unwrap_or(0);
         m.max_tokens = def.max_tokens.unwrap_or(0);
         if let Some(cost) = &def.cost {
@@ -1608,6 +1612,7 @@ mod tests {
                 input: None,
                 headers: None,
                 compat: None,
+                service_tiers: Vec::new(),
             }],
         };
         let models = provider_to_models("gateway", &cfg).expect("anthropic-compatible");
@@ -1868,6 +1873,7 @@ mod tests {
                 input: None,
                 headers: None,
                 compat: None,
+                service_tiers: Vec::new(),
             }],
         };
         let models = provider_to_models("ice-fake-provider", &cfg).unwrap();

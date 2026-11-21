@@ -74,6 +74,9 @@ pub struct SimpleStreamOptions {
     /// Per-level reasoning token budgets for budget-based thinking models.
     /// Faux ignores this; anthropic uses it in `adjust_max_tokens_for_thinking`.
     pub thinking_budgets: Option<ThinkingBudgets>,
+    /// Requested service tier (for example `"priority"`). Providers send it only
+    /// when the model lists it in `Model::service_tiers`.
+    pub service_tier: Option<String>,
 }
 
 impl Default for SimpleStreamOptions {
@@ -93,6 +96,7 @@ impl Default for SimpleStreamOptions {
             hard_max_output_tokens: None,
             temperature: None,
             thinking_budgets: None,
+            service_tier: None,
         }
     }
 }
@@ -362,6 +366,7 @@ pub struct SimpleStreamOptionsPatch {
     pub max_tokens: Option<Option<u64>>,
     pub temperature: Option<Option<f64>>,
     pub session_id: Option<Option<String>>,
+    pub service_tier: Option<Option<String>>,
 }
 
 impl SimpleStreamOptionsPatch {
@@ -409,6 +414,9 @@ impl SimpleStreamOptionsPatch {
         }
         if let Some(v) = &self.session_id {
             opts.session_id = v.clone();
+        }
+        if let Some(v) = &self.service_tier {
+            opts.service_tier = v.clone();
         }
     }
 }

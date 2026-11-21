@@ -1190,6 +1190,7 @@ where
             "set_model" => rpc_set_model(&lane, harness, &model_catalog, &msg).await,
             "get_available_thinking_levels" => Ok(rpc_get_available_thinking_levels(&lane).await),
             "set_thinking_level" => rpc_set_thinking_level(&lane, harness, &msg).await,
+            "set_fast_mode" => rpc_set_fast_mode(harness, &msg).await,
             "get_available_tools" => Ok(rpc_get_available_tools(&lane, harness).await),
             "set_active_tools" => rpc_set_active_tools(&lane, &msg).await,
             "ping" => Ok(serde_json::json!({"pong": true})),
@@ -1763,6 +1764,10 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         "modelId": model.as_ref().map(|model| model.id.clone()),
         "provider": model.as_ref().map(|model| model.provider.clone()),
         "thinkingLevel": thinking,
+        "fastMode": harness.service_tier().as_deref() == Some(FAST_SERVICE_TIER),
+        "fastModeSupported": model.as_ref().is_some_and(|model| {
+            model.service_tiers.iter().any(|tier| tier == FAST_SERVICE_TIER)
+        }),
         "activeTools": active_tools,
         "leafId": leaf_id,
         "context": context,
@@ -2505,6 +2510,25 @@ async fn rpc_set_model(
         return Err(format!("could not persist model selection: {error}"));
     }
     Ok(serde_json::json!({"modelId": model.id, "provider": model.provider}))
+}
+
+/// The service tier "fast mode" requests. A model receives it only when its
+/// `serviceTiers` lists it, so enabling the mode is harmless on other models.
+pub(crate) const FAST_SERVICE_TIER: &str = "priority";
+
+async fn rpc_set_fast_mode(
+    harness: &AgentHarness,
+    msg: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let enabled = msg
+        .get("enabled")
+        .and_then(|value| value.as_bool())
+        .ok_or("set_fast_mode requires boolean `enabled`")?;
+    harness
+        .set_service_tier(enabled.then(|| FAST_SERVICE_TIER.to_string()))
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({"fastMode": enabled}))
 }
 
 async fn rpc_set_thinking_level(

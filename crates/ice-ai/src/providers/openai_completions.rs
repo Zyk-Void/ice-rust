@@ -474,6 +474,13 @@ fn build_request(model: &Model, ctx: &Context, opts: &SimpleStreamOptions) -> Va
     if supports_streaming_usage(model) {
         body.insert("stream_options".into(), json!({ "include_usage": true }));
     }
+    if let Some(tier) = opts
+        .service_tier
+        .as_deref()
+        .filter(|tier| model.service_tiers.iter().any(|accepted| accepted == tier))
+    {
+        body.insert("service_tier".into(), Value::String(tier.to_string()));
+    }
     let max_tokens = resolve_max_tokens(model, opts);
     if max_tokens > 0 {
         body.insert(max_tokens_field(model).into(), Value::from(max_tokens));
@@ -1522,6 +1529,28 @@ mod tests {
         );
         assert!(body.get("prompt_cache_key").is_none());
         assert!(body.get("prompt_cache_retention").is_none());
+    }
+
+    #[test]
+    fn service_tier_is_sent_only_for_models_that_accept_it() {
+        let mut options = SimpleStreamOptions::default();
+        options.service_tier = Some("priority".into());
+
+        let mut fast = model();
+        fast.service_tiers = vec!["priority".into()];
+        let body = build_request(&fast, &cache_context(), &options);
+        assert_eq!(body["service_tier"], "priority");
+
+        // A model without the tier never receives it, and an unlisted tier is dropped.
+        let body = build_request(&model(), &cache_context(), &options);
+        assert!(body.get("service_tier").is_none());
+        options.service_tier = Some("flex".into());
+        let body = build_request(&fast, &cache_context(), &options);
+        assert!(body.get("service_tier").is_none());
+
+        options.service_tier = None;
+        let body = build_request(&fast, &cache_context(), &options);
+        assert!(body.get("service_tier").is_none());
     }
 
     #[test]

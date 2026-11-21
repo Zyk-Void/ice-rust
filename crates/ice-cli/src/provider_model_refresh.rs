@@ -141,6 +141,7 @@ pub(crate) fn persist(provider: &str, discovered: &[Model]) -> Result<usize, Str
             input: None,
             headers: None,
             compat: None,
+            service_tiers: Vec::new(),
         });
         added += 1;
     }

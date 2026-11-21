@@ -119,6 +119,9 @@ pub enum Command {
     SetThinkingLevel {
         level: ice_ai::types::ThinkingLevel,
     },
+    SetFastMode {
+        enabled: bool,
+    },
     GetAvailableTools,
     SetActiveTools {
         tools: Vec<String>,
@@ -157,6 +160,7 @@ pub const SUPPORTED_COMMANDS: &[&str] = &[
     "set_model",
     "get_available_thinking_levels",
     "set_thinking_level",
+    "set_fast_mode",
     "get_available_tools",
     "set_active_tools",
     "ui_dialog_response",
@@ -372,6 +376,20 @@ mod tests {
             }))),
         );
         assert!(!status.to_string().contains("secret-fixture"));
+    }
+    #[test]
+    fn set_fast_mode_validates_as_a_typed_request() {
+        // The dispatcher rejects a supported command that has no typed variant,
+        // so the handler alone is not enough.
+        assert!(SUPPORTED_COMMANDS.contains(&"set_fast_mode"));
+        let on: Request =
+            serde_json::from_value(json!({"type": "set_fast_mode", "enabled": true})).unwrap();
+        assert!(matches!(on.command, Command::SetFastMode { enabled: true }));
+        assert!(serde_json::from_value::<Request>(
+            json!({"type": "set_fast_mode", "enabled": "yes"})
+        )
+        .is_err());
+        assert!(serde_json::from_value::<Request>(json!({"type": "set_fast_mode"})).is_err());
     }
     #[test]
     fn response_has_canonical_success_data_shape() {

@@ -756,6 +756,20 @@ impl Session {
                 "options": level_choices,
             }));
         }
+        // A two-value select, because T3 Code renders only select options for
+        // generic agents. Offered only for models that accept a priority tier.
+        if state["fastModeSupported"] == true {
+            options.push(json!({
+                "id": "fast_mode",
+                "name": "Fast mode",
+                "type": "select",
+                "currentValue": if state["fastMode"] == true { "on" } else { "off" },
+                "options": [
+                    {"value": "off", "name": "Off"},
+                    {"value": "on", "name": "On"},
+                ],
+            }));
+        }
         Value::Array(options)
     }
 
@@ -805,6 +819,16 @@ impl Session {
                 .command(json!({"type": "set_thinking_level", "level": value}))
                 .await
                 .map(drop),
+            "fast_mode" => {
+                let enabled = match value {
+                    "on" => true,
+                    "off" => false,
+                    other => return Err(format!("unknown fast mode value `{other}`")),
+                };
+                self.command(json!({"type": "set_fast_mode", "enabled": enabled}))
+                    .await
+                    .map(drop)
+            }
             other => Err(format!("unknown config option `{other}`")),
         }
     }

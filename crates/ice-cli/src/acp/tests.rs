@@ -619,6 +619,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
     let mut provider = "p".to_string();
     let mut model_id = "m1".to_string();
     let mut thinking_level = "low".to_string();
+    let mut fast_mode = false;
     let mut history_pages = 0;
     let mut wake_case = false;
     let mut wake_query_failure = false;
@@ -636,6 +637,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                     json!({"type": "response", "id": id, "success": false, "error": "state unavailable"})
                 } else {
                     let mut state = json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level,
+                        "fastMode": fast_mode, "fastModeSupported": provider == "fastp",
                         "context": {"tokens": context_tokens, "window": context_window},
                         "stats": {"costTotal": cost_total}, "sessionName": session_name});
                     if wake_case {
@@ -681,7 +683,9 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                 emit(&mut stdout, ok(json!({"levels": ["off", "low", "high"]}))).await
             }
             "set_model" => {
-                if msg["provider"] == "omni" {
+                if msg["provider"] == "fastp" {
+                    assert_eq!(msg["modelId"], "m");
+                } else if msg["provider"] == "omni" {
                     assert_eq!(msg["modelId"], "model-700");
                 } else {
                     assert_eq!(msg["provider"], "q");
@@ -693,6 +697,10 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                     assert_eq!(msg["persist"], false);
                 }
                 emit(&mut stdout, ok(json!({}))).await
+            }
+            "set_fast_mode" => {
+                fast_mode = msg["enabled"].as_bool().unwrap();
+                emit(&mut stdout, ok(json!({"fastMode": fast_mode}))).await
             }
             "set_thinking_level" => {
                 thinking_level = msg["level"].as_str().unwrap().to_string();
@@ -2137,6 +2145,56 @@ async fn set_config_option_switches_model_in_session() {
     assert_eq!(response["error"]["code"], INVALID_PARAMS);
 }
 
+#[tokio::test]
+async fn fast_mode_option_follows_model_support_and_switches() {
+    let mut client = Client::start();
+    let (session, response) = client.new_session().await;
+    let has_fast = |options: &Value| {
+        options
+            .as_array()
+            .is_some_and(|all| all.iter().any(|option| option["id"] == "fast_mode"))
+    };
+    assert!(
+        !has_fast(&response["result"]["configOptions"]),
+        "{response}"
+    );
+
+    // A model that accepts a priority tier gets the two-value select, off by default.
+    let (_, response) = client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": session, "configId": "model", "value": "fastp/m"}),
+        )
+        .await;
+    let options = response["result"]["configOptions"].as_array().unwrap();
+    let fast = options
+        .iter()
+        .find(|o| o["id"] == "fast_mode")
+        .expect("fast option");
+    assert_eq!(fast["currentValue"], "off", "{fast}");
+    assert_eq!(fast["name"], "Fast mode");
+
+    let (_, response) = client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": session, "configId": "fast_mode", "value": "on"}),
+        )
+        .await;
+    let options = response["result"]["configOptions"].as_array().unwrap();
+    let fast = options
+        .iter()
+        .find(|o| o["id"] == "fast_mode")
+        .expect("fast option");
+    assert_eq!(fast["currentValue"], "on", "{fast}");
+
+    let (_, response) = client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": session, "configId": "fast_mode", "value": "maybe"}),
+        )
+        .await;
+    assert_eq!(response["error"]["code"], INVALID_PARAMS);
+}
 #[tokio::test]
 async fn session_new_advertises_slash_commands_after_responding() {
     let mut client = Client::start();

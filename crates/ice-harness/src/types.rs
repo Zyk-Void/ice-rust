@@ -174,6 +174,9 @@ pub struct AgentHarnessStreamOptions {
     pub headers: Option<BTreeMap<String, String>>,
     pub metadata: Option<BTreeMap<String, String>>,
     pub cache_retention: Option<CacheRetention>,
+    /// Requested service tier, for example `priority`. Providers apply it only
+    /// to models that list it.
+    pub service_tier: Option<String>,
 }
 
 /// The harness's pinned subset folded into a real [`SimpleStreamOptions`] per
@@ -210,6 +213,9 @@ impl AgentHarnessStreamOptions {
         if let Some(c) = self.cache_retention {
             base.cache_retention = c;
         }
+        if let Some(tier) = &self.service_tier {
+            base.service_tier = Some(tier.clone());
+        }
         base
     }
 }
@@ -226,6 +232,7 @@ pub struct AgentHarnessStreamOptionsPatch {
     pub headers: Option<BTreeMap<String, Option<String>>>,
     pub metadata: Option<BTreeMap<String, Option<serde_json::Value>>>,
     pub cache_retention: Option<Option<CacheRetention>>,
+    pub service_tier: Option<Option<String>>,
 }
 
 impl AgentHarnessStreamOptionsPatch {
@@ -271,6 +278,9 @@ impl AgentHarnessStreamOptionsPatch {
         }
         if let Some(v) = self.cache_retention {
             opts.cache_retention = v;
+        }
+        if let Some(v) = &self.service_tier {
+            opts.service_tier = v.clone();
         }
     }
 }

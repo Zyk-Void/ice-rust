@@ -180,6 +180,8 @@ pub struct Args {
     pub models: Option<Vec<String>>,
     pub session_dir: Option<PathBuf>,
     pub no_session: bool,
+    /// `--fast` / `--no-fast`: request the priority service tier. `None` defers to settings.
+    pub fast: Option<bool>,
     pub name: Option<String>,
 
     pub tools: Option<Vec<String>>,
@@ -398,6 +400,8 @@ pub fn parse_args(args: &[String]) -> Args {
             "--continue" | "-c" => result.continue_session = true,
             "--resume" | "-r" => result.resume = true,
             "--no-session" => result.no_session = true,
+            "--fast" => result.fast = Some(true),
+            "--no-fast" => result.fast = Some(false),
             "--no-tools" | "-nt" => result.no_tools = true,
             "--no-builtin-tools" | "-nbt" => result.no_builtin_tools = true,
             "--no-skills" | "-ns" => result.no_skills = true,
@@ -672,6 +676,7 @@ pub fn print_help() {
   --session <id|path>            Use a specific session (partial UUID or file)
   --session-dir <dir>            Directory for session storage
   --no-session                   Ephemeral mode (do not persist the session)
+  --fast, --no-fast              Request the priority service tier on models that list it (settings: fastMode)
   --name, -n <name>              Set the session display name
   --tools, -t <list>             Comma-separated allowlist of tool names to enable
   --exclude-tools, -xt <list>    Comma-separated denylist of tool names to disable
@@ -796,6 +801,13 @@ mod tests {
 
     fn s(args: &[&str]) -> Vec<String> {
         args.iter().map(|a| a.to_string()).collect()
+    }
+
+    #[test]
+    fn fast_flags_override_the_saved_default_in_either_direction() {
+        assert_eq!(parse_args(&s(&["hi"])).fast, None);
+        assert_eq!(parse_args(&s(&["--fast", "hi"])).fast, Some(true));
+        assert_eq!(parse_args(&s(&["--no-fast", "hi"])).fast, Some(false));
     }
 
     #[test]

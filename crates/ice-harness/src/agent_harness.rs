@@ -2379,6 +2379,27 @@ impl AgentHarness {
         Ok(())
     }
 
+    /// Pin the requested service tier (for example `priority`) for later requests,
+    /// or clear it with `None`. Providers send it only to models that list it.
+    pub async fn set_service_tier(&self, tier: Option<String>) -> HarnessResult<()> {
+        let mut inner = self.inner.lock().unwrap();
+        if inner.closed {
+            return Err(HarnessError::closed());
+        }
+        inner.stream_options.service_tier = tier;
+        Ok(())
+    }
+
+    /// The service tier pinned with [`Self::set_service_tier`], if any.
+    pub fn service_tier(&self) -> Option<String> {
+        self.inner
+            .lock()
+            .unwrap()
+            .stream_options
+            .service_tier
+            .clone()
+    }
+
     /// Replace live MCP instruction sections without modifying the caller's base
     /// prompt. Reconnects and disconnects replace this map; reloads preserve it.
     pub async fn set_mcp_instructions(

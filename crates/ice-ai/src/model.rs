@@ -292,6 +292,10 @@ pub struct Model {
     pub headers: Option<std::collections::BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compat: Option<StreamingProtocolCompat>,
+    /// Request service tiers the model accepts (models.json `serviceTiers`),
+    /// for example `["priority"]`. Empty means the model takes no tier.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub service_tiers: Vec<String>,
 }
 
 impl Model {
@@ -319,6 +323,7 @@ impl Model {
             sampling_params: None,
             headers: None,
             compat: None,
+            service_tiers: Vec::new(),
         }
     }
 

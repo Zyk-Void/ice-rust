@@ -859,6 +859,11 @@ pub async fn build_prepared(
         stream_options: AgentHarnessStreamOptions {
             timeout: args.timeout,
             cache_retention: crate::args::cache_retention_from_env(),
+            service_tier: args
+                .fast
+                .or(saved_settings.fast_mode)
+                .unwrap_or(false)
+                .then(|| crate::modes::FAST_SERVICE_TIER.to_string()),
             ..Default::default()
         },
         // Settings-backed harness options: upstream lets users tune retry,
