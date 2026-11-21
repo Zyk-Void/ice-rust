@@ -340,6 +340,7 @@ impl Session {
             }
             before = cursor;
         }
+        let mut latest_state: Option<Value> = None;
         if saved_config.is_object() {
             let state = self.command(json!({"type": "get_state"})).await?;
             if let (Some(provider), Some(model)) = (
@@ -362,6 +363,7 @@ impl Session {
                 )
                 .await?;
             }
+            latest_state = Some(state);
         }
         // Use a separate translator: replay must not leave a historical stop
         // reason or partial text in the live prompt's streaming state.
@@ -378,8 +380,29 @@ impl Session {
                 }
             }
         }
-        self.publish_usage().await;
+        self.publish_usage_from(latest_state).await;
         Ok(())
+    }
+
+    /// Publish usage from an already-fetched state when available, otherwise
+    /// query the child once. Avoids a second get_state on session/load.
+    async fn publish_usage_from(&self, state: Option<Value>) -> bool {
+        let owned;
+        let state = match state {
+            Some(state) => state,
+            None => {
+                owned = self.command(json!({"type": "get_state"})).await;
+                let Ok(state) = owned else {
+                    return false;
+                };
+                state
+            }
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// Publish an available context snapshot without making usage-query failures
