@@ -77,6 +77,8 @@ pub(crate) struct Session {
     next_id: AtomicU64,
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     settled: Mutex<Option<oneshot::Sender<Value>>>,
+    response_gate: Arc<tokio::sync::Mutex<()>>,
+    client_settlement: Mutex<Option<String>>,
     translator: Mutex<Translator>,
     prompt_running: AtomicBool,
     cancelled: AtomicBool,
@@ -111,6 +113,8 @@ impl Session {
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             settled: Mutex::new(None),
+            response_gate: Arc::default(),
+            client_settlement: Mutex::new(None),
             prompt_running: AtomicBool::new(false),
             cancelled: AtomicBool::new(false),
             closed: CancellationToken::new(),
@@ -176,8 +180,15 @@ impl Session {
                     }
                 }
                 Some("agent_settled") => {
-                    if let Some(settled) = self.settled.lock().unwrap().take() {
-                        let _ = settled.send(frame);
+                    if frame["origin"] == "wake" {
+                        // get_state needs this pump to route its response.
+                        tokio::spawn(Arc::clone(&self).finish_wake(frame));
+                    } else {
+                        *self.client_settlement.lock().unwrap() =
+                            frame["settlementId"].as_str().map(str::to_owned);
+                        if let Some(settled) = self.settled.lock().unwrap().take() {
+                            let _ = settled.send(frame);
+                        }
                     }
                 }
                 Some("ui_dialog_request") => {
@@ -203,6 +214,38 @@ impl Session {
         self.closed.cancel();
         self.pending.lock().unwrap().clear();
         self.settled.lock().unwrap().take();
+    }
+
+    pub(crate) async fn response_guard(&self) -> Result<tokio::sync::OwnedMutexGuard<()>, String> {
+        if self.prompt_running.load(Ordering::Acquire) {
+            return Err("a prompt is already running in this session".to_string());
+        }
+        // A new request can arrive just after the prior ACP response was
+        // flushed, while its native acknowledgement is still being written.
+        tokio::select! {
+            biased;
+            _ = self.closed.cancelled() => Err("icers session is closed".to_string()),
+            guard = self.response_gate.clone().lock_owned() => Ok(guard),
+        }
+    }
+
+    pub(crate) async fn after_prompt_response(&self) {
+        let id = self.client_settlement.lock().unwrap().take();
+        if let Some(id) = id {
+            let _ = self
+                .send(&json!({"type": "client_settled_ack", "settlementId": id}))
+                .await;
+        }
+    }
+
+    async fn finish_wake(self: Arc<Self>, frame: Value) {
+        self.publish_usage().await;
+        self.translator.lock().unwrap().take_stop_reason();
+        if let Some(id) = frame["wakeId"].as_str() {
+            let _ = self
+                .send(&json!({"type": "wake_settled_ack", "wakeId": id}))
+                .await;
+        }
     }
 
     async fn notify_update(&self, update: Value) {
@@ -341,6 +384,8 @@ impl Session {
 
     /// Capture the live source through its owning child; never reopen its file.
     pub(crate) async fn fork_native(&self) -> Result<Value, String> {
+        // Match prompt's lock order and wait for its response acknowledgement.
+        let _response = self.response_guard().await?;
         let _operation = self
             .operation
             .try_lock()
@@ -473,8 +518,9 @@ impl Session {
     pub(crate) async fn cancel(&self) {
         if self.prompt_running.load(Ordering::Acquire) {
             self.cancelled.store(true, Ordering::Release);
-            let _ = self.send(&json!({"type": "abort"})).await;
         }
+        // Stop remains meaningful after the foreground turn has returned.
+        let _ = self.send(&json!({"type": "kill_background_shells"})).await;
     }
 
     /// Replay the complete active branch, oldest first, before responding to
@@ -685,6 +731,7 @@ impl Session {
         config_id: &str,
         value: &str,
     ) -> Result<(), String> {
+        let _response = self.response_guard().await?;
         match config_id {
             "model" => {
                 let (provider, model) = value
@@ -787,3 +834,6 @@ mod tests {
         peer.await.unwrap();
     }
 }
+
+#[cfg(test)]
+mod response_tests;

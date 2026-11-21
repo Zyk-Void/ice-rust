@@ -21,6 +21,9 @@ pub(crate) struct Translator {
     /// `tool_call` updates of running tools, so a permission request for the
     /// call can carry the same title, kind and locations.
     tools: HashMap<String, Value>,
+    background: HashMap<String, String>,
+    pending_background: HashMap<String, Value>,
+    replaying: bool,
 }
 
 impl Translator {
@@ -31,11 +34,16 @@ impl Translator {
             thought_sent: String::new(),
             last_stop_reason: None,
             tools: HashMap::new(),
+            background: HashMap::new(),
+            pending_background: HashMap::new(),
+            replaying: false,
         }
     }
 
     pub(crate) fn clone_for_replay(&self) -> Self {
-        Self::new(self.cwd.clone())
+        let mut replay = Self::new(self.cwd.clone());
+        replay.replaying = true;
+        replay
     }
 
     /// Map persisted branch messages without executing any historical tools.
@@ -140,12 +148,63 @@ impl Translator {
                 if let Some(id) = event["toolCallId"].as_str() {
                     self.tools.remove(id);
                 }
-                let mut updates = vec![tool_end(event)];
+                let mut update = tool_end(event);
+                if !self.replaying && event["toolName"] == "bash" && event["isError"] != true {
+                    if let (Some(shell), Some(tool)) = (
+                        event["result"]["details"]["background_task_id"].as_str(),
+                        event["toolCallId"].as_str(),
+                    ) {
+                        self.background.insert(shell.to_string(), tool.to_string());
+                        update["status"] = json!("in_progress");
+                        update["rawOutput"] = json!({
+                            "type": "BackgroundTaskStarted", "task_id": shell, "task_type": "bash",
+                            "icers": {"backgroundTask": true},
+                        });
+                        let mut updates = vec![update];
+                        if let Some(completion) = self.pending_background.remove(shell) {
+                            updates.extend(self.background_update(&completion));
+                        }
+                        return updates;
+                    }
+                }
+                let mut updates = vec![update];
                 updates.extend(todo_plan(event));
                 updates
             }
+            Some("background_shell") => self.background_update(event),
             _ => Vec::new(),
         }
+    }
+
+    fn background_update(&mut self, event: &Value) -> Vec<Value> {
+        let Some(shell) = event["shellId"].as_str() else {
+            return Vec::new();
+        };
+        let Some(tool) = self.background.remove(shell) else {
+            // A short command can finish before its tool result reaches ACP.
+            if self.pending_background.len() >= 256 {
+                self.pending_background.clear();
+            }
+            self.pending_background
+                .insert(shell.to_string(), event.clone());
+            return Vec::new();
+        };
+        let failed = event["status"] == "failed";
+        let status = if failed { "failed" } else { "completed" };
+        let output = event["output"].as_str().unwrap_or_default();
+        let exit_code = event["exitCode"]
+            .as_i64()
+            .unwrap_or(if failed { -1 } else { 0 });
+        vec![json!({
+            "sessionUpdate": "tool_call_update", "toolCallId": tool, "status": status,
+            "content": [text_content(output)],
+            "_meta": {"icers": {"toolName": "bash"}},
+            "rawOutput": {
+                "type": "TaskOutput",
+                "Result": {"task_id": shell, "status": status, "exit_code": exit_code, "output": output},
+                "icers": {"backgroundTask": true, "stoppedByUser": event["stoppedByUser"] == true},
+            },
+        })]
     }
 
     fn message_update(&mut self, event: &Value) -> Vec<Value> {

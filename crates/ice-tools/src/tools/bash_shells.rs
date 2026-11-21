@@ -107,6 +107,8 @@ pub type ConfirmFn = Arc<dyn Fn(String, String) -> BoxFuture<'static, bool> + Se
 /// Options shared by the control tools.
 #[derive(Clone, Default)]
 pub struct BashShellToolOptions {
+    /// Whether completion notices can wake an idle model.
+    pub wake_on_completion: bool,
     /// Reports a queued steering message so waits return early.
     pub steer_probe: Option<SteerProbe>,
     /// Approval policy for `bash_input`.
@@ -361,10 +363,14 @@ impl AgentTool for BashOutputTool {
                 .as_ref()
                 .is_some_and(|probe| probe())
         {
-            parts.push(
-                "[Stopped waiting because a message arrived (from the user, a finished background shell, or an alert); read it now. This shell keeps running, and you are told when it finishes.]"
-                    .into(),
-            );
+            let completion = if self.options.wake_on_completion {
+                "you are told when it finishes"
+            } else {
+                "if the session is idle, its result is included with the next user message; use bash_output to check it"
+            };
+            parts.push(format!(
+                "[Stopped waiting because a message arrived (from the user, a finished background shell, or an alert); read it now. This shell keeps running, and {completion}.]"
+            ));
         }
         if let Some(path) = &shell.log_path {
             parts.push(format!("Full log: {path}"));

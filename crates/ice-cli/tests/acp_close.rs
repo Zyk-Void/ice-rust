@@ -26,12 +26,18 @@ impl Drop for OwnedShell {
     }
 }
 
-async fn reply(socket: &mut tokio::net::TcpStream, delta: Value, reason: &str) {
+async fn reply(
+    socket: &mut tokio::net::TcpStream,
+    delta: Value,
+    reason: &str,
+) -> std::io::Result<()> {
     let mut bytes = Vec::new();
     loop {
         let mut buf = [0; 8192];
-        let count = socket.read(&mut buf).await.unwrap();
-        assert!(count > 0);
+        let count = socket.read(&mut buf).await?;
+        if count == 0 {
+            return Err(std::io::ErrorKind::UnexpectedEof.into());
+        }
         bytes.extend_from_slice(&buf[..count]);
         if let Some(end) = bytes.windows(4).position(|part| part == b"\r\n\r\n") {
             let headers = String::from_utf8_lossy(&bytes[..end]).to_ascii_lowercase();
@@ -50,7 +56,7 @@ async fn reply(socket: &mut tokio::net::TcpStream, delta: Value, reason: &str) {
     let chunk = json!({"id":"mock", "choices":[{"index":0,"delta":delta,"finish_reason":reason}]});
     let body = format!("data: {chunk}\n\ndata: [DONE]\n\n");
     let response = format!("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
-    socket.write_all(response.as_bytes()).await.unwrap();
+    socket.write_all(response.as_bytes()).await
 }
 
 async fn call(
@@ -117,7 +123,8 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
             }]}),
             "tool_calls",
         )
-        .await;
+        .await
+        .expect("initial tool request remains connected");
         // The outer shell can complete while its owned descendant lingers.
         // Its notice may need a late foreground reply or an ACP wake reply;
         // this cleanup test must keep the mock alive through either ordering.
@@ -126,7 +133,21 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
                 _ = &mut provider_stopped => break,
                 next = listener.accept() => next.unwrap(),
             };
-            reply(&mut socket, json!({"content":"Shell is running."}), "stop").await;
+            if let Err(error) =
+                reply(&mut socket, json!({"content":"Shell is running."}), "stop").await
+            {
+                // Close can cancel a late wake before its HTTP request or
+                // response completes. The initial tool exchange stays strict.
+                assert!(
+                    matches!(
+                        error.kind(),
+                        std::io::ErrorKind::UnexpectedEof
+                            | std::io::ErrorKind::ConnectionReset
+                            | std::io::ErrorKind::BrokenPipe
+                    ),
+                    "late mock provider reply failed: {error}"
+                );
+            }
         }
     });
     let program = std::env::var_os("ICERS_ACP_TEST_BINARY")

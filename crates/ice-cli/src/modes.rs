@@ -435,43 +435,69 @@ where
     W: Write + Send + 'static,
 {
     let lane: Arc<dyn AgentLane> = harness.lane("main");
+    let acp = crate::background_shells::acp_runtime();
     // One blocking writer owns stdout. Producers only enqueue bounded messages,
     // so pipe backpressure never blocks a Tokio worker on IO or a std mutex.
     let (stdout, writer_task, writer_failed) = start_rpc_writer(output);
     let pump_stop = tokio_util::sync::CancellationToken::new();
-    let (compaction_tx, mut compaction_rx) = tokio::sync::mpsc::unbounded_channel();
+    let (compaction_tx, compaction_rx) = tokio::sync::mpsc::unbounded_channel();
+    let weak_runtime = acp.as_ref().map(Arc::downgrade);
     let compaction_guard = acp_compaction.then(|| {
         crate::rpc::compaction::CompactionGuard::attach(
             harness,
             Arc::new(move |event| {
-                let _ = compaction_tx.send(event);
+                if let Some(runtime) = weak_runtime.as_ref().and_then(std::sync::Weak::upgrade) {
+                    // Compaction and wake settlement share one ordered FIFO.
+                    runtime.emit(event);
+                } else {
+                    // Isolated native RPC tests have no installed ACP runtime.
+                    let _ = compaction_tx.send(event);
+                }
             }),
         )
     });
+    if let (Some(runtime), Some(guard)) = (&acp, &compaction_guard) {
+        runtime.set_compaction_observer(guard.observer());
+    }
+    let background_events = acp
+        .as_ref()
+        .and_then(|runtime| runtime.take_events())
+        .or_else(|| compaction_guard.is_some().then_some(compaction_rx));
 
     // A completion response is queued only after its final events, so a
     // subsequent prompt cannot overtake the previous run's agent_end.
     let (event_flush_tx, mut event_flush_rx) =
         tokio::sync::mpsc::unbounded_channel::<tokio::sync::oneshot::Sender<()>>();
     // Stream fine-grained AgentEvents as JSONL until the receiver closes.
-    let event_task = (agent_events.is_some() || compaction_guard.is_some()).then(|| {
+    let event_task = (agent_events.is_some() || background_events.is_some()).then(|| {
         let mut rx = agent_events.take();
         let out = stdout.clone();
         let stop = pump_stop.clone();
+        let acp = acp.clone();
+        let mut background_events = background_events;
         tokio::spawn(async move {
             loop {
                 let received = tokio::select! {
+                    biased;
                     _ = stop.cancelled() => {
-                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
+                        drain_rpc_events(&out, &mut rx, acp.as_deref(), &mut background_events).await;
                         break;
                     }
-                    Some(done) = event_flush_rx.recv() => {
-                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
-                        let _ = done.send(());
+                    Some(frame) = async {
+                        match background_events.as_mut() {
+                            Some(events) => events.recv().await,
+                            None => std::future::pending().await,
+                        }
+                    } => {
+                        if frame["type"] == "agent_settled" {
+                            drain_rpc_events(&out, &mut rx, acp.as_deref(), &mut background_events).await;
+                        }
+                        write_line(&out, &frame).await;
                         continue;
                     }
-                    Some(event) = compaction_rx.recv() => {
-                        write_line(&out, &event).await;
+                    Some(done) = event_flush_rx.recv() => {
+                        drain_rpc_events(&out, &mut rx, acp.as_deref(), &mut background_events).await;
+                        let _ = done.send(());
                         continue;
                     }
                     event = async {
@@ -483,7 +509,12 @@ where
                 };
                 match received {
                     Ok(event) => {
-                        if let Some(value) = wire_agent_event_json(&event) {
+                        let value = wire_rpc_agent_event_json(&event, acp.as_deref());
+                        if matches!(&event, AgentEvent::RunSettled { .. }) {
+                            // Translation can close an unfinished compaction.
+                            drain_acp_events(&out, &mut background_events).await;
+                        }
+                        if let Some(value) = value {
                             write_line(&out, &value).await;
                         }
                     }
@@ -542,10 +573,20 @@ where
     let run_active = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let mut run_task: Option<tokio::task::JoinHandle<()>> = None;
     let mut run_cancel = tokio_util::sync::CancellationToken::new();
-    let mut cancel_on_exit = false;
+    let cancel_on_exit;
 
     let mut input = input;
-    write_line(&stdout, &rpc_protocol::ready()).await;
+    let mut ready = rpc_protocol::ready();
+    if acp.is_some() {
+        if let Some(commands) = ready["supportedCommands"].as_array_mut() {
+            commands.extend(
+                rpc_protocol::ACP_COMMANDS
+                    .iter()
+                    .map(|command| serde_json::json!(command)),
+            );
+        }
+    }
+    write_line(&stdout, &ready).await;
 
     loop {
         let incoming = tokio::select! {
@@ -562,7 +603,10 @@ where
         };
         let line = match incoming {
             Ok(Some(line)) => line,
-            Ok(None) => break, // EOF
+            Ok(None) => {
+                cancel_on_exit = acp.is_some();
+                break;
+            }
             Err(error) => {
                 eprintln!("[icers] rpc stdin error: {error}");
                 cancel_on_exit = true;
@@ -594,7 +638,8 @@ where
             .unwrap_or("")
             .to_string();
 
-        if rpc_protocol::SUPPORTED_COMMANDS.contains(&kind.as_str())
+        if (rpc_protocol::SUPPORTED_COMMANDS.contains(&kind.as_str())
+            || (acp.is_some() && rpc_protocol::ACP_COMMANDS.contains(&kind.as_str())))
             && serde_json::from_value::<rpc_protocol::Request>(msg.clone()).is_err()
         {
             write_line(
@@ -773,6 +818,27 @@ where
                             slash_instructions = (!args.is_empty()).then_some(args);
                         }
                         Some(slash @ (Slash::Builtin(..) | Slash::Extension(..))) => {
+                            let _operation = if let Some(runtime) = &acp {
+                                match runtime.operation().try_lock_owned() {
+                                    Ok(guard) => Some(guard),
+                                    Err(_) => {
+                                        active_task
+                                            .store(false, std::sync::atomic::Ordering::Release);
+                                        write_line(
+                                            &stdout,
+                                            &rpc_protocol::response(
+                                                Some(id),
+                                                &kind,
+                                                Err("a wake turn is active".to_string()),
+                                            ),
+                                        )
+                                        .await;
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                None
+                            };
                             let text = rpc_inline_command(
                                 slash,
                                 &lane,
@@ -783,7 +849,6 @@ where
                                 &builtins,
                             )
                             .await;
-                            active_task.store(false, std::sync::atomic::Ordering::Release);
                             if !legacy_prompt {
                                 write_line(
                                     &stdout,
@@ -800,19 +865,21 @@ where
                                 &serde_json::json!({"type": "command_output", "text": text}),
                             )
                             .await;
-                            write_line(
-                                &stdout,
-                                &serde_json::json!({
-                                    "type": "agent_settled",
-                                    "runId": null,
-                                    "outcome": "completed",
-                                    "aborted": false,
-                                    "error": null,
-                                    "summary": null,
-                                    "pendingResume": false,
-                                }),
-                            )
-                            .await;
+                            let receipt = acp.as_ref().map(|runtime| runtime.client_settlement());
+                            let mut settled = serde_json::json!({
+                                "type": "agent_settled",
+                                "runId": null,
+                                "outcome": "completed",
+                                "aborted": false,
+                                "error": null,
+                                "summary": null,
+                                "pendingResume": false,
+                            });
+                            if let Some((id, _)) = &receipt {
+                                settled["origin"] = serde_json::json!("client");
+                                settled["settlementId"] = serde_json::json!(id);
+                            }
+                            write_line(&stdout, &settled).await;
                             if legacy_prompt {
                                 write_line(
                                     &stdout,
@@ -826,6 +893,14 @@ where
                                     ),
                                 )
                                 .await;
+                            }
+                            if let (Some(runtime), Some((id, done))) = (acp.clone(), receipt) {
+                                run_task = Some(tokio::spawn(async move {
+                                    let _operation = _operation;
+                                    runtime.wait_client(&id, done).await;
+                                }));
+                            } else {
+                                active_task.store(false, std::sync::atomic::Ordering::Release);
                             }
                             continue;
                         }
@@ -895,8 +970,17 @@ where
                     .and_then(|v| v.as_str())
                     .map(str::to_owned)
                     .or(slash_instructions);
+                let acp_task = acp.clone();
                 run_task = Some(tokio::spawn(async move {
-                    let result = if compact {
+                    // Admission precedes normalization and input hooks. Retrying
+                    // LaneBusy would execute those hooks more than once.
+                    let operation = match &acp_task {
+                        Some(runtime) => runtime.reserve(&cancel_task).await.map(Some),
+                        None => Ok(None),
+                    };
+                    let result = if operation.is_err() {
+                        Ok(serde_json::json!({"outcome": "aborted", "runId": null}))
+                    } else if compact {
                         rpc_compact_cancellable(&lane_task, instructions, cancel_task).await
                     } else if resume {
                         rpc_resume_cancellable(&lane_task, cancel_task).await
@@ -906,14 +990,18 @@ where
                         rpc_prompt_images_cancellable(&lane_task, &content, images, cancel_task)
                             .await
                     };
-                    if let Some(observer) = compaction_task {
-                        let error = result.as_ref().err().map(String::as_str).or_else(|| {
-                            result
-                                .as_ref()
-                                .ok()
-                                .and_then(|value| value["error"].as_str())
-                        });
-                        observer.settle(error);
+                    // A cancelled queued client never owned the lane. Its
+                    // cleanup must not terminate the current wake's compaction.
+                    if operation.is_ok() {
+                        if let Some(observer) = compaction_task {
+                            let error = result.as_ref().err().map(String::as_str).or_else(|| {
+                                result
+                                    .as_ref()
+                                    .ok()
+                                    .and_then(|value| value["error"].as_str())
+                            });
+                            observer.settle(error);
+                        }
                     }
                     if let Some(flush) = flush_events {
                         let (done, drained) = tokio::sync::oneshot::channel();
@@ -944,7 +1032,7 @@ where
                         .ok()
                         .and_then(|value| value.get("summary"))
                         .cloned();
-                    let settled = serde_json::json!({
+                    let mut settled = serde_json::json!({
                         "type": "agent_settled",
                         "runId": result.as_ref().ok().and_then(|value| value.get("runId")),
                         "outcome": outcome,
@@ -953,6 +1041,11 @@ where
                         "summary": summary,
                         "pendingResume": pending_resume,
                     });
+                    let receipt = acp_task.as_ref().map(|runtime| runtime.client_settlement());
+                    if let Some((id, _)) = &receipt {
+                        settled["origin"] = serde_json::json!("client");
+                        settled["settlementId"] = serde_json::json!(id);
+                    }
                     write_line(&out_task, &settled).await;
                     if legacy_prompt {
                         write_line(
@@ -962,17 +1055,85 @@ where
                         .await;
                     }
                     mailbox_task.cancel_all();
-                    active_task.store(false, std::sync::atomic::Ordering::Release);
+                    if let (Some(runtime), Some((id, done))) = (&acp_task, receipt) {
+                        runtime.wait_client(&id, done).await;
+                    } else {
+                        active_task.store(false, std::sync::atomic::Ordering::Release);
+                    }
                 }));
                 continue;
             }
             _ => {}
         }
 
+        // This reader must remain available for wake acknowledgements.
+        let _operation = if matches!(
+            kind.as_str(),
+            "fork_session" | "navigate" | "set_model" | "set_thinking_level" | "set_active_tools"
+        ) {
+            if let Some(runtime) = &acp {
+                match runtime.operation().try_lock_owned() {
+                    Ok(guard) => Some(guard),
+                    Err(_) => {
+                        write_line(
+                            &stdout,
+                            &rpc_protocol::response(
+                                Some(id),
+                                &kind,
+                                Err("a run is already active".to_string()),
+                            ),
+                        )
+                        .await;
+                        continue;
+                    }
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         let result = match kind.as_str() {
+            "client_settled_ack" => {
+                if let (Some(runtime), Some(id)) = (&acp, msg["settlementId"].as_str()) {
+                    if runtime.acknowledge_client(id) {
+                        // The receipt is already released, so joining cannot
+                        // require more input. Finish dropping its operation
+                        // guard before a following synchronous fork/config edit.
+                        if let Some(task) = run_task.take() {
+                            let _ = task.await;
+                        }
+                        run_active.store(false, std::sync::atomic::Ordering::Release);
+                    }
+                    Ok(serde_json::json!({"acknowledged": true}))
+                } else {
+                    Err("client acknowledgement requires an ACP settlementId".to_string())
+                }
+            }
+            "wake_settled_ack" => {
+                if let (Some(runtime), Some(wake_id)) = (&acp, msg["wakeId"].as_str()) {
+                    runtime.acknowledge_wake(wake_id).await;
+                    Ok(serde_json::json!({"acknowledged": true}))
+                } else {
+                    Err("wake acknowledgement requires an ACP wakeId".to_string())
+                }
+            }
+            "kill_background_shells" => {
+                if let Some(runtime) = &acp {
+                    run_cancel.cancel();
+                    runtime.stop_background(harness).await;
+                    Ok(serde_json::json!({"stopped": true}))
+                } else {
+                    Err("background control requires the ACP RPC opt-in".to_string())
+                }
+            }
             "abort" if run_active.load(std::sync::atomic::Ordering::Acquire) => {
                 // This also covers abort arriving before the task enters the lane.
                 run_cancel.cancel();
+                if let Some(runtime) = &acp {
+                    runtime.cancel_wake();
+                    let _ = lane.abort().await;
+                }
                 Ok(serde_json::json!({"aborted": true}))
             }
             "abort" => lane
@@ -1045,8 +1206,12 @@ where
     ui_dialog.detach();
     if cancel_on_exit {
         run_cancel.cancel();
-        // A background notice can own the lane without a client run_task.
-        let _ = lane.abort().await;
+        if let Some(runtime) = &acp {
+            runtime.shutdown(harness).await;
+        } else {
+            // A background notice can own the lane without a client run_task.
+            let _ = lane.abort().await;
+        }
     }
     let mut exit_code = 0;
     if let Some(task) = run_task {
@@ -1073,34 +1238,58 @@ where
     exit_code
 }
 
-async fn drain_rpc_events_and_compaction(
+async fn drain_rpc_events(
     out: &RpcWriter,
     events: &mut Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
-    compactions: &mut tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>,
+    acp: Option<&crate::background_shells::AcpRuntime>,
+    background: &mut Option<tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>>,
 ) {
     if let Some(events) = events {
-        drain_rpc_events(out, events).await;
+        loop {
+            match events.try_recv() {
+                Ok(event) => {
+                    let value = wire_rpc_agent_event_json(&event, acp);
+                    if matches!(&event, AgentEvent::RunSettled { .. }) {
+                        // Include terminals emitted by ordered_settlement itself.
+                        drain_acp_events(out, background).await;
+                    }
+                    if let Some(value) = value {
+                        write_line(out, &value).await;
+                    }
+                }
+                Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
+                Err(_) => break,
+            }
+        }
     }
-    while let Ok(event) = compactions.try_recv() {
-        write_line(out, &event).await;
+    drain_acp_events(out, background).await;
+}
+
+async fn drain_acp_events(
+    out: &RpcWriter,
+    events: &mut Option<tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>>,
+) {
+    if let Some(events) = events {
+        while let Ok(frame) = events.try_recv() {
+            write_line(out, &frame).await;
+        }
     }
 }
 
-async fn drain_rpc_events(
-    out: &RpcWriter,
-    events: &mut tokio::sync::broadcast::Receiver<AgentEvent>,
-) {
-    loop {
-        match events.try_recv() {
-            Ok(event) => {
-                if let Some(value) = wire_agent_event_json(&event) {
-                    write_line(out, &value).await;
-                }
-            }
-            Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
-            Err(_) => break,
-        }
-    }
+#[cfg(test)]
+pub(crate) async fn drain_acp_test_event(
+    runtime: &crate::background_shells::AcpRuntime,
+    event: AgentEvent,
+    events: &mut Option<tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>>,
+) -> Vec<serde_json::Value> {
+    let output = tests::RpcOutput::default();
+    let (writer, task, _) = start_rpc_writer(output.clone());
+    let (sender, receiver) = tokio::sync::broadcast::channel(1);
+    sender.send(event).unwrap();
+    drain_rpc_events(&writer, &mut Some(receiver), Some(runtime), events).await;
+    drop(writer);
+    task.await.unwrap().unwrap();
+    output.messages()
 }
 
 /// Cancellation is delivered even if abort/stop arrives before prompt_text has
@@ -1111,6 +1300,14 @@ pub(crate) async fn rpc_prompt_cancellable(
     cancel: tokio_util::sync::CancellationToken,
 ) -> Result<serde_json::Value, String> {
     rpc_prompt_images_cancellable(lane, content, Vec::new(), cancel).await
+}
+
+fn wire_rpc_agent_event_json(
+    event: &AgentEvent,
+    acp: Option<&crate::background_shells::AcpRuntime>,
+) -> Option<serde_json::Value> {
+    acp.and_then(|runtime| runtime.ordered_settlement(event))
+        .or_else(|| wire_agent_event_json(event))
 }
 
 async fn rpc_prompt_images_cancellable(
@@ -2845,7 +3042,7 @@ mod tests {
     }
 
     #[derive(Clone, Default)]
-    struct RpcOutput(Arc<Mutex<Vec<u8>>>);
+    pub(super) struct RpcOutput(Arc<Mutex<Vec<u8>>>);
 
     impl Write for RpcOutput {
         fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
@@ -2858,7 +3055,7 @@ mod tests {
     }
 
     impl RpcOutput {
-        fn messages(&self) -> Vec<serde_json::Value> {
+        pub(super) fn messages(&self) -> Vec<serde_json::Value> {
             String::from_utf8(self.0.lock().unwrap().clone())
                 .unwrap()
                 .lines()

@@ -288,7 +288,38 @@ impl Server {
                 let resumed = (method == "session/resume")
                     .then(|| params["sessionId"].as_str().map(str::to_owned))
                     .flatten();
-                match self.handle(method, params).await {
+                let response_session = if method == "session/prompt" {
+                    match self.session(&params) {
+                        Ok(session) => Some(session),
+                        Err((code, message)) => {
+                            self.writer.error(id, code, message).await;
+                            return;
+                        }
+                    }
+                } else {
+                    None
+                };
+                // Keep the next prompt behind the prior ACP response and its
+                // native acknowledgement, including failed/cancelled turns.
+                let _response_guard = if let Some(session) = &response_session {
+                    match session.response_guard().await {
+                        Ok(guard) => Some(guard),
+                        Err(error) => {
+                            self.writer.error(id, INTERNAL_ERROR, error).await;
+                            return;
+                        }
+                    }
+                } else {
+                    None
+                };
+                let result = if let Some(session) = &response_session {
+                    // A concurrent close/resume can replace the same UUID.
+                    // Prompt, response gate and acknowledgement must use one child.
+                    Self::prompt_on_session(session, &params).await
+                } else {
+                    self.handle(method, params).await
+                };
+                match result {
                     Ok(result) => {
                         let created = match method {
                             "session/new" | "session/load" | "session/fork" => {
@@ -308,6 +339,9 @@ impl Server {
                         }
                     }
                     Err((code, message)) => self.writer.error(id, code, message).await,
+                }
+                if let Some(session) = response_session {
+                    session.after_prompt_response().await;
                 }
             }
             (Some(method), None) => self.handle_notification(method, &frame["params"]).await,
@@ -350,22 +384,7 @@ impl Server {
             "session/fork" => self.fork_session(params).await,
             "session/prompt" => {
                 let session = self.session(&params)?;
-                let blocks = params["prompt"]
-                    .as_array()
-                    .ok_or((INVALID_PARAMS, "`prompt` must be an array".to_string()))?;
-                let (text, images) =
-                    translate::prompt_content(blocks).map_err(|e| (INVALID_PARAMS, e))?;
-                let changes_config = ["/model", "/thinking"]
-                    .iter()
-                    .any(|command| text.trim_start().starts_with(command));
-                let stop = session
-                    .prompt(text, images)
-                    .await
-                    .map_err(|e| (INTERNAL_ERROR, e))?;
-                if changes_config {
-                    session.publish_config_options().await;
-                }
-                Ok(json!({"stopReason": stop}))
+                Self::prompt_on_session(&session, &params).await
             }
             // Also accepted as a request, for clients that send it with an id.
             "session/cancel" => {
@@ -398,6 +417,24 @@ impl Server {
             }
             _ => Err((METHOD_NOT_FOUND, format!("method not found: {method}"))),
         }
+    }
+
+    async fn prompt_on_session(session: &Session, params: &Value) -> Result<Value, (i64, String)> {
+        let blocks = params["prompt"]
+            .as_array()
+            .ok_or((INVALID_PARAMS, "`prompt` must be an array".to_string()))?;
+        let (text, images) = translate::prompt_content(blocks).map_err(|e| (INVALID_PARAMS, e))?;
+        let changes_config = ["/model", "/thinking"]
+            .iter()
+            .any(|command| text.trim_start().starts_with(command));
+        let stop = session
+            .prompt(text, images)
+            .await
+            .map_err(|e| (INTERNAL_ERROR, e))?;
+        if changes_config {
+            session.publish_config_options().await;
+        }
+        Ok(json!({"stopReason": stop}))
     }
 
     async fn new_session(&self, params: Value) -> Result<Value, (i64, String)> {

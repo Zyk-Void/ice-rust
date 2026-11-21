@@ -6,14 +6,16 @@
 //! Completions and alerts are sent to the main lane as custom messages that
 //! steer with `triggerTurn`: while the agent is running they are read at the
 //! next tool boundary, not only when the whole run ends; when it is idle they
-//! start a turn so the model can react. Headless sessions (`--mode rpc`, which
-//! ACP drives, `--mode json`, `-p`) only run turns their client asked for, so
-//! there an idle notice joins the conversation for the next prompt instead.
+//! start a turn so the model can react. The dedicated ACP RPC child opts into
+//! serialized wake turns. Ordinary RPC, JSON and print sessions keep idle
+//! notices for the next explicit prompt.
 //! A user stop is recorded for the next
 //! turn instead of waking the model. A completion whose result the model
 //! already read with `bash_output` is not sent.
 
 use std::future::Future;
+mod acp;
+pub use acp::{acp_rpc_enabled, acp_runtime, AcpRuntime};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 use tokio::task::JoinHandle;
@@ -46,8 +48,16 @@ struct DeliveryState {
 struct DeliveryTasks(Mutex<DeliveryState>);
 
 impl DeliveryTasks {
+    fn close(&self) {
+        self.0
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .closed = true;
+    }
+
     fn spawn(&self, delivery: impl Future<Output = ()> + Send + 'static) {
         let mut state = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        state.tasks.retain(|task| !task.is_finished());
         if !state.closed {
             state.tasks.push(tokio::spawn(delivery));
         }
@@ -82,6 +92,7 @@ pub struct SessionShells {
     deliveries: Arc<DeliveryTasks>,
     /// Set by `connect`; the tools are built before the harness exists.
     harness: Arc<OnceLock<WeakAgentHarness>>,
+    wake_idle: std::sync::atomic::AtomicBool,
 }
 
 impl SessionShells {
@@ -111,6 +122,7 @@ impl SessionShells {
                 .filter(|s| *s > 0.0 && Duration::try_from_secs_f64(*s).is_ok()),
             deliveries: Arc::new(DeliveryTasks::default()),
             harness: Arc::default(),
+            wake_idle: std::sync::atomic::AtomicBool::new(false),
         })
     }
 
@@ -121,6 +133,15 @@ impl SessionShells {
 
     pub fn auto_background_secs(&self) -> Option<f64> {
         self.auto_background_secs
+    }
+
+    pub fn set_wake_idle(&self, enabled: bool) {
+        self.wake_idle
+            .store(enabled, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    pub fn wake_idle(&self) -> bool {
+        self.wake_idle.load(std::sync::atomic::Ordering::Relaxed)
     }
 
     /// True while a steering message waits on the connected harness: one
@@ -173,6 +194,7 @@ impl SessionShells {
             self.registry.clone(),
             BashShellToolOptions {
                 input_approval: self.approval,
+                wake_on_completion: self.wake_idle(),
                 steer_probe: Some(self.steer_probe()),
                 ..Default::default()
             },
@@ -191,30 +213,60 @@ impl SessionShells {
     /// Deliver completions and watch alerts to `harness`'s main lane. Holds
     /// only a weak reference, so the harness can still be dropped.
     /// `wake_idle` lets a notice start a turn when the agent is idle; a
-    /// headless client (`--mode rpc`, ACP) only expects turns it asked for,
+    /// headless client (`--mode rpc`) only expects turns it asked for,
     /// so there the notice joins the conversation for its next prompt.
     pub fn connect(&self, harness: &AgentHarness, wake_idle: bool) {
+        self.connect_inner(harness, wake_idle, None);
+    }
+
+    pub fn connect_acp(&self, harness: &AgentHarness) {
+        let runtime = AcpRuntime::install(self, harness);
+        self.connect_inner(harness, true, Some(runtime));
+    }
+
+    fn connect_inner(
+        &self,
+        harness: &AgentHarness,
+        wake_idle: bool,
+        runtime: Option<Arc<AcpRuntime>>,
+    ) {
+        self.set_wake_idle(wake_idle);
         let _ = self.harness.set(harness.downgrade());
         let weak = harness.downgrade();
         let deliveries = self.deliveries.clone();
         // Weak: the registry owns this listener.
         let registry = Arc::downgrade(&self.registry);
+        let completion_runtime = runtime.clone();
         self.registry.on_complete(move |completion| {
             if let Some(harness) = weak.upgrade() {
+                if let Some(runtime) = &completion_runtime {
+                    runtime.begin_completion(completion);
+                }
                 let completion = completion.clone();
                 let registry = registry.clone();
+                let runtime = completion_runtime.clone();
+                let epoch = runtime
+                    .as_ref()
+                    .map(|runtime| runtime.epoch())
+                    .unwrap_or_default();
                 deliveries.spawn(async move {
                     // Checked at send time, after any `bash_output` call in
                     // flight finishes, so a read between the shell's end and
                     // now still counts.
-                    let Some(registry) = registry.upgrade() else {
-                        return;
-                    };
-                    if !registry.completion_due(&completion.task_id).await {
-                        return;
+                    if let Some(registry) = registry.upgrade() {
+                        if registry.completion_due(&completion.task_id).await {
+                            let options = completion_delivery(&completion, wake_idle);
+                            let message = completion_message(&completion);
+                            if let Some(runtime) = &runtime {
+                                runtime.deliver(harness, message, options, epoch).await;
+                            } else {
+                                deliver(harness, message, options).await;
+                            }
+                        }
                     }
-                    let options = completion_delivery(&completion, wake_idle);
-                    deliver(harness, completion_message(&completion), options).await;
+                    if let Some(runtime) = runtime {
+                        runtime.finish_completion(&completion);
+                    }
                 });
             }
         });
@@ -223,7 +275,20 @@ impl SessionShells {
         self.watches.on_fire(move |fire| {
             if let Some(harness) = weak.upgrade() {
                 let message = fire_message(fire);
-                deliveries.spawn(deliver(harness, message, steer(wake_idle)));
+                let runtime = runtime.clone();
+                let epoch = runtime
+                    .as_ref()
+                    .map(|runtime| runtime.epoch())
+                    .unwrap_or_default();
+                deliveries.spawn(async move {
+                    if let Some(runtime) = runtime {
+                        runtime
+                            .deliver(harness, message, steer(wake_idle), epoch)
+                            .await;
+                    } else {
+                        deliver(harness, message, steer(wake_idle)).await;
+                    }
+                });
             }
         });
     }
@@ -738,11 +803,10 @@ mod delivery_tests {
         assert!(elapsed < Duration::from_secs(2), "waited {elapsed:?}");
     }
 
-    /// A shell that ends after the run: a TUI is woken for a turn to react;
-    /// a headless client (ACP) gets the notice with its next prompt instead
-    /// of a turn it never asked for.
+    /// A shell that ends after the run wakes an enabled session; ordinary
+    /// headless clients receive the notice with their next explicit prompt.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn an_idle_notice_wakes_only_a_tui() {
+    async fn an_idle_notice_wakes_only_when_enabled() {
         let steps = || {
             script(vec![
                 launch("slow"),
