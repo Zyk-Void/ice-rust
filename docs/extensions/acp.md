@@ -71,6 +71,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | `session/list` | Supported for an explicit existing absolute `cwd`. Lists only that project, newest activity first, in pages of 50 with an opaque `nextCursor`. Includes saved names and UTC update times. Reads live sessions without taking ownership or modifying their files; cursors cannot be reused for another project |
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
 | `session/cancel` | Supported (aborts the running turn) |
+| `session/close` | Supported. Removes the live session, releases pending requests, stops its child and owned shells, and releases the saved-session writer lock so load or resume can reopen it |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
 | Context and cost | `usage_update` follows settled turns and loaded history, reporting current context use and the model's context window, plus cumulative USD cost when positive. Unknown context windows or unavailable state omit the update without failing the turn |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output |

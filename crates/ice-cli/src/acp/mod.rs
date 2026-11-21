@@ -346,6 +346,7 @@ impl Server {
             "session/load" => self.open_saved_session(params, true).await,
             "session/resume" => self.open_saved_session(params, false).await,
             "session/list" => list::sessions(&params, self.session_dir.as_deref()).await,
+            "session/close" => self.close_session(params).await,
             "session/prompt" => {
                 let session = self.session(&params)?;
                 let blocks = params["prompt"]
@@ -541,6 +542,22 @@ impl Server {
         }
     }
 
+    async fn close_session(&self, params: Value) -> Result<Value, (i64, String)> {
+        let id = params["sessionId"]
+            .as_str()
+            .ok_or((INVALID_PARAMS, "`sessionId` is required".to_string()))?;
+        // Keep load/resume excluded until the native writer lock is released.
+        let _loading = self.loading.lock().await;
+        let session = self
+            .sessions
+            .lock()
+            .unwrap()
+            .remove(id)
+            .ok_or((RESOURCE_NOT_FOUND, format!("unknown session: {id}")))?;
+        session.shutdown().await;
+        Ok(json!({}))
+    }
+
     fn session(&self, params: &Value) -> Result<Arc<Session>, (i64, String)> {
         let id = params["sessionId"]
             .as_str()
@@ -560,7 +577,7 @@ fn initialize_result() -> Value {
         "protocolVersion": PROTOCOL_VERSION,
         "agentCapabilities": {
             "loadSession": true,
-            "sessionCapabilities": {"list": {}, "resume": {}},
+            "sessionCapabilities": {"list": {}, "resume": {}, "close": {}},
             "promptCapabilities": {"image": true, "audio": false, "embeddedContext": true},
             "mcpCapabilities": {"http": false, "sse": false},
         },

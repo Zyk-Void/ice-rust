@@ -985,6 +985,8 @@ where
     ui_dialog.detach();
     if cancel_on_exit {
         run_cancel.cancel();
+        // A background notice can own the lane without a client run_task.
+        let _ = lane.abort().await;
     }
     let mut exit_code = 0;
     if let Some(task) = run_task {
