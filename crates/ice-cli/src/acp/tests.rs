@@ -622,6 +622,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
     let mut history_pages = 0;
     let mut wake_case = false;
     let mut wake_query_failure = false;
+    let mut wake_busy_refused = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
@@ -705,6 +706,16 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                 context_window = if msg["message"] == "no-window" { 0 } else { 8192 };
                 cost_total = 0.125;
                 state_error = msg["message"] == "state-error";
+                if msg["message"] == "/version during-wake" && !wake_busy_refused {
+                    // An inline command meets a running wake turn: refuse it,
+                    // then let that wake settle.
+                    wake_busy_refused = true;
+                    emit(&mut stdout, json!({"type": "response", "id": id, "success": false,
+                        "error": crate::rpc::protocol::WAKE_TURN_ACTIVE})).await;
+                    emit(&mut stdout, json!({"type": "agent_settled", "origin": "wake",
+                        "wakeId": "wake-busy", "runId": "wake-run", "outcome": "completed"})).await;
+                    continue;
+                }
                 if msg["message"].as_str().unwrap().trim() == "/compact reject" {
                     emit(&mut stdout, json!({"type": "response", "id": id, "success": false, "error": "cannot compact now"})).await;
                     continue;
@@ -772,7 +783,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                         emit(&mut stdout, json!({"type":"agent_settled", "origin":"wake", "wakeId":"wake-1",
                             "runId":"wake-run", "outcome":"completed"})).await;
                     }
-                    "/version" => {
+                    "/version" | "/version during-wake" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
                     }
@@ -813,7 +824,13 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                 emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta", "delta": answer, "message": {"kind": "assistant"}})).await;
                 emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
             }
+            "kill_background_shells" if !waiting => {
+                emit(&mut stdout, json!({"type": "command_output", "text": "background shells stopped"})).await;
+            }
             "abort" | "kill_background_shells" if waiting => {
+                if msg["type"] == "kill_background_shells" {
+                    emit(&mut stdout, json!({"type": "command_output", "text": "background shells stopped"})).await;
+                }
                 let mut settled = json!({"type": "agent_settled", "outcome": "aborted", "aborted": true});
                 if compacting {
                     settled["summary"] = json!("Compaction aborted.");
@@ -1656,6 +1673,74 @@ async fn cancel_resolves_prompt_as_cancelled() {
     let (frames, response) = client.until_response(id).await;
     assert_eq!(response["result"]["stopReason"], "cancelled");
     assert_eq!(usage_after_content(&frames)["used"], 1234);
+    // Stopping a reply aborts only that reply; background shells keep running.
+    assert!(
+        !frames
+            .iter()
+            .any(|frame| frame.to_string().contains("background shells stopped")),
+        "Stop during a turn must not kill background shells: {frames:?}"
+    );
+    // With no turn running, Stop targets the background work itself.
+    client
+        .send(
+            json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}}),
+        )
+        .await;
+    loop {
+        let frame = client.next().await;
+        if frame["params"]["update"]["content"]["text"] == "background shells stopped" {
+            break;
+        }
+    }
+}
+
+#[tokio::test]
+async fn config_changes_apply_while_a_turn_is_running() {
+    let mut client = Client::start();
+    let (session, _) = client.new_session().await;
+    let prompt = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": session, "prompt": [{"type": "text", "text": "wait"}]}),
+        )
+        .await;
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    let (_, response) = client
+        .call(
+            "session/set_config_option",
+            json!({"sessionId": session, "configId": "thinking", "value": "high"}),
+        )
+        .await;
+    assert!(
+        response["result"]["configOptions"].is_array(),
+        "model and thinking changes stay available mid-turn: {response}"
+    );
+    client
+        .send(
+            json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}}),
+        )
+        .await;
+    let (_, response) = client.until_response(prompt).await;
+    assert_eq!(response["result"]["stopReason"], "cancelled");
+}
+
+#[tokio::test]
+async fn inline_command_waits_for_a_wake_turn_instead_of_failing() {
+    let mut client = Client::start();
+    let (session, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/prompt",
+            json!({"sessionId": session, "prompt": [{"type": "text", "text": "/version during-wake"}]}),
+        )
+        .await;
+    assert_eq!(response["result"]["stopReason"], "end_turn", "{response}");
+    assert!(
+        frames
+            .iter()
+            .any(|frame| frame["params"]["update"]["content"]["text"] == "icers 0.0.0"),
+        "the command runs once the wake settles: {frames:?}"
+    );
 }
 
 async fn permission_round_trip(answer: Value) -> String {

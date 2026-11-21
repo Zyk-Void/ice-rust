@@ -164,6 +164,10 @@ pub const SUPPORTED_COMMANDS: &[&str] = &[
     "stop",
 ];
 
+/// Error for an inline command that arrives while a background-wake turn owns
+/// the ACP child. The ACP bridge waits for the wake to settle and retries.
+pub const WAKE_TURN_ACTIVE: &str = "a wake turn is active";
+
 pub const ACP_COMMANDS: &[&str] = &[
     "kill_background_shells",
     "wake_settled_ack",

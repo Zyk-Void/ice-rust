@@ -76,7 +76,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | `session/new` | Supported. `cwd` must be an existing absolute directory |
 | `session/list` | Supported for an explicit existing absolute `cwd`. Lists only that project, newest activity first, in pages of 50 with an opaque `nextCursor`. Includes saved names and UTC update times. Reads live sessions without taking ownership or modifying their files; cursors cannot be reused for another project |
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
-| `session/cancel` | Stops client or wake turns and owned background shells, including after the foreground prompt returns |
+| `session/cancel` | During a turn, aborts that turn only; background shells keep running. With no turn running, stops owned background shells and any wake reply |
 | `session/close` | Supported. Removes the live session, releases pending requests, stops its child and owned shells, and releases the saved-session writer lock so load or resume can reopen it |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
 | Context and cost | `usage_update` follows settled turns and loaded history, reporting current context use and the model's context window, plus cumulative USD cost when positive. Unknown context windows or unavailable state omit the update without failing the turn |
@@ -84,8 +84,8 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | Todo plans | Successful `todo` results replace the ACP plan while keeping the tool card. Empty lists clear the plan; failed or malformed results leave the current plan unchanged. Saved todo results restore the plan on session load |
 | Automatic compaction | Negotiated with `clientCapabilities.session.compaction: {}`. Progress completes only after the native checkpoint and its step record are saved; provider/storage failures, cancellation, extension vetoes and process exit close the same progress item. Manual compaction remains a separate prompt operation |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
-| Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only. `session/set_model` is also supported. The current model is listed first |
-| Manual compaction | `/compact` emits `compaction_update` progress and its final summary when the client advertises `session.compaction`. The same compaction ID closes on success, cancellation or failure. Other clients retain the text summary. Automatic compaction progress is not forwarded yet |
+| Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only, including while a turn runs (the change applies from the next model request). `session/set_model` is also supported. The current model is listed first |
+| Manual compaction | `/compact` emits `compaction_update` progress and its final summary when the client advertises `session.compaction`. The same compaction ID closes on success, cancellation or failure. Other clients retain the text summary. Automatic compaction is reported separately (see above) |
 | Session title | `session_info_update` publishes the actual saved name after a successful `/name <display name>` and after history replay on `session/load`. Unnamed sessions have no generated title. Native RPC `get_state` includes an additive nullable `sessionName` field; a missing name or unavailable state does not fail the ACP operation |
 | Slash commands | Advertised with `available_commands_update` and run like the TUI: `/skill:<name>` and `$skill` mentions, prompt templates, extension commands, and the headless built-ins `/compact`, `/model`, `/thinking`, `/tools`, `/context`, `/usage`, `/session`, `/name`, `/cognee`, `/blackhole`, `/version` and `/help`. TUI-only commands (`/settings`, `/tree`, `/export`, `/reload`, …) are not offered; extension commands that open an interactive dialog report that they need the TUI |
 | Client `mcpServers` | Accepted but **not started yet** (a warning is printed to stderr) |
@@ -131,12 +131,15 @@ live background jobs.
 Completion notices and watch alerts can start an unsolicited wake turn in the
 dedicated ACP child. Text streams normally, followed by a best-effort
 `usage_update` when the native context size is known. A wake settlement never
-resolves a waiting client prompt. Prompts, compaction and resume queue behind an
-active wake before normalization or input hooks run; cancellation prevents a
+resolves a waiting client prompt. Prompts, compaction, resume and inline slash
+commands such as `/name` queue behind an active wake before normalization or
+input hooks run; cancellation prevents a
 queued input from reaching the provider.
 
-`session/cancel` also works after the foreground prompt has returned. It cancels
-queued client work and the active wake and stops the session's owned shells.
+`session/cancel` during a client turn aborts only that turn, so stopping an
+unrelated reply never kills a server the agent started earlier. With no client
+turn running (for example Stop on a waiting background row), it cancels the
+active wake and stops the session's owned shells.
 User-stopped results and notices queued before or during Stop are recorded for
 the next explicit turn instead of starting another wake. User-stopped passive
 terminal markers include `stoppedByUser`. If Stop wins before native admission,

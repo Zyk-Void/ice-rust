@@ -829,7 +829,7 @@ where
                                             &rpc_protocol::response(
                                                 Some(id),
                                                 &kind,
-                                                Err("a wake turn is active".to_string()),
+                                                Err(rpc_protocol::WAKE_TURN_ACTIVE.to_string()),
                                             ),
                                         )
                                         .await;
@@ -1067,10 +1067,10 @@ where
         }
 
         // This reader must remain available for wake acknowledgements.
-        let _operation = if matches!(
-            kind.as_str(),
-            "fork_session" | "navigate" | "set_model" | "set_thinking_level" | "set_active_tools"
-        ) {
+        // Model, thinking and tool settings stay editable during a run, as in
+        // ordinary RPC: they apply from the next request. Only operations that
+        // replace or snapshot the session tree are excluded.
+        let _operation = if matches!(kind.as_str(), "fork_session" | "navigate") {
             if let Some(runtime) = &acp {
                 match runtime.operation().try_lock_owned() {
                     Ok(guard) => Some(guard),

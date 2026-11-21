@@ -19,6 +19,7 @@ use tokio_util::sync::CancellationToken;
 const READY_TIMEOUT: Duration = Duration::from_secs(60);
 /// How long a child may take to answer a non-prompt command.
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(30);
+const WAKE_RETRY_INTERVAL: Duration = Duration::from_millis(200);
 
 /// The stdio of a native child (a real process, or an in-memory fake in tests).
 pub(crate) struct ChildIo {
@@ -82,6 +83,9 @@ pub(crate) struct Session {
     translator: Mutex<Translator>,
     prompt_running: AtomicBool,
     cancelled: AtomicBool,
+    /// Counts background-wake turns whose settlement was acknowledged, so a
+    /// command refused during a wake can retry once that wake ends.
+    wakes_finished: tokio::sync::watch::Sender<u64>,
     /// Cancelled when shutdown starts or the child's stdout closes.
     closed: CancellationToken,
 }
@@ -117,6 +121,7 @@ impl Session {
             client_settlement: Mutex::new(None),
             prompt_running: AtomicBool::new(false),
             cancelled: AtomicBool::new(false),
+            wakes_finished: tokio::sync::watch::Sender::new(0),
             closed: CancellationToken::new(),
         });
         let (ready_tx, ready_rx) = oneshot::channel();
@@ -246,6 +251,7 @@ impl Session {
                 .send(&json!({"type": "wake_settled_ack", "wakeId": id}))
                 .await;
         }
+        self.wakes_finished.send_modify(|count| *count += 1);
     }
 
     async fn notify_update(&self, update: Value) {
@@ -472,12 +478,30 @@ impl Session {
     ) -> Result<Value, String> {
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
-        if let Err(error) = self
-            .command(json!({"type": "prompt", "message": text, "images": images}))
-            .await
-        {
-            self.settled.lock().unwrap().take();
-            return Err(error);
+        let frame = json!({"type": "prompt", "message": text, "images": images});
+        let mut wakes = self.wakes_finished.subscribe();
+        loop {
+            match self.command(frame.clone()).await {
+                Ok(_) => break,
+                // Inline commands (`/name`, `/model`, ...) cannot queue behind a
+                // background-wake turn inside the child, so wait for it here.
+                // The poll covers a wake that ends without a settlement frame.
+                Err(error) if error == crate::rpc::protocol::WAKE_TURN_ACTIVE => {
+                    tokio::select! {
+                        _ = wakes.changed() => {}
+                        _ = tokio::time::sleep(WAKE_RETRY_INTERVAL) => {}
+                        _ = self.closed.cancelled() => {}
+                    }
+                    if self.cancelled.load(Ordering::Acquire) {
+                        self.settled.lock().unwrap().take();
+                        return Ok(json!({"outcome": "aborted", "aborted": true}));
+                    }
+                }
+                Err(error) => {
+                    self.settled.lock().unwrap().take();
+                    return Err(error);
+                }
+            }
         }
         // Cancellation can arrive after progress is visible but before the
         // native command is accepted. Apply it again once admission is known.
@@ -514,13 +538,20 @@ impl Session {
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
-    /// resolves with `cancelled` once the child settles.
+    /// resolves with `cancelled` once the child settles. Background shells
+    /// keep running: stopping an unrelated reply must not kill a server the
+    /// agent started earlier.
+    ///
+    /// With no client turn running, Stop targets the background work itself
+    /// (T3's Stop on a waiting background row): it stops owned shells and any
+    /// wake reply, and records the stop for the next turn.
     pub(crate) async fn cancel(&self) {
         if self.prompt_running.load(Ordering::Acquire) {
             self.cancelled.store(true, Ordering::Release);
+            let _ = self.send(&json!({"type": "abort"})).await;
+        } else {
+            let _ = self.send(&json!({"type": "kill_background_shells"})).await;
         }
-        // Stop remains meaningful after the foreground turn has returned.
-        let _ = self.send(&json!({"type": "kill_background_shells"})).await;
     }
 
     /// Replay the complete active branch, oldest first, before responding to
@@ -731,7 +762,8 @@ impl Session {
         config_id: &str,
         value: &str,
     ) -> Result<(), String> {
-        let _response = self.response_guard().await?;
+        // Allowed during a turn, as before: the change applies from the next
+        // model request, and the child accepts it without the operation lock.
         match config_id {
             "model" => {
                 let (provider, model) = value
