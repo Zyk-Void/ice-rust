@@ -239,12 +239,12 @@ impl Writer {
 
 struct Server {
     writer: Arc<Writer>,
+    compaction: AtomicBool,
     spawner: Spawner,
     elicitation_form: AtomicBool,
     sessions: Mutex<HashMap<String, Arc<Session>>>,
     loading: tokio::sync::Mutex<()>,
     session_dir: Option<PathBuf>,
-    compaction: AtomicBool,
 }
 
 /// Run the ACP server over the given streams. Generic so tests can drive it
@@ -261,12 +261,12 @@ where
 {
     let server = Arc::new(Server {
         writer: Arc::new(Writer::new(Box::new(output))),
+        compaction: AtomicBool::new(false),
         spawner,
         elicitation_form: AtomicBool::new(false),
         sessions: Mutex::new(HashMap::new()),
         loading: tokio::sync::Mutex::new(()),
         session_dir,
-        compaction: AtomicBool::new(false),
     });
     let mut tasks = tokio::task::JoinSet::new();
     loop {

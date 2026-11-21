@@ -6,7 +6,7 @@
 use super::translate::{self, Translator};
 use super::Writer;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -39,6 +39,7 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
     Arc::new(move |cwd, session_id, saved_path| {
         let mut command = tokio::process::Command::new(&program);
         command.args(["--mode", "rpc"]).args(&extra_args);
+        command.env("ICERS_ACP_RPC", "1");
         if let Some(path) = saved_path {
             // Open-only: never recreate a missing or unreadable saved session.
             command.arg("--session").arg(path);
@@ -67,6 +68,7 @@ pub(crate) struct Session {
     id: String,
     cwd: PathBuf,
     operation: tokio::sync::Mutex<()>,
+    pending_compactions: Mutex<HashSet<String>>,
     writer: Arc<Writer>,
     elicitation_form: bool,
     compaction: bool,
@@ -101,6 +103,7 @@ impl Session {
             id,
             cwd,
             operation: tokio::sync::Mutex::new(()),
+            pending_compactions: Mutex::new(HashSet::new()),
             writer,
             elicitation_form,
             compaction,
@@ -155,6 +158,24 @@ impl Session {
                         let _ = waiter.send(frame);
                     }
                 }
+                Some("compaction_status") => {
+                    if self.compaction {
+                        if let Some(update) = translate::compaction_update(&frame) {
+                            let id = update["compactionId"].as_str().unwrap().to_string();
+                            let accepted = {
+                                let mut pending = self.pending_compactions.lock().unwrap();
+                                if update["status"] == "in_progress" {
+                                    pending.insert(id)
+                                } else {
+                                    pending.remove(&id)
+                                }
+                            };
+                            if accepted {
+                                self.notify_update(update).await;
+                            }
+                        }
+                    }
+                }
                 Some("agent_settled") => {
                     if let Some(settled) = self.settled.lock().unwrap().take() {
                         let _ = settled.send(frame);
@@ -180,6 +201,13 @@ impl Session {
                     }
                 }
             }
+        }
+        let unfinished: Vec<_> = self.pending_compactions.lock().unwrap().drain().collect();
+        for id in unfinished {
+            self.notify_update(json!({"sessionUpdate": "compaction_update",
+                "compactionId": id, "status": "failed",
+                "error": "icers process exited during compaction"}))
+                .await;
         }
         self.closed.cancel();
         self.pending.lock().unwrap().clear();
@@ -420,7 +448,13 @@ impl Session {
             .await
         {
             self.settled.lock().unwrap().take();
-            return Err(error);
+            // The child can exit before it answers; report that as a turn
+            // failure rather than the generic closed-session error.
+            return Err(if self.closed.is_cancelled() {
+                "icers process exited during the turn".to_string()
+            } else {
+                error
+            });
         }
         drop(gate);
         tokio::select! {
@@ -707,6 +741,7 @@ mod turn_tests {
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
             compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -790,6 +825,7 @@ mod turn_tests {
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
             compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -833,6 +869,7 @@ mod turn_tests {
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
             compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),

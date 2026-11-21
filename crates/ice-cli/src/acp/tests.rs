@@ -375,6 +375,85 @@ async fn resume_validates_saved_identity_and_cwd_without_creating_replacements()
 }
 
 #[tokio::test]
+async fn auto_compaction_progress_is_negotiated_and_terminal_before_prompt_response() {
+    for capability in [json!({}), Value::Null, json!(true)] {
+        for status in ["completed", "failed", "cancelled"] {
+            let mut client = Client::start();
+            client
+                .call(
+                    "initialize",
+                    json!({"clientCapabilities": {
+                        "session": {"compaction": capability}
+                    }}),
+                )
+                .await;
+            let (id, _) = client.new_session().await;
+            let (frames, response) = client.call("session/prompt", json!({
+                "sessionId": id, "prompt": [{"type": "text", "text": format!("auto:{status}")}]
+            })).await;
+            assert_eq!(response["result"]["stopReason"], "end_turn");
+            let updates: Vec<_> = frames
+                .iter()
+                .filter_map(|frame| {
+                    let update = &frame["params"]["update"];
+                    (update["sessionUpdate"] == "compaction_update").then_some(update)
+                })
+                .collect();
+            if capability.is_object() {
+                assert_eq!(updates.len(), 2, "{frames:?}");
+                assert_eq!(updates[0]["status"], "in_progress");
+                assert_eq!(updates[1]["status"], status);
+                assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+                assert_eq!(
+                    updates[1]["summary"],
+                    json!([{"type": "text", "text": "Saved summary"}])
+                );
+            } else {
+                assert!(updates.is_empty());
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn auto_compaction_child_exit_closes_the_pending_attempt() {
+    let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"clientCapabilities": {
+                "session": {"compaction": {}}
+            }}),
+        )
+        .await;
+    let (id, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/prompt",
+            json!({
+                "sessionId": id, "prompt": [{"type": "text", "text": "auto:exit"}]
+            }),
+        )
+        .await;
+    assert!(response.get("error").is_some());
+    let updates: Vec<_> = frames
+        .iter()
+        .filter_map(|frame| {
+            let update = &frame["params"]["update"];
+            (update["sessionUpdate"] == "compaction_update").then_some(update)
+        })
+        .collect();
+    assert_eq!(updates.len(), 2, "{frames:?}");
+    assert_eq!(updates[0]["status"], "in_progress");
+    assert_eq!(updates[1]["status"], "failed");
+    assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+    assert_eq!(
+        updates[1]["error"],
+        "icers process exited during compaction"
+    );
+}
+
+#[tokio::test]
 async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     let temp = tempfile::tempdir().unwrap();
     let cwd = temp.path().to_str().unwrap();
@@ -662,6 +741,16 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                             Some("decline") => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "declined", "summary": "Nothing to compact yet."})).await,
                             _ => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "compacted", "summary": "Conversation compacted."})).await,
                         }
+                    }
+                    text if text.starts_with("auto:") => {
+                        let status = text.strip_prefix("auto:").unwrap();
+                        emit(&mut stdout, json!({"type": "compaction_status",
+                            "compactionId": "auto-1", "status": "in_progress"})).await;
+                        if status == "exit" { break; }
+                        emit(&mut stdout, json!({"type": "compaction_status",
+                            "compactionId": "auto-1", "status": status,
+                            "summary": "Saved summary", "error": "native compaction error"})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
                     }
                     "wait" => waiting = true,
                     "/version" => {

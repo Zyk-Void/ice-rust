@@ -21,6 +21,16 @@ use serde_json::Value;
 use ice_agent::events::AgentEvent;
 use ice_agent::types::AgentToolResult;
 
+/// ACP-only compaction lifecycle, separate from the legacy JSON-mode activity flag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CompactionStatus {
+    InProgress,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
 /// A fine-grained lifecycle event streamed from the server to the client.
 ///
 /// Mirrors the shape produced by the previous hand-rolled projection in
@@ -28,6 +38,16 @@ use ice_agent::types::AgentToolResult;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum RemoteEvent {
+    /// Emitted only by the ACP opt-in, after native extension observation.
+    CompactionStatus {
+        #[serde(rename = "compactionId")]
+        compaction_id: String,
+        status: CompactionStatus,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        summary: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        error: Option<String>,
+    },
     UiDialogRequest {
         #[serde(rename = "requestId")]
         request_id: String,
@@ -132,6 +152,7 @@ impl RemoteEvent {
     /// The wire `type` tag (kept in sync with the serde `rename_all`).
     pub fn type_tag(&self) -> &'static str {
         match self {
+            RemoteEvent::CompactionStatus { .. } => "compaction_status",
             RemoteEvent::UiDialogRequest { .. } => "ui_dialog_request",
             RemoteEvent::UiDialogClosed { .. } => "ui_dialog_closed",
             RemoteEvent::AgentStart => "agent_start",

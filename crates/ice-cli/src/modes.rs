@@ -339,6 +339,7 @@ pub async fn rpc(
         tokio::io::BufReader::new(tokio::io::stdin()),
         std::io::stdout(),
         terminate,
+        std::env::var("ICERS_ACP_RPC").as_deref() == Ok("1"),
     )
     .await
 }
@@ -410,6 +411,7 @@ where
         input,
         output,
         tokio_util::sync::CancellationToken::new(),
+        false,
     )
     .await
 }
@@ -426,6 +428,7 @@ async fn rpc_with_builtins<R, W>(
     input: R,
     output: W,
     terminate: tokio_util::sync::CancellationToken,
+    acp_compaction: bool,
 ) -> i32
 where
     R: tokio::io::AsyncBufRead + Unpin,
@@ -436,28 +439,47 @@ where
     // so pipe backpressure never blocks a Tokio worker on IO or a std mutex.
     let (stdout, writer_task, writer_failed) = start_rpc_writer(output);
     let pump_stop = tokio_util::sync::CancellationToken::new();
+    let (compaction_tx, mut compaction_rx) = tokio::sync::mpsc::unbounded_channel();
+    let compaction_guard = acp_compaction.then(|| {
+        crate::rpc::compaction::CompactionGuard::attach(
+            harness,
+            Arc::new(move |event| {
+                let _ = compaction_tx.send(event);
+            }),
+        )
+    });
 
     // A completion response is queued only after its final events, so a
     // subsequent prompt cannot overtake the previous run's agent_end.
     let (event_flush_tx, mut event_flush_rx) =
         tokio::sync::mpsc::unbounded_channel::<tokio::sync::oneshot::Sender<()>>();
     // Stream fine-grained AgentEvents as JSONL until the receiver closes.
-    let event_task = agent_events.take().map(|mut rx| {
+    let event_task = (agent_events.is_some() || compaction_guard.is_some()).then(|| {
+        let mut rx = agent_events.take();
         let out = stdout.clone();
         let stop = pump_stop.clone();
         tokio::spawn(async move {
             loop {
                 let received = tokio::select! {
                     _ = stop.cancelled() => {
-                        drain_rpc_events(&out, &mut rx).await;
+                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
                         break;
                     }
                     Some(done) = event_flush_rx.recv() => {
-                        drain_rpc_events(&out, &mut rx).await;
+                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
                         let _ = done.send(());
                         continue;
                     }
-                    event = rx.recv() => event,
+                    Some(event) = compaction_rx.recv() => {
+                        write_line(&out, &event).await;
+                        continue;
+                    }
+                    event = async {
+                        match &mut rx {
+                            Some(rx) => rx.recv().await,
+                            None => std::future::pending().await,
+                        }
+                    } => event,
                 };
                 match received {
                     Ok(event) => {
@@ -706,6 +728,7 @@ where
                 let active_task = Arc::clone(&run_active);
                 let mailbox_task = ui_dialog.clone();
                 let flush_events = event_flush.clone();
+                let compaction_task = compaction_guard.as_ref().map(|guard| guard.observer());
                 let Some(content) = content.or_else(|| (resume || compact).then(String::new))
                 else {
                     active_task.store(false, std::sync::atomic::Ordering::Release);
@@ -883,6 +906,15 @@ where
                         rpc_prompt_images_cancellable(&lane_task, &content, images, cancel_task)
                             .await
                     };
+                    if let Some(observer) = compaction_task {
+                        let error = result.as_ref().err().map(String::as_str).or_else(|| {
+                            result
+                                .as_ref()
+                                .ok()
+                                .and_then(|value| value["error"].as_str())
+                        });
+                        observer.settle(error);
+                    }
                     if let Some(flush) = flush_events {
                         let (done, drained) = tokio::sync::oneshot::channel();
                         if flush.send(done).is_ok() {
@@ -1023,6 +1055,7 @@ where
             exit_code = 1;
         }
     }
+    drop(compaction_guard);
     pump_stop.cancel();
     let _ = dialog_task.await;
     if let Some(task) = event_task {
@@ -1038,6 +1071,19 @@ where
         }
     }
     exit_code
+}
+
+async fn drain_rpc_events_and_compaction(
+    out: &RpcWriter,
+    events: &mut Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
+    compactions: &mut tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>,
+) {
+    if let Some(events) = events {
+        drain_rpc_events(out, events).await;
+    }
+    while let Ok(event) = compactions.try_recv() {
+        write_line(out, &event).await;
+    }
 }
 
 async fn drain_rpc_events(
@@ -2880,6 +2926,42 @@ mod tests {
         (client, output, task)
     }
 
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_compaction_observer_releases_producers_on_eof() {
+        for enabled in [false, true] {
+            let (harness, _) = rpc_test_harness("done", 0.0).await;
+            let output = RpcOutput::default();
+            let input = b"{\"type\":\"prompt\",\"id\":1,\"message\":\"continue\"}\n";
+            let code = tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                rpc_with_builtins(
+                    &harness,
+                    None,
+                    vec![],
+                    ice_extensions::UiDialogMailbox::new(),
+                    None,
+                    RpcBuiltins::default(),
+                    tokio::io::BufReader::new(input.as_slice()),
+                    output.clone(),
+                    tokio_util::sync::CancellationToken::new(),
+                    enabled,
+                ),
+            )
+            .await
+            .expect("observer must release every producer before writer join");
+            assert_eq!(code, 0);
+            assert!(harness.extensions().is_empty());
+            assert!(output
+                .messages()
+                .iter()
+                .any(|frame| frame["type"] == "agent_settled" && frame["outcome"] == "completed"));
+            assert!(!output
+                .messages()
+                .iter()
+                .any(|frame| frame["type"] == "compaction_status"));
+        }
+    }
+
     #[tokio::test]
     async fn rpc_oauth_reaches_handler_only_for_valid_payloads() {
         use tokio::io::AsyncWriteExt;
@@ -3290,6 +3372,7 @@ mod tests {
                 tokio::io::BufReader::new(input),
                 captured,
                 signal,
+                false,
             )
             .await
         });
