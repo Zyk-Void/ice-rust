@@ -445,7 +445,7 @@ pub(crate) fn stop_reason(
     match settled["outcome"].as_str().unwrap_or("completed") {
         "aborted" => Ok("cancelled"),
         "completed" if stop_reason == Some("length") => Ok("max_tokens"),
-        "completed" => Ok("end_turn"),
+        "completed" | "compacted" | "declined" => Ok("end_turn"),
         _ if cancelled => Ok("cancelled"),
         _ => Err(settled["error"]
             .as_str()
@@ -974,6 +974,12 @@ mod tests {
         let done = json!({"outcome": "completed"});
         assert_eq!(stop_reason(&done, false, Some("stop")), Ok("end_turn"));
         assert_eq!(stop_reason(&done, false, Some("length")), Ok("max_tokens"));
+        for outcome in ["compacted", "declined"] {
+            assert_eq!(
+                stop_reason(&json!({"outcome": outcome}), false, None),
+                Ok("end_turn")
+            );
+        }
         assert_eq!(
             stop_reason(&json!({"outcome": "aborted"}), true, None),
             Ok("cancelled")
