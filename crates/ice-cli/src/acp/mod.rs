@@ -331,7 +331,7 @@ impl Server {
                 match self.handle(method, params).await {
                     Ok(result) => {
                         let created = match method {
-                            "session/new" | "session/load" => {
+                            "session/new" | "session/load" | "session/fork" => {
                                 result["sessionId"].as_str().map(str::to_owned)
                             }
                             "session/resume" => resumed,
@@ -383,6 +383,7 @@ impl Server {
             "session/resume" => self.open_saved_session(params, false).await,
             "session/list" => list::sessions(&params, self.session_dir.as_deref()).await,
             "session/close" => self.close_session(params).await,
+            "session/fork" => self.fork_session(params).await,
             "session/prompt" => {
                 let session = self.session(&params)?;
                 let blocks = params["prompt"]
@@ -592,6 +593,83 @@ impl Server {
         Ok(json!({}))
     }
 
+    async fn fork_session(&self, params: Value) -> Result<Value, (i64, String)> {
+        // Close/load/fork share lifecycle admission. The source remains open,
+        // and its own operation guard excludes a concurrent client prompt.
+        let _loading = self.loading.lock().await;
+        let source = self.session(&params)?;
+        let cwd = params["cwd"]
+            .as_str()
+            .ok_or((INVALID_PARAMS, "`cwd` is required".to_string()))?;
+        let cwd = PathBuf::from(cwd);
+        if !cwd.is_absolute() || !cwd.is_dir() {
+            return Err((
+                INVALID_PARAMS,
+                "`cwd` must be an existing absolute directory".to_string(),
+            ));
+        }
+        let canonical = std::fs::canonicalize(&cwd)
+            .map_err(|error| (INVALID_PARAMS, format!("cannot resolve cwd: {error}")))?;
+        if std::fs::canonicalize(source.cwd()).ok().as_ref() != Some(&canonical) {
+            return Err((
+                INVALID_PARAMS,
+                "source session belongs to a different working directory".to_string(),
+            ));
+        }
+        if params
+            .get("mcpServers")
+            .is_some_and(|servers| !servers.is_null() && !servers.is_array())
+        {
+            return Err((INVALID_PARAMS, "`mcpServers` must be an array".to_string()));
+        }
+        let fork = source
+            .fork_native()
+            .await
+            .map_err(|error| (INVALID_PARAMS, error))?;
+        let id = fork["sessionId"]
+            .as_str()
+            .filter(|id| uuid::Uuid::parse_str(id).is_ok())
+            .ok_or((
+                INTERNAL_ERROR,
+                "native fork returned an invalid session id".to_string(),
+            ))?
+            .to_string();
+        let saved_path = fork["path"]
+            .as_str()
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .ok_or((
+                INTERNAL_ERROR,
+                "native fork returned an invalid saved path".to_string(),
+            ))?;
+        if self.sessions.lock().unwrap().contains_key(&id) {
+            return Err((
+                INTERNAL_ERROR,
+                "native fork returned an already-open session id".to_string(),
+            ));
+        }
+        let session = Session::start(
+            id.clone(),
+            cwd,
+            Some(&saved_path),
+            &self.spawner,
+            Arc::clone(&self.writer),
+            self.elicitation_form.load(Ordering::Acquire),
+        )
+        .await
+        .map_err(|error| (INTERNAL_ERROR, error))?;
+        if let Err(error) = session.replay_history().await {
+            session.shutdown().await;
+            return Err((
+                INTERNAL_ERROR,
+                format!("cannot replay forked session {id}: {error}"),
+            ));
+        }
+        let config_options = session.config_options().await;
+        self.sessions.lock().unwrap().insert(id.clone(), session);
+        Ok(json!({"sessionId": id, "configOptions": config_options}))
+    }
+
     fn session(&self, params: &Value) -> Result<Arc<Session>, (i64, String)> {
         let id = params["sessionId"]
             .as_str()
@@ -611,7 +689,7 @@ fn initialize_result() -> Value {
         "protocolVersion": PROTOCOL_VERSION,
         "agentCapabilities": {
             "loadSession": true,
-            "sessionCapabilities": {"list": {}, "resume": {}, "close": {}},
+            "sessionCapabilities": {"list": {}, "resume": {}, "close": {}, "fork": {}},
             "promptCapabilities": {"image": true, "audio": false, "embeddedContext": true},
             "mcpCapabilities": {"http": false, "sse": false},
         },

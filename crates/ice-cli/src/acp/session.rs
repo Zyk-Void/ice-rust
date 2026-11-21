@@ -65,6 +65,8 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
 
 pub(crate) struct Session {
     id: String,
+    cwd: PathBuf,
+    operation: tokio::sync::Mutex<()>,
     writer: Arc<Writer>,
     elicitation_form: bool,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
@@ -93,8 +95,10 @@ impl Session {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
         let session = Arc::new(Self {
-            translator: Mutex::new(Translator::new(cwd)),
+            translator: Mutex::new(Translator::new(cwd.clone())),
             id,
+            cwd,
+            operation: tokio::sync::Mutex::new(()),
             writer,
             elicitation_form,
             stdin: tokio::sync::Mutex::new(io.stdin),
@@ -300,6 +304,10 @@ impl Session {
         if self.closed.is_cancelled() {
             return Err("icers session is closed".to_string());
         }
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "another operation is running in this session".to_string())?;
         let gate = self.turn_gate.lock().await;
         let cancel = {
             let mut turn = self.turn.lock().unwrap();
@@ -315,6 +323,19 @@ impl Session {
         let _gate = self.turn_gate.lock().await;
         self.turn.lock().unwrap().take();
         result
+    }
+
+    pub(crate) fn cwd(&self) -> &Path {
+        &self.cwd
+    }
+
+    /// Capture the live source through its owning child; never reopen its file.
+    pub(crate) async fn fork_native(&self) -> Result<Value, String> {
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "wait for the current operation to finish before forking".to_string())?;
+        self.command(json!({"type": "fork_session"})).await
     }
 
     async fn prompt_inner(
@@ -613,6 +634,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(None),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let held_stdin = session.stdin.lock().await;
@@ -693,6 +716,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(Some(old.clone())),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let gate = session.turn_gate.lock().await;
@@ -733,6 +758,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(Some(token.clone())),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let held_stdin = session.stdin.lock().await;

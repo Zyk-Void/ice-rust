@@ -61,7 +61,7 @@ use crate::session::jsonl::types::{
 };
 use crate::session::memory::Clock;
 use crate::session::types::{
-    ForkOptions, JsonValue, SessionCreateOptions, SessionMetadata, SessionRepo,
+    ForkOptions, JsonValue, SessionCreateOptions, SessionForkSnapshot, SessionMetadata, SessionRepo,
 };
 
 /// `^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$` — a session id must be
@@ -459,9 +459,34 @@ impl JsonlSessionRepo {
             name: source.get_name().await?,
         })?;
         let mutations = state.create_fork_mutations(fork)?;
+        let snapshot = SessionForkSnapshot {
+            metadata: source.metadata(),
+            persistence_path: source.persistence_path(),
+            mutations,
+        };
+        self.fork_snapshot_at(snapshot, options, directory).await
+    }
+
+    /// Publish a coherent backend snapshot without reading the source again.
+    pub async fn fork_snapshot_in_directory(
+        &self,
+        snapshot: SessionForkSnapshot,
+        directory: &str,
+        options: &JsonlSessionCreateOptions,
+    ) -> SessionResult<JsonlSessionStorage> {
+        self.fork_snapshot_at(snapshot, options, Some(directory))
+            .await
+    }
+
+    async fn fork_snapshot_at(
+        &self,
+        snapshot: SessionForkSnapshot,
+        options: &JsonlSessionCreateOptions,
+        directory: Option<&str>,
+    ) -> SessionResult<JsonlSessionStorage> {
         let mut options = options.clone();
         if options.parent_session_id.is_none() {
-            options.parent_session_id = Some(source.metadata().id);
+            options.parent_session_id = Some(snapshot.metadata.id);
         }
         let destination = self.resolve_create_destination(&options).await?;
         self.claim_create_destination(&destination, async {
@@ -472,7 +497,7 @@ impl JsonlSessionRepo {
                 self.fs.clone(),
                 &path,
                 header,
-                mutations,
+                snapshot.mutations,
                 self.clock.clone(),
                 self.ids.clone(),
             )

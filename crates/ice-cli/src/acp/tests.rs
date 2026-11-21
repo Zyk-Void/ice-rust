@@ -523,7 +523,7 @@ fn replay_preserves_images_thoughts_and_tool_results() {
 /// A fake child: answers state queries, streams a canned turn for `prompt`,
 /// waits for `abort` when the prompt text is `wait`, and asks a permission
 /// question when it is `ask`, or a serialized question after `question `.
-async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
+async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf) {
     async fn emit(out: &mut DuplexStream, value: Value) {
         let mut line = serde_json::to_vec(&value).unwrap();
         line.push(b'\n');
@@ -543,6 +543,9 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
         let id = msg["id"].clone();
         let ok = |data: Value| json!({"type": "response", "id": id, "success": true, "data": data});
         match msg["type"].as_str().unwrap() {
+            "fork_session" => {
+                emit(&mut stdout, ok(json!({"sessionId": uuid::Uuid::new_v4().to_string(), "path": cwd.join("fake-fork.jsonl")}))).await;
+            }
             "get_state" => {
                 emit(&mut stdout, ok(json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level}))).await
             }
@@ -613,6 +616,10 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                         emit(&mut stdout, json!({"type": "command_output", "text": history_pages.to_string()})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
                     }
+                    "wait-fork" => {
+                        waiting = true;
+                        emit(&mut stdout, json!({"type": "command_output", "text": "fork blocked"})).await;
+                    }
                     "wait" => waiting = true,
                     "/version" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
@@ -670,7 +677,7 @@ fn fake_spawner() -> Spawner {
     Arc::new(|_cwd: &Path, _id: &str, _saved_path: Option<&Path>| {
         let (child_stdin, fake_in) = tokio::io::duplex(1 << 16);
         let (fake_out, child_stdout) = tokio::io::duplex(1 << 16);
-        tokio::spawn(fake_child(fake_in, fake_out));
+        tokio::spawn(fake_child(fake_in, fake_out, _cwd.to_path_buf()));
         Ok(ChildIo {
             stdin: Box::new(child_stdin),
             stdout: Box::new(BufReader::new(child_stdout)),
@@ -828,7 +835,7 @@ async fn initialize_advertises_v1_without_unimplemented_capabilities() {
 #[tokio::test]
 async fn unknown_methods_and_sessions_are_errors() {
     let mut client = Client::start();
-    let (_, response) = client.call("session/fork", json!({})).await;
+    let (_, response) = client.call("session/not-implemented", json!({})).await;
     assert_eq!(response["error"]["code"], METHOD_NOT_FOUND);
     let (_, response) = client
         .call("session/prompt", json!({"sessionId": "nope", "prompt": []}))
@@ -908,6 +915,87 @@ async fn close_releases_an_in_flight_prompt() {
             seen.insert(prompt);
         }
     }
+}
+
+#[tokio::test]
+async fn fork_creates_an_independent_session_and_replays_before_response() {
+    let mut client = Client::start();
+    let (_, init) = client.call("initialize", json!({})).await;
+    assert!(init["result"]["agentCapabilities"]["sessionCapabilities"]["fork"].is_object());
+    let (source, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": source, "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    let fork = response["result"]["sessionId"].as_str().unwrap();
+    assert_ne!(fork, source);
+    assert!(uuid::Uuid::parse_str(fork).is_ok());
+    let kinds = update_kinds(&frames);
+    assert!(kinds.contains(&"user_message_chunk".to_string()));
+    assert!(kinds.contains(&"agent_message_chunk".to_string()));
+    for id in [source.as_str(), fork] {
+        let (_, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": "continue"}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+    }
+}
+
+#[tokio::test]
+async fn fork_rejects_unknown_sessions_and_wrong_working_directories() {
+    let mut client = Client::start();
+    let (source, _) = client.new_session().await;
+    let (_, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": uuid::Uuid::new_v4().to_string(), "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert_eq!(response["error"]["code"], RESOURCE_NOT_FOUND);
+    let other = tempfile::tempdir().unwrap();
+    for cwd in [json!(other.path()), json!("relative"), Value::Null] {
+        let (_, response) = client
+            .call("session/fork", json!({"sessionId": source, "cwd": cwd}))
+            .await;
+        assert_eq!(response["error"]["code"], INVALID_PARAMS, "{response}");
+    }
+}
+
+#[tokio::test]
+async fn fork_rejects_an_active_prompt_without_stopping_it() {
+    let mut client = Client::start();
+    let (source, _) = client.new_session().await;
+    let prompt = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": source, "prompt": [{"type": "text", "text": "wait-fork"}]}),
+        )
+        .await;
+    loop {
+        if client.next().await["params"]["update"]["content"]["text"] == "fork blocked" {
+            break;
+        }
+    }
+    let (_, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": source, "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert_eq!(response["error"]["code"], INVALID_PARAMS);
+    client
+        .send(
+            json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": source}}),
+        )
+        .await;
+    let (_, response) = client.until_response(prompt).await;
+    assert_eq!(response["result"]["stopReason"], "cancelled");
 }
 
 #[tokio::test]
@@ -1352,7 +1440,7 @@ async fn question_form_child_exit_while_waiting_does_not_hang() {
         let exit_rx = exit_rx.lock().unwrap().take().unwrap();
         tokio::spawn(async move {
             tokio::select! {
-                _ = fake_child(fake_in, fake_out) => {},
+                _ = fake_child(fake_in, fake_out, PathBuf::from(".")) => {},
                 _ = exit_rx => {},
             }
         });
