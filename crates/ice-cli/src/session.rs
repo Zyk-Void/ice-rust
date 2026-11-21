@@ -443,6 +443,10 @@ pub async fn build_prepared(
     let shells = crate::background_shells::SessionShells::new(
         &crate::settings::load_settings().unwrap_or_default(),
     );
+    shells.set_wake_idle(
+        (args.mode == crate::args::Mode::Text && !args.print)
+            || (args.mode == crate::args::Mode::Rpc && crate::background_shells::acp_rpc_enabled()),
+    );
     let mut tools = build_tools(&ctx, args, Some(&shells));
 
     // ---- Extensions (Part B2) ----
@@ -1055,10 +1059,14 @@ pub async fn build_prepared(
     // NOT held here (the TUI already owns a `&AgentHarness` / clone at the call
     // site — passing it into `reload_extension_resources` keeps this structfree
     // of a harness back-reference so it can be `Clone` into the reload callback).
-    // Only a TUI (local, or remote through `--server`) may be woken by a
-    // background notice; headless clients run just the turns they ask for.
+    // TUI notices may wake the model. The dedicated ACP RPC child additionally
+    // installs serialized wake admission; other headless modes remain passive.
     let wake_idle = args.mode == crate::args::Mode::Text && !args.print;
-    shells.connect(&harness, wake_idle);
+    if args.mode == crate::args::Mode::Rpc && crate::background_shells::acp_rpc_enabled() {
+        shells.connect_acp(&harness);
+    } else {
+        shells.connect(&harness, wake_idle);
+    }
     let reload_context = ReloadContext {
         skill_registry: Arc::new(std::sync::RwLock::new(live_skill_result)),
         capability_service: capability_service.clone(),
@@ -2384,6 +2392,7 @@ pub fn bash_options(
         command_prefix: settings.shell_command_prefix.clone(),
         default_timeout: Some(default),
         background: shells.map(|s| s.registry()),
+        wake_on_completion: shells.is_some_and(|shells| shells.wake_idle()),
         auto_background_secs: shells.and_then(|s| s.auto_background_secs()),
         steer_probe: shells.map(|s| s.steer_probe()),
         ..Default::default()
@@ -5212,6 +5221,7 @@ mod tests {
     /// - **Narrowness.** The user's own configuration must still reach the shell.
     #[test]
     fn host_private_env_matches_the_declared_contract() {
+        assert!(ice_tools::is_host_private_env("ICERS_ACP_RPC"));
         // 1. The wire values. Pinned literally on purpose: see the doc comment.
         assert_eq!(ice_plugin_sdk::SESSION_ID_ENV, "ICERS_SESSION_ID");
         assert_eq!(

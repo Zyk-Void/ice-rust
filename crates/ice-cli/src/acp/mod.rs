@@ -268,6 +268,22 @@ impl Server {
         match (method, id) {
             (Some(method), Some(id)) => {
                 let params = frame.get("params").cloned().unwrap_or(Value::Null);
+                let response_session = (method == "session/prompt")
+                    .then(|| self.session(&params).ok())
+                    .flatten();
+                // Keep the next prompt behind the prior ACP response and its
+                // native acknowledgement, including failed/cancelled turns.
+                let _response_guard = if let Some(session) = &response_session {
+                    match session.response_guard().await {
+                        Ok(guard) => Some(guard),
+                        Err(error) => {
+                            self.writer.error(id, INTERNAL_ERROR, error).await;
+                            return;
+                        }
+                    }
+                } else {
+                    None
+                };
                 match self.handle(method, params).await {
                     Ok(result) => {
                         let created = (method == "session/new" || method == "session/load")
@@ -284,6 +300,9 @@ impl Server {
                         }
                     }
                     Err((code, message)) => self.writer.error(id, code, message).await,
+                }
+                if let Some(session) = response_session {
+                    session.after_prompt_response().await;
                 }
             }
             (Some(method), None) => self.handle_notification(method, &frame["params"]).await,

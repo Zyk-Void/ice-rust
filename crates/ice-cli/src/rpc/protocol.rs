@@ -49,6 +49,15 @@ pub enum Command {
         message: String,
     },
     Abort,
+    KillBackgroundShells,
+    WakeSettledAck {
+        #[serde(rename = "wakeId")]
+        wake_id: String,
+    },
+    ClientSettledAck {
+        #[serde(rename = "settlementId")]
+        settlement_id: String,
+    },
     GetState,
     GetCommands,
     /// Read-only snapshot of the current branch's message entries.
@@ -150,6 +159,12 @@ pub const SUPPORTED_COMMANDS: &[&str] = &[
     "ui_dialog_response",
     "ping",
     "stop",
+];
+
+pub const ACP_COMMANDS: &[&str] = &[
+    "kill_background_shells",
+    "wake_settled_ack",
+    "client_settled_ack",
 ];
 
 pub fn response(id: Option<Value>, command: &str, result: Result<Option<Value>, String>) -> Value {

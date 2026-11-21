@@ -114,6 +114,8 @@ pub struct BashToolOptions {
     /// `run_in_background` is rejected and foreground calls cannot be
     /// released. Mirrors TS `background`.
     pub background: Option<Arc<BashBackgroundRegistry>>,
+    /// Whether an idle session starts a turn for a completion notification.
+    pub wake_on_completion: bool,
     /// Move a foreground call to the background once it has run this many
     /// seconds (when its timeout is absent or longer). Mirrors TS
     /// `autoBackgroundMs`; unset means never.
@@ -289,8 +291,13 @@ fn timeout_description(options: &BashToolOptions) -> String {
         None => text.push_str(" Omit it (or pass 0) for no timeout."),
     }
     if let Some(secs) = omitted.auto_background {
+        let completion = if options.wake_on_completion {
+            "you are told when it finishes"
+        } else {
+            "if the session is idle, its result is included with the next user message"
+        };
         text.push_str(&format!(
-            " A foreground command still running after {secs} seconds moves to the background and keeps running; you are told when it finishes."
+            " A foreground command still running after {secs} seconds moves to the background and keeps running; {completion}."
         ));
     }
     let max = options.max_timeout.filter(|m| *m > 0.0);
@@ -419,7 +426,7 @@ impl AgentTool for BashTool {
             let text = format!(
                 "Started background bash {id}: {}\n{}",
                 shell_label(input.description.as_deref(), &original_command),
-                background_guidance(&id, want_stdin, timeout)
+                background_guidance(&id, want_stdin, timeout, self.options.wake_on_completion)
             );
             return Ok(background_result(
                 text,
@@ -594,7 +601,10 @@ impl AgentTool for BashTool {
                 if !shown.is_empty() {
                     text.push_str(&format!("\n\nOutput so far:\n{shown}"));
                 }
-                text.push_str(&format!("\n\n{}", background_guidance(&id, false, timeout)));
+                text.push_str(&format!(
+                    "\n\n{}",
+                    background_guidance(&id, false, timeout, self.options.wake_on_completion)
+                ));
                 Ok(background_result(text, &id, origin, log_path, truncation))
             }
         }
@@ -602,7 +612,7 @@ impl AgentTool for BashTool {
 }
 
 /// Tell the model how to follow a background shell.
-fn background_guidance(id: &str, stdin: bool, timeout: Option<f64>) -> String {
+fn background_guidance(id: &str, stdin: bool, timeout: Option<f64>, wake: bool) -> String {
     let deadline = match timeout {
         Some(secs) => format!(" Its timeout stops it {secs} seconds after it started."),
         None => String::new(),
@@ -612,8 +622,13 @@ fn background_guidance(id: &str, stdin: bool, timeout: Option<f64>) -> String {
     } else {
         String::new()
     };
+    let completion = if wake {
+        "you will be told when it finishes."
+    } else {
+        "if the session is idle, its result is included with the next user message."
+    };
     format!(
-        "It keeps running after this call returns: continue with other work or end your turn; you will be told when it finishes.{deadline} Read new output with bash_output (id \"{id}\"; set wait_seconds to wait for it).{input} Stop it with bash_kill."
+        "It keeps running after this call returns: continue with other work or end your turn; {completion}{deadline} Read new output with bash_output (id \"{id}\"; set wait_seconds to wait for it).{input} Stop it with bash_kill."
     )
 }
 
@@ -917,6 +932,24 @@ pub(crate) fn resolve_timeout(timeout: Option<f64>) -> Result<Option<f64>, Agent
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn background_wording_matches_idle_wake_support() {
+        let headless = background_guidance("shell", false, None, false);
+        assert!(headless.contains("next user message"));
+        assert!(!headless.contains("you will be told"));
+        let waking = background_guidance("shell", true, Some(10.0), true);
+        assert!(waking.contains("you will be told when it finishes"));
+        assert!(waking.contains("bash_input"));
+        let mut options = BashToolOptions {
+            background: Some(BashBackgroundRegistry::new()),
+            auto_background_secs: Some(3.0),
+            ..Default::default()
+        };
+        assert!(timeout_description(&options).contains("next user message"));
+        options.wake_on_completion = true;
+        assert!(timeout_description(&options).contains("you are told when it finishes"));
+    }
 
     #[test]
     fn zero_or_omitted_timeout_means_none() {

@@ -69,7 +69,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | `initialize` (v1) | Supported |
 | `session/new` | Supported. `cwd` must be an existing absolute directory |
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
-| `session/cancel` | Supported (aborts the running turn) |
+| `session/cancel` | Stops client or wake turns and owned background shells, including after the foreground prompt returns |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
@@ -82,6 +82,88 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | Audio | Not supported |
 | Client fs/terminal methods | Not used. icers runs its own tools |
 | Free-form questions from extensions | Cancelled (no ACP mapping yet) |
+
+## Background shells and wake turns
+
+A bash command started with `run_in_background`, or moved to the background by
+the runtime, can outlive its foreground prompt. The prompt returns when that
+foreground run settles; another prompt can run while the shell continues.
+
+The original `toolCallId` stays `in_progress` when the native bash tool returns
+its background-task ID. Its namespaced raw output is:
+
+```json
+{"type":"BackgroundTaskStarted","task_id":"shell-id","task_type":"bash","icers":{"backgroundTask":true}}
+```
+
+When the shell finishes, a `tool_call_update` for that same `toolCallId` carries
+status `completed` or `failed`, the output tail as ACP text content, and:
+
+```json
+{"type":"TaskOutput","Result":{"task_id":"shell-id","status":"completed","exit_code":0,"output":"output tail"},"icers":{"backgroundTask":true,"stoppedByUser":false}}
+```
+
+This passive terminal update reports the shell result; it does not mean a later
+model wake has consumed it. Early completions are retained until the native tool
+result supplies the shell-to-tool mapping. Historical replay does not recreate
+live background jobs.
+
+Completion notices and watch alerts can start an unsolicited wake turn in the
+dedicated ACP child. Text streams normally, followed by a best-effort
+`usage_update` when the native context size is known. A wake settlement never
+resolves a waiting client prompt. Prompts, compaction and resume queue behind an
+active wake before normalization or input hooks run; cancellation prevents a
+queued input from reaching the provider.
+
+`session/cancel` also works after the foreground prompt has returned. It cancels
+queued client work and the active wake and stops the session's owned shells.
+User-stopped results and notices queued before or during Stop are recorded for
+the next explicit turn instead of starting another wake. User-stopped passive
+terminal markers include `stoppedByUser`. If Stop wins before native admission,
+the original notice is retained without invoking its input hooks a second time.
+
+The local/remote TUI retains its existing wake behavior. Ordinary `--mode rpc`,
+`--mode json` and print runs keep idle results for the next explicit prompt.
+The bash start message, automatic-background timeout description and
+`bash_output` interruption guidance describe the actual session behavior:
+automatic notification when wakes are enabled, or results on the next user
+message plus explicit `bash_output` inspection otherwise.
+
+## Private ACP child coordination
+
+The bridge sets `ICERS_ACP_RPC=1` only on its dedicated `--mode rpc` child. This
+is an internal transport opt-in, not a setting general RPC clients need to
+enable. It is removed from the environment inherited by shell commands, so a
+nested ordinary icers process does not accidentally enter this protocol.
+Only the opted-in child's `ready` frame advertises these commands:
+
+| Native command | Purpose |
+| --- | --- |
+| `kill_background_shells` | Cancel queued client work and the active wake, stop owned shells, and record stopped notices for the next explicit turn |
+| `wake_settled_ack {wakeId}` | Release wake admission after the bridge publishes available usage or skips an unavailable snapshot |
+| `client_settled_ack {settlementId}` | Release client admission after the ACP response or error has been written |
+
+The normal native prompt `accepted` response still means acceptance, not
+completion. A client-origin `agent_settled` has `origin: "client"` and a
+`settlementId`; a wake has `origin: "wake"`, `wakeId`, its admitted `runId` and
+its actual outcome. Wake metadata is correlated by run ID and emitted at the
+harness's ordered `RunSettled` barrier after durable finalization. Suspended
+or rejected wake attempts use explicit fallback settlements.
+
+The child holds a shared operation guard through each acknowledgement. The
+bridge queries wake usage outside its input pump, which must remain free to
+receive the `get_state` response, then acknowledges the wake. For a client turn
+it acknowledges after writing the ACP response. A prompt arriving during that
+response-only tail waits for the acknowledgement; a truly active concurrent
+client prompt is rejected. This preserves content, usage and response order in
+both directions between client and wake turns.
+
+Synchronous mutations such as model changes and session forking use an
+immediate operation reservation and return a busy error during a run. The
+native input reader never waits on an occupied operation guard, so cancellation
+and acknowledgement commands remain readable. Closing releases queued
+admissions and acknowledgement waiters and begins owned-shell cleanup before
+waiting for the run and extension cleanup.
 
 ## Large model catalogs and attachments
 
