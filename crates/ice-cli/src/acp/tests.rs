@@ -37,7 +37,7 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     assert_eq!(response["result"]["sessionId"], id);
     assert_eq!(
         update_kinds(&frames),
-        ["user_message_chunk", "agent_message_chunk"]
+        ["user_message_chunk", "agent_message_chunk", "usage_update"]
     );
     assert_eq!(
         frames[0]["params"]["update"]["content"]["text"],
@@ -46,6 +46,10 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     assert_eq!(
         frames[1]["params"]["update"]["content"]["text"],
         "saved answer"
+    );
+    assert_eq!(
+        usage_after_content(&frames),
+        &json!({"sessionUpdate": "usage_update", "used": 0, "size": 8192})
     );
     let (_, duplicate) = client
         .call("session/load", json!({"sessionId": id, "cwd": cwd}))
@@ -167,13 +171,24 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     let mut waiting = false;
     let mut asked = false;
     let mut asked_question = false;
+    let mut context_tokens = 0;
+    let mut context_window = 8192;
+    let mut cost_total = 0.0;
+    let mut state_error = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
         let ok = |data: Value| json!({"type": "response", "id": id, "success": true, "data": data});
         match msg["type"].as_str().unwrap() {
             "get_state" => {
-                emit(&mut stdout, ok(json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low"}))).await
+                let response = if state_error {
+                    json!({"type": "response", "id": id, "success": false, "error": "state unavailable"})
+                } else {
+                    ok(json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low",
+                        "context": {"tokens": context_tokens, "window": context_window},
+                        "stats": {"costTotal": cost_total}}))
+                };
+                emit(&mut stdout, response).await
             }
             "get_messages" => {
                 let (messages, more, first) = if msg["beforeId"].is_null() {
@@ -217,6 +232,10 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 emit(&mut stdout, ok(json!({}))).await
             }
             "prompt" => {
+                context_tokens = 1234;
+                context_window = if msg["message"] == "no-window" { 0 } else { 8192 };
+                cost_total = 0.125;
+                state_error = msg["message"] == "state-error";
                 if msg["message"] == "image regression" || msg["message"] == "" {
                     assert_eq!(msg["images"].as_array().unwrap().len(), 1);
                     assert_eq!(msg["images"][0]["mimeType"], "image/png");
@@ -225,6 +244,11 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 emit(&mut stdout, ok(json!({"accepted": true}))).await;
                 match msg["message"].as_str().unwrap() {
                     "wait" => waiting = true,
+                    "fail" => {
+                        emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta",
+                            "delta": "partial reply", "message": {"kind": "assistant"}})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "failed", "error": "provider failed"})).await;
+                    }
                     "/version" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
@@ -379,6 +403,32 @@ fn update_kinds(frames: &[Value]) -> Vec<String> {
         .collect()
 }
 
+fn usage_after_content(frames: &[Value]) -> &Value {
+    let usage_indices: Vec<_> = frames
+        .iter()
+        .enumerate()
+        .filter(|(_, frame)| frame["params"]["update"]["sessionUpdate"] == "usage_update")
+        .map(|(index, _)| index)
+        .collect();
+    assert_eq!(
+        usage_indices.len(),
+        1,
+        "one usage update before the response"
+    );
+    if let Some(last_content) = frames.iter().rposition(|frame| {
+        matches!(
+            frame["params"]["update"]["sessionUpdate"].as_str(),
+            Some("user_message_chunk" | "agent_message_chunk" | "agent_thought_chunk")
+        )
+    }) {
+        assert!(
+            usage_indices[0] > last_content,
+            "usage follows the last content update"
+        );
+    }
+    &frames[usage_indices[0]]["params"]["update"]
+}
+
 #[test]
 fn child_arguments_allow_observe_but_reject_bridge_owned_flags() {
     let args = ["--observe", "--offline", "--model", "provider/model"].map(str::to_owned);
@@ -497,6 +547,45 @@ async fn prompt_streams_then_resolves_on_settlement() {
         .collect();
     assert_eq!(text, "hello", "final text reconciled exactly once");
     assert!(frames.iter().all(|f| f["params"]["sessionId"] == session));
+    assert_eq!(
+        usage_after_content(&frames),
+        &json!({"sessionUpdate": "usage_update", "used": 1234, "size": 8192,
+            "cost": {"amount": 0.125, "currency": "USD"}})
+    );
+}
+
+#[tokio::test]
+async fn usage_query_failure_or_unknown_window_does_not_fail_the_prompt() {
+    for message in ["state-error", "no-window"] {
+        let mut client = Client::start();
+        let (session, _) = client.new_session().await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({
+                    "sessionId": session, "prompt": [{"type": "text", "text": message}],
+                }),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn", "{response}");
+        assert!(!update_kinds(&frames).contains(&"usage_update".to_string()));
+    }
+}
+
+#[tokio::test]
+async fn usage_is_published_before_a_failed_prompt_response() {
+    let mut client = Client::start();
+    let (session, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/prompt",
+            json!({
+                "sessionId": session, "prompt": [{"type": "text", "text": "fail"}],
+            }),
+        )
+        .await;
+    assert_eq!(response["error"]["message"], "provider failed");
+    assert_eq!(usage_after_content(&frames)["used"], 1234);
 }
 
 #[tokio::test]
@@ -550,8 +639,9 @@ async fn cancel_resolves_prompt_as_cancelled() {
             json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}}),
         )
         .await;
-    let (_, response) = client.until_response(id).await;
+    let (frames, response) = client.until_response(id).await;
     assert_eq!(response["result"]["stopReason"], "cancelled");
+    assert_eq!(usage_after_content(&frames)["used"], 1234);
 }
 
 async fn permission_round_trip(answer: Value) -> String {
