@@ -539,7 +539,7 @@ impl Session {
             }
             before = cursor;
         }
-        self.apply_saved_config(&saved_config).await?;
+        let latest_state = self.apply_saved_config(&saved_config).await?;
         // Use a separate translator: replay must not leave a historical stop
         // reason or partial text in the live prompt's streaming state.
         let mut translator = self.translator.lock().unwrap().clone_for_replay();
@@ -556,7 +556,7 @@ impl Session {
             }
         }
         self.publish_title(None).await;
-        self.publish_usage().await;
+        self.publish_usage_from(latest_state).await;
         Ok(())
     }
 
@@ -568,11 +568,17 @@ impl Session {
         if !page["messages"].is_array() {
             return Err("invalid native history response".to_string());
         }
-        self.apply_saved_config(&page["savedConfig"]).await
+        self.apply_saved_config(&page["savedConfig"])
+            .await
+            .map(|_| ())
     }
 
-    async fn apply_saved_config(&self, saved_config: &Value) -> Result<(), String> {
+    /// Apply the persisted model and thinking selections. Returns the state
+    /// fetched on the way so a caller can reuse it instead of querying again.
+    async fn apply_saved_config(&self, saved_config: &Value) -> Result<Option<Value>, String> {
+        let mut latest_state: Option<Value> = None;
         if saved_config.is_object() {
+            let mut changed = false;
             let state = self.command(json!({"type": "get_state"})).await?;
             if let (Some(provider), Some(model)) = (
                 saved_config["provider"].as_str(),
@@ -586,6 +592,7 @@ impl Session {
                     )
                     .await?;
                     self.command(json!({"type": "set_model", "provider": provider, "modelId": model, "persist": false})).await?;
+                    changed = true;
                 }
             }
             if let Some(level) = saved_config["thinkingLevel"].as_str() {
@@ -593,9 +600,36 @@ impl Session {
                     json!({"type": "set_thinking_level", "level": level, "persist": false}),
                 )
                 .await?;
+                changed = true;
+            }
+            // A state fetched before a selection changed no longer describes
+            // the model, so only an unchanged state is safe to reuse.
+            if !changed {
+                latest_state = Some(state);
             }
         }
-        Ok(())
+        Ok(latest_state)
+    }
+
+    /// Publish usage from an already-fetched state when available, otherwise
+    /// query the child once. Avoids a second get_state on session/load.
+    async fn publish_usage_from(&self, state: Option<Value>) -> bool {
+        let owned;
+        let state = match state {
+            Some(state) => state,
+            None => {
+                owned = self.command(json!({"type": "get_state"})).await;
+                let Ok(state) = owned else {
+                    return false;
+                };
+                state
+            }
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// Publish an available context snapshot without making usage-query failures
