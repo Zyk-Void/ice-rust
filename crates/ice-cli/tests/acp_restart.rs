@@ -124,15 +124,25 @@ fn replay_text(frames: &[Value], kind: &str) -> String {
 
 #[tokio::test]
 async fn acp_load_after_restart_preserves_transcript_model_and_provider_context() {
-    restart_roundtrip(false).await;
+    restart_roundtrip(false, "session/load").await;
 }
 
 #[tokio::test]
 async fn acp_load_legacy_session_recovers_model_from_assistant() {
-    restart_roundtrip(true).await;
+    restart_roundtrip(true, "session/load").await;
 }
 
-async fn restart_roundtrip(legacy: bool) {
+#[tokio::test]
+async fn acp_resume_after_restart_preserves_config_and_context_without_replay() {
+    restart_roundtrip(false, "session/resume").await;
+}
+
+#[tokio::test]
+async fn acp_resume_legacy_session_recovers_model_without_replay() {
+    restart_roundtrip(true, "session/resume").await;
+}
+
+async fn restart_roundtrip(legacy: bool, method: &str) {
     let temp = tempfile::tempdir().unwrap();
     let agent = temp.path().join("agent");
     std::fs::create_dir(&agent).unwrap();
@@ -244,7 +254,7 @@ async fn restart_roundtrip(legacy: bool) {
         .await;
     let (frames, loaded) = second
         .call(
-            "session/load",
+            method,
             json!({"sessionId": id, "cwd": temp.path(), "mcpServers": []}),
         )
         .await;
@@ -257,14 +267,24 @@ async fn restart_roundtrip(legacy: bool) {
             ),
         "{frames:?}"
     );
-    assert_eq!(
-        replay_text(&frames, "user_message_chunk"),
-        "remember restart-marker-721"
-    );
-    assert_eq!(
-        replay_text(&frames, "agent_message_chunk"),
-        "persisted answer"
-    );
+    if method == "session/resume" {
+        assert!(loaded.get("sessionId").is_none());
+        assert!(replay_text(&frames, "user_message_chunk").is_empty());
+        assert!(replay_text(&frames, "agent_message_chunk").is_empty());
+        assert!(frames.iter().all(|frame| !matches!(
+            frame["params"]["update"]["sessionUpdate"].as_str(),
+            Some("agent_thought_chunk" | "tool_call" | "tool_call_update")
+        )));
+    } else {
+        assert_eq!(
+            replay_text(&frames, "user_message_chunk"),
+            "remember restart-marker-721"
+        );
+        assert_eq!(
+            replay_text(&frames, "agent_message_chunk"),
+            "persisted answer"
+        );
+    }
     let model = loaded["configOptions"]
         .as_array()
         .unwrap()
