@@ -7,6 +7,191 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, DuplexStream, Lines};
 
+fn list_fixture(
+    dir: &Path,
+    cwd: &Path,
+    index: usize,
+    modified_ms: u64,
+    body: &str,
+) -> (String, PathBuf) {
+    let id = uuid::Uuid::from_u128(index as u128 + 1).to_string();
+    std::fs::create_dir_all(dir).unwrap();
+    let path = dir.join(format!("{index:04}.jsonl"));
+    let header = json!({"kind": "header", "version": 4, "id": id, "createdAt": 0, "cwd": cwd});
+    std::fs::write(&path, format!("{header}\n{body}")).unwrap();
+    let time = std::time::UNIX_EPOCH + std::time::Duration::from_millis(modified_ms);
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(std::fs::FileTimes::new().set_modified(time))
+        .unwrap();
+    (id, path)
+}
+
+#[tokio::test]
+async fn list_filters_shared_directories_and_reads_live_names_without_writes() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let shared = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        shared.path(),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    saved.storage().set_name(Some("First name")).await.unwrap();
+    saved
+        .storage()
+        .set_name(Some("Current name"))
+        .await
+        .unwrap();
+    let foreign = list_fixture(shared.path(), other.path(), 500, 1_700_000_000_000, "");
+    let meta = crate::session::discover_session_metadata_in_dir(
+        temp.path().to_str().unwrap(),
+        shared.path(),
+    )
+    .await
+    .unwrap()
+    .sessions
+    .into_iter()
+    .find(|m| m.id == id)
+    .unwrap();
+    let before = std::fs::read(&meta.path).unwrap();
+    let mut client = Client::with_session_dir(Some(shared.path().to_path_buf()));
+    let (_, response) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    let sessions = response["result"]["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(), 1, "{response}");
+    assert_eq!(sessions[0]["sessionId"], id);
+    assert_eq!(sessions[0]["title"], "Current name");
+    assert_eq!(
+        sessions[0]["cwd"],
+        json!(temp.path().canonicalize().unwrap())
+    );
+    assert!(sessions[0]["updatedAt"].as_str().unwrap().ends_with('Z'));
+    assert!(response["result"].get("nextCursor").is_none());
+    assert_eq!(std::fs::read(&meta.path).unwrap(), before);
+    assert!(foreign.1.exists());
+    saved.storage().set_name(Some("Still owned")).await.unwrap();
+}
+
+#[tokio::test]
+async fn list_pages_stably_and_binds_cursors_to_the_requested_project() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let mut expected = Vec::new();
+    for index in 0..51 {
+        let modified = if index < 25 {
+            1_700_000_001_000
+        } else {
+            1_700_000_000_000
+        };
+        expected.push(list_fixture(&dir, temp.path(), index, modified, "").0);
+    }
+    let mut client = Client::start();
+    let (_, first) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(first.get("error").is_none(), "{first}");
+    let page = first["result"]["sessions"].as_array().unwrap();
+    assert_eq!(page.len(), 50);
+    assert_eq!(page[0]["updatedAt"], "2023-11-14T22:13:21.000Z");
+    let cursor = first["result"]["nextCursor"].as_str().unwrap();
+    let (_, second) = client
+        .call(
+            "session/list",
+            json!({"cwd": temp.path(), "cursor": cursor}),
+        )
+        .await;
+    let mut actual: Vec<_> = page
+        .iter()
+        .map(|session| session["sessionId"].as_str().unwrap().to_owned())
+        .collect();
+    actual.extend(
+        second["result"]["sessions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|session| session["sessionId"].as_str().unwrap().to_owned()),
+    );
+    assert_eq!(actual, expected);
+    assert!(second["result"].get("nextCursor").is_none());
+    let (_, wrong_project) = client
+        .call(
+            "session/list",
+            json!({"cwd": other.path(), "cursor": cursor}),
+        )
+        .await;
+    assert_eq!(wrong_project["error"]["code"], INVALID_PARAMS);
+    std::fs::remove_file(dir.join("0049.jsonl")).unwrap();
+    let (_, after_delete) = client
+        .call(
+            "session/list",
+            json!({"cwd": temp.path(), "cursor": cursor}),
+        )
+        .await;
+    assert_eq!(
+        after_delete["result"]["sessions"],
+        second["result"]["sessions"]
+    );
+}
+
+#[tokio::test]
+async fn list_rejects_invalid_scope_and_cursor_without_creating_sessions() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut client = Client::start();
+    for params in [
+        json!({}),
+        json!({"cwd": "."}),
+        json!({"cwd": temp.path().join("missing")}),
+        json!({"cwd": temp.path(), "cursor": 3}),
+        json!({"cwd": temp.path(), "cursor": "not-a-cursor"}),
+    ] {
+        let (_, response) = client.call("session/list", params).await;
+        assert_eq!(response["error"]["code"], INVALID_PARAMS, "{response}");
+    }
+    let (_, empty) = client
+        .call("session/list", json!({"cwd": temp.path(), "cursor": null}))
+        .await;
+    assert_eq!(empty["result"], json!({"sessions": []}));
+    assert!(!crate::session::default_session_dir(temp.path()).exists());
+}
+
+#[tokio::test]
+async fn list_names_scan_the_complete_snapshot_and_ignore_partial_tail_facts() {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let filler =
+        json!({"kind": "lane", "seq": 1, "lane": "padding".repeat(40_000), "leafId": null});
+    let mut tail = filler.clone();
+    tail["seq"] = json!(3);
+    let body = format!("{filler}\n{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":2,\"name\":\"Middle name\"}}\n{tail}\n{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":4,\"name\":\"Partial name\"}}");
+    let (id, path) = list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, &body);
+    let before = std::fs::read(&path).unwrap();
+    let mut client = Client::start();
+    let (_, response) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert_eq!(
+        response["result"]["sessions"][0]["sessionId"], id,
+        "{response}"
+    );
+    assert_eq!(response["result"]["sessions"][0]["title"], "Middle name");
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    let clear = "{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":1,\"name\":\"Old\"}\n{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":2,\"name\":null}\n";
+    list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, clear);
+    let (_, cleared) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(cleared["result"]["sessions"][0].get("title").is_none());
+}
+
 #[tokio::test]
 async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     let temp = tempfile::tempdir().unwrap();
@@ -368,9 +553,22 @@ impl Client {
     }
 
     fn with_spawner(spawner: Spawner) -> Self {
+        Self::with_spawner_and_session_dir(spawner, None)
+    }
+
+    fn with_session_dir(session_dir: Option<PathBuf>) -> Self {
+        Self::with_spawner_and_session_dir(fake_spawner(), session_dir)
+    }
+
+    fn with_spawner_and_session_dir(spawner: Spawner, session_dir: Option<PathBuf>) -> Self {
         let (input, server_in) = tokio::io::duplex(1 << 16);
         let (server_out, output) = tokio::io::duplex(1 << 16);
-        tokio::spawn(serve(BufReader::new(server_in), server_out, spawner, None));
+        tokio::spawn(serve(
+            BufReader::new(server_in),
+            server_out,
+            spawner,
+            session_dir,
+        ));
         Self {
             input,
             output: BufReader::new(output).lines(),
@@ -707,6 +905,10 @@ async fn initialize_advertises_v1_without_unimplemented_capabilities() {
     assert_eq!(result["protocolVersion"], 1);
     assert_eq!(result["agentInfo"]["name"], "icers");
     assert_eq!(result["agentCapabilities"]["loadSession"], true);
+    assert_eq!(
+        result["agentCapabilities"]["sessionCapabilities"]["list"],
+        json!({})
+    );
     assert_eq!(
         result["agentCapabilities"]["promptCapabilities"]["image"],
         true

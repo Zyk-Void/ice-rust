@@ -8,6 +8,7 @@
 //!
 //! Behaviour reference: upstream `rpi-acp` (`pi-rust/rpi-package`, MIT).
 
+mod list;
 mod session;
 mod translate;
 
@@ -336,6 +337,7 @@ impl Server {
             "authenticate" => Ok(json!({})),
             "session/new" => self.new_session(params).await,
             "session/load" => self.load_session(params).await,
+            "session/list" => list::sessions(&params, self.session_dir.as_deref()).await,
             "session/prompt" => {
                 let session = self.session(&params)?;
                 let blocks = params["prompt"]
@@ -537,6 +539,7 @@ fn initialize_result() -> Value {
         "protocolVersion": PROTOCOL_VERSION,
         "agentCapabilities": {
             "loadSession": true,
+            "sessionCapabilities": {"list": {}},
             "promptCapabilities": {"image": true, "audio": false, "embeddedContext": true},
             "mcpCapabilities": {"http": false, "sse": false},
         },
