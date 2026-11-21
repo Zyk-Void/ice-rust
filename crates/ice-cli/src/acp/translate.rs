@@ -491,6 +491,155 @@ pub(crate) fn permission_answer(
     }
 }
 
+/// A native question represented by an ACP form and its native answer mapping.
+pub(crate) struct QuestionForm {
+    pub(crate) message: String,
+    pub(crate) requested_schema: Value,
+    prompt: crate::ask_user::AskUserPrompt,
+}
+
+pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
+    let ui = &frame["ui"];
+    if ui["purpose"].as_str() != Some("question") {
+        return None;
+    }
+    let prompt = crate::ask_user::parse_ask_user_prompt(&ice_extensions::UiDialogRequest {
+        request_id: frame["requestId"].as_str().unwrap_or_default().to_string(),
+        tool_call_id: frame["toolCallId"].as_str().map(str::to_string),
+        ui: ui.clone(),
+        raw: Value::Null,
+    });
+    let input = prompt.kind == "input" || prompt.options.is_empty();
+    let multiple = prompt.allow_multiple && prompt.kind != "confirm";
+    let freeform = !input && prompt.allow_freeform && prompt.kind != "confirm";
+    let mut message = prompt.question.clone();
+    if let Some(context) = &prompt.context {
+        if !message.is_empty() {
+            message.push_str("\n\n");
+        }
+        message.push_str(context);
+    }
+    if message.is_empty() {
+        message = prompt
+            .header
+            .clone()
+            .unwrap_or_else(|| "Please answer the question.".to_string());
+    }
+    let choices: Vec<Value> = prompt
+        .options
+        .iter()
+        .map(|(title, description)| {
+            let mut choice = json!({"const": title, "title": title});
+            if let Some(description) = description {
+                choice["description"] = json!(description);
+            }
+            choice
+        })
+        .collect();
+    let mut property = if input {
+        json!({"type": "string"})
+    } else if multiple {
+        json!({"type": "array", "items": {"anyOf": choices}})
+    } else {
+        json!({"type": "string", "oneOf": choices})
+    };
+    property["title"] = json!(prompt.header.as_deref().unwrap_or("Answer"));
+    let description = if input {
+        match &prompt.suggest {
+            Some(suggest) => format!("{message}\n\n{suggest}"),
+            None => message.clone(),
+        }
+    } else {
+        message.clone()
+    };
+    property["description"] = json!(description);
+    let mut requested_schema = json!({
+        "type": "object",
+        "properties": {"answer": property},
+    });
+    if let Some(header) = &prompt.header {
+        requested_schema["title"] = json!(header);
+    }
+    if freeform {
+        // T3 folds optional answer + answer__other into one single-choice form.
+        requested_schema["properties"]["answer__other"] = json!({
+            "type": "string",
+            "title": "Other (type your own)",
+            "description": prompt.suggest.as_deref().unwrap_or("Type another answer."),
+        });
+    } else {
+        requested_schema["required"] = json!(["answer"]);
+    }
+    Some(QuestionForm {
+        message,
+        requested_schema,
+        prompt,
+    })
+}
+
+impl QuestionForm {
+    pub(crate) fn answer(&self, request_id: &str, response: Result<Value, String>) -> Value {
+        let answer = response.ok().and_then(|response| {
+            // T3's legacy session/elicitation nests the action; modern clients use a flat result.
+            let response = match response.get("action") {
+                Some(action) if action.is_object() => action,
+                _ => &response,
+            };
+            if response["action"].as_str() != Some("accept") {
+                return None;
+            }
+            self.answer_content(response["content"].as_object()?)
+        });
+        match answer {
+            Some(answer) => json!({
+                "type": "ui_dialog_response",
+                "requestId": request_id,
+                "answer": answer,
+            }),
+            None => {
+                json!({"type": "ui_dialog_response", "requestId": request_id, "cancelled": true})
+            }
+        }
+    }
+
+    fn answer_content(&self, content: &serde_json::Map<String, Value>) -> Option<Value> {
+        if self.prompt.kind == "input" || self.prompt.options.is_empty() {
+            return Some(question_text_answer(content.get("answer")?.as_str()?));
+        }
+        if self.prompt.allow_freeform && self.prompt.kind != "confirm" {
+            if let Some(other) = content.get("answer__other") {
+                let other = other.as_str()?;
+                if !other.trim().is_empty() {
+                    return Some(question_text_answer(other));
+                }
+            }
+        }
+        let selected = content.get("answer")?;
+        let values = if self.prompt.allow_multiple && self.prompt.kind != "confirm" {
+            selected
+                .as_array()?
+                .iter()
+                .map(Value::as_str)
+                .collect::<Option<Vec<_>>>()?
+        } else {
+            vec![selected.as_str()?]
+        };
+        if !values.iter().all(|value| {
+            self.prompt
+                .options
+                .iter()
+                .any(|(title, _)| title.as_str() == *value)
+        }) {
+            return None;
+        }
+        Some(json!({"values": values, "kind": "selector"}))
+    }
+}
+
+fn question_text_answer(text: &str) -> Value {
+    json!({"values": [text], "value": text, "text": text, "kind": "input"})
+}
+
 /// Preserve inline images separately from the flattened text/editor context.
 /// Audio and URL-only images are not supported.
 pub(crate) fn prompt_content(
@@ -718,6 +867,218 @@ mod tests {
         ] {
             assert_eq!(
                 permission_answer("r", &options, response)["cancelled"],
+                true
+            );
+        }
+    }
+
+    fn ask_form(ui: Value) -> QuestionForm {
+        question_form(&json!({"requestId": "question-1", "ui": ui})).unwrap()
+    }
+
+    #[test]
+    fn question_form_preserves_choice_labels_and_context() {
+        let form = ask_form(json!({
+            "purpose": "question", "header": "Database", "question": "Which database?",
+            "context": "Choose for the service.",
+            "options": [{"label": " Postgres ", "description": "Recommended"}, "SQLite"],
+        }));
+        assert_eq!(form.message, "Which database?\n\nChoose for the service.");
+        assert_eq!(form.requested_schema["title"], "Database");
+        let answer = &form.requested_schema["properties"]["answer"];
+        assert_eq!(answer["title"], "Database");
+        assert_eq!(answer["description"], form.message);
+        assert_eq!(
+            answer["oneOf"],
+            json!([
+                {"const": "Postgres", "title": "Postgres", "description": "Recommended"},
+                {"const": "SQLite", "title": "SQLite"},
+            ])
+        );
+        assert_eq!(form.requested_schema["required"], json!(["answer"]));
+        for response in [
+            json!({"action": "accept", "content": {"answer": "Postgres"}}),
+            json!({"action": {"action": "accept", "content": {"answer": "Postgres"}}}),
+        ] {
+            assert_eq!(
+                form.answer("r1", Ok(response)),
+                json!({
+                    "type": "ui_dialog_response", "requestId": "r1",
+                    "answer": {"values": ["Postgres"], "kind": "selector"},
+                })
+            );
+        }
+    }
+
+    #[test]
+    fn question_form_multi_select_uses_titled_array_items() {
+        let form = ask_form(json!({
+            "purpose": "question", "allowMultiple": true,
+            "questions": [
+                {"question": "Choose databases.", "options": ["Postgres", "SQLite"]},
+                {"question": "Ignored second question.", "options": ["Other"]},
+            ],
+        }));
+        let answer = &form.requested_schema["properties"]["answer"];
+        assert_eq!(form.message, "Choose databases.");
+        assert_eq!(answer["type"], "array");
+        assert!(answer["items"].get("type").is_none());
+        assert_eq!(
+            answer["items"]["anyOf"],
+            json!([
+                {"const": "Postgres", "title": "Postgres"},
+                {"const": "SQLite", "title": "SQLite"},
+            ])
+        );
+        assert_eq!(
+            form.answer(
+                "r2",
+                Ok(json!({
+                    "action": {"action": "accept", "content": {"answer": ["SQLite", "Postgres"]}},
+                }))
+            )["answer"],
+            json!({"values": ["SQLite", "Postgres"], "kind": "selector"})
+        );
+    }
+
+    #[test]
+    fn question_form_freeform_companion_takes_precedence() {
+        for multiple in [false, true] {
+            let form = ask_form(json!({
+                "purpose": "question", "question": "Choose databases.",
+                "options": ["Postgres", "SQLite"],
+                "allowMultiple": multiple, "allowFreeform": true,
+            }));
+            assert!(form.requested_schema.get("required").is_none());
+            assert_eq!(
+                form.requested_schema["properties"]["answer__other"]["type"],
+                "string"
+            );
+            let selected = if multiple {
+                json!(["SQLite"])
+            } else {
+                json!("SQLite")
+            };
+            for mut content in [json!({}), json!({"answer": selected.clone()})] {
+                content["answer__other"] = json!("  custom database  ");
+                assert_eq!(
+                    form.answer("r3", Ok(json!({"action": "accept", "content": content})))
+                        ["answer"],
+                    json!({
+                        "values": ["  custom database  "], "value": "  custom database  ",
+                        "text": "  custom database  ", "kind": "input",
+                    })
+                );
+            }
+            assert_eq!(
+                form.answer(
+                    "r3",
+                    Ok(json!({
+                        "action": "accept", "content": {"answer": selected, "answer__other": " "},
+                    }))
+                )["answer"],
+                json!({"values": ["SQLite"], "kind": "selector"})
+            );
+        }
+    }
+
+    #[test]
+    fn question_form_input_preserves_the_tui_answer_envelope() {
+        for ui in [
+            json!({"purpose": "question", "question": "Name?", "options": []}),
+            json!({
+                "purpose": "question", "question": "Name?", "kind": "input",
+                "options": ["Ignored choice"], "placeholder": "Type a name",
+            }),
+        ] {
+            let form = ask_form(ui);
+            let property = &form.requested_schema["properties"]["answer"];
+            assert_eq!(property["type"], "string");
+            assert!(property.get("oneOf").is_none());
+            if form.prompt.suggest.is_some() {
+                assert_eq!(property["description"], "Name?\n\nType a name");
+            }
+            for text in ["chosen name", ""] {
+                assert_eq!(
+                    form.answer(
+                        "r4",
+                        Ok(json!({"action": "accept", "content": {"answer": text}}))
+                    )["answer"],
+                    json!({"values": [text], "value": text, "text": text, "kind": "input"})
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn question_form_confirm_is_a_yes_no_single_selector() {
+        let form = ask_form(json!({
+            "purpose": "question", "kind": "confirm", "summary": "Continue?",
+            "allowMultiple": true, "allowFreeform": true,
+        }));
+        assert_eq!(form.message, "Continue?");
+        assert_eq!(
+            form.requested_schema["properties"]["answer"]["type"],
+            "string"
+        );
+        assert_eq!(
+            form.requested_schema["properties"]["answer"]["oneOf"],
+            json!([{"const": "Yes", "title": "Yes"}, {"const": "No", "title": "No"}])
+        );
+        assert!(form.requested_schema["properties"]
+            .get("answer__other")
+            .is_none());
+        assert_eq!(
+            form.answer(
+                "r5",
+                Ok(json!({
+                    "action": {"action": "accept", "content": {"answer": "No"}},
+                }))
+            )["answer"],
+            json!({"values": ["No"], "kind": "selector"})
+        );
+    }
+
+    #[test]
+    fn question_form_answers_fail_closed() {
+        let form = ask_form(json!({
+            "purpose": "question", "question": "Choose.", "options": ["Known"],
+            "allowFreeform": true,
+        }));
+        for response in [
+            Ok(json!({"action": {"action": "decline"}})),
+            Ok(json!({"action": {"action": "cancel"}})),
+            Ok(json!({"action": "decline"})),
+            Ok(json!({"action": "cancel"})),
+            Ok(json!({"action": "unknown", "content": {"answer": "Known"}})),
+            Ok(json!({"action": "accept", "content": {"answer": "Unknown"}})),
+            Ok(json!({"action": "accept", "content": {"answer": ["Known"]}})),
+            Ok(json!({"action": "accept", "content": {"answer": "Known", "answer__other": true}})),
+            Ok(json!({"action": "accept", "content": {}})),
+            Ok(json!({"action": "accept", "content": null})),
+            Err("client gone".to_string()),
+        ] {
+            assert_eq!(
+                form.answer("r6", response),
+                json!({"type": "ui_dialog_response", "requestId": "r6", "cancelled": true})
+            );
+        }
+        for ui in [json!({"purpose": "permission"}), json!({})] {
+            assert!(question_form(&json!({"requestId": "r6", "ui": ui})).is_none());
+        }
+        let multi = ask_form(json!({
+            "purpose": "question", "options": ["Known"], "allowMultiple": true,
+        }));
+        for answer in [
+            json!(["Known", "Unknown"]),
+            json!(["Known", false]),
+            json!("Known"),
+        ] {
+            assert_eq!(
+                multi.answer(
+                    "r6",
+                    Ok(json!({"action": "accept", "content": {"answer": answer}}))
+                )["cancelled"],
                 true
             );
         }

@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 use session::{Session, Spawner};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufRead, AsyncWrite, AsyncWriteExt};
 use tokio::sync::oneshot;
@@ -103,6 +103,17 @@ pub(crate) struct Writer {
     pending: Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>,
 }
 
+struct PendingRequest<'a> {
+    writer: &'a Writer,
+    id: u64,
+}
+
+impl Drop for PendingRequest<'_> {
+    fn drop(&mut self) {
+        self.writer.pending.lock().unwrap().remove(&self.id);
+    }
+}
+
 impl Writer {
     fn new(out: Box<dyn AsyncWrite + Send + Unpin>) -> Self {
         Self {
@@ -152,6 +163,7 @@ impl Writer {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
+        let _pending = PendingRequest { writer: self, id };
         self.write(json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}))
             .await;
         rx.await
@@ -185,6 +197,7 @@ impl Writer {
 struct Server {
     writer: Arc<Writer>,
     spawner: Spawner,
+    elicitation_form: AtomicBool,
     sessions: Mutex<HashMap<String, Arc<Session>>>,
     loading: tokio::sync::Mutex<()>,
     session_dir: Option<PathBuf>,
@@ -205,6 +218,7 @@ where
     let server = Arc::new(Server {
         writer: Arc::new(Writer::new(Box::new(output))),
         spawner,
+        elicitation_form: AtomicBool::new(false),
         sessions: Mutex::new(HashMap::new()),
         loading: tokio::sync::Mutex::new(()),
         session_dir,
@@ -306,7 +320,13 @@ impl Server {
 
     async fn handle(&self, method: &str, params: Value) -> Result<Value, (i64, String)> {
         match method {
-            "initialize" => Ok(initialize_result()),
+            "initialize" => {
+                self.elicitation_form.store(
+                    params["clientCapabilities"]["elicitation"]["form"].is_object(),
+                    Ordering::Release,
+                );
+                Ok(initialize_result())
+            }
             "authenticate" => Ok(json!({})),
             "session/new" => self.new_session(params).await,
             "session/load" => self.load_session(params).await,
@@ -398,6 +418,7 @@ impl Server {
             None,
             &self.spawner,
             Arc::clone(&self.writer),
+            self.elicitation_form.load(Ordering::Acquire),
         )
         .await
         .map_err(|e| (INTERNAL_ERROR, e))?;
@@ -465,6 +486,7 @@ impl Server {
             Some(&saved_path),
             &self.spawner,
             Arc::clone(&self.writer),
+            self.elicitation_form.load(Ordering::Acquire),
         )
         .await
         .map_err(|error| {

@@ -21,6 +21,12 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     .unwrap();
     drop(saved);
     let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"protocolVersion": 1, "clientCapabilities": {"elicitation": {"form": {}}}}),
+        )
+        .await;
     let (frames, response) = client
         .call(
             "session/load",
@@ -52,6 +58,22 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
         )
         .await;
     assert_eq!(response["result"]["stopReason"], "end_turn");
+    let (requests, native) = question_in_session(
+        &mut client,
+        &id,
+        json!({"question": "Continue after loading?", "options": ["Yes", "No"]}),
+        accepted_question(json!({"answer": "Yes"})),
+    )
+    .await;
+    assert_eq!(
+        requests.len(),
+        1,
+        "loaded sessions keep the negotiated form capability"
+    );
+    assert_eq!(
+        native["answer"],
+        json!({"values": ["Yes"], "kind": "selector"})
+    );
 }
 
 #[tokio::test]
@@ -133,7 +155,7 @@ fn replay_preserves_images_thoughts_and_tool_results() {
 
 /// A fake child: answers state queries, streams a canned turn for `prompt`,
 /// waits for `abort` when the prompt text is `wait`, and asks a permission
-/// question when it is `ask`.
+/// question when it is `ask`, or a serialized question after `question `.
 async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     async fn emit(out: &mut DuplexStream, value: Value) {
         let mut line = serde_json::to_vec(&value).unwrap();
@@ -144,6 +166,7 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     let mut lines = BufReader::new(stdin).lines();
     let mut waiting = false;
     let mut asked = false;
+    let mut asked_question = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
@@ -214,6 +237,14 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                             "ui": {"purpose": "permission", "kind": "confirm", "summary": "Allow?",
                                 "options": [{"title": "Deny", "permission": "reject_once"}, {"title": "Allow", "permission": "allow_once"}]}})).await;
                     }
+                    question if question.starts_with("question ") => {
+                        asked_question = true;
+                        let ui: Value = serde_json::from_str(&question["question ".len()..]).unwrap();
+                        emit(&mut stdout, json!({"type": "tool_execution_start", "toolCallId": "question-tool",
+                            "toolName": "ask_user", "args": {}})).await;
+                        emit(&mut stdout, json!({"type": "ui_dialog_request", "requestId": "question-1",
+                            "toolCallId": "question-tool", "ui": ui})).await;
+                    }
                     _ => {
                         emit(&mut stdout, json!({"type": "message_start", "message": {"kind": "assistant"}})).await;
                         emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta", "delta": "hel", "message": {"kind": "assistant"}})).await;
@@ -222,6 +253,12 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
                     }
                 }
+            }
+            "ui_dialog_response" if asked_question => {
+                asked_question = false;
+                emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta",
+                    "delta": msg.to_string(), "message": {"kind": "assistant"}})).await;
+                emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
             }
             "ui_dialog_response" if asked => {
                 let answer = msg["answer"]["values"][0].as_str().unwrap_or("cancelled").to_string();
@@ -259,14 +296,13 @@ struct Client {
 
 impl Client {
     fn start() -> Self {
+        Self::with_spawner(fake_spawner())
+    }
+
+    fn with_spawner(spawner: Spawner) -> Self {
         let (input, server_in) = tokio::io::duplex(1 << 16);
         let (server_out, output) = tokio::io::duplex(1 << 16);
-        tokio::spawn(serve(
-            BufReader::new(server_in),
-            server_out,
-            fake_spawner(),
-            None,
-        ));
+        tokio::spawn(serve(BufReader::new(server_in), server_out, spawner, None));
         Self {
             input,
             output: BufReader::new(output).lines(),
@@ -580,6 +616,305 @@ async fn permission_cancel_or_client_error_denies() {
     assert_eq!(cancelled, "cancelled");
     let failed = permission_round_trip(json!("boom")).await;
     assert_eq!(failed, "cancelled");
+}
+
+async fn question_round_trip(ui: Value, capabilities: Value, answer: Value) -> (Vec<Value>, Value) {
+    let mut client = Client::start();
+    let (_, initialized) = client
+        .call(
+            "initialize",
+            json!({"protocolVersion": 1, "clientCapabilities": capabilities}),
+        )
+        .await;
+    assert!(initialized.get("error").is_none(), "{initialized}");
+    let (session, _) = client.new_session().await;
+    question_in_session(&mut client, &session, ui, answer).await
+}
+
+async fn question_in_session(
+    client: &mut Client,
+    session: &str,
+    mut ui: Value,
+    answer: Value,
+) -> (Vec<Value>, Value) {
+    ui["purpose"] = json!("question");
+    let id = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": session,
+                "prompt": [{"type": "text", "text": format!("question {ui}")}]}),
+        )
+        .await;
+    let mut requests = Vec::new();
+    let mut chunks = String::new();
+    loop {
+        let frame = client.next().await;
+        if frame["method"] == "session/elicitation" {
+            assert_eq!(frame["params"]["sessionId"], session);
+            assert_eq!(frame["params"]["toolCallId"], "question-tool");
+            assert_eq!(frame["params"]["mode"], "form");
+            requests.push(frame["params"].clone());
+            let mut reply = json!({"jsonrpc": "2.0", "id": frame["id"]});
+            match &answer {
+                Value::String(error) => reply["error"] = json!({"code": -1, "message": error}),
+                result => reply["result"] = result.clone(),
+            }
+            client.send(reply).await;
+        } else if frame["params"]["update"]["sessionUpdate"] == "agent_message_chunk" {
+            chunks.push_str(
+                frame["params"]["update"]["content"]["text"]
+                    .as_str()
+                    .unwrap(),
+            );
+        } else if frame["id"] == id && frame.get("method").is_none() {
+            assert_eq!(frame["result"]["stopReason"], "end_turn", "{frame}");
+            return (requests, serde_json::from_str(&chunks).unwrap());
+        }
+    }
+}
+
+fn accepted_question(content: Value) -> Value {
+    json!({"action": {"action": "accept", "content": content}})
+}
+
+#[tokio::test]
+async fn question_form_single_choice_round_trips_t3_response() {
+    let (requests, native) = question_round_trip(
+        json!({"question": "Continue?", "header": "Next step", "context": "The build passed.",
+            "options": [{"title": "Yes", "description": "Continue with the work"}, "No"]}),
+        json!({"elicitation": {"form": {}}}),
+        accepted_question(json!({"answer": "Yes"})),
+    )
+    .await;
+    assert_eq!(requests.len(), 1, "a question must issue form elicitation");
+    assert_eq!(requests[0]["requestedSchema"]["type"], "object");
+    assert_eq!(requests[0]["requestedSchema"]["title"], "Next step");
+    assert_eq!(
+        requests[0]["requestedSchema"]["properties"]["answer"]["type"],
+        "string"
+    );
+    let message = requests[0]["message"].as_str().unwrap();
+    assert!(message.contains("Continue?") && message.contains("The build passed."));
+    assert_eq!(
+        native,
+        json!({"type": "ui_dialog_response", "requestId": "question-1",
+        "answer": {"values": ["Yes"], "kind": "selector"}})
+    );
+}
+
+#[tokio::test]
+async fn question_form_multi_choice_round_trips_tui_answer() {
+    let (requests, native) = question_round_trip(
+        json!({"question": "Choose targets", "allowMultiple": true,
+            "options": ["Linux", "Windows", "macOS"]}),
+        json!({"elicitation": {"form": {}}}),
+        accepted_question(json!({"answer": ["Linux", "macOS"]})),
+    )
+    .await;
+    assert_eq!(requests.len(), 1);
+    assert_eq!(
+        requests[0]["requestedSchema"]["properties"]["answer"]["type"],
+        "array"
+    );
+    assert_eq!(
+        native["answer"],
+        json!({"values": ["Linux", "macOS"], "kind": "selector"})
+    );
+}
+
+#[tokio::test]
+async fn question_form_freeform_only_round_trips_tui_answer() {
+    let (requests, native) = question_round_trip(
+        json!({"questions": [{"question": "Name the branch", "kind": "input",
+            "suggest": "Use a feat/ prefix"}]}),
+        json!({"elicitation": {"form": {}}}),
+        accepted_question(json!({"answer": "feat/questions"})),
+    )
+    .await;
+    assert_eq!(requests.len(), 1);
+    assert_eq!(
+        requests[0]["requestedSchema"]["properties"]["answer"]["type"],
+        "string"
+    );
+    let description = requests[0]["requestedSchema"]["properties"]["answer"]["description"]
+        .as_str()
+        .unwrap();
+    assert!(description.contains("Name the branch"));
+    assert!(description.contains("Use a feat/ prefix"));
+    assert_eq!(
+        native["answer"],
+        json!({"values": ["feat/questions"], "value": "feat/questions",
+        "text": "feat/questions", "kind": "input"})
+    );
+}
+
+#[tokio::test]
+async fn question_form_freeform_companion_can_replace_the_selection() {
+    for content in [
+        json!({"answer__other": "Custom target"}),
+        json!({"answer": "Linux", "answer__other": "Custom target"}),
+    ] {
+        let (requests, native) = question_round_trip(
+            json!({"question": "Choose a target", "allowFreeform": true, "options": ["Linux", "Windows"]}),
+            json!({"elicitation": {"form": {}}}),
+            accepted_question(content),
+        )
+        .await;
+        assert_eq!(requests.len(), 1);
+        let schema = &requests[0]["requestedSchema"];
+        assert_eq!(schema["properties"]["answer__other"]["type"], "string");
+        assert!(!schema["required"]
+            .as_array()
+            .is_some_and(|fields| fields.iter().any(|field| field == "answer")));
+        assert_eq!(
+            native["answer"],
+            json!({"values": ["Custom target"], "value": "Custom target",
+            "text": "Custom target", "kind": "input"})
+        );
+    }
+}
+
+#[tokio::test]
+async fn question_form_confirm_round_trips_yes_and_no() {
+    for choice in ["Yes", "No"] {
+        let (requests, native) = question_round_trip(
+            json!({"question": "Continue?", "kind": "confirm"}),
+            json!({"elicitation": {"form": {}}}),
+            accepted_question(json!({"answer": choice})),
+        )
+        .await;
+        assert_eq!(requests.len(), 1);
+        assert_eq!(
+            requests[0]["requestedSchema"]["properties"]["answer"]["type"],
+            "string"
+        );
+        assert_eq!(
+            native["answer"],
+            json!({"values": [choice], "kind": "selector"})
+        );
+    }
+}
+
+#[tokio::test]
+async fn question_form_decline_cancel_error_and_invalid_accept_cancel_the_dialog() {
+    for answer in [
+        json!({"action": {"action": "decline"}}),
+        json!({"action": {"action": "cancel"}}),
+        json!("client failed"),
+        accepted_question(json!({})),
+        accepted_question(json!({"answer": "unoffered choice"})),
+        accepted_question(json!({"answer": ["Yes"]})),
+    ] {
+        let (requests, native) = question_round_trip(
+            json!({"question": "Continue?", "options": ["Yes", "No"]}),
+            json!({"elicitation": {"form": {}}}),
+            answer,
+        )
+        .await;
+        assert_eq!(requests.len(), 1);
+        assert_eq!(
+            native,
+            json!({"type": "ui_dialog_response", "requestId": "question-1", "cancelled": true})
+        );
+    }
+}
+
+#[tokio::test]
+async fn question_form_without_capability_cancels_without_a_request() {
+    for capabilities in [
+        json!({}),
+        json!({"elicitation": {}}),
+        json!({"elicitation": {"form": null}}),
+        json!({"elicitation": {"form": false}}),
+        json!({"elicitation": {"form": true}}),
+    ] {
+        let (requests, native) = question_round_trip(
+            json!({"question": "Continue?", "options": ["Yes", "No"]}),
+            capabilities,
+            accepted_question(json!({"answer": "Yes"})),
+        )
+        .await;
+        assert!(requests.is_empty());
+        assert_eq!(
+            native,
+            json!({"type": "ui_dialog_response", "requestId": "question-1", "cancelled": true})
+        );
+    }
+}
+
+#[tokio::test]
+async fn question_form_child_exit_while_waiting_does_not_hang() {
+    let (exit_tx, exit_rx) = tokio::sync::oneshot::channel::<()>();
+    let exit_rx = Arc::new(std::sync::Mutex::new(Some(exit_rx)));
+    let spawner: Spawner = Arc::new(move |_cwd: &Path, _id: &str, _saved_path: Option<&Path>| {
+        let (child_stdin, fake_in) = tokio::io::duplex(1 << 16);
+        let (fake_out, child_stdout) = tokio::io::duplex(1 << 16);
+        let exit_rx = exit_rx.lock().unwrap().take().unwrap();
+        tokio::spawn(async move {
+            tokio::select! {
+                _ = fake_child(fake_in, fake_out) => {},
+                _ = exit_rx => {},
+            }
+        });
+        Ok(ChildIo {
+            stdin: Box::new(child_stdin),
+            stdout: Box::new(BufReader::new(child_stdout)),
+            process: None,
+        })
+    });
+    let mut client = Client::with_spawner(spawner);
+    client
+        .call(
+            "initialize",
+            json!({"protocolVersion": 1,
+        "clientCapabilities": {"elicitation": {"form": {}}}}),
+        )
+        .await;
+    let (session, _) = client.new_session().await;
+    let ui = json!({"purpose": "question", "question": "Continue?", "options": ["Yes", "No"]});
+    let id = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": session,
+        "prompt": [{"type": "text", "text": format!("question {ui}")}]}),
+        )
+        .await;
+    loop {
+        let frame = client.next().await;
+        if frame["method"] == "session/elicitation" {
+            break;
+        }
+        assert!(
+            frame["id"] != id || frame.get("method").is_some(),
+            "the question must remain pending until the client answers: {frame}"
+        );
+    }
+    exit_tx.send(()).unwrap();
+    let (_, response) = client.until_response(id).await;
+    assert!(response.get("error").is_some(), "{response}");
+    let (_, initialized) = client
+        .call("initialize", json!({"protocolVersion": 1}))
+        .await;
+    assert_eq!(initialized["result"]["protocolVersion"], 1);
+}
+
+#[tokio::test]
+async fn question_request_drop_removes_the_pending_waiter() {
+    let (out, input) = tokio::io::duplex(1 << 16);
+    let writer = Writer::new(Box::new(out));
+    let mut output = BufReader::new(input).lines();
+    let mut request = Box::pin(writer.request("session/elicitation", json!({"sessionId": "test"})));
+    let frame = tokio::select! {
+        result = request.as_mut() => panic!("request completed before a response: {result:?}"),
+        line = output.next_line() => serde_json::from_str::<Value>(&line.unwrap().unwrap()).unwrap(),
+    };
+    assert_eq!(frame["method"], "session/elicitation");
+    assert_eq!(writer.pending.lock().unwrap().len(), 1);
+    drop(request);
+    assert!(
+        writer.pending.lock().unwrap().is_empty(),
+        "closing a session must release its unanswered form request"
+    );
 }
 
 #[tokio::test]

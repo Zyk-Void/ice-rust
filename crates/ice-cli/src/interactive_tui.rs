@@ -29,8 +29,9 @@
 
 // Feature modules share the host state; their helpers stay private to this TUI.
 mod extensions;
+use crate::ask_user::{parse_ask_user_prompt, AskUserPrompt};
+pub(crate) use extensions::ask_user_frame;
 use extensions::*;
-pub(crate) use extensions::{ask_user_frame, parse_ask_user_prompt, AskUserPrompt};
 mod commands;
 pub(crate) use commands::headless_context_report;
 pub(crate) use usage_panel::headless_report as headless_usage_report;

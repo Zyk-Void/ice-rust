@@ -66,6 +66,7 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
 pub(crate) struct Session {
     id: String,
     writer: Arc<Writer>,
+    elicitation_form: bool,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     process: Mutex<Option<tokio::process::Child>>,
     next_id: AtomicU64,
@@ -86,6 +87,7 @@ impl Session {
         saved_path: Option<&Path>,
         spawner: &Spawner,
         writer: Arc<Writer>,
+        elicitation_form: bool,
     ) -> Result<Arc<Self>, String> {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
@@ -93,6 +95,7 @@ impl Session {
             translator: Mutex::new(Translator::new(cwd)),
             id,
             writer,
+            elicitation_form,
             stdin: tokio::sync::Mutex::new(io.stdin),
             process: Mutex::new(io.process),
             next_id: AtomicU64::new(1),
@@ -176,9 +179,8 @@ impl Session {
             .await;
     }
 
-    /// Forward a native permission dialog as `session/request_permission` and
-    /// answer it. Dialogs without an ACP equivalent are cancelled so the run
-    /// never hangs; the asking extension treats that as "declined".
+    /// Forward permission dialogs and negotiated question forms. Unsupported
+    /// dialogs are cancelled so the asking extension never waits indefinitely.
     async fn answer_dialog(self: Arc<Self>, frame: Value) {
         let request_id = frame["requestId"].as_str().unwrap_or_default().to_string();
         let ui = &frame["ui"];
@@ -196,7 +198,28 @@ impl Session {
                 translate::permission_answer(&request_id, &options, outcome)
             }
             None => {
-                json!({"type": "ui_dialog_response", "requestId": request_id, "cancelled": true})
+                if let Some(form) = self
+                    .elicitation_form
+                    .then(|| translate::question_form(&frame))
+                    .flatten()
+                {
+                    let mut params = json!({
+                        "sessionId": self.id,
+                        "mode": "form",
+                        "message": form.message,
+                        "requestedSchema": form.requested_schema,
+                    });
+                    if let Some(tool_call_id) = frame["toolCallId"].as_str() {
+                        params["toolCallId"] = json!(tool_call_id);
+                    }
+                    let outcome = tokio::select! {
+                        outcome = self.writer.request("session/elicitation", params) => outcome,
+                        _ = self.closed.cancelled() => return,
+                    };
+                    form.answer(&request_id, outcome)
+                } else {
+                    json!({"type": "ui_dialog_response", "requestId": request_id, "cancelled": true})
+                }
             }
         };
         let _ = self.send(&response).await;
