@@ -49,6 +49,8 @@ pub enum Command {
         message: String,
     },
     Abort,
+    /// Fork a coherent snapshot without replacing the live source session.
+    ForkSession,
     GetState,
     GetCommands,
     /// Read-only snapshot of the current branch's message entries.
@@ -126,6 +128,7 @@ pub enum Command {
 pub const SUPPORTED_COMMANDS: &[&str] = &[
     "get_state",
     "get_commands",
+    "fork_session",
     "get_messages",
     "get_history",
     "get_stats",

@@ -3275,36 +3275,40 @@ pub(crate) async fn fork_session_storage_with_options(
     {
         return Err("wait for the current run to finish before forking".into());
     }
-    let active = harness.session();
-    let source_path = active
-        .storage()
-        .persistence_path()
+    let source = harness.session().storage();
+    let snapshot = source
+        .fork_snapshot(options)
+        .await
+        .map_err(|error| error.to_string())?;
+    let source_path = snapshot
+        .persistence_path
+        .as_deref()
         .ok_or("current session is not saved to a JSONL file")?;
-    let dir = Path::new(&source_path)
+    let dir = Path::new(source_path)
         .parent()
         .filter(|dir| !dir.as_os_str().is_empty())
-        .ok_or("current session file has no directory")?;
+        .ok_or("current session file has no directory")?
+        .to_string_lossy()
+        .into_owned();
     let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(cwd)));
     let fs: Arc<dyn FileSystem> = env.clone();
-    let source = active.storage();
-    let source_id = source.metadata().id;
+    let source_id = snapshot.metadata.id.clone();
     let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
         fs,
-        sessions_root: dir.to_string_lossy().into_owned(),
+        sessions_root: dir.clone(),
         clock: Arc::new(SystemClock),
         ids: Arc::new(DefaultIdGenerator::new()),
     });
     let fork_storage = repo
-        .fork_from_storage_in_directory(
-            source.as_ref(),
-            &dir.to_string_lossy(),
+        .fork_snapshot_in_directory(
+            snapshot,
+            &dir,
             &ice_harness::session::jsonl::JsonlSessionCreateOptions {
                 id: None,
                 parent_session_id: Some(source_id),
                 cwd: cwd.to_string(),
                 metadata: None,
             },
-            options,
         )
         .await
         .map_err(|e| e.to_string())?;

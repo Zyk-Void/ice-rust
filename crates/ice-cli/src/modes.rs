@@ -955,6 +955,34 @@ where
                 Ok(serde_json::json!({"commands": commands}))
             }
             "get_messages" => rpc_get_messages(&lane, harness, &msg).await,
+            "fork_session" if run_active.load(std::sync::atomic::Ordering::Acquire) => {
+                Err("wait for the current run to finish before forking".to_string())
+            }
+            "fork_session" => {
+                match std::env::current_dir() {
+                    Ok(cwd) => {
+                        match crate::session::fork_session_storage(harness, &cwd.to_string_lossy())
+                            .await
+                        {
+                            Ok(fork) => {
+                                let storage = fork.storage();
+                                let id = storage.metadata().id;
+                                let path = storage.persistence_path();
+                                // Release the new file's writer lock before the ACP
+                                // bridge starts the child that will own the fork.
+                                drop(storage);
+                                drop(fork);
+                                path.map(|path| serde_json::json!({"sessionId": id, "path": path}))
+                                    .ok_or_else(|| {
+                                        "fork did not create a saved session".to_string()
+                                    })
+                            }
+                            Err(error) => Err(error),
+                        }
+                    }
+                    Err(error) => Err(format!("cannot resolve current directory: {error}")),
+                }
+            }
             "get_history" => rpc_get_history(&lane, harness, &msg).await,
             "get_stats" => rpc_get_stats(&lane, harness).await,
             "get_queue" => rpc_get_queue(&lane, harness, &msg).await,

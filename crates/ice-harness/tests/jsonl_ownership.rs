@@ -157,6 +157,94 @@ async fn live_owned_source_can_fork_and_reopen_without_reclaiming_source() {
 }
 
 #[tokio::test]
+async fn coherent_fork_snapshot_is_unchanged_by_later_source_mutations() {
+    use ice_harness::session::jsonl::{
+        JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
+    };
+    use ice_harness::session::types::{ProvisionedEntry, ProvisionedKind};
+    let temp = tempfile::tempdir().unwrap();
+    let source = create(temp.path()).await;
+    let entry = |id: &str| ProvisionedEntry {
+        id: id.to_string(),
+        kind: ProvisionedKind::Message {
+            message: ice_agent::AgentMessage::User(ice_ai::types::UserMessage::new(id, 1)),
+            terminate: None,
+        },
+    };
+    source.append_entry(entry("before"), "main").await.unwrap();
+    source.set_name(Some("snapshot name")).await.unwrap();
+    source
+        .set_label("before", Some("snapshot label"))
+        .await
+        .unwrap();
+    let snapshot = source.fork_snapshot(&Default::default()).await.unwrap();
+    assert_eq!(snapshot.metadata.id, "owned");
+    assert_eq!(
+        snapshot.persistence_path.as_deref(),
+        Some(source.jsonl_metadata().path.as_str())
+    );
+
+    source.append_entry(entry("after"), "main").await.unwrap();
+    source.set_name(Some("later name")).await.unwrap();
+    source
+        .set_label("before", Some("later label"))
+        .await
+        .unwrap();
+    let source_bytes = std::fs::read(temp.path().join("session.jsonl")).unwrap();
+    let repo = JsonlSessionRepo::with_env_cwd(JsonlSessionRepoOptions {
+        fs: fs(temp.path()),
+        sessions_root: temp.path().to_string_lossy().into_owned(),
+        clock: Arc::new(FakeClock::new()),
+        ids: Arc::new(CounterIdGenerator::new()),
+    });
+    let fork = repo
+        .fork_snapshot_in_directory(
+            snapshot,
+            &temp.path().to_string_lossy(),
+            &JsonlSessionCreateOptions {
+                id: Some("snapshot-fork".into()),
+                parent_session_id: None,
+                cwd: temp.path().to_string_lossy().into_owned(),
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        fork.get_name().await.unwrap().as_deref(),
+        Some("snapshot name")
+    );
+    assert_eq!(
+        fork.get_label("before").await.unwrap().as_deref(),
+        Some("snapshot label")
+    );
+    assert!(fork.get_entry("before").await.unwrap().is_some());
+    assert!(fork.get_entry("after").await.unwrap().is_none());
+    let lanes = fork.get_lanes().await.unwrap();
+    assert_eq!(
+        lanes
+            .iter()
+            .find(|pointer| pointer.lane == "main")
+            .unwrap()
+            .leaf_id
+            .as_deref(),
+        Some("before")
+    );
+    assert_eq!(
+        fork.jsonl_metadata().parent_session_id.as_deref(),
+        Some("owned")
+    );
+    assert_eq!(
+        std::fs::read(temp.path().join("session.jsonl")).unwrap(),
+        source_bytes
+    );
+    assert!(
+        load(temp.path()).await.is_err(),
+        "the live source retains its lock"
+    );
+}
+
+#[tokio::test]
 async fn discovery_isolates_unreadable_headers_but_reports_root_failure() {
     use ice_harness::session::jsonl::{
         JsonlSessionCreateOptions, JsonlSessionRepo, JsonlSessionRepoOptions,
