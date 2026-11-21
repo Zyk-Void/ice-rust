@@ -936,13 +936,25 @@ async fn compaction_failure_and_child_exit_always_close_the_progress_row() {
                 json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
             )
             .await;
-        assert_eq!(response["error"]["message"], error, "{response}");
+        let reported_error = response["error"]["message"].as_str().unwrap();
+        if prompt == "/compact exit" {
+            // EOF can win the command-response race after close support adds
+            // cancellation to command(). Either diagnosis must close the row.
+            assert!(
+                reported_error == error
+                    || reported_error == "icers session is closed"
+                    || reported_error == "icers process exited",
+                "{response}"
+            );
+        } else {
+            assert_eq!(reported_error, error, "{response}");
+        }
         let updates = compaction_updates(&frames);
         assert_eq!(updates.len(), 2, "{frames:?}");
         assert_eq!(updates[0]["status"], "in_progress");
         assert_eq!(updates[1]["status"], "failed");
         assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
-        assert_eq!(updates[1]["error"], error);
+        assert_eq!(updates[1]["error"], reported_error);
     }
 }
 
@@ -1750,9 +1762,10 @@ async fn question_form_child_exit_while_waiting_does_not_hang() {
         let (child_stdin, fake_in) = tokio::io::duplex(1 << 16);
         let (fake_out, child_stdout) = tokio::io::duplex(1 << 16);
         let exit_rx = exit_rx.lock().unwrap().take().unwrap();
+        let cwd = _cwd.to_path_buf();
         tokio::spawn(async move {
             tokio::select! {
-                _ = fake_child(fake_in, fake_out) => {},
+                _ = fake_child(fake_in, fake_out, cwd) => {},
                 _ = exit_rx => {},
             }
         });
