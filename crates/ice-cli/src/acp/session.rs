@@ -437,8 +437,15 @@ impl Session {
             .and_then(|settled| settled["summary"].as_str())
             .filter(|text| !text.is_empty());
         if let Some(id) = compaction_id {
+            // ACP has no "declined" status. Reporting a declined compaction as
+            // completed made clients announce "Context compacted" when nothing
+            // changed, so it closes as failed with the native reason instead.
+            let declined = settled
+                .as_ref()
+                .is_ok_and(|settled| settled["outcome"] == "declined");
             let status = match &result {
                 Ok("cancelled") => "cancelled",
+                Ok(_) if declined => "failed",
                 Ok(_) => "completed",
                 Err(_) => "failed",
             };
@@ -450,6 +457,8 @@ impl Session {
             }
             if let Err(error) = &result {
                 update["error"] = json!(error);
+            } else if declined {
+                update["error"] = json!(summary.unwrap_or("Nothing to compact yet."));
             }
             self.notify_update(update).await;
         } else if let Some(summary) = summary {

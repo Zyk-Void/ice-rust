@@ -1022,9 +1022,14 @@ fn compaction_updates(frames: &[Value]) -> Vec<&Value> {
 async fn compaction_reports_started_and_completed_before_prompt_response() {
     let (mut client, id) = compaction_client(json!({})).await;
     let mut previous_id = None;
-    for (prompt, summary) in [
-        ("/compact focus on tests", "Conversation compacted."),
-        ("  /compact decline  ", "Nothing to compact yet."),
+    for (prompt, summary, status) in [
+        (
+            "/compact focus on tests",
+            "Conversation compacted.",
+            "completed",
+        ),
+        // A declined compaction changed nothing and must not read as done.
+        ("  /compact decline  ", "Nothing to compact yet.", "failed"),
     ] {
         let (frames, response) = client
             .call(
@@ -1036,7 +1041,12 @@ async fn compaction_reports_started_and_completed_before_prompt_response() {
         let updates = compaction_updates(&frames);
         assert_eq!(updates.len(), 2, "{frames:?}");
         assert_eq!(updates[0]["status"], "in_progress");
-        assert_eq!(updates[1]["status"], "completed");
+        assert_eq!(updates[1]["status"], status);
+        if status == "failed" {
+            assert_eq!(updates[1]["error"], summary);
+        } else {
+            assert!(updates[1].get("error").is_none(), "{:?}", updates[1]);
+        }
         assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
         let compact_id = updates[0]["compactionId"].as_str().unwrap();
         assert!(uuid::Uuid::parse_str(compact_id).is_ok());
