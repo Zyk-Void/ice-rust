@@ -76,7 +76,7 @@ pub(crate) struct Session {
     turn: Mutex<Option<Arc<CancellationToken>>>,
     /// Serializes turn transitions with delivery of an abort to the child.
     turn_gate: tokio::sync::Mutex<()>,
-    /// Cancelled when the child's stdout closes (exit, crash or shutdown).
+    /// Cancelled when shutdown starts or the child's stdout closes.
     closed: CancellationToken,
 }
 
@@ -258,6 +258,9 @@ impl Session {
 
     /// Send a native command and wait for its `response` frame.
     pub(crate) async fn command(&self, mut frame: Value) -> Result<Value, String> {
+        if self.closed.is_cancelled() {
+            return Err("icers session is closed".to_string());
+        }
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         frame["id"] = json!(id);
         let (tx, rx) = oneshot::channel();
@@ -268,6 +271,10 @@ impl Session {
         }
         let response = tokio::select! {
             response = rx => response.map_err(|_| "icers process exited".to_string())?,
+            _ = self.closed.cancelled() => {
+                self.pending.lock().unwrap().remove(&id);
+                return Err("icers session is closed".to_string());
+            }
             _ = tokio::time::sleep(COMMAND_TIMEOUT) => {
                 self.pending.lock().unwrap().remove(&id);
                 return Err("icers did not answer in time".to_string());
@@ -290,6 +297,9 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
+        if self.closed.is_cancelled() {
+            return Err("icers session is closed".to_string());
+        }
         let gate = self.turn_gate.lock().await;
         let cancel = {
             let mut turn = self.turn.lock().unwrap();
@@ -567,10 +577,13 @@ impl Session {
 
     /// Stop the child: a graceful `stop`, then kill if it lingers.
     pub(crate) async fn shutdown(&self) {
+        self.closed.cancel();
         let _ = self.send(&json!({"type": "stop"})).await;
         let child = self.process.lock().unwrap().take();
         if let Some(mut child) = child {
-            let exited = tokio::time::timeout(Duration::from_secs(3), child.wait()).await;
+            // Shell groups get three seconds to stop before SIGKILL. Allow
+            // enough time for their cleanup and the native writer lock.
+            let exited = tokio::time::timeout(Duration::from_secs(10), child.wait()).await;
             if exited.is_err() {
                 let _ = child.kill().await;
             }

@@ -839,6 +839,78 @@ async fn unknown_methods_and_sessions_are_errors() {
 }
 
 #[tokio::test]
+async fn close_removes_the_session_and_rejects_unknown_ids() {
+    let mut client = Client::start();
+    let (_, init) = client.call("initialize", json!({})).await;
+    assert_eq!(
+        init["result"]["agentCapabilities"]["sessionCapabilities"]["close"],
+        json!({})
+    );
+    let (id, _) = client.new_session().await;
+    let (_, closed) = client.call("session/close", json!({"sessionId": id})).await;
+    assert_eq!(closed["result"], json!({}));
+    let (_, absent) = client
+        .call("session/prompt", json!({"sessionId": id, "prompt": []}))
+        .await;
+    assert_eq!(absent["error"]["code"], RESOURCE_NOT_FOUND);
+    let (_, repeated) = client.call("session/close", json!({"sessionId": id})).await;
+    assert_eq!(repeated["error"]["code"], RESOURCE_NOT_FOUND);
+    let (_, invalid) = client.call("session/close", json!({})).await;
+    assert_eq!(invalid["error"]["code"], INVALID_PARAMS);
+}
+
+#[tokio::test]
+async fn close_allows_the_saved_session_to_be_loaded_again() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let (_, loaded) = client
+        .call("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    assert!(loaded.get("error").is_none(), "{loaded}");
+    let (_, closed) = client.call("session/close", json!({"sessionId": id})).await;
+    assert!(closed.get("error").is_none(), "{closed}");
+    let (_, reloaded) = client
+        .call("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    assert!(reloaded.get("error").is_none(), "{reloaded}");
+}
+
+#[tokio::test]
+async fn close_releases_an_in_flight_prompt() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    let prompt = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type":"text", "text":"wait"}]}),
+        )
+        .await;
+    let close = client
+        .request_id("session/close", json!({"sessionId": id}))
+        .await;
+    let mut seen = std::collections::HashSet::new();
+    while seen.len() < 2 {
+        let frame = client.next().await;
+        if frame.get("method").is_none() && frame["id"] == close {
+            assert_eq!(frame["result"], json!({}), "{frame}");
+            seen.insert(close);
+        } else if frame.get("method").is_none() && frame["id"] == prompt {
+            assert!(frame.get("error").is_some(), "{frame}");
+            seen.insert(prompt);
+        }
+    }
+}
+
+#[tokio::test]
 async fn full_model_catalog_is_one_selector_without_pages() {
     let mut client = Client::start();
     let (session_id, result) = client.new_session().await;
