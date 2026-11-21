@@ -8,6 +8,169 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, DuplexStream, Lines};
 
 #[tokio::test]
+async fn resume_restores_config_without_history_and_publishes_commands_after_response() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let (frames, response) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    assert!(response["result"].get("sessionId").is_none());
+    assert!(
+        frames.iter().all(|frame| matches!(
+            frame["params"]["update"]["sessionUpdate"].as_str(),
+            Some("usage_update" | "session_info_update")
+        )),
+        "resume cannot replay historical updates: {frames:?}"
+    );
+    let options = response["result"]["configOptions"].as_array().unwrap();
+    assert_eq!(
+        options
+            .iter()
+            .find(|option| option["id"] == "model")
+            .unwrap()["currentValue"],
+        "q/a/b"
+    );
+    assert_eq!(
+        options
+            .iter()
+            .find(|option| option["id"] == "thinking")
+            .unwrap()["currentValue"],
+        "high"
+    );
+    let commands = client.next().await;
+    assert_eq!(commands["params"]["sessionId"], id);
+    assert_eq!(
+        commands["params"]["update"]["sessionUpdate"],
+        "available_commands_update"
+    );
+    let (frames, prompt) = client
+        .call(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "history pages"}]}),
+        )
+        .await;
+    assert_eq!(prompt["result"]["stopReason"], "end_turn");
+    assert_eq!(
+        frames[0]["params"]["update"]["content"]["text"], "1",
+        "resume reads only the config page"
+    );
+}
+
+#[tokio::test]
+async fn resume_and_load_of_one_session_cannot_create_two_owners() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let load = client
+        .request_id("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    let resume = client
+        .request_id(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    let mut responses = Vec::new();
+    while responses.len() < 2 {
+        let frame = client.next().await;
+        if frame.get("method").is_none() && (frame["id"] == load || frame["id"] == resume) {
+            responses.push(frame);
+        }
+    }
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response.get("result").is_some())
+            .count(),
+        1,
+        "{responses:?}"
+    );
+    let error = responses
+        .iter()
+        .find(|response| response.get("error").is_some())
+        .unwrap();
+    assert_eq!(error["error"]["code"], INVALID_PARAMS);
+    assert!(error["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("already open"));
+}
+
+#[tokio::test]
+async fn resume_validates_saved_identity_and_cwd_without_creating_replacements() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let id = uuid::Uuid::new_v4().to_string();
+    let mut client = Client::start();
+    for (params, code) in [
+        (
+            json!({"sessionId": id, "cwd": temp.path()}),
+            RESOURCE_NOT_FOUND,
+        ),
+        (
+            json!({"sessionId": "../escape", "cwd": temp.path()}),
+            INVALID_PARAMS,
+        ),
+        (json!({"sessionId": id, "cwd": "."}), INVALID_PARAMS),
+        (
+            json!({"sessionId": id, "cwd": temp.path(), "mcpServers": {}}),
+            INVALID_PARAMS,
+        ),
+    ] {
+        let (_, response) = client.call("session/resume", params).await;
+        assert_eq!(response["error"]["code"], code, "{response}");
+    }
+    assert!(!dir.exists());
+    let saved = crate::session::create_jsonl_session_with_id(
+        &dir,
+        other.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    let path = saved.storage().persistence_path().unwrap();
+    drop(saved);
+    let (_, wrong) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert_eq!(wrong["error"]["code"], INVALID_PARAMS);
+    std::fs::write(&path, "invalid header\n").unwrap();
+    let (_, corrupt) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert_eq!(corrupt["error"]["code"], RESOURCE_NOT_FOUND);
+    assert_eq!(std::fs::read_to_string(path).unwrap(), "invalid header\n");
+}
+
+#[tokio::test]
 async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     let temp = tempfile::tempdir().unwrap();
     let cwd = temp.path().to_str().unwrap();
@@ -144,22 +307,28 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     let mut lines = BufReader::new(stdin).lines();
     let mut waiting = false;
     let mut asked = false;
+    let mut provider = "p".to_string();
+    let mut model_id = "m1".to_string();
+    let mut thinking_level = "low".to_string();
+    let mut history_pages = 0;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
         let ok = |data: Value| json!({"type": "response", "id": id, "success": true, "data": data});
         match msg["type"].as_str().unwrap() {
             "get_state" => {
-                emit(&mut stdout, ok(json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low"}))).await
+                emit(&mut stdout, ok(json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level}))).await
             }
             "get_messages" => {
+                history_pages += 1;
                 let (messages, more, first) = if msg["beforeId"].is_null() {
                     (json!([{"kind": "assistant", "content": [{"type": "text", "text": "saved answer"}]}]), true, "answer")
                 } else {
                     assert_eq!(msg["beforeId"], "answer");
                     (json!([{"kind": "user", "content": "saved question"}]), false, "question")
                 };
-                emit(&mut stdout, ok(json!({"messages": messages, "hasMore": more, "firstId": first}))).await;
+                emit(&mut stdout, ok(json!({"messages": messages, "hasMore": more, "firstId": first,
+                    "savedConfig": {"provider": "q", "modelId": "a/b", "thinkingLevel": "high"}}))).await;
             }
             "get_available_models" => {
                 let mut models = vec![
@@ -191,6 +360,18 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                     assert_eq!(msg["provider"], "q");
                     assert_eq!(msg["modelId"], "a/b");
                 }
+                provider = msg["provider"].as_str().unwrap().to_string();
+                model_id = msg["modelId"].as_str().unwrap().to_string();
+                if msg.get("persist").is_some() {
+                    assert_eq!(msg["persist"], false);
+                }
+                emit(&mut stdout, ok(json!({}))).await
+            }
+            "set_thinking_level" => {
+                thinking_level = msg["level"].as_str().unwrap().to_string();
+                if msg.get("persist").is_some() {
+                    assert_eq!(msg["persist"], false);
+                }
                 emit(&mut stdout, ok(json!({}))).await
             }
             "prompt" => {
@@ -201,6 +382,10 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 }
                 emit(&mut stdout, ok(json!({"accepted": true}))).await;
                 match msg["message"].as_str().unwrap() {
+                    "history pages" => {
+                        emit(&mut stdout, json!({"type": "command_output", "text": history_pages.to_string()})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
+                    }
                     "wait" => waiting = true,
                     "/version" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
@@ -367,6 +552,10 @@ async fn initialize_advertises_v1_without_unimplemented_capabilities() {
     assert_eq!(result["protocolVersion"], 1);
     assert_eq!(result["agentInfo"]["name"], "icers");
     assert_eq!(result["agentCapabilities"]["loadSession"], true);
+    assert_eq!(
+        result["agentCapabilities"]["sessionCapabilities"]["resume"],
+        json!({})
+    );
     assert_eq!(
         result["agentCapabilities"]["promptCapabilities"]["image"],
         true

@@ -268,11 +268,18 @@ impl Server {
         match (method, id) {
             (Some(method), Some(id)) => {
                 let params = frame.get("params").cloned().unwrap_or(Value::Null);
+                let resumed = (method == "session/resume")
+                    .then(|| params["sessionId"].as_str().map(str::to_owned))
+                    .flatten();
                 match self.handle(method, params).await {
                     Ok(result) => {
-                        let created = (method == "session/new" || method == "session/load")
-                            .then(|| result["sessionId"].as_str().map(str::to_owned))
-                            .flatten();
+                        let created = match method {
+                            "session/new" | "session/load" => {
+                                result["sessionId"].as_str().map(str::to_owned)
+                            }
+                            "session/resume" => resumed,
+                            _ => None,
+                        };
                         self.writer.respond(id, result).await;
                         // Commands go out after the response, once the client
                         // knows the session id they belong to.
@@ -309,7 +316,8 @@ impl Server {
             "initialize" => Ok(initialize_result()),
             "authenticate" => Ok(json!({})),
             "session/new" => self.new_session(params).await,
-            "session/load" => self.load_session(params).await,
+            "session/load" => self.open_saved_session(params, true).await,
+            "session/resume" => self.open_saved_session(params, false).await,
             "session/prompt" => {
                 let session = self.session(&params)?;
                 let blocks = params["prompt"]
@@ -406,7 +414,11 @@ impl Server {
         Ok(json!({"sessionId": id, "configOptions": config_options}))
     }
 
-    async fn load_session(&self, params: Value) -> Result<Value, (i64, String)> {
+    async fn open_saved_session(
+        &self,
+        params: Value,
+        replay: bool,
+    ) -> Result<Value, (i64, String)> {
         let id = params["sessionId"]
             .as_str()
             .filter(|id| uuid::Uuid::parse_str(id).is_ok())
@@ -430,7 +442,7 @@ impl Server {
         {
             return Err((INVALID_PARAMS, "`mcpServers` must be an array".to_string()));
         }
-        // Serialize loads so concurrent requests cannot spawn two owners of the
+        // Serialize load/resume so requests cannot spawn two owners of the
         // same native file. Do not hold the sessions map lock across awaits.
         let _loading = self.loading.lock().await;
         if self.sessions.lock().unwrap().contains_key(id) {
@@ -470,14 +482,19 @@ impl Server {
         .map_err(|error| {
             (
                 INTERNAL_ERROR,
-                format!("cannot load saved session {id}: {error}"),
+                format!("cannot open saved session {id}: {error}"),
             )
         })?;
-        if let Err(error) = session.replay_history().await {
+        let restored = if replay {
+            session.replay_history().await
+        } else {
+            session.restore_saved_config().await
+        };
+        if let Err(error) = restored {
             session.shutdown().await;
             return Err((
                 INTERNAL_ERROR,
-                format!("cannot replay saved session {id}: {error}"),
+                format!("cannot restore saved session {id}: {error}"),
             ));
         }
         let config_options = session.config_options().await;
@@ -485,7 +502,11 @@ impl Server {
             .lock()
             .unwrap()
             .insert(id.to_string(), session);
-        Ok(json!({"sessionId": id, "configOptions": config_options}))
+        if replay {
+            Ok(json!({"sessionId": id, "configOptions": config_options}))
+        } else {
+            Ok(json!({"configOptions": config_options}))
+        }
     }
 
     fn session(&self, params: &Value) -> Result<Arc<Session>, (i64, String)> {
@@ -507,6 +528,7 @@ fn initialize_result() -> Value {
         "protocolVersion": PROTOCOL_VERSION,
         "agentCapabilities": {
             "loadSession": true,
+            "sessionCapabilities": {"resume": {}},
             "promptCapabilities": {"image": true, "audio": false, "embeddedContext": true},
             "mcpCapabilities": {"http": false, "sse": false},
         },
