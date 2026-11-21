@@ -140,7 +140,9 @@ impl Translator {
                 if let Some(id) = event["toolCallId"].as_str() {
                     self.tools.remove(id);
                 }
-                vec![tool_end(event)]
+                let mut updates = vec![tool_end(event)];
+                updates.extend(todo_plan(event));
+                updates
             }
             _ => Vec::new(),
         }
@@ -267,6 +269,41 @@ fn tool_end(event: &Value) -> Value {
         update["content"] = json!([text_content(&text)]);
     }
     update
+}
+
+/// A successful todo result replaces the complete ACP plan, including an empty list.
+fn todo_plan(event: &Value) -> Option<Value> {
+    if event["toolName"].as_str() != Some("todo") || event["isError"].as_bool().unwrap_or(false) {
+        return None;
+    }
+    let details = event["result"].get("details")?;
+    if details.get("error").is_some() {
+        return None;
+    }
+    let entries = details
+        .get("todos")?
+        .as_array()?
+        .iter()
+        .map(|todo| {
+            let content = todo.get("text")?.as_str()?;
+            let status = if todo["done"].as_bool().unwrap_or(false) {
+                "completed"
+            } else {
+                match todo["status"].as_str() {
+                    Some("in_progress") => "in_progress",
+                    Some("completed") => "completed",
+                    _ => "pending",
+                }
+            };
+            let priority = match todo["priority"].as_str() {
+                Some("high") => "high",
+                Some("low") => "low",
+                _ => "medium",
+            };
+            Some(json!({"content": content, "priority": priority, "status": status}))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(json!({"sessionUpdate": "plan", "entries": entries}))
 }
 
 fn text_content(text: &str) -> Value {
@@ -822,6 +859,114 @@ mod tests {
         }));
         assert_eq!(failed[0]["status"], "failed");
         assert_eq!(failed[0]["content"][0]["content"]["text"], "no match");
+    }
+
+    #[test]
+    fn todo_completion_emits_normalized_plan_after_tool_result() {
+        let mut t = translator();
+        let out = t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+            "isError": false,
+            "result": {
+                "content": [{"type": "text", "text": "Todo list updated."}],
+                "details": {"todos": [
+                    {"text": "Finished", "done": true, "status": "in_progress", "priority": "high"},
+                    {"text": "Working", "done": false, "status": "in_progress", "priority": "low"},
+                    {"text": "Also finished", "status": "completed", "priority": "medium"},
+                    {"text": "Waiting", "status": "pending"},
+                    {"text": "Unknown status", "status": "blocked", "priority": "urgent"},
+                    {"text": "Missing status"}
+                ]}
+            }
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+        assert_eq!(out[0]["toolCallId"], "todo-1");
+        assert_eq!(out[0]["status"], "completed");
+        assert_eq!(
+            out[0]["content"][0]["content"]["text"],
+            "Todo list updated."
+        );
+        assert_eq!(
+            out[1],
+            json!({
+                "sessionUpdate": "plan",
+                "entries": [
+                    {"content": "Finished", "priority": "high", "status": "completed"},
+                    {"content": "Working", "priority": "low", "status": "in_progress"},
+                    {"content": "Also finished", "priority": "medium", "status": "completed"},
+                    {"content": "Waiting", "priority": "medium", "status": "pending"},
+                    {"content": "Unknown status", "priority": "medium", "status": "pending"},
+                    {"content": "Missing status", "priority": "medium", "status": "pending"}
+                ]
+            })
+        );
+    }
+
+    #[test]
+    fn empty_todo_list_clears_the_plan() {
+        let mut t = translator();
+        t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+            "result": {"details": {"todos": [{"text": "Old entry"}]}}
+        }));
+        let out = t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-2", "toolName": "todo",
+            "result": {"details": {"todos": []}}
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[1], json!({"sessionUpdate": "plan", "entries": []}));
+    }
+
+    #[test]
+    fn failed_malformed_and_unrelated_tool_results_do_not_replace_the_plan() {
+        let mut t = translator();
+        for (name, is_error, details) in [
+            ("todo", true, json!({"todos": [{"text": "Failed"}]})),
+            (
+                "todo",
+                false,
+                json!({"error": "rejected", "todos": [{"text": "Failed"}]}),
+            ),
+            ("todo", false, json!({"error": null, "todos": []})),
+            ("todo", false, json!({})),
+            ("todo", false, json!({"todos": "invalid"})),
+            (
+                "todo",
+                false,
+                json!({"todos": [{"text": "Valid"}, {"text": 42}]}),
+            ),
+            ("read", false, json!({"todos": [{"text": "Unrelated"}]})),
+        ] {
+            let out = t.translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "tool-1", "toolName": name,
+                "isError": is_error, "result": {"details": details}
+            }));
+            assert_eq!(out.len(), 1, "unexpected plan for {name}: {out:?}");
+            assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+            assert_eq!(
+                out[0]["status"],
+                if is_error { "failed" } else { "completed" }
+            );
+        }
+    }
+
+    #[test]
+    fn saved_todo_result_replays_the_plan() {
+        let out = translator().replay_message(&json!({
+            "kind": "tool_result", "toolCallId": "todo-1", "toolName": "todo",
+            "isError": false, "content": [{"type": "text", "text": "Updated."}],
+            "details": {"todos": [{"text": "Saved item", "done": true}]}
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+        assert_eq!(
+            out[1],
+            json!({
+                "sessionUpdate": "plan",
+                "entries": [{"content": "Saved item", "priority": "medium", "status": "completed"}]
+            })
+        );
     }
 
     #[test]
