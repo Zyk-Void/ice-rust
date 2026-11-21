@@ -371,6 +371,9 @@ impl Session {
     pub(crate) async fn cancel(&self) {
         if self.prompt_running.load(Ordering::Acquire) {
             self.cancelled.store(true, Ordering::Release);
+            // Abort immediately: prompt() only sends abort after the admission
+            // response, so a wake turn stuck there would not cancel promptly.
+            let _ = self.send(&json!({"type": "abort"})).await;
         }
         // Stop remains meaningful after the foreground turn has returned.
         let _ = self.send(&json!({"type": "kill_background_shells"})).await;

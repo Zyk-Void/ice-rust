@@ -5,7 +5,7 @@
 //! `packages/rpi-acp/src/session.rs` at `9906990d`.
 
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 
 /// Per-session translation state.
@@ -23,6 +23,9 @@ pub(crate) struct Translator {
     tools: HashMap<String, Value>,
     background: HashMap<String, String>,
     pending_background: HashMap<String, Value>,
+    /// Insertion order of `pending_background`, so eviction can drop the
+    /// oldest parked completion instead of clearing live ones.
+    pending_order: VecDeque<String>,
     replaying: bool,
 }
 
@@ -36,6 +39,7 @@ impl Translator {
             tools: HashMap::new(),
             background: HashMap::new(),
             pending_background: HashMap::new(),
+            pending_order: VecDeque::new(),
             replaying: false,
         }
     }
@@ -162,6 +166,7 @@ impl Translator {
                         });
                         let mut updates = vec![update];
                         if let Some(completion) = self.pending_background.remove(shell) {
+                            self.pending_order.retain(|key| key != shell);
                             updates.extend(self.background_update(&completion));
                         }
                         return updates;
@@ -180,8 +185,14 @@ impl Translator {
         };
         let Some(tool) = self.background.remove(shell) else {
             // A short command can finish before its tool result reaches ACP.
-            if self.pending_background.len() >= 256 {
-                self.pending_background.clear();
+            // Park it, evicting only the oldest completion at the bound.
+            if !self.pending_background.contains_key(shell) {
+                self.pending_order.push_back(shell.to_string());
+                while self.pending_order.len() > 256 {
+                    if let Some(oldest) = self.pending_order.pop_front() {
+                        self.pending_background.remove(&oldest);
+                    }
+                }
             }
             self.pending_background
                 .insert(shell.to_string(), event.clone());
