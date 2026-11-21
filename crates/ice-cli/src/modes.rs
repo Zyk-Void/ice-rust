@@ -1515,6 +1515,7 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         });
     let queued = lane.queued_messages().await.unwrap_or_default();
     let stats = rpc_get_stats(lane, harness).await.ok();
+    let session_name = harness.session().get_name().await.ok().flatten();
     serde_json::json!({
         "modelId": model.as_ref().map(|model| model.id.clone()),
         "provider": model.as_ref().map(|model| model.provider.clone()),
@@ -1523,6 +1524,7 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         "leafId": leaf_id,
         "context": context,
         "sessionId": harness.session().storage().metadata().id,
+        "sessionName": session_name,
         "activeOperation": active_operation,
         "queue": {
             "steering": queued.steering,
@@ -2610,6 +2612,27 @@ mod tests {
         AssistantMessage, Content, StopReason, TextContent, TextContentType, Usage,
     };
     use ice_harness::session::types::OperationError;
+
+    #[tokio::test]
+    async fn rpc_state_exposes_only_the_persisted_session_title() {
+        let (harness, _) = rpc_test_harness("unused", 0.0).await;
+        let lane = harness.lane("main");
+        assert_eq!(
+            rpc_get_state(&lane, &harness).await.get("sessionName"),
+            Some(&serde_json::Value::Null)
+        );
+        harness
+            .session()
+            .set_name(Some("Persisted title"))
+            .await
+            .unwrap();
+        assert_eq!(
+            rpc_get_state(&lane, &harness).await["sessionName"],
+            "Persisted title"
+        );
+        harness.session().set_name(None).await.unwrap();
+        assert!(rpc_get_state(&lane, &harness).await["sessionName"].is_null());
+    }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn repl_abort_returns_a_stopping_exit_code() {

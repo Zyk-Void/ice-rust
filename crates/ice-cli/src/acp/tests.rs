@@ -404,7 +404,11 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     assert_eq!(response["result"]["sessionId"], id);
     assert_eq!(
         update_kinds(&frames),
-        ["user_message_chunk", "agent_message_chunk"]
+        [
+            "user_message_chunk",
+            "agent_message_chunk",
+            "session_info_update"
+        ]
     );
     assert_eq!(
         frames[0]["params"]["update"]["content"]["text"],
@@ -414,6 +418,7 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
         frames[1]["params"]["update"]["content"]["text"],
         "saved answer"
     );
+    assert_eq!(frames[2]["params"]["update"]["title"], "saved title");
     let (_, duplicate) = client
         .call("session/load", json!({"sessionId": id, "cwd": cwd}))
         .await;
@@ -538,6 +543,8 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
     let mut model_id = "m1".to_string();
     let mut thinking_level = "low".to_string();
     let mut history_pages = 0;
+    let mut session_name = None::<String>;
+    let mut state_unavailable = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
@@ -547,10 +554,15 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                 emit(&mut stdout, ok(json!({"sessionId": uuid::Uuid::new_v4().to_string(), "path": cwd.join("fake-fork.jsonl")}))).await;
             }
             "get_state" => {
-                emit(&mut stdout, ok(json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level}))).await
+                if state_unavailable {
+                    emit(&mut stdout, json!({"type": "response", "id": id, "success": false, "error": "state unavailable"})).await;
+                } else {
+                    emit(&mut stdout, ok(json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level, "sessionName": session_name}))).await;
+                }
             }
             "get_messages" => {
                 history_pages += 1;
+                session_name = Some("saved title".to_string());
                 let (messages, more, first) = if msg["beforeId"].is_null() {
                     (json!([{"kind": "assistant", "content": [{"type": "text", "text": "saved answer"}]}]), true, "answer")
                 } else {
@@ -619,6 +631,19 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf)
                     "wait-fork" => {
                         waiting = true;
                         emit(&mut stdout, json!({"type": "command_output", "text": "fork blocked"})).await;
+                    }
+                    text if text.split_whitespace().next() == Some("/name") => {
+                        if let Some((_, args)) = text.trim().split_once(char::is_whitespace) {
+                            let args = args.trim();
+                            match args {
+                                "refused" => {},
+                                "unavailable" => state_unavailable = true,
+                                "" => {},
+                                _ => session_name = Some(args.to_string()),
+                            }
+                        }
+                        emit(&mut stdout, json!({"type": "command_output", "text": "name command finished"})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
                     }
                     "wait" => waiting = true,
                     "/version" => {
@@ -788,6 +813,71 @@ fn update_kinds(frames: &[Value]) -> Vec<String> {
                 .to_string()
         })
         .collect()
+}
+
+#[tokio::test]
+async fn session_title_uses_native_name_before_prompt_response() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    let (frames, response) = client.call("session/prompt", json!({"sessionId": id, "prompt": [{"type": "text", "text": "  /name  Build release  "}]})).await;
+    assert_eq!(response["result"]["stopReason"], "end_turn");
+    let titles: Vec<_> = frames
+        .iter()
+        .filter(|frame| frame["params"]["update"]["sessionUpdate"] == "session_info_update")
+        .collect();
+    assert_eq!(titles.len(), 1, "{frames:?}");
+    assert_eq!(titles[0]["params"]["update"]["title"], "Build release");
+    assert!(titles[0]["params"]["update"].get("updatedAt").is_none());
+}
+
+#[tokio::test]
+async fn session_title_skips_ordinary_and_incomplete_name_prompts() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    for prompt in [
+        "hello",
+        "/name",
+        "  /name   ",
+        "/names release",
+        "please /name release",
+    ] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(
+            !update_kinds(&frames).contains(&"session_info_update".to_string()),
+            "{frames:?}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn session_title_does_not_invent_requested_name_after_failure() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    client
+        .call(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "/name Original title"}]}),
+        )
+        .await;
+    for prompt in ["/name refused", "/name unavailable"] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(
+            !update_kinds(&frames).contains(&"session_info_update".to_string()),
+            "{frames:?}"
+        );
+    }
 }
 
 #[test]
