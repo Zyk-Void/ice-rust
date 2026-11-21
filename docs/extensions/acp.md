@@ -23,6 +23,12 @@ background shells and subagents. Sessions are stored in the project's normal
 `.icers/sessions/` directory, so `icers --resume` in that project also lists
 sessions started from an ACP client.
 
+The bridge sets `ICERS_ACP_RPC=1` only for its dedicated native child. This
+opt-in adds `compaction_status` RPC events with a per-attempt `compactionId`
+and `in_progress`, `completed`, `failed` or `cancelled` status. Completion
+comes from the persisted-checkpoint hook, not the legacy JSON-mode activity
+flag. Ordinary RPC, JSON mode and the TUI keep their existing event shapes.
+
 ## Setup
 
 Build the binary:
@@ -76,6 +82,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | Context and cost | `usage_update` follows settled turns and loaded history, reporting current context use and the model's context window, plus cumulative USD cost when positive. Unknown context windows or unavailable state omit the update without failing the turn |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output. Live and replayed calls carry `_meta.icers.toolName`; partial and final `rawOutput` preserve the native result and structured details for plan cards and parent subagent rows |
 | Todo plans | Successful `todo` results replace the ACP plan while keeping the tool card. Empty lists clear the plan; failed or malformed results leave the current plan unchanged. Saved todo results restore the plan on session load |
+| Automatic compaction | Negotiated with `clientCapabilities.session.compaction: {}`. Progress completes only after the native checkpoint and its step record are saved; provider/storage failures, cancellation, extension vetoes and process exit close the same progress item. Manual compaction remains a separate prompt operation |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
 | Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only. `session/set_model` is also supported. The current model is listed first |
 | Manual compaction | `/compact` emits `compaction_update` progress and its final summary when the client advertises `session.compaction`. The same compaction ID closes on success, cancellation or failure. Other clients retain the text summary. Automatic compaction progress is not forwarded yet |

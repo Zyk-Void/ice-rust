@@ -1,5 +1,6 @@
 //! P0 native JSONL RPC building blocks.
 
+pub(crate) mod compaction;
 pub(crate) mod events;
 pub(crate) mod framing;
 pub(crate) mod protocol;
