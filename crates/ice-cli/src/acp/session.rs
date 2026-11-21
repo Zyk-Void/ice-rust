@@ -432,6 +432,7 @@ impl Session {
                 self.publish_title(Some(name)).await;
             }
         }
+        self.publish_usage().await;
         result
     }
 
@@ -458,6 +459,8 @@ impl Session {
         }
         drop(gate);
         tokio::select! {
+            // A settlement that already arrived wins over a later close.
+            biased;
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string()),
             _ = self.closed.cancelled() => Err("icers process exited during the turn".to_string()),
         }
@@ -553,6 +556,7 @@ impl Session {
             }
         }
         self.publish_title(None).await;
+        self.publish_usage().await;
         Ok(())
     }
 
@@ -592,6 +596,19 @@ impl Session {
             }
         }
         Ok(())
+    }
+
+    /// Publish an available context snapshot without making usage-query failures
+    /// fail the turn. Call outside the child reader, which resolves the query.
+    pub(crate) async fn publish_usage(&self) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// ACP `configOptions` for model and thinking level, built from the
@@ -805,6 +822,9 @@ mod turn_tests {
             .unwrap()
             .send(json!({"outcome": "aborted"}))
             .unwrap();
+        // This fake child never answers the usage query that follows a settled
+        // turn; closing makes that query fail fast.
+        session.closed.cancel();
         assert_eq!(
             tokio::time::timeout(Duration::from_secs(5), prompt)
                 .await
