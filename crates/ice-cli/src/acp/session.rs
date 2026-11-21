@@ -612,8 +612,7 @@ impl Session {
                 }
             }
         }
-        self.publish_title(None).await;
-        self.publish_usage().await;
+        self.publish_saved_name_and_usage().await;
         Ok(())
     }
 
@@ -626,8 +625,7 @@ impl Session {
             return Err("invalid native history response".to_string());
         }
         self.apply_saved_config(&page["savedConfig"]).await?;
-        self.publish_title(None).await;
-        self.publish_usage().await;
+        self.publish_saved_name_and_usage().await;
         Ok(())
     }
 
@@ -670,6 +668,27 @@ impl Session {
         };
         self.notify_update(update).await;
         true
+    }
+
+    /// Publish the persisted name and current usage from one state query, for
+    /// session setup paths that need both. Call outside the child reader.
+    async fn publish_saved_name_and_usage(&self) {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return;
+        };
+        if let Some(name) = state["sessionName"]
+            .as_str()
+            .filter(|name| !name.trim().is_empty())
+        {
+            self.notify_update(json!({
+                "sessionUpdate": "session_info_update",
+                "title": name,
+            }))
+            .await;
+        }
+        if let Some(update) = translate::usage_update(&state) {
+            self.notify_update(update).await;
+        }
     }
 
     /// ACP `configOptions` for model and thinking level, built from the
