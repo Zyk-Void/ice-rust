@@ -243,7 +243,10 @@ fn missing_suffix<'a>(sent: &str, full: &'a str) -> Option<&'a str> {
 fn tool_update(event: &Value) -> Option<Value> {
     let result = &event["partialResult"];
     let text = result_text(result);
-    if text.is_empty() && result["details"].is_null() {
+    if text.is_empty()
+        && result["details"].is_null()
+        && result["content"].as_array().is_none_or(Vec::is_empty)
+    {
         return None;
     }
     let mut update = json!({
@@ -1028,6 +1031,13 @@ mod tests {
         assert_eq!(updates[0]["_meta"]["icers"]["toolName"], "delegate_task");
         assert_eq!(updates[0]["rawOutput"], partial);
         assert!(updates[0].get("content").is_none());
+        let image = json!({"content": [{"type": "image", "data": "abc", "mimeType": "image/png"}], "details": null});
+        let updates = t.translate(&json!({
+            "type": "tool_execution_update", "toolCallId": "task-1",
+            "toolName": "delegate_task", "partialResult": image,
+        }));
+        assert_eq!(updates.len(), 1);
+        assert_eq!(updates[0]["rawOutput"], image);
         for partial in [Value::Null, json!({"content": [], "details": null})] {
             assert!(t
                 .translate(&json!({
