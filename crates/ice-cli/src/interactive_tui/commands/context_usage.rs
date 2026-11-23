@@ -122,22 +122,14 @@ impl Snapshot {
         self.categories[2] = listing_tokens;
     }
 
-    fn tools(
-        &mut self,
-        tools: &[ice_harness::types::HarnessTool],
-        active: &[String],
-    ) -> Result<(), String> {
-        for tool in tools {
-            let schema = tool.tool.schema();
-            // Harness semantics: an empty selection enables all registered tools.
-            if active.is_empty() || active.contains(&schema.name) {
-                let encoded = serde_json::to_string(&schema).map_err(|e| e.to_string())?;
-                self.add(
-                    3,
-                    format!("{} schema", display_label(&schema.name)),
-                    byte_tokens(encoded.len()),
-                );
-            }
+    fn tools(&mut self, tools: &[ice_ai::types::Tool]) -> Result<(), String> {
+        for schema in tools {
+            let encoded = serde_json::to_string(schema).map_err(|e| e.to_string())?;
+            self.add(
+                3,
+                format!("{} schema", display_label(&schema.name)),
+                byte_tokens(encoded.len()),
+            );
         }
         Ok(())
     }
@@ -473,6 +465,8 @@ fn allocate(weights: &[u64], used: u64, window: u64, budget: usize) -> Vec<usize
 struct Fence {
     storage: Arc<dyn ice_harness::session::types::SessionStorage>,
     tip: Option<String>,
+    model: ice_ai::Model,
+    prompt: ice_harness::agent_harness::HarnessPromptSnapshot,
 }
 
 impl Fence {
@@ -482,7 +476,17 @@ impl Fence {
     ) -> Result<Self, String> {
         let storage = session.harness().session().storage();
         let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
-        let fence = Self { storage, tip };
+        let model = session.model().await.map_err(|e| e.to_string())?;
+        let prompt = session
+            .harness()
+            .prompt_snapshot()
+            .map_err(|e| e.to_string())?;
+        let fence = Self {
+            storage,
+            tip,
+            model,
+            prompt,
+        };
         if !fence.current(session, lane).await {
             return Err("Context changed".into());
         }
@@ -498,7 +502,13 @@ impl Fence {
             Ok(tip) => tip,
             Err(_) => return false,
         };
-        tip == self.tip && Arc::ptr_eq(&self.storage, &session.harness().session().storage())
+        tip == self.tip
+            && session.model().await.is_ok_and(|model| model == self.model)
+            && Arc::ptr_eq(&self.storage, &session.harness().session().storage())
+            && session
+                .harness()
+                .prompt_snapshot()
+                .is_ok_and(|prompt| prompt == self.prompt)
     }
 }
 
@@ -519,8 +529,13 @@ async fn collect_at(
     if !fence.current(session, lane).await {
         return Err("Context changed".into());
     }
-    let model = session.model().await.map_err(|e| e.to_string())?;
-    let snapshot = collect_from(session.harness(), lane, &model, fence.tip.clone()).await?;
+    let snapshot = collect_from(
+        session.harness(),
+        &fence.model,
+        fence.tip.clone(),
+        &fence.prompt,
+    )
+    .await?;
     if !fence.current(session, lane).await {
         return Err("Context changed".into());
     }
@@ -530,17 +545,10 @@ async fn collect_at(
 /// Build the report for `model` from the branch ending at `tip`.
 async fn collect_from(
     harness: &ice_harness::agent_harness::AgentHarness,
-    lane: &Arc<dyn AgentLane>,
     model: &ice_ai::Model,
     tip: Option<String>,
+    prompt: &ice_harness::agent_harness::HarnessPromptSnapshot,
 ) -> Result<Snapshot, String> {
-    let active = lane.get_active_tools().await.map_err(|e| e.to_string())?;
-    let base = harness
-        .get_system_prompt()
-        .await
-        .map_err(|e| e.to_string())?;
-    let resources = harness.get_resources().await.map_err(|e| e.to_string())?;
-    let tools = harness.get_tools().await.map_err(|e| e.to_string())?;
     let entries = if tip.is_some() {
         harness
             .find_entries_on_branch(
@@ -563,13 +571,13 @@ async fn collect_from(
         window: model.context_window as u64,
         ..Default::default()
     };
-    let skills = if active.iter().any(|name| name == "read") {
-        resources.skills.as_deref().unwrap_or(&[])
-    } else {
-        &[]
-    };
-    snapshot.prompt(base.as_deref(), skills);
-    snapshot.tools(&tools, &active)?;
+    snapshot.prompt(prompt.rendered_base.as_deref(), &prompt.visible_skills);
+    snapshot.add(
+        0,
+        "live MCP instructions",
+        byte_tokens(prompt.mcp_instructions.len()),
+    );
+    snapshot.tools(&prompt.tools)?;
     snapshot.messages(&entries);
     Ok(snapshot)
 }
@@ -583,7 +591,8 @@ pub(crate) async fn headless_report(
 ) -> Result<String, String> {
     let model = lane.get_model().await.map_err(|e| e.to_string())?;
     let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
-    let snapshot = collect_from(harness, lane, &model, tip).await?;
+    let prompt = harness.prompt_snapshot().map_err(|e| e.to_string())?;
+    let snapshot = collect_from(harness, &model, tip, &prompt).await?;
     Ok(render_report(&snapshot, width)
         .iter()
         .map(|line| ice_tui::utils::strip_ansi(line).trim_end().to_string())

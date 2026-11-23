@@ -1376,16 +1376,24 @@ pub struct McpReadyGate {
 }
 
 impl McpReadyGate {
-    async fn wait_ready(&self, budget: Duration) {
+    /// Wait for startup discovery using the same budget as prompt admission.
+    pub(crate) async fn wait_for_startup(&self) -> bool {
+        self.wait_ready(START_TIMEOUT + Duration::from_secs(1))
+            .await
+    }
+
+    async fn wait_ready(&self, budget: Duration) -> bool {
         let mut ready = self.ready.clone();
-        let _ = tokio::time::timeout(budget, async {
+        tokio::time::timeout(budget, async {
             while !*ready.borrow_and_update() {
                 if ready.changed().await.is_err() {
-                    break;
+                    return false;
                 }
             }
+            true
         })
-        .await;
+        .await
+        .unwrap_or(false)
     }
 }
 
@@ -1395,8 +1403,7 @@ impl HarnessLifecycleHooks for McpReadyGate {
         &self,
         message: ice_agent::AgentMessage,
     ) -> ice_harness::result::HarnessResult<ice_agent::AgentMessage> {
-        self.wait_ready(START_TIMEOUT + Duration::from_secs(1))
-            .await;
+        self.wait_for_startup().await;
         match &self.inner {
             Some(inner) => inner.input(message).await,
             None => Ok(message),

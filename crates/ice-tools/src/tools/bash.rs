@@ -329,6 +329,14 @@ impl AgentTool for BashTool {
     fn label(&self) -> &str {
         "bash"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Execute Bash commands using Bash/POSIX syntax, including on Windows".to_string())
+    }
+    fn prompt_guidelines(&self) -> Vec<String> {
+        vec![
+            "The bash tool runs Bash, even on Windows. Use ls, find, rg, and POSIX pipelines; do not pass PowerShell cmdlets such as Get-ChildItem, Select-Object, or Select-String. If a powershell tool is available, use it for PowerShell commands.".to_string(),
+        ]
+    }
 
     async fn execute(
         &self,

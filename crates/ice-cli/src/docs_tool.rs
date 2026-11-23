@@ -115,6 +115,14 @@ impl AgentTool for DocsTool {
     fn label(&self) -> &str {
         "docs"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Look up icers usage, extension, and configuration documentation".to_string())
+    }
+    fn prompt_guidelines(&self) -> Vec<String> {
+        vec![
+            "When unsure about icers commands, extensions, or .icers configuration, consult the project documentation before guessing".to_string(),
+        ]
+    }
 
     fn execution_mode(&self) -> ToolExecutionMode {
         ToolExecutionMode::Parallel

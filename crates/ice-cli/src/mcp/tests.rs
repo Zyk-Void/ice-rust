@@ -454,16 +454,18 @@ async fn first_prompt_includes_delayed_mcp_tools() {
 async fn readiness_gate_bounds_hanging_discovery_and_accepts_closed_sender() {
     let (tx, ready) = watch::channel(false);
     let gate = McpReadyGate { inner: None, ready };
-    tokio::time::timeout(
+    assert!(!tokio::time::timeout(
         Duration::from_secs(1),
         gate.wait_ready(Duration::from_millis(20)),
     )
     .await
-    .unwrap();
+    .unwrap());
     drop(tx);
-    tokio::time::timeout(Duration::from_millis(100), gate.wait_ready(START_TIMEOUT))
-        .await
-        .unwrap();
+    assert!(
+        !tokio::time::timeout(Duration::from_millis(100), gate.wait_ready(START_TIMEOUT))
+            .await
+            .unwrap()
+    );
 }
 
 #[test]

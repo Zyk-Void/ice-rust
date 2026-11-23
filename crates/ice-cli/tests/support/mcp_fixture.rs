@@ -1,4 +1,13 @@
 pub fn server_executable() -> std::path::PathBuf {
+    if let Some(value) = std::env::var_os("ICERS_MCP_TEST_SERVER") {
+        let path = std::path::PathBuf::from(value);
+        assert!(
+            path.is_absolute() && path.is_file(),
+            "ICERS_MCP_TEST_SERVER must point to an existing absolute path: {}",
+            path.display()
+        );
+        return path;
+    }
     let exe = std::env::current_exe().unwrap();
     let deps = exe.parent().unwrap();
     let suffix = std::env::consts::EXE_SUFFIX;

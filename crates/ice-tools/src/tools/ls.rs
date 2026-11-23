@@ -126,6 +126,9 @@ impl AgentTool for LsTool {
     fn label(&self) -> &str {
         "ls"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("List directory contents".to_string())
+    }
 
     async fn execute(
         &self,

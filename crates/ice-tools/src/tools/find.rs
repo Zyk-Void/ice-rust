@@ -110,6 +110,9 @@ impl AgentTool for FindTool {
     fn label(&self) -> &str {
         "find"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Find files by glob pattern (respects .gitignore)".to_string())
+    }
 
     async fn execute(
         &self,

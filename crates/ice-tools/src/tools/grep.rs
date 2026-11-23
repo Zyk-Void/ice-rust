@@ -136,6 +136,9 @@ impl AgentTool for GrepTool {
     fn label(&self) -> &str {
         "grep"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Search file contents for patterns (respects .gitignore)".to_string())
+    }
 
     async fn execute(
         &self,

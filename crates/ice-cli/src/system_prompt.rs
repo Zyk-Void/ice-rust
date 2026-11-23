@@ -473,7 +473,8 @@ mod tests {
             DEFAULT_SYSTEM_PROMPT_TEMPLATE,
             "working_state"
         ));
-        let prompt = default_system_prompt(&env(), false);
+        let base = default_system_prompt(&env(), false);
+        let prompt = ice_harness::system_prompt::render_tool_sections(&base, &[]);
         assert!(!prompt.contains("{{"), "unfilled placeholder: {prompt}");
     }
 
@@ -508,10 +509,10 @@ mod tests {
 
     #[test]
     fn prompt_does_not_carry_a_fixed_tool_inventory() {
-        // The live tool set changes mid-session; the request's tool schemas
-        // are the authority, so the prompt must not list tools of its own.
+        // The live tool set changes mid-session; only the harness should
+        // populate the inventory from the tools in the current request.
         let prompt = default_system_prompt(&env(), false);
-        assert!(!prompt.contains("Available tools"));
+        assert!(prompt.contains(ice_harness::system_prompt::TOOLS_PLACEHOLDER));
         for line in prompt.lines() {
             for tool in [
                 "read", "bash", "edit", "write", "docs", "grep", "find", "ls",
@@ -526,10 +527,21 @@ mod tests {
     }
 
     #[test]
-    fn prompt_keeps_bash_on_windows_guidance() {
-        let prompt = default_system_prompt(&env(), false);
-        assert!(prompt.contains("The bash tool runs Bash, even on Windows"));
-        assert!(prompt.contains("do not pass\n  PowerShell cmdlets"));
+    fn prompt_only_includes_bash_guidance_when_bash_is_active() {
+        use ice_harness::system_prompt::render_tool_sections;
+        use ice_tools::{ExecutionToolContext, OsExecutionEnv};
+        use std::{path::PathBuf, sync::Arc};
+
+        let base = default_system_prompt(&env(), false);
+        let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(".")));
+        let context = ExecutionToolContext::new(env.clone(), Some(env));
+        let bash = ice_tools::create_bash_tool(&context, None);
+        let without_bash = render_tool_sections(&base, &[]);
+        let with_bash = render_tool_sections(&base, &[bash]);
+        let guidance = "The bash tool runs Bash, even on Windows";
+        assert!(!without_bash.contains(guidance));
+        assert!(with_bash.contains(guidance));
+        assert!(with_bash.contains("PowerShell cmdlets"));
     }
 
     #[test]

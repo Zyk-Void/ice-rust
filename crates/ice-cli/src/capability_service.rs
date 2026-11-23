@@ -564,6 +564,12 @@ impl AgentTool for CapabilitySearchTool {
     fn label(&self) -> &str {
         "Capability search"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some(
+            "Search the local skill and tool catalog for a capability you do not see listed"
+                .to_string(),
+        )
+    }
     async fn execute(
         &self,
         _tool_call_id: &str,

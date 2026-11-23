@@ -194,6 +194,9 @@ impl AgentTool for ScriptTool {
     fn label(&self) -> &str {
         "MCP script"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Chain several MCP tool calls in one JavaScript script".to_string())
+    }
     async fn execute(
         &self,
         call_id: &str,

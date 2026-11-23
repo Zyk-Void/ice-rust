@@ -89,6 +89,16 @@ jobs:
             exit 1
           fi
 
+      # Cargo may place the fixture and the CLI unit tests in separate directories.
+      - name: Build and locate the MCP test fixture
+        shell: bash
+        run: |
+          fixture=$(cargo test -p ice-cli --test mcp_test_server --no-run --locked --message-format=json |
+            jq -ers '[.[] | select(.reason == "compiler-artifact" and .target.name == "mcp_test_server" and .executable != null) | .executable]
+              | unique | if length == 1 then .[0] else error("expected exactly one MCP fixture executable") end')
+          test -x "$fixture"
+          printf 'ICERS_MCP_TEST_SERVER=%s\n' "$(realpath -- "$fixture")" >> "$GITHUB_ENV"
+
       - name: Run workspace tests
         run: cargo test --workspace --locked
 

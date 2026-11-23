@@ -8,7 +8,7 @@ use super::Writer;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWrite, AsyncWriteExt};
@@ -73,8 +73,9 @@ pub(crate) struct Session {
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     settled: Mutex<Option<oneshot::Sender<Value>>>,
     translator: Mutex<Translator>,
-    prompt_running: AtomicBool,
-    cancelled: AtomicBool,
+    turn: Mutex<Option<Arc<CancellationToken>>>,
+    /// Serializes turn transitions with delivery of an abort to the child.
+    turn_gate: tokio::sync::Mutex<()>,
     /// Cancelled when the child's stdout closes (exit, crash or shutdown).
     closed: CancellationToken,
 }
@@ -101,8 +102,8 @@ impl Session {
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             settled: Mutex::new(None),
-            prompt_running: AtomicBool::new(false),
-            cancelled: AtomicBool::new(false),
+            turn: Mutex::new(None),
+            turn_gate: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let (ready_tx, ready_rx) = oneshot::channel();
@@ -153,9 +154,17 @@ impl Session {
                     }
                 }
                 Some("ui_dialog_request") => {
-                    // Answered concurrently: the pump must keep draining events
-                    // while a human decides.
-                    tokio::spawn(Arc::clone(&self).answer_dialog(frame));
+                    // Capture this turn before spawning, so an old dialog
+                    // cannot attach itself to a later prompt.
+                    let cancel = self
+                        .turn
+                        .lock()
+                        .unwrap()
+                        .as_ref()
+                        .map(|token| token.as_ref().clone());
+                    if let Some(cancel) = cancel {
+                        tokio::spawn(Arc::clone(&self).answer_dialog(frame, cancel));
+                    }
                 }
                 _ => {
                     let updates = self.translator.lock().unwrap().translate(&frame);
@@ -181,7 +190,7 @@ impl Session {
 
     /// Forward permission dialogs and negotiated question forms. Unsupported
     /// dialogs are cancelled so the asking extension never waits indefinitely.
-    async fn answer_dialog(self: Arc<Self>, frame: Value) {
+    async fn answer_dialog(self: Arc<Self>, frame: Value, cancel: CancellationToken) {
         let request_id = frame["requestId"].as_str().unwrap_or_default().to_string();
         let ui = &frame["ui"];
         let response = match translate::permission_options(ui) {
@@ -191,10 +200,10 @@ impl Session {
                 let mut params =
                     translate::permission_params(ui, &options, tool_call, tool_call_id);
                 params["sessionId"] = json!(self.id);
-                let outcome = tokio::select! {
-                    outcome = self.writer.request("session/request_permission", params) => outcome,
-                    _ = self.closed.cancelled() => return,
-                };
+                let outcome = self
+                    .writer
+                    .request("session/request_permission", params, &cancel)
+                    .await;
                 translate::permission_answer(&request_id, &options, outcome)
             }
             None => {
@@ -212,17 +221,22 @@ impl Session {
                     if let Some(tool_call_id) = frame["toolCallId"].as_str() {
                         params["toolCallId"] = json!(tool_call_id);
                     }
-                    let outcome = tokio::select! {
-                        outcome = self.writer.request("session/elicitation", params) => outcome,
-                        _ = self.closed.cancelled() => return,
-                    };
+                    let outcome = self
+                        .writer
+                        .request("session/elicitation", params, &cancel)
+                        .await;
                     form.answer(&request_id, outcome)
                 } else {
                     json!({"type": "ui_dialog_response", "requestId": request_id, "cancelled": true})
                 }
             }
         };
-        let _ = self.send(&response).await;
+        // The native abort/settlement clears its own dialog. Do not send a
+        // late answer (or a second cancellation) into the next turn.
+        let _gate = self.turn_gate.lock().await;
+        if !cancel.is_cancelled() {
+            let _ = self.send(&response).await;
+        }
     }
 
     async fn send(&self, frame: &Value) -> Result<(), String> {
@@ -276,11 +290,20 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
-        if self.prompt_running.swap(true, Ordering::AcqRel) {
-            return Err("a prompt is already running in this session".to_string());
-        }
-        let result = self.prompt_inner(text, images).await;
-        self.prompt_running.store(false, Ordering::Release);
+        let gate = self.turn_gate.lock().await;
+        let cancel = {
+            let mut turn = self.turn.lock().unwrap();
+            if turn.is_some() {
+                return Err("a prompt is already running in this session".to_string());
+            }
+            let cancel = Arc::new(self.closed.child_token());
+            *turn = Some(cancel.clone());
+            cancel
+        };
+        let result = self.prompt_inner(text, images, &cancel, gate).await;
+        cancel.cancel();
+        let _gate = self.turn_gate.lock().await;
+        self.turn.lock().unwrap().take();
         result
     }
 
@@ -288,8 +311,9 @@ impl Session {
         &self,
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
+        cancel: &CancellationToken,
+        gate: tokio::sync::MutexGuard<'_, ()>,
     ) -> Result<&'static str, String> {
-        self.cancelled.store(false, Ordering::Release);
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
         if let Err(error) = self
@@ -299,6 +323,7 @@ impl Session {
             self.settled.lock().unwrap().take();
             return Err(error);
         }
+        drop(gate);
         let settled = tokio::select! {
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string())?,
             _ = self.closed.cancelled() => return Err("icers process exited during the turn".to_string()),
@@ -312,19 +337,25 @@ impl Session {
             .await;
         }
         let stop = self.translator.lock().unwrap().take_stop_reason();
-        translate::stop_reason(
-            &settled,
-            self.cancelled.load(Ordering::Acquire),
-            stop.as_deref(),
-        )
+        translate::stop_reason(&settled, cancel.is_cancelled(), stop.as_deref())
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
     /// resolves with `cancelled` once the child settles.
     pub(crate) async fn cancel(&self) {
-        if self.prompt_running.load(Ordering::Acquire) {
-            self.cancelled.store(true, Ordering::Release);
-            let _ = self.send(&json!({"type": "abort"})).await;
+        let cancel = self.turn.lock().unwrap().clone();
+        if let Some(cancel) = cancel {
+            let _gate = self.turn_gate.lock().await;
+            let current = self
+                .turn
+                .lock()
+                .unwrap()
+                .as_ref()
+                .is_some_and(|turn| Arc::ptr_eq(turn, &cancel));
+            if current {
+                cancel.cancel();
+                let _ = self.send(&json!({"type": "abort"})).await;
+            }
         }
     }
 
@@ -529,6 +560,192 @@ impl Session {
             }
         }
         self.closed.cancel();
+    }
+}
+
+#[cfg(test)]
+mod turn_tests {
+    use super::*;
+    use tokio::io::AsyncBufReadExt;
+
+    #[tokio::test]
+    async fn prompt_is_accepted_before_queued_abort() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(None),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let held_stdin = session.stdin.lock().await;
+        let mut prompt = Box::pin(session.prompt("hello".into(), Vec::new()));
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let mut cancel = Box::pin(session.cancel());
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        drop(held_stdin);
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        let frame: Value =
+            serde_json::from_str(&lines.next_line().await.unwrap().unwrap()).unwrap();
+        assert_eq!(frame["type"], "prompt");
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let id = frame["id"].as_u64().unwrap();
+        session
+            .pending
+            .lock()
+            .unwrap()
+            .remove(&id)
+            .unwrap()
+            .send(json!({"success": true}))
+            .unwrap();
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        tokio::time::timeout(Duration::from_secs(5), cancel)
+            .await
+            .unwrap();
+        let abort: Value =
+            serde_json::from_str(&lines.next_line().await.unwrap().unwrap()).unwrap();
+        assert_eq!(abort["type"], "abort");
+        session
+            .settled
+            .lock()
+            .unwrap()
+            .take()
+            .unwrap()
+            .send(json!({"outcome": "aborted"}))
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(5), prompt)
+                .await
+                .unwrap()
+                .unwrap(),
+            "cancelled"
+        );
+    }
+
+    #[tokio::test]
+    async fn queued_cancel_does_not_abort_replacement_turn() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let old = Arc::new(CancellationToken::new());
+        let new = Arc::new(CancellationToken::new());
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(Some(old.clone())),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let gate = session.turn_gate.lock().await;
+        let mut cancel = Box::pin(session.cancel());
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        *session.turn.lock().unwrap() = Some(new.clone());
+        drop(gate);
+        tokio::time::timeout(Duration::from_secs(5), cancel)
+            .await
+            .unwrap();
+        assert!(!new.is_cancelled());
+        assert!(!old.is_cancelled());
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), lines.next_line())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn queued_abort_finishes_before_old_turn_can_be_retired() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let token = Arc::new(CancellationToken::new());
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(Some(token.clone())),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let held_stdin = session.stdin.lock().await;
+        let abort = tokio::spawn({
+            let session = session.clone();
+            async move { session.cancel().await }
+        });
+        tokio::time::timeout(Duration::from_secs(5), token.cancelled())
+            .await
+            .unwrap();
+        let retirement = tokio::spawn({
+            let session = session.clone();
+            async move {
+                let _gate = session.turn_gate.lock().await;
+                session.turn.lock().unwrap().take();
+            }
+        });
+        tokio::task::yield_now().await;
+        assert!(
+            !retirement.is_finished(),
+            "turn must stay active while abort is queued"
+        );
+        drop(held_stdin);
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        let line = tokio::time::timeout(Duration::from_secs(5), lines.next_line())
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&line).unwrap()["type"],
+            "abort"
+        );
+        tokio::time::timeout(Duration::from_secs(5), abort)
+            .await
+            .unwrap()
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(5), retirement)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(session.turn.lock().unwrap().is_none());
     }
 }
 

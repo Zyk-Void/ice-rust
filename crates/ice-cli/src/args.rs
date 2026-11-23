@@ -635,9 +635,9 @@ pub enum RunMode {
 
 /// Print the help text to stdout. Mirrors TS `printHelp`, scoped to v1 flags.
 pub fn print_help() {
-    let builtin = "read, bash, edit, write, docs";
+    let builtin = "read, bash, edit, write, grep, docs";
     println!(
-        "{name} - AI coding assistant with read, bash, edit, write, docs tools
+        "{name} - AI coding assistant with {builtin} tools
 
 {u}Usage:{r}
   {name} [options] [@files...] [messages...]
@@ -676,7 +676,7 @@ pub fn print_help() {
   --tools, -t <list>             Comma-separated allowlist of tool names to enable
   --exclude-tools, -xt <list>    Comma-separated denylist of tool names to disable
   --no-tools, -nt                Disable all tools
-  --no-builtin-tools, -nbt       Disable the built-in tools (read, bash, edit, write, docs)
+  --no-builtin-tools, -nbt       Disable the built-in tools ({builtin})
   --no-skills, -ns               Skip skill discovery (no <available_skills> block)
   --no-prompt-templates, -np     Skip prompt-template discovery (/expand templates)
   --no-context-files, -nc        Skip AGENTS.md/CLAUDE.md discovery (no <project_context>)

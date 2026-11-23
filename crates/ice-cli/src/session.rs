@@ -20,11 +20,9 @@
 //! - **No `ModelRuntime`/multi-provider registry.** The resolver supports the
 //!   built-in Anthropic/OpenAI-compatible providers and `models.json`, but
 //!   runtime catalog mutation remains outside this layer.
-//! - **Built-in tools**: `read`, `bash`, `edit`, `write`, and the read-only
-//!   `docs` lookup tool (the system prompt does not list them; the request's
-//!   tool schemas do). The former ice-only `grep`, `find`, `ls`, and
-//!   `powershell` tools remain library modules but are not registered by the
-//!   CLI.
+//! - **Built-in tools**: `read`, `bash`, `edit`, `write`, `grep`, and the
+//!   read-only `docs` lookup tool. The request's tool schemas advertise them.
+//!   `find` and `ls` remain library modules; PowerShell is registered on Windows.
 //! - **Session restore (`-c`/`-r`/`--session`)** is *partially* supported: a
 //!   fresh session is always created. The harness's `create` rejects sessions
 //!   that already have records unless `allow_existing_session` is enabled.
@@ -52,8 +50,8 @@ use ice_harness::types::{
 #[cfg(windows)]
 use ice_tools::create_powershell_tool;
 use ice_tools::{
-    create_bash_tool, create_edit_tool, create_read_tool, create_write_tool, ExecutionToolContext,
-    MutationQueueRegistry, OsExecutionEnv,
+    create_bash_tool, create_edit_tool, create_grep_tool, create_read_tool, create_write_tool,
+    ExecutionToolContext, MutationQueueRegistry, OsExecutionEnv,
 };
 
 use crate::args::Args;
@@ -71,7 +69,7 @@ use ice_extensions::{
 };
 
 /// The coding tools registered by the CLI by default.
-pub const BUILTIN_TOOL_NAMES: &[&str] = &["read", "bash", "edit", "write", "docs"];
+pub const BUILTIN_TOOL_NAMES: &[&str] = &["read", "bash", "edit", "write", "grep", "docs"];
 
 /// Await extension observers before exposing the same lifecycle event publicly.
 /// Streaming tool updates still use the emitter's non-blocking `try_emit` path.
@@ -644,14 +642,8 @@ pub async fn build_prepared(
         append_join.as_deref(),
     );
 
-    // ---- Debug: dump the resolved system-prompt sections (verification) ----
-    // A verification affordance for Part-A resource discovery: prints the
-    // composed sections + resource counts to stderr so a smoke can confirm
-    // `<available_skills>` + `<project_context>` + appended text reached the
-    // prompt without parsing a provider round-trip. The harness composes the
-    // final prompt (base → append → context → skills); here we print the
-    // pre-harness sections (the harness adds the skills listing itself, gated
-    // on `read` + `disable_model_invocation`).
+    // Print the discovered inputs first. The final harness snapshot is printed
+    // below, after startup tool registration completes.
     if args.debug_system_prompt {
         eprintln!("=== --debug-system-prompt ===");
         let base_src = if args.system_prompt.is_some() {
@@ -662,7 +654,7 @@ pub async fn build_prepared(
             "default"
         };
         eprintln!("[base source: {base_src}]");
-        eprintln!("--- base ---\n{base_prompt}");
+        eprintln!("--- base template ---\n{base_prompt}");
         if let Some(append) = append_join.as_deref() {
             eprintln!("--- append ---\n{append}");
         } else {
@@ -710,10 +702,6 @@ pub async fn build_prepared(
         for p in &discovered.prompt_paths {
             eprintln!("    prompt: {p}");
         }
-        eprintln!(
-            "--- final composed base+append+context (skills listing added by harness) ---\n{system_prompt}"
-        );
-        eprintln!("=== end --debug-system-prompt ===");
     }
 
     // ---- Options ----
@@ -996,11 +984,11 @@ pub async fn build_prepared(
     } else {
         mcp_tools
     };
-    let ready = crate::mcp::start(mcp_tools.clone());
-    harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
+    let mcp_ready = Arc::new(crate::mcp::McpReadyGate {
         inner: Some(command_hooks),
-        ready,
-    }));
+        ready: crate::mcp::start(mcp_tools.clone()),
+    });
+    harness.set_lifecycle_hooks(mcp_ready.clone());
 
     harness.set_extensions(builtins.harness_extensions());
     let mut capability_service = None;
@@ -1082,6 +1070,28 @@ pub async fn build_prepared(
         dev_extension: None,
         builtins,
     };
+
+    if args.debug_system_prompt {
+        if !mcp_ready.wait_for_startup().await {
+            eprintln!("MCP startup did not complete; the debug prompt may be incomplete.");
+        }
+        for server in reload_context.mcp_tools.snapshot() {
+            if let crate::mcp::ServerStatus::Failed(_) = server.status {
+                eprintln!(
+                    "MCP server {:?} failed to start; the debug prompt may be incomplete.",
+                    server.name
+                );
+            }
+        }
+        match harness.prompt_snapshot() {
+            Ok(snapshot) => eprintln!(
+                "--- composed system prompt after MCP startup wait ---\n{}",
+                snapshot.compose()
+            ),
+            Err(error) => eprintln!("Could not compose the startup system prompt: {error}"),
+        }
+        eprintln!("=== end --debug-system-prompt ===");
+    }
 
     Ok((harness, event_rx, reload_context))
 }
@@ -2426,6 +2436,10 @@ fn build_tools(
         ),
         ("edit", HarnessTool::new(create_edit_tool(ctx))),
         ("write", HarnessTool::new(create_write_tool(ctx))),
+        (
+            "grep",
+            HarnessTool::new(create_grep_tool(ctx, None)).with_replay(ToolReplay::Safe),
+        ),
         (
             "docs",
             HarnessTool::new(create_docs_tool()).with_replay(ToolReplay::Safe),
@@ -4512,7 +4526,7 @@ mod tests {
                 .map(|tool| tool.replay)
         };
 
-        for read_only in ["read", "docs"] {
+        for read_only in ["read", "grep", "docs"] {
             assert_eq!(
                 replay_of(read_only),
                 Some(ToolReplay::Safe),
@@ -4541,17 +4555,39 @@ mod tests {
             .map(|tool| tool.tool.schema().name.clone())
             .collect();
 
-        // `docs` is a default capability; the legacy ice-only lookup tools stay
-        // unregistered. Asserted by membership (not exact equality) because
-        // `powershell` is Windows-only and `settings.json#defaultTools` may
-        // narrow the set in a developer's environment.
+        // `grep` and `docs` are default capabilities; find and ls remain
+        // library-only. PowerShell is Windows-only.
         assert!(names.contains(&"docs".to_string()));
-        for legacy in ["grep", "find", "ls"] {
+        assert!(names.contains(&"grep".to_string()));
+        for legacy in ["find", "ls"] {
             assert!(
                 !names.contains(&legacy.to_string()),
                 "legacy tool {legacy} should not be registered by default"
             );
         }
+    }
+
+    #[test]
+    fn grep_respects_explicit_tool_filters() {
+        let env = Arc::new(OsExecutionEnv::with_cwd(PathBuf::from(".")));
+        let env_dyn: Arc<dyn ice_tools::ExecutionEnv> = env.clone();
+        let mut_env: Arc<dyn ice_tools::MutatingEnv> = env;
+        let context = ExecutionToolContext::new(env_dyn, Some(mut_env));
+        let args = Args {
+            tools: Some(vec!["grep".into()]),
+            ..Args::default()
+        };
+        let names: Vec<_> = build_tools(&context, &args, None)
+            .iter()
+            .map(|tool| tool.tool.schema().name.clone())
+            .collect();
+        assert_eq!(names, ["grep"]);
+        let args = Args {
+            tools: Some(vec!["grep".into()]),
+            exclude_tools: Some(vec!["grep".into()]),
+            ..Args::default()
+        };
+        assert!(build_tools(&context, &args, None).is_empty());
     }
 
     #[test]

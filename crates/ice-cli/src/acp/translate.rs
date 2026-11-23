@@ -243,7 +243,10 @@ fn missing_suffix<'a>(sent: &str, full: &'a str) -> Option<&'a str> {
 fn tool_update(event: &Value) -> Option<Value> {
     let result = &event["partialResult"];
     let text = result_text(result);
-    if text.is_empty() && result["details"].is_null() {
+    if text.is_empty()
+        && result["details"].is_null()
+        && result["content"].as_array().is_none_or(Vec::is_empty)
+    {
         return None;
     }
     let mut update = json!({
@@ -253,8 +256,18 @@ fn tool_update(event: &Value) -> Option<Value> {
         "rawOutput": result,
         "_meta": {"icers": {"toolName": event["toolName"]}},
     });
-    if !text.is_empty() {
-        update["content"] = json!([text_content(&text)]);
+    let content: Vec<Value> = result["content"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|block| match block["type"].as_str() {
+            Some("text") => block["text"].as_str().map(text_content),
+            Some("image") => Some(json!({"type": "content", "content": block})),
+            _ => None,
+        })
+        .collect();
+    if !content.is_empty() {
+        update["content"] = json!(content);
     }
     Some(update)
 }
@@ -285,7 +298,10 @@ fn todo_plan(event: &Value) -> Option<Value> {
         return None;
     }
     let details = event["result"].get("details")?;
-    if details.get("error").is_some() {
+    if details
+        .get("error")
+        .is_some_and(|error| !error.is_null() && error.as_str() != Some(""))
+    {
         return None;
     }
     let entries = details
@@ -545,7 +561,22 @@ pub(crate) struct QuestionForm {
 
 pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     let ui = &frame["ui"];
-    if ui["purpose"].as_str() != Some("question") {
+    if ui.as_object()?.is_empty() {
+        return None;
+    }
+    // The native SDK defaults an omitted purpose to a question.
+    if ui
+        .get("purpose")
+        .is_some_and(|purpose| purpose.as_str() != Some("question"))
+    {
+        return None;
+    }
+    // One native response carries one answer; never silently discard a batch.
+    if ui
+        .get("questions")
+        .and_then(Value::as_array)
+        .is_some_and(|questions| questions.len() > 1)
+    {
         return None;
     }
     let prompt = crate::ask_user::parse_ask_user_prompt(&ice_extensions::UiDialogRequest {
@@ -556,7 +587,23 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     });
     let input = prompt.kind == "input" || prompt.options.is_empty();
     let multiple = prompt.allow_multiple && prompt.kind != "confirm";
-    let freeform = !input && prompt.allow_freeform && prompt.kind != "confirm";
+    // The current native answer contract cannot safely combine a custom value
+    // with multiple selections; reject instead of dropping the custom option.
+    if !input && multiple && prompt.allow_freeform {
+        return None;
+    }
+    let freeform = !input && !multiple && prompt.allow_freeform && prompt.kind != "confirm";
+    if !input
+        && prompt
+            .options
+            .iter()
+            .map(|(title, _)| title)
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            != prompt.options.len()
+    {
+        return None;
+    }
     let mut message = prompt.question.clone();
     if let Some(context) = &prompt.context {
         if !message.is_empty() {
@@ -584,7 +631,7 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     let mut property = if input {
         json!({"type": "string"})
     } else if multiple {
-        json!({"type": "array", "items": {"anyOf": choices}})
+        json!({"type": "array", "minItems": 1, "uniqueItems": true, "items": {"anyOf": choices}})
     } else {
         json!({"type": "string", "oneOf": choices})
     };
@@ -651,7 +698,8 @@ impl QuestionForm {
         if self.prompt.kind == "input" || self.prompt.options.is_empty() {
             return Some(question_text_answer(content.get("answer")?.as_str()?));
         }
-        if self.prompt.allow_freeform && self.prompt.kind != "confirm" {
+        let multiple = self.prompt.allow_multiple && self.prompt.kind != "confirm";
+        if !multiple && self.prompt.allow_freeform && self.prompt.kind != "confirm" {
             if let Some(other) = content.get("answer__other") {
                 let other = other.as_str()?;
                 if !other.trim().is_empty() {
@@ -660,7 +708,7 @@ impl QuestionForm {
             }
         }
         let selected = content.get("answer")?;
-        let values = if self.prompt.allow_multiple && self.prompt.kind != "confirm" {
+        let values = if multiple {
             selected
                 .as_array()?
                 .iter()
@@ -669,12 +717,20 @@ impl QuestionForm {
         } else {
             vec![selected.as_str()?]
         };
-        if !values.iter().all(|value| {
-            self.prompt
-                .options
-                .iter()
-                .any(|(title, _)| title.as_str() == *value)
-        }) {
+        if values.is_empty()
+            || (multiple
+                && values
+                    .iter()
+                    .collect::<std::collections::HashSet<_>>()
+                    .len()
+                    != values.len())
+            || !values.iter().all(|value| {
+                self.prompt
+                    .options
+                    .iter()
+                    .any(|(title, _)| title.as_str() == *value)
+            })
+        {
             return None;
         }
         Some(json!({"values": values, "kind": "selector"}))
@@ -887,6 +943,17 @@ mod tests {
     }
 
     #[test]
+    fn empty_error_does_not_suppress_successful_plan() {
+        for error in [Value::Null, json!("")] {
+            let out = translator().translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+                "result": {"details": {"error": error, "todos": []}}
+            }));
+            assert_eq!(out[1], json!({"sessionUpdate": "plan", "entries": []}));
+        }
+    }
+
+    #[test]
     fn failed_malformed_and_unrelated_tool_results_do_not_replace_the_plan() {
         let mut t = translator();
         for (name, is_error, details) in [
@@ -896,7 +963,6 @@ mod tests {
                 false,
                 json!({"error": "rejected", "todos": [{"text": "Failed"}]}),
             ),
-            ("todo", false, json!({"error": null, "todos": []})),
             ("todo", false, json!({})),
             ("todo", false, json!({"todos": "invalid"})),
             (
@@ -988,6 +1054,14 @@ mod tests {
         assert_eq!(updates[0]["_meta"]["icers"]["toolName"], "delegate_task");
         assert_eq!(updates[0]["rawOutput"], partial);
         assert!(updates[0].get("content").is_none());
+        let image = json!({"content": [{"type": "image", "data": "abc", "mimeType": "image/png"}], "details": null});
+        let updates = t.translate(&json!({
+            "type": "tool_execution_update", "toolCallId": "task-1",
+            "toolName": "delegate_task", "partialResult": image,
+        }));
+        assert_eq!(updates.len(), 1);
+        assert_eq!(updates[0]["rawOutput"], image);
+        assert_eq!(updates[0]["content"][0]["content"], image["content"][0]);
         for partial in [Value::Null, json!({"content": [], "details": null})] {
             assert!(t
                 .translate(&json!({
@@ -1155,12 +1229,24 @@ mod tests {
             "purpose": "question", "allowMultiple": true,
             "questions": [
                 {"question": "Choose databases.", "options": ["Postgres", "SQLite"]},
-                {"question": "Ignored second question.", "options": ["Other"]},
             ],
         }));
         let answer = &form.requested_schema["properties"]["answer"];
         assert_eq!(form.message, "Choose databases.");
         assert_eq!(answer["type"], "array");
+        assert_eq!(answer["minItems"], 1);
+        assert_eq!(answer["uniqueItems"], true);
+        assert_eq!(
+            form.answer(
+                "r",
+                Ok(json!({"action":"accept", "content":{"answer":["Postgres", "Postgres"]}}))
+            )["cancelled"],
+            true
+        );
+        assert_eq!(
+            form.answer("r", Ok(json!({"action":"accept", "content":{"answer":[]}})))["cancelled"],
+            true
+        );
         assert!(answer["items"].get("type").is_none());
         assert_eq!(
             answer["items"]["anyOf"],
@@ -1182,43 +1268,34 @@ mod tests {
 
     #[test]
     fn question_form_freeform_companion_takes_precedence() {
-        for multiple in [false, true] {
-            let form = ask_form(json!({
-                "purpose": "question", "question": "Choose databases.",
-                "options": ["Postgres", "SQLite"],
-                "allowMultiple": multiple, "allowFreeform": true,
-            }));
-            assert!(form.requested_schema.get("required").is_none());
+        let form = ask_form(json!({
+            "purpose": "question", "question": "Choose a database.",
+            "options": ["Postgres", "SQLite"], "allowFreeform": true,
+        }));
+        assert!(form.requested_schema.get("required").is_none());
+        assert_eq!(
+            form.requested_schema["properties"]["answer__other"]["type"],
+            "string"
+        );
+        for mut content in [json!({}), json!({"answer": "SQLite"})] {
+            content["answer__other"] = json!("  custom database  ");
             assert_eq!(
-                form.requested_schema["properties"]["answer__other"]["type"],
-                "string"
-            );
-            let selected = if multiple {
-                json!(["SQLite"])
-            } else {
-                json!("SQLite")
-            };
-            for mut content in [json!({}), json!({"answer": selected.clone()})] {
-                content["answer__other"] = json!("  custom database  ");
-                assert_eq!(
-                    form.answer("r3", Ok(json!({"action": "accept", "content": content})))
-                        ["answer"],
-                    json!({
-                        "values": ["  custom database  "], "value": "  custom database  ",
-                        "text": "  custom database  ", "kind": "input",
-                    })
-                );
-            }
-            assert_eq!(
-                form.answer(
-                    "r3",
-                    Ok(json!({
-                        "action": "accept", "content": {"answer": selected, "answer__other": " "},
-                    }))
-                )["answer"],
-                json!({"values": ["SQLite"], "kind": "selector"})
+                form.answer("r3", Ok(json!({"action": "accept", "content": content})))["answer"],
+                json!({
+                    "values": ["  custom database  "], "value": "  custom database  ",
+                    "text": "  custom database  ", "kind": "input",
+                })
             );
         }
+        assert_eq!(
+            form.answer(
+                "r3",
+                Ok(json!({
+                    "action": "accept", "content": {"answer": "SQLite", "answer__other": " "},
+                }))
+            )["answer"],
+            json!({"values": ["SQLite"], "kind": "selector"})
+        );
     }
 
     #[test]
