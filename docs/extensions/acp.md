@@ -71,6 +71,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
 | `session/cancel` | Supported (aborts the running turn) |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
+| Context and cost | `usage_update` follows settled turns and loaded history, reporting current context use and the model's context window, plus cumulative USD cost when positive. Unknown context windows or unavailable state omit the update without failing the turn |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
 | Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only. `session/set_model` is also supported. The current model is listed first |

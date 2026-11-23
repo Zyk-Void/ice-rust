@@ -289,11 +289,13 @@ impl Session {
             .await;
         }
         let stop = self.translator.lock().unwrap().take_stop_reason();
-        translate::stop_reason(
+        let result = translate::stop_reason(
             &settled,
             self.cancelled.load(Ordering::Acquire),
             stop.as_deref(),
-        )
+        );
+        self.publish_usage().await;
+        result
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
@@ -338,6 +340,7 @@ impl Session {
             }
             before = cursor;
         }
+        let mut latest_state: Option<Value> = None;
         if saved_config.is_object() {
             let state = self.command(json!({"type": "get_state"})).await?;
             if let (Some(provider), Some(model)) = (
@@ -360,6 +363,7 @@ impl Session {
                 )
                 .await?;
             }
+            latest_state = Some(state);
         }
         // Use a separate translator: replay must not leave a historical stop
         // reason or partial text in the live prompt's streaming state.
@@ -376,7 +380,42 @@ impl Session {
                 }
             }
         }
+        self.publish_usage_from(latest_state).await;
         Ok(())
+    }
+
+    /// Publish usage from an already-fetched state when available, otherwise
+    /// query the child once. Avoids a second get_state on session/load.
+    async fn publish_usage_from(&self, state: Option<Value>) -> bool {
+        let owned;
+        let state = match state {
+            Some(state) => state,
+            None => {
+                owned = self.command(json!({"type": "get_state"})).await;
+                let Ok(state) = owned else {
+                    return false;
+                };
+                state
+            }
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
+    }
+
+    /// Publish an available context snapshot without making usage-query failures
+    /// fail the turn. Call outside the child reader, which resolves the query.
+    pub(crate) async fn publish_usage(&self) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// ACP `configOptions` for model and thinking level, built from the
