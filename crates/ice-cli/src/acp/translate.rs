@@ -510,6 +510,14 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     {
         return None;
     }
+    // One native response carries one answer; never silently discard a batch.
+    if ui
+        .get("questions")
+        .and_then(Value::as_array)
+        .is_some_and(|questions| questions.len() > 1)
+    {
+        return None;
+    }
     let prompt = crate::ask_user::parse_ask_user_prompt(&ice_extensions::UiDialogRequest {
         request_id: frame["requestId"].as_str().unwrap_or_default().to_string(),
         tool_call_id: frame["toolCallId"].as_str().map(str::to_string),
@@ -518,6 +526,11 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     });
     let input = prompt.kind == "input" || prompt.options.is_empty();
     let multiple = prompt.allow_multiple && prompt.kind != "confirm";
+    // The current native answer contract cannot safely combine a custom value
+    // with multiple selections; reject instead of dropping the custom option.
+    if !input && multiple && prompt.allow_freeform {
+        return None;
+    }
     let freeform = !input && !multiple && prompt.allow_freeform && prompt.kind != "confirm";
     let mut message = prompt.question.clone();
     if let Some(context) = &prompt.context {
@@ -924,7 +937,6 @@ mod tests {
             "purpose": "question", "allowMultiple": true,
             "questions": [
                 {"question": "Choose databases.", "options": ["Postgres", "SQLite"]},
-                {"question": "Ignored second question.", "options": ["Other"]},
             ],
         }));
         let answer = &form.requested_schema["properties"]["answer"];

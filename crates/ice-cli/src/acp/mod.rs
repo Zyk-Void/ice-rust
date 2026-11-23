@@ -125,31 +125,37 @@ impl Writer {
     }
 
     async fn write(&self, frame: Value) {
-        self.write_cancellable(frame, None).await;
+        let _ = self.write_cancellable(frame, None).await;
     }
 
-    async fn write_cancellable(&self, frame: Value, cancel: Option<&CancellationToken>) -> bool {
+    async fn write_cancellable(
+        &self,
+        frame: Value,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(), String> {
         let mut line = match serde_json::to_vec(&frame) {
             Ok(line) => line,
             Err(error) => {
                 eprintln!("[icers acp] failed to encode frame: {error}");
-                return false;
+                return Err("failed to encode frame".to_string());
             }
         };
         line.push(b'\n');
         let mut out = if let Some(cancel) = cancel {
             tokio::select! {
                 biased;
-                _ = cancel.cancelled() => return false,
+                _ = cancel.cancelled() => return Err("dialog cancelled".to_string()),
                 out = self.out.lock() => out,
             }
         } else {
             self.out.lock().await
         };
-        if out.write_all(&line).await.is_err() || out.flush().await.is_err() {
-            eprintln!("[icers acp] client stdout closed");
-        }
-        true
+        out.write_all(&line)
+            .await
+            .map_err(|_| "client stdout closed".to_string())?;
+        out.flush()
+            .await
+            .map_err(|_| "client stdout closed".to_string())
     }
 
     async fn respond(&self, id: Value, result: Value) {
@@ -186,15 +192,11 @@ impl Writer {
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
         let _pending = PendingRequest { writer: self, id };
-        if !self
-            .write_cancellable(
-                json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}),
-                Some(cancel),
-            )
-            .await
-        {
-            return Err("dialog cancelled".to_string());
-        }
+        self.write_cancellable(
+            json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}),
+            Some(cancel),
+        )
+        .await?;
         tokio::select! {
             biased;
             _ = cancel.cancelled() => Err("dialog cancelled".to_string()),

@@ -707,9 +707,9 @@ async fn question_form_single_choice_round_trips_t3_response() {
 async fn question_form_multi_choice_round_trips_tui_answer() {
     let (requests, native) = question_round_trip(
         json!({"purpose": "question", "question": "Choose targets", "allowMultiple": true,
-            "allowFreeform": true, "options": ["Linux", "Windows", "macOS"]}),
+            "allowFreeform": false, "options": ["Linux", "Windows", "macOS"]}),
         json!({"elicitation": {"form": {}}}),
-        accepted_question(json!({"answer": ["Linux", "macOS"], "answer__other": "ignored"})),
+        accepted_question(json!({"answer": ["Linux", "macOS"]})),
     )
     .await;
     assert_eq!(requests.len(), 1);
@@ -935,6 +935,31 @@ async fn question_request_drop_removes_the_pending_waiter() {
         writer.pending.lock().unwrap().is_empty(),
         "closing a session must release its unanswered form request"
     );
+}
+
+#[tokio::test]
+async fn closed_client_output_fails_dialog_request() {
+    let (out, input) = tokio::io::duplex(1024);
+    drop(input);
+    let writer = Writer::new(Box::new(out));
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        writer.request("session/elicitation", json!({}), &CancellationToken::new()),
+    )
+    .await
+    .unwrap();
+    assert_eq!(result, Err("client stdout closed".into()));
+    assert!(writer.pending.lock().unwrap().is_empty());
+}
+
+#[test]
+fn unsupported_question_combinations_are_rejected() {
+    for ui in [
+        json!({"questions": [{"question":"one"}, {"question":"two"}]}),
+        json!({"question":"pick", "allowMultiple":true, "allowFreeform":true, "options":["one"]}),
+    ] {
+        assert!(translate::question_form(&json!({"requestId":"test", "ui":ui})).is_none());
+    }
 }
 
 #[tokio::test]

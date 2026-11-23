@@ -232,6 +232,7 @@ impl Session {
         };
         // The native abort/settlement clears its own dialog. Do not send a
         // late answer (or a second cancellation) into the next turn.
+        let _gate = self.turn_gate.lock().await;
         if !cancel.is_cancelled() {
             let _ = self.send(&response).await;
         }
@@ -288,8 +289,8 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
+        let gate = self.turn_gate.lock().await;
         let cancel = {
-            let _gate = self.turn_gate.lock().await;
             let mut turn = self.turn.lock().unwrap();
             if turn.is_some() {
                 return Err("a prompt is already running in this session".to_string());
@@ -298,7 +299,7 @@ impl Session {
             *turn = Some(cancel.clone());
             cancel
         };
-        let result = self.prompt_inner(text, images, &cancel).await;
+        let result = self.prompt_inner(text, images, &cancel, gate).await;
         cancel.cancel();
         let _gate = self.turn_gate.lock().await;
         self.turn.lock().unwrap().take();
@@ -310,6 +311,7 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
         cancel: &CancellationToken,
+        gate: tokio::sync::MutexGuard<'_, ()>,
     ) -> Result<&'static str, String> {
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
@@ -320,6 +322,7 @@ impl Session {
             self.settled.lock().unwrap().take();
             return Err(error);
         }
+        drop(gate);
         let settled = tokio::select! {
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string())?,
             _ = self.closed.cancelled() => return Err("icers process exited during the turn".to_string()),
@@ -563,6 +566,84 @@ impl Session {
 mod turn_tests {
     use super::*;
     use tokio::io::AsyncBufReadExt;
+
+    #[tokio::test]
+    async fn prompt_is_accepted_before_queued_abort() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(None),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let held_stdin = session.stdin.lock().await;
+        let mut prompt = Box::pin(session.prompt("hello".into(), Vec::new()));
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let mut cancel = Box::pin(session.cancel());
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        drop(held_stdin);
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        let frame: Value =
+            serde_json::from_str(&lines.next_line().await.unwrap().unwrap()).unwrap();
+        assert_eq!(frame["type"], "prompt");
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        let id = frame["id"].as_u64().unwrap();
+        session
+            .pending
+            .lock()
+            .unwrap()
+            .remove(&id)
+            .unwrap()
+            .send(json!({"success": true}))
+            .unwrap();
+        assert!(matches!(
+            futures::poll!(prompt.as_mut()),
+            std::task::Poll::Pending
+        ));
+        tokio::time::timeout(Duration::from_secs(5), cancel)
+            .await
+            .unwrap();
+        let abort: Value =
+            serde_json::from_str(&lines.next_line().await.unwrap().unwrap()).unwrap();
+        assert_eq!(abort["type"], "abort");
+        session
+            .settled
+            .lock()
+            .unwrap()
+            .take()
+            .unwrap()
+            .send(json!({"outcome": "aborted"}))
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(5), prompt)
+                .await
+                .unwrap()
+                .unwrap(),
+            "cancelled"
+        );
+    }
 
     #[tokio::test]
     async fn queued_cancel_does_not_abort_replacement_turn() {
