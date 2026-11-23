@@ -31,6 +31,7 @@ pub mod acp;
 pub mod agent_session;
 pub mod app;
 pub mod args;
+mod ask_user;
 pub mod auth;
 pub mod auth_guidance;
 pub mod background_shells;

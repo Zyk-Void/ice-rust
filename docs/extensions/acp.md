@@ -81,7 +81,13 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | Images | Supported (`promptCapabilities.image: true`). Inline base64 PNG/JPEG/GIF/WebP supported by the native image detector; malformed data or mismatched MIME types are rejected. The selected provider/model must support vision |
 | Audio | Not supported |
 | Client fs/terminal methods | Not used. icers runs its own tools |
-| Free-form questions from extensions | Cancelled (no ACP mapping yet) |
+| Questions from extensions (`ask_user`) | Forwarded as `session/elicitation` forms when the client advertises form support. Single and multiple selections, text input and Yes/No confirmations use the same answer format as the TUI. Decline, cancel, invalid answers and client errors cancel the native question; clients without form support also cancel it |
+
+When a question offers choices and allows another answer, the form includes an
+optional text field. Entered text takes precedence over selected choices. T3
+combines that field with single-choice questions. For multiple-choice questions,
+T3 currently shows a separate text field and requires at least one selection
+before submitting, even when another answer is entered.
 
 ## Large model catalogs and attachments
 

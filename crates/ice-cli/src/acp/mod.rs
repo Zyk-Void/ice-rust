@@ -15,10 +15,11 @@ use serde_json::{json, Value};
 use session::{Session, Spawner};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufRead, AsyncWrite, AsyncWriteExt};
 use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 const PROTOCOL_VERSION: u64 = 1;
 /// Largest accepted inbound frame. Prompts can embed whole files as context.
@@ -101,6 +102,18 @@ pub(crate) struct Writer {
     out: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     next_id: AtomicU64,
     pending: Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>,
+    closed: AtomicBool,
+}
+
+struct PendingRequest<'a> {
+    writer: &'a Writer,
+    id: u64,
+}
+
+impl Drop for PendingRequest<'_> {
+    fn drop(&mut self) {
+        self.writer.pending.lock().unwrap().remove(&self.id);
+    }
 }
 
 impl Writer {
@@ -109,22 +122,44 @@ impl Writer {
             out: tokio::sync::Mutex::new(out),
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
+            closed: AtomicBool::new(false),
         }
     }
 
     async fn write(&self, frame: Value) {
+        let _ = self.write_cancellable(frame, None).await;
+    }
+
+    async fn write_cancellable(
+        &self,
+        frame: Value,
+        cancel: Option<&CancellationToken>,
+    ) -> Result<(), String> {
         let mut line = match serde_json::to_vec(&frame) {
             Ok(line) => line,
             Err(error) => {
                 eprintln!("[icers acp] failed to encode frame: {error}");
-                return;
+                return Err("failed to encode frame".to_string());
             }
         };
         line.push(b'\n');
-        let mut out = self.out.lock().await;
-        if out.write_all(&line).await.is_err() || out.flush().await.is_err() {
-            eprintln!("[icers acp] client stdout closed");
+        let mut out = if let Some(cancel) = cancel {
+            tokio::select! {
+                biased;
+                _ = cancel.cancelled() => return Err("dialog cancelled".to_string()),
+                out = self.out.lock() => out,
+            }
+        } else {
+            self.out.lock().await
+        };
+        if self.closed.load(Ordering::Acquire) {
+            return Err("client stdout closed".to_string());
         }
+        if out.write_all(&line).await.is_err() || out.flush().await.is_err() {
+            self.close();
+            return Err("client stdout closed".to_string());
+        }
+        Ok(())
     }
 
     async fn respond(&self, id: Value, result: Value) {
@@ -146,16 +181,34 @@ impl Writer {
             .await;
     }
 
-    /// Send an agent→client request and wait for its result. Resolves to `Err`
-    /// on a JSON-RPC error or when the client disconnects first.
-    pub(crate) async fn request(&self, method: &str, params: Value) -> Result<Value, String> {
+    /// Send an agent→client request and wait for a response. Cancellation may
+    /// stop the response wait, but must not interrupt a partially written line.
+    pub(crate) async fn request(
+        &self,
+        method: &str,
+        params: Value,
+        cancel: &CancellationToken,
+    ) -> Result<Value, String> {
+        if cancel.is_cancelled() {
+            return Err("dialog cancelled".to_string());
+        }
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
-        self.write(json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}))
-            .await;
-        rx.await
-            .unwrap_or_else(|_| Err("client disconnected".to_string()))
+        let _pending = PendingRequest { writer: self, id };
+        self.write_cancellable(
+            json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}),
+            Some(cancel),
+        )
+        .await?;
+        tokio::select! {
+            biased;
+            _ = cancel.cancelled() => {
+                self.notify("$/cancel_request", json!({"requestId": id})).await;
+                Err("dialog cancelled".to_string())
+            },
+            outcome = rx => outcome.unwrap_or_else(|_| Err("client disconnected".to_string())),
+        }
     }
 
     /// Route a client response to the matching [`request`](Self::request).
@@ -178,6 +231,7 @@ impl Writer {
 
     /// Fail every outstanding client request (client gone).
     fn close(&self) {
+        self.closed.store(true, Ordering::Release);
         self.pending.lock().unwrap().clear();
     }
 }
@@ -185,6 +239,7 @@ impl Writer {
 struct Server {
     writer: Arc<Writer>,
     spawner: Spawner,
+    elicitation_form: AtomicBool,
     sessions: Mutex<HashMap<String, Arc<Session>>>,
     loading: tokio::sync::Mutex<()>,
     session_dir: Option<PathBuf>,
@@ -205,6 +260,7 @@ where
     let server = Arc::new(Server {
         writer: Arc::new(Writer::new(Box::new(output))),
         spawner,
+        elicitation_form: AtomicBool::new(false),
         sessions: Mutex::new(HashMap::new()),
         loading: tokio::sync::Mutex::new(()),
         session_dir,
@@ -306,7 +362,13 @@ impl Server {
 
     async fn handle(&self, method: &str, params: Value) -> Result<Value, (i64, String)> {
         match method {
-            "initialize" => Ok(initialize_result()),
+            "initialize" => {
+                self.elicitation_form.store(
+                    params["clientCapabilities"]["elicitation"]["form"].is_object(),
+                    Ordering::Release,
+                );
+                Ok(initialize_result())
+            }
             "authenticate" => Ok(json!({})),
             "session/new" => self.new_session(params).await,
             "session/load" => self.load_session(params).await,
@@ -398,6 +460,7 @@ impl Server {
             None,
             &self.spawner,
             Arc::clone(&self.writer),
+            self.elicitation_form.load(Ordering::Acquire),
         )
         .await
         .map_err(|e| (INTERNAL_ERROR, e))?;
@@ -465,6 +528,7 @@ impl Server {
             Some(&saved_path),
             &self.spawner,
             Arc::clone(&self.writer),
+            self.elicitation_form.load(Ordering::Acquire),
         )
         .await
         .map_err(|error| {

@@ -7,7 +7,8 @@ use ice_tui::{Container, Editor, Focusable, Input, SelectItem, SelectList, TuiAl
 use serde_json::{json, Value};
 use tokio::sync::mpsc;
 
-use crate::interactive_tui::{ask_user_frame, parse_ask_user_prompt, AskUserPrompt};
+use crate::ask_user::{parse_ask_user_prompt, AskUserPrompt};
+use crate::interactive_tui::ask_user_frame;
 use crate::session_driver::DriverCommand;
 
 pub(super) enum DialogAction {
