@@ -1036,12 +1036,21 @@ async fn cancelling_form_wait_finishes_the_in_flight_frame() {
         .unwrap();
     cancel.cancel();
     let mut line = vec![first];
-    tokio::time::timeout(deadline, BufReader::new(input).read_until(b'\n', &mut line))
+    let mut input = BufReader::new(input);
+    tokio::time::timeout(deadline, input.read_until(b'\n', &mut line))
         .await
         .expect("cancellation must not truncate the frame")
         .unwrap();
     let frame: Value = serde_json::from_slice(&line).unwrap();
     assert_eq!(frame["method"], "session/elicitation");
+    let mut cancellation = Vec::new();
+    tokio::time::timeout(deadline, input.read_until(b'\n', &mut cancellation))
+        .await
+        .unwrap()
+        .unwrap();
+    let cancellation: Value = serde_json::from_slice(&cancellation).unwrap();
+    assert_eq!(cancellation["method"], "$/cancel_request");
+    assert_eq!(cancellation["params"]["requestId"], frame["id"]);
     assert_eq!(
         tokio::time::timeout(deadline, task)
             .await

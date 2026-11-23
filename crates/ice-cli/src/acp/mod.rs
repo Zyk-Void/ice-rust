@@ -203,7 +203,10 @@ impl Writer {
         .await?;
         tokio::select! {
             biased;
-            _ = cancel.cancelled() => Err("dialog cancelled".to_string()),
+            _ = cancel.cancelled() => {
+                self.notify("$/cancel_request", json!({"requestId": id})).await;
+                Err("dialog cancelled".to_string())
+            },
             outcome = rx => outcome.unwrap_or_else(|_| Err("client disconnected".to_string())),
         }
     }
