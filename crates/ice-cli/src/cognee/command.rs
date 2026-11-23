@@ -61,6 +61,12 @@ impl AgentTool for CogneeSearchTool {
     fn label(&self) -> &str {
         "Cognee Search"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some(
+            "Search Cognee memory for prior decisions, preferences, and earlier sessions"
+                .to_string(),
+        )
+    }
 
     fn execution_mode(&self) -> ToolExecutionMode {
         ToolExecutionMode::Parallel

@@ -40,6 +40,19 @@ pub trait AgentTool: Send + Sync {
         ToolExecutionMode::Parallel
     }
 
+    /// One-line summary for the system prompt's "Available tools" list.
+    /// Mirrors TS `ToolDefinition.promptSnippet`: a tool without a snippet is
+    /// still callable, it is just not listed there.
+    fn prompt_snippet(&self) -> Option<String> {
+        None
+    }
+
+    /// Usage rules this tool adds to the system prompt's guidelines while it
+    /// is active. Mirrors TS `ToolDefinition.promptGuidelines`.
+    fn prompt_guidelines(&self) -> Vec<String> {
+        Vec::new()
+    }
+
     /// Optional compatibility shim for raw tool-call arguments before schema
     /// validation. Default is identity. Mirrors TS `prepareArguments`.
     fn prepare_arguments(&self, args: serde_json::Value) -> Result<serde_json::Value, AgentError> {

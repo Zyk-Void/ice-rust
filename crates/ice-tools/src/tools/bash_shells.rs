@@ -240,6 +240,11 @@ impl AgentTool for BashOutputTool {
     fn label(&self) -> &str {
         "bash_output"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some(
+            "Check background shells: status, new output, or tail/grep of the full log".to_string(),
+        )
+    }
 
     async fn execute(
         &self,
@@ -442,6 +447,9 @@ impl AgentTool for BashKillTool {
     fn label(&self) -> &str {
         "bash_kill"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Stop a background shell".to_string())
+    }
 
     async fn execute(
         &self,
@@ -483,6 +491,9 @@ impl AgentTool for BashInputTool {
     }
     fn label(&self) -> &str {
         "bash_input"
+    }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Send input to a background shell started with stdin: true".to_string())
     }
 
     async fn execute(

@@ -165,6 +165,9 @@ impl AgentTool for ReadTool {
     fn label(&self) -> &str {
         "read"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Read file contents (text and images)".to_string())
+    }
 
     async fn execute(
         &self,

@@ -323,6 +323,30 @@ pub struct HarnessContextSnapshot {
     pub compact_at_tokens: Option<i64>,
 }
 
+/// Rendered prompt sections and active tool schemas from one configuration
+/// snapshot, before any per-request hooks.
+#[derive(Debug, Clone, PartialEq)]
+pub struct HarnessPromptSnapshot {
+    pub rendered_base: Option<String>,
+    pub visible_skills: Vec<Skill>,
+    pub mcp_instructions: String,
+    pub tools: Vec<ice_ai::types::Tool>,
+}
+
+impl HarnessPromptSnapshot {
+    /// Compose the captured sections without reading live configuration again.
+    pub fn compose(&self) -> String {
+        let mut prompt = compose_system_prompt(
+            self.rendered_base.as_deref(),
+            &self.visible_skills,
+            None,
+            None,
+        );
+        prompt.push_str(&self.mcp_instructions);
+        prompt
+    }
+}
+
 /// A point-in-time read model of one lane. Mirrors the TS lane snapshot the
 /// runtime/TUI renders from: the leaf pointer, the session name, rolled-up
 /// stats, and (when a run is in flight) the active operation.
@@ -2282,6 +2306,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snapshot.system_prompt.as_deref(),
             &snapshot.resources,
+            &snapshot.tools,
             &snapshot.active_tool_names,
             &snapshot.mcp_instructions,
         );
@@ -2377,6 +2402,33 @@ impl AgentHarness {
         }
         inner.system_prompt = prompt;
         Ok(())
+    }
+
+    /// Capture the prompt sections and exposed tools together. No provider
+    /// hooks, branch reads, or resource file reads are performed.
+    pub fn prompt_snapshot(&self) -> HarnessResult<HarnessPromptSnapshot> {
+        let (base, resources, tools, active, instructions) = {
+            let inner = self.inner.lock().unwrap();
+            if inner.closed {
+                return Err(HarnessError::closed());
+            }
+            (
+                inner.system_prompt.clone(),
+                inner.resources.clone(),
+                inner.tools.clone(),
+                inner.active_tool_names.clone(),
+                inner.mcp_instructions.clone(),
+            )
+        };
+        let tools = Self::active_tools(&tools, &active);
+        Ok(HarnessPromptSnapshot {
+            rendered_base: base
+                .as_deref()
+                .map(|base| crate::system_prompt::render_tool_sections(base, &tools)),
+            visible_skills: Self::prompt_skills(&resources, &active).to_vec(),
+            mcp_instructions: crate::system_prompt::format_mcp_instructions(&instructions),
+            tools: tools.iter().map(|tool| tool.schema().clone()).collect(),
+        })
     }
 
     /// Replace live MCP instruction sections without modifying the caller's base
@@ -3573,20 +3625,33 @@ impl AgentHarness {
     fn compose_prompt(
         base: Option<&str>,
         resources: &AgentHarnessResources,
+        tools: &[HarnessTool],
         active_tool_names: &[String],
         mcp_instructions: &BTreeMap<String, String>,
     ) -> String {
-        let all_skills: &[Skill] = resources.skills.as_deref().unwrap_or(&[]);
-        let skills: &[Skill] = if active_tool_names.iter().any(|n| n == "read") {
-            all_skills
-        } else {
-            &[]
-        };
+        // The default base prompt carries tool markers; fill them from the
+        // tools this request actually exposes (TS `_rebuildSystemPrompt`).
+        let rendered = base.map(|base| {
+            crate::system_prompt::render_tool_sections(
+                base,
+                &Self::active_tools(tools, active_tool_names),
+            )
+        });
+        let base = rendered.as_deref();
+        let skills = Self::prompt_skills(resources, active_tool_names);
         let mut prompt = compose_system_prompt(base, skills, None, None);
         prompt.push_str(&crate::system_prompt::format_mcp_instructions(
             mcp_instructions,
         ));
         prompt
+    }
+
+    fn prompt_skills<'a>(resources: &'a AgentHarnessResources, active: &[String]) -> &'a [Skill] {
+        if active.iter().any(|name| name == "read") {
+            resources.skills.as_deref().unwrap_or(&[])
+        } else {
+            &[]
+        }
     }
 
     /// Input ceiling for the known coding request. Keep the configured trigger,
@@ -3637,6 +3702,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snap.system_prompt.as_deref(),
             &snap.resources,
+            &snap.tools,
             &snap.active_tool_names,
             &snap.mcp_instructions,
         );
@@ -4720,6 +4786,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snap.system_prompt.as_deref(),
             &snap.resources,
+            &snap.tools,
             &snap.active_tool_names,
             &snap.mcp_instructions,
         );

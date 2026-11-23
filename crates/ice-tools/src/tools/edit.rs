@@ -106,6 +106,9 @@ impl AgentTool for EditTool {
     fn label(&self) -> &str {
         "edit"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Make precise file edits with exact text replacement, including multiple disjoint edits in one call".to_string())
+    }
 
     /// Fold legacy `oldText`/`newText` and parse a JSON-string `edits`. Mirrors
     /// `prepareEditArguments`.

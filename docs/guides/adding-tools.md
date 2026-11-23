@@ -129,10 +129,12 @@ before choosing a route.
 3. **Activation.** `active_tool_names` + `filter_active_tool_names`. With no
    `--tools`, *every registered tool is active*. There is no "registered but
    inactive by default" mechanism (TS has one; see 6.5).
-4. **Prompt.** The system prompt has a **hard-coded** "Available tools:" list in
-   `session.rs` (search for `Available tools:`). Registering a tool does *not*
-   add it there. The tool's own `description` still reaches the model through
-   the provider tool schema. See 6.1.
+4. **Prompt.** The default system prompt's "Available tools:" list and tool
+   guidelines are filled per request from the active tools
+   (`ice_harness::system_prompt::render_tool_sections`). A tool is listed when
+   it returns `AgentTool::prompt_snippet`, and each active tool adds its
+   `AgentTool::prompt_guidelines`. A tool without a snippet is still callable
+   through its provider schema; it is just not listed. See 6.1.
 5. **Presentation.** TUI grouping and previews are keyed on tool *names*
    (`ice-tui/src/tool_group.rs`, `tool_render.rs`). Unknown names fall back to
    a generic rendering. See 12.7.
@@ -294,8 +296,8 @@ Rust trait does.
 | `prepareArguments` | `AgentTool::prepare_arguments` | none |
 | `executionMode` (`sequential`/`parallel`) | `AgentTool::execution_mode` | none |
 | `execute(id, params, signal, onUpdate, ctx)` | `execute(id, params, signal, on_update)` | **no `ctx` argument.** Built-ins capture an `ExecutionToolContext` at construction; plugins get `cwd`/`sessionId` injected as `__ice` (10.6). |
-| `promptSnippet` | none found | The "Available tools" prompt section is hard-coded. |
-| `promptGuidelines` | none found | Same. |
+| `promptSnippet` | `AgentTool::prompt_snippet` | Plugin tools (`PluginToolAdapter`) do not supply one yet, so they are not listed. |
+| `promptGuidelines` | `AgentTool::prompt_guidelines` | Same. |
 | `access: "read" \| "write"` | none | Needed by plan/build modes (§2 of `ICE_PORTING.md`). |
 | `renderShell`, `renderCall`, `renderResult` | none | Rust tools cannot supply their own TUI rendering. Rendering is keyed on tool name in `ice-tui`. |
 | `AgentToolResult.addedToolNames` | `AgentToolResult.added_tool_names` | exists (deferred-tool loading) |
@@ -340,33 +342,18 @@ that.
 
 Ordered roughly by how likely they are to bite a user.
 
-### 6.1 The system prompt's tool list is hard-coded and out of date
+### 6.1 The system prompt's tool list (fixed)
 
-Location: `ice-cli/src/session.rs`, the `format!` that begins
-`"You are an expert coding assistant operating inside icers…"`.
+The built-in template (`crates/ice-cli/prompts/system.md`) opts in to dynamic
+tool sections with the first-line `{{icers:tool-sections}}` header. On each
+request the harness removes that header and fills the standalone lines
+`{{icers:tools}}` and `{{icers:guidelines}}` from active tools' `prompt_snippet`
+and `prompt_guidelines`. A custom `SYSTEM.md` or `--system-prompt` must include
+the same first-line header to opt in; otherwise tool markers are left alone.
+The `todo` guideline is already conditional on the tool being advertised.
 
-It lists exactly five tools: `read`, `bash`, `edit`, `write`, `docs`. It does
-not mention `bash_output`, `bash_kill`, `bash_input`, `bash_watch`,
-`cognee_search`, `mcp`, `mcpScript`, or `powershell` (although a later
-guideline mentions "if a powershell tool is available").
-
-It *does* tell the model: "Track multi-step work with the todo tool instead of
-re-listing the plan in prose". There is no built-in `todo` tool. If the
-companion plugin is not installed, the model is instructed to use a tool that
-does not exist, and may attempt the call.
-
-Alterations to consider:
-
-1. Make the list **derive from the active tool set** rather than a string
-   literal, so a new tool cannot be forgotten. This is the structural fix and
-   it removes a whole class of bug.
-2. Make the `todo` guideline **conditional on the tool being registered.**
-3. Until that is done, every built-in you add must be added to this literal by
-   hand. That is easy to forget; the compiler will not tell you.
-
-The tool's own `description` still reaches the model via the provider tool
-schema regardless, so a missing prompt line degrades guidance, it does not hide
-the tool.
+When you add a tool, give it a `prompt_snippet` (and `prompt_guidelines` if it
+has usage rules) instead of editing the prompt text.
 
 ### 6.2 `grep` / `find` / `ls` wiring
 
@@ -588,7 +575,7 @@ exist in every build.
    shell tools and `powershell`. Add to `ToolName` only if ice has it too;
    otherwise create it directly, as `bash_shells.rs` does.
 6. **Register** in `ice-cli` `build_tools` (section 3). Choose the replay policy.
-7. **Add to the system prompt list** (6.1).
+7. **Give it a `prompt_snippet`** (and `prompt_guidelines` if needed) so the system prompt lists it (6.1).
 8. **Add TUI handling** if it deserves grouping or a preview (12.7).
 9. **Tests** (12.8). A new behavior needs a test; a bug fix needs a regression
    test that fails before the fix (`AGENTS.md` §5).
@@ -1253,15 +1240,8 @@ use ice_tools::{create_find_tool, create_grep_tool, create_ls_tool};
 The options argument is a forward-compat seam with no fields in v1 (the
 constructors do `let _ = options;`), so `None` is correct.
 
-**Change 2: system prompt** (`session.rs`), add to "Available tools:":
-
-```
-- grep  — Search file contents for a pattern (respects .gitignore)
-- find  — Find files by glob pattern
-- ls    — List directory contents
-```
-
-and, ideally, replace the literal with a list built from the active tools (6.1).
+**Change 2: system prompt.** Nothing to edit: `grep`, `find` and `ls` already
+return a `prompt_snippet`, so they are listed once they are active (6.1).
 
 **Change 3: tests.** `session.rs` has no test of `build_tools` today (I found
 none by name), which is how the three tools went unnoticed. Add one in
@@ -1429,10 +1409,8 @@ runs), and ordered by value over cost:
 
 1. **Wire `grep`, `find`, `ls`** (13.1). Small, already tested, immediately
    useful, makes `--tools read,grep` real.
-2. **Make the system prompt tool list derive from the registered tools** and
-   make the `todo` guideline conditional (6.1). Prevents a recurring class of
-   bug, and fixes a prompt that currently instructs the model to use a missing
-   tool.
+2. ~~Make the system prompt tool list derive from the registered tools~~
+   Done (6.1).
 3. **Fix the doc drift**: `ICE_PORTING.md` §3 (15.1), the `authoring.md`
    contradiction (15.2), the `--no-builtin-tools` comment and help text
    (15.5, 15.6).

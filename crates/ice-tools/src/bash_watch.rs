@@ -875,6 +875,12 @@ impl AgentTool for BashWatchTool {
     fn label(&self) -> &str {
         "bash_watch"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some(
+            "Alert on a background shell's output pattern, silence, or interval instead of polling"
+                .to_string(),
+        )
+    }
 
     async fn execute(
         &self,

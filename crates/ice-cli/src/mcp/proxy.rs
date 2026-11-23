@@ -143,6 +143,12 @@ impl AgentTool for ProxyTool {
     fn label(&self) -> &str {
         "MCP"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some(
+            "MCP gateway: list, search, describe, and call tools on connected MCP servers"
+                .to_string(),
+        )
+    }
     async fn execute(
         &self,
         call_id: &str,

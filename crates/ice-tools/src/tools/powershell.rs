@@ -59,6 +59,9 @@ impl AgentTool for PowerShellTool {
     fn label(&self) -> &str {
         "powershell"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Execute PowerShell commands on Windows".to_string())
+    }
 
     async fn execute(
         &self,

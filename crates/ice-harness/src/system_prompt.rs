@@ -76,6 +76,80 @@ pub fn compose_system_prompt(
     out
 }
 
+/// First-line opt-in for per-request tool sections in a base prompt.
+const TOOL_SECTIONS_HEADER: &str = "{{icers:tool-sections}}";
+/// Marker the default base prompt uses for the per-request tool list.
+pub const TOOLS_PLACEHOLDER: &str = "{{icers:tools}}";
+/// Marker the default base prompt uses for the per-request tool guidelines.
+pub const GUIDELINES_PLACEHOLDER: &str = "{{icers:guidelines}}";
+
+/// Fill the tool markers in `prompt` from the tools active for this request.
+/// Mirrors TS `buildSystemPrompt`: only tools with a `prompt_snippet` are
+/// listed under "Available tools", and each active tool's
+/// `prompt_guidelines` are added once, in tool order.
+///
+/// Only prompts with the first-line `{{icers:tool-sections}}` opt-in are
+/// rendered. Within those prompts, only the first standalone line for each
+/// marker is replaced. A standalone guidelines line disappears if no active
+/// tool supplies a guideline.
+pub fn render_tool_sections(
+    prompt: &str,
+    tools: &[std::sync::Arc<dyn ice_agent::AgentTool>],
+) -> String {
+    let Some((header, body)) = prompt.split_once('\n') else {
+        return prompt.to_string();
+    };
+    if header.trim_end_matches('\r') != TOOL_SECTIONS_HEADER {
+        return prompt.to_string();
+    }
+    let listed: Vec<String> = tools
+        .iter()
+        .filter_map(|tool| {
+            let snippet = tool.prompt_snippet()?;
+            let snippet = snippet.trim();
+            (!snippet.is_empty()).then(|| format!("- {}: {snippet}", tool.schema().name))
+        })
+        .collect();
+    let tool_list = if listed.is_empty() {
+        "(none)".to_string()
+    } else {
+        listed.join("\n")
+    };
+    let mut seen = std::collections::HashSet::new();
+    let mut guidelines = String::new();
+    for tool in tools {
+        for guideline in tool.prompt_guidelines() {
+            let guideline = guideline.trim().to_string();
+            if !guideline.is_empty() && seen.insert(guideline.clone()) {
+                guidelines.push_str("- ");
+                guidelines.push_str(&guideline);
+                guidelines.push('\n');
+            }
+        }
+    }
+    let mut rendered = String::with_capacity(body.len() + tool_list.len() + guidelines.len());
+    let mut tools_pending = true;
+    let mut guidelines_pending = true;
+    for line in body.split_inclusive('\n') {
+        let text = line.trim_end_matches(['\r', '\n']);
+        let ending = &line[text.len()..];
+        if tools_pending && text == TOOLS_PLACEHOLDER {
+            tools_pending = false;
+            rendered.push_str(&tool_list);
+            rendered.push_str(ending);
+        } else if guidelines_pending && text == GUIDELINES_PLACEHOLDER {
+            guidelines_pending = false;
+            if !guidelines.is_empty() {
+                rendered.push_str(guidelines.trim_end_matches('\n'));
+                rendered.push_str(ending);
+            }
+        } else {
+            rendered.push_str(line);
+        }
+    }
+    rendered
+}
+
 /// Bounded live instructions from connected MCP servers. Limits include headers
 /// and truncation notices and are measured in UTF-8 bytes, not characters.
 pub fn format_mcp_instructions(
@@ -125,6 +199,97 @@ pub fn format_mcp_instructions(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct PromptTool {
+        schema: ice_ai::types::Tool,
+        snippet: Option<&'static str>,
+        guidelines: Vec<&'static str>,
+    }
+
+    #[async_trait::async_trait]
+    impl ice_agent::AgentTool for PromptTool {
+        fn schema(&self) -> &ice_ai::types::Tool {
+            &self.schema
+        }
+        fn label(&self) -> &str {
+            &self.schema.name
+        }
+        fn prompt_snippet(&self) -> Option<String> {
+            self.snippet.map(str::to_string)
+        }
+        fn prompt_guidelines(&self) -> Vec<String> {
+            self.guidelines.iter().map(|g| g.to_string()).collect()
+        }
+        async fn execute(
+            &self,
+            _id: &str,
+            _params: serde_json::Value,
+            _signal: tokio_util::sync::CancellationToken,
+            _update: std::sync::Arc<dyn Fn(ice_agent::ToolResultPartial) + Send + Sync>,
+        ) -> Result<ice_agent::AgentToolResult, ice_agent::AgentError> {
+            unreachable!("prompt rendering never runs a tool")
+        }
+    }
+
+    fn prompt_tool(
+        name: &str,
+        snippet: Option<&'static str>,
+        guidelines: Vec<&'static str>,
+    ) -> std::sync::Arc<dyn ice_agent::AgentTool> {
+        std::sync::Arc::new(PromptTool {
+            schema: ice_ai::types::Tool {
+                name: name.to_string(),
+                description: String::new(),
+                parameters: ice_ai::types::Schema::new(serde_json::json!({"type": "object"})),
+                constrained_sampling: None,
+            },
+            snippet,
+            guidelines,
+        })
+    }
+
+    const TEMPLATE: &str = concat!(
+        "{{icers:tool-sections}}\n",
+        "Tools:\n{{icers:tools}}\n\nGuidelines:\n- base rule\n{{icers:guidelines}}\n- last rule"
+    );
+
+    #[test]
+    fn render_lists_snippet_tools_and_dedupes_guidelines() {
+        let tools = vec![
+            prompt_tool("read", Some("Read files"), vec!["Use read, not cat."]),
+            prompt_tool("hidden", None, vec!["Use read, not cat.", "Hidden rule."]),
+            prompt_tool("bash", Some("Run Bash"), vec![]),
+        ];
+        assert_eq!(
+            render_tool_sections(TEMPLATE, &tools),
+            "Tools:\n- read: Read files\n- bash: Run Bash\n\nGuidelines:\n- base rule\n- Use read, not cat.\n- Hidden rule.\n- last rule"
+        );
+    }
+
+    #[test]
+    fn render_without_tools_says_none_and_drops_the_guideline_line() {
+        assert_eq!(
+            render_tool_sections(TEMPLATE, &[]),
+            "Tools:\n(none)\n\nGuidelines:\n- base rule\n- last rule"
+        );
+    }
+
+    #[test]
+    fn render_leaves_custom_markers_unchanged_without_opt_in() {
+        let custom = "Example:\n{{icers:tools}}\n{{icers:guidelines}}\n{{icers:tool-sections}}";
+        let tools = vec![prompt_tool("read", Some("Read files"), vec!["rule"])];
+        assert_eq!(render_tool_sections(custom, &tools), custom);
+    }
+
+    #[test]
+    fn render_leaves_inline_marker_examples_alone_with_opt_in() {
+        let custom = "{{icers:tool-sections}}\r\nExample: `{{icers:tools}}`\r\n{{icers:tools}}";
+        let tools = vec![prompt_tool("read", Some("Read files"), vec![])];
+        assert_eq!(
+            render_tool_sections(custom, &tools),
+            "Example: `{{icers:tools}}`\r\n- read: Read files"
+        );
+    }
     use crate::context_files::ContextFile;
     use crate::types::Skill;
 
@@ -231,6 +396,8 @@ mod tests {
             .await
             .unwrap();
         let snapshot = harness.context_snapshot().await.unwrap();
+        let captured = harness.prompt_snapshot().unwrap();
+        assert_eq!(captured.compose(), snapshot.system_prompt);
         assert_eq!(snapshot.base_system_prompt.as_deref(), Some("BASE"));
         assert!(snapshot
             .system_prompt
@@ -244,6 +411,11 @@ mod tests {
             .await
             .unwrap();
         let prompt = harness.context_snapshot().await.unwrap().system_prompt;
+        assert_eq!(harness.prompt_snapshot().unwrap().compose(), prompt);
+        assert_eq!(
+            captured.compose(),
+            "BASE\n\nMCP server `demo` instructions:\nUse echo."
+        );
         assert!(prompt.starts_with("RELOADED"));
         assert!(!prompt.contains("Use echo."));
         assert_eq!(prompt.matches("MCP server `demo`").count(), 1);
