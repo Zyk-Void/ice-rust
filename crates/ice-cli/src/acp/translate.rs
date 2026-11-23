@@ -500,7 +500,14 @@ pub(crate) struct QuestionForm {
 
 pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     let ui = &frame["ui"];
-    if ui["purpose"].as_str() != Some("question") {
+    if ui.as_object()?.is_empty() {
+        return None;
+    }
+    // The native SDK defaults an omitted purpose to a question.
+    if ui
+        .get("purpose")
+        .is_some_and(|purpose| purpose.as_str() != Some("question"))
+    {
         return None;
     }
     let prompt = crate::ask_user::parse_ask_user_prompt(&ice_extensions::UiDialogRequest {
@@ -511,7 +518,7 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     });
     let input = prompt.kind == "input" || prompt.options.is_empty();
     let multiple = prompt.allow_multiple && prompt.kind != "confirm";
-    let freeform = !input && prompt.allow_freeform && prompt.kind != "confirm";
+    let freeform = !input && !multiple && prompt.allow_freeform && prompt.kind != "confirm";
     let mut message = prompt.question.clone();
     if let Some(context) = &prompt.context {
         if !message.is_empty() {
@@ -606,7 +613,8 @@ impl QuestionForm {
         if self.prompt.kind == "input" || self.prompt.options.is_empty() {
             return Some(question_text_answer(content.get("answer")?.as_str()?));
         }
-        if self.prompt.allow_freeform && self.prompt.kind != "confirm" {
+        let multiple = self.prompt.allow_multiple && self.prompt.kind != "confirm";
+        if !multiple && self.prompt.allow_freeform && self.prompt.kind != "confirm" {
             if let Some(other) = content.get("answer__other") {
                 let other = other.as_str()?;
                 if !other.trim().is_empty() {
@@ -615,7 +623,7 @@ impl QuestionForm {
             }
         }
         let selected = content.get("answer")?;
-        let values = if self.prompt.allow_multiple && self.prompt.kind != "confirm" {
+        let values = if multiple {
             selected
                 .as_array()?
                 .iter()
@@ -943,43 +951,34 @@ mod tests {
 
     #[test]
     fn question_form_freeform_companion_takes_precedence() {
-        for multiple in [false, true] {
-            let form = ask_form(json!({
-                "purpose": "question", "question": "Choose databases.",
-                "options": ["Postgres", "SQLite"],
-                "allowMultiple": multiple, "allowFreeform": true,
-            }));
-            assert!(form.requested_schema.get("required").is_none());
+        let form = ask_form(json!({
+            "purpose": "question", "question": "Choose a database.",
+            "options": ["Postgres", "SQLite"], "allowFreeform": true,
+        }));
+        assert!(form.requested_schema.get("required").is_none());
+        assert_eq!(
+            form.requested_schema["properties"]["answer__other"]["type"],
+            "string"
+        );
+        for mut content in [json!({}), json!({"answer": "SQLite"})] {
+            content["answer__other"] = json!("  custom database  ");
             assert_eq!(
-                form.requested_schema["properties"]["answer__other"]["type"],
-                "string"
-            );
-            let selected = if multiple {
-                json!(["SQLite"])
-            } else {
-                json!("SQLite")
-            };
-            for mut content in [json!({}), json!({"answer": selected.clone()})] {
-                content["answer__other"] = json!("  custom database  ");
-                assert_eq!(
-                    form.answer("r3", Ok(json!({"action": "accept", "content": content})))
-                        ["answer"],
-                    json!({
-                        "values": ["  custom database  "], "value": "  custom database  ",
-                        "text": "  custom database  ", "kind": "input",
-                    })
-                );
-            }
-            assert_eq!(
-                form.answer(
-                    "r3",
-                    Ok(json!({
-                        "action": "accept", "content": {"answer": selected, "answer__other": " "},
-                    }))
-                )["answer"],
-                json!({"values": ["SQLite"], "kind": "selector"})
+                form.answer("r3", Ok(json!({"action": "accept", "content": content})))["answer"],
+                json!({
+                    "values": ["  custom database  "], "value": "  custom database  ",
+                    "text": "  custom database  ", "kind": "input",
+                })
             );
         }
+        assert_eq!(
+            form.answer(
+                "r3",
+                Ok(json!({
+                    "action": "accept", "content": {"answer": "SQLite", "answer__other": " "},
+                }))
+            )["answer"],
+            json!({"values": ["SQLite"], "kind": "selector"})
+        );
     }
 
     #[test]

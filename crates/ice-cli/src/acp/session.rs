@@ -8,7 +8,7 @@ use super::Writer;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWrite, AsyncWriteExt};
@@ -73,8 +73,7 @@ pub(crate) struct Session {
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     settled: Mutex<Option<oneshot::Sender<Value>>>,
     translator: Mutex<Translator>,
-    prompt_running: AtomicBool,
-    cancelled: AtomicBool,
+    turn: Mutex<Option<CancellationToken>>,
     /// Cancelled when the child's stdout closes (exit, crash or shutdown).
     closed: CancellationToken,
 }
@@ -101,8 +100,7 @@ impl Session {
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             settled: Mutex::new(None),
-            prompt_running: AtomicBool::new(false),
-            cancelled: AtomicBool::new(false),
+            turn: Mutex::new(None),
             closed: CancellationToken::new(),
         });
         let (ready_tx, ready_rx) = oneshot::channel();
@@ -153,9 +151,15 @@ impl Session {
                     }
                 }
                 Some("ui_dialog_request") => {
-                    // Answered concurrently: the pump must keep draining events
-                    // while a human decides.
-                    tokio::spawn(Arc::clone(&self).answer_dialog(frame));
+                    // Capture this turn before spawning, so an old dialog
+                    // cannot attach itself to a later prompt.
+                    let cancel = self
+                        .turn
+                        .lock()
+                        .unwrap()
+                        .clone()
+                        .unwrap_or_else(|| self.closed.clone());
+                    tokio::spawn(Arc::clone(&self).answer_dialog(frame, cancel));
                 }
                 _ => {
                     let updates = self.translator.lock().unwrap().translate(&frame);
@@ -181,7 +185,7 @@ impl Session {
 
     /// Forward permission dialogs and negotiated question forms. Unsupported
     /// dialogs are cancelled so the asking extension never waits indefinitely.
-    async fn answer_dialog(self: Arc<Self>, frame: Value) {
+    async fn answer_dialog(self: Arc<Self>, frame: Value, cancel: CancellationToken) {
         let request_id = frame["requestId"].as_str().unwrap_or_default().to_string();
         let ui = &frame["ui"];
         let response = match translate::permission_options(ui) {
@@ -191,10 +195,10 @@ impl Session {
                 let mut params =
                     translate::permission_params(ui, &options, tool_call, tool_call_id);
                 params["sessionId"] = json!(self.id);
-                let outcome = tokio::select! {
-                    outcome = self.writer.request("session/request_permission", params) => outcome,
-                    _ = self.closed.cancelled() => return,
-                };
+                let outcome = self
+                    .writer
+                    .request("session/request_permission", params, &cancel)
+                    .await;
                 translate::permission_answer(&request_id, &options, outcome)
             }
             None => {
@@ -212,17 +216,21 @@ impl Session {
                     if let Some(tool_call_id) = frame["toolCallId"].as_str() {
                         params["toolCallId"] = json!(tool_call_id);
                     }
-                    let outcome = tokio::select! {
-                        outcome = self.writer.request("session/elicitation", params) => outcome,
-                        _ = self.closed.cancelled() => return,
-                    };
+                    let outcome = self
+                        .writer
+                        .request("session/elicitation", params, &cancel)
+                        .await;
                     form.answer(&request_id, outcome)
                 } else {
                     json!({"type": "ui_dialog_response", "requestId": request_id, "cancelled": true})
                 }
             }
         };
-        let _ = self.send(&response).await;
+        // The native abort/settlement clears its own dialog. Do not send a
+        // late answer (or a second cancellation) into the next turn.
+        if !cancel.is_cancelled() {
+            let _ = self.send(&response).await;
+        }
     }
 
     async fn send(&self, frame: &Value) -> Result<(), String> {
@@ -276,11 +284,18 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
-        if self.prompt_running.swap(true, Ordering::AcqRel) {
-            return Err("a prompt is already running in this session".to_string());
-        }
-        let result = self.prompt_inner(text, images).await;
-        self.prompt_running.store(false, Ordering::Release);
+        let cancel = {
+            let mut turn = self.turn.lock().unwrap();
+            if turn.is_some() {
+                return Err("a prompt is already running in this session".to_string());
+            }
+            let cancel = self.closed.child_token();
+            *turn = Some(cancel.clone());
+            cancel
+        };
+        let result = self.prompt_inner(text, images, &cancel).await;
+        cancel.cancel();
+        self.turn.lock().unwrap().take();
         result
     }
 
@@ -288,8 +303,8 @@ impl Session {
         &self,
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
+        cancel: &CancellationToken,
     ) -> Result<&'static str, String> {
-        self.cancelled.store(false, Ordering::Release);
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
         if let Err(error) = self
@@ -312,18 +327,15 @@ impl Session {
             .await;
         }
         let stop = self.translator.lock().unwrap().take_stop_reason();
-        translate::stop_reason(
-            &settled,
-            self.cancelled.load(Ordering::Acquire),
-            stop.as_deref(),
-        )
+        translate::stop_reason(&settled, cancel.is_cancelled(), stop.as_deref())
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
     /// resolves with `cancelled` once the child settles.
     pub(crate) async fn cancel(&self) {
-        if self.prompt_running.load(Ordering::Acquire) {
-            self.cancelled.store(true, Ordering::Release);
+        let cancel = self.turn.lock().unwrap().clone();
+        if let Some(cancel) = cancel {
+            cancel.cancel();
             let _ = self.send(&json!({"type": "abort"})).await;
         }
     }

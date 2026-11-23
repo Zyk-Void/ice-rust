@@ -19,6 +19,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufRead, AsyncWrite, AsyncWriteExt};
 use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 const PROTOCOL_VERSION: u64 = 1;
 /// Largest accepted inbound frame. Prompts can embed whole files as context.
@@ -157,17 +158,28 @@ impl Writer {
             .await;
     }
 
-    /// Send an agent→client request and wait for its result. Resolves to `Err`
-    /// on a JSON-RPC error or when the client disconnects first.
-    pub(crate) async fn request(&self, method: &str, params: Value) -> Result<Value, String> {
+    /// Send an agent→client request and wait for a response. Cancellation may
+    /// stop the response wait, but must not interrupt a partially written line.
+    pub(crate) async fn request(
+        &self,
+        method: &str,
+        params: Value,
+        cancel: &CancellationToken,
+    ) -> Result<Value, String> {
+        if cancel.is_cancelled() {
+            return Err("dialog cancelled".to_string());
+        }
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
         let _pending = PendingRequest { writer: self, id };
         self.write(json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}))
             .await;
-        rx.await
-            .unwrap_or_else(|_| Err("client disconnected".to_string()))
+        tokio::select! {
+            biased;
+            _ = cancel.cancelled() => Err("dialog cancelled".to_string()),
+            outcome = rx => outcome.unwrap_or_else(|_| Err("client disconnected".to_string())),
+        }
     }
 
     /// Route a client response to the matching [`request`](Self::request).

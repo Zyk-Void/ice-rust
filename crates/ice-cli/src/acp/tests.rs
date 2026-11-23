@@ -266,7 +266,9 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta", "delta": answer, "message": {"kind": "assistant"}})).await;
                 emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
             }
-            "abort" if waiting => {
+            "abort" if waiting || asked_question => {
+                asked_question = false;
+                waiting = false;
                 emit(&mut stdout, json!({"type": "agent_settled", "outcome": "aborted", "aborted": true})).await;
             }
             "stop" => break,
@@ -634,10 +636,9 @@ async fn question_round_trip(ui: Value, capabilities: Value, answer: Value) -> (
 async fn question_in_session(
     client: &mut Client,
     session: &str,
-    mut ui: Value,
+    ui: Value,
     answer: Value,
 ) -> (Vec<Value>, Value) {
-    ui["purpose"] = json!("question");
     let id = client
         .request_id(
             "session/prompt",
@@ -705,10 +706,10 @@ async fn question_form_single_choice_round_trips_t3_response() {
 #[tokio::test]
 async fn question_form_multi_choice_round_trips_tui_answer() {
     let (requests, native) = question_round_trip(
-        json!({"question": "Choose targets", "allowMultiple": true,
-            "options": ["Linux", "Windows", "macOS"]}),
+        json!({"purpose": "question", "question": "Choose targets", "allowMultiple": true,
+            "allowFreeform": true, "options": ["Linux", "Windows", "macOS"]}),
         json!({"elicitation": {"form": {}}}),
-        accepted_question(json!({"answer": ["Linux", "macOS"]})),
+        accepted_question(json!({"answer": ["Linux", "macOS"], "answer__other": "ignored"})),
     )
     .await;
     assert_eq!(requests.len(), 1);
@@ -716,6 +717,9 @@ async fn question_form_multi_choice_round_trips_tui_answer() {
         requests[0]["requestedSchema"]["properties"]["answer"]["type"],
         "array"
     );
+    assert!(requests[0]["requestedSchema"]["properties"]
+        .get("answer__other")
+        .is_none());
     assert_eq!(
         native["answer"],
         json!({"values": ["Linux", "macOS"], "kind": "selector"})
@@ -903,7 +907,9 @@ async fn question_request_drop_removes_the_pending_waiter() {
     let (out, input) = tokio::io::duplex(1 << 16);
     let writer = Writer::new(Box::new(out));
     let mut output = BufReader::new(input).lines();
-    let mut request = Box::pin(writer.request("session/elicitation", json!({"sessionId": "test"})));
+    let cancel = CancellationToken::new();
+    let mut request =
+        Box::pin(writer.request("session/elicitation", json!({"sessionId": "test"}), &cancel));
     let frame = tokio::select! {
         result = request.as_mut() => panic!("request completed before a response: {result:?}"),
         line = output.next_line() => serde_json::from_str::<Value>(&line.unwrap().unwrap()).unwrap(),
@@ -915,6 +921,87 @@ async fn question_request_drop_removes_the_pending_waiter() {
         writer.pending.lock().unwrap().is_empty(),
         "closing a session must release its unanswered form request"
     );
+}
+
+#[tokio::test]
+async fn cancelling_form_wait_finishes_the_in_flight_frame() {
+    use tokio::io::AsyncReadExt;
+
+    let (out, mut input) = tokio::io::duplex(8);
+    let writer = Arc::new(Writer::new(Box::new(out)));
+    let cancel = CancellationToken::new();
+    let task = tokio::spawn({
+        let writer = Arc::clone(&writer);
+        let cancel = cancel.clone();
+        async move {
+            writer
+                .request("session/elicitation", json!({"sessionId": "test"}), &cancel)
+                .await
+        }
+    });
+    let deadline = std::time::Duration::from_secs(5);
+    let first = tokio::time::timeout(deadline, input.read_u8())
+        .await
+        .expect("the request starts writing")
+        .unwrap();
+    cancel.cancel();
+    let mut line = vec![first];
+    tokio::time::timeout(deadline, BufReader::new(input).read_until(b'\n', &mut line))
+        .await
+        .expect("cancellation must not truncate the frame")
+        .unwrap();
+    let frame: Value = serde_json::from_slice(&line).unwrap();
+    assert_eq!(frame["method"], "session/elicitation");
+    assert_eq!(
+        tokio::time::timeout(deadline, task)
+            .await
+            .expect("cancellation releases the response wait")
+            .unwrap(),
+        Err("dialog cancelled".into())
+    );
+    assert!(writer.pending.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn cancelling_prompt_with_open_form_allows_the_next_form() {
+    let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"protocolVersion": 1,
+        "clientCapabilities": {"elicitation": {"form": {}}}}),
+        )
+        .await;
+    let (session, _) = client.new_session().await;
+    let prompt = client.request_id("session/prompt", json!({"sessionId": session,
+        "prompt": [{"type": "text", "text": "question {\"question\":\"Continue?\",\"options\":[\"Yes\",\"No\"]}"}]})).await;
+    let old_form = loop {
+        let frame = client.next().await;
+        if frame["method"] == "session/elicitation" {
+            break frame["id"].clone();
+        }
+        assert_ne!(
+            frame["id"], prompt,
+            "prompt settled before elicitation: {frame}"
+        );
+    };
+    client
+        .send(
+            json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}}),
+        )
+        .await;
+    let (_, response) = client.until_response(prompt).await;
+    assert_eq!(response["result"]["stopReason"], "cancelled");
+    client.send(json!({"jsonrpc": "2.0", "id": old_form, "result": accepted_question(json!({"answer": "No"}))})).await;
+    let (requests, native) = question_in_session(
+        &mut client,
+        &session,
+        json!({"question": "Try again?", "options": ["Yes", "No"]}),
+        accepted_question(json!({"answer": "Yes"})),
+    )
+    .await;
+    assert_eq!(requests.len(), 1);
+    assert_eq!(native["answer"]["values"], json!(["Yes"]));
 }
 
 #[tokio::test]
