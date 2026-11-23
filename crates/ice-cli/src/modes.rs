@@ -339,6 +339,7 @@ pub async fn rpc(
         tokio::io::BufReader::new(tokio::io::stdin()),
         std::io::stdout(),
         terminate,
+        std::env::var("ICERS_ACP_RPC").as_deref() == Ok("1"),
     )
     .await
 }
@@ -410,6 +411,7 @@ where
         input,
         output,
         tokio_util::sync::CancellationToken::new(),
+        false,
     )
     .await
 }
@@ -426,6 +428,7 @@ async fn rpc_with_builtins<R, W>(
     input: R,
     output: W,
     terminate: tokio_util::sync::CancellationToken,
+    acp_compaction: bool,
 ) -> i32
 where
     R: tokio::io::AsyncBufRead + Unpin,
@@ -436,28 +439,47 @@ where
     // so pipe backpressure never blocks a Tokio worker on IO or a std mutex.
     let (stdout, writer_task, writer_failed) = start_rpc_writer(output);
     let pump_stop = tokio_util::sync::CancellationToken::new();
+    let (compaction_tx, mut compaction_rx) = tokio::sync::mpsc::unbounded_channel();
+    let compaction_guard = acp_compaction.then(|| {
+        crate::rpc::compaction::CompactionGuard::attach(
+            harness,
+            Arc::new(move |event| {
+                let _ = compaction_tx.send(event);
+            }),
+        )
+    });
 
     // A completion response is queued only after its final events, so a
     // subsequent prompt cannot overtake the previous run's agent_end.
     let (event_flush_tx, mut event_flush_rx) =
         tokio::sync::mpsc::unbounded_channel::<tokio::sync::oneshot::Sender<()>>();
     // Stream fine-grained AgentEvents as JSONL until the receiver closes.
-    let event_task = agent_events.take().map(|mut rx| {
+    let event_task = (agent_events.is_some() || compaction_guard.is_some()).then(|| {
+        let mut rx = agent_events.take();
         let out = stdout.clone();
         let stop = pump_stop.clone();
         tokio::spawn(async move {
             loop {
                 let received = tokio::select! {
                     _ = stop.cancelled() => {
-                        drain_rpc_events(&out, &mut rx).await;
+                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
                         break;
                     }
                     Some(done) = event_flush_rx.recv() => {
-                        drain_rpc_events(&out, &mut rx).await;
+                        drain_rpc_events_and_compaction(&out, &mut rx, &mut compaction_rx).await;
                         let _ = done.send(());
                         continue;
                     }
-                    event = rx.recv() => event,
+                    Some(event) = compaction_rx.recv() => {
+                        write_line(&out, &event).await;
+                        continue;
+                    }
+                    event = async {
+                        match &mut rx {
+                            Some(rx) => rx.recv().await,
+                            None => std::future::pending().await,
+                        }
+                    } => event,
                 };
                 match received {
                     Ok(event) => {
@@ -706,6 +728,7 @@ where
                 let active_task = Arc::clone(&run_active);
                 let mailbox_task = ui_dialog.clone();
                 let flush_events = event_flush.clone();
+                let compaction_task = compaction_guard.as_ref().map(|guard| guard.observer());
                 let Some(content) = content.or_else(|| (resume || compact).then(String::new))
                 else {
                     active_task.store(false, std::sync::atomic::Ordering::Release);
@@ -883,6 +906,15 @@ where
                         rpc_prompt_images_cancellable(&lane_task, &content, images, cancel_task)
                             .await
                     };
+                    if let Some(observer) = compaction_task {
+                        let error = result.as_ref().err().map(String::as_str).or_else(|| {
+                            result
+                                .as_ref()
+                                .ok()
+                                .and_then(|value| value["error"].as_str())
+                        });
+                        observer.settle(error);
+                    }
                     if let Some(flush) = flush_events {
                         let (done, drained) = tokio::sync::oneshot::channel();
                         if flush.send(done).is_ok() {
@@ -955,6 +987,34 @@ where
                 Ok(serde_json::json!({"commands": commands}))
             }
             "get_messages" => rpc_get_messages(&lane, harness, &msg).await,
+            "fork_session" if run_active.load(std::sync::atomic::Ordering::Acquire) => {
+                Err("wait for the current run to finish before forking".to_string())
+            }
+            "fork_session" => {
+                match std::env::current_dir() {
+                    Ok(cwd) => {
+                        match crate::session::fork_session_storage(harness, &cwd.to_string_lossy())
+                            .await
+                        {
+                            Ok(fork) => {
+                                let storage = fork.storage();
+                                let id = storage.metadata().id;
+                                let path = storage.persistence_path();
+                                // Release the new file's writer lock before the ACP
+                                // bridge starts the child that will own the fork.
+                                drop(storage);
+                                drop(fork);
+                                path.map(|path| serde_json::json!({"sessionId": id, "path": path}))
+                                    .ok_or_else(|| {
+                                        "fork did not create a saved session".to_string()
+                                    })
+                            }
+                            Err(error) => Err(error),
+                        }
+                    }
+                    Err(error) => Err(format!("cannot resolve current directory: {error}")),
+                }
+            }
             "get_history" => rpc_get_history(&lane, harness, &msg).await,
             "get_stats" => rpc_get_stats(&lane, harness).await,
             "get_queue" => rpc_get_queue(&lane, harness, &msg).await,
@@ -985,6 +1045,8 @@ where
     ui_dialog.detach();
     if cancel_on_exit {
         run_cancel.cancel();
+        // A background notice can own the lane without a client run_task.
+        let _ = lane.abort().await;
     }
     let mut exit_code = 0;
     if let Some(task) = run_task {
@@ -993,6 +1055,7 @@ where
             exit_code = 1;
         }
     }
+    drop(compaction_guard);
     pump_stop.cancel();
     let _ = dialog_task.await;
     if let Some(task) = event_task {
@@ -1008,6 +1071,19 @@ where
         }
     }
     exit_code
+}
+
+async fn drain_rpc_events_and_compaction(
+    out: &RpcWriter,
+    events: &mut Option<tokio::sync::broadcast::Receiver<AgentEvent>>,
+    compactions: &mut tokio::sync::mpsc::UnboundedReceiver<serde_json::Value>,
+) {
+    if let Some(events) = events {
+        drain_rpc_events(out, events).await;
+    }
+    while let Ok(event) = compactions.try_recv() {
+        write_line(out, &event).await;
+    }
 }
 
 async fn drain_rpc_events(
@@ -1485,6 +1561,7 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         });
     let queued = lane.queued_messages().await.unwrap_or_default();
     let stats = rpc_get_stats(lane, harness).await.ok();
+    let session_name = harness.session().get_name().await.ok().flatten();
     serde_json::json!({
         "modelId": model.as_ref().map(|model| model.id.clone()),
         "provider": model.as_ref().map(|model| model.provider.clone()),
@@ -1493,6 +1570,7 @@ async fn rpc_get_state(lane: &Arc<dyn AgentLane>, harness: &AgentHarness) -> ser
         "leafId": leaf_id,
         "context": context,
         "sessionId": harness.session().storage().metadata().id,
+        "sessionName": session_name,
         "activeOperation": active_operation,
         "queue": {
             "steering": queued.steering,
@@ -2581,6 +2659,27 @@ mod tests {
     };
     use ice_harness::session::types::OperationError;
 
+    #[tokio::test]
+    async fn rpc_state_exposes_only_the_persisted_session_title() {
+        let (harness, _) = rpc_test_harness("unused", 0.0).await;
+        let lane = harness.lane("main");
+        assert_eq!(
+            rpc_get_state(&lane, &harness).await.get("sessionName"),
+            Some(&serde_json::Value::Null)
+        );
+        harness
+            .session()
+            .set_name(Some("Persisted title"))
+            .await
+            .unwrap();
+        assert_eq!(
+            rpc_get_state(&lane, &harness).await["sessionName"],
+            "Persisted title"
+        );
+        harness.session().set_name(None).await.unwrap();
+        assert!(rpc_get_state(&lane, &harness).await["sessionName"].is_null());
+    }
+
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn repl_abort_returns_a_stopping_exit_code() {
         let (harness, provider) = rpc_test_harness("still streaming the response", 20.0).await;
@@ -2825,6 +2924,42 @@ mod tests {
             .await
         });
         (client, output, task)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn rpc_compaction_observer_releases_producers_on_eof() {
+        for enabled in [false, true] {
+            let (harness, _) = rpc_test_harness("done", 0.0).await;
+            let output = RpcOutput::default();
+            let input = b"{\"type\":\"prompt\",\"id\":1,\"message\":\"continue\"}\n";
+            let code = tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                rpc_with_builtins(
+                    &harness,
+                    None,
+                    vec![],
+                    ice_extensions::UiDialogMailbox::new(),
+                    None,
+                    RpcBuiltins::default(),
+                    tokio::io::BufReader::new(input.as_slice()),
+                    output.clone(),
+                    tokio_util::sync::CancellationToken::new(),
+                    enabled,
+                ),
+            )
+            .await
+            .expect("observer must release every producer before writer join");
+            assert_eq!(code, 0);
+            assert!(harness.extensions().is_empty());
+            assert!(output
+                .messages()
+                .iter()
+                .any(|frame| frame["type"] == "agent_settled" && frame["outcome"] == "completed"));
+            assert!(!output
+                .messages()
+                .iter()
+                .any(|frame| frame["type"] == "compaction_status"));
+        }
     }
 
     #[tokio::test]
@@ -3237,6 +3372,7 @@ mod tests {
                 tokio::io::BufReader::new(input),
                 captured,
                 signal,
+                false,
             )
             .await
         });

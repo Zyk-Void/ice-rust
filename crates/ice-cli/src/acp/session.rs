@@ -6,7 +6,7 @@
 use super::translate::{self, Translator};
 use super::Writer;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -39,6 +39,7 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
     Arc::new(move |cwd, session_id, saved_path| {
         let mut command = tokio::process::Command::new(&program);
         command.args(["--mode", "rpc"]).args(&extra_args);
+        command.env("ICERS_ACP_RPC", "1");
         if let Some(path) = saved_path {
             // Open-only: never recreate a missing or unreadable saved session.
             command.arg("--session").arg(path);
@@ -65,8 +66,12 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
 
 pub(crate) struct Session {
     id: String,
+    cwd: PathBuf,
+    operation: tokio::sync::Mutex<()>,
+    pending_compactions: Mutex<HashSet<String>>,
     writer: Arc<Writer>,
     elicitation_form: bool,
+    compaction: bool,
     stdin: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     process: Mutex<Option<tokio::process::Child>>,
     next_id: AtomicU64,
@@ -76,7 +81,7 @@ pub(crate) struct Session {
     turn: Mutex<Option<Arc<CancellationToken>>>,
     /// Serializes turn transitions with delivery of an abort to the child.
     turn_gate: tokio::sync::Mutex<()>,
-    /// Cancelled when the child's stdout closes (exit, crash or shutdown).
+    /// Cancelled when shutdown starts or the child's stdout closes.
     closed: CancellationToken,
 }
 
@@ -89,14 +94,19 @@ impl Session {
         spawner: &Spawner,
         writer: Arc<Writer>,
         elicitation_form: bool,
+        compaction: bool,
     ) -> Result<Arc<Self>, String> {
         let io = spawner(&cwd, &id, saved_path)
             .map_err(|error| format!("failed to start icers: {error}"))?;
         let session = Arc::new(Self {
-            translator: Mutex::new(Translator::new(cwd)),
+            translator: Mutex::new(Translator::new(cwd.clone())),
             id,
+            cwd,
+            operation: tokio::sync::Mutex::new(()),
+            pending_compactions: Mutex::new(HashSet::new()),
             writer,
             elicitation_form,
+            compaction,
             stdin: tokio::sync::Mutex::new(io.stdin),
             process: Mutex::new(io.process),
             next_id: AtomicU64::new(1),
@@ -148,6 +158,24 @@ impl Session {
                         let _ = waiter.send(frame);
                     }
                 }
+                Some("compaction_status") => {
+                    if self.compaction {
+                        if let Some(update) = translate::compaction_update(&frame) {
+                            let id = update["compactionId"].as_str().unwrap().to_string();
+                            let accepted = {
+                                let mut pending = self.pending_compactions.lock().unwrap();
+                                if update["status"] == "in_progress" {
+                                    pending.insert(id)
+                                } else {
+                                    pending.remove(&id)
+                                }
+                            };
+                            if accepted {
+                                self.notify_update(update).await;
+                            }
+                        }
+                    }
+                }
                 Some("agent_settled") => {
                     if let Some(settled) = self.settled.lock().unwrap().take() {
                         let _ = settled.send(frame);
@@ -173,6 +201,13 @@ impl Session {
                     }
                 }
             }
+        }
+        let unfinished: Vec<_> = self.pending_compactions.lock().unwrap().drain().collect();
+        for id in unfinished {
+            self.notify_update(json!({"sessionUpdate": "compaction_update",
+                "compactionId": id, "status": "failed",
+                "error": "icers process exited during compaction"}))
+                .await;
         }
         self.closed.cancel();
         self.pending.lock().unwrap().clear();
@@ -258,6 +293,9 @@ impl Session {
 
     /// Send a native command and wait for its `response` frame.
     pub(crate) async fn command(&self, mut frame: Value) -> Result<Value, String> {
+        if self.closed.is_cancelled() {
+            return Err("icers session is closed".to_string());
+        }
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         frame["id"] = json!(id);
         let (tx, rx) = oneshot::channel();
@@ -268,6 +306,10 @@ impl Session {
         }
         let response = tokio::select! {
             response = rx => response.map_err(|_| "icers process exited".to_string())?,
+            _ = self.closed.cancelled() => {
+                self.pending.lock().unwrap().remove(&id);
+                return Err("icers session is closed".to_string());
+            }
             _ = tokio::time::sleep(COMMAND_TIMEOUT) => {
                 self.pending.lock().unwrap().remove(&id);
                 return Err("icers did not answer in time".to_string());
@@ -290,6 +332,13 @@ impl Session {
         text: String,
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
+        if self.closed.is_cancelled() {
+            return Err("icers session is closed".to_string());
+        }
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "another operation is running in this session".to_string())?;
         let gate = self.turn_gate.lock().await;
         let cancel = {
             let mut turn = self.turn.lock().unwrap();
@@ -307,6 +356,19 @@ impl Session {
         result
     }
 
+    pub(crate) fn cwd(&self) -> &Path {
+        &self.cwd
+    }
+
+    /// Capture the live source through its owning child; never reopen its file.
+    pub(crate) async fn fork_native(&self) -> Result<Value, String> {
+        let _operation = self
+            .operation
+            .try_lock()
+            .map_err(|_| "wait for the current operation to finish before forking".to_string())?;
+        self.command(json!({"type": "fork_session"})).await
+    }
+
     async fn prompt_inner(
         &self,
         text: String,
@@ -314,6 +376,72 @@ impl Session {
         cancel: &CancellationToken,
         gate: tokio::sync::MutexGuard<'_, ()>,
     ) -> Result<&'static str, String> {
+        let requested_name =
+            text.trim()
+                .split_once(char::is_whitespace)
+                .and_then(|(command, args)| {
+                    let name = args.trim();
+                    (command == "/name" && !name.is_empty()).then(|| name.to_string())
+                });
+        let compaction_id = (self.compaction && text.split_whitespace().next() == Some("/compact"))
+            .then(|| uuid::Uuid::new_v4().to_string());
+        if let Some(id) = &compaction_id {
+            self.notify_update(json!({
+                "sessionUpdate": "compaction_update", "compactionId": id,
+                "status": "in_progress",
+            }))
+            .await;
+        }
+        let settled = self.prompt_settlement(text, images, gate).await;
+        let stop = self.translator.lock().unwrap().take_stop_reason();
+        let result = match &settled {
+            Ok(settled) => translate::stop_reason(settled, cancel.is_cancelled(), stop.as_deref()),
+            Err(error) => Err(error.clone()),
+        };
+        let summary = settled
+            .as_ref()
+            .ok()
+            .and_then(|settled| settled["summary"].as_str())
+            .filter(|text| !text.is_empty());
+        if let Some(id) = compaction_id {
+            let status = match &result {
+                Ok("cancelled") => "cancelled",
+                Ok(_) => "completed",
+                Err(_) => "failed",
+            };
+            let mut update = json!({
+                "sessionUpdate": "compaction_update", "compactionId": id, "status": status,
+            });
+            if let Some(summary) = summary {
+                update["summary"] = json!([{"type": "text", "text": summary}]);
+            }
+            if let Err(error) = &result {
+                update["error"] = json!(error);
+            }
+            self.notify_update(update).await;
+        } else if let Some(summary) = summary {
+            // Clients without compaction support still receive the native summary.
+            self.notify_update(json!({
+                "sessionUpdate": "agent_message_chunk",
+                "content": {"type": "text", "text": summary},
+            }))
+            .await;
+        }
+        if result == Ok("end_turn") {
+            if let Some(name) = requested_name.as_deref() {
+                self.publish_title(Some(name)).await;
+            }
+        }
+        self.publish_usage().await;
+        result
+    }
+
+    async fn prompt_settlement(
+        &self,
+        text: String,
+        images: Vec<ice_ai::types::ImageContent>,
+        gate: tokio::sync::MutexGuard<'_, ()>,
+    ) -> Result<Value, String> {
         let (tx, rx) = oneshot::channel();
         *self.settled.lock().unwrap() = Some(tx);
         if let Err(error) = self
@@ -321,23 +449,42 @@ impl Session {
             .await
         {
             self.settled.lock().unwrap().take();
-            return Err(error);
+            // The child can exit before it answers; report that as a turn
+            // failure rather than the generic closed-session error.
+            return Err(if self.closed.is_cancelled() {
+                "icers process exited during the turn".to_string()
+            } else {
+                error
+            });
         }
         drop(gate);
-        let settled = tokio::select! {
-            settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string())?,
-            _ = self.closed.cancelled() => return Err("icers process exited during the turn".to_string()),
-        };
-        // `/compact` reports its result as a settlement summary.
-        if let Some(summary) = settled["summary"].as_str().filter(|text| !text.is_empty()) {
-            self.notify_update(json!({
-                "sessionUpdate": "agent_message_chunk",
-                "content": {"type": "text", "text": summary},
-            }))
-            .await;
+        tokio::select! {
+            // A settlement that already arrived wins over a later close.
+            biased;
+            settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string()),
+            _ = self.closed.cancelled() => Err("icers process exited during the turn".to_string()),
         }
-        let stop = self.translator.lock().unwrap().take_stop_reason();
-        translate::stop_reason(&settled, cancel.is_cancelled(), stop.as_deref())
+    }
+
+    /// Publish the actual persisted name. With an expected name, a failed
+    /// `/name` command must not announce its requested (but unsaved) title.
+    /// Missing names and state-query failures leave the operation unchanged.
+    pub(crate) async fn publish_title(&self, expected: Option<&str>) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(name) = state["sessionName"]
+            .as_str()
+            .filter(|name| !name.trim().is_empty())
+        else {
+            return false;
+        };
+        if expected.is_some_and(|expected| expected != name) {
+            return false;
+        }
+        self.notify_update(json!({"sessionUpdate": "session_info_update", "title": name}))
+            .await;
+        true
     }
 
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
@@ -392,29 +539,7 @@ impl Session {
             }
             before = cursor;
         }
-        if saved_config.is_object() {
-            let state = self.command(json!({"type": "get_state"})).await?;
-            if let (Some(provider), Some(model)) = (
-                saved_config["provider"].as_str(),
-                saved_config["modelId"].as_str(),
-            ) {
-                if state["provider"] != provider || state["modelId"] != model {
-                    // Reset the startup thinking default before switching to
-                    // the saved model; restore its persisted level below.
-                    self.command(
-                        json!({"type": "set_thinking_level", "level": "off", "persist": false}),
-                    )
-                    .await?;
-                    self.command(json!({"type": "set_model", "provider": provider, "modelId": model, "persist": false})).await?;
-                }
-            }
-            if let Some(level) = saved_config["thinkingLevel"].as_str() {
-                self.command(
-                    json!({"type": "set_thinking_level", "level": level, "persist": false}),
-                )
-                .await?;
-            }
-        }
+        let latest_state = self.apply_saved_config(&saved_config).await?;
         // Use a separate translator: replay must not leave a historical stop
         // reason or partial text in the live prompt's streaming state.
         let mut translator = self.translator.lock().unwrap().clone_for_replay();
@@ -430,7 +555,94 @@ impl Session {
                 }
             }
         }
+        self.publish_title(None).await;
+        self.publish_usage_from(latest_state).await;
         Ok(())
+    }
+
+    /// Restore only persisted selections; resume must not replay transcript updates.
+    pub(crate) async fn restore_saved_config(&self) -> Result<(), String> {
+        let page = self
+            .command(json!({"type": "get_messages", "limit": 1}))
+            .await?;
+        if !page["messages"].is_array() {
+            return Err("invalid native history response".to_string());
+        }
+        self.apply_saved_config(&page["savedConfig"])
+            .await
+            .map(|_| ())
+    }
+
+    /// Apply the persisted model and thinking selections. Returns the state
+    /// fetched on the way so a caller can reuse it instead of querying again.
+    async fn apply_saved_config(&self, saved_config: &Value) -> Result<Option<Value>, String> {
+        let mut latest_state: Option<Value> = None;
+        if saved_config.is_object() {
+            let mut changed = false;
+            let state = self.command(json!({"type": "get_state"})).await?;
+            if let (Some(provider), Some(model)) = (
+                saved_config["provider"].as_str(),
+                saved_config["modelId"].as_str(),
+            ) {
+                if state["provider"] != provider || state["modelId"] != model {
+                    // Reset the startup thinking default before switching to
+                    // the saved model; restore its persisted level below.
+                    self.command(
+                        json!({"type": "set_thinking_level", "level": "off", "persist": false}),
+                    )
+                    .await?;
+                    self.command(json!({"type": "set_model", "provider": provider, "modelId": model, "persist": false})).await?;
+                    changed = true;
+                }
+            }
+            if let Some(level) = saved_config["thinkingLevel"].as_str() {
+                self.command(
+                    json!({"type": "set_thinking_level", "level": level, "persist": false}),
+                )
+                .await?;
+                changed = true;
+            }
+            // A state fetched before a selection changed no longer describes
+            // the model, so only an unchanged state is safe to reuse.
+            if !changed {
+                latest_state = Some(state);
+            }
+        }
+        Ok(latest_state)
+    }
+
+    /// Publish usage from an already-fetched state when available, otherwise
+    /// query the child once. Avoids a second get_state on session/load.
+    async fn publish_usage_from(&self, state: Option<Value>) -> bool {
+        let owned;
+        let state = match state {
+            Some(state) => state,
+            None => {
+                owned = self.command(json!({"type": "get_state"})).await;
+                let Ok(state) = owned else {
+                    return false;
+                };
+                state
+            }
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
+    }
+
+    /// Publish an available context snapshot without making usage-query failures
+    /// fail the turn. Call outside the child reader, which resolves the query.
+    pub(crate) async fn publish_usage(&self) -> bool {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return false;
+        };
+        let Some(update) = translate::usage_update(&state) else {
+            return false;
+        };
+        self.notify_update(update).await;
+        true
     }
 
     /// ACP `configOptions` for model and thinking level, built from the
@@ -551,10 +763,13 @@ impl Session {
 
     /// Stop the child: a graceful `stop`, then kill if it lingers.
     pub(crate) async fn shutdown(&self) {
+        self.closed.cancel();
         let _ = self.send(&json!({"type": "stop"})).await;
         let child = self.process.lock().unwrap().take();
         if let Some(mut child) = child {
-            let exited = tokio::time::timeout(Duration::from_secs(3), child.wait()).await;
+            // Shell groups get three seconds to stop before SIGKILL. Allow
+            // enough time for their cleanup and the native writer lock.
+            let exited = tokio::time::timeout(Duration::from_secs(10), child.wait()).await;
             if exited.is_err() {
                 let _ = child.kill().await;
             }
@@ -576,6 +791,8 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -584,6 +801,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(None),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let held_stdin = session.stdin.lock().await;
@@ -637,6 +856,9 @@ mod turn_tests {
             .unwrap()
             .send(json!({"outcome": "aborted"}))
             .unwrap();
+        // This fake child never answers the usage query that follows a settled
+        // turn; closing makes that query fail fast.
+        session.closed.cancel();
         assert_eq!(
             tokio::time::timeout(Duration::from_secs(5), prompt)
                 .await
@@ -656,6 +878,8 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -664,6 +888,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(Some(old.clone())),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let gate = session.turn_gate.lock().await;
@@ -696,6 +922,8 @@ mod turn_tests {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
             elicitation_form: false,
+            compaction: false,
+            pending_compactions: Mutex::new(HashSet::new()),
             stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
             process: Mutex::new(None),
             next_id: AtomicU64::new(1),
@@ -704,6 +932,8 @@ mod turn_tests {
             translator: Mutex::new(Translator::new(PathBuf::from("."))),
             turn: Mutex::new(Some(token.clone())),
             turn_gate: tokio::sync::Mutex::new(()),
+            cwd: PathBuf::from("."),
+            operation: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let held_stdin = session.stdin.lock().await;
@@ -753,4 +983,71 @@ mod turn_tests {
 /// providers). The first `/` splits, so model ids may contain slashes.
 fn model_value(provider: &str, id: &str) -> String {
     format!("{provider}/{id}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::io::BufReader;
+
+    #[tokio::test]
+    async fn compaction_cancel_before_native_admission_is_not_lost() {
+        let (bridge_stdin, native_stdin) = tokio::io::duplex(4096);
+        let (mut native_stdout, bridge_stdout) = tokio::io::duplex(4096);
+        let io = Mutex::new(Some(ChildIo {
+            stdin: Box::new(bridge_stdin),
+            stdout: Box::new(BufReader::new(bridge_stdout)),
+            process: None,
+        }));
+        let spawner: Spawner = Arc::new(move |_, _, _| Ok(io.lock().unwrap().take().unwrap()));
+        let peer = tokio::spawn(async move {
+            native_stdout
+                .write_all(b"{\"type\":\"ready\"}\n")
+                .await
+                .unwrap();
+            let mut input = BufReader::new(native_stdin).lines();
+            let prompt: Value =
+                serde_json::from_str(&input.next_line().await.unwrap().unwrap()).unwrap();
+            assert_eq!(prompt["type"], "prompt");
+            let response = json!({"type": "response", "id": prompt["id"], "success": true, "data": {"accepted": true}});
+            native_stdout
+                .write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+            let abort: Value =
+                serde_json::from_str(&input.next_line().await.unwrap().unwrap()).unwrap();
+            assert_eq!(abort["type"], "abort");
+            native_stdout
+                .write_all(b"{\"type\":\"agent_settled\",\"outcome\":\"aborted\"}\n")
+                .await
+                .unwrap();
+        });
+        let session = Session::start(
+            "early-cancel".to_string(),
+            std::env::temp_dir(),
+            None,
+            &spawner,
+            Arc::new(Writer::new(Box::new(tokio::io::sink()))),
+            false,
+            true,
+        )
+        .await
+        .unwrap();
+        // A cancel can arrive after the progress notification, before the
+        // child's prompt command is accepted. The turn gate must carry it
+        // across admission instead of dropping it.
+        let cancel = async {
+            while session.turn.lock().unwrap().is_none() {
+                tokio::task::yield_now().await;
+            }
+            session.cancel().await;
+        };
+        let (result, ()) = tokio::time::timeout(Duration::from_secs(5), async {
+            tokio::join!(session.prompt("/compact".to_string(), Vec::new()), cancel)
+        })
+        .await
+        .expect("pre-admission cancel reaches the accepted prompt");
+        assert_eq!(result.unwrap(), "cancelled");
+        peer.await.unwrap();
+    }
 }

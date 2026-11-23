@@ -7,6 +7,452 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, DuplexStream, Lines};
 
+fn list_fixture(
+    dir: &Path,
+    cwd: &Path,
+    index: usize,
+    modified_ms: u64,
+    body: &str,
+) -> (String, PathBuf) {
+    let id = uuid::Uuid::from_u128(index as u128 + 1).to_string();
+    std::fs::create_dir_all(dir).unwrap();
+    let path = dir.join(format!("{index:04}.jsonl"));
+    let header = json!({"kind": "header", "version": 4, "id": id, "createdAt": 0, "cwd": cwd});
+    std::fs::write(&path, format!("{header}\n{body}")).unwrap();
+    let time = std::time::UNIX_EPOCH + std::time::Duration::from_millis(modified_ms);
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(std::fs::FileTimes::new().set_modified(time))
+        .unwrap();
+    (id, path)
+}
+
+#[tokio::test]
+async fn list_filters_shared_directories_and_reads_live_names_without_writes() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let shared = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        shared.path(),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    saved.storage().set_name(Some("First name")).await.unwrap();
+    saved
+        .storage()
+        .set_name(Some("Current name"))
+        .await
+        .unwrap();
+    let foreign = list_fixture(shared.path(), other.path(), 500, 1_700_000_000_000, "");
+    let meta = crate::session::discover_session_metadata_in_dir(
+        temp.path().to_str().unwrap(),
+        shared.path(),
+    )
+    .await
+    .unwrap()
+    .sessions
+    .into_iter()
+    .find(|m| m.id == id)
+    .unwrap();
+    let before = std::fs::read(&meta.path).unwrap();
+    let mut client = Client::with_session_dir(Some(shared.path().to_path_buf()));
+    let (_, response) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    let sessions = response["result"]["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(), 1, "{response}");
+    assert_eq!(sessions[0]["sessionId"], id);
+    assert_eq!(sessions[0]["title"], "Current name");
+    assert_eq!(
+        sessions[0]["cwd"],
+        json!(temp.path().canonicalize().unwrap())
+    );
+    assert!(sessions[0]["updatedAt"].as_str().unwrap().ends_with('Z'));
+    assert!(response["result"].get("nextCursor").is_none());
+    assert_eq!(std::fs::read(&meta.path).unwrap(), before);
+    assert!(foreign.1.exists());
+    saved.storage().set_name(Some("Still owned")).await.unwrap();
+}
+
+#[tokio::test]
+async fn list_pages_stably_and_binds_cursors_to_the_requested_project() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let mut expected = Vec::new();
+    for index in 0..51 {
+        let modified = if index < 25 {
+            1_700_000_001_000
+        } else {
+            1_700_000_000_000
+        };
+        expected.push(list_fixture(&dir, temp.path(), index, modified, "").0);
+    }
+    let mut client = Client::start();
+    let (_, first) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(first.get("error").is_none(), "{first}");
+    let page = first["result"]["sessions"].as_array().unwrap();
+    assert_eq!(page.len(), 50);
+    assert_eq!(page[0]["updatedAt"], "2023-11-14T22:13:21.000Z");
+    let cursor = first["result"]["nextCursor"].as_str().unwrap();
+    // Updating a not-yet-returned file must not move it ahead of the cursor.
+    let path = dir.join("0050.jsonl");
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(std::fs::FileTimes::new().set_modified(
+            std::time::UNIX_EPOCH + std::time::Duration::from_millis(1_800_000_000_000),
+        ))
+        .unwrap();
+    let (_, second) = client
+        .call(
+            "session/list",
+            json!({"cwd": temp.path(), "cursor": cursor}),
+        )
+        .await;
+    let mut actual: Vec<_> = page
+        .iter()
+        .map(|session| session["sessionId"].as_str().unwrap().to_owned())
+        .collect();
+    actual.extend(
+        second["result"]["sessions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|session| session["sessionId"].as_str().unwrap().to_owned()),
+    );
+    assert_eq!(actual, expected);
+    assert!(second["result"].get("nextCursor").is_none());
+    let (_, wrong_project) = client
+        .call(
+            "session/list",
+            json!({"cwd": other.path(), "cursor": cursor}),
+        )
+        .await;
+    assert_eq!(wrong_project["error"]["code"], INVALID_PARAMS);
+    std::fs::remove_file(dir.join("0049.jsonl")).unwrap();
+    let (_, after_delete) = client
+        .call(
+            "session/list",
+            json!({"cwd": temp.path(), "cursor": cursor}),
+        )
+        .await;
+    assert_eq!(
+        after_delete["result"]["sessions"],
+        second["result"]["sessions"]
+    );
+}
+
+#[tokio::test]
+async fn list_rejects_invalid_scope_and_cursor_without_creating_sessions() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut client = Client::start();
+    for params in [
+        json!({}),
+        json!({"cwd": "."}),
+        json!({"cwd": temp.path().join("missing")}),
+        json!({"cwd": temp.path(), "cursor": 3}),
+        json!({"cwd": temp.path(), "cursor": "not-a-cursor"}),
+    ] {
+        let (_, response) = client.call("session/list", params).await;
+        assert_eq!(response["error"]["code"], INVALID_PARAMS, "{response}");
+    }
+    let (_, empty) = client
+        .call("session/list", json!({"cwd": temp.path(), "cursor": null}))
+        .await;
+    assert_eq!(empty["result"], json!({"sessions": []}));
+    assert!(!crate::session::default_session_dir(temp.path()).exists());
+}
+
+#[tokio::test]
+async fn list_names_scan_the_complete_snapshot_and_ignore_partial_tail_facts() {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let filler =
+        json!({"kind": "lane", "seq": 1, "lane": "padding".repeat(40_000), "leafId": null});
+    let mut tail = filler.clone();
+    tail["seq"] = json!(3);
+    let body = format!("{filler}\n{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":2,\"name\":\"Middle name\"}}\n{tail}\n{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":4,\"name\":\"Partial name\"}}");
+    let (id, path) = list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, &body);
+    let before = std::fs::read(&path).unwrap();
+    let mut client = Client::start();
+    let (_, response) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert_eq!(
+        response["result"]["sessions"][0]["sessionId"], id,
+        "{response}"
+    );
+    assert_eq!(response["result"]["sessions"][0]["title"], "Middle name");
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    let clear = "{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":1,\"name\":\"Old\"}\n{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":2,\"name\":null}\n";
+    list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, clear);
+    let (_, cleared) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(cleared["result"]["sessions"][0].get("title").is_none());
+    let large = format!(
+        "{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":1,\"name\":\"Old\"}}\n{}",
+        "x".repeat(1024 * 1024)
+    );
+    list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, &large);
+    let (_, oversized) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(oversized["result"]["sessions"][0].get("title").is_none());
+}
+
+#[tokio::test]
+async fn resume_restores_config_without_history_and_publishes_commands_after_response() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let (frames, response) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    assert!(response["result"].get("sessionId").is_none());
+    assert!(
+        frames.iter().all(|frame| matches!(
+            frame["params"]["update"]["sessionUpdate"].as_str(),
+            Some("usage_update" | "session_info_update")
+        )),
+        "resume cannot replay historical updates: {frames:?}"
+    );
+    let options = response["result"]["configOptions"].as_array().unwrap();
+    assert_eq!(
+        options
+            .iter()
+            .find(|option| option["id"] == "model")
+            .unwrap()["currentValue"],
+        "q/a/b"
+    );
+    assert_eq!(
+        options
+            .iter()
+            .find(|option| option["id"] == "thinking")
+            .unwrap()["currentValue"],
+        "high"
+    );
+    let commands = client.next().await;
+    assert_eq!(commands["params"]["sessionId"], id);
+    assert_eq!(
+        commands["params"]["update"]["sessionUpdate"],
+        "available_commands_update"
+    );
+    let (frames, prompt) = client
+        .call(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "history pages"}]}),
+        )
+        .await;
+    assert_eq!(prompt["result"]["stopReason"], "end_turn");
+    assert_eq!(
+        frames[0]["params"]["update"]["content"]["text"], "1",
+        "resume reads only the config page"
+    );
+}
+
+#[tokio::test]
+async fn resume_and_load_of_one_session_cannot_create_two_owners() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let load = client
+        .request_id("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    let resume = client
+        .request_id(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    let mut responses = Vec::new();
+    while responses.len() < 2 {
+        let frame = client.next().await;
+        if frame.get("method").is_none() && (frame["id"] == load || frame["id"] == resume) {
+            responses.push(frame);
+        }
+    }
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response.get("result").is_some())
+            .count(),
+        1,
+        "{responses:?}"
+    );
+    let error = responses
+        .iter()
+        .find(|response| response.get("error").is_some())
+        .unwrap();
+    assert_eq!(error["error"]["code"], INVALID_PARAMS);
+    assert!(error["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("already open"));
+}
+
+#[tokio::test]
+async fn resume_validates_saved_identity_and_cwd_without_creating_replacements() {
+    let temp = tempfile::tempdir().unwrap();
+    let other = tempfile::tempdir().unwrap();
+    let dir = crate::session::default_session_dir(temp.path());
+    let id = uuid::Uuid::new_v4().to_string();
+    let mut client = Client::start();
+    for (params, code) in [
+        (
+            json!({"sessionId": id, "cwd": temp.path()}),
+            RESOURCE_NOT_FOUND,
+        ),
+        (
+            json!({"sessionId": "../escape", "cwd": temp.path()}),
+            INVALID_PARAMS,
+        ),
+        (json!({"sessionId": id, "cwd": "."}), INVALID_PARAMS),
+        (
+            json!({"sessionId": id, "cwd": temp.path(), "mcpServers": {}}),
+            INVALID_PARAMS,
+        ),
+    ] {
+        let (_, response) = client.call("session/resume", params).await;
+        assert_eq!(response["error"]["code"], code, "{response}");
+    }
+    assert!(!dir.exists());
+    let saved = crate::session::create_jsonl_session_with_id(
+        &dir,
+        other.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    let path = saved.storage().persistence_path().unwrap();
+    drop(saved);
+    let (_, wrong) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert_eq!(wrong["error"]["code"], INVALID_PARAMS);
+    std::fs::write(&path, "invalid header\n").unwrap();
+    let (_, corrupt) = client
+        .call(
+            "session/resume",
+            json!({"sessionId": id, "cwd": temp.path()}),
+        )
+        .await;
+    assert_eq!(corrupt["error"]["code"], RESOURCE_NOT_FOUND);
+    assert_eq!(std::fs::read_to_string(path).unwrap(), "invalid header\n");
+}
+
+#[tokio::test]
+async fn auto_compaction_progress_is_negotiated_and_terminal_before_prompt_response() {
+    for capability in [json!({}), Value::Null, json!(true)] {
+        for status in ["completed", "failed", "cancelled"] {
+            let mut client = Client::start();
+            client
+                .call(
+                    "initialize",
+                    json!({"clientCapabilities": {
+                        "session": {"compaction": capability}
+                    }}),
+                )
+                .await;
+            let (id, _) = client.new_session().await;
+            let (frames, response) = client.call("session/prompt", json!({
+                "sessionId": id, "prompt": [{"type": "text", "text": format!("auto:{status}")}]
+            })).await;
+            assert_eq!(response["result"]["stopReason"], "end_turn");
+            let updates: Vec<_> = frames
+                .iter()
+                .filter_map(|frame| {
+                    let update = &frame["params"]["update"];
+                    (update["sessionUpdate"] == "compaction_update").then_some(update)
+                })
+                .collect();
+            if capability.is_object() {
+                assert_eq!(updates.len(), 2, "{frames:?}");
+                assert_eq!(updates[0]["status"], "in_progress");
+                assert_eq!(updates[1]["status"], status);
+                assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+                assert_eq!(
+                    updates[1]["summary"],
+                    json!([{"type": "text", "text": "Saved summary"}])
+                );
+            } else {
+                assert!(updates.is_empty());
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn auto_compaction_child_exit_closes_the_pending_attempt() {
+    let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"clientCapabilities": {
+                "session": {"compaction": {}}
+            }}),
+        )
+        .await;
+    let (id, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/prompt",
+            json!({
+                "sessionId": id, "prompt": [{"type": "text", "text": "auto:exit"}]
+            }),
+        )
+        .await;
+    assert!(response.get("error").is_some());
+    let updates: Vec<_> = frames
+        .iter()
+        .filter_map(|frame| {
+            let update = &frame["params"]["update"];
+            (update["sessionUpdate"] == "compaction_update").then_some(update)
+        })
+        .collect();
+    assert_eq!(updates.len(), 2, "{frames:?}");
+    assert_eq!(updates[0]["status"], "in_progress");
+    assert_eq!(updates[1]["status"], "failed");
+    assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+    assert_eq!(
+        updates[1]["error"],
+        "icers process exited during compaction"
+    );
+}
+
 #[tokio::test]
 async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     let temp = tempfile::tempdir().unwrap();
@@ -37,7 +483,12 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     assert_eq!(response["result"]["sessionId"], id);
     assert_eq!(
         update_kinds(&frames),
-        ["user_message_chunk", "agent_message_chunk"]
+        [
+            "user_message_chunk",
+            "agent_message_chunk",
+            "session_info_update",
+            "usage_update"
+        ]
     );
     assert_eq!(
         frames[0]["params"]["update"]["content"]["text"],
@@ -46,6 +497,11 @@ async fn load_saved_session_replays_all_pages_before_response_and_can_prompt() {
     assert_eq!(
         frames[1]["params"]["update"]["content"]["text"],
         "saved answer"
+    );
+    assert_eq!(frames[2]["params"]["update"]["title"], "saved title");
+    assert_eq!(
+        usage_after_content(&frames),
+        &json!({"sessionUpdate": "usage_update", "used": 0, "size": 8192})
     );
     let (_, duplicate) = client
         .call("session/load", json!({"sessionId": id, "cwd": cwd}))
@@ -156,7 +612,7 @@ fn replay_preserves_images_thoughts_and_tool_results() {
 /// A fake child: answers state queries, streams a canned turn for `prompt`,
 /// waits for `abort` when the prompt text is `wait`, and asks a permission
 /// question when it is `ask`, or a serialized question after `question `.
-async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
+async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream, cwd: PathBuf) {
     async fn emit(out: &mut DuplexStream, value: Value) {
         let mut line = serde_json::to_vec(&value).unwrap();
         line.push(b'\n');
@@ -167,22 +623,45 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     let mut waiting = false;
     let mut asked = false;
     let mut asked_question = false;
+    let mut provider = "p".to_string();
+    let mut model_id = "m1".to_string();
+    let mut thinking_level = "low".to_string();
+    let mut history_pages = 0;
+    let mut session_name = None::<String>;
+    let mut state_unavailable = false;
+    let mut compacting = false;
+    let mut context_tokens = 0;
+    let mut context_window = 8192;
+    let mut cost_total = 0.0;
+    let mut state_error = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
         let ok = |data: Value| json!({"type": "response", "id": id, "success": true, "data": data});
         match msg["type"].as_str().unwrap() {
+            "fork_session" => {
+                emit(&mut stdout, ok(json!({"sessionId": uuid::Uuid::new_v4().to_string(), "path": cwd.join("fake-fork.jsonl")}))).await;
+            }
             "get_state" => {
-                emit(&mut stdout, ok(json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low"}))).await
+                if state_unavailable || state_error {
+                    emit(&mut stdout, json!({"type": "response", "id": id, "success": false, "error": "state unavailable"})).await;
+                } else {
+                    emit(&mut stdout, ok(json!({"modelId": model_id, "provider": provider, "thinkingLevel": thinking_level, "sessionName": session_name,
+                        "context": {"tokens": context_tokens, "window": context_window},
+                        "stats": {"costTotal": cost_total}}))).await;
+                }
             }
             "get_messages" => {
+                history_pages += 1;
+                session_name = Some("saved title".to_string());
                 let (messages, more, first) = if msg["beforeId"].is_null() {
                     (json!([{"kind": "assistant", "content": [{"type": "text", "text": "saved answer"}]}]), true, "answer")
                 } else {
                     assert_eq!(msg["beforeId"], "answer");
                     (json!([{"kind": "user", "content": "saved question"}]), false, "question")
                 };
-                emit(&mut stdout, ok(json!({"messages": messages, "hasMore": more, "firstId": first}))).await;
+                emit(&mut stdout, ok(json!({"messages": messages, "hasMore": more, "firstId": first,
+                    "savedConfig": {"provider": "q", "modelId": "a/b", "thinkingLevel": "high"}}))).await;
             }
             "get_available_models" => {
                 let mut models = vec![
@@ -214,9 +693,29 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                     assert_eq!(msg["provider"], "q");
                     assert_eq!(msg["modelId"], "a/b");
                 }
+                provider = msg["provider"].as_str().unwrap().to_string();
+                model_id = msg["modelId"].as_str().unwrap().to_string();
+                if msg.get("persist").is_some() {
+                    assert_eq!(msg["persist"], false);
+                }
+                emit(&mut stdout, ok(json!({}))).await
+            }
+            "set_thinking_level" => {
+                thinking_level = msg["level"].as_str().unwrap().to_string();
+                if msg.get("persist").is_some() {
+                    assert_eq!(msg["persist"], false);
+                }
                 emit(&mut stdout, ok(json!({}))).await
             }
             "prompt" => {
+                if msg["message"].as_str().unwrap().trim() == "/compact reject" {
+                    emit(&mut stdout, json!({"type": "response", "id": id, "success": false, "error": "cannot compact now"})).await;
+                    continue;
+                }
+                context_tokens = 1234;
+                context_window = if msg["message"] == "no-window" { 0 } else { 8192 };
+                cost_total = 0.125;
+                state_error = msg["message"] == "state-error";
                 if msg["message"] == "image regression" || msg["message"] == "" {
                     assert_eq!(msg["images"].as_array().unwrap().len(), 1);
                     assert_eq!(msg["images"][0]["mimeType"], "image/png");
@@ -224,7 +723,56 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 }
                 emit(&mut stdout, ok(json!({"accepted": true}))).await;
                 match msg["message"].as_str().unwrap() {
+                    "history pages" => {
+                        emit(&mut stdout, json!({"type": "command_output", "text": history_pages.to_string()})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
+                    }
+                    "wait-fork" => {
+                        waiting = true;
+                        emit(&mut stdout, json!({"type": "command_output", "text": "fork blocked"})).await;
+                    }
+                    text if text.split_whitespace().next() == Some("/name") => {
+                        if let Some((_, args)) = text.trim().split_once(char::is_whitespace) {
+                            let args = args.trim();
+                            match args {
+                                "refused" => {},
+                                "unavailable" => state_unavailable = true,
+                                "" => {},
+                                _ => session_name = Some(args.to_string()),
+                            }
+                        }
+                        emit(&mut stdout, json!({"type": "command_output", "text": "name command finished"})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
+                    }
+                    text if text.split_whitespace().next() == Some("/compact") => {
+                        match text.split_whitespace().nth(1) {
+                            Some("wait") => {
+                                waiting = true;
+                                compacting = true;
+                                emit(&mut stdout, json!({"type": "command_output", "text": "compacting"})).await;
+                            }
+                            Some("exit") => break,
+                            Some("fail") => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "failed", "error": "compactor failed", "summary": "Compaction failed: compactor failed"})).await,
+                            Some("decline") => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "declined", "summary": "Nothing to compact yet."})).await,
+                            _ => emit(&mut stdout, json!({"type": "agent_settled", "outcome": "compacted", "summary": "Conversation compacted."})).await,
+                        }
+                    }
+                    text if text.starts_with("auto:") => {
+                        let status = text.strip_prefix("auto:").unwrap();
+                        emit(&mut stdout, json!({"type": "compaction_status",
+                            "compactionId": "auto-1", "status": "in_progress"})).await;
+                        if status == "exit" { break; }
+                        emit(&mut stdout, json!({"type": "compaction_status",
+                            "compactionId": "auto-1", "status": status,
+                            "summary": "Saved summary", "error": "native compaction error"})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
+                    }
                     "wait" => waiting = true,
+                    "fail" => {
+                        emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta",
+                            "delta": "partial reply", "message": {"kind": "assistant"}})).await;
+                        emit(&mut stdout, json!({"type": "agent_settled", "outcome": "failed", "error": "provider failed"})).await;
+                    }
                     "/version" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
@@ -269,7 +817,11 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
             "abort" if waiting || asked_question => {
                 asked_question = false;
                 waiting = false;
-                emit(&mut stdout, json!({"type": "agent_settled", "outcome": "aborted", "aborted": true})).await;
+                let mut settled = json!({"type": "agent_settled", "outcome": "aborted", "aborted": true});
+                if compacting {
+                    settled["summary"] = json!("Compaction aborted.");
+                }
+                emit(&mut stdout, settled).await;
             }
             "stop" => break,
             _ => {}
@@ -281,7 +833,7 @@ fn fake_spawner() -> Spawner {
     Arc::new(|_cwd: &Path, _id: &str, _saved_path: Option<&Path>| {
         let (child_stdin, fake_in) = tokio::io::duplex(1 << 16);
         let (fake_out, child_stdout) = tokio::io::duplex(1 << 16);
-        tokio::spawn(fake_child(fake_in, fake_out));
+        tokio::spawn(fake_child(fake_in, fake_out, _cwd.to_path_buf()));
         Ok(ChildIo {
             stdin: Box::new(child_stdin),
             stdout: Box::new(BufReader::new(child_stdout)),
@@ -302,9 +854,22 @@ impl Client {
     }
 
     fn with_spawner(spawner: Spawner) -> Self {
+        Self::with_options(spawner, None)
+    }
+
+    fn with_session_dir(session_dir: Option<PathBuf>) -> Self {
+        Self::with_options(fake_spawner(), session_dir)
+    }
+
+    fn with_options(spawner: Spawner, session_dir: Option<PathBuf>) -> Self {
         let (input, server_in) = tokio::io::duplex(1 << 16);
         let (server_out, output) = tokio::io::duplex(1 << 16);
-        tokio::spawn(serve(BufReader::new(server_in), server_out, spawner, None));
+        tokio::spawn(serve(
+            BufReader::new(server_in),
+            server_out,
+            spawner,
+            session_dir,
+        ));
         Self {
             input,
             output: BufReader::new(output).lines(),
@@ -381,6 +946,242 @@ fn update_kinds(frames: &[Value]) -> Vec<String> {
         .collect()
 }
 
+#[tokio::test]
+async fn session_title_uses_native_name_before_prompt_response() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    let (frames, response) = client.call("session/prompt", json!({"sessionId": id, "prompt": [{"type": "text", "text": "  /name  Build release  "}]})).await;
+    assert_eq!(response["result"]["stopReason"], "end_turn");
+    let titles: Vec<_> = frames
+        .iter()
+        .filter(|frame| frame["params"]["update"]["sessionUpdate"] == "session_info_update")
+        .collect();
+    assert_eq!(titles.len(), 1, "{frames:?}");
+    assert_eq!(titles[0]["params"]["update"]["title"], "Build release");
+    assert!(titles[0]["params"]["update"].get("updatedAt").is_none());
+}
+
+#[tokio::test]
+async fn session_title_skips_ordinary_and_incomplete_name_prompts() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    for prompt in [
+        "hello",
+        "/name",
+        "  /name   ",
+        "/names release",
+        "please /name release",
+    ] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(
+            !update_kinds(&frames).contains(&"session_info_update".to_string()),
+            "{frames:?}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn session_title_does_not_invent_requested_name_after_failure() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    client
+        .call(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "/name Original title"}]}),
+        )
+        .await;
+    for prompt in ["/name refused", "/name unavailable"] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(
+            !update_kinds(&frames).contains(&"session_info_update".to_string()),
+            "{frames:?}"
+        );
+    }
+}
+
+async fn compaction_client(capability: Value) -> (Client, String) {
+    let mut client = Client::start();
+    client
+        .call(
+            "initialize",
+            json!({"clientCapabilities": {"session": {"compaction": capability}}}),
+        )
+        .await;
+    let (id, _) = client.new_session().await;
+    (client, id)
+}
+
+fn compaction_updates(frames: &[Value]) -> Vec<&Value> {
+    frames
+        .iter()
+        .filter_map(|frame| {
+            let update = &frame["params"]["update"];
+            (update["sessionUpdate"] == "compaction_update").then_some(update)
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn compaction_reports_started_and_completed_before_prompt_response() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    let mut previous_id = None;
+    for (prompt, summary) in [
+        ("/compact focus on tests", "Conversation compacted."),
+        ("  /compact decline  ", "Nothing to compact yet."),
+    ] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn", "{response}");
+        let updates = compaction_updates(&frames);
+        assert_eq!(updates.len(), 2, "{frames:?}");
+        assert_eq!(updates[0]["status"], "in_progress");
+        assert_eq!(updates[1]["status"], "completed");
+        assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+        let compact_id = updates[0]["compactionId"].as_str().unwrap();
+        assert!(uuid::Uuid::parse_str(compact_id).is_ok());
+        assert_ne!(previous_id.as_deref(), Some(compact_id));
+        previous_id = Some(compact_id.to_owned());
+        assert_eq!(
+            updates[1]["summary"],
+            json!([{"type": "text", "text": summary}])
+        );
+        assert!(!update_kinds(&frames).contains(&"agent_message_chunk".to_string()));
+    }
+}
+
+#[tokio::test]
+async fn compaction_failure_and_child_exit_always_close_the_progress_row() {
+    for (prompt, error) in [
+        ("/compact fail", "compactor failed"),
+        ("/compact reject", "cannot compact now"),
+        ("/compact exit", "icers process exited during the turn"),
+    ] {
+        let (mut client, id) = compaction_client(json!({})).await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["error"]["message"], error, "{response}");
+        let updates = compaction_updates(&frames);
+        assert_eq!(updates.len(), 2, "{frames:?}");
+        assert_eq!(updates[0]["status"], "in_progress");
+        assert_eq!(updates[1]["status"], "failed");
+        assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+        assert_eq!(updates[1]["error"], error);
+    }
+}
+
+#[tokio::test]
+async fn compaction_cancellation_closes_the_same_progress_row() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    let request = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type": "text", "text": "/compact wait"}]}),
+        )
+        .await;
+    let mut frames = Vec::new();
+    loop {
+        let frame = client.next().await;
+        let ready = frame["params"]["update"]["content"]["text"] == "compacting";
+        frames.push(frame);
+        if ready {
+            break;
+        }
+    }
+    client
+        .send(json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": id}}))
+        .await;
+    let (terminal, response) = client.until_response(request).await;
+    frames.extend(terminal);
+    assert_eq!(response["result"]["stopReason"], "cancelled");
+    let updates = compaction_updates(&frames);
+    assert_eq!(updates.len(), 2);
+    assert_eq!(updates[1]["status"], "cancelled");
+    assert_eq!(updates[0]["compactionId"], updates[1]["compactionId"]);
+    assert_eq!(updates[1]["summary"][0]["text"], "Compaction aborted.");
+}
+
+#[tokio::test]
+async fn compaction_without_negotiation_keeps_the_text_summary() {
+    for capability in [Value::Null, json!(true)] {
+        let (mut client, id) = compaction_client(capability).await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": "/compact"}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(compaction_updates(&frames).is_empty());
+        assert!(
+            frames
+                .iter()
+                .any(|frame| frame["params"]["update"]["content"]["text"]
+                    == "Conversation compacted.")
+        );
+    }
+}
+
+#[tokio::test]
+async fn compaction_requires_the_exact_slash_command_token() {
+    let (mut client, id) = compaction_client(json!({})).await;
+    for prompt in ["/compaction", "please /compact", "/compact-extra"] {
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": prompt}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        assert!(compaction_updates(&frames).is_empty());
+    }
+}
+
+fn usage_after_content(frames: &[Value]) -> &Value {
+    let usage_indices: Vec<_> = frames
+        .iter()
+        .enumerate()
+        .filter(|(_, frame)| frame["params"]["update"]["sessionUpdate"] == "usage_update")
+        .map(|(index, _)| index)
+        .collect();
+    assert_eq!(
+        usage_indices.len(),
+        1,
+        "one usage update before the response"
+    );
+    if let Some(last_content) = frames.iter().rposition(|frame| {
+        matches!(
+            frame["params"]["update"]["sessionUpdate"].as_str(),
+            Some("user_message_chunk" | "agent_message_chunk" | "agent_thought_chunk")
+        )
+    }) {
+        assert!(
+            usage_indices[0] > last_content,
+            "usage follows the last content update"
+        );
+    }
+    &frames[usage_indices[0]]["params"]["update"]
+}
+
 #[test]
 fn child_arguments_allow_observe_but_reject_bridge_owned_flags() {
     let args = ["--observe", "--offline", "--model", "provider/model"].map(str::to_owned);
@@ -406,6 +1207,14 @@ async fn initialize_advertises_v1_without_unimplemented_capabilities() {
     assert_eq!(result["agentInfo"]["name"], "icers");
     assert_eq!(result["agentCapabilities"]["loadSession"], true);
     assert_eq!(
+        result["agentCapabilities"]["sessionCapabilities"]["list"],
+        json!({})
+    );
+    assert_eq!(
+        result["agentCapabilities"]["sessionCapabilities"]["resume"],
+        json!({})
+    );
+    assert_eq!(
         result["agentCapabilities"]["promptCapabilities"]["image"],
         true
     );
@@ -418,7 +1227,7 @@ async fn initialize_advertises_v1_without_unimplemented_capabilities() {
 #[tokio::test]
 async fn unknown_methods_and_sessions_are_errors() {
     let mut client = Client::start();
-    let (_, response) = client.call("session/fork", json!({})).await;
+    let (_, response) = client.call("session/not-implemented", json!({})).await;
     assert_eq!(response["error"]["code"], METHOD_NOT_FOUND);
     let (_, response) = client
         .call("session/prompt", json!({"sessionId": "nope", "prompt": []}))
@@ -426,6 +1235,159 @@ async fn unknown_methods_and_sessions_are_errors() {
     assert_eq!(response["error"]["code"], RESOURCE_NOT_FOUND);
     let (_, response) = client.call("session/new", json!({"cwd": "relative"})).await;
     assert_eq!(response["error"]["code"], INVALID_PARAMS);
+}
+
+#[tokio::test]
+async fn close_removes_the_session_and_rejects_unknown_ids() {
+    let mut client = Client::start();
+    let (_, init) = client.call("initialize", json!({})).await;
+    assert_eq!(
+        init["result"]["agentCapabilities"]["sessionCapabilities"]["close"],
+        json!({})
+    );
+    let (id, _) = client.new_session().await;
+    let (_, closed) = client.call("session/close", json!({"sessionId": id})).await;
+    assert_eq!(closed["result"], json!({}));
+    let (_, absent) = client
+        .call("session/prompt", json!({"sessionId": id, "prompt": []}))
+        .await;
+    assert_eq!(absent["error"]["code"], RESOURCE_NOT_FOUND);
+    let (_, repeated) = client.call("session/close", json!({"sessionId": id})).await;
+    assert_eq!(repeated["error"]["code"], RESOURCE_NOT_FOUND);
+    let (_, invalid) = client.call("session/close", json!({})).await;
+    assert_eq!(invalid["error"]["code"], INVALID_PARAMS);
+}
+
+#[tokio::test]
+async fn close_allows_the_saved_session_to_be_loaded_again() {
+    let temp = tempfile::tempdir().unwrap();
+    let id = uuid::Uuid::new_v4().to_string();
+    let saved = crate::session::create_jsonl_session_with_id(
+        &crate::session::default_session_dir(temp.path()),
+        temp.path().to_str().unwrap(),
+        Some(id.clone()),
+    )
+    .await
+    .unwrap();
+    drop(saved);
+    let mut client = Client::start();
+    let (_, loaded) = client
+        .call("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    assert!(loaded.get("error").is_none(), "{loaded}");
+    let (_, closed) = client.call("session/close", json!({"sessionId": id})).await;
+    assert!(closed.get("error").is_none(), "{closed}");
+    let (_, reloaded) = client
+        .call("session/load", json!({"sessionId": id, "cwd": temp.path()}))
+        .await;
+    assert!(reloaded.get("error").is_none(), "{reloaded}");
+}
+
+#[tokio::test]
+async fn close_releases_an_in_flight_prompt() {
+    let mut client = Client::start();
+    let (id, _) = client.new_session().await;
+    let prompt = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": id, "prompt": [{"type":"text", "text":"wait"}]}),
+        )
+        .await;
+    let close = client
+        .request_id("session/close", json!({"sessionId": id}))
+        .await;
+    let mut seen = std::collections::HashSet::new();
+    while seen.len() < 2 {
+        let frame = client.next().await;
+        if frame.get("method").is_none() && frame["id"] == close {
+            assert_eq!(frame["result"], json!({}), "{frame}");
+            seen.insert(close);
+        } else if frame.get("method").is_none() && frame["id"] == prompt {
+            assert!(frame.get("error").is_some(), "{frame}");
+            seen.insert(prompt);
+        }
+    }
+}
+
+#[tokio::test]
+async fn fork_creates_an_independent_session_and_replays_before_response() {
+    let mut client = Client::start();
+    let (_, init) = client.call("initialize", json!({})).await;
+    assert!(init["result"]["agentCapabilities"]["sessionCapabilities"]["fork"].is_object());
+    let (source, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": source, "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert!(response.get("error").is_none(), "{response}");
+    let fork = response["result"]["sessionId"].as_str().unwrap();
+    assert_ne!(fork, source);
+    assert!(uuid::Uuid::parse_str(fork).is_ok());
+    let kinds = update_kinds(&frames);
+    assert!(kinds.contains(&"user_message_chunk".to_string()));
+    assert!(kinds.contains(&"agent_message_chunk".to_string()));
+    for id in [source.as_str(), fork] {
+        let (_, response) = client
+            .call(
+                "session/prompt",
+                json!({"sessionId": id, "prompt": [{"type": "text", "text": "continue"}]}),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+    }
+}
+
+#[tokio::test]
+async fn fork_rejects_unknown_sessions_and_wrong_working_directories() {
+    let mut client = Client::start();
+    let (source, _) = client.new_session().await;
+    let (_, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": uuid::Uuid::new_v4().to_string(), "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert_eq!(response["error"]["code"], RESOURCE_NOT_FOUND);
+    let other = tempfile::tempdir().unwrap();
+    for cwd in [json!(other.path()), json!("relative"), Value::Null] {
+        let (_, response) = client
+            .call("session/fork", json!({"sessionId": source, "cwd": cwd}))
+            .await;
+        assert_eq!(response["error"]["code"], INVALID_PARAMS, "{response}");
+    }
+}
+
+#[tokio::test]
+async fn fork_rejects_an_active_prompt_without_stopping_it() {
+    let mut client = Client::start();
+    let (source, _) = client.new_session().await;
+    let prompt = client
+        .request_id(
+            "session/prompt",
+            json!({"sessionId": source, "prompt": [{"type": "text", "text": "wait-fork"}]}),
+        )
+        .await;
+    loop {
+        if client.next().await["params"]["update"]["content"]["text"] == "fork blocked" {
+            break;
+        }
+    }
+    let (_, response) = client
+        .call(
+            "session/fork",
+            json!({"sessionId": source, "cwd": std::env::temp_dir()}),
+        )
+        .await;
+    assert_eq!(response["error"]["code"], INVALID_PARAMS);
+    client
+        .send(
+            json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": source}}),
+        )
+        .await;
+    let (_, response) = client.until_response(prompt).await;
+    assert_eq!(response["result"]["stopReason"], "cancelled");
 }
 
 #[tokio::test]
@@ -499,6 +1461,45 @@ async fn prompt_streams_then_resolves_on_settlement() {
         .collect();
     assert_eq!(text, "hello", "final text reconciled exactly once");
     assert!(frames.iter().all(|f| f["params"]["sessionId"] == session));
+    assert_eq!(
+        usage_after_content(&frames),
+        &json!({"sessionUpdate": "usage_update", "used": 1234, "size": 8192,
+            "cost": {"amount": 0.125, "currency": "USD"}})
+    );
+}
+
+#[tokio::test]
+async fn usage_query_failure_or_unknown_window_does_not_fail_the_prompt() {
+    for message in ["state-error", "no-window"] {
+        let mut client = Client::start();
+        let (session, _) = client.new_session().await;
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({
+                    "sessionId": session, "prompt": [{"type": "text", "text": message}],
+                }),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn", "{response}");
+        assert!(!update_kinds(&frames).contains(&"usage_update".to_string()));
+    }
+}
+
+#[tokio::test]
+async fn usage_is_published_before_a_failed_prompt_response() {
+    let mut client = Client::start();
+    let (session, _) = client.new_session().await;
+    let (frames, response) = client
+        .call(
+            "session/prompt",
+            json!({
+                "sessionId": session, "prompt": [{"type": "text", "text": "fail"}],
+            }),
+        )
+        .await;
+    assert_eq!(response["error"]["message"], "provider failed");
+    assert_eq!(usage_after_content(&frames)["used"], 1234);
 }
 
 #[tokio::test]
@@ -552,8 +1553,9 @@ async fn cancel_resolves_prompt_as_cancelled() {
             json!({"jsonrpc": "2.0", "method": "session/cancel", "params": {"sessionId": session}}),
         )
         .await;
-    let (_, response) = client.until_response(id).await;
+    let (frames, response) = client.until_response(id).await;
     assert_eq!(response["result"]["stopReason"], "cancelled");
+    assert_eq!(usage_after_content(&frames)["used"], 1234);
 }
 
 async fn permission_round_trip(answer: Value) -> String {
@@ -870,7 +1872,7 @@ async fn question_form_child_exit_while_waiting_does_not_hang() {
         let exit_rx = exit_rx.lock().unwrap().take().unwrap();
         tokio::spawn(async move {
             tokio::select! {
-                _ = fake_child(fake_in, fake_out) => {},
+                _ = fake_child(fake_in, fake_out, PathBuf::from(".")) => {},
                 _ = exit_rx => {},
             }
         });

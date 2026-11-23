@@ -63,7 +63,7 @@ use crate::session::state::SessionState;
 use crate::session::types::{
     provisioned_into_entry, BranchBounds, Entry, EntryQuery, ForkOptions, IdGenerator, LanePointer,
     LaneRecord, LogItem, LogOptions, OperationStartedRecord, ProvisionedEntry, RecordQuery,
-    SessionMetadata, SessionMutation, SessionStats, SessionStorage,
+    SessionForkSnapshot, SessionMetadata, SessionMutation, SessionStats, SessionStorage,
 };
 
 /// Durable file-backed `SessionStorage`. Mirrors TS `JsonlSessionStorage`.
@@ -466,6 +466,15 @@ impl SessionStorage for JsonlSessionStorage {
 
     async fn get_metadata(&self) -> SessionMetadata {
         self.metadata.to_base()
+    }
+
+    async fn fork_snapshot(&self, options: &ForkOptions) -> SessionResult<SessionForkSnapshot> {
+        let state = self.state.lock().await;
+        Ok(SessionForkSnapshot {
+            metadata: self.metadata.to_base(),
+            persistence_path: Some(self.metadata.path.clone()),
+            mutations: state.create_fork_mutations(options)?,
+        })
     }
 
     async fn get_lanes(&self) -> SessionResult<Vec<LanePointer>> {

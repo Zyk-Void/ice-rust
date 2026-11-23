@@ -1281,6 +1281,14 @@ pub struct SessionCreateOptions {
 // SessionStorage / SessionRepo / SessionTree traits
 // ---------------------------------------------------------------------------
 
+/// A coherent in-process snapshot used to publish a fork.
+#[derive(Debug, Clone)]
+pub struct SessionForkSnapshot {
+    pub metadata: SessionMetadata,
+    pub persistence_path: Option<String>,
+    pub mutations: Vec<SessionMutation>,
+}
+
 /// Read+write surface the `Session` wraps. Mirrors TS `SessionStorage`.
 ///
 /// All methods are `async` because the JSONL backend hits the FS; the in-memory
@@ -1304,6 +1312,13 @@ pub trait SessionStorage: Send + Sync {
     }
     async fn get_metadata(&self) -> SessionMetadata {
         self.metadata()
+    }
+
+    /// Capture entries, facts and lanes under one backend read lock.
+    async fn fork_snapshot(&self, _options: &ForkOptions) -> SessionResult<SessionForkSnapshot> {
+        Err(crate::error::SessionError::storage(
+            "coherent fork snapshots are unsupported by this backend",
+        ))
     }
 
     // Lanes

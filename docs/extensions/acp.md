@@ -23,6 +23,12 @@ background shells and subagents. Sessions are stored in the project's normal
 `.icers/sessions/` directory, so `icers --resume` in that project also lists
 sessions started from an ACP client.
 
+The bridge sets `ICERS_ACP_RPC=1` only for its dedicated native child. This
+opt-in adds `compaction_status` RPC events with a per-attempt `compactionId`
+and `in_progress`, `completed`, `failed` or `cancelled` status. Completion
+comes from the persisted-checkpoint hook, not the legacy JSON-mode activity
+flag. Ordinary RPC, JSON mode and the TUI keep their existing event shapes.
+
 ## Setup
 
 Build the binary:
@@ -68,17 +74,23 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | --- | --- |
 | `initialize` (v1) | Supported |
 | `session/new` | Supported. `cwd` must be an existing absolute directory |
+| `session/list` | Supported for an explicit existing absolute `cwd`. Lists only that project, in stable session-file path order, in pages of 50 with an opaque `nextCursor`. Includes UTC update times and saved names for histories up to 1 MiB; larger histories omit the optional name. Reads live sessions without taking ownership or modifying their files; cursors cannot be reused for another project |
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
 | `session/cancel` | Supported (aborts the running turn) |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |
 | Tool calls | `tool_call` / `tool_call_update` with ACP `kind`, absolute file `locations`, diffs for `edit`/`write`, and the tool's text output. Live and replayed calls carry `_meta.icers.toolName`; partial and final `rawOutput` preserve the native result and structured details for plan cards and parent subagent rows |
 | Todo plans | Successful `todo` results replace the ACP plan while keeping the tool card. Empty lists clear the plan; failed or malformed results leave the current plan unchanged. Saved todo results restore the plan on session load |
+| Automatic compaction | Negotiated with `clientCapabilities.session.compaction: {}`. Progress completes only after the native checkpoint and its step record are saved; provider/storage failures, cancellation, extension vetoes and process exit close the same progress item. Manual compaction remains a separate prompt operation |
+| Context and cost | `usage_update` follows settled turns and loaded history, reporting current context use and the model's context window, plus cumulative USD cost when positive. Unknown context windows or unavailable state omit the update without failing the turn |
 | `session/request_permission` | Permission dialogs raised in icers (for example MCP tool approvals) are forwarded. Only an explicit selection allows the call; cancel, error or disconnect deny it |
 | Model and thinking level | `configOptions` (`category: "model"` and `"thought_level"`) and `session/set_config_option`, applied to that session only. `session/set_model` is also supported. The current model is listed first |
+| Session title | `session_info_update` publishes the actual saved name after a successful `/name <display name>` and after history replay on `session/load`. Unnamed sessions have no generated title. Native RPC `get_state` includes an additive nullable `sessionName` field; a missing name or unavailable state does not fail the ACP operation |
+| Manual compaction | `/compact` emits `compaction_update` progress and its final summary when the client advertises `session.compaction`. The same compaction ID closes on success, cancellation or failure. Other clients retain the text summary. Automatic compaction progress is not forwarded yet |
 | Slash commands | Advertised with `available_commands_update` and run like the TUI: `/skill:<name>` and `$skill` mentions, prompt templates, extension commands, and the headless built-ins `/compact`, `/model`, `/thinking`, `/tools`, `/context`, `/usage`, `/session`, `/name`, `/cognee`, `/blackhole`, `/version` and `/help`. TUI-only commands (`/settings`, `/tree`, `/export`, `/reload`, …) are not offered; extension commands that open an interactive dialog report that they need the TUI |
 | Client `mcpServers` | Accepted but **not started yet** (a warning is printed to stderr) |
 | `session/load` | Supported across process restarts. Opens the exact native saved session in its original `cwd`, replays the active branch (including paginated history and tool results) before responding, and restores the saved model and thinking level before returning configuration. Older sessions without selection records use their latest assistant's model. Missing, unreadable, already-open or unrestorable sessions return an error; loading never creates an empty replacement |
-| `session/resume` | Not implemented; clients should use the advertised `session/load` capability |
+| `session/resume` | Supported with the same saved-session and cwd validation as load. Restores model and thinking configuration without replaying history or rewriting the saved conversation; returns `configOptions` and advertises commands after the response |
+| `session/fork` | Supported for an open, idle session in the same `cwd`. Captures the live source's JSONL branch, facts and configuration coherently, creates a new native session ID with the source as parent, then replays the fork before returning. The original child and session file remain unchanged and usable |
 | Images | Supported (`promptCapabilities.image: true`). Inline base64 PNG/JPEG/GIF/WebP supported by the native image detector; malformed data or mismatched MIME types are rejected. The selected provider/model must support vision |
 | Audio | Not supported |
 | Client fs/terminal methods | Not used. icers runs its own tools |

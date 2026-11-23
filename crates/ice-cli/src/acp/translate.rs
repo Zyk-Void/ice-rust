@@ -210,6 +210,30 @@ impl Translator {
     }
 }
 
+pub(crate) fn compaction_update(event: &Value) -> Option<Value> {
+    let crate::remote::protocol::RemoteEvent::CompactionStatus {
+        compaction_id,
+        status,
+        summary,
+        error,
+    } = serde_json::from_value(event.clone()).ok()?
+    else {
+        return None;
+    };
+    if compaction_id.trim().is_empty() {
+        return None;
+    }
+    let mut update = json!({"sessionUpdate": "compaction_update",
+        "compactionId": compaction_id, "status": status});
+    if let Some(summary) = summary.filter(|text| !text.is_empty()) {
+        update["summary"] = json!([{"type": "text", "text": summary}]);
+    }
+    if let Some(error) = error.filter(|text| !text.is_empty()) {
+        update["error"] = json!(error);
+    }
+    Some(update)
+}
+
 fn is_assistant(event: &Value) -> bool {
     event["message"].get("kind").and_then(Value::as_str) == Some("assistant")
 }
@@ -469,13 +493,29 @@ pub(crate) fn stop_reason(
     match settled["outcome"].as_str().unwrap_or("completed") {
         "aborted" => Ok("cancelled"),
         "completed" if stop_reason == Some("length") => Ok("max_tokens"),
-        "completed" => Ok("end_turn"),
+        "completed" | "compacted" | "declined" => Ok("end_turn"),
         _ if cancelled => Ok("cancelled"),
         _ => Err(settled["error"]
             .as_str()
             .unwrap_or("the agent run failed")
             .to_string()),
     }
+}
+
+pub(crate) fn usage_update(state: &Value) -> Option<Value> {
+    let used = state["context"]["tokens"].as_u64()?;
+    let size = state["context"]["window"]
+        .as_u64()
+        .filter(|size| *size > 0)?;
+    let mut update = json!({"sessionUpdate": "usage_update", "used": used, "size": size});
+    if let Some(amount) = state["stats"]["costTotal"]
+        .as_f64()
+        .filter(|amount| amount.is_finite() && *amount > 0.0)
+    {
+        // Native model rates and accumulated SessionStats costs are in USD.
+        update["cost"] = json!({"amount": amount, "currency": "USD"});
+    }
+    Some(update)
 }
 
 /// Option titles of a native permission dialog, when every option declares a
@@ -1126,6 +1166,12 @@ mod tests {
         let done = json!({"outcome": "completed"});
         assert_eq!(stop_reason(&done, false, Some("stop")), Ok("end_turn"));
         assert_eq!(stop_reason(&done, false, Some("length")), Ok("max_tokens"));
+        for outcome in ["compacted", "declined"] {
+            assert_eq!(
+                stop_reason(&json!({"outcome": outcome}), false, None),
+                Ok("end_turn")
+            );
+        }
         assert_eq!(
             stop_reason(&json!({"outcome": "aborted"}), true, None),
             Ok("cancelled")
@@ -1133,6 +1179,42 @@ mod tests {
         let failed = json!({"outcome": "failed", "error": "boom"});
         assert_eq!(stop_reason(&failed, false, None), Err("boom".to_string()));
         assert_eq!(stop_reason(&failed, true, None), Ok("cancelled"));
+    }
+
+    #[test]
+    fn usage_update_uses_context_tokens_and_positive_usd_cost() {
+        assert_eq!(
+            usage_update(&json!({
+                "context": {"tokens": 1234, "window": 8192},
+                "stats": {"totalTokens": 999999, "costTotal": 0.125},
+            })),
+            Some(json!({
+                "sessionUpdate": "usage_update", "used": 1234, "size": 8192,
+                "cost": {"amount": 0.125, "currency": "USD"},
+            }))
+        );
+        for cost in [Value::Null, json!(0), json!(-1), json!("unknown")] {
+            assert_eq!(
+                usage_update(&json!({
+                    "context": {"tokens": 0, "window": 8192}, "stats": {"costTotal": cost},
+                })),
+                Some(json!({"sessionUpdate": "usage_update", "used": 0, "size": 8192}))
+            );
+        }
+    }
+
+    #[test]
+    fn usage_update_skips_unknown_or_invalid_context() {
+        for context in [
+            Value::Null,
+            json!({"tokens": 10}),
+            json!({"tokens": 10, "window": 0}),
+            json!({"tokens": 10, "window": -1}),
+            json!({"tokens": -1, "window": 8192}),
+            json!({"tokens": "10", "window": 8192}),
+        ] {
+            assert!(usage_update(&json!({"context": context})).is_none());
+        }
     }
 
     fn mcp_permission_ui() -> Value {
