@@ -240,16 +240,20 @@ impl SessionShells {
         self.watches.dispose();
         // Start lingering group stops together: each has
         // a TERM grace period, which must not accumulate across the session.
-        let mut stops = tokio::task::JoinSet::new();
+        // Plain spawned tasks (not a JoinSet) keep running if this future is
+        // dropped, so a cancelled dispose still finishes stopping the groups.
+        let mut stops = Vec::new();
         for shell in self.registry.snapshots().into_iter().filter(|shell| {
             shell.status != ice_tools::bash_background::BackgroundShellStatus::Running
         }) {
             let registry = self.registry.clone();
-            stops.spawn(async move {
+            stops.push(tokio::spawn(async move {
                 let _ = registry.kill(&shell.task_id, false).await;
-            });
+            }));
         }
-        while stops.join_next().await.is_some() {}
+        for stop in stops {
+            let _ = stop.await;
+        }
         self.registry.dispose().await;
         self.deliveries.close_and_drain().await;
     }

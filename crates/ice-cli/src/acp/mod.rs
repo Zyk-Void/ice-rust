@@ -610,20 +610,30 @@ impl Server {
             .as_str()
             .ok_or((INVALID_PARAMS, "`cwd` is required".to_string()))?;
         let cwd = PathBuf::from(cwd);
-        if !cwd.is_absolute() || !cwd.is_dir() {
-            return Err((
-                INVALID_PARAMS,
-                "`cwd` must be an existing absolute directory".to_string(),
-            ));
-        }
-        let canonical = std::fs::canonicalize(&cwd)
-            .map_err(|error| (INVALID_PARAMS, format!("cannot resolve cwd: {error}")))?;
-        if std::fs::canonicalize(source.cwd()).ok().as_ref() != Some(&canonical) {
-            return Err((
-                INVALID_PARAMS,
-                "source session belongs to a different working directory".to_string(),
-            ));
-        }
+        let source_cwd = source.cwd().to_path_buf();
+        let requested = cwd.clone();
+        // Directory checks and canonicalization touch the filesystem, which can
+        // be slow or remote; keep them off the async workers.
+        tokio::task::spawn_blocking(move || {
+            if !requested.is_absolute() || !requested.is_dir() {
+                return Err((
+                    INVALID_PARAMS,
+                    "`cwd` must be an existing absolute directory".to_string(),
+                ));
+            }
+            let canonical = requested
+                .canonicalize()
+                .map_err(|error| (INVALID_PARAMS, format!("cannot resolve cwd: {error}")))?;
+            if source_cwd.canonicalize().ok().as_ref() != Some(&canonical) {
+                return Err((
+                    INVALID_PARAMS,
+                    "source session belongs to a different working directory".to_string(),
+                ));
+            }
+            Ok(())
+        })
+        .await
+        .map_err(|error| (INTERNAL_ERROR, error.to_string()))??;
         if params
             .get("mcpServers")
             .is_some_and(|servers| !servers.is_null() && !servers.is_array())
