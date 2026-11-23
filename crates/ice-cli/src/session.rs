@@ -1077,6 +1077,14 @@ pub async fn build_prepared(
         if !mcp_ready.wait_for_startup().await {
             eprintln!("MCP startup did not complete; the debug prompt may be incomplete.");
         }
+        for server in reload_context.mcp_tools.snapshot() {
+            if let crate::mcp::ServerStatus::Failed(_) = server.status {
+                eprintln!(
+                    "MCP server {:?} failed to start; the debug prompt may be incomplete.",
+                    server.name
+                );
+            }
+        }
         match harness.prompt_snapshot() {
             Ok(snapshot) => eprintln!(
                 "--- composed system prompt after MCP startup wait ---\n{}",

@@ -396,7 +396,13 @@ async fn context_command_appends_responsive_panel_without_usage_event_or_session
 #[tokio::test]
 async fn changed_leaf_or_replaced_backing_rejects_snapshot_even_with_same_session_id() {
     let dir = tempfile::tempdir().unwrap();
-    let harness = AgentHarness::create(Default::default()).await.unwrap();
+    let mut options = ice_harness::types::AgentHarnessOptions::default();
+    options
+        .models
+        .push(ice_ai::providers::faux::FauxProvider::new(
+            ice_ai::providers::faux::FauxScript::new(),
+        ));
+    let harness = AgentHarness::create(options).await.unwrap();
     let lane = harness.lane("main");
     let root = lane.append_message(user("root")).await.unwrap();
     let session = crate::agent_session::AgentSession::new(harness, vec![], vec![], dir.path());
@@ -418,6 +424,14 @@ async fn changed_leaf_or_replaced_backing_rejects_snapshot_even_with_same_sessio
         .set_mcp_instructions(Default::default())
         .await
         .unwrap();
+    let mut changed_model = fence.model.clone();
+    changed_model.context_window += 1;
+    session.set_model(changed_model).await.unwrap();
+    assert!(
+        !fence.current(&session, &lane).await,
+        "changed model rejects publication"
+    );
+    session.set_model(fence.model.clone()).await.unwrap();
     lane.append_message(user("next")).await.unwrap();
     assert!(
         !fence.current(&session, &lane).await,

@@ -465,6 +465,7 @@ fn allocate(weights: &[u64], used: u64, window: u64, budget: usize) -> Vec<usize
 struct Fence {
     storage: Arc<dyn ice_harness::session::types::SessionStorage>,
     tip: Option<String>,
+    model: ice_ai::Model,
     prompt: ice_harness::agent_harness::HarnessPromptSnapshot,
 }
 
@@ -475,6 +476,7 @@ impl Fence {
     ) -> Result<Self, String> {
         let storage = session.harness().session().storage();
         let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
+        let model = session.model().await.map_err(|e| e.to_string())?;
         let prompt = session
             .harness()
             .prompt_snapshot()
@@ -482,6 +484,7 @@ impl Fence {
         let fence = Self {
             storage,
             tip,
+            model,
             prompt,
         };
         if !fence.current(session, lane).await {
@@ -500,6 +503,7 @@ impl Fence {
             Err(_) => return false,
         };
         tip == self.tip
+            && session.model().await.is_ok_and(|model| model == self.model)
             && Arc::ptr_eq(&self.storage, &session.harness().session().storage())
             && session
                 .harness()
@@ -525,8 +529,13 @@ async fn collect_at(
     if !fence.current(session, lane).await {
         return Err("Context changed".into());
     }
-    let model = session.model().await.map_err(|e| e.to_string())?;
-    let snapshot = collect_from(session.harness(), &model, fence.tip.clone()).await?;
+    let snapshot = collect_from(
+        session.harness(),
+        &fence.model,
+        fence.tip.clone(),
+        &fence.prompt,
+    )
+    .await?;
     if !fence.current(session, lane).await {
         return Err("Context changed".into());
     }
@@ -538,8 +547,8 @@ async fn collect_from(
     harness: &ice_harness::agent_harness::AgentHarness,
     model: &ice_ai::Model,
     tip: Option<String>,
+    prompt: &ice_harness::agent_harness::HarnessPromptSnapshot,
 ) -> Result<Snapshot, String> {
-    let prompt = harness.prompt_snapshot().map_err(|e| e.to_string())?;
     let entries = if tip.is_some() {
         harness
             .find_entries_on_branch(
@@ -582,7 +591,8 @@ pub(crate) async fn headless_report(
 ) -> Result<String, String> {
     let model = lane.get_model().await.map_err(|e| e.to_string())?;
     let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
-    let snapshot = collect_from(harness, &model, tip).await?;
+    let prompt = harness.prompt_snapshot().map_err(|e| e.to_string())?;
+    let snapshot = collect_from(harness, &model, tip, &prompt).await?;
     Ok(render_report(&snapshot, width)
         .iter()
         .map(|line| ice_tui::utils::strip_ansi(line).trim_end().to_string())
