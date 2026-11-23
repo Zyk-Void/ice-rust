@@ -559,7 +559,7 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     let mut property = if input {
         json!({"type": "string"})
     } else if multiple {
-        json!({"type": "array", "items": {"anyOf": choices}})
+        json!({"type": "array", "minItems": 1, "items": {"anyOf": choices}})
     } else {
         json!({"type": "string", "oneOf": choices})
     };
@@ -645,12 +645,14 @@ impl QuestionForm {
         } else {
             vec![selected.as_str()?]
         };
-        if !values.iter().all(|value| {
-            self.prompt
-                .options
-                .iter()
-                .any(|(title, _)| title.as_str() == *value)
-        }) {
+        if values.is_empty()
+            || !values.iter().all(|value| {
+                self.prompt
+                    .options
+                    .iter()
+                    .any(|(title, _)| title.as_str() == *value)
+            })
+        {
             return None;
         }
         Some(json!({"values": values, "kind": "selector"}))
@@ -942,6 +944,11 @@ mod tests {
         let answer = &form.requested_schema["properties"]["answer"];
         assert_eq!(form.message, "Choose databases.");
         assert_eq!(answer["type"], "array");
+        assert_eq!(answer["minItems"], 1);
+        assert_eq!(
+            form.answer("r", Ok(json!({"action":"accept", "content":{"answer":[]}})))["cancelled"],
+            true
+        );
         assert!(answer["items"].get("type").is_none());
         assert_eq!(
             answer["items"]["anyOf"],
