@@ -102,6 +102,7 @@ pub(crate) struct Writer {
     out: tokio::sync::Mutex<Box<dyn AsyncWrite + Send + Unpin>>,
     next_id: AtomicU64,
     pending: Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>,
+    closed: AtomicBool,
 }
 
 struct PendingRequest<'a> {
@@ -121,6 +122,7 @@ impl Writer {
             out: tokio::sync::Mutex::new(out),
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
+            closed: AtomicBool::new(false),
         }
     }
 
@@ -150,12 +152,14 @@ impl Writer {
         } else {
             self.out.lock().await
         };
-        out.write_all(&line)
-            .await
-            .map_err(|_| "client stdout closed".to_string())?;
-        out.flush()
-            .await
-            .map_err(|_| "client stdout closed".to_string())
+        if self.closed.load(Ordering::Acquire) {
+            return Err("client stdout closed".to_string());
+        }
+        if out.write_all(&line).await.is_err() || out.flush().await.is_err() {
+            self.close();
+            return Err("client stdout closed".to_string());
+        }
+        Ok(())
     }
 
     async fn respond(&self, id: Value, result: Value) {
@@ -224,6 +228,7 @@ impl Writer {
 
     /// Fail every outstanding client request (client gone).
     fn close(&self) {
+        self.closed.store(true, Ordering::Release);
         self.pending.lock().unwrap().clear();
     }
 }

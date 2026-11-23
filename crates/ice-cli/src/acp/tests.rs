@@ -952,11 +952,28 @@ async fn closed_client_output_fails_dialog_request() {
     assert!(writer.pending.lock().unwrap().is_empty());
 }
 
+#[tokio::test]
+async fn output_failure_drains_other_pending_requests() {
+    let (out, input) = tokio::io::duplex(1024);
+    let writer = Writer::new(Box::new(out));
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    writer.pending.lock().unwrap().insert(999, tx);
+    drop(input);
+    assert!(writer
+        .request("session/elicitation", json!({}), &CancellationToken::new())
+        .await
+        .is_err());
+    assert!(rx.await.is_err());
+    assert!(writer.closed.load(Ordering::Acquire));
+    assert!(writer.pending.lock().unwrap().is_empty());
+}
+
 #[test]
 fn unsupported_question_combinations_are_rejected() {
     for ui in [
         json!({"questions": [{"question":"one"}, {"question":"two"}]}),
         json!({"question":"pick", "allowMultiple":true, "allowFreeform":true, "options":["one"]}),
+        json!({"question":"pick", "options":["one", "one"]}),
     ] {
         assert!(translate::question_form(&json!({"requestId":"test", "ui":ui})).is_none());
     }

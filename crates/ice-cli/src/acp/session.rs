@@ -161,9 +161,10 @@ impl Session {
                         .lock()
                         .unwrap()
                         .as_ref()
-                        .map(|token| token.as_ref().clone())
-                        .unwrap_or_else(|| self.closed.clone());
-                    tokio::spawn(Arc::clone(&self).answer_dialog(frame, cancel));
+                        .map(|token| token.as_ref().clone());
+                    if let Some(cancel) = cancel {
+                        tokio::spawn(Arc::clone(&self).answer_dialog(frame, cancel));
+                    }
                 }
                 _ => {
                     let updates = self.translator.lock().unwrap().translate(&frame);

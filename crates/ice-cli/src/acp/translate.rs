@@ -532,6 +532,17 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
         return None;
     }
     let freeform = !input && !multiple && prompt.allow_freeform && prompt.kind != "confirm";
+    if !input
+        && prompt
+            .options
+            .iter()
+            .map(|(title, _)| title)
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            != prompt.options.len()
+    {
+        return None;
+    }
     let mut message = prompt.question.clone();
     if let Some(context) = &prompt.context {
         if !message.is_empty() {
@@ -559,7 +570,7 @@ pub(crate) fn question_form(frame: &Value) -> Option<QuestionForm> {
     let mut property = if input {
         json!({"type": "string"})
     } else if multiple {
-        json!({"type": "array", "minItems": 1, "items": {"anyOf": choices}})
+        json!({"type": "array", "minItems": 1, "uniqueItems": true, "items": {"anyOf": choices}})
     } else {
         json!({"type": "string", "oneOf": choices})
     };
@@ -646,6 +657,12 @@ impl QuestionForm {
             vec![selected.as_str()?]
         };
         if values.is_empty()
+            || (multiple
+                && values
+                    .iter()
+                    .collect::<std::collections::HashSet<_>>()
+                    .len()
+                    != values.len())
             || !values.iter().all(|value| {
                 self.prompt
                     .options
@@ -945,6 +962,14 @@ mod tests {
         assert_eq!(form.message, "Choose databases.");
         assert_eq!(answer["type"], "array");
         assert_eq!(answer["minItems"], 1);
+        assert_eq!(answer["uniqueItems"], true);
+        assert_eq!(
+            form.answer(
+                "r",
+                Ok(json!({"action":"accept", "content":{"answer":["Postgres", "Postgres"]}}))
+            )["cancelled"],
+            true
+        );
         assert_eq!(
             form.answer("r", Ok(json!({"action":"accept", "content":{"answer":[]}})))["cancelled"],
             true
