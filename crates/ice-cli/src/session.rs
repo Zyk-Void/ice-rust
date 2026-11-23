@@ -986,11 +986,11 @@ pub async fn build_prepared(
     } else {
         mcp_tools
     };
-    let ready = crate::mcp::start(mcp_tools.clone());
-    harness.set_lifecycle_hooks(Arc::new(crate::mcp::McpReadyGate {
+    let mcp_ready = Arc::new(crate::mcp::McpReadyGate {
         inner: Some(command_hooks),
-        ready,
-    }));
+        ready: crate::mcp::start(mcp_tools.clone()),
+    });
+    harness.set_lifecycle_hooks(mcp_ready.clone());
 
     harness.set_extensions(builtins.harness_extensions());
     let mut capability_service = None;
@@ -1074,10 +1074,11 @@ pub async fn build_prepared(
     };
 
     if args.debug_system_prompt {
-        match harness.context_snapshot().await {
+        mcp_ready.wait_for_startup().await;
+        match harness.prompt_snapshot() {
             Ok(snapshot) => eprintln!(
-                "--- composed system prompt at startup ---\n{}",
-                snapshot.system_prompt
+                "--- composed system prompt after MCP startup wait ---\n{}",
+                snapshot.compose()
             ),
             Err(error) => eprintln!("Could not compose the startup system prompt: {error}"),
         }

@@ -396,6 +396,8 @@ mod tests {
             .await
             .unwrap();
         let snapshot = harness.context_snapshot().await.unwrap();
+        let captured = harness.prompt_snapshot().unwrap();
+        assert_eq!(captured.compose(), snapshot.system_prompt);
         assert_eq!(snapshot.base_system_prompt.as_deref(), Some("BASE"));
         assert!(snapshot
             .system_prompt
@@ -409,6 +411,11 @@ mod tests {
             .await
             .unwrap();
         let prompt = harness.context_snapshot().await.unwrap().system_prompt;
+        assert_eq!(harness.prompt_snapshot().unwrap().compose(), prompt);
+        assert_eq!(
+            captured.compose(),
+            "BASE\n\nMCP server `demo` instructions:\nUse echo."
+        );
         assert!(prompt.starts_with("RELOADED"));
         assert!(!prompt.contains("Use echo."));
         assert_eq!(prompt.matches("MCP server `demo`").count(), 1);
