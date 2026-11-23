@@ -568,6 +568,16 @@ async fn collect_from(
     } else {
         &[]
     };
+    // Measure the prompt a request sends: the base's tool markers are filled
+    // from the active tools, as `AgentHarness::compose_prompt` does.
+    let active_tools: Vec<Arc<dyn ice_agent::AgentTool>> = tools
+        .iter()
+        .filter(|tool| active.is_empty() || active.contains(&tool.tool.schema().name))
+        .map(|tool| Arc::clone(&tool.tool))
+        .collect();
+    let base = base
+        .as_deref()
+        .map(|base| ice_harness::system_prompt::render_tool_sections(base, &active_tools));
     snapshot.prompt(base.as_deref(), skills);
     snapshot.tools(&tools, &active)?;
     snapshot.messages(&entries);

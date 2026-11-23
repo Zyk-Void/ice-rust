@@ -662,7 +662,14 @@ pub async fn build_prepared(
             "default"
         };
         eprintln!("[base source: {base_src}]");
-        eprintln!("--- base ---\n{base_prompt}");
+        let active_tools: Vec<Arc<dyn ice_agent::AgentTool>> = tools
+            .iter()
+            .filter(|tool| active.contains(&tool.tool.schema().name))
+            .map(|tool| Arc::clone(&tool.tool))
+            .collect();
+        let rendered_base =
+            ice_harness::system_prompt::render_tool_sections(&base_prompt, &active_tools);
+        eprintln!("--- base ---\n{rendered_base}");
         if let Some(append) = append_join.as_deref() {
             eprintln!("--- append ---\n{append}");
         } else {

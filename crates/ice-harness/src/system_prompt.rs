@@ -76,6 +76,61 @@ pub fn compose_system_prompt(
     out
 }
 
+/// Marker the default base prompt uses for the per-request tool list.
+pub const TOOLS_PLACEHOLDER: &str = "{{icers:tools}}";
+/// Marker the default base prompt uses for the per-request tool guidelines.
+pub const GUIDELINES_PLACEHOLDER: &str = "{{icers:guidelines}}";
+
+/// Fill the tool markers in `prompt` from the tools active for this request.
+/// Mirrors TS `buildSystemPrompt`: only tools with a `prompt_snippet` are
+/// listed under "Available tools", and each active tool's
+/// `prompt_guidelines` are added once, in tool order.
+///
+/// Only the first occurrence of each marker is replaced, and the markers are
+/// namespaced, so a `SYSTEM.md` or project file without them passes through
+/// unchanged. The guideline marker is expected on its own line; that line is
+/// dropped when no active tool adds a guideline.
+pub fn render_tool_sections(
+    prompt: &str,
+    tools: &[std::sync::Arc<dyn ice_agent::AgentTool>],
+) -> String {
+    if !prompt.contains(TOOLS_PLACEHOLDER) && !prompt.contains(GUIDELINES_PLACEHOLDER) {
+        return prompt.to_string();
+    }
+    let listed: Vec<String> = tools
+        .iter()
+        .filter_map(|tool| {
+            let snippet = tool.prompt_snippet()?;
+            let snippet = snippet.trim();
+            (!snippet.is_empty()).then(|| format!("- {}: {snippet}", tool.schema().name))
+        })
+        .collect();
+    let tool_list = if listed.is_empty() {
+        "(none)".to_string()
+    } else {
+        listed.join("\n")
+    };
+    let mut seen = std::collections::HashSet::new();
+    let mut guidelines = String::new();
+    for tool in tools {
+        for guideline in tool.prompt_guidelines() {
+            let guideline = guideline.trim().to_string();
+            if !guideline.is_empty() && seen.insert(guideline.clone()) {
+                guidelines.push_str("- ");
+                guidelines.push_str(&guideline);
+                guidelines.push('\n');
+            }
+        }
+    }
+    let rendered = prompt.replacen(TOOLS_PLACEHOLDER, &tool_list, 1);
+    let line = format!("{GUIDELINES_PLACEHOLDER}\n");
+    if rendered.contains(&line) {
+        rendered.replacen(&line, &guidelines, 1)
+    } else {
+        rendered.replacen(GUIDELINES_PLACEHOLDER, guidelines.trim_end(), 1)
+    }
+}
+
 /// Bounded live instructions from connected MCP servers. Limits include headers
 /// and truncation notices and are measured in UTF-8 bytes, not characters.
 pub fn format_mcp_instructions(
@@ -125,6 +180,85 @@ pub fn format_mcp_instructions(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct PromptTool {
+        schema: ice_ai::types::Tool,
+        snippet: Option<&'static str>,
+        guidelines: Vec<&'static str>,
+    }
+
+    #[async_trait::async_trait]
+    impl ice_agent::AgentTool for PromptTool {
+        fn schema(&self) -> &ice_ai::types::Tool {
+            &self.schema
+        }
+        fn label(&self) -> &str {
+            &self.schema.name
+        }
+        fn prompt_snippet(&self) -> Option<String> {
+            self.snippet.map(str::to_string)
+        }
+        fn prompt_guidelines(&self) -> Vec<String> {
+            self.guidelines.iter().map(|g| g.to_string()).collect()
+        }
+        async fn execute(
+            &self,
+            _id: &str,
+            _params: serde_json::Value,
+            _signal: tokio_util::sync::CancellationToken,
+            _update: std::sync::Arc<dyn Fn(ice_agent::ToolResultPartial) + Send + Sync>,
+        ) -> Result<ice_agent::AgentToolResult, ice_agent::AgentError> {
+            unreachable!("prompt rendering never runs a tool")
+        }
+    }
+
+    fn prompt_tool(
+        name: &str,
+        snippet: Option<&'static str>,
+        guidelines: Vec<&'static str>,
+    ) -> std::sync::Arc<dyn ice_agent::AgentTool> {
+        std::sync::Arc::new(PromptTool {
+            schema: ice_ai::types::Tool {
+                name: name.to_string(),
+                description: String::new(),
+                parameters: ice_ai::types::Schema::new(serde_json::json!({"type": "object"})),
+                constrained_sampling: None,
+            },
+            snippet,
+            guidelines,
+        })
+    }
+
+    const TEMPLATE: &str =
+        "Tools:\n{{icers:tools}}\n\nGuidelines:\n- base rule\n{{icers:guidelines}}\n- last rule";
+
+    #[test]
+    fn render_lists_snippet_tools_and_dedupes_guidelines() {
+        let tools = vec![
+            prompt_tool("read", Some("Read files"), vec!["Use read, not cat."]),
+            prompt_tool("hidden", None, vec!["Use read, not cat.", "Hidden rule."]),
+            prompt_tool("bash", Some("Run Bash"), vec![]),
+        ];
+        assert_eq!(
+            render_tool_sections(TEMPLATE, &tools),
+            "Tools:\n- read: Read files\n- bash: Run Bash\n\nGuidelines:\n- base rule\n- Use read, not cat.\n- Hidden rule.\n- last rule"
+        );
+    }
+
+    #[test]
+    fn render_without_tools_says_none_and_drops_the_guideline_line() {
+        assert_eq!(
+            render_tool_sections(TEMPLATE, &[]),
+            "Tools:\n(none)\n\nGuidelines:\n- base rule\n- last rule"
+        );
+    }
+
+    #[test]
+    fn render_leaves_a_custom_prompt_without_markers_unchanged() {
+        let custom = "My SYSTEM.md with {{tools}} left as the user wrote it.";
+        let tools = vec![prompt_tool("read", Some("Read files"), vec!["rule"])];
+        assert_eq!(render_tool_sections(custom, &tools), custom);
+    }
     use crate::context_files::ContextFile;
     use crate::types::Skill;
 

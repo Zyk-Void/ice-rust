@@ -2282,6 +2282,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snapshot.system_prompt.as_deref(),
             &snapshot.resources,
+            &snapshot.tools,
             &snapshot.active_tool_names,
             &snapshot.mcp_instructions,
         );
@@ -3573,9 +3574,19 @@ impl AgentHarness {
     fn compose_prompt(
         base: Option<&str>,
         resources: &AgentHarnessResources,
+        tools: &[HarnessTool],
         active_tool_names: &[String],
         mcp_instructions: &BTreeMap<String, String>,
     ) -> String {
+        // The default base prompt carries tool markers; fill them from the
+        // tools this request actually exposes (TS `_rebuildSystemPrompt`).
+        let rendered = base.map(|base| {
+            crate::system_prompt::render_tool_sections(
+                base,
+                &Self::active_tools(tools, active_tool_names),
+            )
+        });
+        let base = rendered.as_deref();
         let all_skills: &[Skill] = resources.skills.as_deref().unwrap_or(&[]);
         let skills: &[Skill] = if active_tool_names.iter().any(|n| n == "read") {
             all_skills
@@ -3637,6 +3648,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snap.system_prompt.as_deref(),
             &snap.resources,
+            &snap.tools,
             &snap.active_tool_names,
             &snap.mcp_instructions,
         );
@@ -4720,6 +4732,7 @@ impl AgentHarness {
         let system_prompt = Self::compose_prompt(
             snap.system_prompt.as_deref(),
             &snap.resources,
+            &snap.tools,
             &snap.active_tool_names,
             &snap.mcp_instructions,
         );

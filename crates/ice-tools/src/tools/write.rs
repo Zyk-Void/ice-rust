@@ -80,6 +80,9 @@ impl AgentTool for WriteTool {
     fn label(&self) -> &str {
         "write"
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        Some("Create or overwrite files".to_string())
+    }
 
     async fn execute(
         &self,

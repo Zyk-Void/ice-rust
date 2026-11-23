@@ -25,6 +25,12 @@ impl ice_agent::AgentTool for ChildTool {
     fn execution_mode(&self) -> ice_agent::ToolExecutionMode {
         self.tool.execution_mode()
     }
+    fn prompt_snippet(&self) -> Option<String> {
+        self.tool.prompt_snippet()
+    }
+    fn prompt_guidelines(&self) -> Vec<String> {
+        self.tool.prompt_guidelines()
+    }
     fn prepare_arguments(
         &self,
         args: serde_json::Value,
