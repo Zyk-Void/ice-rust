@@ -116,11 +116,11 @@ impl AgentTool for DocsTool {
         "docs"
     }
     fn prompt_snippet(&self) -> Option<String> {
-        Some("Look up icers usage, extension, package, and compatibility documentation".to_string())
+        Some("Look up icers usage, extension, and configuration documentation".to_string())
     }
     fn prompt_guidelines(&self) -> Vec<String> {
         vec![
-            "When unsure about icers commands, extensions, Pi package compatibility, or .icers configuration, consult the project documentation before guessing".to_string(),
+            "When unsure about icers commands, extensions, or .icers configuration, consult the project documentation before guessing".to_string(),
         ]
     }
 
