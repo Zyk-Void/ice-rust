@@ -29,14 +29,23 @@ pub(super) async fn sessions(
     let cwd = params["cwd"]
         .as_str()
         .map(PathBuf::from)
-        .filter(|cwd| cwd.is_absolute() && cwd.is_dir())
+        .filter(|cwd| cwd.is_absolute())
         .ok_or((
             INVALID_PARAMS,
             "`cwd` must be an existing absolute directory".to_string(),
         ))?;
-    let cwd = cwd
-        .canonicalize()
-        .map_err(|error| (INVALID_PARAMS, error.to_string()))?;
+    let cwd = tokio::task::spawn_blocking(move || {
+        if !cwd.is_dir() {
+            return Err((
+                INVALID_PARAMS,
+                "`cwd` must be an existing absolute directory".to_string(),
+            ));
+        }
+        cwd.canonicalize()
+            .map_err(|error| (INVALID_PARAMS, error.to_string()))
+    })
+    .await
+    .map_err(|error| (INTERNAL_ERROR, error.to_string()))??;
     let cursor = match params.get("cursor") {
         None | Some(Value::Null) => None,
         Some(Value::String(encoded)) if encoded.len() <= 16 * 1024 => {
