@@ -256,8 +256,18 @@ fn tool_update(event: &Value) -> Option<Value> {
         "rawOutput": result,
         "_meta": {"icers": {"toolName": event["toolName"]}},
     });
-    if !text.is_empty() {
-        update["content"] = json!([text_content(&text)]);
+    let content: Vec<Value> = result["content"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|block| match block["type"].as_str() {
+            Some("text") => block["text"].as_str().map(text_content),
+            Some("image") => Some(json!({"type": "content", "content": block})),
+            _ => None,
+        })
+        .collect();
+    if !content.is_empty() {
+        update["content"] = json!(content);
     }
     Some(update)
 }
@@ -288,7 +298,10 @@ fn todo_plan(event: &Value) -> Option<Value> {
         return None;
     }
     let details = event["result"].get("details")?;
-    if details.get("error").is_some() {
+    if details
+        .get("error")
+        .is_some_and(|error| !error.is_null() && error.as_str() != Some(""))
+    {
         return None;
     }
     let entries = details
@@ -930,6 +943,17 @@ mod tests {
     }
 
     #[test]
+    fn empty_error_does_not_suppress_successful_plan() {
+        for error in [Value::Null, json!("")] {
+            let out = translator().translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+                "result": {"details": {"error": error, "todos": []}}
+            }));
+            assert_eq!(out[1], json!({"sessionUpdate": "plan", "entries": []}));
+        }
+    }
+
+    #[test]
     fn failed_malformed_and_unrelated_tool_results_do_not_replace_the_plan() {
         let mut t = translator();
         for (name, is_error, details) in [
@@ -939,7 +963,6 @@ mod tests {
                 false,
                 json!({"error": "rejected", "todos": [{"text": "Failed"}]}),
             ),
-            ("todo", false, json!({"error": null, "todos": []})),
             ("todo", false, json!({})),
             ("todo", false, json!({"todos": "invalid"})),
             (
@@ -1038,6 +1061,7 @@ mod tests {
         }));
         assert_eq!(updates.len(), 1);
         assert_eq!(updates[0]["rawOutput"], image);
+        assert_eq!(updates[0]["content"][0]["content"], image["content"][0]);
         for partial in [Value::Null, json!({"content": [], "details": null})] {
             assert!(t
                 .translate(&json!({
