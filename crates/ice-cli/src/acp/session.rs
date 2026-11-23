@@ -73,7 +73,7 @@ pub(crate) struct Session {
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     settled: Mutex<Option<oneshot::Sender<Value>>>,
     translator: Mutex<Translator>,
-    turn: Mutex<Option<CancellationToken>>,
+    turn: Mutex<Option<Arc<CancellationToken>>>,
     /// Serializes turn transitions with delivery of an abort to the child.
     turn_gate: tokio::sync::Mutex<()>,
     /// Cancelled when the child's stdout closes (exit, crash or shutdown).
@@ -160,7 +160,8 @@ impl Session {
                         .turn
                         .lock()
                         .unwrap()
-                        .clone()
+                        .as_ref()
+                        .map(|token| token.as_ref().clone())
                         .unwrap_or_else(|| self.closed.clone());
                     tokio::spawn(Arc::clone(&self).answer_dialog(frame, cancel));
                 }
@@ -293,7 +294,7 @@ impl Session {
             if turn.is_some() {
                 return Err("a prompt is already running in this session".to_string());
             }
-            let cancel = self.closed.child_token();
+            let cancel = Arc::new(self.closed.child_token());
             *turn = Some(cancel.clone());
             cancel
         };
@@ -338,11 +339,19 @@ impl Session {
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
     /// resolves with `cancelled` once the child settles.
     pub(crate) async fn cancel(&self) {
-        let _gate = self.turn_gate.lock().await;
         let cancel = self.turn.lock().unwrap().clone();
         if let Some(cancel) = cancel {
-            cancel.cancel();
-            let _ = self.send(&json!({"type": "abort"})).await;
+            let _gate = self.turn_gate.lock().await;
+            let current = self
+                .turn
+                .lock()
+                .unwrap()
+                .as_ref()
+                .is_some_and(|turn| Arc::ptr_eq(turn, &cancel));
+            if current {
+                cancel.cancel();
+                let _ = self.send(&json!({"type": "abort"})).await;
+            }
         }
     }
 
@@ -556,10 +565,51 @@ mod turn_tests {
     use tokio::io::AsyncBufReadExt;
 
     #[tokio::test]
+    async fn queued_cancel_does_not_abort_replacement_turn() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let old = Arc::new(CancellationToken::new());
+        let new = Arc::new(CancellationToken::new());
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(Some(old.clone())),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let gate = session.turn_gate.lock().await;
+        let mut cancel = Box::pin(session.cancel());
+        assert!(matches!(
+            futures::poll!(cancel.as_mut()),
+            std::task::Poll::Pending
+        ));
+        *session.turn.lock().unwrap() = Some(new.clone());
+        drop(gate);
+        tokio::time::timeout(Duration::from_secs(5), cancel)
+            .await
+            .unwrap();
+        assert!(!new.is_cancelled());
+        assert!(!old.is_cancelled());
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), lines.next_line())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
     async fn queued_abort_finishes_before_old_turn_can_be_retired() {
         let (child_stdin, child_input) = tokio::io::duplex(1024);
         let (client_out, _client_input) = tokio::io::duplex(1024);
-        let token = CancellationToken::new();
+        let token = Arc::new(CancellationToken::new());
         let session = Arc::new(Session {
             id: "test".into(),
             writer: Arc::new(Writer::new(Box::new(client_out))),
