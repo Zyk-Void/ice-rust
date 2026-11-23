@@ -144,13 +144,23 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
     let mut lines = BufReader::new(stdin).lines();
     let mut waiting = false;
     let mut asked = false;
+    let mut wake_case = false;
+    let mut wake_query_failure = false;
     while let Ok(Some(line)) = lines.next_line().await {
         let msg: Value = serde_json::from_str(&line).unwrap();
         let id = msg["id"].clone();
         let ok = |data: Value| json!({"type": "response", "id": id, "success": true, "data": data});
         match msg["type"].as_str().unwrap() {
             "get_state" => {
-                emit(&mut stdout, ok(json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low"}))).await
+                if wake_case && wake_query_failure {
+                    emit(&mut stdout, json!({"type":"response", "id":id, "success":false, "error":"state unavailable"})).await;
+                } else {
+                    let mut state = json!({"modelId": "m1", "provider": "p", "thinkingLevel": "low"});
+                    if wake_case {
+                        state["context"] = json!({"tokens":42, "window":1000});
+                    }
+                    emit(&mut stdout, ok(state)).await;
+                }
             }
             "get_messages" => {
                 let (messages, more, first) = if msg["beforeId"].is_null() {
@@ -202,6 +212,12 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 emit(&mut stdout, ok(json!({"accepted": true}))).await;
                 match msg["message"].as_str().unwrap() {
                     "wait" => waiting = true,
+                    "wake-then-client" | "wake-query-fails" => {
+                        wake_case = true;
+                        wake_query_failure = msg["message"] == "wake-query-fails";
+                        emit(&mut stdout, json!({"type":"agent_settled", "origin":"wake", "wakeId":"wake-1",
+                            "runId":"wake-run", "outcome":"completed"})).await;
+                    }
                     "/version" => {
                         emit(&mut stdout, json!({"type": "command_output", "text": "icers 0.0.0"})).await;
                         emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
@@ -229,8 +245,18 @@ async fn fake_child(stdin: DuplexStream, mut stdout: DuplexStream) {
                 emit(&mut stdout, json!({"type": "message_update", "eventType": "text_delta", "delta": answer, "message": {"kind": "assistant"}})).await;
                 emit(&mut stdout, json!({"type": "agent_settled", "outcome": "completed"})).await;
             }
-            "abort" if waiting => {
+            "abort" | "kill_background_shells" if waiting => {
                 emit(&mut stdout, json!({"type": "agent_settled", "outcome": "aborted", "aborted": true})).await;
+            }
+            "wake_settled_ack" if wake_case => {
+                assert_eq!(msg["wakeId"], "wake-1");
+                emit(&mut stdout, json!({"type":"command_output", "text":"client only"})).await;
+                emit(&mut stdout, json!({"type":"agent_settled", "origin":"client",
+                    "settlementId":"client-1", "outcome":"completed"})).await;
+            }
+            "client_settled_ack" if wake_case => {
+                assert_eq!(msg["settlementId"], "client-1");
+                emit(&mut stdout, json!({"type":"command_output", "text":"after client response"})).await;
             }
             "stop" => break,
             _ => {}
@@ -388,6 +414,87 @@ async fn unknown_methods_and_sessions_are_errors() {
     assert_eq!(response["error"]["code"], RESOURCE_NOT_FOUND);
     let (_, response) = client.call("session/new", json!({"cwd": "relative"})).await;
     assert_eq!(response["error"]["code"], INVALID_PARAMS);
+}
+
+#[tokio::test]
+async fn wake_settlement_keeps_client_waiter_and_queries_usage_outside_pump() {
+    for fail_query in [false, true] {
+        let mut client = Client::start();
+        let (id, _) = client.new_session().await;
+        let message = if fail_query {
+            "wake-query-fails"
+        } else {
+            "wake-then-client"
+        };
+        let (frames, response) = client
+            .call(
+                "session/prompt",
+                json!({
+                    "sessionId":id, "prompt":[{"type":"text", "text":message}]
+                }),
+            )
+            .await;
+        assert_eq!(response["result"]["stopReason"], "end_turn");
+        let updates: Vec<_> = frames
+            .iter()
+            .map(|frame| &frame["params"]["update"])
+            .collect();
+        let text = updates
+            .iter()
+            .position(|update| update["content"]["text"] == "client only")
+            .expect("wake settlement must not resolve the client waiter");
+        let usage = updates
+            .iter()
+            .position(|update| update["sessionUpdate"] == "usage_update");
+        if fail_query {
+            assert!(usage.is_none(), "failed query must not invent zero usage");
+        } else {
+            assert!(
+                usage.unwrap() < text,
+                "wake usage precedes next client content"
+            );
+            assert_eq!(updates[usage.unwrap()]["used"], 42);
+        }
+        assert!(!updates
+            .iter()
+            .any(|update| update["content"]["text"] == "after client response"));
+        loop {
+            let next = client.next().await;
+            if next["params"]["update"]["content"]["text"] == "after client response" {
+                break;
+            }
+        }
+    }
+}
+
+#[test]
+fn background_terminal_reuses_original_tool_after_foreground_end() {
+    for completed_first in [false, true] {
+        let mut translator = translate::Translator::new(PathBuf::from("/tmp"));
+        translator.translate(
+            &json!({"type":"tool_execution_start", "toolCallId":"call-1",
+            "toolName":"bash", "args":{"command":"work", "run_in_background":true}}),
+        );
+        let completion = json!({"type":"background_shell","shellId":"shell-1",
+            "status":"failed","exitCode":7,"output":"failure tail","stoppedByUser":false});
+        if completed_first {
+            assert!(translator.translate(&completion).is_empty());
+        }
+        let mut updates = translator.translate(&json!({"type":"tool_execution_end",
+            "toolCallId":"call-1", "toolName":"bash", "isError":false,
+            "result":{"details":{"background_task_id":"shell-1"}, "content":[{"type":"text","text":"started"}]}}));
+        if !completed_first {
+            updates.extend(translator.translate(&completion));
+        }
+        assert_eq!(updates.len(), 2);
+        assert_eq!(updates[0]["status"], "in_progress");
+        assert_eq!(updates[0]["rawOutput"]["type"], "BackgroundTaskStarted");
+        assert_eq!(updates[1]["toolCallId"], "call-1");
+        assert_eq!(updates[1]["status"], "failed");
+        assert_eq!(updates[1]["rawOutput"]["Result"]["exit_code"], 7);
+        assert_eq!(updates[1]["content"][0]["content"]["text"], "failure tail");
+        assert_eq!(updates[1]["rawOutput"]["icers"]["backgroundTask"], true);
+    }
 }
 
 #[tokio::test]

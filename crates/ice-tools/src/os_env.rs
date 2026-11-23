@@ -80,6 +80,8 @@ struct ShellConfig {
 /// slice, or an extension's channel will be missed — which is precisely the bug
 /// that let `LANGFUSE_PI_PARENT_*` through.
 pub const HOST_PRIVATE_ENV: &[&str] = &[
+    // Internal protocol coordination belongs only to the dedicated ACP child.
+    "ICERS_ACP_RPC",
     ice_plugin_sdk::SESSION_ID_ENV,
     // The rest of the per-call session identity bash sets explicitly (see
     // `tools::bash::SESSION_ENV_NAMES`); an inherited copy would be stale.

@@ -39,6 +39,7 @@ pub(crate) fn process_spawner(program: PathBuf, extra_args: Vec<String>) -> Spaw
     Arc::new(move |cwd, session_id, saved_path| {
         let mut command = tokio::process::Command::new(&program);
         command.args(["--mode", "rpc"]).args(&extra_args);
+        command.env("ICERS_ACP_RPC", "1");
         if let Some(path) = saved_path {
             // Open-only: never recreate a missing or unreadable saved session.
             command.arg("--session").arg(path);
@@ -71,6 +72,8 @@ pub(crate) struct Session {
     next_id: AtomicU64,
     pending: Mutex<HashMap<u64, oneshot::Sender<Value>>>,
     settled: Mutex<Option<oneshot::Sender<Value>>>,
+    response_gate: Arc<tokio::sync::Mutex<()>>,
+    client_settlement: Mutex<Option<String>>,
     translator: Mutex<Translator>,
     prompt_running: AtomicBool,
     cancelled: AtomicBool,
@@ -98,6 +101,8 @@ impl Session {
             next_id: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             settled: Mutex::new(None),
+            response_gate: Arc::default(),
+            client_settlement: Mutex::new(None),
             prompt_running: AtomicBool::new(false),
             cancelled: AtomicBool::new(false),
             closed: CancellationToken::new(),
@@ -145,8 +150,15 @@ impl Session {
                     }
                 }
                 Some("agent_settled") => {
-                    if let Some(settled) = self.settled.lock().unwrap().take() {
-                        let _ = settled.send(frame);
+                    if frame["origin"] == "wake" {
+                        // get_state needs this pump to route its response.
+                        tokio::spawn(Arc::clone(&self).finish_wake(frame));
+                    } else {
+                        *self.client_settlement.lock().unwrap() =
+                            frame["settlementId"].as_str().map(str::to_owned);
+                        if let Some(settled) = self.settled.lock().unwrap().take() {
+                            let _ = settled.send(frame);
+                        }
                     }
                 }
                 Some("ui_dialog_request") => {
@@ -165,6 +177,60 @@ impl Session {
         self.closed.cancel();
         self.pending.lock().unwrap().clear();
         self.settled.lock().unwrap().take();
+    }
+
+    pub(crate) async fn response_guard(&self) -> Result<tokio::sync::OwnedMutexGuard<()>, String> {
+        if self.prompt_running.load(Ordering::Acquire) {
+            return Err("a prompt is already running in this session".to_string());
+        }
+        // A new request can arrive just after the prior ACP response was
+        // flushed, while its native acknowledgement is still being written.
+        tokio::select! {
+            biased;
+            _ = self.closed.cancelled() => Err("icers session is closed".to_string()),
+            guard = self.response_gate.clone().lock_owned() => Ok(guard),
+        }
+    }
+
+    pub(crate) async fn after_prompt_response(&self) {
+        let id = self.client_settlement.lock().unwrap().take();
+        if let Some(id) = id {
+            let _ = self
+                .send(&json!({"type": "client_settled_ack", "settlementId": id}))
+                .await;
+        }
+    }
+
+    async fn finish_wake(self: Arc<Self>, frame: Value) {
+        self.publish_wake_usage().await;
+        self.translator.lock().unwrap().take_stop_reason();
+        if let Some(id) = frame["wakeId"].as_str() {
+            let _ = self
+                .send(&json!({"type": "wake_settled_ack", "wakeId": id}))
+                .await;
+        }
+    }
+
+    // Kept local so this feature can compile independently of the foreground
+    // usage item. The combined bridge uses the same validated snapshot fields.
+    async fn publish_wake_usage(&self) {
+        let Ok(state) = self.command(json!({"type": "get_state"})).await else {
+            return;
+        };
+        let Some(used) = state["context"]["tokens"].as_u64() else {
+            return;
+        };
+        let Some(size) = state["context"]["window"].as_u64().filter(|size| *size > 0) else {
+            return;
+        };
+        let mut update = json!({"sessionUpdate": "usage_update", "used": used, "size": size});
+        if let Some(amount) = state["stats"]["costTotal"]
+            .as_f64()
+            .filter(|amount| amount.is_finite() && *amount > 0.0)
+        {
+            update["cost"] = json!({"amount": amount, "currency": "USD"});
+        }
+        self.notify_update(update).await;
     }
 
     async fn notify_update(&self, update: Value) {
@@ -276,6 +342,10 @@ impl Session {
             self.settled.lock().unwrap().take();
             return Err(error);
         }
+        // Cancel can beat native admission while a wake owns the operation.
+        if self.cancelled.load(Ordering::Acquire) {
+            let _ = self.send(&json!({"type": "abort"})).await;
+        }
         let settled = tokio::select! {
             settled = rx => settled.map_err(|_| "icers process exited during the turn".to_string())?,
             _ = self.closed.cancelled() => return Err("icers process exited during the turn".to_string()),
@@ -301,8 +371,12 @@ impl Session {
     pub(crate) async fn cancel(&self) {
         if self.prompt_running.load(Ordering::Acquire) {
             self.cancelled.store(true, Ordering::Release);
+            // Abort immediately: prompt() only sends abort after the admission
+            // response, so a wake turn stuck there would not cancel promptly.
             let _ = self.send(&json!({"type": "abort"})).await;
         }
+        // Stop remains meaningful after the foreground turn has returned.
+        let _ = self.send(&json!({"type": "kill_background_shells"})).await;
     }
 
     /// Replay the complete active branch, oldest first, before responding to
@@ -514,3 +588,6 @@ impl Session {
 fn model_value(provider: &str, id: &str) -> String {
     format!("{provider}/{id}")
 }
+
+#[cfg(test)]
+mod response_tests;

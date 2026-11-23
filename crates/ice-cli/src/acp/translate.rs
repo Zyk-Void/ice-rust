@@ -5,7 +5,7 @@
 //! `packages/rpi-acp/src/session.rs` at `9906990d`.
 
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 
 /// Per-session translation state.
@@ -21,6 +21,12 @@ pub(crate) struct Translator {
     /// `tool_call` updates of running tools, so a permission request for the
     /// call can carry the same title, kind and locations.
     tools: HashMap<String, Value>,
+    background: HashMap<String, String>,
+    pending_background: HashMap<String, Value>,
+    /// Insertion order of `pending_background`, so eviction can drop the
+    /// oldest parked completion instead of clearing live ones.
+    pending_order: VecDeque<String>,
+    replaying: bool,
 }
 
 impl Translator {
@@ -31,11 +37,17 @@ impl Translator {
             thought_sent: String::new(),
             last_stop_reason: None,
             tools: HashMap::new(),
+            background: HashMap::new(),
+            pending_background: HashMap::new(),
+            pending_order: VecDeque::new(),
+            replaying: false,
         }
     }
 
     pub(crate) fn clone_for_replay(&self) -> Self {
-        Self::new(self.cwd.clone())
+        let mut replay = Self::new(self.cwd.clone());
+        replay.replaying = true;
+        replay
     }
 
     /// Map persisted branch messages without executing any historical tools.
@@ -140,10 +152,68 @@ impl Translator {
                 if let Some(id) = event["toolCallId"].as_str() {
                     self.tools.remove(id);
                 }
-                vec![tool_end(event)]
+                let mut update = tool_end(event);
+                if !self.replaying && event["toolName"] == "bash" && event["isError"] != true {
+                    if let (Some(shell), Some(tool)) = (
+                        event["result"]["details"]["background_task_id"].as_str(),
+                        event["toolCallId"].as_str(),
+                    ) {
+                        self.background.insert(shell.to_string(), tool.to_string());
+                        update["status"] = json!("in_progress");
+                        update["rawOutput"] = json!({
+                            "type": "BackgroundTaskStarted", "task_id": shell, "task_type": "bash",
+                            "icers": {"backgroundTask": true},
+                        });
+                        let mut updates = vec![update];
+                        if let Some(completion) = self.pending_background.remove(shell) {
+                            self.pending_order.retain(|key| key != shell);
+                            updates.extend(self.background_update(&completion));
+                        }
+                        return updates;
+                    }
+                }
+                vec![update]
             }
+            Some("background_shell") => self.background_update(event),
             _ => Vec::new(),
         }
+    }
+
+    fn background_update(&mut self, event: &Value) -> Vec<Value> {
+        let Some(shell) = event["shellId"].as_str() else {
+            return Vec::new();
+        };
+        let Some(tool) = self.background.remove(shell) else {
+            // A short command can finish before its tool result reaches ACP.
+            // Park it, evicting only the oldest completion at the bound.
+            if !self.pending_background.contains_key(shell) {
+                self.pending_order.push_back(shell.to_string());
+                while self.pending_order.len() > 256 {
+                    if let Some(oldest) = self.pending_order.pop_front() {
+                        self.pending_background.remove(&oldest);
+                    }
+                }
+            }
+            self.pending_background
+                .insert(shell.to_string(), event.clone());
+            return Vec::new();
+        };
+        let failed = event["status"] == "failed";
+        let status = if failed { "failed" } else { "completed" };
+        let output = event["output"].as_str().unwrap_or_default();
+        let exit_code = event["exitCode"]
+            .as_i64()
+            .unwrap_or(if failed { -1 } else { 0 });
+        vec![json!({
+            "sessionUpdate": "tool_call_update", "toolCallId": tool, "status": status,
+            "content": [text_content(output)],
+            "_meta": {"icers": {"toolName": "bash"}},
+            "rawOutput": {
+                "type": "TaskOutput",
+                "Result": {"task_id": shell, "status": status, "exit_code": exit_code, "output": output},
+                "icers": {"backgroundTask": true, "stoppedByUser": event["stoppedByUser"] == true},
+            },
+        })]
     }
 
     fn message_update(&mut self, event: &Value) -> Vec<Value> {
