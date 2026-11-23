@@ -68,7 +68,7 @@ the bridge controls itself (`--mode`, `--print`, `--session*`, `--continue`,
 | --- | --- |
 | `initialize` (v1) | Supported |
 | `session/new` | Supported. `cwd` must be an existing absolute directory |
-| `session/list` | Supported for an explicit existing absolute `cwd`. Lists only that project, newest activity first, in pages of 50 with an opaque `nextCursor`. Includes saved names and UTC update times. Reads live sessions without taking ownership or modifying their files; cursors cannot be reused for another project |
+| `session/list` | Supported for an explicit existing absolute `cwd`. Lists only that project, in stable session-file path order, in pages of 50 with an opaque `nextCursor`. Includes UTC update times and saved names for histories up to 1 MiB; larger histories omit the optional name. Reads live sessions without taking ownership or modifying their files; cursors cannot be reused for another project |
 | `session/prompt` | Supported. Text, inline base64 images, embedded resources (inlined as context) and resource links. Mixed and image-only prompts are forwarded to the native agent. Resolves only when the native run settles: `end_turn`, `cancelled` or `max_tokens`; failures return an error |
 | `session/cancel` | Supported (aborts the running turn) |
 | Streaming | Assistant text and thinking chunks; final text is reconciled so no text is lost or duplicated |

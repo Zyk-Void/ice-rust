@@ -10,13 +10,15 @@ use std::io::{BufRead, Read};
 use std::path::{Path, PathBuf};
 
 const PAGE_SIZE: usize = 50;
+// Titles are optional. Avoid scanning arbitrarily large histories or returning
+// a stale title when a later name mutation may lie outside the scan window.
+const MAX_TITLE_SCAN_BYTES: u64 = 1024 * 1024;
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Cursor {
     version: u8,
     cwd: PathBuf,
-    modified_at: i64,
     path: String,
 }
 
@@ -67,18 +69,19 @@ pub(super) async fn sessions(
             .map_err(|error| (INTERNAL_ERROR, error.to_string()))?
             .sessions;
     // A configured root can contain several projects and native imports.
-    metadata.retain(|meta| Path::new(&meta.cwd).canonicalize().ok().as_ref() == Some(&cwd));
-    metadata.sort_by(|left, right| {
-        right
-            .modified_at
-            .cmp(&left.modified_at)
-            .then_with(|| left.path.cmp(&right.path))
-    });
+    // Canonicalization is filesystem I/O and must not block a Tokio worker.
+    let filter_cwd = cwd.clone();
+    metadata = tokio::task::spawn_blocking(move || {
+        metadata
+            .retain(|meta| Path::new(&meta.cwd).canonicalize().ok().as_ref() == Some(&filter_cwd));
+        metadata
+    })
+    .await
+    .map_err(|error| (INTERNAL_ERROR, error.to_string()))?;
+    // Paths remain stable when a live session is appended to, unlike mtimes.
+    metadata.sort_by(|left, right| left.path.cmp(&right.path));
     if let Some(cursor) = cursor {
-        metadata.retain(|meta| {
-            meta.modified_at < cursor.modified_at
-                || (meta.modified_at == cursor.modified_at && meta.path > cursor.path)
-        });
+        metadata.retain(|meta| meta.path > cursor.path);
     }
     let has_more = metadata.len() > PAGE_SIZE;
     metadata.truncate(PAGE_SIZE);
@@ -87,7 +90,6 @@ pub(super) async fn sessions(
         let cursor = Cursor {
             version: 1,
             cwd: cwd.clone(),
-            modified_at: last.modified_at,
             path: last.path.clone(),
         };
         Some(URL_SAFE_NO_PAD.encode(
@@ -125,6 +127,9 @@ pub(super) async fn sessions(
 fn saved_title(meta: &JsonlSessionMetadata) -> Option<String> {
     let file = std::fs::File::open(&meta.path).ok()?;
     let length = file.metadata().ok()?.len();
+    if length > MAX_TITLE_SCAN_BYTES {
+        return None;
+    }
     // Never claim native writer ownership or follow an actively growing tail.
     let mut reader = std::io::BufReader::new(file.take(length));
     let mut line = String::new();

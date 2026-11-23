@@ -103,6 +103,16 @@ async fn list_pages_stably_and_binds_cursors_to_the_requested_project() {
     assert_eq!(page.len(), 50);
     assert_eq!(page[0]["updatedAt"], "2023-11-14T22:13:21.000Z");
     let cursor = first["result"]["nextCursor"].as_str().unwrap();
+    // Updating a not-yet-returned file must not move it ahead of the cursor.
+    let path = dir.join("0050.jsonl");
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(std::fs::FileTimes::new().set_modified(
+            std::time::UNIX_EPOCH + std::time::Duration::from_millis(1_800_000_000_000),
+        ))
+        .unwrap();
     let (_, second) = client
         .call(
             "session/list",
@@ -190,6 +200,15 @@ async fn list_names_scan_the_complete_snapshot_and_ignore_partial_tail_facts() {
         .call("session/list", json!({"cwd": temp.path()}))
         .await;
     assert!(cleared["result"]["sessions"][0].get("title").is_none());
+    let large = format!(
+        "{{\"kind\":\"fact\",\"fact\":\"name\",\"seq\":1,\"name\":\"Old\"}}\n{}",
+        "x".repeat(1024 * 1024)
+    );
+    list_fixture(&dir, temp.path(), 0, 1_700_000_000_000, &large);
+    let (_, oversized) = client
+        .call("session/list", json!({"cwd": temp.path()}))
+        .await;
+    assert!(oversized["result"]["sessions"][0].get("title").is_none());
 }
 
 #[tokio::test]
