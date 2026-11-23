@@ -753,6 +753,20 @@ async fn question_form_freeform_only_round_trips_tui_answer() {
 }
 
 #[tokio::test]
+async fn nested_input_kind_takes_precedence_over_options() {
+    let (requests, native) = question_round_trip(
+        json!({"kind": "selector", "questions": [{"question": "Name", "kind": "input", "options": ["suggestion"]}]}),
+        json!({"elicitation": {"form": {}}}),
+        accepted_question(json!({"answer": "custom"})),
+    ).await;
+    assert!(requests[0]["requestedSchema"]["properties"]["answer"]
+        .get("enum")
+        .is_none());
+    assert_eq!(native["answer"]["kind"], "input");
+    assert_eq!(native["answer"]["value"], "custom");
+}
+
+#[tokio::test]
 async fn question_form_freeform_companion_can_replace_the_selection() {
     for content in [
         json!({"answer__other": "Custom target"}),
@@ -920,6 +934,40 @@ async fn question_request_drop_removes_the_pending_waiter() {
     assert!(
         writer.pending.lock().unwrap().is_empty(),
         "closing a session must release its unanswered form request"
+    );
+}
+
+#[tokio::test]
+async fn cancelling_form_queued_for_writer_does_not_emit_frame() {
+    let (out, input) = tokio::io::duplex(1024);
+    let writer = Arc::new(Writer::new(Box::new(out)));
+    let guard = writer.out.lock().await;
+    let cancel = CancellationToken::new();
+    let task = tokio::spawn({
+        let writer = Arc::clone(&writer);
+        let cancel = cancel.clone();
+        async move {
+            writer
+                .request("session/elicitation", json!({}), &cancel)
+                .await
+        }
+    });
+    tokio::task::yield_now().await;
+    cancel.cancel();
+    assert_eq!(
+        tokio::time::timeout(std::time::Duration::from_secs(5), task)
+            .await
+            .unwrap()
+            .unwrap(),
+        Err("dialog cancelled".into())
+    );
+    drop(guard);
+    assert!(writer.pending.lock().unwrap().is_empty());
+    let mut input = BufReader::new(input).lines();
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(50), input.next_line())
+            .await
+            .is_err()
     );
 }
 

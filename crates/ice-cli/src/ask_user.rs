@@ -67,11 +67,6 @@ fn ask_user_options(value: &serde_json::Value) -> Vec<(String, Option<String>)> 
 
 pub(crate) fn parse_ask_user_prompt(request: &ice_extensions::UiDialogRequest) -> AskUserPrompt {
     let ui = &request.ui;
-    let kind = ui
-        .get("kind")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("selector")
-        .to_string();
     // A request may carry a single flat question or a `questions[]` array. The
     // plugin emits one question per request, but accepting `questions[0]` keeps
     // the host compatible with hosts/plugins that batch.
@@ -80,6 +75,9 @@ pub(crate) fn parse_ask_user_prompt(request: &ice_extensions::UiDialogRequest) -
         .and_then(serde_json::Value::as_array)
         .and_then(|items| items.first());
     let source = nested.filter(|value| value.is_object()).unwrap_or(ui);
+    let kind = ask_user_str(source, &["kind"])
+        .or_else(|| ask_user_str(ui, &["kind"]))
+        .unwrap_or_else(|| "selector".to_string());
 
     let question = ask_user_str(source, &["question", "summary", "title"])
         .or_else(|| ask_user_str(ui, &["question", "summary", "title"]))

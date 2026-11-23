@@ -74,6 +74,8 @@ pub(crate) struct Session {
     settled: Mutex<Option<oneshot::Sender<Value>>>,
     translator: Mutex<Translator>,
     turn: Mutex<Option<CancellationToken>>,
+    /// Serializes turn transitions with delivery of an abort to the child.
+    turn_gate: tokio::sync::Mutex<()>,
     /// Cancelled when the child's stdout closes (exit, crash or shutdown).
     closed: CancellationToken,
 }
@@ -101,6 +103,7 @@ impl Session {
             pending: Mutex::new(HashMap::new()),
             settled: Mutex::new(None),
             turn: Mutex::new(None),
+            turn_gate: tokio::sync::Mutex::new(()),
             closed: CancellationToken::new(),
         });
         let (ready_tx, ready_rx) = oneshot::channel();
@@ -285,6 +288,7 @@ impl Session {
         images: Vec<ice_ai::types::ImageContent>,
     ) -> Result<&'static str, String> {
         let cancel = {
+            let _gate = self.turn_gate.lock().await;
             let mut turn = self.turn.lock().unwrap();
             if turn.is_some() {
                 return Err("a prompt is already running in this session".to_string());
@@ -295,6 +299,7 @@ impl Session {
         };
         let result = self.prompt_inner(text, images, &cancel).await;
         cancel.cancel();
+        let _gate = self.turn_gate.lock().await;
         self.turn.lock().unwrap().take();
         result
     }
@@ -333,6 +338,7 @@ impl Session {
     /// `session/cancel`: abort the running turn. Its `session/prompt` then
     /// resolves with `cancelled` once the child settles.
     pub(crate) async fn cancel(&self) {
+        let _gate = self.turn_gate.lock().await;
         let cancel = self.turn.lock().unwrap().clone();
         if let Some(cancel) = cancel {
             cancel.cancel();
@@ -541,6 +547,73 @@ impl Session {
             }
         }
         self.closed.cancel();
+    }
+}
+
+#[cfg(test)]
+mod turn_tests {
+    use super::*;
+    use tokio::io::AsyncBufReadExt;
+
+    #[tokio::test]
+    async fn queued_abort_finishes_before_old_turn_can_be_retired() {
+        let (child_stdin, child_input) = tokio::io::duplex(1024);
+        let (client_out, _client_input) = tokio::io::duplex(1024);
+        let token = CancellationToken::new();
+        let session = Arc::new(Session {
+            id: "test".into(),
+            writer: Arc::new(Writer::new(Box::new(client_out))),
+            elicitation_form: false,
+            stdin: tokio::sync::Mutex::new(Box::new(child_stdin)),
+            process: Mutex::new(None),
+            next_id: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+            settled: Mutex::new(None),
+            translator: Mutex::new(Translator::new(PathBuf::from("."))),
+            turn: Mutex::new(Some(token.clone())),
+            turn_gate: tokio::sync::Mutex::new(()),
+            closed: CancellationToken::new(),
+        });
+        let held_stdin = session.stdin.lock().await;
+        let abort = tokio::spawn({
+            let session = session.clone();
+            async move { session.cancel().await }
+        });
+        tokio::time::timeout(Duration::from_secs(5), token.cancelled())
+            .await
+            .unwrap();
+        let retirement = tokio::spawn({
+            let session = session.clone();
+            async move {
+                let _gate = session.turn_gate.lock().await;
+                session.turn.lock().unwrap().take();
+            }
+        });
+        tokio::task::yield_now().await;
+        assert!(
+            !retirement.is_finished(),
+            "turn must stay active while abort is queued"
+        );
+        drop(held_stdin);
+        let mut lines = tokio::io::BufReader::new(child_input).lines();
+        let line = tokio::time::timeout(Duration::from_secs(5), lines.next_line())
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&line).unwrap()["type"],
+            "abort"
+        );
+        tokio::time::timeout(Duration::from_secs(5), abort)
+            .await
+            .unwrap()
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(5), retirement)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(session.turn.lock().unwrap().is_none());
     }
 }
 

@@ -125,18 +125,31 @@ impl Writer {
     }
 
     async fn write(&self, frame: Value) {
+        self.write_cancellable(frame, None).await;
+    }
+
+    async fn write_cancellable(&self, frame: Value, cancel: Option<&CancellationToken>) -> bool {
         let mut line = match serde_json::to_vec(&frame) {
             Ok(line) => line,
             Err(error) => {
                 eprintln!("[icers acp] failed to encode frame: {error}");
-                return;
+                return false;
             }
         };
         line.push(b'\n');
-        let mut out = self.out.lock().await;
+        let mut out = if let Some(cancel) = cancel {
+            tokio::select! {
+                biased;
+                _ = cancel.cancelled() => return false,
+                out = self.out.lock() => out,
+            }
+        } else {
+            self.out.lock().await
+        };
         if out.write_all(&line).await.is_err() || out.flush().await.is_err() {
             eprintln!("[icers acp] client stdout closed");
         }
+        true
     }
 
     async fn respond(&self, id: Value, result: Value) {
@@ -173,8 +186,15 @@ impl Writer {
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
         let _pending = PendingRequest { writer: self, id };
-        self.write(json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}))
-            .await;
+        if !self
+            .write_cancellable(
+                json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}),
+                Some(cancel),
+            )
+            .await
+        {
+            return Err("dialog cancelled".to_string());
+        }
         tokio::select! {
             biased;
             _ = cancel.cancelled() => Err("dialog cancelled".to_string()),
