@@ -200,6 +200,7 @@ fn plain_prompt_uses_codex_input_text_items_through_the_cli() {
             "bash",
             "edit",
             "write",
+            "grep",
             "docs",
             "bash_output",
             "bash_kill",
