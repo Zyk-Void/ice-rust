@@ -117,8 +117,12 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
             "tool_calls",
         )
         .await;
-        let (mut socket, _) = listener.accept().await.unwrap();
-        reply(&mut socket, json!({"content":"Shell is running."}), "stop").await;
+        // The turn can make more than one follow-up request, depending on how
+        // the background-shell notice races the end of the run. Answer them all.
+        loop {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            reply(&mut socket, json!({"content":"Shell is running."}), "stop").await;
+        }
     });
     let program = std::env::var_os("ICERS_ACP_TEST_BINARY")
         .unwrap_or_else(|| env!("CARGO_BIN_EXE_icers").into());
@@ -220,5 +224,7 @@ async fn close_stops_term_resistant_owned_shell_and_releases_saved_session() {
         .unwrap()
         .unwrap();
     assert!(status.success(), "{status}");
-    provider.await.unwrap();
+    // The mock serves until stopped; a panic inside it must still fail the test.
+    provider.abort();
+    assert!(provider.await.unwrap_err().is_cancelled());
 }
