@@ -403,6 +403,21 @@ async fn changed_leaf_or_replaced_backing_rejects_snapshot_even_with_same_sessio
     let fence = Fence::capture(&session, &lane).await.unwrap();
     let prepared = collect_at(&session, &lane, &fence).await.unwrap();
     assert_eq!(prepared.categories[4], 1);
+    session
+        .harness()
+        .set_mcp_instructions([("demo".into(), "new instructions".into())].into())
+        .await
+        .unwrap();
+    assert!(
+        !fence.current(&session, &lane).await,
+        "changed MCP configuration rejects publication"
+    );
+    assert!(collect_at(&session, &lane, &fence).await.is_err());
+    session
+        .harness()
+        .set_mcp_instructions(Default::default())
+        .await
+        .unwrap();
     lane.append_message(user("next")).await.unwrap();
     assert!(
         !fence.current(&session, &lane).await,

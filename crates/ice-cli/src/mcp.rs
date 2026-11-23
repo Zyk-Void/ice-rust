@@ -1377,21 +1377,23 @@ pub struct McpReadyGate {
 
 impl McpReadyGate {
     /// Wait for startup discovery using the same budget as prompt admission.
-    pub(crate) async fn wait_for_startup(&self) {
+    pub(crate) async fn wait_for_startup(&self) -> bool {
         self.wait_ready(START_TIMEOUT + Duration::from_secs(1))
-            .await;
+            .await
     }
 
-    async fn wait_ready(&self, budget: Duration) {
+    async fn wait_ready(&self, budget: Duration) -> bool {
         let mut ready = self.ready.clone();
-        let _ = tokio::time::timeout(budget, async {
+        tokio::time::timeout(budget, async {
             while !*ready.borrow_and_update() {
                 if ready.changed().await.is_err() {
-                    break;
+                    return false;
                 }
             }
+            true
         })
-        .await;
+        .await
+        .unwrap_or(false)
     }
 }
 

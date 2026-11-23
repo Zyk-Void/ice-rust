@@ -465,6 +465,7 @@ fn allocate(weights: &[u64], used: u64, window: u64, budget: usize) -> Vec<usize
 struct Fence {
     storage: Arc<dyn ice_harness::session::types::SessionStorage>,
     tip: Option<String>,
+    prompt: ice_harness::agent_harness::HarnessPromptSnapshot,
 }
 
 impl Fence {
@@ -474,7 +475,15 @@ impl Fence {
     ) -> Result<Self, String> {
         let storage = session.harness().session().storage();
         let tip = lane.get_tip_id().await.map_err(|e| e.to_string())?;
-        let fence = Self { storage, tip };
+        let prompt = session
+            .harness()
+            .prompt_snapshot()
+            .map_err(|e| e.to_string())?;
+        let fence = Self {
+            storage,
+            tip,
+            prompt,
+        };
         if !fence.current(session, lane).await {
             return Err("Context changed".into());
         }
@@ -490,7 +499,12 @@ impl Fence {
             Ok(tip) => tip,
             Err(_) => return false,
         };
-        tip == self.tip && Arc::ptr_eq(&self.storage, &session.harness().session().storage())
+        tip == self.tip
+            && Arc::ptr_eq(&self.storage, &session.harness().session().storage())
+            && session
+                .harness()
+                .prompt_snapshot()
+                .is_ok_and(|prompt| prompt == self.prompt)
     }
 }
 

@@ -325,7 +325,7 @@ pub struct HarnessContextSnapshot {
 
 /// Rendered prompt sections and active tool schemas from one configuration
 /// snapshot, before any per-request hooks.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct HarnessPromptSnapshot {
     pub rendered_base: Option<String>,
     pub visible_skills: Vec<Skill>,

@@ -1074,7 +1074,9 @@ pub async fn build_prepared(
     };
 
     if args.debug_system_prompt {
-        mcp_ready.wait_for_startup().await;
+        if !mcp_ready.wait_for_startup().await {
+            eprintln!("MCP startup did not complete; the debug prompt may be incomplete.");
+        }
         match harness.prompt_snapshot() {
             Ok(snapshot) => eprintln!(
                 "--- composed system prompt after MCP startup wait ---\n{}",
