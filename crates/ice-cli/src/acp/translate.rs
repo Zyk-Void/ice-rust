@@ -99,7 +99,7 @@ impl Translator {
     pub(crate) fn tool_call(&self, tool_call_id: &str) -> Option<Value> {
         let call = self.tools.get(tool_call_id)?;
         let mut update = json!({"toolCallId": tool_call_id});
-        for key in ["title", "kind", "locations", "rawInput"] {
+        for key in ["title", "kind", "locations", "rawInput", "_meta"] {
             if let Some(value) = call.get(key) {
                 update[key] = value.clone();
             }
@@ -140,7 +140,9 @@ impl Translator {
                 if let Some(id) = event["toolCallId"].as_str() {
                     self.tools.remove(id);
                 }
-                vec![tool_end(event)]
+                let mut updates = vec![tool_end(event)];
+                updates.extend(todo_plan(event));
+                updates
             }
             _ => Vec::new(),
         }
@@ -195,6 +197,7 @@ impl Translator {
             "kind": tool_kind(name),
             "status": "in_progress",
             "rawInput": args,
+            "_meta": {"icers": {"toolName": name}},
         });
         let locations = tool_locations(name, args, &self.cwd);
         if !locations.is_empty() {
@@ -238,16 +241,35 @@ fn missing_suffix<'a>(sent: &str, full: &'a str) -> Option<&'a str> {
 }
 
 fn tool_update(event: &Value) -> Option<Value> {
-    let text = result_text(&event["partialResult"]);
-    if text.is_empty() {
+    let result = &event["partialResult"];
+    let text = result_text(result);
+    if text.is_empty()
+        && result["details"].is_null()
+        && result["content"].as_array().is_none_or(Vec::is_empty)
+    {
         return None;
     }
-    Some(json!({
+    let mut update = json!({
         "sessionUpdate": "tool_call_update",
         "toolCallId": event["toolCallId"],
         "status": "in_progress",
-        "content": [text_content(&text)],
-    }))
+        "rawOutput": result,
+        "_meta": {"icers": {"toolName": event["toolName"]}},
+    });
+    let content: Vec<Value> = result["content"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|block| match block["type"].as_str() {
+            Some("text") => block["text"].as_str().map(text_content),
+            Some("image") => Some(json!({"type": "content", "content": block})),
+            _ => None,
+        })
+        .collect();
+    if !content.is_empty() {
+        update["content"] = json!(content);
+    }
+    Some(update)
 }
 
 fn tool_end(event: &Value) -> Value {
@@ -258,6 +280,7 @@ fn tool_end(event: &Value) -> Value {
         "toolCallId": event["toolCallId"],
         "status": if failed { "failed" } else { "completed" },
         "rawOutput": result,
+        "_meta": {"icers": {"toolName": event["toolName"]}},
     });
     let text = result_text(result);
     // Keep the edit diff sent at start; replacing it with the summary text
@@ -267,6 +290,44 @@ fn tool_end(event: &Value) -> Value {
         update["content"] = json!([text_content(&text)]);
     }
     update
+}
+
+/// A successful todo result replaces the complete ACP plan, including an empty list.
+fn todo_plan(event: &Value) -> Option<Value> {
+    if event["toolName"].as_str() != Some("todo") || event["isError"].as_bool().unwrap_or(false) {
+        return None;
+    }
+    let details = event["result"].get("details")?;
+    if details
+        .get("error")
+        .is_some_and(|error| !error.is_null() && error.as_str() != Some(""))
+    {
+        return None;
+    }
+    let entries = details
+        .get("todos")?
+        .as_array()?
+        .iter()
+        .map(|todo| {
+            let content = todo.get("text")?.as_str()?;
+            let status = if todo["done"].as_bool().unwrap_or(false) {
+                "completed"
+            } else {
+                match todo["status"].as_str() {
+                    Some("in_progress") => "in_progress",
+                    Some("completed") => "completed",
+                    _ => "pending",
+                }
+            };
+            let priority = match todo["priority"].as_str() {
+                Some("high") => "high",
+                Some("low") => "low",
+                _ => "medium",
+            };
+            Some(json!({"content": content, "priority": priority, "status": status}))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(json!({"sessionUpdate": "plan", "entries": entries}))
 }
 
 fn text_content(text: &str) -> Value {
@@ -822,6 +883,218 @@ mod tests {
         }));
         assert_eq!(failed[0]["status"], "failed");
         assert_eq!(failed[0]["content"][0]["content"]["text"], "no match");
+    }
+
+    #[test]
+    fn todo_completion_emits_normalized_plan_after_tool_result() {
+        let mut t = translator();
+        let out = t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+            "isError": false,
+            "result": {
+                "content": [{"type": "text", "text": "Todo list updated."}],
+                "details": {"todos": [
+                    {"text": "Finished", "done": true, "status": "in_progress", "priority": "high"},
+                    {"text": "Working", "done": false, "status": "in_progress", "priority": "low"},
+                    {"text": "Also finished", "status": "completed", "priority": "medium"},
+                    {"text": "Waiting", "status": "pending"},
+                    {"text": "Unknown status", "status": "blocked", "priority": "urgent"},
+                    {"text": "Missing status"}
+                ]}
+            }
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+        assert_eq!(out[0]["toolCallId"], "todo-1");
+        assert_eq!(out[0]["status"], "completed");
+        assert_eq!(
+            out[0]["content"][0]["content"]["text"],
+            "Todo list updated."
+        );
+        assert_eq!(
+            out[1],
+            json!({
+                "sessionUpdate": "plan",
+                "entries": [
+                    {"content": "Finished", "priority": "high", "status": "completed"},
+                    {"content": "Working", "priority": "low", "status": "in_progress"},
+                    {"content": "Also finished", "priority": "medium", "status": "completed"},
+                    {"content": "Waiting", "priority": "medium", "status": "pending"},
+                    {"content": "Unknown status", "priority": "medium", "status": "pending"},
+                    {"content": "Missing status", "priority": "medium", "status": "pending"}
+                ]
+            })
+        );
+    }
+
+    #[test]
+    fn empty_todo_list_clears_the_plan() {
+        let mut t = translator();
+        t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+            "result": {"details": {"todos": [{"text": "Old entry"}]}}
+        }));
+        let out = t.translate(&json!({
+            "type": "tool_execution_end", "toolCallId": "todo-2", "toolName": "todo",
+            "result": {"details": {"todos": []}}
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[1], json!({"sessionUpdate": "plan", "entries": []}));
+    }
+
+    #[test]
+    fn empty_error_does_not_suppress_successful_plan() {
+        for error in [Value::Null, json!("")] {
+            let out = translator().translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "todo-1", "toolName": "todo",
+                "result": {"details": {"error": error, "todos": []}}
+            }));
+            assert_eq!(out[1], json!({"sessionUpdate": "plan", "entries": []}));
+        }
+    }
+
+    #[test]
+    fn failed_malformed_and_unrelated_tool_results_do_not_replace_the_plan() {
+        let mut t = translator();
+        for (name, is_error, details) in [
+            ("todo", true, json!({"todos": [{"text": "Failed"}]})),
+            (
+                "todo",
+                false,
+                json!({"error": "rejected", "todos": [{"text": "Failed"}]}),
+            ),
+            ("todo", false, json!({})),
+            ("todo", false, json!({"todos": "invalid"})),
+            (
+                "todo",
+                false,
+                json!({"todos": [{"text": "Valid"}, {"text": 42}]}),
+            ),
+            ("read", false, json!({"todos": [{"text": "Unrelated"}]})),
+        ] {
+            let out = t.translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "tool-1", "toolName": name,
+                "isError": is_error, "result": {"details": details}
+            }));
+            assert_eq!(out.len(), 1, "unexpected plan for {name}: {out:?}");
+            assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+            assert_eq!(
+                out[0]["status"],
+                if is_error { "failed" } else { "completed" }
+            );
+        }
+    }
+
+    #[test]
+    fn tool_metadata_survives_live_lifecycle_and_permission_snapshot() {
+        for name in ["read", "delegate_task", "plan_mode_complete"] {
+            let mut t = translator();
+            let args = json!({"task": "Review the change", "role": "reviewer"});
+            let start = t.translate(&json!({
+                "type": "tool_execution_start", "toolCallId": "task-1",
+                "toolName": name, "args": args,
+            }));
+            assert_eq!(start[0]["_meta"]["icers"]["toolName"], name);
+            assert_eq!(start[0]["rawInput"], args);
+            assert_eq!(
+                t.tool_call("task-1").unwrap()["_meta"]["icers"]["toolName"],
+                name
+            );
+
+            let partial = json!({"content": [{"type": "text", "text": "Checking files"}],
+                "details": {"progress": 2}});
+            let progress = t.translate(&json!({
+                "type": "tool_execution_update", "toolCallId": "task-1",
+                "toolName": name, "partialResult": partial,
+            }));
+            assert_eq!(progress[0]["_meta"]["icers"]["toolName"], name);
+            assert_eq!(progress[0]["rawOutput"], partial);
+            assert_eq!(progress[0]["status"], "in_progress");
+
+            let result = json!({"content": [{"type": "text", "text": "Review failed"}],
+                "details": {"error": "source unavailable"}});
+            let end = t.translate(&json!({
+                "type": "tool_execution_end", "toolCallId": "task-1", "toolName": name,
+                "isError": true, "result": result,
+            }));
+            assert_eq!(end[0]["_meta"]["icers"]["toolName"], name);
+            assert_eq!(end[0]["rawOutput"], result);
+            assert_eq!(end[0]["status"], "failed");
+            assert!(t.tool_call("task-1").is_none());
+        }
+    }
+
+    #[test]
+    fn saved_todo_result_replays_the_plan() {
+        let out = translator().replay_message(&json!({
+            "kind": "tool_result", "toolCallId": "todo-1", "toolName": "todo",
+            "isError": false, "content": [{"type": "text", "text": "Updated."}],
+            "details": {"todos": [{"text": "Saved item", "done": true}]}
+        }));
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0]["sessionUpdate"], "tool_call_update");
+        assert_eq!(
+            out[1],
+            json!({
+                "sessionUpdate": "plan",
+                "entries": [{"content": "Saved item", "priority": "medium", "status": "completed"}]
+            })
+        );
+    }
+
+    #[test]
+    fn tool_metadata_preserves_structured_only_partial_results() {
+        let mut t = translator();
+        let partial = json!({"content": [], "details": {"progress": 3}});
+        let updates = t.translate(&json!({
+            "type": "tool_execution_update", "toolCallId": "task-1",
+            "toolName": "delegate_task", "partialResult": partial,
+        }));
+        assert_eq!(updates.len(), 1);
+        assert_eq!(updates[0]["_meta"]["icers"]["toolName"], "delegate_task");
+        assert_eq!(updates[0]["rawOutput"], partial);
+        assert!(updates[0].get("content").is_none());
+        let image = json!({"content": [{"type": "image", "data": "abc", "mimeType": "image/png"}], "details": null});
+        let updates = t.translate(&json!({
+            "type": "tool_execution_update", "toolCallId": "task-1",
+            "toolName": "delegate_task", "partialResult": image,
+        }));
+        assert_eq!(updates.len(), 1);
+        assert_eq!(updates[0]["rawOutput"], image);
+        assert_eq!(updates[0]["content"][0]["content"], image["content"][0]);
+        for partial in [Value::Null, json!({"content": [], "details": null})] {
+            assert!(t
+                .translate(&json!({
+                    "type": "tool_execution_update", "toolCallId": "task-1",
+                    "toolName": "delegate_task", "partialResult": partial,
+                }))
+                .is_empty());
+        }
+    }
+
+    #[test]
+    fn tool_metadata_and_plan_details_survive_saved_history_replay() {
+        let mut t = translator();
+        for (name, id) in [
+            ("delegate_task", "child-1"),
+            ("plan_mode_complete", "plan-1"),
+        ] {
+            let args = json!({"task": "Implement this plan", "role": "builder"});
+            let start = t.replay_message(&json!({"kind": "assistant", "content": [{
+                "type": "toolCall", "id": id, "name": name, "arguments": args,
+            }]}));
+            assert_eq!(start[0]["_meta"]["icers"]["toolName"], name);
+            assert_eq!(start[0]["rawInput"], args);
+            let details = json!({"kind": "plan", "active": false, "plan": "# Plan\n\nShip it."});
+            let end = t.replay_message(&json!({"kind": "tool_result", "toolCallId": id,
+                "toolName": name, "isError": false,
+                "content": [{"type": "text", "text": "Done"}], "details": details,
+            }));
+            assert_eq!(end[0]["_meta"]["icers"]["toolName"], name);
+            assert_eq!(end[0]["rawOutput"]["details"], details);
+            assert_eq!(end[0]["status"], "completed");
+            assert!(end[0]["_meta"]["icers"].get("childSessionId").is_none());
+        }
     }
 
     #[test]
