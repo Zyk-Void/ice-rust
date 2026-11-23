@@ -344,13 +344,13 @@ Ordered roughly by how likely they are to bite a user.
 
 ### 6.1 The system prompt's tool list (fixed)
 
-The default prompt (`ice-cli/src/session.rs`, `default_system_prompt`) no
-longer hard-codes its tools. It carries the markers `{{icers:tools}}` and
-`{{icers:guidelines}}`, and `AgentHarness::compose_prompt` fills them on every
-request from the active tools' `prompt_snippet` and `prompt_guidelines`, as TS
-`buildSystemPrompt` does. A `SYSTEM.md` or `--system-prompt` without the
-markers is passed through unchanged. The `todo` guideline is already
-conditional on the tool being advertised.
+The built-in template (`crates/ice-cli/prompts/system.md`) opts in to dynamic
+tool sections with the first-line `{{icers:tool-sections}}` header. On each
+request the harness removes that header and fills the standalone lines
+`{{icers:tools}}` and `{{icers:guidelines}}` from active tools' `prompt_snippet`
+and `prompt_guidelines`. A custom `SYSTEM.md` or `--system-prompt` must include
+the same first-line header to opt in; otherwise tool markers are left alone.
+The `todo` guideline is already conditional on the tool being advertised.
 
 When you add a tool, give it a `prompt_snippet` (and `prompt_guidelines` if it
 has usage rules) instead of editing the prompt text.

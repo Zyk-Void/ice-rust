@@ -644,14 +644,8 @@ pub async fn build_prepared(
         append_join.as_deref(),
     );
 
-    // ---- Debug: dump the resolved system-prompt sections (verification) ----
-    // A verification affordance for Part-A resource discovery: prints the
-    // composed sections + resource counts to stderr so a smoke can confirm
-    // `<available_skills>` + `<project_context>` + appended text reached the
-    // prompt without parsing a provider round-trip. The harness composes the
-    // final prompt (base → append → context → skills); here we print the
-    // pre-harness sections (the harness adds the skills listing itself, gated
-    // on `read` + `disable_model_invocation`).
+    // Print the discovered inputs first. The final harness snapshot is printed
+    // below, after startup tool registration completes.
     if args.debug_system_prompt {
         eprintln!("=== --debug-system-prompt ===");
         let base_src = if args.system_prompt.is_some() {
@@ -662,14 +656,7 @@ pub async fn build_prepared(
             "default"
         };
         eprintln!("[base source: {base_src}]");
-        let active_tools: Vec<Arc<dyn ice_agent::AgentTool>> = tools
-            .iter()
-            .filter(|tool| active.contains(&tool.tool.schema().name))
-            .map(|tool| Arc::clone(&tool.tool))
-            .collect();
-        let rendered_base =
-            ice_harness::system_prompt::render_tool_sections(&base_prompt, &active_tools);
-        eprintln!("--- base ---\n{rendered_base}");
+        eprintln!("--- base template ---\n{base_prompt}");
         if let Some(append) = append_join.as_deref() {
             eprintln!("--- append ---\n{append}");
         } else {
@@ -717,10 +704,6 @@ pub async fn build_prepared(
         for p in &discovered.prompt_paths {
             eprintln!("    prompt: {p}");
         }
-        eprintln!(
-            "--- final composed base+append+context (skills listing added by harness) ---\n{system_prompt}"
-        );
-        eprintln!("=== end --debug-system-prompt ===");
     }
 
     // ---- Options ----
@@ -1089,6 +1072,17 @@ pub async fn build_prepared(
         dev_extension: None,
         builtins,
     };
+
+    if args.debug_system_prompt {
+        match harness.context_snapshot().await {
+            Ok(snapshot) => eprintln!(
+                "--- composed system prompt at startup ---\n{}",
+                snapshot.system_prompt
+            ),
+            Err(error) => eprintln!("Could not compose the startup system prompt: {error}"),
+        }
+        eprintln!("=== end --debug-system-prompt ===");
+    }
 
     Ok((harness, event_rx, reload_context))
 }

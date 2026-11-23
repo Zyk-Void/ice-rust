@@ -2380,6 +2380,18 @@ impl AgentHarness {
         Ok(())
     }
 
+    /// Return the bounded live MCP instruction section used in the system prompt.
+    pub fn mcp_instruction_prompt(&self) -> HarnessResult<String> {
+        let instructions = {
+            let inner = self.inner.lock().unwrap();
+            if inner.closed {
+                return Err(HarnessError::closed());
+            }
+            inner.mcp_instructions.clone()
+        };
+        Ok(crate::system_prompt::format_mcp_instructions(&instructions))
+    }
+
     /// Replace live MCP instruction sections without modifying the caller's base
     /// prompt. Reconnects and disconnects replace this map; reloads preserve it.
     pub async fn set_mcp_instructions(

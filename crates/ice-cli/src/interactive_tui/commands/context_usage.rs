@@ -568,8 +568,8 @@ async fn collect_from(
     } else {
         &[]
     };
-    // Measure the prompt a request sends: the base's tool markers are filled
-    // from the active tools, as `AgentHarness::compose_prompt` does.
+    // Estimate the static prompt sections using the active tools. Per-request
+    // hooks may still add or transform content after this snapshot.
     let active_tools: Vec<Arc<dyn ice_agent::AgentTool>> = tools
         .iter()
         .filter(|tool| active.is_empty() || active.contains(&tool.tool.schema().name))
@@ -579,6 +579,10 @@ async fn collect_from(
         .as_deref()
         .map(|base| ice_harness::system_prompt::render_tool_sections(base, &active_tools));
     snapshot.prompt(base.as_deref(), skills);
+    let mcp = harness
+        .mcp_instruction_prompt()
+        .map_err(|e| e.to_string())?;
+    snapshot.add(0, "live MCP instructions", byte_tokens(mcp.len()));
     snapshot.tools(&tools, &active)?;
     snapshot.messages(&entries);
     Ok(snapshot)

@@ -503,6 +503,23 @@ async fn public_collection_tracks_active_fork_tools_skills_and_loaded_prompt_wit
         .unwrap();
     let snapshot = collect(&session, &lane).await.unwrap();
     assert_eq!(snapshot.categories[4], 2, "unrelated fork excluded");
+    let instruction = "Use the fixture catalog for this report.";
+    session
+        .harness()
+        .set_mcp_instructions(
+            [("fixture".into(), instruction.into())]
+                .into_iter()
+                .collect(),
+        )
+        .await
+        .unwrap();
+    let with_mcp = collect(&session, &lane).await.unwrap();
+    let expected = format!("\n\nMCP server `fixture` instructions:\n{instruction}");
+    assert_eq!(
+        with_mcp.categories[0] - snapshot.categories[0],
+        byte_tokens(expected.len()),
+    );
+    assert!(!with_mcp.render(160).join("\n").contains(instruction));
     assert_eq!(
         snapshot.categories[2],
         byte_tokens(

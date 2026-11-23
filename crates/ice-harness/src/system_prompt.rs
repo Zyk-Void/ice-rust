@@ -76,6 +76,8 @@ pub fn compose_system_prompt(
     out
 }
 
+/// First-line opt-in for per-request tool sections in a base prompt.
+const TOOL_SECTIONS_HEADER: &str = "{{icers:tool-sections}}";
 /// Marker the default base prompt uses for the per-request tool list.
 pub const TOOLS_PLACEHOLDER: &str = "{{icers:tools}}";
 /// Marker the default base prompt uses for the per-request tool guidelines.
@@ -86,15 +88,18 @@ pub const GUIDELINES_PLACEHOLDER: &str = "{{icers:guidelines}}";
 /// listed under "Available tools", and each active tool's
 /// `prompt_guidelines` are added once, in tool order.
 ///
-/// Only the first occurrence of each marker is replaced, and the markers are
-/// namespaced, so a `SYSTEM.md` or project file without them passes through
-/// unchanged. The guideline marker is expected on its own line; that line is
-/// dropped when no active tool adds a guideline.
+/// Only prompts with the first-line `{{icers:tool-sections}}` opt-in are
+/// rendered. Within those prompts, only the first standalone line for each
+/// marker is replaced. A standalone guidelines line disappears if no active
+/// tool supplies a guideline.
 pub fn render_tool_sections(
     prompt: &str,
     tools: &[std::sync::Arc<dyn ice_agent::AgentTool>],
 ) -> String {
-    if !prompt.contains(TOOLS_PLACEHOLDER) && !prompt.contains(GUIDELINES_PLACEHOLDER) {
+    let Some((header, body)) = prompt.split_once('\n') else {
+        return prompt.to_string();
+    };
+    if header.trim_end_matches('\r') != TOOL_SECTIONS_HEADER {
         return prompt.to_string();
     }
     let listed: Vec<String> = tools
@@ -122,13 +127,27 @@ pub fn render_tool_sections(
             }
         }
     }
-    let rendered = prompt.replacen(TOOLS_PLACEHOLDER, &tool_list, 1);
-    let line = format!("{GUIDELINES_PLACEHOLDER}\n");
-    if rendered.contains(&line) {
-        rendered.replacen(&line, &guidelines, 1)
-    } else {
-        rendered.replacen(GUIDELINES_PLACEHOLDER, guidelines.trim_end(), 1)
+    let mut rendered = String::with_capacity(body.len() + tool_list.len() + guidelines.len());
+    let mut tools_pending = true;
+    let mut guidelines_pending = true;
+    for line in body.split_inclusive('\n') {
+        let text = line.trim_end_matches(['\r', '\n']);
+        let ending = &line[text.len()..];
+        if tools_pending && text == TOOLS_PLACEHOLDER {
+            tools_pending = false;
+            rendered.push_str(&tool_list);
+            rendered.push_str(ending);
+        } else if guidelines_pending && text == GUIDELINES_PLACEHOLDER {
+            guidelines_pending = false;
+            if !guidelines.is_empty() {
+                rendered.push_str(guidelines.trim_end_matches('\n'));
+                rendered.push_str(ending);
+            }
+        } else {
+            rendered.push_str(line);
+        }
     }
+    rendered
 }
 
 /// Bounded live instructions from connected MCP servers. Limits include headers
@@ -229,8 +248,10 @@ mod tests {
         })
     }
 
-    const TEMPLATE: &str =
-        "Tools:\n{{icers:tools}}\n\nGuidelines:\n- base rule\n{{icers:guidelines}}\n- last rule";
+    const TEMPLATE: &str = concat!(
+        "{{icers:tool-sections}}\n",
+        "Tools:\n{{icers:tools}}\n\nGuidelines:\n- base rule\n{{icers:guidelines}}\n- last rule"
+    );
 
     #[test]
     fn render_lists_snippet_tools_and_dedupes_guidelines() {
@@ -254,10 +275,20 @@ mod tests {
     }
 
     #[test]
-    fn render_leaves_a_custom_prompt_without_markers_unchanged() {
-        let custom = "My SYSTEM.md with {{tools}} left as the user wrote it.";
+    fn render_leaves_custom_markers_unchanged_without_opt_in() {
+        let custom = "Example:\n{{icers:tools}}\n{{icers:guidelines}}\n{{icers:tool-sections}}";
         let tools = vec![prompt_tool("read", Some("Read files"), vec!["rule"])];
         assert_eq!(render_tool_sections(custom, &tools), custom);
+    }
+
+    #[test]
+    fn render_leaves_inline_marker_examples_alone_with_opt_in() {
+        let custom = "{{icers:tool-sections}}\r\nExample: `{{icers:tools}}`\r\n{{icers:tools}}";
+        let tools = vec![prompt_tool("read", Some("Read files"), vec![])];
+        assert_eq!(
+            render_tool_sections(custom, &tools),
+            "Example: `{{icers:tools}}`\r\n- read: Read files"
+        );
     }
     use crate::context_files::ContextFile;
     use crate::types::Skill;
