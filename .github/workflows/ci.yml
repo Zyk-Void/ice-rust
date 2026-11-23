@@ -89,6 +89,10 @@ jobs:
             exit 1
           fi
 
+      # The CLI library tests launch this separate test executable.
+      - name: Build the MCP test fixture
+        run: cargo test -p ice-cli --test mcp_test_server --no-run --locked
+
       - name: Run workspace tests
         run: cargo test --workspace --locked
 
